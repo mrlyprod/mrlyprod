@@ -1,6 +1,0 @@
-[package]
-name = "sponge-window"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true

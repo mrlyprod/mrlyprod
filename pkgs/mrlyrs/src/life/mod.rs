@@ -1,6 +1,7 @@
 //! The engine: a rule over a grid, stepped, recorded, measured and rendered.
 //!
 //! - `step`: one generation of a grid under birth and survive counts.
+//! - `chladni`: a soup on a design mask under share windows, stepped by FFT and read by its spectrum.
 //! - `animate`: a seed run until it fixes, loops or times out.
 //! - `models`: the run config and the recorded life.
 //! - `metrics`: the entropy and churn readings of a run.
@@ -19,6 +20,8 @@
 
 /// The run of a seed until it fixes, loops or times out.
 pub mod animate;
+/// A soup on a design mask under birth and survive share windows, stepped by FFT and read by its spectrum.
+pub mod chladni;
 /// The centred cropping and tiling of a run's frames.
 pub mod crop;
 /// The elementary automata: their stepping, their space-time diagrams and the card of one rule.

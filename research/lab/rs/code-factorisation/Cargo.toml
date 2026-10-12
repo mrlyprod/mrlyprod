@@ -1,7 +1,0 @@
-[package]
-name = "code-factorisation"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true
-num-bigint.workspace = true

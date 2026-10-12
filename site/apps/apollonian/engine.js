@@ -39,17 +39,8 @@ export function study(num, name, cap) {
   const hull = packing.root.find((c) => c.k < 0);
   const rows = [...inner, ...packing.circles];
   const total = rows.length;
-  const data = new Float64Array(total * STRIDE);
-  const ints = new Int32Array(total * 3);
-  rows.forEach((c, i) => {
-    data[i * STRIDE] = c.x / c.k;
-    data[i * STRIDE + 1] = c.y / c.k;
-    data[i * STRIDE + 2] = 1 / c.k;
-    data[i * STRIDE + 3] = c.k;
-    ints[i * 3] = c.k;
-    ints[i * 3 + 1] = c.x;
-    ints[i * 3 + 2] = c.y;
-  });
+  const data = a.flat(name, cap);
+  const ints = Int32Array.from(rows.flatMap((c) => [c.k, c.x, c.y]));
   const k0 = packing.circles[0]?.k ?? inner.at(-1)?.k ?? cap;
   const octaves = Math.max(1, Math.ceil(Math.log2(cap / k0)) + 1);
   const bands = Uint8Array.from({ length: total }, (_, i) => Math.min(octaves - 1, Math.max(0, Math.floor(Math.log2(data[i * STRIDE + 3] / k0)))));

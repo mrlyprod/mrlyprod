@@ -1,5 +1,5 @@
 import { start } from '../kit/git/client.ts';
-import { crumbs } from '../ui/crumbs.js';
+import { crumbs, paint } from '../ui/crumbs.js';
 
 /* MARKDOWN */
 
@@ -11,22 +11,7 @@ async function md(text, link) {
 
 /* CHROME */
 
-function trail() {
-  const list = document.querySelector('.subheader .crumbs ol');
-  if (!list) return;
-  const steps = crumbs(location.pathname);
-  list.replaceChildren(
-    ...steps.map((step, n) => {
-      const item = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = step.href;
-      a.textContent = step.name;
-      if (n === steps.length - 1) a.setAttribute('aria-current', 'page');
-      item.append(a);
-      return item;
-    }),
-  );
-}
+const trail = () => paint(crumbs(location.pathname));
 
 const opener = () => document.querySelector('[data-pane="right"]');
 

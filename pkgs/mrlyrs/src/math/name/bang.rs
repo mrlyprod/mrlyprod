@@ -1,5 +1,10 @@
 use super::{kind, Named};
 use crate::core::error::{value_error, Result};
+use crate::core::Tensor;
+use crate::math::bang::catalog::{antis, classics};
+use crate::math::bang::factory::{corners_to_code, residue_corners, total_codes};
+use crate::math::bang::Code;
+use crate::math::{three, two};
 use serde::{Deserialize, Serialize};
 
 kind!("bang");
@@ -138,6 +143,53 @@ impl Named for Bang {
     }
 }
 
+/// Lists every classic then anti design of the plane or the cube as its decimal code and its word, empty for any other dimension.
+///
+/// ```
+/// let words = mrlyrs::math::name::words(2, 2);
+/// assert_eq!(words[0], ("7".to_string(), "carpet".to_string()));
+/// ```
+pub fn words(dim: usize, base: usize) -> Vec<(String, String)> {
+    if total_codes(dim, base).is_err() {
+        return Vec::new();
+    }
+    let drawn = |types: &Tensor| {
+        let filled: Vec<Vec<u8>> = residue_corners(dim, base)
+            .into_iter()
+            .enumerate()
+            .filter(|&(i, _)| types.at(i) != 0)
+            .map(|(_, corner)| corner)
+            .collect();
+        corners_to_code(&filled, dim, base).to_string()
+    };
+    classics(dim)
+        .into_iter()
+        .chain(antis(dim))
+        .filter_map(|design| {
+            let code = match dim {
+                2 => drawn(two::named(design, base, 1, 0).ok()?.types()),
+                3 => drawn(three::named(design, base, 1).ok()?.types()),
+                _ => return None,
+            };
+            Some((code, design.name().to_lowercase()))
+        })
+        .collect()
+}
+
+/// Returns the word of the first named design a code draws in the plane or the cube, or None for a code no named design draws.
+///
+/// ```
+/// use mrlyrs::math::bang::Code;
+/// assert_eq!(mrlyrs::math::name::of(Code::from(7u64), 2, 2).as_deref(), Some("carpet"));
+/// ```
+pub fn of(code: Code, dim: usize, base: usize) -> Option<String> {
+    let code = code.to_string();
+    words(dim, base)
+        .into_iter()
+        .find(|(listed, _)| *listed == code)
+        .map(|(_, word)| word)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -269,5 +321,39 @@ mod tests {
             assert_eq!(Bang::from_url(&bang.to_url().unwrap()).unwrap(), bang);
             assert_eq!(Bang::from_file(&bang.to_file().unwrap()).unwrap(), bang);
         }
+    }
+    #[test]
+    fn every_named_design_grows_back_from_its_listed_code_in_both_bases() {
+        for dim in [2, 3] {
+            for base in [2, 3] {
+                let list = words(dim, base);
+                assert_eq!(list.len(), if dim == 2 { 10 } else { 12 });
+                for ((code, word), design) in
+                    list.iter().zip(classics(dim).into_iter().chain(antis(dim)))
+                {
+                    let code: Code = code.parse().unwrap();
+                    let (seed, grown) = match dim {
+                        2 => (
+                            two::named(design, base, 1, 0).unwrap().types().clone(),
+                            two::create(code, base, 1, 0, base).unwrap().types().clone(),
+                        ),
+                        _ => (
+                            three::named(design, base, 1).unwrap().types().clone(),
+                            three::create(code, base, 1, base).unwrap().types().clone(),
+                        ),
+                    };
+                    assert_eq!(*word, design.name().to_lowercase());
+                    assert_eq!(grown, seed, "{dim} {base} {word}");
+                }
+            }
+        }
+        assert!(words(4, 2).is_empty());
+    }
+    #[test]
+    fn a_code_names_the_design_it_draws() {
+        let word = |code: u64, dim, base| of(Code::from(code), dim, base);
+        assert_eq!(word(7, 2, 2).as_deref(), Some("carpet"));
+        assert_eq!(word(23, 3, 2).as_deref(), Some("carpet"));
+        assert_eq!(word(11, 2, 2), None);
     }
 }

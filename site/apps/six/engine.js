@@ -1,5 +1,5 @@
 import { num, sheet } from '../../lib/svg.js';
-import { named, resolve, title, word } from '../designs/engine.js';
+import { settle, title } from '../designs/engine.js';
 
 export const DIM = 3;
 export const NUMBERS = [3, 5, 7, 9];
@@ -8,47 +8,30 @@ export const ORIENTS = [['pointy', 'Pointy'], ['flat', 'Flat']];
 export const ORDER = ['VOID', 'FILL', 'UP', 'LEFT', 'RIGHT'];
 export const BUDGET = 32000;
 export const RINGS = 4;
-export const COPIES = [1, 7, 19, 37, 61];
 export const RATIO = Math.sqrt(3) / 2;
 export const SCALE = 8;
 
 /* SIZE */
 
-export function cap(number, copies) {
-  let level = 1;
-  while (6 * (number ** (level + 1)) ** 2 * copies <= BUDGET) level++;
-  return level;
-}
-
-export function copies(math, rings) {
-  if (!rings) return 1;
-  let n = 0;
-  for (const bit of math.six.radial_mask(rings + 1, 'Horizontal').data) if (bit) n++;
-  return n;
-}
-
-export function parity(one, rings, side) {
-  return (one.start + (rings % 2 ? side : 0)) % 2;
-}
+export const cap = (math, number, copies) => math.bang.level_cap(number, 2, Math.floor(BUDGET / (6 * copies)));
 
 /* STUDY */
 
 export function study(math, value, rand) {
   const six = math.six;
-  const total = Number(math.bang.factory.total_codes(DIM, value.base));
-  const code = String(resolve(value.code, total, rand));
-  const n = copies(math, value.radius);
-  const level = Math.min(value.level, cap(value.number, n));
+  const code = settle(math, DIM, value.base, value.code, rand);
+  const n = six.copies(value.radius);
+  const level = Math.min(value.level, cap(math, value.number, n));
   const side = value.number ** level;
   const grown = math.three.create(code, value.number, level, value.base);
   const cube = value.invert ? math.cell.models.anti(grown) : grown;
   const one = six[value.projection](cube);
-  const sheet = value.radius ? six.new_(six.tessellate(one, six.radial_mask(value.radius + 1, one.orientation)), one.projection, one.orientation, parity(one, value.radius, side)) : one;
+  const sheet = six.disc(one, value.radius);
   const seen = value.projection === 'iso' ? six.skin(one) : one;
   const tally = six.census(seen, false);
   const facts = {
     code,
-    name: word(named(math, DIM, value.base), code),
+    name: math.name.of(code, DIM, value.base) ?? '',
     title: title(math, DIM, value.base, code),
     level,
     side,

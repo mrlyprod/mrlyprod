@@ -3,7 +3,7 @@ import { Bar } from '../../lib/frame.jsx';
 import { Btn, Group, Pick } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
 import { sources, spell } from './engine.js';
-import { BOARD_KEYS, make } from './scene.js';
+import { BOARD_KEYS, PRESETS, make } from './scene.js';
 
 const HAND = ['', 'By hand'];
 
@@ -19,6 +19,7 @@ const ROWS = [
   ['Population', (s) => s.pop],
   ['Fate', (s) => s.fate || '-'],
   ['Rule', (s) => s.name || '-'],
+  ['Wavelength', (s) => (s.wave == null ? '-' : s.wave.toFixed(2))],
 ];
 
 const Fact = ({ name, value }) => (
@@ -71,14 +72,21 @@ export function Widget({ value, onChange, onReady }) {
       {units && <Scene make={made} value={board} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} />}
       <Bar side="right">
         <Group name="Counts" className="facts">
-          {ROWS.map(([name, get]) => <Fact key={name} name={name} value={stat ? get(stat) : '-'} />)}
+          {ROWS.filter(([name]) => name !== 'Wavelength' || value.mode === 'chladni').map(([name, get]) => <Fact key={name} name={name} value={stat ? get(stat) : '-'} />)}
         </Group>
       </Bar>
       <Bar side="actions">
         <Btn primary onClick={() => handle.current?.step()}>Step</Btn>
         <Btn onClick={() => handle.current?.clear()}>Clear</Btn>
       </Bar>
-      {units && value.mode !== 'wolfram' && (
+      {value.mode === 'chladni' && (
+        <Bar side="right">
+          <Group name="Presets">
+            {PRESETS.map(([label, preset]) => <Btn key={label} on={Object.entries(preset).every(([key, v]) => String(value[key]) === String(v))} onClick={() => onChange(preset)}>{label}</Btn>)}
+          </Group>
+        </Bar>
+      )}
+      {units && !['wolfram', 'chladni'].includes(value.mode) && (
         <Bar side="right">
           <Group name="Sequences">
             {SIDES.map(([key, label, i]) => <Pick key={key} label={label} value={chosen(value[key])} options={options} onChange={draw(key, i)} />)}

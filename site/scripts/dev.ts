@@ -25,7 +25,7 @@ const server = Bun.serve({
     if (step.redirect) return Response.redirect(`${step.redirect}${url.search}`, 301);
     const path = step.uri!;
     if (path === "/index.html" || path === "/404.html") return reply((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${org}/`, "/"), "text/html; charset=utf-8");
-    const raw = path.startsWith("/raw/") && !path.startsWith("/raw/research/");
+    const raw = path.startsWith("/raw/");
     const disk = raw ? join(org, "..", path.slice(5)) : join(org, "public", path);
     const found = !path.includes("..") && existsSync(disk) && statSync(disk).isFile() ? readFileSync(disk) : null;
     if (found) return reply(found, raw ? typed(path, found) : kind(disk));

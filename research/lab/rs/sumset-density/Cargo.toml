@@ -1,5 +1,0 @@
-[package]
-name = "sumset-density"
-edition.workspace = true
-
-[dependencies]

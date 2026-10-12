@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { COPIES, RATIO, RINGS, bounds, cap, copies, fit, mesh, parity, study, turned, wrap } from './engine.js';
+import { RATIO, bounds, fit, mesh, study, turned, wrap } from './engine.js';
 import { SPEC } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -10,45 +10,6 @@ math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mr
 const CARPET = { ...defaults(SPEC), base: 2, code: '23' };
 
 const read = (value, seed = 1) => study(math, { ...CARPET, ...value }, rng(seed));
-
-test('the level cap keeps six side squared times the copies under the budget', () => {
-  expect([cap(3, 1), cap(5, 1), cap(7, 1), cap(9, 1)]).toEqual([3, 2, 2, 1]);
-  expect([cap(3, 7), cap(5, 7), cap(7, 7), cap(3, 19), cap(3, 61)]).toEqual([3, 2, 1, 2, 2]);
-});
-
-test('the rings count the hexagons of the disc', () => {
-  expect([0, 1, 2, 3, 4].map((rings) => copies(math, rings))).toEqual([1, 7, 19, 37, 61]);
-  expect(Array.from({ length: RINGS + 1 }, (_, rings) => copies(math, rings))).toEqual(COPIES);
-});
-
-test('the disc keeps the parity of the uncropped sheet it sits in', () => {
-  for (const projection of ['cut', 'iso', 'pro']) {
-    for (const [number, level] of [[3, 1], [3, 2], [5, 1]]) {
-      const one = math.six[`${projection}_design`]('23', number, level, 2);
-      for (let rings = 1; rings <= 4; rings++) {
-        const disc = math.six.tessellate(one, math.six.radial_mask(rings + 1, one.orientation));
-        const tile = math.six.tile_cell(one, 2 * rings + 1, 2 * rings + 1, false);
-        const [th, tw] = disc.shape;
-        const [, W] = tile.cell.shape;
-        const seat = () => {
-          for (let dy = 0; dy + th <= tile.cell.shape[0]; dy++) {
-            for (let dx = 0; dx + tw <= W; dx++) {
-              let same = true;
-              for (let i = 0; same && i < disc.types.length; i++) {
-                if (disc.types[i] === 2) continue;
-                same = disc.types[i] === tile.cell.types[(Math.floor(i / tw) + dy) * W + (i % tw) + dx];
-              }
-              if (same) return [dx, dy];
-            }
-          }
-          return null;
-        };
-        const [dx, dy] = seat();
-        expect([projection, number, level, rings, parity(one, rings, number ** level)]).toEqual([projection, number, level, rings, (tile.start + dx + dy) % 2]);
-      }
-    }
-  }
-});
 
 test('the study reads the carpet in each projection and counts the skin of the iso', () => {
   const iso = read({ projection: 'iso' }).facts;

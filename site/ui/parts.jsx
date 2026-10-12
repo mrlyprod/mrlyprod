@@ -70,14 +70,19 @@ export function Grid({ nodes = [] }) {
 
 /* MENU */
 
+export const GROUPS = [
+  ['play', 'Play'],
+  ['read', 'Read'],
+  ['tool', 'Tools'],
+];
+
 export function filled(site, rows) {
-  const doors = (list) => list.map((one) => ({ name: one.title, href: one.route }));
-  const fills = {
-    apps: doors(rows.filter((one) => one.meta?.id)),
-    pages: doors(rows.filter((one) => one.meta?.was === 'page')),
-    elsewhere: [...site.socials, { name: site.contact, href: `mailto:${site.contact}` }],
-  };
-  return site.tree.map((node) => (node.href ? node : { ...node, nodes: node.nodes ?? fills[node.name.toLowerCase()] ?? [] })).filter((node) => node.href || node.nodes.length);
+  const card = (one) => ({ name: one.title, href: one.route, figure: one.figure ?? undefined });
+  const shown = rows.filter((one) => one.meta?.menu && !one.hidden).sort((a, b) => a.title.localeCompare(b.title));
+  const groups = GROUPS.map(([key, name]) => ({ name, nodes: shown.filter((one) => one.meta.menu === key).map(card) }));
+  const fills = { elsewhere: [...site.socials, { name: site.contact, href: `mailto:${site.contact}` }] };
+  const tree = site.tree.map((node) => ({ ...node, nodes: node.nodes ?? fills[node.name.toLowerCase()] ?? [] }));
+  return [...groups, ...tree].filter((node) => node.nodes.length);
 }
 
 const anchor = (name) => name.toLowerCase();
@@ -85,8 +90,7 @@ const anchor = (name) => name.toLowerCase();
 export function Menu({ tree = [] }) {
   return (
     <div className="menu">
-      <Grid nodes={tree.filter((node) => node.href)} />
-      {tree.filter((node) => node.nodes).map((folder) => (
+      {tree.map((folder) => (
         <section key={folder.name} id={anchor(folder.name)} aria-label={folder.name}>
           <h2>{folder.name}</h2>
           <Grid nodes={folder.nodes} />

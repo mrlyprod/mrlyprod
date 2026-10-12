@@ -8,6 +8,8 @@ export const apollonian = {
     Circle: wasm.apollonian_Circle,
     ORDER_CAP: wasm.apollonian_ORDER_CAP,
     ROOTS: wasm.apollonian_ROOTS,
+    STRIDE: wasm.apollonian_STRIDE,
+    flat: wasm.apollonian_flat,
     form: wasm.apollonian_form,
     frame: wasm.apollonian_frame,
     grow: wasm.apollonian_grow,
@@ -19,20 +21,6 @@ export const apollonian = {
     sound: wasm.apollonian_sound,
     swap: wasm.apollonian_swap,
     touches: wasm.apollonian_touches,
-};
-export const arrays = {
-    MOST: wasm.arrays_MOST,
-    essential: wasm.arrays_essential,
-    fractal: wasm.arrays_fractal,
-    holes: wasm.arrays_holes,
-    law: wasm.arrays_law,
-    lost: wasm.arrays_lost,
-    paired: wasm.arrays_paired,
-    weights: wasm.arrays_weights,
-};
-export const automaton = {
-    Automaton: wasm.automaton_Automaton,
-    ROUNDING: wasm.automaton_ROUNDING,
 };
 export const blend = {
     add: wasm.blend_add,
@@ -53,47 +41,6 @@ export const boolean = {
     nonlinearity: wasm.boolean_nonlinearity,
     sac: wasm.boolean_sac,
     walsh_spectrum: wasm.boolean_walsh_spectrum,
-};
-export const design = {
-    ZETA_ORDINATES: wasm.design_ZETA_ORDINATES,
-    digits_of: wasm.design_digits_of,
-    echo_series: wasm.design_echo_series,
-    elements: wasm.design_elements,
-    log_grid: wasm.design_log_grid,
-    median_floor: wasm.design_median_floor,
-    meter: wasm.design_meter,
-    nearest: wasm.design_nearest,
-    peaks: wasm.design_peaks,
-    pole_lattice: wasm.design_pole_lattice,
-    resample: wasm.design_resample,
-    score: wasm.design_score,
-    size: wasm.design_size,
-    spectrum: wasm.design_spectrum,
-    upper_rms: wasm.design_upper_rms,
-};
-export const dissection = {
-    BAR_A: wasm.dissection_BAR_A,
-    BAR_B: wasm.dissection_BAR_B,
-    CAP_BASE: wasm.dissection_CAP_BASE,
-    CERTIFIED: wasm.dissection_CERTIFIED,
-    DIGIT_WALL: wasm.dissection_DIGIT_WALL,
-    FIRST_BELOW: wasm.dissection_FIRST_BELOW,
-    GAMMA: wasm.dissection_GAMMA,
-    WINDOW_WALL: wasm.dissection_WINDOW_WALL,
-    cap: wasm.dissection_cap,
-    chain_exponent: wasm.dissection_chain_exponent,
-    chain_margin: wasm.dissection_chain_margin,
-    chain_root: wasm.dissection_chain_root,
-    chain_wall: wasm.dissection_chain_wall,
-    consecutive: wasm.dissection_consecutive,
-    fraction: wasm.dissection_fraction,
-    kappa: wasm.dissection_kappa,
-    masses: wasm.dissection_masses,
-    reach: wasm.dissection_reach,
-    reading: wasm.dissection_reading,
-    regions: wasm.dissection_regions,
-    tally: wasm.dissection_tally,
-    weights: wasm.dissection_weights,
 };
 export const factor = {
     aliquot: wasm.factor_aliquot,
@@ -143,13 +90,6 @@ export const kummer = {
     valuation: wasm.kummer_valuation,
     witness: wasm.kummer_witness,
 };
-export const ladder = {
-    Design: wasm.ladder_Design,
-    ROUNDING: wasm.ladder_ROUNDING,
-    cofactor: wasm.ladder_cofactor,
-    residue: wasm.ladder_residue,
-    zeta: wasm.ladder_zeta,
-};
 export const lattice = {
     coprime_pairs: wasm.lattice_coprime_pairs,
     farey: wasm.lattice_farey,
@@ -160,19 +100,6 @@ export const lattice = {
     visible_density: wasm.lattice_visible_density,
     zeta_factor: wasm.lattice_zeta_factor,
     zeta_whole: wasm.lattice_zeta_whole,
-};
-export const memory = {
-    Rule: wasm.memory_Rule,
-    SPAN: wasm.memory_SPAN,
-    SWEEPS: wasm.memory_SWEEPS,
-    TOLERANCE: wasm.memory_TOLERANCE,
-    allowed_windows: wasm.memory_allowed_windows,
-    cells: wasm.memory_cells,
-    counts: wasm.memory_counts,
-    exponent: wasm.memory_exponent,
-    kappa: wasm.memory_kappa,
-    perron: wasm.memory_perron,
-    transfer: wasm.memory_transfer,
 };
 export const morse = {
     LIFTS: wasm.morse_LIFTS,
@@ -185,9 +112,11 @@ export const morse = {
     fold: wasm.morse_fold,
     letter: wasm.morse_letter,
     lift: wasm.morse_lift,
+    mask: wasm.morse_mask,
     power: wasm.morse_power,
     repeat: wasm.morse_repeat,
     runs: wasm.morse_runs,
+    signs: wasm.morse_signs,
     stage: wasm.morse_stage,
     substitution: wasm.morse_substitution,
     upsample: wasm.morse_upsample,
@@ -207,16 +136,6 @@ export const prime = {
     splits: wasm.prime_splits,
     squares: wasm.prime_squares,
     study: wasm.prime_study,
-};
-export const radix = {
-    Base: wasm.radix_Base,
-    Radix: wasm.radix_Radix,
-    flowsnake: wasm.radix_flowsnake,
-    gasket: wasm.radix_gasket,
-    koch: wasm.radix_koch,
-    terdragon: wasm.radix_terdragon,
-    tile: wasm.radix_tile,
-    twindragon: wasm.radix_twindragon,
 };
 export const series = {
     APERY: wasm.series_APERY,
@@ -277,13 +196,6 @@ export const spiral = {
     marks: wasm.spiral_marks,
     snail: wasm.spiral_snail,
 };
-export const sumset = {
-    DEEPEST: wasm.sumset_DEEPEST,
-    Pair: wasm.sumset_Pair,
-    Sumset: wasm.sumset_Sumset,
-    WIDEST: wasm.sumset_WIDEST,
-    pairs: wasm.sumset_pairs,
-};
 export const zeta = {
     Complex: wasm.zeta_Complex,
     JOIN: wasm.zeta_JOIN,
@@ -294,7 +206,9 @@ export const zeta = {
     mellin: wasm.zeta_mellin,
     novelty_main: wasm.zeta_novelty_main,
     novelty_wave: wasm.zeta_novelty_wave,
+    psi_curve: wasm.zeta_psi_curve,
     psi_formula: wasm.zeta_psi_formula,
+    psi_gap: wasm.zeta_psi_gap,
     psi_stair: wasm.zeta_psi_stair,
     raise: wasm.zeta_raise,
     sharp_novelty: wasm.zeta_sharp_novelty,

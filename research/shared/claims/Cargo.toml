@@ -1,0 +1,9 @@
+[package]
+name = "claims"
+edition = "2021"
+publish = false
+
+[dependencies]
+mrlyrs = { path = "../../../pkgs/mrlyrs" }
+
+[workspace]

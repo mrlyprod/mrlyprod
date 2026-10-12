@@ -1,14 +1,14 @@
 import { expect, test } from 'bun:test';
 import { match, sort } from './route.js';
 
-const DEEP = ['/git/'];
+const DEEP = ['/git/', '/research/'];
 
 const ROWS = [
-  { route: '/', kind: 'home', meta: {} },
-  { route: '/about/', kind: 'prose', meta: {} },
-  { route: '/research/', kind: 'paused', meta: {} },
-  { route: '/git/', kind: 'git', meta: { deep: true } },
-  { route: '/404.html', kind: 'missing', meta: {} },
+  { route: '/', kind: 'app', meta: { id: 'home' } },
+  { route: '/about/', kind: 'prose', meta: { id: 'about' } },
+  { route: '/research/', kind: 'app', meta: { id: 'research', deep: true } },
+  { route: '/git/', kind: 'app', meta: { id: 'git', deep: true } },
+  { route: '/404.html', kind: 'app', meta: { id: 'missing' } },
 ];
 
 const kind = (to, from) => sort(new URL(to, `https://mrly.net${from}`), new URL(`https://mrly.net${from}`), DEEP);
@@ -18,7 +18,8 @@ test('a path takes its exact row, else the longest deep row it sits under, else 
     ['/about/', '/about/'],
     ['/git/', '/git/'],
     ['/git/site/kit/push.ts', '/git/'],
-    ['/research/notes/beneath/', '/404.html'],
+    ['/research/', '/research/'],
+    ['/research/beneath/', '/research/'],
     ['/nothing-here/', '/404.html'],
     ['/index.html', '/'],
     ['/', '/'],
@@ -28,8 +29,11 @@ test('a path takes its exact row, else the longest deep row it sits under, else 
 
 test("the router takes a page and leaves another origin, a file, a fragment of the page and a link of the page's own router", () => {
   const rows = [
-    ['/research/', '/', 'page'],
-    ['/about/#who', '/research/', 'page'],
+    ['/git/site/', '/menu/', 'page'],
+    ['/about/#who', '/research/beneath/', 'page'],
+    ['/research/', '/menu/', 'page'],
+    ['/research/beneath/', '/research/', 'inner'],
+    ['/research/', '/research/beneath/', 'inner'],
     ['/about/', '/about/', 'page'],
     ['?seed=7', '/sleep/', 'page'],
     ['/git/site/kit/push.ts', '/about/', 'page'],
@@ -40,7 +44,7 @@ test("the router takes a page and leaves another origin, a file, a fragment of t
     ['#L12', '/git/site/kit/push.ts', 'inner'],
     ['#who', '/about/', 'mark'],
     ['#', '/menu/', 'mark'],
-    ['https://oeis.org/A000001/', '/research/', ''],
+    ['https://oeis.org/A000001/', '/research/beneath/', ''],
     ['mailto:help@mrly.net', '/contact/', ''],
     ['/robots.txt', '/menu/', ''],
     ['/sitemap.xml', '/menu/', ''],

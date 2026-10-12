@@ -1,0 +1,10 @@
+[package]
+name = "ledger"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[dependencies]
+mrlyrs = { path = "../../../pkgs/mrlyrs" }
+
+[workspace]

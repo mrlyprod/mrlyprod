@@ -5,16 +5,11 @@ const ROTATION = 0;
 
 const worlds = new Map();
 const groups = new Map();
-const words = new Map();
 const reps = new Map();
 
 /* SPACE */
 
-export function cap(dim) {
-  let level = 1;
-  while (SIDE ** (dim * (level + 1)) <= BUDGET) level++;
-  return level;
-}
+export const cap = (math, dim) => math.bang.level_cap(SIDE, dim, BUDGET);
 
 export function total(math, dim, base) {
   return Number(math.bang.factory.total_codes(dim, base));
@@ -29,16 +24,15 @@ export function codes(math, dim, base) {
   return count <= LIMIT ? Array.from({ length: count }, (_, code) => String(code)) : null;
 }
 
-export function resolve(code, count, rand) {
-  const text = String(code ?? '').trim();
-  const n = Number(text);
-  if (text === '' || !Number.isFinite(n)) return 1 + Math.floor(rand() * (count - 1));
-  const whole = Math.floor(n);
-  return ((whole % count) + count) % count;
+export function roll(math, dim, base, rand = Math.random) {
+  return math.bang.random_code(dim, base, new math.Rng(Math.floor(rand() * 2 ** 32)), 1);
 }
 
-export function roll(math, dim, base, rand = Math.random) {
-  return String(1 + Math.floor(rand() * (total(math, dim, base) - 1)));
+export function settle(math, dim, base, code, rand) {
+  const text = String(code ?? '').trim();
+  if (text === '' || !Number.isFinite(Number(text))) return roll(math, dim, base, rand);
+  const count = total(math, dim, base);
+  return String(((Math.floor(Number(text)) % count) + count) % count);
 }
 
 /* CLASSES */
@@ -89,28 +83,6 @@ export function title(math, dim, base, code) {
   return text;
 }
 
-/* NAMES */
-
-const corners = (math, cell, dim, base) => math.bang.factory.residue_corners(dim, base).filter((_, i) => cell.types[i]);
-
-const seeds = {
-  2: (math, word, number) => math.two.named(word, number, 1, ROTATION),
-  3: (math, word, number) => math.three.named(word, number, 1),
-};
-
-export function named(math, dim, base) {
-  const key = `${dim}:${base}`;
-  if (!words.has(key)) {
-    const list = [...math.bang.sources('Classics', dim).map((one) => one.design), ...math.bang.catalog.antis(dim)];
-    words.set(key, list.map((word) => ({ code: math.bang.corners_to_code(corners(math, seeds[dim](math, word, base), dim, base), dim, base), name: word.toLowerCase() })));
-  }
-  return words.get(key);
-}
-
-export function word(list, code) {
-  return list.find((one) => one.code === String(code))?.name ?? '';
-}
-
 /* GROWTH */
 
 export function grow(math, dim, base, code, level) {
@@ -129,7 +101,7 @@ export function dimension(math, dim, base, code) {
 /* LISTS */
 
 export function gallery(math, dim, base, filter) {
-  if (filter === 'named') return named(math, dim, base).map((one) => one.code);
+  if (filter === 'named') return math.name.words(dim, base).map(([code]) => code);
   if (filter === 'classes') return classes(math, dim, base)?.map((one) => one.code) ?? null;
   return codes(math, dim, base);
 }

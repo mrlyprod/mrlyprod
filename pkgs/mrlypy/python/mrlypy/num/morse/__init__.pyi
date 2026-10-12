@@ -40,6 +40,9 @@ def letter(place: int) -> int:
 def lift(kind: Literal["Parity", "And", "Xor", "Sum"], side: int) -> bytes:
     """Builds a lift as a row-major sign grid of the side, zero for plus one and one for minus one."""
 
+def mask(a: bytes, b: bytes) -> bytes:
+    """Keeps the sites lit in both grids of the same length, site by site."""
+
 def power(tile: bytes, number: int, level: int) -> bytes:
     """Folds a tile of the side into its Kronecker power at the level, one bit per site."""
 
@@ -48,6 +51,9 @@ def repeat(tile: bytes, number: int, side: int) -> bytes:
 
 def runs(word: bytes) -> list[int]:
     """Returns the lengths of the maximal blocks of one repeated letter, in order."""
+
+def signs(types: bytes) -> bytes:
+    """Reads a design plus-minus: a filled cell is plus, zero, and a void is minus, one."""
 
 def stage(rounds: int) -> bytes:
     """Returns the substitution stage after the rounds, a word of length two to the rounds."""

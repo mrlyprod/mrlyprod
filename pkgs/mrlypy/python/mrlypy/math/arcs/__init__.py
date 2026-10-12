@@ -1,3 +1,3 @@
 from mrlypy._mrlypy.math.arcs import *
 
-__all__ = ["draw", "law", "trace"]
+__all__ = ["curves", "draw", "law", "trace"]

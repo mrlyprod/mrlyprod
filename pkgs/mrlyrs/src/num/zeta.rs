@@ -12,6 +12,7 @@ const STEPS: usize = 10;
 const STENCIL: f64 = 0.02;
 const TOLERANCE: f64 = 1e-9;
 const NODES: usize = 4096;
+const REMAINDER: f64 = 1.0;
 
 /// A complex number: a real and an imaginary part.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -28,21 +29,21 @@ impl Complex {
         Complex { re, im }
     }
     /// Returns the modulus.
-    pub fn abs(self) -> f64 {
-        self.re.hypot(self.im)
+    pub fn abs(z: Complex) -> f64 {
+        z.re.hypot(z.im)
     }
     /// Returns the principal argument.
-    pub fn arg(self) -> f64 {
-        self.im.atan2(self.re)
+    pub fn arg(z: Complex) -> f64 {
+        z.im.atan2(z.re)
     }
     /// Returns the exponential.
-    pub fn exp(self) -> Complex {
-        let r = self.re.exp();
-        Complex::new(r * self.im.cos(), r * self.im.sin())
+    pub fn exp(z: Complex) -> Complex {
+        let r = z.re.exp();
+        Complex::new(r * z.im.cos(), r * z.im.sin())
     }
     /// Returns the principal logarithm.
-    pub fn ln(self) -> Complex {
-        Complex::new(self.abs().ln(), self.arg())
+    pub fn ln(z: Complex) -> Complex {
+        Complex::new(Complex::abs(z).ln(), Complex::arg(z))
     }
     /// Returns a unit complex number at the given angle.
     pub fn turn(angle: f64) -> Complex {
@@ -115,7 +116,7 @@ impl Neg for Complex {
 
 /// Returns a positive real base raised to a complex exponent.
 pub fn raise(base: f64, exponent: Complex) -> Complex {
-    (exponent * base.ln()).exp()
+    Complex::exp(exponent * base.ln())
 }
 
 /// Returns the Riemann-Siegel kernel, the cosine ratio that leads the remainder, in the form that stays finite at its removable points.
@@ -196,9 +197,9 @@ impl Line {
     pub fn theta(&self, t: f64) -> f64 {
         let z = Complex::new(0.25, 0.5 * t);
         let w = z + SHIFT as f64;
-        let mut arg = ((w - 0.5) * w.ln() - w).im;
+        let mut arg = ((w - 0.5) * Complex::ln(w) - w).im;
         for k in 0..SHIFT {
-            arg -= (z + k as f64).arg();
+            arg -= Complex::arg(z + k as f64);
         }
         let inverse = Complex::new(1.0, 0.0) / w;
         let square = inverse * inverse;
@@ -280,26 +281,28 @@ impl Line {
     }
     /// Returns Z(t) by the Riemann-Siegel formula: the main sum and the first four corrections.
     pub fn siegel(&self, t: f64) -> f64 {
-        let a = (t / (2.0 * PI)).sqrt();
-        let whole = a.floor();
+        let whole = (t / (2.0 * PI)).sqrt().floor();
         let theta = self.theta(t);
         let mut sum = 0.0;
         for k in 1..=whole as usize {
             let kf = k as f64;
             sum += (theta - t * kf.ln()).cos() / kf.sqrt();
         }
-        let sign = if (whole as u64).is_multiple_of(2) {
-            -1.0
+        2.0 * sum + remainder(t)
+    }
+    fn turned(&self, t: f64, turns: &[Complex], roots: &[f64]) -> f64 {
+        let a = (t / (2.0 * PI)).sqrt();
+        let (sin, cos) = self.theta(t).sin_cos();
+        let sum: f64 = turns[..a as usize]
+            .iter()
+            .zip(roots)
+            .map(|(turn, root)| (cos * turn.re + sin * turn.im) / root)
+            .sum();
+        if 2.0 * sum.abs() * a.sqrt() > REMAINDER {
+            sum
         } else {
-            1.0
-        };
-        let mut weight = 1.0 / a.sqrt();
-        let mut rest = 0.0;
-        for c in corrections(a - whole) {
-            rest += c * weight;
-            weight /= a;
+            2.0 * sum + remainder(t)
         }
-        2.0 * sum + sign * rest
     }
     /// Returns Z(t): Euler-Maclaurin below the join, Riemann-Siegel above.
     pub fn z(&self, t: f64) -> f64 {
@@ -330,37 +333,35 @@ impl Line {
     }
     /// Returns the n-th Gram point, where theta is n pi, by Newton from the right.
     pub fn gram(&self, n: i64) -> f64 {
+        self.newton(n, 2.0 * PI * (n as f64 + 2.0).max(3.0), 1e-12)
+    }
+    fn newton(&self, n: i64, mut t: f64, tolerance: f64) -> f64 {
         let target = n as f64 * PI;
-        let mut t = 2.0 * PI * (n as f64 + 2.0).max(3.0);
         for _ in 0..100 {
             let step = (self.theta(t) - target) / (0.5 * (t / (2.0 * PI)).ln());
             t -= step;
-            if step.abs() < 1e-12 {
+            if step.abs() < tolerance {
                 break;
             }
         }
         t
     }
-    fn brackets(&self, limit: f64, count: usize, exact: bool) -> Vec<(f64, f64)> {
-        let z = |t: f64| if exact { self.exact(t) } else { self.z(t) };
+    fn brackets(&self, count: usize) -> Vec<(f64, f64)> {
         let mut out = Vec::new();
         let mut n = -1;
         let mut left = self.gram(n);
         let mut previous = left;
-        let mut before = z(left);
-        'walk: while out.len() < count && left < limit {
+        let mut before = self.exact(left);
+        while out.len() < count {
             let right = self.gram(n + 1);
             for k in 1..=STEPS {
-                let t = (left + (right - left) * k as f64 / STEPS as f64).min(limit);
-                let now = z(t);
+                let t = left + (right - left) * k as f64 / STEPS as f64;
+                let now = self.exact(t);
                 if before * now < 0.0 {
                     out.push((previous, t));
                 }
                 previous = t;
                 before = now;
-                if t >= limit {
-                    break 'walk;
-                }
             }
             left = right;
             n += 1;
@@ -384,15 +385,73 @@ impl Line {
     }
     /// Returns the first zeros on the line: sign changes of Z between Gram points, refined by bisection on Euler-Maclaurin to a billionth.
     pub fn zeros(&self, count: usize) -> Vec<f64> {
-        self.brackets(f64::INFINITY, count, true)
+        self.brackets(count)
             .into_iter()
             .map(|pair| self.bisect(pair))
             .collect()
     }
-    /// Counts the zeros on the line below t.
+    /// Counts the zeros on the line below t: the sign changes of Z on ten steps a Gram interval, the Riemann-Siegel main sum turned from step to step and its remainder read only where it could flip the sign.
     pub fn count(&self, t: f64) -> usize {
-        self.brackets(t, usize::MAX, false).len()
+        let terms = (t.max(0.0) / (2.0 * PI)).sqrt() as usize + 1;
+        let logs: Vec<f64> = (1..=terms).map(|k| (k as f64).ln()).collect();
+        let roots: Vec<f64> = (1..=terms).map(|k| (k as f64).sqrt()).collect();
+        let mut turns = vec![Complex::default(); terms];
+        let mut steps = vec![Complex::default(); terms];
+        let mut found = 0;
+        let mut n = -1;
+        let mut left = self.gram(n);
+        let mut before = self.z(left);
+        while left < t {
+            let guess = left + PI / (0.5 * (left / (2.0 * PI)).ln());
+            let right = self.newton(n + 1, guess, 1e-12 * left);
+            let stride = (right - left) / STEPS as f64;
+            let high = left + stride >= JOIN;
+            if high {
+                for (k, log) in logs.iter().enumerate() {
+                    turns[k] = Complex::turn((left + stride) * log);
+                    steps[k] = Complex::turn(stride * log);
+                }
+            }
+            for k in 1..=STEPS {
+                let at = (left + (right - left) * k as f64 / STEPS as f64).min(t);
+                let now = if high && at < t {
+                    self.turned(at, &turns, &roots)
+                } else {
+                    self.z(at)
+                };
+                if before * now < 0.0 {
+                    found += 1;
+                }
+                if at >= t {
+                    return found;
+                }
+                before = now;
+                for (turn, step) in turns.iter_mut().zip(&steps) {
+                    *turn = *turn * *step;
+                }
+            }
+            left = right;
+            n += 1;
+        }
+        found
     }
+}
+
+fn remainder(t: f64) -> f64 {
+    let a = (t / (2.0 * PI)).sqrt();
+    let whole = a.floor();
+    let sign = if (whole as u64).is_multiple_of(2) {
+        -1.0
+    } else {
+        1.0
+    };
+    let mut weight = 1.0 / a.sqrt();
+    let mut rest = 0.0;
+    for c in corrections(a - whole) {
+        rest += c * weight;
+        weight /= a;
+    }
+    sign * rest
 }
 
 /// Returns the Chebyshev staircase at every whole number from one to x: the sum of ln p over the prime powers up to each.
@@ -423,6 +482,17 @@ pub fn psi_formula(x: f64, gammas: &[f64]) -> f64 {
         .map(|&g| (0.5 * (g * log).cos() + g * (g * log).sin()) / (0.25 + g * g))
         .sum();
     x - 2.0 * x.sqrt() * waves - (2.0 * PI).ln() - 0.5 * (1.0 - 1.0 / (x * x)).ln()
+}
+
+/// Returns how far the explicit formula over the zeros at the given ordinates lands from the staircase at the whole number x.
+pub fn psi_gap(x: usize, gammas: &[f64]) -> f64 {
+    let stair = psi_stair(x).last().copied().unwrap_or(0.0);
+    (psi_formula(x as f64, gammas) - stair).abs()
+}
+
+/// Returns the explicit formula over the zeros at the given ordinates at every sample x.
+pub fn psi_curve(gammas: &[f64], samples: &[f64]) -> Vec<f64> {
+    samples.iter().map(|&x| psi_formula(x, gammas)).collect()
 }
 
 // NOVELTY
@@ -495,11 +565,11 @@ mod tests {
     #[test]
     fn the_complex_arithmetic_round_trips() {
         let z = Complex::new(-1.5, 2.25);
-        let back = z.ln().exp();
-        assert!((back - z).abs() < 1e-14);
-        assert!((z / z - Complex::new(1.0, 0.0)).abs() < 1e-15);
+        let back = Complex::exp(Complex::ln(z));
+        assert!(Complex::abs(back - z) < 1e-14);
+        assert!(Complex::abs(z / z - Complex::new(1.0, 0.0)) < 1e-15);
         assert!((raise(2.0, Complex::new(3.0, 0.0)).re - 8.0).abs() < 1e-13);
-        assert!((raise(4.0, Complex::new(0.5, 0.0)) - Complex::new(2.0, 0.0)).abs() < 1e-14);
+        assert!(Complex::abs(raise(4.0, Complex::new(0.5, 0.0)) - Complex::new(2.0, 0.0)) < 1e-14);
     }
 
     #[test]
@@ -523,7 +593,7 @@ mod tests {
         let one = line.maclaurin(1.0);
         assert!((one.re - 0.143_936_427_077_189).abs() < 1e-9);
         assert!((one.im + 0.722_099_743_531_673).abs() < 1e-9);
-        assert!(line.maclaurin(14.134_725).abs() < 1e-5);
+        assert!(Complex::abs(line.maclaurin(14.134_725)) < 1e-5);
         for t in [3.0, 25.0, 140.0] {
             let value = line.maclaurin(t);
             assert!(
@@ -568,6 +638,8 @@ mod tests {
         assert_eq!(line.count(100.0), 29);
         assert_eq!(line.count(200.0), 79);
         assert_eq!(line.count(10.0), 0);
+        assert_eq!(line.count(1000.0), 649);
+        assert_eq!(line.count(10000.0), 10138);
         let hundred = line.zeros(100);
         assert_eq!(hundred.len(), 100);
         assert!((hundred[99] - 236.524_230).abs() < 1e-5);
@@ -582,10 +654,10 @@ mod tests {
         let (_, slope) = line.pair(Complex::new(0.5, 0.0));
         assert!((slope.re + 3.922_646_139_209_15).abs() < 1e-9);
         let (on, _) = line.pair(Complex::new(0.5, 30.0));
-        assert!((on - line.maclaurin(30.0)).abs() < 1e-9);
+        assert!(Complex::abs(on - line.maclaurin(30.0)) < 1e-9);
         let (root, prime) = line.pair(Complex::new(0.5, 14.134_725_141_734_7));
-        assert!(root.abs() < 1e-8);
-        assert!((prime.abs() - 0.793_16).abs() < 1e-4);
+        assert!(Complex::abs(root) < 1e-8);
+        assert!((Complex::abs(prime) - 0.793_16).abs() < 1e-4);
     }
 
     #[test]
@@ -596,8 +668,8 @@ mod tests {
         let line = Line::new();
         let gammas = line.zeros(10);
         let coef = line.novelty_coefficients(&gammas);
-        assert!((coef[0].abs() - 0.1879).abs() < 5e-4);
-        assert!((coef[9].abs() - 4.286e-3).abs() < 5e-6);
+        assert!((Complex::abs(coef[0]) - 0.1879).abs() < 5e-4);
+        assert!((Complex::abs(coef[9]) - 4.286e-3).abs() < 5e-6);
         let phi = totients(1 << 15);
         let mut prefix = vec![0u64; phi.len()];
         for n in 1..phi.len() {
@@ -652,5 +724,33 @@ mod tests {
         let close = psi_formula(100.0, &zeros);
         assert!((close - stair[99]).abs() < 1.0, "{close}");
         assert!((close - stair[99]).abs() < (psi_formula(100.0, &[]) - stair[99]).abs());
+    }
+
+    #[test]
+    fn the_formula_curve_meets_the_steps_better_with_every_zero_and_the_gap_is_its_miss_at_x() {
+        let zeros = Line::new().zeros(100);
+        let stair = psi_stair(100);
+        let samples: Vec<f64> = (0..600)
+            .map(|i| 1.5 + (100.0 - 1.5) * i as f64 / 599.0)
+            .collect();
+        let miss = |count: usize| {
+            psi_curve(&zeros[..count], &samples)
+                .iter()
+                .zip(&samples)
+                .filter(|(_, &u)| u >= 20.0 && (u - u.round()).abs() >= 0.25)
+                .map(|(y, &u)| (y - stair[u as usize - 1]).abs())
+                .fold(0.0, f64::max)
+        };
+        assert!(miss(100) < miss(10));
+        assert!(miss(10) < miss(0));
+        assert_eq!(
+            psi_curve(&zeros, &[100.0]),
+            vec![psi_formula(100.0, &zeros)]
+        );
+        assert_eq!(
+            psi_gap(100, &zeros),
+            (psi_formula(100.0, &zeros) - stair[99]).abs()
+        );
+        assert!(psi_gap(100, &zeros) < psi_gap(100, &[]));
     }
 }

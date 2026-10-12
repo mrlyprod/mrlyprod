@@ -1,6 +1,0 @@
-[package]
-name = "circle-crop"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true

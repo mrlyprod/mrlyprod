@@ -1,7 +1,7 @@
 use super::models::Cell6d;
 use super::{Orientation, Projection, FILL, GRID, LEFT, RIGHT, UP, VOID};
 use crate::core::cell::{remap, Cell};
-use crate::core::error::{value_error, Result};
+use crate::core::error::{overflow_error, value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::math::three::Cell3d;
 use crate::math::two::Cell2d;
@@ -565,6 +565,43 @@ pub fn radial(cell: &Cell6d, radius: usize) -> Result<Cell2d> {
     tessellate(cell, &radial_mask(radius, orient))
 }
 
+/// Returns the hexagons in a disc of the given rings about one centre: 1, 7, 19, 37 and on.
+///
+/// # Errors
+///
+/// Errors when the count passes the machine word.
+pub fn copies(rings: usize) -> Result<usize> {
+    match rings
+        .checked_add(1)
+        .and_then(|r| r.checked_mul(rings))
+        .and_then(|r| r.checked_mul(3))
+        .and_then(|r| r.checked_add(1))
+    {
+        Some(n) => Ok(n),
+        None => overflow_error(format!("a disc of {rings} rings passes the machine word.")),
+    }
+}
+
+/// Tessellates a hexagonal cell over the disc of the given rings about one centre, keeping its projection and orientation and taking the start parity of the uncropped sheet the disc sits in; no rings is the cell itself.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a hexagon.
+pub fn disc(cell: &Cell6d, rings: usize) -> Result<Cell6d> {
+    if rings == 0 {
+        return Ok(cell.clone());
+    }
+    let sheet = tessellate(cell, &radial_mask(rings + 1, cell.orientation))?;
+    let side = cell.width().min(cell.height()) / 2;
+    let start = (cell.start as usize + (rings % 2) * side) % 2;
+    Ok(Cell6d::new(
+        sheet,
+        cell.projection,
+        cell.orientation,
+        start as u8,
+    ))
+}
+
 /// Crops the interlocking overhang off a disc tiled at the given radius and tile size.
 ///
 /// # Errors
@@ -800,6 +837,57 @@ mod tests {
         assert!(
             !shifted(&filled_corners(&wrong), step_x as i64, 2 * step_y as i64).is_subset(&whole)
         );
+    }
+    #[test]
+    fn the_rings_count_the_hexagons_of_the_disc() {
+        for rings in 0..=4 {
+            let mask = radial_mask(rings + 1, Orientation::Horizontal);
+            assert_eq!(copies(rings).unwrap() as u64, mask.sum());
+        }
+        let counts: Vec<usize> = (0..=4).map(|rings| copies(rings).unwrap()).collect();
+        assert_eq!(counts, [1, 7, 19, 37, 61]);
+        assert!(copies(usize::MAX).is_err());
+    }
+    #[test]
+    fn the_disc_keeps_the_parity_of_the_uncropped_sheet_it_sits_in() {
+        let designs = [
+            crate::math::six::cut_design,
+            crate::math::six::iso_design,
+            crate::math::six::pro_design,
+        ];
+        for design in designs {
+            for (number, level) in [(3, 1), (3, 2), (5, 1)] {
+                let one = design(Code(23), number, level, 2).unwrap();
+                assert_eq!(disc(&one, 0).unwrap(), one);
+                for rings in 1..=4 {
+                    let made = disc(&one, rings).unwrap();
+                    let tile = tile_cell(&one, 2 * rings + 1, 2 * rings + 1, false).unwrap();
+                    let (th, tw) = (made.height(), made.width());
+                    let (height, width) = (tile.height(), tile.width());
+                    let (disc_types, tile_types) = (made.cell.types(), tile.cell.types());
+                    let seat = (0..=height - th)
+                        .flat_map(|dy| (0..=width - tw).map(move |dx| (dx, dy)))
+                        .find(|&(dx, dy)| {
+                            (0..th * tw).all(|i| {
+                                let v = disc_types.at(i);
+                                v == i64::from(GRID)
+                                    || v == tile_types.at((i / tw + dy) * width + i % tw + dx)
+                            })
+                        });
+                    let (dx, dy) = seat.unwrap();
+                    assert_eq!(
+                        made.start as usize,
+                        (tile.start as usize + dx + dy) % 2,
+                        "{:?} {number} {level} {rings}",
+                        one.projection
+                    );
+                    assert_eq!(
+                        (made.projection, made.orientation),
+                        (one.projection, one.orientation)
+                    );
+                }
+            }
+        }
     }
     #[test]
     fn skin_turns_the_iso_faces_into_one_figure() {

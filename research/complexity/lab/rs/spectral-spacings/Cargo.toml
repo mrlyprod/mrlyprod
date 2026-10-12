@@ -1,0 +1,9 @@
+[package]
+name = "spectral-spacings"
+edition = "2021"
+
+[dependencies]
+mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+faer = "0.24"
+
+[workspace]

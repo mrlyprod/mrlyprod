@@ -1,0 +1,10 @@
+[package]
+license = "MIT"
+name = "life-atlas"
+edition = "2021"
+
+[dependencies]
+mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+atlas = { path = "../../../../shared/atlas" }
+
+[workspace]

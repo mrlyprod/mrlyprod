@@ -37,10 +37,20 @@ const plain = (doc: Doc) => {
   return out;
 };
 
-const pages = readdirSync(at('site/pages')).filter((name) => name.endsWith('.md')).sort().map((name) => read(`site/pages/${name}`));
-const posts = readdirSync(at('site/blog'), { withFileTypes: true }).filter((one) => one.isDirectory() && there(`site/blog/${one.name}/index.md`)).map((one) => read(`site/blog/${one.name}/index.md`));
-const prose = [...pages, ...posts, read('pkgs/mrlyrs/NAMES.md')];
+const folders = (name: string) => readdirSync(at(name), { withFileTypes: true }).filter((one) => one.isDirectory()).map((one) => one.name).sort();
+const apps = folders('site/apps').filter((id) => there(`site/apps/${id}/app.json`));
+const pages = apps.filter((id) => there(`site/apps/${id}/page.md`)).map((id) => read(`site/apps/${id}/page.md`));
+const posts = folders('site/apps/blog').filter((slug) => there(`site/apps/blog/${slug}/index.md`)).map((slug) => read(`site/apps/blog/${slug}/index.md`));
+const sources = apps.flatMap((id) => JSON.parse(readFileSync(at(`site/apps/${id}/app.json`), 'utf8')).source ?? []).map((name: string) => read(name));
+const prose = [...pages, ...posts, ...sources];
 const live = new Set(roster().map((one) => one.name));
+const SKIP = new Set(['node_modules', 'target']);
+const notes = existsSync(at('research'))
+  ? (readdirSync(at('research'), { recursive: true }) as string[])
+      .filter((name) => name.endsWith('.md') && !name.split('/').some((part) => part.startsWith('.') || SKIP.has(part)))
+      .sort()
+      .map((name) => read(`research/${name}`))
+  : [];
 
 // ROWS
 
@@ -56,12 +66,17 @@ const routes = new Set(rows.map((row) => row.route));
 // FIGURES
 
 const drawn: string[] = [];
-for (const doc of [...pages, ...posts]) {
+for (const doc of [...pages, ...posts, ...notes]) {
   const figure = doc.front.get('figure');
   if (figure && !live.has(figure)) drawn.push(`${doc.name} figure ${figure} is no live figure`);
 }
-for (const doc of prose) for (const name of named(doc.lines.join('\n'))) if (!live.has(name)) drawn.push(`${doc.name} shows ${name}, no live figure`);
-report('figures', `${live.size} live figures`, drawn);
+let shown = 0;
+for (const doc of [...prose, ...notes])
+  for (const name of named(doc.lines.join('\n'))) {
+    shown += 1;
+    if (!live.has(name)) drawn.push(`${doc.name} shows ${name}, no live figure`);
+  }
+report('figures', `${live.size} live figures, ${shown} lone images`, drawn);
 
 // LINKS
 
@@ -81,11 +96,35 @@ for (const doc of prose) {
 }
 report('links', `${aimed} links`, dead);
 
+// RESEARCH
+
+const lost: string[] = [];
+let tied = 0;
+for (const doc of notes) {
+  const home = doc.name === 'research/shared/ledger/src/prose.md' ? at('research/shared') : dirname(at(doc.name));
+  for (const [n, line] of plain(doc))
+    for (const hit of line.replace(/`[^`]*`/g, '').replace(/!\[.*?\]\([^)\s]*\)/g, '').matchAll(/\[[^\]\n]*\]\(([^)\s]+)\)/g)) {
+      const target = hit[1].split(/[#?]/)[0];
+      if (target === '' || /^[a-z]+:/.test(target)) continue;
+      tied += 1;
+      if (target.startsWith('/')) {
+        if (/^\/[\w-]+\/$/.test(target) && !routes.has(target)) lost.push(`${doc.name}:${n} ${target} is no route`);
+        continue;
+      }
+      let path = target;
+      try {
+        path = decodeURIComponent(target);
+      } catch {}
+      if (!existsSync(resolve(home, path))) lost.push(`${doc.name}:${n} ${target}`);
+    }
+}
+report('research links', `${tied} links in ${notes.length} files`, lost);
+
 // HOUSE
 
 const house: string[] = [];
 let ruled = 0;
-for (const doc of [...pages, ...posts]) {
+for (const doc of [...pages, ...posts, ...notes]) {
   ruled += doc.lines.length;
   doc.lines.forEach((line, i) => {
     if (i > 0 && line === '' && doc.lines[i - 1] === '') house.push(`${doc.name}:${i + 1} two blank lines`);

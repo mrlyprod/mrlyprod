@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Btn, Export, Knob, Knobs, Toggle } from './knobs.jsx';
+import { Btn, Export, Knob, Knobs, Slider, Toggle } from './knobs.jsx';
 
 const SPEC = [
   { key: 'max', label: 'Jump speed', kind: 'slider', def: 14, min: 4, max: 30, step: 1, group: 'Jump' },
@@ -30,6 +30,14 @@ test('a Toggle writes 1 when switched on and 0 when switched off', () => {
   input(0).props.onChange({ target: { checked: true } });
   input(1).props.onChange({ target: { checked: false } });
   expect(wrote).toEqual([1, 0]);
+});
+
+test('a slider input fires onChange on input, before any change event', () => {
+  const wrote = [];
+  const input = Knob({ row: SPEC[0], value: 14, onChange: (patch) => wrote.push(patch) }).props;
+  expect(input.commit).toBeUndefined();
+  Slider(input).props.children[2].props.onChange({ target: { value: '20' } });
+  expect(wrote).toEqual([{ max: 20 }]);
 });
 
 test('a slider row with a unit shows the unit after its number, one without shows the number alone', () => {

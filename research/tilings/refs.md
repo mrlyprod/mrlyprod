@@ -1,0 +1,18 @@
+# REFS
+
+## PAPERS AND BOOKS
+
+| ref | title | url |
+|---|---|---|
+| Liu, Wang and Zheng 2026 | Spectrality of product-form self-similar measures and tiles; the digit-set transform as the product of the mask polynomial at scaled frequencies | https://arxiv.org/abs/2603.21031 |
+| Coven-Meyerowitz 1999 | Tiling the integers with translates of one finite set, J. Algebra 212 (1999) 161-174, read the conditions T1 and T2, Theorems A, B1, B2 and Lemmas 1.1, 1.3, 1.4, 2.1, 2.3 with their remarks | https://arxiv.org/abs/math/9802122 |
+| Laba-Wang 2002 | On spectral Cantor measures, J. Funct. Anal. 193 (2002) 409-420, read Theorems 1.2 to 1.4 with the proof of 1.4, Lemmas 2.1 to 2.3 with Lemma 2.2(b), (d), and Conjecture 3.1 | https://arxiv.org/abs/math/0109126 |
+| Jorgensen-Pedersen 1998 | Dense analytic subspaces in fractal L2-spaces, J. Analyse Math. 75 (1998) 185-228, read Section 6 and Theorem 6.1 | https://arxiv.org/abs/funct-an/9709007 |
+| Dai-He-Lau 2014 | On spectral N-Bernoulli measures, Adv. Math. 259 (2014) 511-531, read the abstract, Theorem 1.1 with the introduction and Section 6 | https://arxiv.org/abs/1403.0669 |
+| Liu-Wang-Zheng 2026 | Spectrality of product-form self-similar measures and tiles, unrefereed arXiv preprint, read the abstract, Section 1.1 with Theorem 1.2 quoting An-Wang Theorem 1.7, Theorems 1.3 and 2.3, the proof of Theorem 3.5 and the references | https://arxiv.org/abs/2603.21031 |
+| Wu-Xiao 2024 | Integer tile and spectrality of Cantor-Moran measures with equidifferent digit sets, arXiv preprint, read the abstract and Section 1 | https://arxiv.org/abs/2410.21626 |
+| An-Lai 2023 | Product-form Hadamard triples and its spectral self-similar measures, Adv. Math. 431 (2023) 109257, read in arXiv v2 Definitions 1.4, 1.5, 2.1 and 2.3, Theorems 2.2, 2.4 and 2.5, Examples 1.3 and 1.6 and the reductions of Section 3 | https://doi.org/10.1016/j.aim.2023.109257 |
+| An-He-Lai 2023 | Classification of spectral self-similar measures with four-digit elements, Asian J. Math. 27 (2023) 467-492, read Section 1.1, Theorems 1.3, 1.7, 4.2 and 5.1, Lemma 4.1, the sufficiency proof of Section 4.1, Conjecture 1.6, and Example 5.2 with the closing remark of Section 5 | https://arxiv.org/abs/2209.05619 |
+| Lam-Leung 2000 | On vanishing sums of roots of unity, J. Algebra 224 (2000) 91-109, read at source in arXiv math/9511209v1: the Main Theorem, Theorems 2.2, 3.1, 3.3 and 4.8 with Corollaries 3.4 and 4.9, Theorem 3.3 traced there to de Bruijn, On the factorization of cyclic groups, Indag. Math. 15 (1953) | https://arxiv.org/abs/math/9511209 |
+| Li-Wu-Hu-Wang-Wang-Zhu 2026 | Reduction of integer tiles via CRT and base-p digits, unrefereed arXiv preprint, read the abstract only: it claims that T1 and T2 characterise integer tiles of every size, without the restriction to two prime factors | https://arxiv.org/abs/2609.14026 |
+| An-Wang 2021 | On self-similar spectral measures, J. Funct. Anal. 280 (2021) 108821, not read: its Theorem 1.7, as quoted by Liu, Wang and Zheng (arXiv 2603.21031, Section 1.1, read), classifies the spectral measures of strict product-form digit sets E_0 ⊕ (pq)^l E_1 with E_0 ⊕ E_1 = {0..pq-1}: spectral if and only if rho^(-1) = p^(l_1) q^(l_2) t_1 with gcd(t_1, pq) = 1 and D CPF with respect to p^(l_1) q^(l_2); cited by papers/spectral-tiling-levels.md as unread | https://doi.org/10.1016/j.jfa.2020.108821 |

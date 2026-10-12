@@ -10,19 +10,30 @@ import { record as capture } from './space/record.js';
 
 export function Scene({ make, value, onReady, ...rest }) {
   const at = useRef(null);
+  const live = useRef(null);
+  const made = useRef('');
   const ready = useRef(onReady);
   ready.current = onReady;
+  const [n, bump] = useState(0);
   const key = JSON.stringify(value);
   useEffect(() => {
     const canvas = at.current;
     const stop = run(canvas, make, value);
+    live.current = stop;
+    made.current = key;
     ready.current?.({ ...stop.scene, canvas, pause: stop.pause, play: stop.play, fix: stop.fix });
     return () => {
       ready.current?.(null);
+      live.current = null;
       stop();
     };
-  }, [make, key]);
-  return <canvas key={key} ref={at} {...rest} />;
+  }, [make, n]);
+  useEffect(() => {
+    if (made.current === key) return;
+    if (live.current?.set(value)) made.current = key;
+    else bump((was) => was + 1);
+  }, [key]);
+  return <canvas key={n} ref={at} {...rest} />;
 }
 
 const PAUSE = { key: ' ', label: 'Pause', act: 'pause' };
@@ -85,9 +96,9 @@ export const live = (map, value) => map.filter((row) => !row.when || row.when(va
 
 export const menu = (record, begin, more = []) => [...(record ? RATIOS.map((at) => [`Video ${at}`, () => begin(at)]) : []), ...more];
 
-function App({ Widget, defaults, spec, keys, actions, gestures, record, id, title }) {
+function App({ Widget, defaults, spec, units, keys, actions, gestures, record, id, title }) {
   const [raw, set] = useQuery(defaults);
-  const value = spec ? { ...raw, ...tidy(spec, raw) } : raw;
+  const value = spec ? { ...raw, ...tidy(spec, raw, units) } : raw;
   const scene = useRef(null);
   const [kept, keep] = useState('');
   const [paused, setPaused] = useState(false);
@@ -117,7 +128,7 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
   };
   const onChange = (patch) => {
     const next = { ...value, ...patch };
-    write(spec ? { ...next, ...tidy(spec, next) } : next);
+    write(spec ? { ...next, ...tidy(spec, next, units) } : next);
   };
   useEffect(() => write(value), []);
   const ready = useCallback((handle) => {
@@ -180,7 +191,7 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
       </Bar>
       {spec && (
         <Bar side="right">
-          <Knobs spec={spec} value={value} onChange={onChange} />
+          <Knobs spec={spec} value={value} units={units} onChange={onChange} />
           <Group name="Seed">
             <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
             <Btn onClick={acts.reroll}>
@@ -217,13 +228,37 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
   );
 }
 
-export function page(Widget, defaults, { spec, keys = [], actions = {}, gestures = false, record = false } = {}) {
+function useUnits(units) {
+  const [held, hold] = useState(null);
+  useEffect(() => {
+    if (!units) return undefined;
+    let on = true;
+    units().then(async ({ ready, ...rest }) => {
+      await ready;
+      if (on) hold(rest);
+    });
+    return () => {
+      on = false;
+    };
+  }, [units]);
+  return held;
+}
+
+export function Held({ units, still, ...rest }) {
+  const held = useUnits(units);
+  const on = !units || Boolean(held);
+  useEffect(() => {
+    if (on) still?.remove();
+  }, [on]);
+  return on ? <App {...rest} units={held ?? undefined} /> : null;
+}
+
+export function page(Widget, defaults, { spec, units, keys = [], actions = {}, gestures = false, record = false } = {}) {
   const start = values(defaults, spec);
   return island((host) => {
     const still = host.nextElementSibling;
     const title = still?.querySelector('h1')?.textContent ?? '';
-    still?.remove();
     seeded(Object.keys(start));
-    return { node: <App Widget={Widget} defaults={start} spec={spec} keys={keys} actions={actions} gestures={gestures} record={record} id={host.dataset.app} title={title} />, close: () => still && host.after(still) };
+    return { node: <Held units={units} still={still} Widget={Widget} defaults={start} spec={spec} keys={keys} actions={actions} gestures={gestures} record={record} id={host.dataset.app} title={title} />, close: () => still && host.after(still) };
   });
 }

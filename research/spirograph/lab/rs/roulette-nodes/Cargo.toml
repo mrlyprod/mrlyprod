@@ -1,0 +1,8 @@
+[package]
+name = "roulette-nodes"
+edition = "2021"
+
+[dependencies]
+mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+
+[workspace]

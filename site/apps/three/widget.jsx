@@ -70,7 +70,7 @@ export function useThree(wanted, given) {
 
 export function Widget({ value, onChange, onReady, onExport, unit, three: given }) {
   const math = useUnit(unit);
-  const shown = staged(value);
+  const shown = staged(value, math && { math });
   const solid = shown.view === 'solid';
   const three = useThree(solid, given);
   const live = useRef(null);

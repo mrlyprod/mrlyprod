@@ -27,7 +27,7 @@ test('the picker pins the cube through dims, so no dim segment shows', () => {
 });
 
 test('the Level knob runs to the cap of the number, and the Cut group shows only the rows the view uses', () => {
-  const rows = (patch) => renderToStaticMarkup(<Knobs spec={SPEC} value={{ ...value, ...patch }} onChange={() => {}} />);
+  const rows = (patch) => renderToStaticMarkup(<Knobs spec={SPEC} value={{ ...value, ...patch }} units={{ math }} onChange={() => {}} />);
   const max = (html) => /type="range" min="1" max="(\d)"/.exec(html)[1];
   expect([max(rows({})), max(rows({ number: 2 })), max(rows({ number: 5 }))]).toEqual(['3', '5', '2']);
   const labels = (html) => [...html.matchAll(/<h3>([^<]*)<\/h3>|<label><span>([^<]*)<\/span>|role="radiogroup" aria-label="([^"]*)"/g)].map((found) => found[1] ?? found[2] ?? found[3]);

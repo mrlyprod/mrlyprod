@@ -1,7 +1,0 @@
-[package]
-license.workspace = true
-name = "arc-loops"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true

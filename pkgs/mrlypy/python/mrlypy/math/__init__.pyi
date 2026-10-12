@@ -1,6 +1,6 @@
 from typing import Any, Literal
 
 from numpy.typing import NDArray
-from . import arcs, atoms, bang, cell, counts, graph, moire, name, press, roulette, rules, shape, six, spectrum, spin, spirograph, three, tourbillon, two
+from . import arcs, arrays, atoms, automaton, bang, cell, counts, design, dissection, graph, ladder, memory, moire, name, press, radix, roulette, rules, shape, six, spectrum, spin, spirograph, sumset, three, tourbillon, two
 
 

@@ -119,7 +119,6 @@ function walk(num, from, span) {
     const [p, z] = line.point(t);
     const x = p.re;
     const y = p.im;
-    p.free();
     xs[i] = x;
     ys[i] = y;
     x0 = Math.min(x0, x);
@@ -214,14 +213,14 @@ function climb(num, x, zeros) {
   const curve = (k) => {
     if (!curves.has(k)) {
       const some = gammas.subarray(0, k);
-      curves.set(k, Float64Array.from(grid, (u) => num.zeta.psi_formula(u, some)));
+      curves.set(k, num.zeta.psi_curve(some, grid));
     }
     return curves.get(k);
   };
   const psi = stair[x - 1];
   const formula = num.zeta.psi_formula(x, gammas);
   const top = Math.max(psi, formula, ...curve(zeros)) * ROOM;
-  const facts = { face: 'stairs', x, zeros, first: 1, last: zeros ? gammas[zeros - 1] : null, psi, formula, gap: Math.abs(formula - psi) };
+  const facts = { face: 'stairs', x, zeros, first: 1, last: zeros ? gammas[zeros - 1] : null, psi, formula, gap: num.zeta.psi_gap(x, gammas) };
   return { x, zeros, gammas, first: 1, stair, grid, ladder, curve, top, facts };
 }
 

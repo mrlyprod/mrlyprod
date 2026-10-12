@@ -1,7 +1,7 @@
 import { tidy } from '../../lib/knobs.js';
 import { pick } from '../../lib/scene.js';
 import { num as fix, runs, sheet } from '../../lib/svg.js';
-import { named, resolve, title, total, word } from '../designs/engine.js';
+import { settle, title, total } from '../designs/engine.js';
 import { DESIGN } from '../designs/scene.js';
 
 export const DIM = 2;
@@ -79,7 +79,7 @@ export function choose(math, value, rand) {
   const kind = KINDS.includes(value.lift) ? value.lift : rolled;
   if (!DESIGNED.includes(value.view)) return { kind, code: '' };
   const typed = String(value.code ?? '').trim();
-  const code = typed ? String(resolve(typed, total(math, DIM, value.base), rand)) : roll(math, sideOf(value), value.base, rand);
+  const code = typed ? settle(math, DIM, value.base, typed, rand) : roll(math, sideOf(value), value.base, rand);
   return { kind, code };
 }
 
@@ -98,8 +98,6 @@ export function study(units, given, rand) {
   kept = { num: units.num, math: units.math, key, plan };
   return plan;
 }
-
-const flip = (bits) => Uint8Array.from(bits, (bit) => (bit ? 0 : 1));
 
 const count = (grid, bit) => {
   let n = 0;
@@ -134,7 +132,7 @@ const SURVEYS = {
     const boundary = m.boundary(last);
     const facts = { view, level, letters: last.length, plus: count(last, 0), minus: count(last, 1), ...tally(m.runs(last)), doubling: m.faults(boundary, m.doubling(boundary.length)) === 0, rule: m.faults(m.digits(last.length), last) === 0 };
     facts.cube = facts.longest <= 2;
-    return { view, level, number: 2, side: last.length, anchor: [0, 0], panels: [], rows: rows.map(flip), facts };
+    return { view, level, number: 2, side: last.length, anchor: [0, 0], panels: [], rows: rows.map((row) => m.signs(row)), facts };
   },
   plane: ({ num }, { view, level }, { kind }) => {
     const m = num.morse;
@@ -143,25 +141,25 @@ const SURVEYS = {
     const read = m.fold(grid, side, 2);
     const twin = kind !== KINDS[0] && m.faults(grid, m.lift(KINDS[0], side)) === 0 ? KINDS[0] : '';
     const facts = { view, level, kind, formula: m.Lift.formula(kind), side, plus: count(grid, 0), minus: count(grid, 1), folds: read.folds, faults: read.faults, first: read.first ?? null, tile: print(read.tile, 2), twin };
-    return { view, level, number: 2, side, anchor: [0, 0], panels: [{ types: flip(grid) }], rows: [], facts };
+    return { view, level, number: 2, side, anchor: [0, 0], panels: [{ types: m.signs(grid) }], rows: [], facts };
   },
   lift: ({ num, math }, { view, level, number, base }, { code }) => {
     const m = num.morse;
     const tile = math.two.create(code, number, 1, 0, base);
     const design = math.two.create(code, number, level, 0, base);
     const side = design.shape[0];
-    const sign = flip(tile.types);
+    const sign = m.signs(tile.types);
     const power = m.power(sign, number, level);
     const types = filled(design.types);
     const agree = m.faults(types, power);
-    const facts = { view, level, code, name: word(named(math, DIM, base), code), title: title(math, DIM, base, code), number, base, side, cells: side * side, filled: count(types, 1), plus: count(power, 0), agree, differ: side * side - agree, tile: print(sign, number), exact: number === 2 && m.faults(power, m.lift(KINDS[0], side)) === 0 };
-    return { view, level, number, side, anchor: corner(tile, number), panels: [{ types }, { types: flip(power) }], rows: [], facts };
+    const facts = { view, level, code, name: math.name.of(code, DIM, base) ?? '', title: title(math, DIM, base, code), number, base, side, cells: side * side, filled: count(types, 1), plus: count(power, 0), agree, differ: side * side - agree, tile: print(sign, number), exact: number === 2 && m.faults(power, m.lift(KINDS[0], side)) === 0 };
+    return { view, level, number, side, anchor: corner(tile, number), panels: [{ types }, { types: m.signs(power) }], rows: [], facts };
   },
   filter: ({ num, math }, { view, level, number, base, fold }, { code }) => {
     const m = num.morse;
     const signed = fold === 'sign';
     const tile = math.two.create(code, number, 1, 0, base);
-    const sign = flip(tile.types);
+    const sign = m.signs(tile.types);
     const grown = (k) => (signed ? m.power(sign, number, k) : filled(math.two.create(code, number, k, 0, base).types));
     const low = grown(level);
     const wide = m.upsample(low, number ** level, number);
@@ -170,10 +168,11 @@ const SURVEYS = {
     const side = number ** (level + 1);
     const cells = side * side;
     const differ = count(diff, 1);
-    const closed = signed ? m.faults(diff, m.repeat(sign, number, side)) === 0 : differ === count(low, 1) * (number * number - count(filled(tile.types), 1));
+    const tiled = m.repeat(sign, number, side);
+    const closed = m.faults(diff, signed ? tiled : m.mask(wide, tiled)) === 0;
     const morse = number === 2 ? m.faults(diff, m.lift(KINDS[0], side)) : null;
-    const facts = { view, level, fold, code, name: word(named(math, DIM, base), code), title: title(math, DIM, base, code), number, base, side, cells, differ, closed, morse, half: morse !== null && morse * 2 === cells, tile: print(sign, number) };
-    const shown = (grid) => ({ types: signed ? flip(grid) : grid });
+    const facts = { view, level, fold, code, name: math.name.of(code, DIM, base) ?? '', title: title(math, DIM, base, code), number, base, side, cells, differ, closed, morse, half: morse !== null && morse * 2 === cells, tile: print(sign, number) };
+    const shown = (grid) => ({ types: signed ? m.signs(grid) : grid });
     return { view, level: level + 1, number, side, anchor: corner(tile, number), panels: [wide, high, diff].map(shown), rows: [], facts };
   },
 };

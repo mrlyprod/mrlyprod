@@ -73,9 +73,11 @@ test('describe returns the groups in first-seen order', () => {
   ]);
 });
 
-test('a max that is a function of the value clamps by the other keys, tidied first', () => {
+test('a max that is a function of the value clamps by the other keys, tidied first, and reads the units it is handed', () => {
   expect([tidy(LIVE, { dim: 2, level: 5 }).level, tidy(LIVE, { dim: 3, level: 5 }).level, tidy(LIVE, { dim: '3', level: '9' }).level, tidy(LIVE, { dim: 7, level: 5 }).level]).toEqual([5, 3, 3, 5]);
   expect(tidy(LIVE, defaults(LIVE))).toEqual(defaults(LIVE));
+  const held = [{ key: 'level', kind: 'slider', def: 3, min: 1, max: (value, units) => units?.top, step: 1 }];
+  expect([tidy(held, { level: 9 }).level, tidy(held, { level: 9 }, { top: 4 }).level]).toEqual([9, 4]);
 });
 
 test('a function max or options reads only tidied keys, so a raw url value cannot reach it', () => {

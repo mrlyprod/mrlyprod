@@ -1,19 +1,28 @@
 import { expect, spyOn, test } from 'bun:test';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { label } from '../lib/keys.js';
 import { tidy } from '../lib/knobs.js';
 import * as scene from '../lib/scene.jsx';
+import { savers as order } from '../scripts/site.ts';
 import { Settings } from '../ui/parts.jsx';
-import APPS from './apps.json';
 
-const savers = APPS.filter((one) => one.kind === 'saver');
+const APPS = readdirSync(import.meta.dir, { withFileTypes: true })
+  .filter((one) => one.isDirectory() && existsSync(join(import.meta.dir, one.name, 'app.json')))
+  .map((one) => ({ id: one.name, ...JSON.parse(readFileSync(join(import.meta.dir, one.name, 'app.json'), 'utf8')) }));
+
+const savers = order(APPS);
+
+const made = APPS.filter((one) => existsSync(join(import.meta.dir, one.id, 'scene.js')) && !one.deep);
 
 const at = (path) => new URL(path, import.meta.url);
 
-test('the app list holds unique root words, each with a title', () => {
-  expect(new Set(APPS.map((one) => one.id)).size).toBe(APPS.length);
-  expect(APPS.filter((one) => !/^[a-z][a-z0-9]*$/.test(one.id) || !one.title)).toEqual([]);
+test('every folder is an app: a root word with a title and a line, a saver holding its scene and widget', () => {
+  expect(readdirSync(import.meta.dir, { withFileTypes: true }).filter((one) => one.isDirectory() && !APPS.some((app) => app.id === one.name)).map((one) => one.name)).toEqual([]);
+  expect(APPS.filter((one) => !/^[a-z][a-z0-9]*$/.test(one.id) || !one.title || !one.line).map((one) => one.id)).toEqual([]);
+  expect(savers.filter((one) => !existsSync(join(import.meta.dir, one.id, 'scene.js')) || !existsSync(join(import.meta.dir, one.id, 'widget.jsx'))).map((one) => one.id)).toEqual([]);
 });
 
 test('every saver scene exports make', async () => {
@@ -34,7 +43,7 @@ test("a saver scene exports a units thunk exactly when its folder holds a unit.j
   }
 });
 
-test('settings offer random and each saver row in order, the first saver row picked', () => {
+test('settings offer random and each saver in order, the desk first and picked', () => {
   const picks = /data-saver-pick[^>]*>(.*?)<\/select>/.exec(renderToStaticMarkup(createElement(Settings, { savers })))[1];
   expect([...picks.matchAll(/value="([^"]*)"/g)].map((found) => found[1])).toEqual(['random', ...savers.map((one) => one.id)]);
   expect(/<option value="([^"]*)" selected/.exec(picks)?.[1]).toBe(savers[0].id);
@@ -49,7 +58,6 @@ test('the chrome and the lock name no saver', async () => {
 
 test("every app's value holds a seed, and an app whose scene has a spec pages it and starts from defaults it keeps as they are", async () => {
   const spy = spyOn(scene, 'page');
-  const made = APPS.filter((one) => one.kind !== 'tool');
   for (const { id } of made) await import(`./${id}/index.jsx`);
   const calls = spy.mock.calls;
   spy.mockRestore();
@@ -64,7 +72,7 @@ test("every app's value holds a seed, and an app whose scene has a spec pages it
 });
 
 test("every app's keys map binds Space to pause and to nothing else", async () => {
-  for (const { id } of APPS.filter((one) => one.kind !== 'tool')) {
+  for (const { id } of made) {
     const { PAGE } = await import(`./${id}/scene.js`);
     const rows = scene.keymap(PAGE?.keys ?? []).filter((row) => [].concat(row.key).some((key) => label(key) === 'Space'));
     expect([id, rows.map((row) => row.act)]).toEqual([id, ['pause']]);

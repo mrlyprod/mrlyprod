@@ -4,7 +4,16 @@ export function share(values) {
   return `?${new URLSearchParams(values)}`;
 }
 
-export function stamp(values) {
+const WAIT = 200;
+
+let pending = null;
+
+let timer = 0;
+
+const write = () => {
+  const values = pending;
+  pending = null;
+  timer = 0;
   if (document.documentElement.getAttribute('aria-busy') === 'true') return;
   const params = new URLSearchParams(location.search);
   for (const [key, value] of Object.entries(values)) {
@@ -13,6 +22,11 @@ export function stamp(values) {
   }
   const tail = String(params);
   history.replaceState(history.state, '', location.pathname + (tail ? `?${tail}` : '') + location.hash);
+};
+
+export function stamp(values) {
+  pending = { ...pending, ...values };
+  if (!timer) timer = setTimeout(write, WAIT);
 }
 
 export function useQuery(defaults) {

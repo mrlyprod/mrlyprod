@@ -1,6 +1,6 @@
 import { tidy } from '../../lib/knobs.js';
 import { board } from '../../lib/scene.js';
-import { cap, census, dimension, facts, grow, named, resolve, title, total, word } from './engine.js';
+import { SIDE, cap, census, dimension, facts, grow, settle, title } from './engine.js';
 import { mesh } from './mesh.js';
 import { space } from './stage.js';
 import { rects } from '../../lib/svg.js';
@@ -12,10 +12,13 @@ export const DESIGN = [
   { key: 'code', label: 'Code', kind: 'text', def: '', group: 'Design' },
 ];
 
-export const SPEC = [...DESIGN, { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value) => cap(value.dim), step: 1, group: 'Design' }];
+export const SPEC = [...DESIGN, { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value, units) => units && cap(units.math, value.dim), step: 1, group: 'Design' }];
+
+export const units = () => import('./unit.js');
 
 export const PAGE = {
   spec: SPEC,
+  units,
   gestures: true,
   keys: [
     { key: 'Enter', label: 'Random', act: 'random', button: true },
@@ -74,10 +77,10 @@ function solid(canvas, view, three, quads, info) {
 
 export function make(canvas, view, opts = {}) {
   const math = opts.math;
-  const value = tidy(SPEC, opts);
+  const value = tidy(SPEC, opts, opts);
   const { dim, base, level } = value;
-  const code = String(resolve(value.code, total(math, dim, base), view.rand));
+  const code = settle(math, dim, base, value.code, view.rand);
   const cell = grow(math, dim, base, code, level);
-  const info = { dim, base, code, level, side: cell.shape[0], name: word(named(math, dim, base), code), title: title(math, dim, base, code), ...facts(math, dim, base, code), ...census(math, dim, cell), dimension: dimension(math, dim, base, code) };
+  const info = { dim, base, code, level, side: cell.shape[0], name: math.name.of(code, dim, base) ?? '', title: title(math, dim, base, code), ...facts(math, dim, base, code), ...census(math, dim, cell), dimension: dimension(math, dim, base, code), ratio: math.counts.ratio(code, SIDE, dim, level, base) };
   return dim === 3 ? solid(canvas, view, opts.three, math.three.quads(cell), info) : plane(canvas, view, cell, info);
 }

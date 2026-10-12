@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { tidy } from '../../lib/knobs.js';
 import { Btn, Icon, Pick as Select, Segment, Slider, Text } from '../../lib/knobs.jsx';
 import { paints } from '../../lib/scene.js';
-import { cap, classes, named, roll, word } from './engine.js';
+import { cap, classes, roll } from './engine.js';
 import { DESIGN } from './scene.js';
 import { enqueue, thumb } from './thumb.js';
 
@@ -60,12 +60,12 @@ export function Thumb({ math, dim, base, code, px = 56, tick = 0 }) {
   return <canvas ref={at} width={px} height={px} aria-hidden="true" />;
 }
 
-export function Thumbs({ math, dim, base, codes, code, names, onPick, px, className = 'designs' }) {
+export function Thumbs({ math, dim, base, codes, code, onPick, px, className = 'designs' }) {
   const tick = useTheme();
   return (
     <div className={className} style={FILL}>
       {codes.map((one) => {
-        const name = word(names, one);
+        const name = math.name.of(one, dim, base) ?? '';
         return (
           <button type="button" key={one} className={one === String(code) ? 'on' : undefined} aria-pressed={one === String(code)} aria-label={`${name || 'bang'} ${one}`} title={name || undefined} onClick={() => onPick(one)}>
             <Thumb math={math} dim={dim} base={base} code={one} px={px} tick={tick} />
@@ -84,21 +84,21 @@ export const read = (value) => tidy(DESIGN, value);
 export function Picker({ value, onChange, math, dims = [2, 3] }) {
   const { dim, base, code } = read(value);
   const spaces = DESIGN[0].options.filter(([one]) => dims.includes(one));
-  const names = math ? named(math, dim, base) : [];
+  const names = math ? math.name.words(dim, base) : [];
   const reps = math ? (classes(math, dim, base) ?? []) : [];
   const write = (patch) => onChange(tidy(DESIGN, { dim, base, code, ...patch }));
   return (
     <>
       {spaces.length > 1 && <Segment label={DESIGN[0].label} value={dim} options={spaces} onChange={(v) => write({ dim: v })} />}
       <Segment label={DESIGN[1].label} value={base} options={DESIGN[1].options} onChange={(v) => write({ base: v })} />
-      <Select label="Named" value={word(names, code) ? code : ''} options={[['', 'Code'], ...names.map((one) => [one.code, one.name])]} onChange={(v) => v && write({ code: v })} />
+      <Select label="Named" value={names.some(([one]) => one === String(code)) ? code : ''} options={[['', 'Code'], ...names]} onChange={(v) => v && write({ code: v })} />
       <Text label={DESIGN[2].label} value={code} commit onChange={(v) => write({ code: v })} />
-      {'level' in value && <Slider label="Level" value={value.level} min={1} max={cap(dim)} step={1} onChange={(v) => onChange({ level: v })} />}
+      {'level' in value && <Slider label="Level" value={value.level} min={1} max={math ? cap(math, dim) : undefined} step={1} onChange={(v) => onChange({ level: v })} />}
       <Btn disabled={!math} onClick={() => write({ code: roll(math, dim, base) })}>
         <Icon name="casino" />
         Random
       </Btn>
-      {reps.length > 0 && reps.length <= STRIP && <Thumbs math={math} dim={dim} base={base} codes={reps.map((one) => one.code)} code={code} names={names} onPick={(v) => write({ code: v })} px={40} />}
+      {reps.length > 0 && reps.length <= STRIP && <Thumbs math={math} dim={dim} base={base} codes={reps.map((one) => one.code)} code={code} onPick={(v) => write({ code: v })} px={40} />}
     </>
   );
 }

@@ -1,6 +1,5 @@
 import { pick, rng } from '../../lib/scene.js';
 import { num as fix, path, sheet } from '../../lib/svg.js';
-import { named, word } from '../designs/engine.js';
 
 export const DIM = 2;
 export const BASE = 3;
@@ -149,7 +148,7 @@ export function span(pts) {
 
 export function study(num, math, value, rand) {
   const { kind, code, turn } = choose(value, rand);
-  const design = kind === 'tile' ? num.radix.tile(BASE, code) : num.radix[kind]();
+  const design = kind === 'tile' ? math.radix.tile(BASE, code) : math.radix[kind]();
   const ring = design.ring();
   const letter = LETTERS[ring];
   const sides = SIDES[ring];
@@ -189,7 +188,7 @@ export function study(num, math, value, rand) {
     return counts.get(level);
   };
   const fill = (level) => Number(design.fill(level));
-  const name = kind === 'tile' ? word(named(math, DIM, BASE), code) : label(kind);
+  const name = kind === 'tile' ? (math.name.of(code, DIM, BASE) ?? '') : label(kind);
   const facts = { kind, name, code: kind === 'tile' ? code : design.code(), ring: `Z[${letter}]`, base: spell(letter, ba, bc), norm, digits: size, canonical: design.canonical(), dimension: design.dimension(), level: top, fill: fill(top), distinct: distinct(top) };
   return { kind, design, sides, norm, angle, turn, sign, top, levels, frame: [x0 - radius, y0 - radius, x1 + radius, y1 + radius], stage, fill, distinct, facts };
 }

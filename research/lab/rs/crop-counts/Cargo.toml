@@ -1,6 +1,0 @@
-[package]
-name = "crop-counts"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true

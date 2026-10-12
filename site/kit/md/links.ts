@@ -2,14 +2,14 @@ import { IMAGE, decode, dirRoute, ext, fileRoute, rawPath } from "../git/view.ts
 
 /* INDEX */
 
-export type Index = { routes: Map<string, string>; blob: string };
+export type Index = { routes: Map<string, string> };
 
 export type Sourced = { route: string; source: string | null };
 
-export function index(rows: Sourced[], blob: string): Index {
+export function index(rows: Sourced[]): Index {
   const routes = new Map<string, string>();
   for (const row of rows) if (row.source) routes.set(row.source, row.route);
-  return { routes, blob };
+  return { routes };
 }
 
 /* RESOLVE */
@@ -17,8 +17,6 @@ export function index(rows: Sourced[], blob: string): Index {
 const DENY = /^(?:javascript|data|vbscript):/i;
 
 const OUT = /^(?:https?:|mailto:|tel:|#|\/)/;
-
-const ARCHIVE = "research";
 
 const keys = (path: string) => [path, `${path}.md`, path.replace(/\.md$/, ""), `${path}/README.md`];
 
@@ -43,7 +41,6 @@ export function resolve(source: string, href: string, idx: Index): string {
   const plain = decode(path);
   const hit = keys(plain).map((key) => idx.routes.get(key)).find(Boolean);
   if (hit) return hit + tail;
-  if (plain === ARCHIVE || plain.startsWith(`${ARCHIVE}/`)) return idx.blob + path + tail;
   if (!path || head.endsWith("/")) return dirRoute(path) + tail;
   if (IMAGE.has(ext(path)) || ext(path) === "pdf") return `/${rawPath(path)}${tail}`;
   return fileRoute(path) + tail;

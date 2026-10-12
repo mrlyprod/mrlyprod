@@ -1,5 +1,3 @@
-import { named, word } from '../designs/engine.js';
-
 export const BOARD = 128;
 export const LINE = 255;
 export const ROWS = 1024;
@@ -73,6 +71,27 @@ export function ruleOf(life, value, cells) {
   return { birth: birth.counts, survive: survive.counts, name: `B${birth.name}/S${survive.name}` };
 }
 
+const FRACTION = /\d*\.\d+|\d+/g;
+
+function share(life, text, cells) {
+  const clean = String(text ?? '').trim();
+  if (clean.includes('.')) {
+    const edges = (clean.match(FRACTION) ?? []).map(Number);
+    if (!edges.length) return { window: [1, 0], name: '-' };
+    const lo = Math.min(...edges);
+    const hi = Math.max(...edges);
+    return { window: [lo, hi], name: lo === hi ? `${lo}` : `${lo}-${hi}` };
+  }
+  const { counts, name } = side(life, text, cells);
+  return { window: counts.length ? [counts[0] / cells, counts[counts.length - 1] / cells] : [1, 0], name };
+}
+
+export function windowsOf(life, value, cells) {
+  const birth = share(life, value.born, cells);
+  const survive = share(life, value.stay, cells);
+  return { birth: birth.window, survive: survive.window, name: `B${birth.name}/S${survive.name}` };
+}
+
 /* MASK */
 
 export function codeOf(text) {
@@ -103,7 +122,7 @@ export function maskOf(life, value) {
 }
 
 export function maskName(math, code) {
-  return word(named(math, 2, 2), code);
+  return math.name.of(code, 2, 2) ?? '';
 }
 
 /* SEEDS */

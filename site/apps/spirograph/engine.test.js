@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { BANDS, COVER, DENSITY, HOLD, LEAST, MOST, RISE, bands, bits, design, fit, legal, roll, seat, shade, share, span, study } from './engine.js';
+import { BANDS, COVER, DENSITY, HOLD, LEAST, MOST, RISE, bands, design, fit, legal, roll, seat, shade, share, span, study } from './engine.js';
 import { SPEC } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -10,15 +10,15 @@ math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mr
 const value = (over) => ({ ...defaults(SPEC), seed: 1, ...over });
 
 test('a rolled code is a base-3 plane design with three fills or more, the same for one seed', () => {
-  const codes = Array.from({ length: 50 }, (_, i) => roll(rng(i)));
-  expect(codes.every((code) => code >= 1 && code <= 510 && bits(code) >= 3)).toBe(true);
-  expect(roll(rng(9))).toBe(roll(rng(9)));
+  const codes = Array.from({ length: 50 }, (_, i) => Number(roll(math, rng(i))));
+  expect(codes.every((code) => code >= 1 && code < 512 && code.toString(2).split('1').length > 3)).toBe(true);
+  expect(roll(math, rng(9))).toBe(roll(math, rng(9)));
 });
 
 test('a readable code is kept, an unreadable or empty one gives the seeded design', () => {
   expect(design(math, value({ code: '495' }), rng(1))).toBe('495');
-  expect(design(math, value({ code: 'carpet' }), rng(1))).toBe(String(roll(rng(1))));
-  expect(design(math, value({ code: '' }), rng(1))).toBe(String(roll(rng(1))));
+  expect(design(math, value({ code: 'carpet' }), rng(1))).toBe(roll(math, rng(1)));
+  expect(design(math, value({ code: '' }), rng(1))).toBe(roll(math, rng(1)));
 });
 
 test('a level the crate refuses to seat steps down until it seats', () => {

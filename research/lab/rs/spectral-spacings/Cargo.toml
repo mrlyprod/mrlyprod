@@ -1,7 +1,0 @@
-[package]
-name = "spectral-spacings"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true
-faer.workspace = true

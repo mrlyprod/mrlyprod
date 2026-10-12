@@ -1,6 +1,0 @@
-[package]
-name = "magic-words"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true

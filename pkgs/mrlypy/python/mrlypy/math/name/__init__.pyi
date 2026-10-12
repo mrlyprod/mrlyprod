@@ -190,3 +190,9 @@ class Lattice:
     @staticmethod
     def units(lattice: Literal["square", "hex"]) -> int:
         """Returns the number of unit directions a twist may pick from."""
+
+def of(code: int, dim: int, base: int) -> str | None:
+    """Returns the word of the first named design a code draws in the plane or the cube, or None for a code no named design draws."""
+
+def words(dim: int, base: int) -> list[tuple[str, str]]:
+    """Lists every classic then anti design of the plane or the cube as its decimal code and its word, empty for any other dimension."""

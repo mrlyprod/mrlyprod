@@ -79,6 +79,23 @@ test('the stop from run carries what make returned', () => {
   expect(stop.scene.trigger()).toBe('fired');
 });
 
+test('set reseeds the rand when the seed changes, hands the scene the value, draws a still scene once, and is false for a scene without set', () => {
+  stage();
+  globalThis.matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });
+  const seen = [];
+  const drawn = [];
+  const stop = run({ clientWidth: 4, clientHeight: 4 }, (canvas, view) => ({ draw: () => drawn.push(view.rand()), set: (next) => seen.push(next) }), { seed: 7 });
+  const set = [stop.set({ seed: 8 }), stop.set({ seed: 8, tint: 'red' })];
+  stop();
+  const plain = run({ clientWidth: 4, clientHeight: 4 }, () => ({ draw: () => {} }), { seed: 7 });
+  const none = plain.set({ seed: 8 });
+  plain();
+  delete globalThis.matchMedia;
+  unstage();
+  expect([set, none, seen]).toEqual([[true, true], false, [{ seed: 8 }, { seed: 8, tint: 'red' }]]);
+  expect(drawn).toEqual([rng(7)(), ...take(rng(8), 2)]);
+});
+
 test('a scene that names a font draws nothing until the font loads', async () => {
   let loaded;
   const asked = [];

@@ -1,4 +1,4 @@
-import { resolve, total } from '../designs/engine.js';
+import { settle } from '../designs/engine.js';
 
 export const NUMBERS = [3, 5, 7, 9];
 export const BLENDS = [['mean', 'Mean'], ['sum', 'Sum'], ['union', 'Union'], ['meet', 'Meet'], ['parity', 'Parity'], ['difference', 'Difference']];
@@ -31,7 +31,7 @@ export function cap(number) {
 }
 
 export function design(math, value, rand) {
-  return String(resolve(value.code, total(math, DIM, value.base), rand));
+  return settle(math, DIM, value.base, value.code, rand);
 }
 
 export function grow(math, value, code) {

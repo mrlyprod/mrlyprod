@@ -1,8 +1,0 @@
-[package]
-license.workspace = true
-name = "life-atlas"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true
-atlas.workspace = true

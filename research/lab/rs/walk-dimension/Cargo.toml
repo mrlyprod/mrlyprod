@@ -1,8 +1,0 @@
-[package]
-name = "walk-dimension"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true
-faer.workspace = true
-png = "0.17"

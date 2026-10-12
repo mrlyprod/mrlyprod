@@ -4,47 +4,11 @@ from numpy.typing import NDArray
 
 JOIN: float
 
-class Complex:
-    """A complex number: a real and an imaginary part."""
-    def __init__(self, re: float, im: float) -> None: ...
-    @property
-    def re(self) -> float:
-        """The real part."""
-    @re.setter
-    def re(self, value: float) -> None: ...
-    @property
-    def im(self) -> float:
-        """The imaginary part."""
-    @im.setter
-    def im(self, value: float) -> None: ...
-    def abs(self) -> float:
-        """Returns the modulus."""
-    def arg(self) -> float:
-        """Returns the principal argument."""
-    @staticmethod
-    def default() -> Complex:
-        """Returns the default Complex."""
-    def exp(self) -> Complex:
-        """Returns the exponential."""
-    def ln(self) -> Complex:
-        """Returns the principal logarithm."""
-    @staticmethod
-    def new(re: float, im: float) -> Complex:
-        """Builds a complex number from its parts."""
-    @staticmethod
-    def turn(angle: float) -> Complex:
-        """Returns a unit complex number at the given angle."""
-    @staticmethod
-    def from_dict(data: Any) -> Complex:
-        """Reads plain data into the class."""
-    def to_dict(self) -> Any:
-        """Returns the value as plain data."""
-
 class Line:
     """The critical line: the Bernoulli numbers and the Euler-Maclaurin weights the two engines share, built once."""
     def __init__(self) -> None: ...
     def count(self, t: float) -> int:
-        """Counts the zeros on the line below t."""
+        """Counts the zeros on the line below t: the sign changes of Z on ten steps a Gram interval, the Riemann-Siegel main sum turned from step to step and its remainder read only where it could flip the sign."""
     @staticmethod
     def default() -> Line:
         """Returns the default Line."""
@@ -52,16 +16,16 @@ class Line:
         """Returns Z(t) from the Euler-Maclaurin value turned onto the real axis."""
     def gram(self, n: int) -> float:
         """Returns the n-th Gram point, where theta is n pi, by Newton from the right."""
-    def maclaurin(self, t: float) -> Complex:
+    def maclaurin(self, t: float) -> dict[str, Any]:
         """Returns zeta at one half plus i t by the complex Euler-Maclaurin sum: t plus ten terms and seven Bernoulli corrections."""
     @staticmethod
     def new() -> Line:
         """Builds the line: the even Bernoulli numbers through the fourteenth and their Euler-Maclaurin weights."""
-    def novelty_coefficients(self, gammas: list[float]) -> list[Complex]:
+    def novelty_coefficients(self, gammas: list[float]) -> list[dict[str, Any]]:
         """Returns the wave coefficient of every zero at the given ordinates: F(rho) zeta(rho - 1) over zeta'(rho) at rho one half plus i gamma, F the Mellin transform of the bump."""
-    def pair(self, s: Complex) -> tuple[Complex, Complex]:
+    def pair(self, s: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
         """Returns zeta and its derivative together at any complex s but one, by the same Euler-Maclaurin sum: the modulus of t plus ten terms and seven Bernoulli corrections, each term differentiated in s."""
-    def point(self, t: float) -> tuple[Complex, float]:
+    def point(self, t: float) -> tuple[dict[str, Any], float]:
         """Returns zeta on the line and Z(t) together, from the engine that serves the t."""
     def seam(self, t0: float, t1: float, steps: int) -> float:
         """Returns the largest gap between the two engines over the t range on a grid."""
@@ -79,6 +43,30 @@ class Line:
     def to_dict(self) -> Any:
         """Returns the value as plain data."""
 
+class Complex:
+    """A complex number: a real and an imaginary part."""
+    @staticmethod
+    def abs(z: dict[str, Any]) -> float:
+        """Returns the modulus."""
+    @staticmethod
+    def arg(z: dict[str, Any]) -> float:
+        """Returns the principal argument."""
+    @staticmethod
+    def default() -> dict[str, Any]:
+        """Returns the default Complex."""
+    @staticmethod
+    def exp(z: dict[str, Any]) -> dict[str, Any]:
+        """Returns the exponential."""
+    @staticmethod
+    def ln(z: dict[str, Any]) -> dict[str, Any]:
+        """Returns the principal logarithm."""
+    @staticmethod
+    def new(re: float, im: float) -> dict[str, Any]:
+        """Builds a complex number from its parts."""
+    @staticmethod
+    def turn(angle: float) -> dict[str, Any]:
+        """Returns a unit complex number at the given angle."""
+
 def bump(u: float) -> float:
     """The smooth window on [1, 2]: exp(4 - 1/((u - 1)(2 - u))) inside, zero outside, every derivative vanishing at the ends and a peak of one at u = 3/2."""
 
@@ -88,22 +76,28 @@ def corrections(p: float) -> list[float]:
 def kernel(p: float) -> float:
     """Returns the Riemann-Siegel kernel, the cosine ratio that leads the remainder, in the form that stays finite at its removable points."""
 
-def mellin(s: Complex) -> Complex:
+def mellin(s: dict[str, Any]) -> dict[str, Any]:
     """Returns the Mellin transform of the bump at a complex s, the integral of bump(u) u^(s - 1) over [1, 2], by a 4096-node midpoint rule."""
 
 def novelty_main() -> float:
     """Returns the main term of the smoothed novelty: six over pi squared times the bump's transform at two."""
 
-def novelty_wave(gammas: list[float], coef: list[Complex], log_y: float) -> float:
+def novelty_wave(gammas: list[float], coef: list[dict[str, Any]], log_y: float) -> float:
     """Sums the waves of the zeros at log y: twice the real part of the coefficients times y to the minus i gamma, the smoothed error over y to the three halves that the zeros predict."""
+
+def psi_curve(gammas: list[float], samples: list[float]) -> list[float]:
+    """Returns the explicit formula over the zeros at the given ordinates at every sample x."""
 
 def psi_formula(x: float, gammas: list[float]) -> float:
     """Returns the von Mangoldt explicit formula at x over the zeros at the given ordinates and their mirrors: x less the sum of x to the rho over rho, less ln two pi, less half the ln of one minus x to the minus two."""
 
+def psi_gap(x: int, gammas: list[float]) -> float:
+    """Returns how far the explicit formula over the zeros at the given ordinates lands from the staircase at the whole number x."""
+
 def psi_stair(x: int) -> list[float]:
     """Returns the Chebyshev staircase at every whole number from one to x: the sum of ln p over the prime powers up to each."""
 
-def raise_(base: float, exponent: Complex) -> Complex:
+def raise_(base: float, exponent: dict[str, Any]) -> dict[str, Any]:
     """Returns a positive real base raised to a complex exponent."""
 
 def sharp_novelty(prefix: list[int], y: float) -> float:

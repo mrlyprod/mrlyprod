@@ -1,5 +1,5 @@
 import { rgb, rng } from '../../lib/scene.js';
-import { named, title, total, word } from '../designs/engine.js';
+import { title, total } from '../designs/engine.js';
 
 export const DIM = 2;
 export const NUMBERS = [3, 5, 7];
@@ -136,7 +136,7 @@ export function kin(math, value, code, count) {
 export function board(math, value, code) {
   const { base, number } = value;
   const grown = grow(math, value, code);
-  return { ...grown, name: word(named(math, DIM, base), code), title: title(math, DIM, base, code), fills: fills(math, value, code), of: number * number, dimension: math.counts.dimension(code, number, DIM, base) };
+  return { ...grown, name: math.name.of(code, DIM, base) ?? '', title: title(math, DIM, base, code), fills: fills(math, value, code), of: number * number, dimension: math.counts.dimension(code, number, DIM, base) };
 }
 
 /* PAIR */

@@ -2,28 +2,22 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { named } from '../designs/engine.js';
-import { BUDGET, DIM, NUMBERS, SHAPES, cap, cutting, design, grow, rows, staged, study, tag } from './engine.js';
+import { DIM, SHAPES, cutting, design, grow, rows, staged, study, tag } from './engine.js';
 import { SPEC } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = (over) => ({ ...defaults(SPEC), seed: 1, base: 2, code: '23', ...over });
 
-test('the level cap keeps the grown cube under the budget at every number', () => {
-  expect(NUMBERS.map(cap)).toEqual([5, 3, 2, 2]);
-  for (const n of NUMBERS) expect([n, n ** (DIM * cap(n)) <= BUDGET, n ** (DIM * (cap(n) + 1)) > BUDGET]).toEqual([n, true, true]);
-});
-
 test('grow caps the level at the number, cutting keeps only the keys the view uses, and staged hands the scene nothing else', () => {
-  expect([grow({ number: 3, level: 5 }), grow({ number: '2', level: '5' }), grow({ number: 9, level: 0 })]).toEqual([{ number: 3, level: 3 }, { number: 2, level: 5 }, { number: 3, level: 1 }]);
+  expect([grow({ number: 3, level: 5 }, { math }), grow({ number: '2', level: '5' }, { math }), grow({ number: 9, level: 0 }, { math })]).toEqual([{ number: 3, level: 3 }, { number: 2, level: 5 }, { number: 3, level: 1 }]);
   expect(rows('solid').map((row) => row.key)).toEqual(['view']);
   expect([rows('slice'), rows('diagonal'), rows('hex')].map((list) => list.map((row) => row.key))).toEqual([['view', 'axis', 'at'], ['view', 'at'], ['view']]);
   expect(cutting({ view: 'slice', axis: '1', at: 0.25 })).toEqual({ view: 'slice', axis: 1, at: 0.25 });
   expect(cutting({ view: 'bogus', axis: 1, at: 0.25 })).toEqual({ view: 'solid' });
   const value = { seed: 1, base: 2, code: '23', number: 4, level: 5, view: 'hex', axis: 1, at: 0.3, crop: '', radius: 16, spin: 1, tint: '' };
-  expect(staged(value)).toEqual({ seed: 1, base: 2, code: '23', crop: '', radius: 16, spin: 1, tint: '', number: 4, level: 2, view: 'hex' });
-  expect(staged({ ...value, at: 0.9 })).toEqual(staged(value));
+  expect(staged(value, { math })).toEqual({ seed: 1, base: 2, code: '23', crop: '', radius: 16, spin: 1, tint: '', number: 4, level: 2, view: 'hex' });
+  expect(staged({ ...value, at: 0.9 }, { math })).toEqual(staged(value, { math }));
 });
 
 test("the shapes of the spec are the crate's named 3D shapes", () => {
@@ -74,7 +68,7 @@ test('a diagonal cut lists the filled cells on x + y + z = height, projected, an
   const plan = study(math, value({ view: 'diagonal', at: 0.5 }), rng(1));
   expect([plan.cut.kind, plan.cut.height, plan.cut.points.length]).toEqual(['diagonal', 39, 306]);
   expect(plan.cut.facts).toEqual({ reading: 'height 39 of 78', cells: 306, support: '0 to 78', least: 1, most: 306, constant: 'no' });
-  const xtree = named(math, DIM, 2).find((one) => one.name === 'xtree').code;
+  const [xtree] = math.name.words(DIM, 2).find(([, name]) => name === 'xtree');
   const lean = study(math, value({ view: 'diagonal', code: xtree, level: 2, at: 0.3 }), rng(1));
   expect(lean.cut.facts.cells).toBe(math.three.diagonal_slice(xtree, 3, 2, 2, lean.cut.height).length);
   const cropped = study(math, value({ view: 'diagonal', at: 0.5, crop: 'ball', radius: 16 }), rng(1));

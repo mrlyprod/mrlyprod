@@ -1,6 +1,0 @@
-[package]
-name = "coprime-terms"
-edition.workspace = true
-license.workspace = true
-
-[dependencies]

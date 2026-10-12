@@ -1,6 +1,0 @@
-[package]
-name = "rho-decoupling"
-edition.workspace = true
-
-[dependencies]
-num-bigint.workspace = true

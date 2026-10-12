@@ -3,7 +3,7 @@ import { text } from '../../lib/export.js';
 import { Bar } from '../../lib/frame.jsx';
 import { Btn, Group, Icon, Pick, Text } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { classes, named, word } from '../designs/engine.js';
+import { classes } from '../designs/engine.js';
 import { Thumbs } from '../designs/pick.jsx';
 import { BASE, DIM, roll, steps } from './engine.js';
 import { make } from './scene.js';
@@ -32,17 +32,17 @@ const Fact = ({ name, value }) => (
 );
 
 function Tiles({ math, code, onChange }) {
-  const names = named(math, DIM, BASE);
+  const names = math.name.words(DIM, BASE);
   const reps = classes(math, DIM, BASE) ?? [];
   return (
     <>
-      <Pick label="Named" value={word(names, code) ? code : ''} options={[['', 'Code'], ...names.map((one) => [one.code, one.name])]} onChange={(v) => v && onChange(v)} />
+      <Pick label="Named" value={names.some(([one]) => one === String(code)) ? code : ''} options={[['', 'Code'], ...names]} onChange={(v) => v && onChange(v)} />
       <Text label="Code" value={code} commit onChange={onChange} />
       <Btn onClick={() => onChange(roll(Math.random))}>
         <Icon name="casino" />
         Random
       </Btn>
-      {reps.length > 0 && <Thumbs math={math} dim={DIM} base={BASE} codes={reps.map((one) => one.code)} code={code} names={names} onPick={onChange} px={40} />}
+      {reps.length > 0 && <Thumbs math={math} dim={DIM} base={BASE} codes={reps.map((one) => one.code)} code={code} onPick={onChange} px={40} />}
     </>
   );
 }

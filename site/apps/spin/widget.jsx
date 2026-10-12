@@ -3,7 +3,7 @@ import { Bar } from '../../lib/frame.jsx';
 import { tidy } from '../../lib/knobs.js';
 import { Btn, Group, Pick as Select, Slider } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { named, roll, word } from '../designs/engine.js';
+import { roll } from '../designs/engine.js';
 import { Pick } from '../designs/pick.jsx';
 import { DIM, NEEDLES, cap } from './engine.js';
 import { DESIGN, make } from './scene.js';
@@ -110,7 +110,7 @@ export function Widget({ value, onChange, onReady, unit: given }) {
     };
     onReady?.(handle && { ...handle, ...hands });
   };
-  const name = facts && unit ? word(named(unit, DIM, design.base), facts.code) : '';
+  const name = facts && unit ? (unit.name.of(facts.code, DIM, design.base) ?? '') : '';
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} />}

@@ -11,6 +11,8 @@ pub const CIRCLE_CAP: usize = 200_000;
 pub const ORDER_CAP: usize = 64;
 /// The root quadruples on offer: the strip first, then the bounded packings named by their curvatures.
 pub const ROOTS: [&str; 4] = ["strip", "-1,2,2,3", "-2,3,6,7", "-3,4,12,13"];
+/// The numbers [`flat`] lays per circle: the centre's two coordinates, the radius and the curvature.
+pub const STRIDE: usize = 4;
 
 // THE OBJECTS
 
@@ -245,6 +247,24 @@ pub fn frame(p: &Packing) -> [f64; 4] {
     let (x, y) = outer.centre().unwrap_or((0.0, 0.0));
     let r = outer.radius().unwrap_or(1.0);
     [x - r, y - r, x + r, y + r]
+}
+
+/// Grows the named packing and lays every circle of positive curvature as `x, y, r, k` in one flat run: the root's own circles first in root order, then the grown ones in curvature order.
+///
+/// # Errors
+///
+/// Errs as [`grow`] does.
+pub fn flat(name: &str, cap: i64) -> Result<Vec<f64>> {
+    let p = grow(name, cap)?;
+    Ok(p.root
+        .iter()
+        .filter(|c| c.k > 0)
+        .chain(&p.circles)
+        .flat_map(|c| {
+            let k = c.k as f64;
+            [c.x as f64 / k, c.y as f64 / k, 1.0 / k, k]
+        })
+        .collect())
 }
 
 // THE FORD CIRCLES
@@ -493,6 +513,22 @@ mod tests {
         );
         assert!(shadow(&p, ORDER_CAP + 1).is_err());
         assert!(shadow(&p, 0).is_err());
+    }
+
+    #[test]
+    fn the_flat_run_lays_the_root_circles_then_the_grown_ones_by_curvature() {
+        let strip = flat("strip", 2048).unwrap();
+        assert_eq!(strip.len(), 2450 * STRIDE);
+        assert_eq!(strip[..4], [0.0, 0.5, 0.5, 2.0]);
+        assert_eq!(strip[2 * STRIDE..3 * STRIDE], [0.5, 0.125, 0.125, 8.0]);
+        assert!(strip
+            .chunks(STRIDE)
+            .collect::<Vec<_>>()
+            .windows(2)
+            .all(|pair| pair[0][3] <= pair[1][3]));
+        let bounded = flat("-1,2,2,3", 32).unwrap();
+        assert_eq!(bounded.len(), 38 * STRIDE);
+        assert!(flat("gasket", 32).is_err());
     }
 
     #[test]

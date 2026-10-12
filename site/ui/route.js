@@ -11,7 +11,7 @@ export function match(rows, path) {
   const exact = rows.find((row) => row.route === want);
   if (exact) return exact;
   const deep = rows.filter((row) => row.meta?.deep && want.startsWith(row.route)).sort((a, b) => b.route.length - a.route.length)[0];
-  return deep ?? rows.find((row) => row.kind === 'missing');
+  return deep ?? rows.find((row) => row.meta?.id === 'missing');
 }
 
 /* SORT */
@@ -30,6 +30,6 @@ export function sort(to, from, deep) {
 export const named = (row, site) => (row.title === site.title ? row.title : `${row.title} · ${site.title}`);
 
 export function trail(row, path) {
-  if (row.kind === 'missing') return [{ name: 'not found', href: path }];
+  if (row.meta?.id === 'missing') return [{ name: 'not found', href: path }];
   return crumbs(row.meta?.deep ? path : row.route);
 }

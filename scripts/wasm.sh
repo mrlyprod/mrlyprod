@@ -10,7 +10,7 @@ font=$(mktemp)
 trap 'rm -f "$font"' EXIT
 
 units=$(cat pkgs/bridge/units.txt)
-used=$(grep -hoE 'mrlyjs[/_][a-z]+' $(ls figures/*.ts | grep -v '\.test\.ts$') $(find site/apps -name '*.js' -o -name '*.jsx' -o -name '*.ts' | grep -v '\.test\.') | cut -c8- | sort -u)
+used=$(grep -hoE 'mrlyjs[/_][a-z]+' $(bun -e 'for (const one of (await import("./site/scripts/site.ts")).roster()) console.log(one.file)') $(find site/apps -name '*.js' -o -name '*.jsx' -o -name '*.ts' | grep -v '\.test\.') | cut -c8- | sort -u)
 live=$(for unit in $units; do if grep -qx "$unit" <<< "$used"; then echo "$unit"; fi; done)
 built=target/wasm32-unknown-unknown/release
 

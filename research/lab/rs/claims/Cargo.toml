@@ -1,8 +1,0 @@
-[package]
-name = "claims"
-edition.workspace = true
-publish = false
-
-[dependencies]
-demos.workspace = true
-mrlyrs.workspace = true

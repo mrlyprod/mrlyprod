@@ -454,6 +454,11 @@ static DOORS: &[Door] = &[
     ("life.Source.read", "(text: str) -> (life.Source, str)?", Some(door_life_source_read)),
     ("life.affine", "(rule: u8) -> bool", Some(door_life_affine)),
     ("life.animate", "(seed: Cell2d, config: life.Config) -> life.Life", Some(door_life_animate)),
+    ("life.chladni.kernel", "(mask: Tensor, size: usize) -> Cell2d", Some(door_life_chladni_kernel)),
+    ("life.chladni.next", "(cell: Cell2d, mask: Tensor, birth: (f64, f64), survive: (f64, f64)) -> Cell2d", Some(door_life_chladni_next)),
+    ("life.chladni.profile", "(cell: Cell2d) -> life.chladni.Profile", Some(door_life_chladni_profile)),
+    ("life.chladni.run", "(mask: Tensor, birth: (f64, f64), survive: (f64, f64), size: usize, steps: usize, density: f64, seed: u64) -> Cell2d", Some(door_life_chladni_run)),
+    ("life.chladni.spectrum", "(cell: Cell2d) -> [f64]", Some(door_life_chladni_spectrum)),
     ("life.churn", "(grids: [Cell2d]) -> f64", Some(door_life_churn)),
     ("life.corner_bits", "(rule: u8) -> [u8]", Some(door_life_corner_bits)),
     ("life.counts", "(seq: life.Source, max_neighbors: usize, include_zeros: bool, include_ones: bool) -> [usize]", Some(door_life_counts)),
@@ -485,9 +490,17 @@ static DOORS: &[Door] = &[
     ("life.surjective", "(rule: u8) -> bool", Some(door_life_surjective)),
     ("life.tessellate", "(grids: [Cell2d], min_canvas: usize) -> [Cell2d]", Some(door_life_tessellate)),
     ("life.wolfram_class", "(rule: u8) -> [u8]", Some(door_life_wolfram_class)),
+    ("math.arcs.curves", "(code: Code, base: usize, level: usize) -> [math.arcs.Curve]", Some(door_math_arcs_curves)),
     ("math.arcs.draw", "(code: Code, base: usize, level: usize) -> math.arcs.Arcs", Some(door_math_arcs_draw)),
     ("math.arcs.law", "(code: Code, base: usize, level: usize) -> math.arcs.Law?", Some(door_math_arcs_law)),
     ("math.arcs.trace", "(side: usize, on: [bool]) -> math.arcs.Arcs", Some(door_math_arcs_trace)),
+    ("math.arrays.essential", "(sensors: [u64]) -> [bool]", Some(door_math_arrays_essential)),
+    ("math.arrays.fractal", "(generator: [u64], base: u64, level: u32) -> [u64]", Some(door_math_arrays_fractal)),
+    ("math.arrays.holes", "(sensors: [u64]) -> [i64]", Some(door_math_arrays_holes)),
+    ("math.arrays.law", "(generator: [u64], level: u32) -> (u64, u64)?", Some(door_math_arrays_law)),
+    ("math.arrays.lost", "(sensors: [u64], sensor: u64) -> [i64]", Some(door_math_arrays_lost)),
+    ("math.arrays.paired", "(sensors: [u64]) -> [u64]", Some(door_math_arrays_paired)),
+    ("math.arrays.weights", "(sensors: [u64]) -> [u64]", Some(door_math_arrays_weights)),
     ("math.atoms.carpet_2d", "(n: usize) -> Tensor", Some(door_math_atoms_carpet_2d)),
     ("math.atoms.carpet_3d", "(n: usize) -> Tensor", Some(door_math_atoms_carpet_3d)),
     ("math.atoms.carpet_nd", "(n: usize, rank: usize) -> Tensor", Some(door_math_atoms_carpet_nd)),
@@ -524,6 +537,20 @@ static DOORS: &[Door] = &[
     ("math.atoms.zeros_3d", "(n: usize) -> Tensor", Some(door_math_atoms_zeros_3d)),
     ("math.atoms.zline_3d", "(n: usize) -> Tensor", Some(door_math_atoms_zline_3d)),
     ("math.atoms.ztree_3d", "(n: usize) -> Tensor", Some(door_math_atoms_ztree_3d)),
+    ("math.automaton.Automaton.abscissa", "(self: math.automaton.Automaton) -> f64", Some(door_math_automaton_automaton_abscissa)),
+    ("math.automaton.Automaton.base", "(self: math.automaton.Automaton) -> u64", Some(door_math_automaton_automaton_base)),
+    ("math.automaton.Automaton.cofactor", "(self: math.automaton.Automaton, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_math_automaton_automaton_cofactor)),
+    ("math.automaton.Automaton.denominator", "(self: math.automaton.Automaton) -> [f64]", Some(door_math_automaton_automaton_denominator)),
+    ("math.automaton.Automaton.matrix", "(self: math.automaton.Automaton) -> [[f64]]", Some(door_math_automaton_automaton_matrix)),
+    ("math.automaton.Automaton.new", "(rule: math.memory.Rule) -> math.automaton.Automaton", Some(door_math_automaton_automaton_new)),
+    ("math.automaton.Automaton.peel", "(self: math.automaton.Automaton) -> usize", Some(door_math_automaton_automaton_peel)),
+    ("math.automaton.Automaton.period", "(self: math.automaton.Automaton) -> f64", Some(door_math_automaton_automaton_period)),
+    ("math.automaton.Automaton.perron", "(self: math.automaton.Automaton) -> (f64, f64)", Some(door_math_automaton_automaton_perron)),
+    ("math.automaton.Automaton.residue", "(self: math.automaton.Automaton, w0: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_math_automaton_automaton_residue)),
+    ("math.automaton.Automaton.rule", "(self: math.automaton.Automaton) -> math.memory.Rule", Some(door_math_automaton_automaton_rule)),
+    ("math.automaton.Automaton.states", "(self: math.automaton.Automaton) -> usize", Some(door_math_automaton_automaton_states)),
+    ("math.automaton.Automaton.with_peel", "(rule: math.memory.Rule, peel: usize) -> math.automaton.Automaton", Some(door_math_automaton_automaton_with_peel)),
+    ("math.automaton.Automaton.zeta", "(self: math.automaton.Automaton, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_math_automaton_automaton_zeta)),
     ("math.bang.Design.anf", "(self: math.bang.Design) -> String", Some(door_math_bang_design_anf)),
     ("math.bang.Design.degree", "(self: math.bang.Design) -> i32", Some(door_math_bang_design_degree)),
     ("math.bang.Design.name", "(self: math.bang.Design) -> String", Some(door_math_bang_design_name)),
@@ -561,9 +588,11 @@ static DOORS: &[Door] = &[
     ("math.bang.factory.create_named", "(spec: str, number: usize, level: usize) -> Tensor", Some(door_math_bang_factory_create_named)),
     ("math.bang.factory.residue_corners", "(dimension: usize, base: usize) -> [[u8]]", Some(door_math_bang_factory_residue_corners)),
     ("math.bang.factory.total_codes", "(dimension: usize, base: usize) -> Code", Some(door_math_bang_factory_total_codes)),
+    ("math.bang.level_cap", "(number: usize, dimension: usize, budget: usize) -> usize", Some(door_math_bang_level_cap)),
     ("math.bang.levels_code", "(dimension: usize, base: usize, levels: [usize]) -> Code", Some(door_math_bang_levels_code)),
     ("math.bang.magic", "(layers: [math.bang.MagicLayer]) -> Tensor", Some(door_math_bang_magic)),
     ("math.bang.magic_named", "(layers: [(str, usize)]) -> Tensor", Some(door_math_bang_magic_named)),
+    ("math.bang.random_code", "(dimension: usize, base: usize, rng: Rng(seed), min_fills: usize) -> Code", Some(door_math_bang_random_code)),
     ("math.bang.sources", "(catalog: gen.recipe.Catalog, dimension: usize) -> [gen.recipe.Source]", Some(door_math_bang_sources)),
     ("math.bang.symmetries", "(dimension: usize) -> [([usize], [u8])]", Some(door_math_bang_symmetries)),
     ("math.bang.total_exposure", "(code: Code, dimension: usize) -> bool", Some(door_math_bang_total_exposure)),
@@ -677,6 +706,34 @@ static DOORS: &[Door] = &[
     ("math.counts.six.solid_slice_vertices", "(number: usize) -> u128", Some(door_math_counts_six_solid_slice_vertices)),
     ("math.counts.surface", "(code: Code, number: usize, level: u32, base: usize) -> u128", Some(door_math_counts_surface)),
     ("math.counts.void", "(code: Code, number: usize, dimension: usize, level: u32, base: usize) -> u128", Some(door_math_counts_void)),
+    ("math.design.digits_of", "(mask: u32, base: u64) -> [u64]", Some(door_math_design_digits_of)),
+    ("math.design.echo_series", "(values: [u64], log_x: [f64], exponent: f64) -> [f64]", Some(door_math_design_echo_series)),
+    ("math.design.elements", "(base: u64, digits: [u64], depth: usize) -> [u64]", Some(door_math_design_elements)),
+    ("math.design.log_grid", "(values: [u64], samples: usize) -> [f64]", Some(door_math_design_log_grid)),
+    ("math.design.median_floor", "(power: [f64], width: usize) -> [f64]", Some(door_math_design_median_floor)),
+    ("math.design.meter", "(mu: [i8]) -> [i64]", Some(door_math_design_meter)),
+    ("math.design.nearest", "(value: f64, list: [f64]) -> f64", Some(door_math_design_nearest)),
+    ("math.design.peaks", "(gamma: [f64], score: [f64], band: (f64, f64), threshold: f64) -> [usize]", Some(door_math_design_peaks)),
+    ("math.design.pole_lattice", "(base: u64, top: f64) -> [f64]", Some(door_math_design_pole_lattice)),
+    ("math.design.resample", "(values: [u64], running: [i64], exponent: f64, log_x: [f64]) -> [f64]", Some(door_math_design_resample)),
+    ("math.design.score", "(power: [f64], width: usize) -> [f64]", Some(door_math_design_score)),
+    ("math.design.size", "(digits: [u64], depth: usize) -> u128", Some(door_math_design_size)),
+    ("math.design.spectrum", "(log_x: [f64], series: [f64]) -> ([f64], [f64])", Some(door_math_design_spectrum)),
+    ("math.design.upper_rms", "(series: [f64]) -> f64", Some(door_math_design_upper_rms)),
+    ("math.dissection.cap", "(y: u64) -> u64", Some(door_math_dissection_cap)),
+    ("math.dissection.chain_exponent", "(base: u64) -> f64", Some(door_math_dissection_chain_exponent)),
+    ("math.dissection.chain_margin", "(base: u64) -> f64", Some(door_math_dissection_chain_margin)),
+    ("math.dissection.chain_root", "(base: u64) -> f64", Some(door_math_dissection_chain_root)),
+    ("math.dissection.chain_wall", "() -> u64", Some(door_math_dissection_chain_wall)),
+    ("math.dissection.consecutive", "(digits: [u64]) -> bool", Some(door_math_dissection_consecutive)),
+    ("math.dissection.fraction", "(a: u64, y: u64, cap: u64) -> (u64, u64)", Some(door_math_dissection_fraction)),
+    ("math.dissection.kappa", "(base: u64, digits: [u64]) -> (u64, u64)", Some(door_math_dissection_kappa)),
+    ("math.dissection.masses", "(base: u64, digits: [u64], level: u32) -> [f64]", Some(door_math_dissection_masses)),
+    ("math.dissection.reach", "(base: u64, missing: u64) -> str", Some(door_math_dissection_reach)),
+    ("math.dissection.reading", "(base: u64, fill: usize, masses: [f64]) -> f64", Some(door_math_dissection_reading)),
+    ("math.dissection.regions", "(base: u64, level: u32, z: u64) -> [math.dissection.Region]", Some(door_math_dissection_regions)),
+    ("math.dissection.tally", "(base: u64, digits: [u64], level: usize, samples: usize) -> math.dissection.Tally", Some(door_math_dissection_tally)),
+    ("math.dissection.weights", "(base: u64, digits: [u64], level: u32) -> [f64]", Some(door_math_dissection_weights)),
     ("math.graph.Layout.energy", "(self: math.graph.Layout) -> f64 # uncallable: math::graph::Layout has no Deserialize", None),
     ("math.graph.Layout.from_network", "(network: math.graph.Network, seed: u64) -> math.graph.Layout # uncallable: math::graph::Layout has no Serialize", None),
     ("math.graph.Layout.ideal", "(self: math.graph.Layout) -> f64 # uncallable: math::graph::Layout has no Deserialize", None),
@@ -703,6 +760,33 @@ static DOORS: &[Door] = &[
     ("math.graph.tips", "(network: math.graph.Network) -> usize", Some(door_math_graph_tips)),
     ("math.graph.total_length", "(network: math.graph.Network) -> f64", Some(door_math_graph_total_length)),
     ("math.graph.tunnel_graph", "(grid: Tensor) -> math.graph.Network", Some(door_math_graph_tunnel_graph)),
+    ("math.ladder.Design.abscissa", "(self: math.ladder.Design) -> f64", Some(door_math_ladder_design_abscissa)),
+    ("math.ladder.Design.base", "(self: math.ladder.Design) -> u64", Some(door_math_ladder_design_base)),
+    ("math.ladder.Design.digits", "(self: math.ladder.Design) -> [u64]", Some(door_math_ladder_design_digits)),
+    ("math.ladder.Design.new", "(base: u64, digits: [u64]) -> math.ladder.Design", Some(door_math_ladder_design_new)),
+    ("math.ladder.Design.peel", "(self: math.ladder.Design) -> usize", Some(door_math_ladder_design_peel)),
+    ("math.ladder.Design.period", "(self: math.ladder.Design) -> f64", Some(door_math_ladder_design_period)),
+    ("math.ladder.Design.pole", "(self: math.ladder.Design, m: usize, j: i64) -> num.zeta.Complex", Some(door_math_ladder_design_pole)),
+    ("math.ladder.Design.with_peel", "(base: u64, digits: [u64], peel: usize) -> math.ladder.Design", Some(door_math_ladder_design_with_peel)),
+    ("math.ladder.cofactor", "(design: math.ladder.Design, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_math_ladder_cofactor)),
+    ("math.ladder.residue", "(design: math.ladder.Design, m: usize, j: i64, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_math_ladder_residue)),
+    ("math.ladder.zeta", "(design: math.ladder.Design, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_math_ladder_zeta)),
+    ("math.memory.Rule.accepts", "(self: math.memory.Rule, word: [usize]) -> bool", Some(door_math_memory_rule_accepts)),
+    ("math.memory.Rule.allowed", "(self: math.memory.Rule, window: usize) -> bool", Some(door_math_memory_rule_allowed)),
+    ("math.memory.Rule.alphabet", "(self: math.memory.Rule) -> [usize]", Some(door_math_memory_rule_alphabet)),
+    ("math.memory.Rule.codes", "(self: math.memory.Rule) -> u128", Some(door_math_memory_rule_codes)),
+    ("math.memory.Rule.full", "(dimension: usize, width: usize) -> math.memory.Rule", Some(door_math_memory_rule_full)),
+    ("math.memory.Rule.letters", "(self: math.memory.Rule) -> usize", Some(door_math_memory_rule_letters)),
+    ("math.memory.Rule.new", "(dimension: usize, width: usize, code: u64) -> math.memory.Rule", Some(door_math_memory_rule_new)),
+    ("math.memory.Rule.states", "(self: math.memory.Rule) -> usize", Some(door_math_memory_rule_states)),
+    ("math.memory.Rule.windows", "(self: math.memory.Rule) -> usize", Some(door_math_memory_rule_windows)),
+    ("math.memory.allowed_windows", "(rule: math.memory.Rule) -> usize", Some(door_math_memory_allowed_windows)),
+    ("math.memory.cells", "(rule: math.memory.Rule, level: usize) -> [u64]", Some(door_math_memory_cells)),
+    ("math.memory.counts", "(rule: math.memory.Rule, levels: usize) -> [u64]", Some(door_math_memory_counts)),
+    ("math.memory.exponent", "(rule: math.memory.Rule) -> f64", Some(door_math_memory_exponent)),
+    ("math.memory.kappa", "(rule: math.memory.Rule) -> f64", Some(door_math_memory_kappa)),
+    ("math.memory.perron", "(rule: math.memory.Rule) -> f64", Some(door_math_memory_perron)),
+    ("math.memory.transfer", "(rule: math.memory.Rule) -> [[u64]]", Some(door_math_memory_transfer)),
     ("math.moire.Field.as_f64", "(self: math.moire.Field) -> [f64]", Some(door_math_moire_field_as_f64)),
     ("math.moire.Field.from_data", "(data: [f32], size: usize) -> math.moire.Field", Some(door_math_moire_field_from_data)),
     ("math.moire.Field.max", "(self: math.moire.Field) -> f32", Some(door_math_moire_field_max)),
@@ -777,6 +861,8 @@ static DOORS: &[Door] = &[
     ("math.name.Word.to_json", "(self: math.name.Word) -> String", Some(door_math_name_word_to_json)),
     ("math.name.Word.to_mrly", "(self: math.name.Word) -> String", Some(door_math_name_word_to_mrly)),
     ("math.name.Word.to_url", "(self: math.name.Word) -> String", Some(door_math_name_word_to_url)),
+    ("math.name.of", "(code: Code, dim: usize, base: usize) -> String?", Some(door_math_name_of)),
+    ("math.name.words", "(dim: usize, base: usize) -> [(String, String)]", Some(door_math_name_words)),
     ("math.press.Press.add", "(self: math.press.Press, number: u128, weight: i128) -> null # uncallable: mutates its argument in place", None),
     ("math.press.Press.new", "(dimension: usize, base: usize) -> math.press.Press", Some(door_math_press_press_new)),
     ("math.press.Press.total", "(self: math.press.Press, code: Code) -> i128", Some(door_math_press_press_total)),
@@ -795,6 +881,37 @@ static DOORS: &[Door] = &[
     ("math.press.word_member", "(layers: [math.bang.MagicLayer], number: u128) -> bool", Some(door_math_press_word_member)),
     ("math.press.word_members", "(layers: [math.bang.MagicLayer]) -> [u128]", Some(door_math_press_word_members)),
     ("math.press.word_profile", "(layers: [math.bang.MagicLayer]) -> [u128]", Some(door_math_press_word_profile)),
+    ("math.radix.Base.class", "(self: math.radix.Base, z: (i64, i64)) -> usize", Some(door_math_radix_base_class)),
+    ("math.radix.Base.congruent", "(self: math.radix.Base, z: (i64, i64), w: (i64, i64)) -> bool", Some(door_math_radix_base_congruent)),
+    ("math.radix.Base.group", "(self: math.radix.Base) -> [[usize]]", Some(door_math_radix_base_group)),
+    ("math.radix.Base.mirrored", "(self: math.radix.Base) -> bool", Some(door_math_radix_base_mirrored)),
+    ("math.radix.Base.new", "(ring: num.gauss.Ring, value: (i64, i64)) -> math.radix.Base", Some(door_math_radix_base_new)),
+    ("math.radix.Base.norm", "(self: math.radix.Base) -> u64", Some(door_math_radix_base_norm)),
+    ("math.radix.Base.power", "(self: math.radix.Base, level: usize) -> (i64, i64)", Some(door_math_radix_base_power)),
+    ("math.radix.Base.residues", "(self: math.radix.Base) -> [(i64, i64)]", Some(door_math_radix_base_residues)),
+    ("math.radix.Base.ring", "(self: math.radix.Base) -> num.gauss.Ring", Some(door_math_radix_base_ring)),
+    ("math.radix.Base.value", "(self: math.radix.Base) -> (i64, i64)", Some(door_math_radix_base_value)),
+    ("math.radix.Radix.base", "(self: math.radix.Radix) -> math.radix.Base", Some(door_math_radix_radix_base)),
+    ("math.radix.Radix.canonical", "(self: math.radix.Radix) -> bool", Some(door_math_radix_radix_canonical)),
+    ("math.radix.Radix.code", "(self: math.radix.Radix) -> u128", Some(door_math_radix_radix_code)),
+    ("math.radix.Radix.digits", "(self: math.radix.Radix) -> [(i64, i64)]", Some(door_math_radix_radix_digits)),
+    ("math.radix.Radix.dimension", "(self: math.radix.Radix) -> f64", Some(door_math_radix_radix_dimension)),
+    ("math.radix.Radix.distinct", "(self: math.radix.Radix, level: usize) -> usize", Some(door_math_radix_radix_distinct)),
+    ("math.radix.Radix.fill", "(self: math.radix.Radix, level: usize) -> u128", Some(door_math_radix_radix_fill)),
+    ("math.radix.Radix.from_code", "(base: math.radix.Base, code: u128) -> math.radix.Radix", Some(door_math_radix_radix_from_code)),
+    ("math.radix.Radix.new", "(base: math.radix.Base, digits: [(i64, i64)], twists: [(i64, i64)]) -> math.radix.Radix", Some(door_math_radix_radix_new)),
+    ("math.radix.Radix.plane", "(self: math.radix.Radix, level: usize) -> [(f64, f64)]", Some(door_math_radix_radix_plane)),
+    ("math.radix.Radix.ring", "(self: math.radix.Radix) -> num.gauss.Ring", Some(door_math_radix_radix_ring)),
+    ("math.radix.Radix.size", "(self: math.radix.Radix) -> usize", Some(door_math_radix_radix_size)),
+    ("math.radix.Radix.twists", "(self: math.radix.Radix) -> [(i64, i64)]", Some(door_math_radix_radix_twists)),
+    ("math.radix.Radix.with_twists", "(self: math.radix.Radix, units: [usize]) -> math.radix.Radix", Some(door_math_radix_radix_with_twists)),
+    ("math.radix.Radix.words", "(self: math.radix.Radix, level: usize) -> [(i64, i64)]", Some(door_math_radix_radix_words)),
+    ("math.radix.flowsnake", "() -> math.radix.Radix", Some(door_math_radix_flowsnake)),
+    ("math.radix.gasket", "() -> math.radix.Radix", Some(door_math_radix_gasket)),
+    ("math.radix.koch", "() -> math.radix.Radix", Some(door_math_radix_koch)),
+    ("math.radix.terdragon", "() -> math.radix.Radix", Some(door_math_radix_terdragon)),
+    ("math.radix.tile", "(m: u64, code: u128) -> math.radix.Radix", Some(door_math_radix_tile)),
+    ("math.radix.twindragon", "() -> math.radix.Radix", Some(door_math_radix_twindragon)),
     ("math.roulette.Nodes.default", "() -> math.roulette.Nodes", Some(door_math_roulette_nodes_default)),
     ("math.roulette.Nodes.pair", "(self: math.roulette.Nodes, i: usize, j: usize) -> usize", Some(door_math_roulette_nodes_pair)),
     ("math.roulette.Nodes.paired", "(self: math.roulette.Nodes) -> usize", Some(door_math_roulette_nodes_paired)),
@@ -816,8 +933,10 @@ static DOORS: &[Door] = &[
     ("math.shape.crop", "(types: Tensor, shape: math.shape.Shape, keep_cut: bool) -> Tensor", Some(door_math_shape_crop)),
     ("math.shape.crossing_shell", "(radius: u64, number: u64, level: u32) -> [(u64, u64)]", Some(door_math_shape_crossing_shell)),
     ("math.shape.crossing_tree", "(radius: u64, number: u64, keep: [bool]) -> math.shape.Shell", Some(door_math_shape_crossing_tree)),
+    ("math.shape.fit", "(shape: math.shape.Shape, extents: [usize]) -> math.shape.Shape", Some(door_math_shape_fit)),
     ("math.shape.named", "(name: str, dimension: usize, radius: math.shape.Frac) -> math.shape.Shape", Some(door_math_shape_named)),
     ("math.shape.radial_census", "(types: Tensor, centre: [i64], r_max: u64) -> [math.shape.RadialCounts]", Some(door_math_shape_radial_census)),
+    ("math.shape.reach", "(name: str, dimension: usize, den: u32) -> u32?", Some(door_math_shape_reach)),
     ("math.shape.refine", "(types: Tensor, shape: math.shape.Shape, base: usize, extra: usize, keep_cut: bool) -> Tensor", Some(door_math_shape_refine)),
     ("math.shape.regions", "(shape: math.shape.Shape, dims: [usize]) -> Tensor", Some(door_math_shape_regions)),
     ("math.shape.shapes", "(dimension: usize) -> [String]", Some(door_math_shape_shapes)),
@@ -828,8 +947,10 @@ static DOORS: &[Door] = &[
     ("math.six.blur", "(self: Cell6d, mask: Tensor, wrap: bool) -> Cell6d", Some(door_math_six_blur)),
     ("math.six.census", "(cell: Cell6d, include_grid: bool) -> math.six.Census", Some(door_math_six_census)),
     ("math.six.components", "(cell: Cell6d) -> usize", Some(door_math_six_components)),
+    ("math.six.copies", "(rings: usize) -> usize", Some(door_math_six_copies)),
     ("math.six.cut", "(cell: Cell3d) -> Cell6d", Some(door_math_six_cut)),
     ("math.six.cut_design", "(code: Code, number: usize, level: usize, base: usize) -> Cell6d", Some(door_math_six_cut_design)),
+    ("math.six.disc", "(cell: Cell6d, rings: usize) -> Cell6d", Some(door_math_six_disc)),
     ("math.six.east", "(x: i64, y: i64) -> [(i64, i64); 3]", Some(door_math_six_east)),
     ("math.six.euler", "(cell: Cell6d, include_grid: bool) -> i64", Some(door_math_six_euler)),
     ("math.six.fills", "(cell: Cell6d) -> usize", Some(door_math_six_fills)),
@@ -930,6 +1051,25 @@ static DOORS: &[Door] = &[
     ("math.spirograph.trace", "(track: math.spirograph.Track, pencils: [math.spirograph.Pencil], samples: usize) -> [f32]", Some(door_math_spirograph_trace)),
     ("math.spirograph.track", "(kind: str, ring: usize, wheel: usize, sides: usize, laps: usize) -> math.spirograph.Track", Some(door_math_spirograph_track)),
     ("math.spirograph.turn", "(track: math.spirograph.Track, s: f64) -> f64", Some(door_math_spirograph_turn)),
+    ("math.sumset.Pair.clean", "(self: math.sumset.Pair) -> bool", Some(door_math_sumset_pair_clean)),
+    ("math.sumset.Pair.copy", "(self: math.sumset.Pair) -> bool", Some(door_math_sumset_pair_copy)),
+    ("math.sumset.Pair.energy", "(self: math.sumset.Pair) -> u128", Some(door_math_sumset_pair_energy)),
+    ("math.sumset.Pair.four", "(self: math.sumset.Pair) -> u32", Some(door_math_sumset_pair_four)),
+    ("math.sumset.Pair.gap", "(self: math.sumset.Pair) -> (u64, u64)?", Some(door_math_sumset_pair_gap)),
+    ("math.sumset.Pair.largest", "(self: math.sumset.Pair) -> u64", Some(door_math_sumset_pair_largest)),
+    ("math.sumset.Pair.new", "(three: u32, four: u32) -> math.sumset.Pair", Some(door_math_sumset_pair_new)),
+    ("math.sumset.Pair.ratio", "(self: math.sumset.Pair, energy: u128) -> f64", Some(door_math_sumset_pair_ratio)),
+    ("math.sumset.Pair.scale", "(self: math.sumset.Pair) -> f64", Some(door_math_sumset_pair_scale)),
+    ("math.sumset.Pair.three", "(self: math.sumset.Pair) -> u32", Some(door_math_sumset_pair_three)),
+    ("math.sumset.Sumset.contains", "(self: math.sumset.Sumset, x: u64) -> bool? # uncallable: math::sumset::Sumset has no Deserialize", None),
+    ("math.sumset.Sumset.count", "(self: math.sumset.Sumset, x: u64) -> u64? # uncallable: math::sumset::Sumset has no Deserialize", None),
+    ("math.sumset.Sumset.density", "(self: math.sumset.Sumset, x: u64) -> f64? # uncallable: math::sumset::Sumset has no Deserialize", None),
+    ("math.sumset.Sumset.extremes", "(self: math.sumset.Sumset, edges: [u64]) -> [(f64, f64)?] # uncallable: math::sumset::Sumset has no Deserialize", None),
+    ("math.sumset.Sumset.fills", "(self: math.sumset.Sumset, low: u64, high: u64, cells: usize) -> [f64] # uncallable: math::sumset::Sumset has no Deserialize", None),
+    ("math.sumset.Sumset.level", "(self: math.sumset.Sumset) -> u32 # uncallable: math::sumset::Sumset has no Deserialize", None),
+    ("math.sumset.Sumset.new", "(level: u32) -> math.sumset.Sumset # uncallable: math::sumset::Sumset has no Serialize", None),
+    ("math.sumset.Sumset.top", "(self: math.sumset.Sumset) -> u64 # uncallable: math::sumset::Sumset has no Deserialize", None),
+    ("math.sumset.pairs", "(level: u32) -> [math.sumset.Pair]", Some(door_math_sumset_pairs)),
     ("math.three.Vec3.cross", "(self: math.three.Vec3, o: math.three.Vec3) -> math.three.Vec3", Some(door_math_three_vec3_cross)),
     ("math.three.Vec3.dot", "(self: math.three.Vec3, o: math.three.Vec3) -> f32", Some(door_math_three_vec3_dot)),
     ("math.three.Vec3.new", "(x: f32, y: f32, z: f32) -> math.three.Vec3", Some(door_math_three_vec3_new)),
@@ -1043,6 +1183,7 @@ static DOORS: &[Door] = &[
     ("num.apollonian.Circle.centre", "(self: num.apollonian.Circle) -> (f64, f64)?", Some(door_num_apollonian_circle_centre)),
     ("num.apollonian.Circle.is_line", "(self: num.apollonian.Circle) -> bool", Some(door_num_apollonian_circle_is_line)),
     ("num.apollonian.Circle.radius", "(self: num.apollonian.Circle) -> f64?", Some(door_num_apollonian_circle_radius)),
+    ("num.apollonian.flat", "(name: str, cap: i64) -> [f64]", Some(door_num_apollonian_flat)),
     ("num.apollonian.form", "(u: [i64; 4], v: [i64; 4]) -> i128", Some(door_num_apollonian_form)),
     ("num.apollonian.frame", "(p: num.apollonian.Packing) -> [f64; 4]", Some(door_num_apollonian_frame)),
     ("num.apollonian.grow", "(name: str, cap: i64) -> num.apollonian.Packing", Some(door_num_apollonian_grow)),
@@ -1054,27 +1195,6 @@ static DOORS: &[Door] = &[
     ("num.apollonian.sound", "(q: [num.apollonian.Circle; 4]) -> bool", Some(door_num_apollonian_sound)),
     ("num.apollonian.swap", "(q: [num.apollonian.Circle; 4], at: usize) -> [num.apollonian.Circle; 4]", Some(door_num_apollonian_swap)),
     ("num.apollonian.touches", "(p: num.apollonian.Packing) -> [num.apollonian.Touch]", Some(door_num_apollonian_touches)),
-    ("num.arrays.essential", "(sensors: [u64]) -> [bool]", Some(door_num_arrays_essential)),
-    ("num.arrays.fractal", "(generator: [u64], base: u64, level: u32) -> [u64]", Some(door_num_arrays_fractal)),
-    ("num.arrays.holes", "(sensors: [u64]) -> [i64]", Some(door_num_arrays_holes)),
-    ("num.arrays.law", "(generator: [u64], level: u32) -> (u64, u64)?", Some(door_num_arrays_law)),
-    ("num.arrays.lost", "(sensors: [u64], sensor: u64) -> [i64]", Some(door_num_arrays_lost)),
-    ("num.arrays.paired", "(sensors: [u64]) -> [u64]", Some(door_num_arrays_paired)),
-    ("num.arrays.weights", "(sensors: [u64]) -> [u64]", Some(door_num_arrays_weights)),
-    ("num.automaton.Automaton.abscissa", "(self: num.automaton.Automaton) -> f64", Some(door_num_automaton_automaton_abscissa)),
-    ("num.automaton.Automaton.base", "(self: num.automaton.Automaton) -> u64", Some(door_num_automaton_automaton_base)),
-    ("num.automaton.Automaton.cofactor", "(self: num.automaton.Automaton, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_num_automaton_automaton_cofactor)),
-    ("num.automaton.Automaton.denominator", "(self: num.automaton.Automaton) -> [f64]", Some(door_num_automaton_automaton_denominator)),
-    ("num.automaton.Automaton.matrix", "(self: num.automaton.Automaton) -> [[f64]]", Some(door_num_automaton_automaton_matrix)),
-    ("num.automaton.Automaton.new", "(rule: num.memory.Rule) -> num.automaton.Automaton", Some(door_num_automaton_automaton_new)),
-    ("num.automaton.Automaton.peel", "(self: num.automaton.Automaton) -> usize", Some(door_num_automaton_automaton_peel)),
-    ("num.automaton.Automaton.period", "(self: num.automaton.Automaton) -> f64", Some(door_num_automaton_automaton_period)),
-    ("num.automaton.Automaton.perron", "(self: num.automaton.Automaton) -> (f64, f64)", Some(door_num_automaton_automaton_perron)),
-    ("num.automaton.Automaton.residue", "(self: num.automaton.Automaton, w0: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_num_automaton_automaton_residue)),
-    ("num.automaton.Automaton.rule", "(self: num.automaton.Automaton) -> num.memory.Rule", Some(door_num_automaton_automaton_rule)),
-    ("num.automaton.Automaton.states", "(self: num.automaton.Automaton) -> usize", Some(door_num_automaton_automaton_states)),
-    ("num.automaton.Automaton.with_peel", "(rule: num.memory.Rule, peel: usize) -> num.automaton.Automaton", Some(door_num_automaton_automaton_with_peel)),
-    ("num.automaton.Automaton.zeta", "(self: num.automaton.Automaton, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_num_automaton_automaton_zeta)),
     ("num.blend.add", "(a: [i128], b: [i128]) -> [i128]", Some(door_num_blend_add)),
     ("num.blend.cauchy", "(a: [i128], b: [i128]) -> [i128]", Some(door_num_blend_cauchy)),
     ("num.blend.characteristic", "(coefficients: [(i128, i128)]) -> [(i128, i128)]", Some(door_num_blend_characteristic)),
@@ -1091,34 +1211,6 @@ static DOORS: &[Door] = &[
     ("num.boolean.nonlinearity", "(code: u128, n: usize) -> i64", Some(door_num_boolean_nonlinearity)),
     ("num.boolean.sac", "(code: u128, n: usize) -> f64", Some(door_num_boolean_sac)),
     ("num.boolean.walsh_spectrum", "(code: u128, n: usize) -> [i64]", Some(door_num_boolean_walsh_spectrum)),
-    ("num.design.digits_of", "(mask: u32, base: u64) -> [u64]", Some(door_num_design_digits_of)),
-    ("num.design.echo_series", "(values: [u64], log_x: [f64], exponent: f64) -> [f64]", Some(door_num_design_echo_series)),
-    ("num.design.elements", "(base: u64, digits: [u64], depth: usize) -> [u64]", Some(door_num_design_elements)),
-    ("num.design.log_grid", "(values: [u64], samples: usize) -> [f64]", Some(door_num_design_log_grid)),
-    ("num.design.median_floor", "(power: [f64], width: usize) -> [f64]", Some(door_num_design_median_floor)),
-    ("num.design.meter", "(mu: [i8]) -> [i64]", Some(door_num_design_meter)),
-    ("num.design.nearest", "(value: f64, list: [f64]) -> f64", Some(door_num_design_nearest)),
-    ("num.design.peaks", "(gamma: [f64], score: [f64], band: (f64, f64), threshold: f64) -> [usize]", Some(door_num_design_peaks)),
-    ("num.design.pole_lattice", "(base: u64, top: f64) -> [f64]", Some(door_num_design_pole_lattice)),
-    ("num.design.resample", "(values: [u64], running: [i64], exponent: f64, log_x: [f64]) -> [f64]", Some(door_num_design_resample)),
-    ("num.design.score", "(power: [f64], width: usize) -> [f64]", Some(door_num_design_score)),
-    ("num.design.size", "(digits: [u64], depth: usize) -> u128", Some(door_num_design_size)),
-    ("num.design.spectrum", "(log_x: [f64], series: [f64]) -> ([f64], [f64])", Some(door_num_design_spectrum)),
-    ("num.design.upper_rms", "(series: [f64]) -> f64", Some(door_num_design_upper_rms)),
-    ("num.dissection.cap", "(y: u64) -> u64", Some(door_num_dissection_cap)),
-    ("num.dissection.chain_exponent", "(base: u64) -> f64", Some(door_num_dissection_chain_exponent)),
-    ("num.dissection.chain_margin", "(base: u64) -> f64", Some(door_num_dissection_chain_margin)),
-    ("num.dissection.chain_root", "(base: u64) -> f64", Some(door_num_dissection_chain_root)),
-    ("num.dissection.chain_wall", "() -> u64", Some(door_num_dissection_chain_wall)),
-    ("num.dissection.consecutive", "(digits: [u64]) -> bool", Some(door_num_dissection_consecutive)),
-    ("num.dissection.fraction", "(a: u64, y: u64, cap: u64) -> (u64, u64)", Some(door_num_dissection_fraction)),
-    ("num.dissection.kappa", "(base: u64, digits: [u64]) -> (u64, u64)", Some(door_num_dissection_kappa)),
-    ("num.dissection.masses", "(base: u64, digits: [u64], level: u32) -> [f64]", Some(door_num_dissection_masses)),
-    ("num.dissection.reach", "(base: u64, missing: u64) -> str", Some(door_num_dissection_reach)),
-    ("num.dissection.reading", "(base: u64, fill: usize, masses: [f64]) -> f64", Some(door_num_dissection_reading)),
-    ("num.dissection.regions", "(base: u64, level: u32, z: u64) -> [num.dissection.Region]", Some(door_num_dissection_regions)),
-    ("num.dissection.tally", "(base: u64, digits: [u64], level: usize, samples: usize) -> num.dissection.Tally", Some(door_num_dissection_tally)),
-    ("num.dissection.weights", "(base: u64, digits: [u64], level: u32) -> [f64]", Some(door_num_dissection_weights)),
     ("num.factor.aliquot", "(number: usize) -> usize", Some(door_num_factor_aliquot)),
     ("num.factor.coprime", "(a: usize, b: usize) -> bool", Some(door_num_factor_coprime)),
     ("num.factor.divisors", "(number: u64) -> [u64]", Some(door_num_factor_divisors)),
@@ -1183,17 +1275,6 @@ static DOORS: &[Door] = &[
     ("num.kummer.member", "(k: u64, prime: u64, top: u64, bottom: u64) -> bool", Some(door_num_kummer_member)),
     ("num.kummer.valuation", "(k: u64, prime: u64, top: u64, bottom: u64) -> u32", Some(door_num_kummer_valuation)),
     ("num.kummer.witness", "(prime: u64, top: u64, bottom: u64) -> (u64, u64)?", Some(door_num_kummer_witness)),
-    ("num.ladder.Design.abscissa", "(self: num.ladder.Design) -> f64", Some(door_num_ladder_design_abscissa)),
-    ("num.ladder.Design.base", "(self: num.ladder.Design) -> u64", Some(door_num_ladder_design_base)),
-    ("num.ladder.Design.digits", "(self: num.ladder.Design) -> [u64]", Some(door_num_ladder_design_digits)),
-    ("num.ladder.Design.new", "(base: u64, digits: [u64]) -> num.ladder.Design", Some(door_num_ladder_design_new)),
-    ("num.ladder.Design.peel", "(self: num.ladder.Design) -> usize", Some(door_num_ladder_design_peel)),
-    ("num.ladder.Design.period", "(self: num.ladder.Design) -> f64", Some(door_num_ladder_design_period)),
-    ("num.ladder.Design.pole", "(self: num.ladder.Design, m: usize, j: i64) -> num.zeta.Complex", Some(door_num_ladder_design_pole)),
-    ("num.ladder.Design.with_peel", "(base: u64, digits: [u64], peel: usize) -> num.ladder.Design", Some(door_num_ladder_design_with_peel)),
-    ("num.ladder.cofactor", "(design: num.ladder.Design, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_num_ladder_cofactor)),
-    ("num.ladder.residue", "(design: num.ladder.Design, m: usize, j: i64, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_num_ladder_residue)),
-    ("num.ladder.zeta", "(design: num.ladder.Design, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_num_ladder_zeta)),
     ("num.lattice.coprime_pairs", "(n: usize) -> u64", Some(door_num_lattice_coprime_pairs)),
     ("num.lattice.farey", "(order: usize) -> [num.lattice.Node]", Some(door_num_lattice_farey)),
     ("num.lattice.grid", "(n: usize) -> [num.lattice.Node2d]", Some(door_num_lattice_grid)),
@@ -1203,22 +1284,6 @@ static DOORS: &[Door] = &[
     ("num.lattice.visible_density", "(dimension: u32) -> f64", Some(door_num_lattice_visible_density)),
     ("num.lattice.zeta_factor", "(dimension: u32) -> f64?", Some(door_num_lattice_zeta_factor)),
     ("num.lattice.zeta_whole", "(s: u32) -> f64", Some(door_num_lattice_zeta_whole)),
-    ("num.memory.Rule.accepts", "(self: num.memory.Rule, word: [usize]) -> bool", Some(door_num_memory_rule_accepts)),
-    ("num.memory.Rule.allowed", "(self: num.memory.Rule, window: usize) -> bool", Some(door_num_memory_rule_allowed)),
-    ("num.memory.Rule.alphabet", "(self: num.memory.Rule) -> [usize]", Some(door_num_memory_rule_alphabet)),
-    ("num.memory.Rule.codes", "(self: num.memory.Rule) -> u128", Some(door_num_memory_rule_codes)),
-    ("num.memory.Rule.full", "(dimension: usize, width: usize) -> num.memory.Rule", Some(door_num_memory_rule_full)),
-    ("num.memory.Rule.letters", "(self: num.memory.Rule) -> usize", Some(door_num_memory_rule_letters)),
-    ("num.memory.Rule.new", "(dimension: usize, width: usize, code: u64) -> num.memory.Rule", Some(door_num_memory_rule_new)),
-    ("num.memory.Rule.states", "(self: num.memory.Rule) -> usize", Some(door_num_memory_rule_states)),
-    ("num.memory.Rule.windows", "(self: num.memory.Rule) -> usize", Some(door_num_memory_rule_windows)),
-    ("num.memory.allowed_windows", "(rule: num.memory.Rule) -> usize", Some(door_num_memory_allowed_windows)),
-    ("num.memory.cells", "(rule: num.memory.Rule, level: usize) -> [u64]", Some(door_num_memory_cells)),
-    ("num.memory.counts", "(rule: num.memory.Rule, levels: usize) -> [u64]", Some(door_num_memory_counts)),
-    ("num.memory.exponent", "(rule: num.memory.Rule) -> f64", Some(door_num_memory_exponent)),
-    ("num.memory.kappa", "(rule: num.memory.Rule) -> f64", Some(door_num_memory_kappa)),
-    ("num.memory.perron", "(rule: num.memory.Rule) -> f64", Some(door_num_memory_perron)),
-    ("num.memory.transfer", "(rule: num.memory.Rule) -> [[u64]]", Some(door_num_memory_transfer)),
     ("num.morse.Lift.all", "() -> [num.morse.Lift; 4]", Some(door_num_morse_lift_all)),
     ("num.morse.Lift.at", "(self: num.morse.Lift, i: u64, j: u64) -> u8", Some(door_num_morse_lift_at)),
     ("num.morse.Lift.formula", "(self: num.morse.Lift) -> String", Some(door_num_morse_lift_formula)),
@@ -1230,9 +1295,11 @@ static DOORS: &[Door] = &[
     ("num.morse.fold", "(grid: [u8], side: usize, number: usize) -> num.morse.Fold", Some(door_num_morse_fold)),
     ("num.morse.letter", "(place: u64) -> u8", Some(door_num_morse_letter)),
     ("num.morse.lift", "(kind: num.morse.Lift, side: usize) -> [u8]", Some(door_num_morse_lift)),
+    ("num.morse.mask", "(a: [u8], b: [u8]) -> [u8]", Some(door_num_morse_mask)),
     ("num.morse.power", "(tile: [u8], number: usize, level: usize) -> [u8]", Some(door_num_morse_power)),
     ("num.morse.repeat", "(tile: [u8], number: usize, side: usize) -> [u8]", Some(door_num_morse_repeat)),
     ("num.morse.runs", "(word: [u8]) -> [usize]", Some(door_num_morse_runs)),
+    ("num.morse.signs", "(types: [u8]) -> [u8]", Some(door_num_morse_signs)),
     ("num.morse.stage", "(rounds: usize) -> [u8]", Some(door_num_morse_stage)),
     ("num.morse.substitution", "(length: usize) -> [u8]", Some(door_num_morse_substitution)),
     ("num.morse.upsample", "(grid: [u8], side: usize, scale: usize) -> [u8]", Some(door_num_morse_upsample)),
@@ -1257,37 +1324,6 @@ static DOORS: &[Door] = &[
     ("num.prime.splits", "(number: usize) -> [(usize, usize)]", Some(door_num_prime_splits)),
     ("num.prime.squares", "(number: usize) -> (usize, usize)?", Some(door_num_prime_squares)),
     ("num.prime.study", "(limit: usize) -> [num.prime.Prime]", Some(door_num_prime_study)),
-    ("num.radix.Base.class", "(self: num.radix.Base, z: (i64, i64)) -> usize", Some(door_num_radix_base_class)),
-    ("num.radix.Base.congruent", "(self: num.radix.Base, z: (i64, i64), w: (i64, i64)) -> bool", Some(door_num_radix_base_congruent)),
-    ("num.radix.Base.group", "(self: num.radix.Base) -> [[usize]]", Some(door_num_radix_base_group)),
-    ("num.radix.Base.mirrored", "(self: num.radix.Base) -> bool", Some(door_num_radix_base_mirrored)),
-    ("num.radix.Base.new", "(ring: num.gauss.Ring, value: (i64, i64)) -> num.radix.Base", Some(door_num_radix_base_new)),
-    ("num.radix.Base.norm", "(self: num.radix.Base) -> u64", Some(door_num_radix_base_norm)),
-    ("num.radix.Base.power", "(self: num.radix.Base, level: usize) -> (i64, i64)", Some(door_num_radix_base_power)),
-    ("num.radix.Base.residues", "(self: num.radix.Base) -> [(i64, i64)]", Some(door_num_radix_base_residues)),
-    ("num.radix.Base.ring", "(self: num.radix.Base) -> num.gauss.Ring", Some(door_num_radix_base_ring)),
-    ("num.radix.Base.value", "(self: num.radix.Base) -> (i64, i64)", Some(door_num_radix_base_value)),
-    ("num.radix.Radix.base", "(self: num.radix.Radix) -> num.radix.Base", Some(door_num_radix_radix_base)),
-    ("num.radix.Radix.canonical", "(self: num.radix.Radix) -> bool", Some(door_num_radix_radix_canonical)),
-    ("num.radix.Radix.code", "(self: num.radix.Radix) -> u128", Some(door_num_radix_radix_code)),
-    ("num.radix.Radix.digits", "(self: num.radix.Radix) -> [(i64, i64)]", Some(door_num_radix_radix_digits)),
-    ("num.radix.Radix.dimension", "(self: num.radix.Radix) -> f64", Some(door_num_radix_radix_dimension)),
-    ("num.radix.Radix.distinct", "(self: num.radix.Radix, level: usize) -> usize", Some(door_num_radix_radix_distinct)),
-    ("num.radix.Radix.fill", "(self: num.radix.Radix, level: usize) -> u128", Some(door_num_radix_radix_fill)),
-    ("num.radix.Radix.from_code", "(base: num.radix.Base, code: u128) -> num.radix.Radix", Some(door_num_radix_radix_from_code)),
-    ("num.radix.Radix.new", "(base: num.radix.Base, digits: [(i64, i64)], twists: [(i64, i64)]) -> num.radix.Radix", Some(door_num_radix_radix_new)),
-    ("num.radix.Radix.plane", "(self: num.radix.Radix, level: usize) -> [(f64, f64)]", Some(door_num_radix_radix_plane)),
-    ("num.radix.Radix.ring", "(self: num.radix.Radix) -> num.gauss.Ring", Some(door_num_radix_radix_ring)),
-    ("num.radix.Radix.size", "(self: num.radix.Radix) -> usize", Some(door_num_radix_radix_size)),
-    ("num.radix.Radix.twists", "(self: num.radix.Radix) -> [(i64, i64)]", Some(door_num_radix_radix_twists)),
-    ("num.radix.Radix.with_twists", "(self: num.radix.Radix, units: [usize]) -> num.radix.Radix", Some(door_num_radix_radix_with_twists)),
-    ("num.radix.Radix.words", "(self: num.radix.Radix, level: usize) -> [(i64, i64)]", Some(door_num_radix_radix_words)),
-    ("num.radix.flowsnake", "() -> num.radix.Radix", Some(door_num_radix_flowsnake)),
-    ("num.radix.gasket", "() -> num.radix.Radix", Some(door_num_radix_gasket)),
-    ("num.radix.koch", "() -> num.radix.Radix", Some(door_num_radix_koch)),
-    ("num.radix.terdragon", "() -> num.radix.Radix", Some(door_num_radix_terdragon)),
-    ("num.radix.tile", "(m: u64, code: u128) -> num.radix.Radix", Some(door_num_radix_tile)),
-    ("num.radix.twindragon", "() -> num.radix.Radix", Some(door_num_radix_twindragon)),
     ("num.series.basel", "(n: usize) -> f64", Some(door_num_series_basel)),
     ("num.series.bernoulli", "(count: usize) -> [(i128, i128)]", Some(door_num_series_bernoulli)),
     ("num.series.beta", "(s: f64, terms: usize) -> f64", Some(door_num_series_beta)),
@@ -1341,30 +1377,11 @@ static DOORS: &[Door] = &[
     ("num.spiral.level_of", "(n: u64, base: u64) -> u32", Some(door_num_spiral_level_of)),
     ("num.spiral.marks", "(mark: num.spiral.Mark, limit: usize) -> [i8]", Some(door_num_spiral_marks)),
     ("num.spiral.snail", "(base: u64, top: u64, growth: num.spiral.Growth) -> num.spiral.Snail", Some(door_num_spiral_snail)),
-    ("num.sumset.Pair.clean", "(self: num.sumset.Pair) -> bool", Some(door_num_sumset_pair_clean)),
-    ("num.sumset.Pair.copy", "(self: num.sumset.Pair) -> bool", Some(door_num_sumset_pair_copy)),
-    ("num.sumset.Pair.energy", "(self: num.sumset.Pair) -> u128", Some(door_num_sumset_pair_energy)),
-    ("num.sumset.Pair.four", "(self: num.sumset.Pair) -> u32", Some(door_num_sumset_pair_four)),
-    ("num.sumset.Pair.gap", "(self: num.sumset.Pair) -> (u64, u64)?", Some(door_num_sumset_pair_gap)),
-    ("num.sumset.Pair.largest", "(self: num.sumset.Pair) -> u64", Some(door_num_sumset_pair_largest)),
-    ("num.sumset.Pair.new", "(three: u32, four: u32) -> num.sumset.Pair", Some(door_num_sumset_pair_new)),
-    ("num.sumset.Pair.ratio", "(self: num.sumset.Pair, energy: u128) -> f64", Some(door_num_sumset_pair_ratio)),
-    ("num.sumset.Pair.scale", "(self: num.sumset.Pair) -> f64", Some(door_num_sumset_pair_scale)),
-    ("num.sumset.Pair.three", "(self: num.sumset.Pair) -> u32", Some(door_num_sumset_pair_three)),
-    ("num.sumset.Sumset.contains", "(self: num.sumset.Sumset, x: u64) -> bool? # uncallable: num::sumset::Sumset has no Deserialize", None),
-    ("num.sumset.Sumset.count", "(self: num.sumset.Sumset, x: u64) -> u64? # uncallable: num::sumset::Sumset has no Deserialize", None),
-    ("num.sumset.Sumset.density", "(self: num.sumset.Sumset, x: u64) -> f64? # uncallable: num::sumset::Sumset has no Deserialize", None),
-    ("num.sumset.Sumset.extremes", "(self: num.sumset.Sumset, edges: [u64]) -> [(f64, f64)?] # uncallable: num::sumset::Sumset has no Deserialize", None),
-    ("num.sumset.Sumset.fills", "(self: num.sumset.Sumset, low: u64, high: u64, cells: usize) -> [f64] # uncallable: num::sumset::Sumset has no Deserialize", None),
-    ("num.sumset.Sumset.level", "(self: num.sumset.Sumset) -> u32 # uncallable: num::sumset::Sumset has no Deserialize", None),
-    ("num.sumset.Sumset.new", "(level: u32) -> num.sumset.Sumset # uncallable: num::sumset::Sumset has no Serialize", None),
-    ("num.sumset.Sumset.top", "(self: num.sumset.Sumset) -> u64 # uncallable: num::sumset::Sumset has no Deserialize", None),
-    ("num.sumset.pairs", "(level: u32) -> [num.sumset.Pair]", Some(door_num_sumset_pairs)),
-    ("num.zeta.Complex.abs", "(self: num.zeta.Complex) -> f64", Some(door_num_zeta_complex_abs)),
-    ("num.zeta.Complex.arg", "(self: num.zeta.Complex) -> f64", Some(door_num_zeta_complex_arg)),
+    ("num.zeta.Complex.abs", "(z: num.zeta.Complex) -> f64", Some(door_num_zeta_complex_abs)),
+    ("num.zeta.Complex.arg", "(z: num.zeta.Complex) -> f64", Some(door_num_zeta_complex_arg)),
     ("num.zeta.Complex.default", "() -> num.zeta.Complex", Some(door_num_zeta_complex_default)),
-    ("num.zeta.Complex.exp", "(self: num.zeta.Complex) -> num.zeta.Complex", Some(door_num_zeta_complex_exp)),
-    ("num.zeta.Complex.ln", "(self: num.zeta.Complex) -> num.zeta.Complex", Some(door_num_zeta_complex_ln)),
+    ("num.zeta.Complex.exp", "(z: num.zeta.Complex) -> num.zeta.Complex", Some(door_num_zeta_complex_exp)),
+    ("num.zeta.Complex.ln", "(z: num.zeta.Complex) -> num.zeta.Complex", Some(door_num_zeta_complex_ln)),
     ("num.zeta.Complex.new", "(re: f64, im: f64) -> num.zeta.Complex", Some(door_num_zeta_complex_new)),
     ("num.zeta.Complex.turn", "(angle: f64) -> num.zeta.Complex", Some(door_num_zeta_complex_turn)),
     ("num.zeta.Line.count", "(self: num.zeta.Line, t: f64) -> usize", Some(door_num_zeta_line_count)),
@@ -1387,7 +1404,9 @@ static DOORS: &[Door] = &[
     ("num.zeta.mellin", "(s: num.zeta.Complex) -> num.zeta.Complex", Some(door_num_zeta_mellin)),
     ("num.zeta.novelty_main", "() -> f64", Some(door_num_zeta_novelty_main)),
     ("num.zeta.novelty_wave", "(gammas: [f64], coef: [num.zeta.Complex], log_y: f64) -> f64", Some(door_num_zeta_novelty_wave)),
+    ("num.zeta.psi_curve", "(gammas: [f64], samples: [f64]) -> [f64]", Some(door_num_zeta_psi_curve)),
     ("num.zeta.psi_formula", "(x: f64, gammas: [f64]) -> f64", Some(door_num_zeta_psi_formula)),
+    ("num.zeta.psi_gap", "(x: usize, gammas: [f64]) -> f64", Some(door_num_zeta_psi_gap)),
     ("num.zeta.psi_stair", "(x: usize) -> [f64]", Some(door_num_zeta_psi_stair)),
     ("num.zeta.raise", "(base: f64, exponent: num.zeta.Complex) -> num.zeta.Complex", Some(door_num_zeta_raise)),
     ("num.zeta.sharp_novelty", "(prefix: [u64], y: f64) -> f64", Some(door_num_zeta_sharp_novelty)),
@@ -3221,6 +3240,61 @@ fn door_life_animate(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_life_chladni_kernel(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    match mrlyrs::life::chladni::kernel(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_life_chladni_next(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+    let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
+    let a2: (f64, f64) = take!(name, 2, &args[2]);
+    let a3: (f64, f64) = take!(name, 3, &args[3]);
+    match mrlyrs::life::chladni::next(&a0, &a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_life_chladni_profile(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+    match mrlyrs::life::chladni::profile(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_life_chladni_run(name: &str, args: &[Value]) -> Done {
+    count(name, args, 7)?;
+    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+    let a1: (f64, f64) = take!(name, 1, &args[1]);
+    let a2: (f64, f64) = take!(name, 2, &args[2]);
+    let a3: usize = take!(name, 3, &args[3]);
+    let a4: usize = take!(name, 4, &args[4]);
+    let a5: f64 = take!(name, 5, &args[5]);
+    let a6: u64 = take!(name, 6, &args[6]);
+    match mrlyrs::life::chladni::run(&a0, a1, a2, a3, a4, a5, a6) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_life_chladni_spectrum(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+    match mrlyrs::life::chladni::spectrum(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_life_churn(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
@@ -3472,6 +3546,17 @@ fn door_life_wolfram_class(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::life::wolfram_class(a0)))
 }
 
+fn door_math_arcs_curves(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    match mrlyrs::math::arcs::curves(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_math_arcs_draw(name: &str, args: &[Value]) -> Done {
     count(name, args, 3)?;
     let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
@@ -3502,6 +3587,55 @@ fn door_math_arcs_trace(name: &str, args: &[Value]) -> Done {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
+}
+
+fn door_math_arrays_essential(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::arrays::essential(&a0)))
+}
+
+fn door_math_arrays_fractal(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    match mrlyrs::math::arrays::fractal(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_arrays_holes(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::arrays::holes(&a0)))
+}
+
+fn door_math_arrays_law(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: u32 = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::arrays::law(&a0, a1)))
+}
+
+fn door_math_arrays_lost(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::arrays::lost(&a0, a1)))
+}
+
+fn door_math_arrays_paired(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::arrays::paired(&a0)))
+}
+
+fn door_math_arrays_weights(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::arrays::weights(&a0)))
 }
 
 fn door_math_atoms_carpet_2d(name: &str, args: &[Value]) -> Done {
@@ -3732,6 +3866,112 @@ fn door_math_atoms_ztree_3d(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
     Ok(give!(mrlyrs::math::atoms::ztree_3d(a0)))
+}
+
+fn door_math_automaton_automaton_abscissa(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::abscissa(&a0)))
+}
+
+fn door_math_automaton_automaton_base(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::base(&a0)))
+}
+
+fn door_math_automaton_automaton_cofactor(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
+    let a2: f64 = take!(name, 2, &args[2]);
+    match mrlyrs::math::automaton::Automaton::cofactor(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_automaton_automaton_denominator(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::denominator(&a0)))
+}
+
+fn door_math_automaton_automaton_matrix(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::matrix(&a0)))
+}
+
+fn door_math_automaton_automaton_new(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    match mrlyrs::math::automaton::Automaton::new(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_automaton_automaton_peel(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::peel(&a0)))
+}
+
+fn door_math_automaton_automaton_period(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::period(&a0)))
+}
+
+fn door_math_automaton_automaton_perron(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::perron(&a0)))
+}
+
+fn door_math_automaton_automaton_residue(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
+    let a2: f64 = take!(name, 2, &args[2]);
+    match mrlyrs::math::automaton::Automaton::residue(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_automaton_automaton_rule(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::rule(&a0)))
+}
+
+fn door_math_automaton_automaton_states(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::automaton::Automaton::states(&a0)))
+}
+
+fn door_math_automaton_automaton_with_peel(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    match mrlyrs::math::automaton::Automaton::with_peel(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_automaton_automaton_zeta(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::automaton::Automaton = take!(name, 0, &args[0]);
+    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
+    let a2: f64 = take!(name, 2, &args[2]);
+    match mrlyrs::math::automaton::Automaton::zeta(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_design_anf(name: &str, args: &[Value]) -> Done {
@@ -4085,6 +4325,14 @@ fn door_math_bang_factory_total_codes(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_bang_level_cap(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::bang::level_cap(a0, a1, a2)))
+}
+
 fn door_math_bang_levels_code(name: &str, args: &[Value]) -> Done {
     count(name, args, 3)?;
     let a0: usize = take!(name, 0, &args[0]);
@@ -4112,6 +4360,18 @@ fn door_math_bang_magic_named(name: &str, args: &[Value]) -> Done {
     let b0: Vec<(&str, usize)> = a0.iter().map(|item| (item.0.as_str(), item.1)).collect();
     match mrlyrs::math::bang::magic_named(&b0) {
         Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_bang_random_code(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let mut a2 = mrlyrs::core::Rng::new(seed(name, 2, &args[2])?);
+    let a3: usize = take!(name, 3, &args[3]);
+    match mrlyrs::math::bang::random_code(a0, a1, &mut a2, a3) {
+        Ok(value) => Ok(Value::String(value.get().to_string())),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
 }
@@ -5779,6 +6039,214 @@ fn door_math_counts_void(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_design_digits_of(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u32 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::design::digits_of(a0, a1)))
+}
+
+fn door_math_design_echo_series(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: Vec<f64> = take!(name, 1, &args[1]);
+    let a2: f64 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::design::echo_series(&a0, &a1, a2)))
+}
+
+fn door_math_design_elements(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::design::elements(a0, &a1, a2)))
+}
+
+fn door_math_design_log_grid(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::design::log_grid(&a0, a1)))
+}
+
+fn door_math_design_median_floor(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::design::median_floor(&a0, a1)))
+}
+
+fn door_math_design_meter(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<i8> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::design::meter(&a0)))
+}
+
+fn door_math_design_nearest(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: f64 = take!(name, 0, &args[0]);
+    let a1: Vec<f64> = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::design::nearest(a0, &a1)))
+}
+
+fn door_math_design_peaks(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    let a1: Vec<f64> = take!(name, 1, &args[1]);
+    let a2: (f64, f64) = take!(name, 2, &args[2]);
+    let a3: f64 = take!(name, 3, &args[3]);
+    match mrlyrs::math::design::peaks(&a0, &a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_design_pole_lattice(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: f64 = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::design::pole_lattice(a0, a1)))
+}
+
+fn door_math_design_resample(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: Vec<i64> = take!(name, 1, &args[1]);
+    let a2: f64 = take!(name, 2, &args[2]);
+    let a3: Vec<f64> = take!(name, 3, &args[3]);
+    Ok(give!(mrlyrs::math::design::resample(&a0, &a1, a2, &a3)))
+}
+
+fn door_math_design_score(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::design::score(&a0, a1)))
+}
+
+fn door_math_design_size(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(Value::String(
+        mrlyrs::math::design::size(&a0, a1).to_string(),
+    ))
+}
+
+fn door_math_design_spectrum(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    let a1: Vec<f64> = take!(name, 1, &args[1]);
+    match mrlyrs::math::design::spectrum(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_design_upper_rms(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::design::upper_rms(&a0)))
+}
+
+fn door_math_dissection_cap(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::dissection::cap(a0)))
+}
+
+fn door_math_dissection_chain_exponent(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::dissection::chain_exponent(a0)))
+}
+
+fn door_math_dissection_chain_margin(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::dissection::chain_margin(a0)))
+}
+
+fn door_math_dissection_chain_root(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::dissection::chain_root(a0)))
+}
+
+fn door_math_dissection_chain_wall(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::math::dissection::chain_wall()))
+}
+
+fn door_math_dissection_consecutive(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::dissection::consecutive(&a0)))
+}
+
+fn door_math_dissection_fraction(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::dissection::fraction(a0, a1, a2)))
+}
+
+fn door_math_dissection_kappa(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::dissection::kappa(a0, &a1)))
+}
+
+fn door_math_dissection_masses(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::dissection::masses(a0, &a1, a2)))
+}
+
+fn door_math_dissection_reach(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::dissection::reach(a0, a1)))
+}
+
+fn door_math_dissection_reading(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: Vec<f64> = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::dissection::reading(a0, a1, &a2)))
+}
+
+fn door_math_dissection_regions(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u32 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::dissection::regions(a0, a1, a2)))
+}
+
+fn door_math_dissection_tally(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    let a3: usize = take!(name, 3, &args[3]);
+    Ok(give!(mrlyrs::math::dissection::tally(a0, &a1, a2, a3)))
+}
+
+fn door_math_dissection_weights(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::dissection::weights(a0, &a1, a2)))
+}
+
 fn door_math_graph_network_adjacency(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
@@ -5895,6 +6363,210 @@ fn door_math_graph_tunnel_graph(name: &str, args: &[Value]) -> Done {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
+}
+
+fn door_math_ladder_design_abscissa(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::ladder::Design::abscissa(&a0)))
+}
+
+fn door_math_ladder_design_base(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::ladder::Design::base(&a0)))
+}
+
+fn door_math_ladder_design_digits(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::ladder::Design::digits(&a0)))
+}
+
+fn door_math_ladder_design_new(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    match mrlyrs::math::ladder::Design::new(a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_ladder_design_peel(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::ladder::Design::peel(&a0)))
+}
+
+fn door_math_ladder_design_period(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::ladder::Design::period(&a0)))
+}
+
+fn door_math_ladder_design_pole(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: i64 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::ladder::Design::pole(&a0, a1, a2)))
+}
+
+fn door_math_ladder_design_with_peel(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    match mrlyrs::math::ladder::Design::with_peel(a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_ladder_cofactor(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
+    let a2: f64 = take!(name, 2, &args[2]);
+    match mrlyrs::math::ladder::cofactor(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_ladder_residue(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: i64 = take!(name, 2, &args[2]);
+    let a3: f64 = take!(name, 3, &args[3]);
+    match mrlyrs::math::ladder::residue(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_ladder_zeta(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::ladder::Design = take!(name, 0, &args[0]);
+    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
+    let a2: f64 = take!(name, 2, &args[2]);
+    match mrlyrs::math::ladder::zeta(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_memory_rule_accepts(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    let a1: Vec<usize> = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::memory::Rule::accepts(&a0, &a1)))
+}
+
+fn door_math_memory_rule_allowed(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::memory::Rule::allowed(&a0, a1)))
+}
+
+fn door_math_memory_rule_alphabet(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::Rule::alphabet(&a0)))
+}
+
+fn door_math_memory_rule_codes(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(Value::String(
+        mrlyrs::math::memory::Rule::codes(&a0).to_string(),
+    ))
+}
+
+fn door_math_memory_rule_full(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    match mrlyrs::math::memory::Rule::full(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_memory_rule_letters(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::Rule::letters(&a0)))
+}
+
+fn door_math_memory_rule_new(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    match mrlyrs::math::memory::Rule::new(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_memory_rule_states(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::Rule::states(&a0)))
+}
+
+fn door_math_memory_rule_windows(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::Rule::windows(&a0)))
+}
+
+fn door_math_memory_allowed_windows(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::allowed_windows(&a0)))
+}
+
+fn door_math_memory_cells(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::memory::cells(&a0, a1)))
+}
+
+fn door_math_memory_counts(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::memory::counts(&a0, a1)))
+}
+
+fn door_math_memory_exponent(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::exponent(&a0)))
+}
+
+fn door_math_memory_kappa(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::kappa(&a0)))
+}
+
+fn door_math_memory_perron(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::perron(&a0)))
+}
+
+fn door_math_memory_transfer(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::memory::transfer(&a0)))
 }
 
 fn door_math_moire_field_as_f64(name: &str, args: &[Value]) -> Done {
@@ -6516,6 +7188,21 @@ fn door_math_name_word_to_url(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_name_of(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::name::of(a0, a1, a2)))
+}
+
+fn door_math_name_words(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::name::words(a0, a1)))
+}
+
 fn door_math_press_press_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
@@ -6731,6 +7418,248 @@ fn door_math_press_word_profile(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_radix_base_class(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    let a1: (i64, i64) = take!(name, 1, &args[1]);
+    match mrlyrs::math::radix::Base::class(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_base_congruent(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    let a1: (i64, i64) = take!(name, 1, &args[1]);
+    let a2: (i64, i64) = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::math::radix::Base::congruent(a0, a1, a2)))
+}
+
+fn door_math_radix_base_group(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    match mrlyrs::math::radix::Base::group(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_base_mirrored(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Base::mirrored(a0)))
+}
+
+fn door_math_radix_base_new(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::num::gauss::Ring = take!(name, 0, &args[0]);
+    let a1: (i64, i64) = take!(name, 1, &args[1]);
+    match mrlyrs::math::radix::Base::new(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_base_norm(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Base::norm(a0)))
+}
+
+fn door_math_radix_base_power(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::radix::Base::power(a0, a1)))
+}
+
+fn door_math_radix_base_residues(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    match mrlyrs::math::radix::Base::residues(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_base_ring(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Base::ring(a0)))
+}
+
+fn door_math_radix_base_value(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Base::value(a0)))
+}
+
+fn door_math_radix_radix_base(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Radix::base(&a0)))
+}
+
+fn door_math_radix_radix_canonical(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    match mrlyrs::math::radix::Radix::canonical(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_radix_code(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    match mrlyrs::math::radix::Radix::code(&a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_radix_digits(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Radix::digits(&a0)))
+}
+
+fn door_math_radix_radix_dimension(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Radix::dimension(&a0)))
+}
+
+fn door_math_radix_radix_distinct(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::radix::Radix::distinct(&a0, a1)))
+}
+
+fn door_math_radix_radix_fill(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(Value::String(
+        mrlyrs::math::radix::Radix::fill(&a0, a1).to_string(),
+    ))
+}
+
+fn door_math_radix_radix_from_code(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    let a1: u128 = big(name, 1, &args[1])?;
+    match mrlyrs::math::radix::Radix::from_code(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_radix_new(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::radix::Base = take!(name, 0, &args[0]);
+    let a1: Vec<(i64, i64)> = take!(name, 1, &args[1]);
+    let a2: Vec<(i64, i64)> = take!(name, 2, &args[2]);
+    match mrlyrs::math::radix::Radix::new(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_radix_plane(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::radix::Radix::plane(&a0, a1)))
+}
+
+fn door_math_radix_radix_ring(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Radix::ring(&a0)))
+}
+
+fn door_math_radix_radix_size(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Radix::size(&a0)))
+}
+
+fn door_math_radix_radix_twists(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::radix::Radix::twists(&a0)))
+}
+
+fn door_math_radix_radix_with_twists(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    let a1: Vec<usize> = take!(name, 1, &args[1]);
+    match mrlyrs::math::radix::Radix::with_twists(a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_radix_words(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::radix::Radix = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::math::radix::Radix::words(&a0, a1)))
+}
+
+fn door_math_radix_flowsnake(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    match mrlyrs::math::radix::flowsnake() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_gasket(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    match mrlyrs::math::radix::gasket() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_koch(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    match mrlyrs::math::radix::koch() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_terdragon(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    match mrlyrs::math::radix::terdragon() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_tile(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u128 = big(name, 1, &args[1])?;
+    match mrlyrs::math::radix::tile(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_radix_twindragon(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    match mrlyrs::math::radix::twindragon() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_math_roulette_nodes_default(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
     Ok(give!(mrlyrs::math::roulette::Nodes::default()))
@@ -6909,6 +7838,16 @@ fn door_math_shape_crossing_tree(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::math::shape::crossing_tree(a0, a1, &a2)))
 }
 
+fn door_math_shape_fit(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::shape::Shape = take!(name, 0, &args[0]);
+    let a1: Vec<usize> = take!(name, 1, &args[1]);
+    match mrlyrs::math::shape::fit(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_math_shape_named(name: &str, args: &[Value]) -> Done {
     count(name, args, 3)?;
     let a0: String = take!(name, 0, &args[0]);
@@ -6926,6 +7865,17 @@ fn door_math_shape_radial_census(name: &str, args: &[Value]) -> Done {
     let a1: Vec<i64> = take!(name, 1, &args[1]);
     let a2: u64 = take!(name, 2, &args[2]);
     Ok(give!(mrlyrs::math::shape::radial_census(&a0, &a1, a2)))
+}
+
+fn door_math_shape_reach(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: String = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    match mrlyrs::math::shape::reach(a0.as_str(), a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_refine(name: &str, args: &[Value]) -> Done {
@@ -7015,6 +7965,15 @@ fn door_math_six_components(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_six_copies(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    match mrlyrs::math::six::copies(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_math_six_cut(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
@@ -7031,6 +7990,16 @@ fn door_math_six_cut_design(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     match mrlyrs::math::six::cut_design(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_six_disc(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    match mrlyrs::math::six::disc(&a0, a1) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -7942,6 +8911,82 @@ fn door_math_spirograph_turn(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::spirograph::Track = take!(name, 0, &args[0]);
     let a1: f64 = take!(name, 1, &args[1]);
     Ok(give!(mrlyrs::math::spirograph::turn(&a0, a1)))
+}
+
+fn door_math_sumset_pair_clean(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::sumset::Pair::clean(&a0)))
+}
+
+fn door_math_sumset_pair_copy(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::sumset::Pair::copy(&a0)))
+}
+
+fn door_math_sumset_pair_energy(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(Value::String(
+        mrlyrs::math::sumset::Pair::energy(&a0).to_string(),
+    ))
+}
+
+fn door_math_sumset_pair_four(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::sumset::Pair::four(&a0)))
+}
+
+fn door_math_sumset_pair_gap(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::sumset::Pair::gap(&a0)))
+}
+
+fn door_math_sumset_pair_largest(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::sumset::Pair::largest(&a0)))
+}
+
+fn door_math_sumset_pair_new(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u32 = take!(name, 0, &args[0]);
+    let a1: u32 = take!(name, 1, &args[1]);
+    match mrlyrs::math::sumset::Pair::new(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_sumset_pair_ratio(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    let a1: u128 = big(name, 1, &args[1])?;
+    Ok(give!(mrlyrs::math::sumset::Pair::ratio(&a0, a1)))
+}
+
+fn door_math_sumset_pair_scale(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::sumset::Pair::scale(&a0)))
+}
+
+fn door_math_sumset_pair_three(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::math::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::sumset::Pair::three(&a0)))
+}
+
+fn door_math_sumset_pairs(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u32 = take!(name, 0, &args[0]);
+    match mrlyrs::math::sumset::pairs(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_vec3_cross(name: &str, args: &[Value]) -> Done {
@@ -9069,6 +10114,16 @@ fn door_num_apollonian_circle_radius(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::num::apollonian::Circle::radius(a0)))
 }
 
+fn door_num_apollonian_flat(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: String = take!(name, 0, &args[0]);
+    let a1: i64 = take!(name, 1, &args[1]);
+    match mrlyrs::num::apollonian::flat(a0.as_str(), a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_num_apollonian_form(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: [i64; 4] = take!(name, 0, &args[0]);
@@ -9149,161 +10204,6 @@ fn door_num_apollonian_touches(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::apollonian::Packing = take!(name, 0, &args[0]);
     Ok(give!(mrlyrs::num::apollonian::touches(&a0)))
-}
-
-fn door_num_arrays_essential(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::arrays::essential(&a0)))
-}
-
-fn door_num_arrays_fractal(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    let a1: u64 = take!(name, 1, &args[1]);
-    let a2: u32 = take!(name, 2, &args[2]);
-    match mrlyrs::num::arrays::fractal(&a0, a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_arrays_holes(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::arrays::holes(&a0)))
-}
-
-fn door_num_arrays_law(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    let a1: u32 = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::arrays::law(&a0, a1)))
-}
-
-fn door_num_arrays_lost(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    let a1: u64 = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::arrays::lost(&a0, a1)))
-}
-
-fn door_num_arrays_paired(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::arrays::paired(&a0)))
-}
-
-fn door_num_arrays_weights(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::arrays::weights(&a0)))
-}
-
-fn door_num_automaton_automaton_abscissa(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::abscissa(&a0)))
-}
-
-fn door_num_automaton_automaton_base(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::base(&a0)))
-}
-
-fn door_num_automaton_automaton_cofactor(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
-    let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::automaton::Automaton::cofactor(&a0, a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_automaton_automaton_denominator(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::denominator(&a0)))
-}
-
-fn door_num_automaton_automaton_matrix(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::matrix(&a0)))
-}
-
-fn door_num_automaton_automaton_new(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    match mrlyrs::num::automaton::Automaton::new(&a0) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_automaton_automaton_peel(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::peel(&a0)))
-}
-
-fn door_num_automaton_automaton_period(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::period(&a0)))
-}
-
-fn door_num_automaton_automaton_perron(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::perron(&a0)))
-}
-
-fn door_num_automaton_automaton_residue(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
-    let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::automaton::Automaton::residue(&a0, a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_automaton_automaton_rule(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::rule(&a0)))
-}
-
-fn door_num_automaton_automaton_states(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::automaton::Automaton::states(&a0)))
-}
-
-fn door_num_automaton_automaton_with_peel(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::automaton::Automaton::with_peel(&a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_automaton_automaton_zeta(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
-    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
-    let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::automaton::Automaton::zeta(&a0, a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
 }
 
 fn door_num_blend_add(name: &str, args: &[Value]) -> Done {
@@ -9604,214 +10504,6 @@ fn door_num_boolean_walsh_spectrum(name: &str, args: &[Value]) -> Done {
     let a0: u128 = big(name, 0, &args[0])?;
     let a1: usize = take!(name, 1, &args[1]);
     Ok(give!(mrlyrs::num::boolean::walsh_spectrum(a0, a1)))
-}
-
-fn door_num_design_digits_of(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: u32 = take!(name, 0, &args[0]);
-    let a1: u64 = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::design::digits_of(a0, a1)))
-}
-
-fn door_num_design_echo_series(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    let a1: Vec<f64> = take!(name, 1, &args[1]);
-    let a2: f64 = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::design::echo_series(&a0, &a1, a2)))
-}
-
-fn door_num_design_elements(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: Vec<u64> = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::design::elements(a0, &a1, a2)))
-}
-
-fn door_num_design_log_grid(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::design::log_grid(&a0, a1)))
-}
-
-fn door_num_design_median_floor(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: Vec<f64> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::design::median_floor(&a0, a1)))
-}
-
-fn door_num_design_meter(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: Vec<i8> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::design::meter(&a0)))
-}
-
-fn door_num_design_nearest(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: f64 = take!(name, 0, &args[0]);
-    let a1: Vec<f64> = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::design::nearest(a0, &a1)))
-}
-
-fn door_num_design_peaks(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: Vec<f64> = take!(name, 0, &args[0]);
-    let a1: Vec<f64> = take!(name, 1, &args[1]);
-    let a2: (f64, f64) = take!(name, 2, &args[2]);
-    let a3: f64 = take!(name, 3, &args[3]);
-    match mrlyrs::num::design::peaks(&a0, &a1, a2, a3) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_design_pole_lattice(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: f64 = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::design::pole_lattice(a0, a1)))
-}
-
-fn door_num_design_resample(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    let a1: Vec<i64> = take!(name, 1, &args[1]);
-    let a2: f64 = take!(name, 2, &args[2]);
-    let a3: Vec<f64> = take!(name, 3, &args[3]);
-    Ok(give!(mrlyrs::num::design::resample(&a0, &a1, a2, &a3)))
-}
-
-fn door_num_design_score(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: Vec<f64> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::design::score(&a0, a1)))
-}
-
-fn door_num_design_size(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(Value::String(
-        mrlyrs::num::design::size(&a0, a1).to_string(),
-    ))
-}
-
-fn door_num_design_spectrum(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: Vec<f64> = take!(name, 0, &args[0]);
-    let a1: Vec<f64> = take!(name, 1, &args[1]);
-    match mrlyrs::num::design::spectrum(&a0, &a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_design_upper_rms(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: Vec<f64> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::design::upper_rms(&a0)))
-}
-
-fn door_num_dissection_cap(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::dissection::cap(a0)))
-}
-
-fn door_num_dissection_chain_exponent(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::dissection::chain_exponent(a0)))
-}
-
-fn door_num_dissection_chain_margin(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::dissection::chain_margin(a0)))
-}
-
-fn door_num_dissection_chain_root(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::dissection::chain_root(a0)))
-}
-
-fn door_num_dissection_chain_wall(name: &str, args: &[Value]) -> Done {
-    count(name, args, 0)?;
-    Ok(give!(mrlyrs::num::dissection::chain_wall()))
-}
-
-fn door_num_dissection_consecutive(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: Vec<u64> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::dissection::consecutive(&a0)))
-}
-
-fn door_num_dissection_fraction(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: u64 = take!(name, 1, &args[1]);
-    let a2: u64 = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::dissection::fraction(a0, a1, a2)))
-}
-
-fn door_num_dissection_kappa(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: Vec<u64> = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::dissection::kappa(a0, &a1)))
-}
-
-fn door_num_dissection_masses(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: Vec<u64> = take!(name, 1, &args[1]);
-    let a2: u32 = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::dissection::masses(a0, &a1, a2)))
-}
-
-fn door_num_dissection_reach(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: u64 = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::dissection::reach(a0, a1)))
-}
-
-fn door_num_dissection_reading(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: Vec<f64> = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::dissection::reading(a0, a1, &a2)))
-}
-
-fn door_num_dissection_regions(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: u32 = take!(name, 1, &args[1]);
-    let a2: u64 = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::dissection::regions(a0, a1, a2)))
-}
-
-fn door_num_dissection_tally(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: Vec<u64> = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    let a3: usize = take!(name, 3, &args[3]);
-    Ok(give!(mrlyrs::num::dissection::tally(a0, &a1, a2, a3)))
-}
-
-fn door_num_dissection_weights(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: Vec<u64> = take!(name, 1, &args[1]);
-    let a2: u32 = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::dissection::weights(a0, &a1, a2)))
 }
 
 fn door_num_factor_aliquot(name: &str, args: &[Value]) -> Done {
@@ -10318,99 +11010,6 @@ fn door_num_kummer_witness(name: &str, args: &[Value]) -> Done {
     }
 }
 
-fn door_num_ladder_design_abscissa(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::ladder::Design::abscissa(&a0)))
-}
-
-fn door_num_ladder_design_base(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::ladder::Design::base(&a0)))
-}
-
-fn door_num_ladder_design_digits(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::ladder::Design::digits(&a0)))
-}
-
-fn door_num_ladder_design_new(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: Vec<u64> = take!(name, 1, &args[1]);
-    match mrlyrs::num::ladder::Design::new(a0, &a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_ladder_design_peel(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::ladder::Design::peel(&a0)))
-}
-
-fn door_num_ladder_design_period(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::ladder::Design::period(&a0)))
-}
-
-fn door_num_ladder_design_pole(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: i64 = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::ladder::Design::pole(&a0, a1, a2)))
-}
-
-fn door_num_ladder_design_with_peel(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: Vec<u64> = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::num::ladder::Design::with_peel(a0, &a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_ladder_cofactor(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
-    let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::ladder::cofactor(&a0, a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_ladder_residue(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: i64 = take!(name, 2, &args[2]);
-    let a3: f64 = take!(name, 3, &args[3]);
-    match mrlyrs::num::ladder::residue(&a0, a1, a2, a3) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_ladder_zeta(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
-    let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
-    let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::ladder::zeta(&a0, a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
 fn door_num_lattice_coprime_pairs(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
@@ -10473,117 +11072,6 @@ fn door_num_lattice_zeta_whole(name: &str, args: &[Value]) -> Done {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
-}
-
-fn door_num_memory_rule_accepts(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    let a1: Vec<usize> = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::memory::Rule::accepts(&a0, &a1)))
-}
-
-fn door_num_memory_rule_allowed(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::memory::Rule::allowed(&a0, a1)))
-}
-
-fn door_num_memory_rule_alphabet(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::Rule::alphabet(&a0)))
-}
-
-fn door_num_memory_rule_codes(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(Value::String(
-        mrlyrs::num::memory::Rule::codes(&a0).to_string(),
-    ))
-}
-
-fn door_num_memory_rule_full(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: usize = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::memory::Rule::full(a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_memory_rule_letters(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::Rule::letters(&a0)))
-}
-
-fn door_num_memory_rule_new(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: usize = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: u64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::memory::Rule::new(a0, a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_memory_rule_states(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::Rule::states(&a0)))
-}
-
-fn door_num_memory_rule_windows(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::Rule::windows(&a0)))
-}
-
-fn door_num_memory_allowed_windows(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::allowed_windows(&a0)))
-}
-
-fn door_num_memory_cells(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::memory::cells(&a0, a1)))
-}
-
-fn door_num_memory_counts(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::memory::counts(&a0, a1)))
-}
-
-fn door_num_memory_exponent(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::exponent(&a0)))
-}
-
-fn door_num_memory_kappa(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::kappa(&a0)))
-}
-
-fn door_num_memory_perron(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::perron(&a0)))
-}
-
-fn door_num_memory_transfer(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::memory::transfer(&a0)))
 }
 
 fn door_num_morse_lift_all(name: &str, args: &[Value]) -> Done {
@@ -10661,6 +11149,13 @@ fn door_num_morse_lift(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::num::morse::lift(a0, a1)))
 }
 
+fn door_num_morse_mask(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<u8> = take!(name, 0, &args[0]);
+    let a1: Vec<u8> = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::num::morse::mask(&a0, &a1)))
+}
+
 fn door_num_morse_power(name: &str, args: &[Value]) -> Done {
     count(name, args, 3)?;
     let a0: Vec<u8> = take!(name, 0, &args[0]);
@@ -10684,6 +11179,12 @@ fn door_num_morse_runs(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<u8> = take!(name, 0, &args[0]);
     Ok(give!(mrlyrs::num::morse::runs(&a0)))
+}
+
+fn door_num_morse_signs(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u8> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::morse::signs(&a0)))
 }
 
 fn door_num_morse_stage(name: &str, args: &[Value]) -> Done {
@@ -10819,248 +11320,6 @@ fn door_num_prime_study(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
     Ok(give!(mrlyrs::num::prime::study(a0)))
-}
-
-fn door_num_radix_base_class(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    let a1: (i64, i64) = take!(name, 1, &args[1]);
-    match mrlyrs::num::radix::Base::class(a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_base_congruent(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    let a1: (i64, i64) = take!(name, 1, &args[1]);
-    let a2: (i64, i64) = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::num::radix::Base::congruent(a0, a1, a2)))
-}
-
-fn door_num_radix_base_group(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    match mrlyrs::num::radix::Base::group(a0) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_base_mirrored(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Base::mirrored(a0)))
-}
-
-fn door_num_radix_base_new(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::gauss::Ring = take!(name, 0, &args[0]);
-    let a1: (i64, i64) = take!(name, 1, &args[1]);
-    match mrlyrs::num::radix::Base::new(a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_base_norm(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Base::norm(a0)))
-}
-
-fn door_num_radix_base_power(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::radix::Base::power(a0, a1)))
-}
-
-fn door_num_radix_base_residues(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    match mrlyrs::num::radix::Base::residues(a0) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_base_ring(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Base::ring(a0)))
-}
-
-fn door_num_radix_base_value(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Base::value(a0)))
-}
-
-fn door_num_radix_radix_base(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Radix::base(&a0)))
-}
-
-fn door_num_radix_radix_canonical(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    match mrlyrs::num::radix::Radix::canonical(&a0) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_radix_code(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    match mrlyrs::num::radix::Radix::code(&a0) {
-        Ok(value) => Ok(Value::String(value.to_string())),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_radix_digits(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Radix::digits(&a0)))
-}
-
-fn door_num_radix_radix_dimension(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Radix::dimension(&a0)))
-}
-
-fn door_num_radix_radix_distinct(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::radix::Radix::distinct(&a0, a1)))
-}
-
-fn door_num_radix_radix_fill(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(Value::String(
-        mrlyrs::num::radix::Radix::fill(&a0, a1).to_string(),
-    ))
-}
-
-fn door_num_radix_radix_from_code(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    let a1: u128 = big(name, 1, &args[1])?;
-    match mrlyrs::num::radix::Radix::from_code(a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_radix_new(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    let a1: Vec<(i64, i64)> = take!(name, 1, &args[1]);
-    let a2: Vec<(i64, i64)> = take!(name, 2, &args[2]);
-    match mrlyrs::num::radix::Radix::new(a0, a1, a2) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_radix_plane(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::radix::Radix::plane(&a0, a1)))
-}
-
-fn door_num_radix_radix_ring(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Radix::ring(&a0)))
-}
-
-fn door_num_radix_radix_size(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Radix::size(&a0)))
-}
-
-fn door_num_radix_radix_twists(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::radix::Radix::twists(&a0)))
-}
-
-fn door_num_radix_radix_with_twists(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::num::radix::Radix::with_twists(a0, &a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_radix_words(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::radix::Radix::words(&a0, a1)))
-}
-
-fn door_num_radix_flowsnake(name: &str, args: &[Value]) -> Done {
-    count(name, args, 0)?;
-    match mrlyrs::num::radix::flowsnake() {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_gasket(name: &str, args: &[Value]) -> Done {
-    count(name, args, 0)?;
-    match mrlyrs::num::radix::gasket() {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_koch(name: &str, args: &[Value]) -> Done {
-    count(name, args, 0)?;
-    match mrlyrs::num::radix::koch() {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_terdragon(name: &str, args: &[Value]) -> Done {
-    count(name, args, 0)?;
-    match mrlyrs::num::radix::terdragon() {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_tile(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: u64 = take!(name, 0, &args[0]);
-    let a1: u128 = big(name, 1, &args[1])?;
-    match mrlyrs::num::radix::tile(a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_radix_twindragon(name: &str, args: &[Value]) -> Done {
-    count(name, args, 0)?;
-    match mrlyrs::num::radix::twindragon() {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
 }
 
 fn door_num_series_basel(name: &str, args: &[Value]) -> Done {
@@ -11475,82 +11734,6 @@ fn door_num_spiral_snail(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::num::spiral::snail(a0, a1, a2)))
 }
 
-fn door_num_sumset_pair_clean(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::sumset::Pair::clean(&a0)))
-}
-
-fn door_num_sumset_pair_copy(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::sumset::Pair::copy(&a0)))
-}
-
-fn door_num_sumset_pair_energy(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    Ok(Value::String(
-        mrlyrs::num::sumset::Pair::energy(&a0).to_string(),
-    ))
-}
-
-fn door_num_sumset_pair_four(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::sumset::Pair::four(&a0)))
-}
-
-fn door_num_sumset_pair_gap(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::sumset::Pair::gap(&a0)))
-}
-
-fn door_num_sumset_pair_largest(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::sumset::Pair::largest(&a0)))
-}
-
-fn door_num_sumset_pair_new(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: u32 = take!(name, 0, &args[0]);
-    let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::sumset::Pair::new(a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_num_sumset_pair_ratio(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    let a1: u128 = big(name, 1, &args[1])?;
-    Ok(give!(mrlyrs::num::sumset::Pair::ratio(&a0, a1)))
-}
-
-fn door_num_sumset_pair_scale(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::sumset::Pair::scale(&a0)))
-}
-
-fn door_num_sumset_pair_three(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::num::sumset::Pair::three(&a0)))
-}
-
-fn door_num_sumset_pairs(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: u32 = take!(name, 0, &args[0]);
-    match mrlyrs::num::sumset::pairs(a0) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
 fn door_num_zeta_complex_abs(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::zeta::Complex = take!(name, 0, &args[0]);
@@ -11728,11 +11911,25 @@ fn door_num_zeta_novelty_wave(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::num::zeta::novelty_wave(&a0, &a1, a2)))
 }
 
+fn door_num_zeta_psi_curve(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    let a1: Vec<f64> = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::num::zeta::psi_curve(&a0, &a1)))
+}
+
 fn door_num_zeta_psi_formula(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: f64 = take!(name, 0, &args[0]);
     let a1: Vec<f64> = take!(name, 1, &args[1]);
     Ok(give!(mrlyrs::num::zeta::psi_formula(a0, &a1)))
+}
+
+fn door_num_zeta_psi_gap(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: Vec<f64> = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::num::zeta::psi_gap(a0, &a1)))
 }
 
 fn door_num_zeta_psi_stair(name: &str, args: &[Value]) -> Done {

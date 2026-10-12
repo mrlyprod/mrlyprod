@@ -1,5 +1,5 @@
 import { pick, rgb } from '../../lib/scene.js';
-import { named, resolve, total, word } from '../designs/engine.js';
+import { settle } from '../designs/engine.js';
 
 export const KINDS = [['tourbillon', 'Tourbillon'], ['moire', 'Moire'], ['star', 'Star']];
 export const COMBINES = [['sum', 'Sum'], ['and', 'And'], ['xor', 'Xor'], ['hive', 'Hive']];
@@ -86,9 +86,9 @@ export function colorizer(ramp, levels, { paper, accent }) {
 
 export function design(math, value, rand) {
   const base = Number(value.base) === 2 ? 2 : 3;
-  const code = String(resolve(value.code, total(math, DIM, base), rand));
+  const code = settle(math, DIM, base, value.code, rand);
   const level = Math.min(DEEPEST, Math.max(1, Math.round(Number(value.level) || 1)));
-  return { base, code, level, name: word(named(math, DIM, base), code) };
+  return { base, code, level, name: math.name.of(code, DIM, base) ?? '' };
 }
 
 const spin = (math, plan, size) => math.tourbillon.field(plan.limit, size, SCHEDULE, plan.increment, plan.set, plan.weights, MODE, BLEND[plan.combine], plan.seed);

@@ -1,5 +1,5 @@
 import { num, path, sheet } from '../../lib/svg.js';
-import { named, resolve, title, total, word } from '../designs/engine.js';
+import { settle, title } from '../designs/engine.js';
 
 export const NUMBERS = [3, 5, 7];
 export const GRAPHS = ['core', 'edge', 'tunnel'];
@@ -195,10 +195,9 @@ const rolls = (value) => blank(value.code) || !GRAPHS.includes(value.graph);
 export function study(math, value, rand, still = false) {
   const dim = dimOf(value);
   const { base, number, level } = value;
-  const space = total(math, dim, base);
   let best = null;
   for (let go = 0; go < ROLLS; go++) {
-    const code = String(resolve(value.code, space, rand));
+    const code = settle(math, dim, base, value.code, rand);
     const chosen = choose(value, rand);
     const cell = grow(math, dim, base, code, number, level);
     const net = extract(math, cell, chosen.graph);
@@ -224,7 +223,7 @@ export function study(math, value, rand, still = false) {
   const read = dim === 3 ? math.three.census(cell) : math.two.census(cell);
   const facts = {
     code,
-    name: word(named(math, dim, base), code),
+    name: math.name.of(code, dim, base) ?? '',
     title: title(math, dim, base, code),
     dim,
     base,

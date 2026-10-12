@@ -111,6 +111,15 @@ pub enum Shape {
     },
     /// The complement of the inner shape: In and Out swap, Cut stays.
     Anti(Box<Shape>),
+    /// The inner shape on the cells wholly inside a box of the unit frame, every other cell Out.
+    Window {
+        /// The shape the window keeps.
+        inner: Box<Shape>,
+        /// The low corner, one coordinate per axis.
+        low: Vec<Frac>,
+        /// The high corner, one coordinate per axis.
+        high: Vec<Frac>,
+    },
 }
 
 /// Where one lattice cell sits relative to a shape.
@@ -195,6 +204,14 @@ fn classify_ball(center: &[Frac], radius: Frac, side: usize, index: &[usize]) ->
     })
 }
 
+fn within(low: &[Frac], high: &[Frac], side: usize, index: &[usize]) -> bool {
+    let s = side as i128;
+    low.iter().zip(high).zip(index).all(|((lo, hi), &i)| {
+        let i = i as i128;
+        lo.num as i128 * s <= i * lo.den as i128 && (i + 1) * hi.den as i128 <= hi.num as i128 * s
+    })
+}
+
 /// Places one lattice cell relative to the shape, exactly, with no floats.
 ///
 /// The cell at the index occupies the closed box from the index to the index plus one on each axis, and the shape's unit-box coordinates are scaled by the side.
@@ -219,6 +236,10 @@ pub fn classify(shape: &Shape, side: usize, index: &[usize]) -> Result<Region> {
             Ok(if cut { Region::Cut } else { Region::In })
         }
         Shape::Anti(inner) => Ok(classify(inner, side, index)?.flip()),
+        Shape::Window { inner, low, high } => match within(low, high, side, index) {
+            true => classify(inner, side, index),
+            false => Ok(Region::Out),
+        },
     }
 }
 
@@ -368,6 +389,118 @@ pub fn named(name: &str, dimension: usize, radius: Frac) -> Result<Shape> {
         }
         _ => value_error(format!("unknown shape {name} in dimension {dimension}.")),
     }
+}
+
+// FITTING
+
+fn moved(shape: &Shape, offsets: &[Frac], short: Frac, unit: Frac) -> Result<Shape> {
+    let at = |c: Frac, o: Frac| -> Result<Frac> { short.times(c)?.plus(o)?.times(unit) };
+    let axes = |n: usize| match n == offsets.len() {
+        true => Ok(()),
+        false => value_error(format!(
+            "a shape of dimension {n} does not fit {} extents.",
+            offsets.len()
+        )),
+    };
+    let corner = |corner: &[Frac]| -> Result<Vec<Frac>> {
+        axes(corner.len())?;
+        corner
+            .iter()
+            .zip(offsets)
+            .map(|(&c, &o)| at(c, o))
+            .collect()
+    };
+    Ok(match shape {
+        Shape::Ball { center, radius } => Shape::Ball {
+            center: corner(center)?,
+            radius: short.times(*radius)?.times(unit)?,
+        },
+        Shape::Polytope { walls } => Shape::Polytope {
+            walls: walls
+                .iter()
+                .map(|wall| {
+                    axes(wall.normal.len())?;
+                    let shift = wall
+                        .normal
+                        .iter()
+                        .zip(offsets)
+                        .try_fold(Frac::whole(0), |sum, (&n, &o)| {
+                            sum.plus(Frac::whole(n).times(o)?)
+                        })?;
+                    Ok(half(wall.normal.clone(), at(wall.offset, shift)?))
+                })
+                .collect::<Result<_>>()?,
+        },
+        Shape::Anti(inner) => Shape::Anti(Box::new(moved(inner, offsets, short, unit)?)),
+        Shape::Window { inner, low, high } => Shape::Window {
+            inner: Box::new(moved(inner, offsets, short, unit)?),
+            low: corner(low)?,
+            high: corner(high)?,
+        },
+    })
+}
+
+/// Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is.
+///
+/// The cube sits half the spare cells in, rounded down, on each long axis.
+///
+/// # Errors
+///
+/// Errors on no extents, a zero extent, a shape of another dimension, or a scale past an i64.
+pub fn fit(shape: &Shape, extents: &[usize]) -> Result<Shape> {
+    let Some(&short) = extents.iter().min() else {
+        return value_error("a fit needs at least one extent.");
+    };
+    if short == 0 {
+        return value_error("a fit needs every extent at least one.");
+    }
+    if extents.iter().all(|&e| e == short) {
+        return Ok(shape.clone());
+    }
+    let whole = |n: usize| match i64::try_from(n) {
+        Ok(n) => Ok(Frac::whole(n)),
+        Err(_) => overflow_error(format!("the extent {n} passes i64.")),
+    };
+    let offsets: Vec<Frac> = extents
+        .iter()
+        .map(|&e| whole((e - short) / 2))
+        .collect::<Result<_>>()?;
+    let short = whole(short)?;
+    let unit = Frac::new(1, whole(extents[0])?.num)?;
+    let window = Shape::Window {
+        inner: Box::new(shape.clone()),
+        low: vec![Frac::whole(0); extents.len()],
+        high: vec![Frac::whole(1); extents.len()],
+    };
+    moved(&window, &offsets, short, unit)
+}
+
+/// Returns the least radius, in den-ths up to one, at which the named shape covers the whole unit box, or none when it does not by one.
+///
+/// # Errors
+///
+/// Errors for an unknown name or a zero den.
+pub fn reach(name: &str, dimension: usize, den: u32) -> Result<Option<u32>> {
+    if den == 0 {
+        return value_error("a reach needs a den of at least one.");
+    }
+    let corner = vec![0usize; dimension];
+    let covers = |k: u32| -> Result<bool> {
+        let shape = named(name, dimension, Frac::new(i64::from(k), i64::from(den))?)?;
+        Ok(classify(&shape, 1, &corner)? == Region::In)
+    };
+    if !covers(den)? {
+        return Ok(None);
+    }
+    let (mut lo, mut hi) = (0, den);
+    while hi - lo > 1 {
+        let mid = lo + (hi - lo) / 2;
+        match covers(mid)? {
+            true => hi = mid,
+            false => lo = mid,
+        }
+    }
+    Ok(Some(hi))
 }
 
 // CROPPING
@@ -816,6 +949,17 @@ mod tests {
                 }
             }
             Shape::Anti(inner) => oracle(inner, side, index).flip(),
+            Shape::Window { inner, low, high } => {
+                let inside = index.iter().enumerate().all(|(axis, &i)| {
+                    let (lo, hi) = (low[axis], high[axis]);
+                    (lo.num as i128 * side as i128) <= i as i128 * lo.den as i128
+                        && (i as i128 + 1) * hi.den as i128 <= hi.num as i128 * side as i128
+                });
+                match inside {
+                    true => oracle(inner, side, index),
+                    false => Region::Out,
+                }
+            }
         }
     }
 
@@ -837,10 +981,20 @@ mod tests {
                     .collect(),
             }
         };
-        if rng.pick(0, 3) == 0 {
-            Shape::Anti(Box::new(core))
-        } else {
-            core
+        let wrap = rng.pick(0, 3);
+        let mut corner = |lo: i64, hi: i64| -> Vec<Frac> {
+            (0..dimension)
+                .map(|_| Frac::new(rng.pick(lo, hi), rng.pick(1, 4)).unwrap())
+                .collect()
+        };
+        match wrap {
+            0 => Shape::Anti(Box::new(core)),
+            1 => Shape::Window {
+                inner: Box::new(core),
+                low: corner(-1, 2),
+                high: corner(1, 4),
+            },
+            _ => core,
         }
     }
 
@@ -999,6 +1153,78 @@ mod tests {
                 assert!(touched <= ones.sum(), "{name} d{dimension} bounded");
             }
         }
+    }
+
+    #[test]
+    fn the_fit_is_the_shape_on_the_centred_short_side_square_and_out_past_it() {
+        let r = Frac::new(1, 2).unwrap();
+        for name in ["ball", "box"] {
+            let shape = named(name, 2, r).unwrap();
+            let square = regions(&shape, &[3, 3]).unwrap();
+            let wide = regions(&fit(&shape, &[3, 8]).unwrap(), &[3, 8]).unwrap();
+            let tall = regions(&fit(&shape, &[8, 3]).unwrap(), &[8, 3]).unwrap();
+            let pasted = |a: usize, b: usize| match (2..5).contains(&b) {
+                true => square.at(a * 3 + b - 2),
+                false => 0,
+            };
+            for a in 0..3 {
+                for b in 0..8 {
+                    assert_eq!(wide.at(a * 8 + b), pasted(a, b), "{name} wide {a} {b}");
+                    assert_eq!(tall.at(b * 3 + a), pasted(a, b), "{name} tall {b} {a}");
+                }
+            }
+            assert_eq!(fit(&shape, &[3, 3]).unwrap(), shape);
+        }
+        assert!(fit(&named("ball", 3, r).unwrap(), &[3, 8]).is_err());
+        assert!(fit(&named("ball", 2, r).unwrap(), &[0, 8]).is_err());
+    }
+
+    #[test]
+    fn a_crop_on_a_sheet_that_is_not_square_keeps_the_shape_centred_on_the_short_side() {
+        let ball = named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
+        let tile = create(Code::from(495u64), 3, 2, 3, 1).unwrap();
+        let wide = tile.tile(&[2, 4]).unwrap();
+        let fitted = fit(&ball, &[6, 12]).unwrap();
+        let kept = crop(&wide, &fitted, false).unwrap();
+        let rows: Vec<Vec<i64>> = (0..6)
+            .map(|y| (0..12).map(|x| kept.at(y * 12 + x)).collect())
+            .collect();
+        assert!(rows
+            .iter()
+            .all(|row| row[..3].iter().chain(&row[9..]).all(|&on| on == 0)));
+        assert!(rows.iter().all(|row| row.iter().eq(row.iter().rev())));
+        assert!(rows.iter().eq(rows.iter().rev()));
+        let cells = census(&fitted, &wide).unwrap().cells[Region::In as usize];
+        assert!(cells > 0 && cells < 36);
+        let tall = crop(
+            &tile.tile(&[4, 2]).unwrap(),
+            &fit(&ball, &[12, 6]).unwrap(),
+            false,
+        )
+        .unwrap();
+        assert!((0..12).all(|y| (0..6).all(|x| tall.at(y * 6 + x) == rows[x][y])));
+    }
+
+    #[test]
+    fn the_reach_is_the_least_radius_past_which_nothing_lies_outside_a_wide_window() {
+        let reaches: Vec<Option<u32>> = shapes(2)
+            .iter()
+            .map(|name| reach(name, 2, 32).unwrap())
+            .collect();
+        assert_eq!(reaches, [Some(23), Some(16), Some(32), None, Some(22)]);
+        let window = Tensor::full(vec![243, 243], 1);
+        let out = |name: &str, radius: u32| {
+            let shape = named(name, 2, Frac::new(i64::from(radius), 32).unwrap()).unwrap();
+            census(&shape, &window).unwrap().cells[Region::Out as usize]
+        };
+        for (name, reach) in shapes(2).iter().zip(reaches) {
+            match reach {
+                Some(r) => assert_eq!((out(name, r), out(name, r - 1) > 0), (0, true), "{name}"),
+                None => assert!(out(name, 32) > 0, "{name}"),
+            }
+        }
+        assert!(reach("blob", 2, 32).is_err());
+        assert!(reach("ball", 2, 0).is_err());
     }
 
     #[test]

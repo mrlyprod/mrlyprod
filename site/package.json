@@ -11,6 +11,7 @@
     "test": "bun test ./kit ./scripts ./ui ./check ./apps ./lib",
     "shots": "bun scripts/shots.ts",
     "film": "bun scripts/film.ts",
+    "time": "bun scripts/time.ts",
     "vendor": "bun scripts/vendor.ts"
   },
   "dependencies": {

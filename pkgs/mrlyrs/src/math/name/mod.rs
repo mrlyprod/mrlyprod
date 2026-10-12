@@ -103,7 +103,7 @@ macro_rules! kind {
 
 pub(crate) use kind;
 
-pub use bang::{Bang, Lattice};
+pub use bang::{of, words, Bang, Lattice};
 pub use sequence::Sequence;
 pub use word::Word;
 

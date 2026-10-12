@@ -99,7 +99,7 @@ function stars(this: { data: () => { micromarkExtensions?: unknown[] } }) {
 
 const unescape = (tex: string) => tex.replace(/\\\\([!-\/:-@[-`{-~])/g, "\\$1");
 
-const FIGURE = /^!\[([^\]]*)\]\(([^)]*)\)$/;
+const FIGURE = /^!\[((?:\\.|[^[\]\\]|\[(?:\\.|[^[\]\\])*\])*)\]\(([^)]*)\)$/;
 
 export const NAME = /^[a-z0-9-]+$/;
 
@@ -222,6 +222,14 @@ export function inline(text: string, opts: Options = {}): string {
   const html = render(text, opts);
   const m = html.match(/^<p>([\s\S]*)<\/p>$/);
   return m ? m[1]! : html;
+}
+
+/* MATH */
+
+export async function mathml(text: string): Promise<Options["math"]> {
+  if (!text.includes("$")) return undefined;
+  const { default: katex } = await import("katex");
+  return (tex, display) => katex.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display });
 }
 
 /* FIGURES */

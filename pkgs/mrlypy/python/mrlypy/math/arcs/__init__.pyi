@@ -2,6 +2,9 @@ from typing import Any, Literal
 
 from numpy.typing import NDArray
 
+def curves(code: int, base: int, level: int) -> list[dict[str, Any]]:
+    """Walks level `level` of `bang dim 2, base b, code c` in arcs into its curves: first the strands, from each boundary midpoint in turn, across edges before upright ones, then the loops, each from its first unwalked arc."""
+
 def draw(code: int, base: int, level: int) -> dict[str, Any]:
     """Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::math::bang::factory::create`], and level 0 is one filled cell."""
 

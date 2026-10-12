@@ -33,11 +33,17 @@ def census(cell: dict[str, Any], include_grid: bool) -> dict[str, Any]:
 def components(cell: dict[str, Any]) -> int:
     """Counts the connected pieces of the fill, triangles joined across shared edges."""
 
+def copies(rings: int) -> int:
+    """Returns the hexagons in a disc of the given rings about one centre: 1, 7, 19, 37 and on."""
+
 def cut(cell: dict[str, Any]) -> dict[str, Any]:
     """Slices a cube through its center across the main diagonal into a hexagon."""
 
 def cut_design(code: int, number: int, level: int, base: int) -> dict[str, Any]:
     """Builds the coded 3d design and slices its central hexagon."""
+
+def disc(cell: dict[str, Any], rings: int) -> dict[str, Any]:
+    """Tessellates a hexagonal cell over the disc of the given rings about one centre, keeping its projection and orientation and taking the start parity of the uncropped sheet the disc sits in; no rings is the cell itself."""
 
 def east(x: int, y: int) -> list[tuple[int, int]]:
     """The three corners of the east-pointing triangle at the grid column and row."""

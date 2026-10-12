@@ -2,24 +2,27 @@ import { tidy } from '../../lib/knobs.js';
 import { TINTS } from '../../lib/scene.js';
 import { rects } from '../../lib/svg.js';
 import { DESIGN } from '../designs/scene.js';
-import { DEN, REACH, SHAPES, cap, lay, study } from './engine.js';
+import { DEN, SHAPES, cap, lay, reach, study } from './engine.js';
 
 export const SIZES = [512, 1024, 2048, 4096];
 
 export const SPEC = [
   { key: 'number', label: 'Side', kind: 'pick', def: 3, options: [[3, '3'], [5, '5'], [7, '7']], group: 'Tile' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value) => cap(value.number, value.x * value.y), step: 1, group: 'Tile' },
+  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value, units) => units && cap(units.math, value.number, value.x * value.y), step: 1, group: 'Tile' },
   { key: 'x', label: 'Across', kind: 'slider', def: 5, min: 1, max: 12, step: 1, group: 'Sheet' },
   { key: 'y', label: 'Down', kind: 'slider', def: 5, min: 1, max: 12, step: 1, group: 'Sheet' },
   { key: 'crop', label: 'Shape', kind: 'pick', def: 'ball', options: SHAPES, group: 'Crop' },
-  { key: 'radius', label: 'Radius', kind: 'slider', def: 16, min: 1, max: (value) => REACH[value.crop] ?? DEN, step: 1, unit: `/${DEN}`, group: 'Crop' },
+  { key: 'radius', label: 'Radius', kind: 'slider', def: 16, min: 1, max: reach, step: 1, unit: `/${DEN}`, group: 'Crop' },
   { key: 'touch', label: 'Touching', kind: 'toggle', def: 0, group: 'Crop' },
   { key: 'invert', label: 'Invert', kind: 'toggle', def: 0, group: 'Look' },
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
 ];
 
+export const units = () => import('./unit.js');
+
 export const PAGE = {
   spec: SPEC,
+  units,
   keys: [
     { key: 'Enter', label: 'Random', act: 'random', button: true },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
@@ -41,7 +44,7 @@ export function make(canvas, view, opts = {}) {
   const math = opts.math;
   if (!math) throw new Error('two: the scene wants mrlyjs/math as opts.math');
   const ctx = canvas.getContext('2d');
-  const plan = study(math, { ...tidy(DESIGN, opts), ...tidy(SPEC, opts) }, view.rand);
+  const plan = study(math, { ...tidy(DESIGN, opts), ...tidy(SPEC, opts, opts) }, view.rand);
   const { cols, rows, runs } = plan;
   let dirty = true;
   const stamp = (pen, box, color) => {

@@ -277,15 +277,15 @@ const BAD: &[(&str, fn())] = &[
         let _ = num::blend::sigma(&[i128::MAX, 1]);
     }),
     (
-        "num::design::peaks, an axis shorter than the scores",
+        "math::design::peaks, an axis shorter than the scores",
         || {
-            let _ = num::design::peaks(&[1.0, 2.0], &[1.0, 2.0, 3.0], (0.0, 1.0), 0.5);
+            let _ = math::design::peaks(&[1.0, 2.0], &[1.0, 2.0, 3.0], (0.0, 1.0), 0.5);
         },
     ),
     (
-        "num::design::spectrum, a pole list under the samples",
+        "math::design::spectrum, a pole list under the samples",
         || {
-            let _ = num::design::spectrum(&[0.0, 1.0], &[1.0, 2.0, 3.0, 4.0]);
+            let _ = math::design::spectrum(&[0.0, 1.0], &[1.0, 2.0, 3.0, 4.0]);
         },
     ),
     ("num::fft::fft, two buffers of unequal length", || {
@@ -324,35 +324,35 @@ const BAD: &[(&str, fn())] = &[
             let _ = num::fft::convolve(&[1.0; 16], &[1.0; 9], 4);
         },
     ),
-    ("num::ladder::Design::new, a digit past the base", || {
-        let _ = num::ladder::Design::new(5, &[3]);
+    ("math::ladder::Design::new, a digit past the base", || {
+        let _ = math::ladder::Design::new(5, &[3]);
     }),
     (
-        "num::ladder::Design::with_peel, a digit past the base",
+        "math::ladder::Design::with_peel, a digit past the base",
         || {
-            let _ = num::ladder::Design::with_peel(5, &[0, 7], 3);
+            let _ = math::ladder::Design::with_peel(5, &[0, 7], 3);
         },
     ),
-    ("num::memory::Rule::new, a zero dimension", || {
-        let _ = num::memory::Rule::new(0, 1, 0);
+    ("math::memory::Rule::new, a zero dimension", || {
+        let _ = math::memory::Rule::new(0, 1, 0);
     }),
-    ("num::memory::Rule::new, a code past its width", || {
-        let _ = num::memory::Rule::new(1, 2, 16);
+    ("math::memory::Rule::new, a code past its width", || {
+        let _ = math::memory::Rule::new(1, 2, 16);
     }),
     (
-        "num::memory::Rule::full, a width past the dimension",
+        "math::memory::Rule::full, a width past the dimension",
         || {
-            let _ = num::memory::Rule::full(3, 3);
+            let _ = math::memory::Rule::full(3, 3);
         },
     ),
-    ("num::radix::Base::new, a unit base", || {
-        let _ = num::radix::Base::new(num::gauss::Ring::Gaussian, (1, 0));
+    ("math::radix::Base::new, a unit base", || {
+        let _ = math::radix::Base::new(num::gauss::Ring::Gaussian, (1, 0));
     }),
-    ("num::radix::tile, an m of twelve", || {
-        let _ = num::radix::tile(12, 1);
+    ("math::radix::tile, an m of twelve", || {
+        let _ = math::radix::tile(12, 1);
     }),
-    ("num::radix::tile, a code past its range", || {
-        let _ = num::radix::tile(3, 1 << 9);
+    ("math::radix::tile, a code past its range", || {
+        let _ = math::radix::tile(3, 1 << 9);
     }),
     ("num::sieve::side, a letter that is not odd", || {
         let _ = num::sieve::side(&[4]);
@@ -397,27 +397,27 @@ const BAD: &[(&str, fn())] = &[
         let _ = num::sieve::limit(&[4, 6], 2);
     }),
     (
-        "num::radix::Radix::from_code, a code past its range",
+        "math::radix::Radix::from_code, a code past its range",
         || {
-            let base = num::radix::Base::new(num::gauss::Ring::Eisenstein, (3, 0)).unwrap();
-            let _ = num::radix::Radix::from_code(base, 1 << 9);
+            let base = math::radix::Base::new(num::gauss::Ring::Eisenstein, (3, 0)).unwrap();
+            let _ = math::radix::Radix::from_code(base, 1 << 9);
         },
     ),
     (
-        "num::radix::Radix::new, digits that do not cover the residues",
+        "math::radix::Radix::new, digits that do not cover the residues",
         || {
-            let base = num::radix::Base::new(num::gauss::Ring::Eisenstein, (3, 0)).unwrap();
-            let _ = num::radix::Radix::new(base, vec![(0, 0), (1, 0)], vec![(1, 0); 3]);
+            let base = math::radix::Base::new(num::gauss::Ring::Eisenstein, (3, 0)).unwrap();
+            let _ = math::radix::Radix::new(base, vec![(0, 0), (1, 0)], vec![(1, 0); 3]);
         },
     ),
-    ("num::radix::with_twists, a twist past the digits", || {
-        let _ = num::radix::twindragon().unwrap().with_twists(&[0, 9]);
+    ("math::radix::with_twists, a twist past the digits", || {
+        let _ = math::radix::twindragon().unwrap().with_twists(&[0, 9]);
     }),
-    ("num::memory::Rule::full, a zero dimension", || {
-        let _ = num::memory::Rule::full(0, 1);
+    ("math::memory::Rule::full, a zero dimension", || {
+        let _ = math::memory::Rule::full(0, 1);
     }),
-    ("num::ladder::Design::new, a base of one", || {
-        let _ = num::ladder::Design::new(1, &[0, 1]);
+    ("math::ladder::Design::new, a base of one", || {
+        let _ = math::ladder::Design::new(1, &[0, 1]);
     }),
     // MATH
     ("math::atoms::carpet_2d, a zero side", || {
@@ -753,6 +753,39 @@ const BAD: &[(&str, fn())] = &[
     ("math::shape::refine, a zero base", || {
         let ball = math::shape::named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
         let _ = math::shape::refine(&math::atoms::ones_2d(3), &ball, 0, 1, false);
+    }),
+    ("math::shape::fit, no extents", || {
+        let _ = math::shape::fit(&wild_shape(), &[]);
+    }),
+    ("math::shape::fit, a shape of another dimension", || {
+        let _ = math::shape::fit(&wild_shape(), &[2, 3]);
+    }),
+    ("math::shape::fit, an extent past an i64", || {
+        let ball = math::shape::named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
+        let _ = math::shape::fit(&ball, &[usize::MAX, 1]);
+    }),
+    ("math::shape::reach, a zero den", || {
+        let _ = math::shape::reach("ball", 2, 0);
+    }),
+    ("math::shape::reach, the widest den", || {
+        let _ = math::shape::reach("ball", 2, u32::MAX);
+    }),
+    ("math::six::geometry::copies, the widest disc", || {
+        let _ = math::six::copies(usize::MAX);
+    }),
+    (
+        "math::six::geometry::disc, a cell that is not a hexagon",
+        || {
+            let cell = math::six::cut_design(Code::from(23u64), 3, 1, 2).unwrap();
+            let flat = math::six::Cell6d::new(empty_2d(), cell.projection, cell.orientation, 0);
+            let _ = math::six::disc(&flat, 1);
+        },
+    ),
+    ("math::arcs::curves, a code past the base", || {
+        let _ = math::arcs::curves(Code::from(16u64), 2, 1);
+    }),
+    ("math::arcs::curves, a level past the machine word", || {
+        let _ = math::arcs::curves(Code::from(9u64), 2, 200);
     }),
     ("math::shape::regions, a center past an i64", || {
         let _ = math::shape::regions(&wild_shape(), &[1]);

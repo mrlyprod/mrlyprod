@@ -111,7 +111,7 @@ html.js .contents summary::-webkit-details-marker { display: none; }
 .menu { display: grid; gap: var(--s7); }
 .menu section > h2 { border-bottom: var(--hair); padding-bottom: var(--s2); margin-bottom: var(--s4); }
 .menu .gallery.grid { grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); }
-.menu .grid .tile h2 { font-size: var(--t3); overflow-wrap: anywhere; }
+.menu .grid .tile h2 { font-size: var(--t3); hyphens: auto; overflow: hidden; text-overflow: ellipsis; }
 .menu form { display: grid; gap: var(--s5); }
 .menu form input { width: 100%; min-height: 2.75rem; padding: 0 var(--s4); background: var(--panel); color: var(--fg); border: var(--hair); border-radius: var(--r2); font-size: var(--t5); }
 .menu form p { grid-column: 1 / -1; }

@@ -1,6 +1,7 @@
 from typing import Any, Literal
 
 from numpy.typing import NDArray
+import mrlypy.core
 import mrlypy.math.name
 from . import baseq, catalog, code, factory, universe, word
 
@@ -93,6 +94,9 @@ def corners(dimension: int) -> list[bytes]:
 def corners_to_code(filled: list[bytes], dimension: int, base: int) -> int:
     """Packs filled residue corners back into their code."""
 
+def level_cap(number: int, dimension: int, budget: int) -> int:
+    """Returns the deepest level, never below one, whose grid of number to the dimension per level stays within the cell budget."""
+
 def levels_code(dimension: int, base: int, levels: list[int]) -> int:
     """Returns the code of the design filled wherever a corner's residue sum lands in the levels."""
 
@@ -101,6 +105,9 @@ def magic(layers: list[dict[str, Any]]) -> NDArray[Any]:
 
 def magic_named(layers: list[tuple[str, int]]) -> NDArray[Any]:
     """Composes JSON-named layers in order."""
+
+def random_code(dimension: int, base: int, rng: mrlypy.core.Rng, min_fills: int) -> int:
+    """Rolls a code uniformly from the nonempty codes of a dimension and base that fill at least min_fills corners."""
 
 def sources(catalog: Any, dimension: int) -> list[Any]:
     """Builds the tile sources a catalog names at a dimension."""

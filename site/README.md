@@ -12,33 +12,59 @@
 request /about/
   edge   kit/edge.js: no dot in the last segment -> /index.html
   shell  ui/index.html: boot.js, page.css, the static chrome, chrome.js + router.js
-  router the site:routes row -> site:pages[kind]() + fetch /raw/<source> -> React into #main
+  router the site:routes row -> ui/app.jsx (apps/<id>/index.jsx) or ui/prose.jsx + fetch /raw/<source> -> #main
   figure lib/figure.js draws each host from an intersection queue
 ```
 
+## THE UNIT
+
+- `apps/<id>/` is the only unit: every route on mrly.net is one folder, `/<id>/`; `home` is `/`.
+- `app.json`: `title`, `line` (the lead), `menu` (`play`, `read` or `tool`), and `saver`, `hidden`, `deep` (each `true` or absent), `source` (a repo path of a markdown page), `route` (`/404.html` for `missing`). No other field; nothing else is configured.
+- The page is exactly one of `index.jsx`, `page.md` or `source`.
+- `index.jsx` exports `mount(at)` and `unmount(at)`, an island under the still (title, figure, `<noscript>`), wide, bare and wearing `lib/mrly.css`; or `render(row, site, host, { text, rows, url, left, right })`, `unmount(host)`, optional `mount(host)`, a page drawn before the swap; an optional `layout` (`left`, `right`, `wide`, `bare`, `sheet`) overrides the island's.
+- `page.md` and `source` are prose, rendered by `ui/prose.jsx` from `/raw/<source>`; front matter `opener: true` (draws the app's icon above the lede), `button` and `link`.
+- `icon.js` is the app's figure, named by the id; a hidden app may omit it, a shown one may not.
+- `scene.js` and `widget.jsx`: required of a saver.
+- Blog posts: `apps/blog/<slug>/index.md` is `/blog/<slug>/` (front matter `title`, `date` YYYY-MM-DD, `lead`), with its `icon.js`, the figure `blog-<slug>`.
+- `site.json` `desk` names the saver home plays and the Settings pick offers first.
+
 ## ROUTES
 
-- `scripts/site.ts` collects the rows: `{ route, kind, title, source, date, lead, figure, hidden, meta }`.
-- `source` is the repo path served at `/raw/<source>` for a markdown row, null otherwise; no row carries a body.
-- Kinds: home, hub, prose, app, settings, git, stats, cart, paused, missing, moved, figures.
-- `pages/<slug>.md` is `/<slug>/`: front matter `title`, `lead`, optional `figure`, `button` and `link`.
-- `blog/<slug>/index.md` is `/blog/<slug>/`: front matter `title`, `date` (YYYY-MM-DD), `lead`, optional `figure` (default `blog-<slug>`).
+- `scripts/site.ts` collects the rows from `apps/*/app.json`, home first, then by id: `{ route, kind, title, source, date, lead, figure, hidden, meta }`.
+- `kind` is `app` (an `index.jsx`) or `prose` (a markdown source); `meta` holds `id`, `menu`, `saver`, `deep`, and `prose` (`page`, `post` or `source`).
+- `source` is the repo path served at `/raw/<source>` for a prose row, null otherwise; no row carries a body.
 - `/mrlymath/` renders `pkgs/mrlyrs/NAMES.md`, so the page and the crate never disagree.
-- `apps/apps.json` makes `/<id>/` per row.
-- `/blog/` and `/menu/` are hubs; the menu is the `tree` of `site.json`, filled with the pages, the apps and the socials.
-- `/research/`, `/research/wiki/` and `/demos/` are paused doors: the door's figure, its title, one line that the section is being rebuilt; anything under them is missing.
-- `/cart/`, `/stats/`, `/redirects/`, `/404.html` and `/figures/` are hidden: no sitemap, no `llms.txt`, no search.
+- `/menu/` is Play, Read and Tools from each app's `menu`, alphabetical, hidden apps off, then the Root and Elsewhere folders of the `tree` in `site.json`; Home is the wordmark.
+- `/research/` is the `research` app, a deep route like `/git/`: a grid of topic cards from `research.json`, and `/research/<slug>/` opens that topic's README in a dialog over the grid, its figures as a gallery; an unknown slug shows the missing state.
+- `research.json` is built from `../research/*/README.md` (a folder with a front matter `title`; `shared/` never): `{ topics: [{ slug, title, figure, figures }] }`, `figure` the README's, `figures` every figure of `<topic>/figures/`.
+- A hidden app (`redirects`, `missing`, `figures`) has no sitemap entry, no `llms.txt` line, no search row and no menu card; it sets no `menu`.
 - `/figures/` draws every live figure with its draw time.
 - A missing url renders "Nothing here" with `noindex`, status 200 by design.
-- Every row wears a live figure; the build stops on an unknown name, on a missing source and on two rows for one route.
+- The build stops on a bad `app.json`, an unknown figure, a missing source and two rows for one route.
 - `redirects.json` is the moved urls, `{ "/old/": { "to": "/new/", "since": "YYYY-MM-DD" } }`; the edge answers each with a 301, `/redirects/` lists them, and the build drops a row whose target is no route.
+
+## FIGURES
+
+- The roster: `apps/*/icon.js` (name = id), `apps/blog/*/icon.js` (name `blog-<slug>`), `../research/*/figures/*.ts` and `../research/shared/figures/*.ts` (name = stem); a name is lowercase words and digits joined by hyphens, taken once, and the file exports `default`.
+- A figure exports `default function draw(pen, ink, t)`, `t` in [0, 1) over one loop.
+- `size`: `[width, height]`, default `[1024, 1024]`; a non-square size keeps its aspect in the host.
+- `still`: the `t` a still figure draws, default 0.
+- `loop` in seconds, with `frames`: an animated figure only; none in the live set.
+- `units`: the `mrlyjs` wasm units it imports, e.g. `{ math }`; the caller initialises them before the first draw.
+- `ink` is `ink(tinted(dark | light, ...))` from `kit/theme`: the tint's hue sits in the blue slot.
+- A figure is a pure function of its inputs: no file, DOM, Date or Math.random.
+- A figure asserts its facts and throws when one breaks; heavy facts are memoised at module level; pixels are never cached.
+- The pen and the kit live in `../pkgs/mrlyjs/view`: `canvas` in the browser, `raster` in Bun and the tests.
+- A lone image line `![caption](name)` in a page, a post or a research note is a live figure; the build and the check stop on an unknown name.
+- `scripts/figures.test.ts` loads every figure: `default` a function, every `units` value defined.
+- `bun run time [name ...]` draws each figure in a fresh worker with the raster pen, cold then warm, dark and light; gate 150 ms warm, 500 ms cold on the icons, `about` excluded; a research figure over it is a named warning, judged with its topic; exit 1 when an icon is over or a figure throws.
 
 ## BUILD
 
 - `bun run build` runs `scripts/site.ts` into `dist/`, or into `MRLY_DIST`; pure Bun, no Chrome, no cargo.
 - Prime: bundle `ui/boot.js`, `ui/git.css` and `lib/mrly.css`; each woff2 ships as `/fonts/<stem>-<sha8>.woff2`.
-- Collect: the rows, the figure roster (`../figures/*.ts`), the wasm units the figures and apps import, the kept redirects, the raw list (`git ls-files` less `research/`).
-- Bundle: one `Bun.build` with splitting over `ui/index.html`, `ui/pages/*.jsx`, `lib/git.js`, every live figure, every `apps/<id>/index.jsx` and `lib/lock.js`.
+- Collect: the apps, the rows, the figure roster, the wasm units the figures and apps import, the kept redirects, the raw list (`git ls-files`), the research topics.
+- Bundle: one `Bun.build` with splitting over `ui/index.html`, `ui/app.jsx`, `ui/prose.jsx`, `lib/git.js`, every live figure, every `apps/<id>/index.jsx` and `lib/lock.js`.
 - Names: entries `[name]-[hash]`, chunks `lib-[hash]`; the build refuses a bundled file with no hash.
 - Shell: the bundled `index.html` with the hashed boot script swapped in for `/boot.js`; `404.html` is its copy.
 - Copy: `raw/<path>` for every listed file, `public/`, the font licences.
@@ -49,17 +75,16 @@ request /about/
 
 - `scripts/site.ts` is one Bun plugin; Bun cannot import a computed path, so each lazy family is a module of `() => import()` thunks.
 - `site:routes`: `{ site, rows }`.
-- `site:pages`: kind to page chunk, from `ui/pages/*.jsx`.
 - `site:figures`: name to figure chunk, plus the wasm urls of the live units.
-- `site:apps`: id to app chunk, plus `lock`, the desk and its lock screen.
+- `site:apps`: id to app chunk, `own` (the apps whose index.jsx exports `render`), plus `lock`, the desk and its lock screen.
 - `site:css`: the `git` and `mrly` sheet urls.
-- `apps:scenes`: the saver scenes in `apps.json` order, for the desk.
-- `mrlyjs/<door>` resolves through the exports of `pkgs/mrlyjs/package.json`; `pkg/<unit>/mrlyjs_<unit>*` resolves to `site/pkg/`.
+- `apps:scenes`: the saver scenes, the desk first, then by title.
+- `mrlyjs/<door>` resolves through the exports of `pkgs/mrlyjs/package.json` (the `mrlyjs` plugin, also used by the figure test and `time`); `pkg/<unit>/mrlyjs_<unit>*` resolves to `site/pkg/`.
 
 ## WASM
 
-- `bun run wasm` runs `../scripts/wasm.sh`: it builds every unit of `pkgs/bridge/units.txt` and copies the units `../figures/` and `apps/` import into `pkg/<unit>/`.
-- Live units today: font, life, math.
+- `bun run wasm` runs `../scripts/wasm.sh`: it builds every unit of `pkgs/bridge/units.txt` and copies the units the roster and `apps/` import into `pkg/<unit>/`.
+- Live units today: core, font, life, math, num.
 - `pkg.lock` pins the copy in S3 the builder Lambda pulls through `scripts/pkg.ts`; the deploy uploads `pkg/` and re-pins it.
 - The build stops when a live unit is missing from `pkg/`.
 
@@ -68,7 +93,7 @@ request /about/
 - `bun run --cwd mrlyprod/site dev`, from `site/`, where `bunfig.toml` hands the plugin to Bun's dev server.
 - `scripts/dev.ts` serves 127.0.0.1:3000 (`PORT` overrides) with HMR.
 - A path the edge sends to the shell answers `ui/index.html`, bundled by Bun on request.
-- `/raw/<path>` reads the tree per request, never `research/`; `public/` reads from disk.
+- `/raw/<path>` reads the tree per request; `public/` reads from disk.
 - The globals, the boot script, the sheets and the faces are built once at start, so a new page, post or app needs a restart.
 
 ## EDGE
@@ -90,7 +115,7 @@ request /about/
 ## CHECK
 
 - `bun run check` runs `check.ts`.
-- Source rows: the rows collect; every figure a page or post names is live; every markdown link lands, a rooted one on a route; the house rules (no two blank lines, no em or en dash, a blank line after a heading).
+- Source rows: the rows collect; every figure a page, a post or a research note names is live; every markdown link lands, a rooted one on a route; the house rules over pages and posts (no two blank lines, no em or en dash, a blank line after a heading).
 - Dist rows, over a built `dist/`: every url in the shell is a route or a file; every row's source is under `raw/`; every redirect goes from a gone path to a route.
 - `bun run test` runs every test, each beside the file it covers.
 
@@ -119,5 +144,4 @@ request /about/
 
 ## IGNORED
 
-- `../research/` is the archive: no route, no figure, no `/raw/research/`, no `git.json` row, no `llms.txt` line.
 - `pkg/`, `dist/` and `node_modules/` are build output and stay out of git.

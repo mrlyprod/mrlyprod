@@ -1,5 +1,6 @@
 use super::code::Code;
 use crate::core::error::{overflow_error, value_error, Result};
+use crate::core::rng::Rng;
 use crate::core::Tensor;
 use crate::math::name::{Bang, Named};
 use crate::math::rules;
@@ -221,6 +222,68 @@ pub fn create_from_corners(
     render(filled, number, dimension, base, level)
 }
 
+/// Returns the deepest level, never below one, whose grid of number to the dimension per level stays within the cell budget.
+///
+/// ```
+/// assert_eq!(mrlyrs::math::bang::level_cap(3, 2, 60000), 5);
+/// ```
+pub fn level_cap(number: usize, dimension: usize, budget: usize) -> usize {
+    if number < 2 || dimension == 0 {
+        return 1;
+    }
+    let mut level = 1;
+    while dimension
+        .checked_mul(level + 1)
+        .and_then(|power| u32::try_from(power).ok())
+        .and_then(|power| (number as u128).checked_pow(power))
+        .is_some_and(|cells| cells <= budget as u128)
+    {
+        level += 1;
+    }
+    level
+}
+
+/// Rolls a code uniformly from the nonempty codes of a dimension and base that fill at least min_fills corners.
+///
+/// # Errors
+///
+/// Errors when the corners overflow a code, or min_fills is more than the corners.
+pub fn random_code(dimension: usize, base: usize, rng: &mut Rng, min_fills: usize) -> Result<Code> {
+    total_codes(dimension, base)?;
+    let corners = base.pow(dimension as u32);
+    let least = min_fills.max(1);
+    if least > corners {
+        return value_error(format!(
+            "dimension {dimension} base {base} has {corners} corners, fewer than {least} fills."
+        ));
+    }
+    let mut row = vec![0u128; corners + 1];
+    row[0] = 1;
+    for n in 1..=corners {
+        for k in (1..=n).rev() {
+            row[k] += row[k - 1];
+        }
+    }
+    let total: u128 = row[least..].iter().sum();
+    let width = 128 - (total - 1).leading_zeros();
+    let mut draw = loop {
+        let draw = (0..width).fold(0u128, |draw, i| draw | u128::from(rng.boolean()) << i);
+        if draw < total {
+            break draw;
+        }
+    };
+    let mut fills = least;
+    while draw >= row[fills] {
+        draw -= row[fills];
+        fills += 1;
+    }
+    Ok(Code(
+        rng.sample_indices(corners, fills)
+            .into_iter()
+            .fold(0, |code, i| code | 1 << i),
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -338,5 +401,45 @@ mod tests {
         assert!(magic(&[]).is_err());
         assert!(magic(std::slice::from_ref(&plane)).is_err());
         assert!(magic(&[plane, cube]).is_err());
+    }
+    #[test]
+    fn the_level_cap_keeps_the_grown_cells_under_the_budget() {
+        let cap = level_cap;
+        assert_eq!([cap(3, 2, 60000), cap(3, 3, 60000)], [5, 3]);
+        let sheet = |number, copies: usize| cap(number, 2, 262144 / copies);
+        assert_eq!(
+            [sheet(3, 25), sheet(3, 1), sheet(7, 144), sheet(5, 16)],
+            [4, 5, 1, 3]
+        );
+        let six = |number, copies: usize| cap(number, 2, 32000 / (6 * copies));
+        assert_eq!([six(3, 1), six(5, 1), six(7, 1), six(9, 1)], [3, 2, 2, 1]);
+        assert_eq!(
+            [six(3, 7), six(5, 7), six(7, 7), six(3, 19), six(3, 61)],
+            [3, 2, 1, 2, 2]
+        );
+        assert_eq!([cap(2, 2, 65536), cap(3, 2, 65536)], [8, 5]);
+        for number in [2usize, 3, 4, 5] {
+            let level = cap(number, 3, 60000) as u32;
+            assert!(number.pow(3 * level) <= 60000 && number.pow(3 * (level + 1)) > 60000);
+        }
+        assert_eq!([cap(1, 2, 10), cap(9, 3, 10)], [1, 1]);
+    }
+    #[test]
+    fn a_rolled_code_fills_its_least_corners_and_one_seed_rolls_one_code() {
+        for seed in 0..50 {
+            let code = random_code(2, 3, &mut Rng::new(seed), 3).unwrap().get();
+            assert!((1..512).contains(&code) && code.count_ones() >= 3, "{code}");
+        }
+        assert_eq!(
+            random_code(2, 3, &mut Rng::new(9), 3).unwrap(),
+            random_code(2, 3, &mut Rng::new(9), 3).unwrap()
+        );
+        assert!((1..16).contains(&random_code(2, 2, &mut Rng::new(1), 0).unwrap().get()));
+        assert_eq!(
+            random_code(3, 3, &mut Rng::new(1), 27).unwrap().get(),
+            (1 << 27) - 1
+        );
+        assert!(random_code(2, 2, &mut Rng::new(1), 5).is_err());
+        assert!(random_code(7, 2, &mut Rng::new(1), 1).is_err());
     }
 }

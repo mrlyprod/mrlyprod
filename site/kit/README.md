@@ -7,7 +7,7 @@
 
 - `md/md.ts` is the markdown pipeline: GFM, `$` and `$$` handed to the caller's math (KaTeX as MathML in the browser), heading ids, a lone image line naming a figure as a figure host, raw HTML as text, `3*n*(n+1)` kept literal.
 - `md/links.ts` is the resolver, `resolve(source, href, index)`: every relative href comes out absolute.
-- Resolver order: a denied scheme to `#`; a scheme, `#` or rooted href passes; a source the rows publish to its route; `research/` to its GitHub blob; a folder to `/git/<dir>/`; an image or a pdf to `/raw/`; any other file to `/git/<path>`.
+- Resolver order: a denied scheme to `#`; a scheme, `#` or rooted href passes; a source the rows publish to its route; a folder to `/git/<dir>/`; an image or a pdf to `/raw/`; any other file to `/git/<path>`.
 - `md/text.ts` holds `escape`, so a browser module imports no pipeline.
 - `edge.js` is the CloudFront function source: one plain file, `decide(uri)` and `handler(event)`, and the `/*MOVED*/{}` mark the redirect table replaces.
 - `edge.ts` evaluates `edge.js` with `../redirects.json` pasted in, for dev and shots.

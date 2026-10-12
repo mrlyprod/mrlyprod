@@ -3,9 +3,20 @@ import * as wasm from "./pkg/math/mrlyjs_math.js";
 export { default, initSync } from "./pkg/math/mrlyjs_math.js";
 export const Rng = wasm.Rng;
 export const arcs = {
+    curves: wasm.arcs_curves,
     draw: wasm.arcs_draw,
     law: wasm.arcs_law,
     trace: wasm.arcs_trace,
+};
+export const arrays = {
+    MOST: wasm.arrays_MOST,
+    essential: wasm.arrays_essential,
+    fractal: wasm.arrays_fractal,
+    holes: wasm.arrays_holes,
+    law: wasm.arrays_law,
+    lost: wasm.arrays_lost,
+    paired: wasm.arrays_paired,
+    weights: wasm.arrays_weights,
 };
 export const atoms = {
     carpet_2d: wasm.atoms_carpet_2d,
@@ -45,6 +56,10 @@ export const atoms = {
     zline_3d: wasm.atoms_zline_3d,
     ztree_3d: wasm.atoms_ztree_3d,
 };
+export const automaton = {
+    Automaton: wasm.automaton_Automaton,
+    ROUNDING: wasm.automaton_ROUNDING,
+};
 export const bang = {
     Design: wasm.bang_Design,
     MagicLayer: wasm.bang_MagicLayer,
@@ -53,9 +68,11 @@ export const bang = {
     code_to_corners: wasm.bang_code_to_corners,
     corners: wasm.bang_corners,
     corners_to_code: wasm.bang_corners_to_code,
+    level_cap: wasm.bang_level_cap,
     levels_code: wasm.bang_levels_code,
     magic: wasm.bang_magic,
     magic_named: wasm.bang_magic_named,
+    random_code: wasm.bang_random_code,
     sources: wasm.bang_sources,
     symmetries: wasm.bang_symmetries,
     total_exposure: wasm.bang_total_exposure,
@@ -224,6 +241,47 @@ export const counts = {
         solid_slice_vertices: wasm.counts_six_solid_slice_vertices,
     },
 };
+export const design = {
+    ZETA_ORDINATES: wasm.design_ZETA_ORDINATES,
+    digits_of: wasm.design_digits_of,
+    echo_series: wasm.design_echo_series,
+    elements: wasm.design_elements,
+    log_grid: wasm.design_log_grid,
+    median_floor: wasm.design_median_floor,
+    meter: wasm.design_meter,
+    nearest: wasm.design_nearest,
+    peaks: wasm.design_peaks,
+    pole_lattice: wasm.design_pole_lattice,
+    resample: wasm.design_resample,
+    score: wasm.design_score,
+    size: wasm.design_size,
+    spectrum: wasm.design_spectrum,
+    upper_rms: wasm.design_upper_rms,
+};
+export const dissection = {
+    BAR_A: wasm.dissection_BAR_A,
+    BAR_B: wasm.dissection_BAR_B,
+    CAP_BASE: wasm.dissection_CAP_BASE,
+    CERTIFIED: wasm.dissection_CERTIFIED,
+    DIGIT_WALL: wasm.dissection_DIGIT_WALL,
+    FIRST_BELOW: wasm.dissection_FIRST_BELOW,
+    GAMMA: wasm.dissection_GAMMA,
+    WINDOW_WALL: wasm.dissection_WINDOW_WALL,
+    cap: wasm.dissection_cap,
+    chain_exponent: wasm.dissection_chain_exponent,
+    chain_margin: wasm.dissection_chain_margin,
+    chain_root: wasm.dissection_chain_root,
+    chain_wall: wasm.dissection_chain_wall,
+    consecutive: wasm.dissection_consecutive,
+    fraction: wasm.dissection_fraction,
+    kappa: wasm.dissection_kappa,
+    masses: wasm.dissection_masses,
+    reach: wasm.dissection_reach,
+    reading: wasm.dissection_reading,
+    regions: wasm.dissection_regions,
+    tally: wasm.dissection_tally,
+    weights: wasm.dissection_weights,
+};
 export const graph = {
     Layout: wasm.graph_Layout,
     Network: wasm.graph_Network,
@@ -238,6 +296,26 @@ export const graph = {
     tips: wasm.graph_tips,
     total_length: wasm.graph_total_length,
     tunnel_graph: wasm.graph_tunnel_graph,
+};
+export const ladder = {
+    Design: wasm.ladder_Design,
+    ROUNDING: wasm.ladder_ROUNDING,
+    cofactor: wasm.ladder_cofactor,
+    residue: wasm.ladder_residue,
+    zeta: wasm.ladder_zeta,
+};
+export const memory = {
+    Rule: wasm.memory_Rule,
+    SPAN: wasm.memory_SPAN,
+    SWEEPS: wasm.memory_SWEEPS,
+    TOLERANCE: wasm.memory_TOLERANCE,
+    allowed_windows: wasm.memory_allowed_windows,
+    cells: wasm.memory_cells,
+    counts: wasm.memory_counts,
+    exponent: wasm.memory_exponent,
+    kappa: wasm.memory_kappa,
+    perron: wasm.memory_perron,
+    transfer: wasm.memory_transfer,
 };
 export const moire = {
     Field: wasm.moire_Field,
@@ -269,6 +347,8 @@ export const name = {
     Lattice: wasm.name_Lattice,
     Sequence: wasm.name_Sequence,
     Word: wasm.name_Word,
+    of: wasm.name_of,
+    words: wasm.name_words,
 };
 export const press = {
     CORNERS: wasm.press_CORNERS,
@@ -287,6 +367,16 @@ export const press = {
     word_member: wasm.press_word_member,
     word_members: wasm.press_word_members,
     word_profile: wasm.press_word_profile,
+};
+export const radix = {
+    Base: wasm.radix_Base,
+    Radix: wasm.radix_Radix,
+    flowsnake: wasm.radix_flowsnake,
+    gasket: wasm.radix_gasket,
+    koch: wasm.radix_koch,
+    terdragon: wasm.radix_terdragon,
+    tile: wasm.radix_tile,
+    twindragon: wasm.radix_twindragon,
 };
 export const roulette = {
     Nodes: wasm.roulette_Nodes,
@@ -308,8 +398,10 @@ export const shape = {
     crop: wasm.shape_crop,
     crossing_shell: wasm.shape_crossing_shell,
     crossing_tree: wasm.shape_crossing_tree,
+    fit: wasm.shape_fit,
     named: wasm.shape_named,
     radial_census: wasm.shape_radial_census,
+    reach: wasm.shape_reach,
     refine: wasm.shape_refine,
     regions: wasm.shape_regions,
     shapes: wasm.shape_shapes,
@@ -328,8 +420,10 @@ export const six = {
     blur: wasm.six_blur,
     census: wasm.six_census,
     components: wasm.six_components,
+    copies: wasm.six_copies,
     cut: wasm.six_cut,
     cut_design: wasm.six_cut_design,
+    disc: wasm.six_disc,
     east: wasm.six_east,
     euler: wasm.six_euler,
     fills: wasm.six_fills,
@@ -436,6 +530,13 @@ export const spirograph = {
     trace: wasm.spirograph_trace,
     track: wasm.spirograph_track,
     turn: wasm.spirograph_turn,
+};
+export const sumset = {
+    DEEPEST: wasm.sumset_DEEPEST,
+    Pair: wasm.sumset_Pair,
+    Sumset: wasm.sumset_Sumset,
+    WIDEST: wasm.sumset_WIDEST,
+    pairs: wasm.sumset_pairs,
 };
 export const three = {
     Vec3: wasm.three_Vec3,

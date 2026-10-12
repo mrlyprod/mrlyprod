@@ -142,6 +142,11 @@ pub fn lift(kind: Lift, side: usize) -> Vec<u8> {
 
 // KRONECKER
 
+/// Reads a design plus-minus: a filled cell is plus, zero, and a void is minus, one.
+pub fn signs(types: &[u8]) -> Vec<u8> {
+    types.iter().map(|&t| u8::from(t == 0)).collect()
+}
+
 /// Folds a tile of the side into its Kronecker power at the level, one bit per site.
 ///
 /// The bits ride the exclusive or, so the power is the digit rule of the tile: a site takes the
@@ -269,6 +274,14 @@ pub fn repeat(tile: &[u8], number: usize, side: usize) -> Vec<u8> {
     out
 }
 
+/// Keeps the sites lit in both grids of the same length, site by site.
+pub fn mask(a: &[u8], b: &[u8]) -> Vec<u8> {
+    a.iter()
+        .zip(b)
+        .map(|(&x, &y)| u8::from(x != 0 && y != 0))
+        .collect()
+}
+
 /// Exclusive-ors two grids of the same length, site by site.
 pub fn difference(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b).map(|(&x, &y)| x ^ y).collect()
@@ -363,6 +376,57 @@ mod tests {
             let grown = upsample(&coarse, side, 2);
             assert_eq!(difference(&grown, &fine), repeat(&tile, 2, side * 2));
         }
+    }
+
+    fn grown(tile: &[u8], number: usize, level: usize) -> Vec<u8> {
+        let side = number.pow(level as u32);
+        let mut out = vec![1u8; side * side];
+        for r in 0..side {
+            for c in 0..side {
+                let (mut row, mut col) = (r, c);
+                for _ in 0..level {
+                    out[r * side + c] &= tile[(row % number) * number + col % number];
+                    row /= number;
+                    col /= number;
+                }
+            }
+        }
+        out
+    }
+
+    #[test]
+    fn a_design_read_plus_minus_lights_its_voids() {
+        let nine = [1, 0, 0, 1];
+        assert_eq!(signs(&nine), vec![0, 1, 1, 0]);
+        assert_eq!(signs(&[2, 0, 0, 1]), vec![0, 1, 1, 0]);
+        let sign = power(&signs(&nine), 2, 2).unwrap();
+        assert_eq!(faults(&grown(&nine, 2, 2), &sign), 12);
+        assert_eq!(faults(&sign, &lift(Lift::Parity, 4)), 0);
+        let carpet = [1, 1, 1, 1, 0, 1, 1, 1, 1];
+        assert_eq!(signs(&carpet), vec![0, 0, 0, 0, 1, 0, 0, 0, 0]);
+        let types = grown(&carpet, 3, 2);
+        let sign = power(&signs(&carpet), 3, 2).unwrap();
+        assert_eq!(types.iter().filter(|&&bit| bit == 1).count(), 64);
+        assert_eq!(sign.iter().filter(|&&bit| bit == 0).count(), 65);
+        assert_eq!(faults(&types, &sign), 80);
+    }
+
+    #[test]
+    fn the_design_filter_is_the_blown_up_level_masked_by_the_tile_complement() {
+        for (tile, number, level, differ) in [
+            (vec![1, 0, 0, 1], 2usize, 2usize, 8),
+            (vec![1, 1, 1, 1, 0, 1, 1, 1, 1], 3, 1, 8),
+        ] {
+            let side = number.pow(level as u32 + 1);
+            let wide = upsample(&grown(&tile, number, level), side / number, number);
+            let diff = difference(&wide, &grown(&tile, number, level + 1));
+            assert_eq!(diff.iter().filter(|&&bit| bit == 1).count(), differ);
+            assert_eq!(diff, mask(&wide, &repeat(&signs(&tile), number, side)));
+        }
+        let wide = upsample(&grown(&[1, 0, 0, 1], 2, 2), 4, 2);
+        let diff = difference(&wide, &grown(&[1, 0, 0, 1], 2, 3));
+        assert_eq!(wide[..8], [1, 1, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(diff[..8], [0, 1, 0, 0, 0, 0, 0, 0]);
     }
 
     #[test]

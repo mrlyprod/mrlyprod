@@ -1,0 +1,8 @@
+[package]
+name = "spin-census"
+edition = "2021"
+
+[dependencies]
+mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+
+[workspace]

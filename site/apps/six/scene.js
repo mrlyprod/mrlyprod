@@ -1,11 +1,11 @@
 import { tidy } from '../../lib/knobs.js';
 import { TINTS, rgb } from '../../lib/scene.js';
 import { DESIGN } from '../designs/scene.js';
-import { COPIES, DIM, NUMBERS, ORIENTS, PROJECTIONS, RINGS, SCALE, cap, fit, kinds, mesh, study, turned, wrap } from './engine.js';
+import { DIM, NUMBERS, ORIENTS, PROJECTIONS, RINGS, SCALE, cap, fit, kinds, mesh, study, turned, wrap } from './engine.js';
 
 export const SPEC = [
   { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Shape' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 2, min: 1, max: (value) => cap(value.number, COPIES[value.radius] ?? 1), step: 1, group: 'Shape' },
+  { key: 'level', label: 'Level', kind: 'slider', def: 2, min: 1, max: (value, units) => units && cap(units.math, value.number, units.math.six.copies(value.radius)), step: 1, group: 'Shape' },
   { key: 'projection', label: 'View', kind: 'segment', def: 'iso', options: PROJECTIONS, group: 'View' },
   { key: 'orient', label: 'Point', kind: 'segment', def: 'pointy', options: ORIENTS, group: 'View' },
   { key: 'radius', label: 'Rings', kind: 'slider', def: 0, min: 0, max: RINGS, step: 1, group: 'View' },
@@ -13,8 +13,11 @@ export const SPEC = [
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
 ];
 
+export const units = () => import('./unit.js');
+
 export const PAGE = {
   spec: SPEC,
+  units,
   keys: [
     { key: 'Enter', label: 'Random', act: 'random', button: true },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'View', act: 'view' },
@@ -50,7 +53,7 @@ export function make(canvas, view, opts = {}) {
   const math = opts.math;
   if (!math) throw new Error('six: the scene wants mrlyjs/math as opts.math');
   const ctx = canvas.getContext('2d');
-  const value = { ...tidy(SPEC, opts), ...tidy(DESIGN, { ...opts, dim: DIM }) };
+  const value = { ...tidy(SPEC, opts, opts), ...tidy(DESIGN, { ...opts, dim: DIM }) };
   const { one, sheet, facts } = study(math, value, view.rand);
   const turn = turned(sheet.orientation, value.orient);
   const built = mesh(math, sheet, turn);

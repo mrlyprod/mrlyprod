@@ -1,6 +1,0 @@
-[package]
-name = "radix-designs"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true

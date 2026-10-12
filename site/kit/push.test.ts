@@ -27,7 +27,7 @@ const TREE: Record<string, ReturnType<typeof page>> = {
 const cache = headers([
   { path: "lib-a1b2c3d4.js", hash: "", fixed: true },
   { path: "fonts/sans-afc7a910.woff2", hash: "", fixed: true },
-  { path: "sitemap-research.xml", hash: "" },
+  { path: "sitemap-blog.xml", hash: "" },
   { path: "index.html", hash: "" },
 ]);
 

@@ -1,6 +1,0 @@
-[package]
-name = "roulette-reaches"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true

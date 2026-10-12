@@ -4,7 +4,7 @@ import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults, describe, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { LINE } from './engine.js';
-import { HOLD, SPEC, make } from './scene.js';
+import { HOLD, PRESETS, SPEC, make } from './scene.js';
 
 life.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/life/mrlyjs_life_bg.wasm', import.meta.url)).arrayBuffer() });
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -43,6 +43,17 @@ test('a knob dead in a mode or under a start hides through its when', () => {
   expect(shown({ mode: 'life', from: 'glider' })).toEqual(['mode', 'born', 'stay', 'code', 'number', 'level', 'from', 'wrap', 'speed']);
   expect(shown({ mode: 'wolfram', from: 'one' })).toEqual(['mode', 'rule', 'from', 'wrap', 'speed']);
   expect(shown({ mode: 'wolfram', from: 'design' })).toEqual(['mode', 'rule', 'code', 'number', 'from', 'wrap', 'speed']);
+  expect(shown({ mode: 'chladni', from: 'noise' })).toEqual(['mode', 'born', 'stay', 'code', 'number', 'level', 'from', 'density', 'speed']);
+});
+
+test('chladni round-trips through the value, and a step of the Bugs preset draws a live field beside its spectrum', () => {
+  const preset = Object.fromEntries(PRESETS)['Bugs'];
+  expect(tidy(SPEC, { mode: 'chladni', ...preset })).toMatchObject({ mode: 'chladni', ...preset });
+  const run = open({ mode: 'chladni', ...preset });
+  run.log.length = 0;
+  run.scene.step();
+  const rects = run.log.filter(([verb]) => verb === 'rect').length;
+  expect([run.last().gen, run.last().pop > 0, rects > run.last().pop, run.log.some(([verb]) => verb === 'arc'), run.last().wave > 0, run.last().name]).toEqual([1, true, true, true, true, 'B0.283-0.375/S0.283-0.483 on carpet']);
 });
 
 test('the Level pick offers the levels whose mask fits the budget, and tidy drops one that does not', () => {
@@ -141,12 +152,14 @@ test('wolfram rows are the unit history of the seed row, drawn by scrolling once
   expect([run.log.some(([verb]) => verb === 'drawImage'), drawn]).toEqual([true, lit]);
 });
 
-test('under reduced motion a wolfram still fills the sheet at once and a life still runs a burst', () => {
+test('under reduced motion a wolfram still fills the sheet at once and a life or chladni still runs a burst', () => {
   const run = open({ mode: 'wolfram', rule: 30, from: 'one', wrap: 0 }, { still: true, w: LINE, h: 20 });
   expect(run.last().gen).toBe(18);
   run.at(0);
   expect(run.last().gen).toBe(18);
   expect(open({ from: 'pentomino' }, { still: true }).last().gen).toBe(24);
+  const chladni = open({ mode: 'chladni', ...Object.fromEntries(PRESETS)['Bugs'] }, { still: true }).last();
+  expect([chladni.gen, chladni.pop > 0]).toEqual([24, true]);
 });
 
 test('a settled board reseeds from the seed after the hold, and never once a hand has painted', () => {

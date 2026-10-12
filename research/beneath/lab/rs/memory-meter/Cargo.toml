@@ -1,0 +1,8 @@
+[package]
+name = "memory-meter"
+edition = "2021"
+
+[dependencies]
+mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+
+[workspace]

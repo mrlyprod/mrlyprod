@@ -56,11 +56,17 @@ def crossing_shell(radius: int, number: int, level: int) -> list[tuple[int, int]
 def crossing_tree(radius: int, number: int, keep: list[bool]) -> dict[str, Any]:
     """Builds the whole crossing tree of one radius, pruned by the seats the design keeps."""
 
+def fit(shape: Any, extents: list[int]) -> Any:
+    """Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is."""
+
 def named(name: str, dimension: int, radius: Frac) -> Any:
     """Builds a named shape of the dimension, centered at one half on every axis."""
 
 def radial_census(types: NDArray[Any], centre: list[int], r_max: int) -> list[dict[str, Any]]:
     """Counts a design's filled cells against every integer radius about one centre, in exact integer arithmetic."""
+
+def reach(name: str, dimension: int, den: int) -> int | None:
+    """Returns the least radius, in den-ths up to one, at which the named shape covers the whole unit box, or none when it does not by one."""
 
 def refine(types: NDArray[Any], shape: Any, base: int, extra: int, keep_cut: bool) -> NDArray[Any]:
     """Replicates each design cell base to the extra per axis and keeps a sub-cell only where its own region passes."""

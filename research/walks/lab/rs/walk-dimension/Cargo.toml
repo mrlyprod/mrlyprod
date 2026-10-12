@@ -1,0 +1,10 @@
+[package]
+name = "walk-dimension"
+edition = "2021"
+
+[dependencies]
+mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+faer = "0.24"
+png = "0.17"
+
+[workspace]

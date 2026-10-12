@@ -6,14 +6,14 @@ const sep = (row) => row.sep ?? '.';
 
 const live = (row) => typeof row.max === 'function' || typeof row.options === 'function';
 
-export const maxOf = (row, value) => (typeof row.max === 'function' ? row.max(value) : row.max);
+export const maxOf = (row, value, units) => (typeof row.max === 'function' ? row.max(value, units) : row.max);
 
 export const optionsOf = (row, value) => (typeof row.options === 'function' ? row.options(value) : row.options);
 
-function number(row, v, value) {
+function number(row, v, value, units) {
   const n = blank(v) ? NaN : Number(v);
   const { min = -Infinity, step } = row;
-  const max = maxOf(row, value) ?? Infinity;
+  const max = maxOf(row, value, units) ?? Infinity;
   if (!Number.isFinite(n)) return Math.min(max, Math.max(min, row.def));
   const from = Number.isFinite(min) ? min : 0;
   const snap = step ? +(from + Math.round((n - from) / step) * step).toPrecision(12) : n;
@@ -49,9 +49,9 @@ export function defaults(spec) {
   return Object.fromEntries(spec.map((row) => [row.key, row.def]));
 }
 
-export function tidy(spec, value) {
+export function tidy(spec, value, units) {
   const fixed = Object.fromEntries(spec.filter((row) => !live(row)).map((row) => [row.key, KINDS[row.kind](row, value?.[row.key], {})]));
-  const seen = spec.filter(live).reduce((was, row) => ({ ...was, [row.key]: KINDS[row.kind](row, value?.[row.key], was) }), { ...value, ...defaults(spec), ...fixed });
+  const seen = spec.filter(live).reduce((was, row) => ({ ...was, [row.key]: KINDS[row.kind](row, value?.[row.key], was, units) }), { ...value, ...defaults(spec), ...fixed });
   return Object.fromEntries(spec.map((row) => [row.key, seen[row.key]]));
 }
 

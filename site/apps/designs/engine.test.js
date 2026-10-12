@@ -1,13 +1,9 @@
 import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { rng } from '../../lib/scene.js';
-import { cap, census, classes, codes, facts, gallery, grow, named, next, resolve, roll, title, total, word } from './engine.js';
+import { census, classes, codes, facts, gallery, grow, next, roll, settle, title, total } from './engine.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
-
-test('the level cap keeps a grown design under the cell budget in each dimension', () => {
-  expect([cap(2), cap(3)]).toEqual([5, 3]);
-});
 
 test('a space lists its codes up to the limit and its classes where the unit can walk them', () => {
   expect([total(math, 2, 2), total(math, 3, 2), total(math, 2, 3), total(math, 3, 3)]).toEqual([16, 256, 512, 134217728]);
@@ -17,33 +13,11 @@ test('a space lists its codes up to the limit and its classes where the unit can
   expect(classes(math, 3, 2)).toBe(classes(math, 3, 2));
 });
 
-test('a code resolves to its space: blank or junk rolls from the seed, a number wraps', () => {
-  const rand = rng(5);
-  const rolled = resolve('', 16, rand);
-  expect(rolled >= 1 && rolled < 16 && Number.isInteger(rolled)).toBe(true);
-  expect(new Set(Array.from({ length: 64 }, (_, seed) => resolve('', 16, rng(seed)))).has(0)).toBe(false);
-  expect(resolve('abc', 16, rng(5))).toBe(rolled);
-  expect([resolve('7', 16, rand), resolve(' 23 ', 16, rand), resolve('-1', 16, rand), resolve('3.7', 16, rand)]).toEqual([7, 7, 15, 3]);
-  expect(Number(roll(math, 3, 3, () => 0.5))).toBe(2 ** 26);
-  expect([roll(math, 2, 2, () => 0), roll(math, 2, 2, () => 0.999)]).toEqual(['1', '15']);
-});
-
-test('every named design grows back from its derived code in both bases', () => {
-  for (const dim of [2, 3]) {
-    for (const base of [2, 3]) {
-      const list = named(math, dim, base);
-      expect(list.length).toBe(dim === 2 ? 10 : 12);
-      for (const { code, name } of list) {
-        const word = name[0].toUpperCase() + name.slice(1);
-        const seed = dim === 2 ? math.two.named(word, base, 1, 0) : math.three.named(word, base, 1);
-        const grown = dim === 2 ? math.two.create(code, base, 1, 0, base) : math.three.create(code, base, 1, base);
-        expect([dim, base, name, Array.from(grown.types)]).toEqual([dim, base, name, Array.from(seed.types)]);
-      }
-    }
-  }
-  expect(word(named(math, 2, 2), 7)).toBe('carpet');
-  expect(word(named(math, 3, 2), '23')).toBe('carpet');
-  expect(word(named(math, 2, 2), 11)).toBe('');
+test('a code settles in its space: blank or junk rolls from the seed, a number wraps', () => {
+  const rolls = Array.from({ length: 64 }, (_, seed) => Number(roll(math, 2, 2, rng(seed))));
+  expect(rolls.every((one) => Number.isInteger(one) && one >= 1 && one < 16)).toBe(true);
+  expect(roll(math, 3, 3, rng(5))).toBe(roll(math, 3, 3, rng(5)));
+  expect([settle(math, 2, 2, '', rng(5)), settle(math, 2, 2, 'abc', rng(5)), settle(math, 2, 2, ' 23 ', rng(5)), settle(math, 2, 2, '-1', rng(5)), settle(math, 2, 2, '3.7', rng(5))]).toEqual([roll(math, 2, 2, rng(5)), roll(math, 2, 2, rng(5)), '7', '15', '3']);
 });
 
 test('the facts of a code name its class, its orbit and its form, and the counts read the grown cell', () => {

@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { BUDGET, DEN, REACH, SHAPES, cap, lay, outline, paste, square, study, tag } from './engine.js';
+import { DEN, SHAPES, lay, outline, study, tag } from './engine.js';
 import { SPEC } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -21,32 +21,11 @@ test('the crop options are the named shapes of the plane after none', () => {
   expect(SHAPES.slice(1).map(([name]) => name)).toEqual(math.shape.shapes(2));
 });
 
-test('the level cap keeps the sheet of copies under the budget and never under one', () => {
-  expect([cap(3, 25), cap(3, 1), cap(7, 144), cap(5, 16)]).toEqual([4, 5, 1, 3]);
-  for (const [number, copies] of [[3, 25], [3, 1], [7, 144], [5, 16]]) {
-    const level = cap(number, copies);
-    expect(number ** (2 * level) * copies <= BUDGET).toBe(true);
-    expect(level === 1 || number ** (2 * (level + 1)) * copies > BUDGET).toBe(true);
-  }
-});
-
 test('the outline reads the radius out of 32 on the unit box', () => {
   const sixteenth = outline(math, 'ball', 16);
   expect(sixteenth.Ball.radius).toEqual({ num: 1, den: 2 });
   expect(sixteenth.Ball.center).toEqual([{ num: 1, den: 2 }, { num: 1, den: 2 }]);
   expect(DEN).toBe(32);
-});
-
-test('the square window is the centred short-side square of the sheet, pasted back where it came from', () => {
-  const sheet = { shape: [3, 8], data: Uint8Array.from({ length: 24 }, (_, i) => i) };
-  const window = square(sheet);
-  expect([window.shape, window.top, window.left]).toEqual([[3, 3], 0, 2]);
-  expect([...window.data]).toEqual([2, 3, 4, 10, 11, 12, 18, 19, 20]);
-  const back = paste(window, window.data, 3, 8);
-  expect([...back]).toEqual([0, 0, 2, 3, 4, 0, 0, 0, 0, 0, 10, 11, 12, 0, 0, 0, 0, 0, 18, 19, 20, 0, 0, 0]);
-  const tall = square({ shape: [8, 3], data: Uint8Array.from({ length: 24 }, (_, i) => i) });
-  expect([tall.shape, tall.top, tall.left]).toEqual([[3, 3], 2, 0]);
-  expect(square({ shape: [3, 3], data: sheet.data.subarray(0, 9) })).toEqual({ shape: [3, 3], data: sheet.data.slice(0, 9), top: 0, left: 0 });
 });
 
 test('a crop on a sheet that is not square keeps the shape centred on the short side and drops the rest', () => {
@@ -117,12 +96,4 @@ test('the status tag is the name or the bare code, short enough to leave the see
 test('the layout fits the sheet in the short side and centres it', () => {
   expect(lay(45, 45, 800, 600, 0.9)).toEqual({ px: 12, x: 130, y: 30 });
   expect(lay(90, 45, 800, 600, 0.9)).toEqual({ px: 8, x: 40, y: 120 });
-});
-
-test('the reach of a crop is the least radius past which nothing lies outside a wide window, and a triangle never covers it', () => {
-  const side = 243;
-  const window = { shape: [side, side], data: new Uint8Array(side * side).fill(1) };
-  const out = (name, radius) => math.shape.census(outline(math, name, radius), window).cells[0];
-  for (const [name, reach] of Object.entries(REACH)) expect([name, out(name, reach), out(name, reach - 1) > 0]).toEqual([name, 0, true]);
-  expect(out('triangle', DEN)).toBeGreaterThan(0);
 });

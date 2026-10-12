@@ -73,6 +73,8 @@ export class Rng {
     shuffle<T>(items: T[]): void;
 }
 export declare namespace arcs {
+    /** Walks level `level` of `bang dim 2, base b, code c` in arcs into its curves: first the strands, from each boundary midpoint in turn, across edges before upright ones, then the loops, each from its first unwalked arc. */
+    export function curves(code: string | number | bigint, base: number, level: number): arcs.Curve[];
     /** Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::math::bang::factory::create`], and level 0 is one filled cell. */
     export function draw(code: string | number | bigint, base: number, level: number): arcs.Arcs;
     /** Returns the proved loop law of `bang dim 2, base b, code c` at the level, or none where no law is proved: the carpet, base 3 code 495, has `(8^n - 1)/7 - 3^n + n + 1` loops; at base 2 codes 7 and 14 have `3^(n-1) - 2^n + 1`, codes 11 and 13 have `3^(n-1) - 2^(n-1)`, both from level 1 on, code 9 has `2^n - 1`, and the other eleven codes never loop. */
@@ -90,6 +92,15 @@ export declare namespace arcs {
         /** The open strands, `2 side` at every level: each of the `4 side` boundary midpoints ends one. */
         strands: number;
     }
+    /** One curve of an arcs drawing: its arcs in walking order, the way each is walked, and whether it closes. */
+    export interface Curve {
+        /** The arcs in walking order, arc `2 i` the lower and arc `2 i + 1` the upper arc of cell `i`. */
+        arcs: number[];
+        /** One sign an arc: 1 when walked from its end on a left or right edge to its end on a bottom or top edge, -1 the other way. */
+        dir: number[];
+        /** True for a loop, false for a strand. */
+        closed: boolean;
+    }
     /** A proved closed form of a design's loop count, read at one level. */
     export interface Law {
         /** The closed form in the level `n`, one line of text. */
@@ -97,6 +108,24 @@ export declare namespace arcs {
         /** The loops the law gives at the level asked. */
         loops: number;
     }
+}
+export declare namespace arrays {
+    /** Returns whether each sensor is essential, in the order given: whether removing it deletes a lag from the coarray, which happens exactly when some lag `t != 0` has all its pairs through it, the one pair of a lag of weight `1` or the two pairs `(s, s - t)` and `(s + t, s)` of a lag of weight `2`. */
+    export function essential(sensors: ArrayLike<number | bigint>): boolean[];
+    /** Returns the fractal array of the generator at the base and level, ascending: every `sum_(i < level) g_i base^i` with each digit `g_i` in the generator. */
+    export function fractal(generator: ArrayLike<number | bigint>, base: number | bigint, level: number): BigUint64Array;
+    /** Returns the holes of the coarray, ascending: the lags between `-span` and `span` that no pair of sensors makes. */
+    export function holes(sensors: ArrayLike<number | bigint>): BigInt64Array;
+    /** Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole. */
+    export function law(generator: ArrayLike<number | bigint>, level: number): [bigint, bigint] | undefined;
+    /** Returns the lags that removing the sensor deletes from the coarray, ascending: those every pair of which holds it; empty when the sensor is inessential or absent. */
+    export function lost(sensors: ArrayLike<number | bigint>, sensor: number | bigint): BigInt64Array;
+    /** Returns the paired sensors, ascending: each `g` with a partner `h` whose lag `g - h` has weight `1`, the set `U` of condition C1 of Cohen and Eldar; a paired sensor is essential. */
+    export function paired(sensors: ArrayLike<number | bigint>): BigUint64Array;
+    /** Returns the coarray weights of the sensors, `w(t)` for every lag `t` from `-span` to `span` at index `t + span`, `span` the largest sensor less the least: the count of ordered pairs `(p, q)` of sensors with `p - q = t`. */
+    export function weights(sensors: ArrayLike<number | bigint>): BigUint64Array;
+    /** The most sensors [`fractal`] builds, `2^20`. */
+    export function MOST(): bigint;
 }
 export declare namespace atoms {
     /** Builds an n by n carpet, on where at most one coordinate is odd. */
@@ -172,6 +201,47 @@ export declare namespace atoms {
     /** Builds an n by n by n tree, free on axis 2, its beams running along z. */
     export function ztree_3d(n: number): Tensor;
 }
+export declare namespace automaton {
+    /** The relative rounding allowance the double-precision matrix ladder charges against the scale it carries. */
+    export function ROUNDING(): number;
+    export type AutomatonData = Record<string, unknown>;
+    /** A memory design read as a matrix ladder: the rule, the transfer matrix on its `(k-1)`-window states, and the peel depth its Dirichlet series is continued from. */
+    export class Automaton {
+        /** Builds the ladder of a rule, choosing the peel depth. */
+        constructor(rule: memory.Rule);
+        free(): void;
+        /** Reads the Automaton from its plain data. */
+        static from(data: AutomatonData): Automaton;
+        /** Writes the Automaton as plain data. */
+        toJSON(): AutomatonData;
+        /** Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of [`crate::math::memory::perron`]. */
+        abscissa(): number;
+        /** Returns the base `q = 2^D`. */
+        base(): bigint;
+        /** Returns the matrix Lyndon cofactor `Z_W(s) = det(I - q^(-s) T) zeta_W(s)` and the bound it is known to. */
+        cofactor(s: num.zeta.Complex, tolerance: number): [num.zeta.Complex, number];
+        /** Returns the coefficients `c_0 .. c_n` of `det(I - x T) = sum c_i x^i`, the ladder denominator read as a polynomial in `x = q^(-s)`. */
+        denominator(): Float64Array;
+        /** Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of [`crate::math::memory::transfer`], entry `(u', u)` counting the letters carrying `u` to `u'`. */
+        matrix(): Float64Array[];
+        /** Returns the peel depth `P`. */
+        peel(): number;
+        /** Returns the pole spacing `2 pi / log q`. */
+        period(): number;
+        /** Returns the Collatz-Wielandt bracket `(low, high)` of the Perron root of the transfer matrix, the ratios the ladder divides with. */
+        perron(): [number, number];
+        /** Returns the residue of `zeta_W` at a simple pole `w0` of the resolvent and the bound it is known to. */
+        residue(w0: num.zeta.Complex, tolerance: number): [num.zeta.Complex, number];
+        /** Returns the rule. */
+        rule(): memory.Rule;
+        /** Returns the state count `q^(k-1)`. */
+        states(): number;
+        /** Builds the ladder at an explicit peel depth, at least the rule width and at least two. */
+        static with_peel(rule: memory.Rule, peel: number): automaton.Automaton;
+        /** Returns `zeta_W(s)` and the bound it is known to. */
+        zeta(s: num.zeta.Complex, tolerance: number): [num.zeta.Complex, number];
+    }
+}
 export declare namespace bang {
     /** Builds the universe of a dimension. */
     export function bang(dimension: number): bang.Universe;
@@ -181,12 +251,16 @@ export declare namespace bang {
     export function corners(dimension: number): Uint8Array[];
     /** Packs filled residue corners back into their code. */
     export function corners_to_code(filled: ArrayLike<number>[], dimension: number, base: number): string;
+    /** Returns the deepest level, never below one, whose grid of number to the dimension per level stays within the cell budget. */
+    export function level_cap(number: number, dimension: number, budget: number): number;
     /** Returns the code of the design filled wherever a corner's residue sum lands in the levels. */
     export function levels_code(dimension: number, base: number, levels: ArrayLike<number>): string;
     /** Composes the layers into one mixed-design cell by the ordered Kronecker product, first layer outermost. */
     export function magic(layers: bang.MagicLayer[]): Tensor;
     /** Composes JSON-named layers in order. */
     export function magic_named(layers: [string, number][]): Tensor;
+    /** Rolls a code uniformly from the nonempty codes of a dimension and base that fill at least min_fills corners. */
+    export function random_code(dimension: number, base: number, rng: Rng, min_fills: number): string;
     /** Builds the tile sources a catalog names at a dimension. */
     export function sources(catalog: gen.recipe.Catalog, dimension: number): gen.recipe.Source[];
     /** Returns the full symmetry group as axis permutations paired with flip patterns. */
@@ -644,6 +718,97 @@ export declare namespace counts {
         export function solid_slice_vertices(number: number): string;
     }
 }
+export declare namespace design {
+    /** Returns the digits a bitmask names inside the base, ascending. */
+    export function digits_of(mask: number, base: number | bigint): BigUint64Array;
+    /** Returns the density echo, the sum of mu(n) A_F(n)/n over the whole numbers up to each grid point divided by x to the exponent, sieving the Mobius values to the largest element. */
+    export function echo_series(values: ArrayLike<number | bigint>, log_x: ArrayLike<number>, exponent: number): Float64Array;
+    /** Returns the elements of the digit design below the base raised to the depth, ascending: the whole numbers of at most that many base digits, every digit drawn from the set and the leading digit nonzero. */
+    export function elements(base: number | bigint, digits: ArrayLike<number | bigint>, depth: number): BigUint64Array;
+    /** Returns the log grid uniform over the span of the elements, from the log of the first to the log of the last. */
+    export function log_grid(values: ArrayLike<number | bigint>, samples: number): Float64Array;
+    /** Returns the running median of the power over a window of the given width, the window clamped at the ends. */
+    export function median_floor(power: ArrayLike<number>, width: number): Float64Array;
+    /** Returns the running design Mobius meter, the partial sums of the Mobius values along the elements. */
+    export function meter(mu: ArrayLike<number>): BigInt64Array;
+    /** Returns the distance from the ordinate to the nearest entry of the list, infinite when the list is empty. */
+    export function nearest(value: number, list: ArrayLike<number>): number;
+    /** Returns the bins inside the band that rise above both neighbours and clear the score threshold, strongest first. */
+    export function peaks(gamma: ArrayLike<number>, score: ArrayLike<number>, band: [number, number], threshold: number): Uint32Array;
+    /** Returns the design's pole lattice below the top, the ordinates 2 pi j over log q of the poles its Dirichlet series carries. */
+    export function pole_lattice(base: number | bigint, top: number): Float64Array;
+    /** Reads the running meter at every point of the log grid and divides by x to the exponent. */
+    export function resample(values: ArrayLike<number | bigint>, running: ArrayLike<number | bigint>, exponent: number, log_x: ArrayLike<number>): Float64Array;
+    /** Returns the power over its local median floor, the score a peak is read against. */
+    export function score(power: ArrayLike<number>, width: number): Float64Array;
+    /** Returns the count of elements the design holds at the depth, the length [`elements`] returns without building them. */
+    export function size(digits: ArrayLike<number | bigint>, depth: number): string;
+    /** Returns the frequency axis and the power spectrum of the series: the mean removed, a Hann window laid on, a real transform taken, and bin j read as the ordinate 2 pi j over the log range. */
+    export function spectrum(log_x: ArrayLike<number>, series: ArrayLike<number>): [Float64Array, Float64Array];
+    /** Returns the root mean square of the upper half of the series, the size the echo and the meter are compared at. */
+    export function upper_rms(series: ArrayLike<number>): number;
+    /** The ordinates of the first fourteen nontrivial zeros of the Riemann zeta function, the imaginary parts of the zeros on the critical line in ascending order. */
+    export function ZETA_ORDINATES(): Float64Array;
+}
+export declare namespace dissection {
+    /** Returns `Q = floor(y^(3/5))`, the largest denominator the dissection admits, exact in integers. */
+    export function cap(y: number | bigint): bigint;
+    /** Returns the chain's certificate exponent at one missing digit, `alpha_1 = log_base(z base/(base - 1))`, the same at every missing digit. */
+    export function chain_exponent(base: number | bigint): number;
+    /** Returns the chain's margin at the bar, the cubic cleared of denominators at `w = base^(1/5)(1 - 1/base)`, positive exactly when the root sits below `w` and `alpha_1 < 1/5`. */
+    export function chain_margin(base: number | bigint): number;
+    /** Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection. */
+    export function chain_root(base: number | bigint): number;
+    /** Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive. */
+    export function chain_wall(): bigint;
+    /** Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads. */
+    export function consecutive(digits: ArrayLike<number | bigint>): boolean;
+    /** Returns the last continued-fraction convergent `l/d` of `a/y` whose denominator is at most the cap, the Dirichlet fraction of the dissection. */
+    export function fraction(a: number | bigint, y: number | bigint, cap: number | bigint): [bigint, bigint];
+    /** Returns `kappa_F = (base/phi(base)) #{f in F : gcd(f, base) = 1}/fill`, the main-term constant of the prime count, as a reduced fraction. */
+    export function kappa(base: number | bigint, digits: ArrayLike<number | bigint>): [bigint, bigint];
+    /** Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`. */
+    export function masses(base: number | bigint, digits: ArrayLike<number | bigint>, level: number): Float64Array;
+    /** Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere. */
+    export function reach(base: number | bigint, missing: number | bigint): string;
+    /** Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate. */
+    export function reading(base: number | bigint, fill: number, masses: ArrayLike<number>): number;
+    /** Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`]. */
+    export function regions(base: number | bigint, level: number, z: number | bigint): dissection.Region[];
+    /** Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span. */
+    export function tally(base: number | bigint, digits: ArrayLike<number | bigint>, level: number, samples: number): dissection.Tally;
+    /** Returns `|hat F_level(a/base^level)|` at every `a < base^level`, built one digit at a time from `hat F_j(t) = hat F(t) hat F_(j-1)(base t)`. */
+    export function weights(base: number | bigint, digits: ArrayLike<number | bigint>, level: number): Float64Array;
+    /** The bar region A sets on the certificate exponent, `alpha_1 < 1/5`: the whole `l^1` mass against the minor-arc `x^(4/5)`. */
+    export function BAR_A(): number;
+    /** The bar region B sets, `alpha_1 < 1/4`: the hybrid `l^1` mass against the `d^(-1/2)` decay. */
+    export function BAR_B(): number;
+    /** The base the chain is scanned to; from here the closed-form cap `1 + sqrt(2 (2/pi) log base + 0.97)` keeps it below the bar. */
+    export function CAP_BASE(): bigint;
+    /** The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`. */
+    export function CERTIFIED(): [bigint, bigint][];
+    /** The least base whose every one-missing-digit set carries a per-digit shifted-grid certificate below `1/5`, `lab/py/digit-transform-norms`, verbs `fifth` and `fifthbelow`; base 114 missing 56 is certified above. */
+    export function DIGIT_WALL(): bigint;
+    /** The least base with some missing digit certified below `1/5`, `lab/py/digit-transform-norms`, verb `fifth`. */
+    export function FIRST_BELOW(): bigint;
+    /** The constant `gamma'` of the digit-uniform chain, `(2/pi)(gamma + log(8/pi))` rounded up at seven decimals. */
+    export function GAMMA(): number;
+    /** The least base whose every one-missing-digit set carries a window certificate below `1/5`, `lab/py/prime-dissection`, verb `window`. */
+    export function WINDOW_WALL(): bigint;
+    /** The four regions the dissection cuts the frequencies `a/y` into by their Dirichlet fraction `l/d` at `Q = y^(3/5)` and height `h = |a d - l y|`. */
+    export type Region = "A" | "B" | "C1" | "C2";
+    /** The set's own sums read on a log grid of `x`: the mass `A_F(x)`, the meter `M_F(x)` and the prime count `psi_F(x) = sum Lambda(n)` over the elements up to `x`. */
+    export interface Tally {
+        /** The log of `x` at every sample, uniform from the first element to the last. */
+        log_x: number[];
+        /** The mass `A_F(x)`, the count of elements up to `x`. */
+        count: number[];
+        /** The meter `M_F(x)`, the sum of `mu(n)` over the elements up to `x`. */
+        meter: number[];
+        /** The prime count `psi_F(x)`, the sum of `Lambda(n)` over the elements up to `x`. */
+        primes: number[];
+    }
+}
 export declare namespace gen {
     export namespace recipe {
         /** The pool of sources a tile may draw from. */
@@ -772,6 +937,106 @@ export declare namespace graph {
     }
     /** What a node's degree makes it. */
     export type Role = "Alone" | "Tip" | "Through" | "Junction";
+}
+export declare namespace ladder {
+    /** Returns the Lyndon cofactor `Z(s) = zeta_F(s) (1 - k q^(-s))` and the bound it is known to. */
+    export function cofactor(design: ladder.Design, s: num.zeta.Complex, tolerance: number): [num.zeta.Complex, number];
+    /** Returns the residue of `zeta_F` at `s_(m,j) = alpha - m + 2 pi i j / log q` and the bound it is known to. */
+    export function residue(design: ladder.Design, m: number, j: number | bigint, tolerance: number): [num.zeta.Complex, number];
+    /** Returns `zeta_F(s)` and the bound it is known to. */
+    export function zeta(design: ladder.Design, s: num.zeta.Complex, tolerance: number): [num.zeta.Complex, number];
+    /** The relative rounding allowance the double-precision ladder charges against the scale it carries. */
+    export function ROUNDING(): number;
+    export type DesignData = Record<string, unknown>;
+    /** A digit design: the base `q`, the digit set `F` its elements are written with, and the peel depth `P` its ladder starts at. */
+    export class Design {
+        /** Builds a design on the base and the digit set, choosing the peel depth. */
+        constructor(base: number | bigint, digits: ArrayLike<number | bigint>);
+        free(): void;
+        /** Reads the Design from its plain data. */
+        static from(data: DesignData): Design;
+        /** Writes the Design as plain data. */
+        toJSON(): DesignData;
+        /** Returns the abscissa `alpha = log_q k`. */
+        abscissa(): number;
+        /** Returns the base. */
+        base(): bigint;
+        /** Returns the digit set, ascending. */
+        digits(): BigUint64Array;
+        /** Returns the peel depth. */
+        peel(): number;
+        /** Returns the pole spacing `2 pi / log q`. */
+        period(): number;
+        /** Returns the pole `s_(m,j) = alpha - m + 2 pi i j / log q`. */
+        pole(m: number, j: number | bigint): num.zeta.Complex;
+        /** Builds a design at an explicit peel depth, at least two. */
+        static with_peel(base: number | bigint, digits: ArrayLike<number | bigint>, peel: number): ladder.Design;
+    }
+}
+export declare namespace memory {
+    /** Returns the count of allowed windows `card W`, the bits the code sets inside its window range. */
+    export function allowed_windows(rule: memory.Rule): number;
+    /** Returns the accepted words of the level as cell indices of the `2^L` grid, `x` from bit `0` of every digit, `y` from bit `1`, `z` from bit `2`, coarsest digit first. */
+    export function cells(rule: memory.Rule, level: number): BigUint64Array;
+    /** Returns `N_W(L)`, the count of accepted words, for `L = 1 ..= levels`, and stops early on the level whose count overruns a `u64`. */
+    export function counts(rule: memory.Rule, levels: number): BigUint64Array;
+    /** Returns the growth exponent `log_2 rho`, the growth per digit of the accepted word count. */
+    export function exponent(rule: memory.Rule): number;
+    /** Returns the memory number `kappa(W) = log_2(card W) / k - log_2 rho`, the bits a digit spends on memory. */
+    export function kappa(rule: memory.Rule): number;
+    /** Returns the Perron root of the transfer matrix, the count's growth per level. */
+    export function perron(rule: memory.Rule): number;
+    /** Returns the transfer matrix on the `(k - 1)`-windows: entry `(s, t)` is one when the window that overlaps state `s` onto state `t` is allowed. */
+    export function transfer(rule: memory.Rule): BigUint64Array[];
+    /** The largest digit span a rule may read, so its code fits a `u64`. */
+    export function SPAN(): number;
+    /** The sweep cap of the power iteration. */
+    export function SWEEPS(): number;
+    /** The absolute `l^1` move of the normalised iterate that stops the power iteration, counted only when it holds over three consecutive sweeps. */
+    export function TOLERANCE(): number;
+    export interface RuleData {
+        /** The dimension `D`, one to three. */
+        dimension: number;
+        /** The window width `k`, at least one. */
+        width: number;
+        /** The window code, bit `w` set when window `w` is allowed. */
+        code: number;
+    }
+    /** A rule on `k` consecutive digits of a design word. */
+    export class Rule {
+        /** Builds a rule from its dimension, its width and its code. */
+        constructor(dimension: number, width: number, code: number | bigint);
+        free(): void;
+        /** Reads the Rule from its plain data. */
+        static from(data: RuleData): Rule;
+        /** Writes the Rule as plain data. */
+        toJSON(): RuleData;
+        /** The dimension `D`, one to three. */
+        get dimension(): number;
+        set dimension(value: number);
+        /** The window width `k`, at least one. */
+        get width(): number;
+        set width(value: number);
+        /** The window code, bit `w` set when window `w` is allowed. */
+        get code(): bigint;
+        set code(value: number | bigint);
+        /** Returns whether a word, coarsest digit first, is accepted. */
+        accepts(word: ArrayLike<number>): boolean;
+        /** Returns whether the window is allowed, and false for any window out of range. */
+        allowed(window: number): boolean;
+        /** Returns the letters that stand in at least one allowed window. */
+        alphabet(): Uint32Array;
+        /** Returns the count of rules of this shape, `2^(2^(k D))`. */
+        codes(): string;
+        /** Returns the rule that allows every window. */
+        static full(dimension: number, width: number): memory.Rule;
+        /** Returns the letter count `2^D`, the digit vectors of the cube's corners. */
+        letters(): number;
+        /** Returns the state count `2^((k - 1) D)`, the windows of one digit less that the transfer matrix runs on. */
+        states(): number;
+        /** Returns the window count `2^(k D)`. */
+        windows(): number;
+    }
 }
 export declare namespace moire {
     /** Returns every preset stacked up to the given scale. */
@@ -992,6 +1257,10 @@ export declare namespace moire {
     }
 }
 export declare namespace name {
+    /** Returns the word of the first named design a code draws in the plane or the cube, or None for a code no named design draws. */
+    export function of(code: string | number | bigint, dim: number, base: number): string | undefined;
+    /** Lists every classic then anti design of the plane or the cube as its decimal code and its word, empty for any other dimension. */
+    export function words(dim: number, base: number): [string, string][];
     export interface BangData {
         /** The kind word. */
         kind: string;
@@ -1177,6 +1446,21 @@ export declare namespace name {
         to_url(): string;
     }
 }
+export declare namespace num {
+    export namespace gauss {
+        /** The two rings of whole numbers in the plane, each a pair (a, b) on its own lattice. */
+        export type Ring = "Gaussian" | "Eisenstein";
+    }
+    export namespace zeta {
+        /** A complex number: a real and an imaginary part. */
+        export interface Complex {
+            /** The real part. */
+            re: number;
+            /** The imaginary part. */
+            im: number;
+        }
+    }
+}
 export declare namespace press {
     /** Returns the number of designs of the dimension and base that contain the number. */
     export function containing(number: string | number | bigint, dimension: number, base: number): string;
@@ -1230,6 +1514,88 @@ export declare namespace press {
         total(code: string | number | bigint): string;
         /** Returns every design's total in code order by one subset-sum transform. */
         totals(): string[];
+    }
+}
+export declare namespace radix {
+    /** Returns the flowsnake as a radix design: base `3 + omega` of norm seven on the hexagonal lattice, the full residue system, code `127`. */
+    export function flowsnake(): radix.Radix;
+    /** Returns the Sierpinski gasket as a radix design: base `2` on the hexagonal lattice, three of the four residues, code `7`. */
+    export function gasket(): radix.Radix;
+    /** Returns the Koch curve as a radix design: base `3` on the hexagonal lattice, digits `0, 1, 2 + omega, 2`, twists `1, e^(i pi/3), e^(-i pi/3), 1`. */
+    export function koch(): radix.Radix;
+    /** Returns the terdragon as a radix design: base `2 + omega` on the hexagonal lattice, the full residue system, code `7`, twisted by `1, omega, 1`. */
+    export function terdragon(): radix.Radix;
+    /** Returns the plane design of a cell code as a radix design: base the rational integer `m`, of norm `m^2`, on the square lattice, no twist, digits the box residues `{x + y i : 0 <= x, y < m}`. */
+    export function tile(m: number | bigint, code: string | number | bigint): radix.Radix;
+    /** Returns the twindragon as a radix design: base `1 + i` on the square lattice, the full residue system, code `3`. */
+    export function twindragon(): radix.Radix;
+    export type BaseData = Record<string, unknown>;
+    /** The base of a radix design: a ring and an element of norm at least two, the scale every word is read against. */
+    export class Base {
+        /** Fixes a base in a ring. */
+        constructor(ring: num.gauss.Ring, value: [number | bigint, number | bigint]);
+        free(): void;
+        /** Reads the Base from its plain data. */
+        static from(data: BaseData): Base;
+        /** Writes the Base as plain data. */
+        toJSON(): BaseData;
+        /** Returns the index in the canonical residue system of the class of a point. */
+        class(z: [number | bigint, number | bigint]): number;
+        /** Returns whether two points are congruent modulo the base. */
+        congruent(z: [number | bigint, number | bigint], w: [number | bigint, number | bigint]): boolean;
+        /** Returns the symmetry group of the base as permutations of the canonical residue indices: every unit multiplication, and every unit times conjugation when the conjugate of the base is an associate of the base. */
+        group(): Uint32Array[];
+        /** Returns whether the conjugate of the base is an associate of the base, which is when the mirror joins the symmetry group. */
+        mirrored(): boolean;
+        /** Returns the norm `q` of the base: the count of residue classes and the square of the scale. */
+        norm(): bigint;
+        /** Returns the base raised to a level. */
+        power(level: number): [bigint, bigint];
+        /** Returns the canonical complete residue system modulo the base: the `q` representatives of least norm, ties broken by argument in `[0, 2 pi)`. */
+        residues(): [bigint, bigint][];
+        /** Returns the ring. */
+        ring(): num.gauss.Ring;
+        /** Returns the base element. */
+        value(): [bigint, bigint];
+    }
+    export type RadixData = Record<string, unknown>;
+    /** A radix design: a digit set inside one ring, placed by a base with a unit twist per digit. */
+    export class Radix {
+        /** Builds a design from a base, a digit list and a unit twist per digit. */
+        constructor(base: radix.Base, digits: ([number | bigint, number | bigint])[], twists: ([number | bigint, number | bigint])[]);
+        free(): void;
+        /** Reads the Radix from its plain data. */
+        static from(data: RadixData): Radix;
+        /** Writes the Radix as plain data. */
+        toJSON(): RadixData;
+        /** Returns the base. */
+        base(): radix.Base;
+        /** Returns whether every digit is the canonical representative of its class. */
+        canonical(): boolean;
+        /** Returns the code of the classes the digits occupy, which names the design only when the digits are the canonical representatives. */
+        code(): string;
+        /** Returns the digits. */
+        digits(): [bigint, bigint][];
+        /** Returns the similarity dimension `log |F| / log sqrt(q)`, the ratio of the digit count to the scale of the base. */
+        dimension(): number;
+        /** Returns the count of distinct level-`L` points: the glue count, which is the fill exactly when no two words name one point. */
+        distinct(level: number): number;
+        /** Returns the count of words of a level, `|F|^L`. */
+        fill(level: number): string;
+        /** Builds an untwisted design from a code over the canonical residue system, bit `i` of the code selecting residue `i`. */
+        static from_code(base: radix.Base, code: string | number | bigint): radix.Radix;
+        /** Returns the level-`L` points in the plane, the scaled words divided by `b^L`. */
+        plane(level: number): [number, number][];
+        /** Returns the ring. */
+        ring(): num.gauss.Ring;
+        /** Returns the digit count `|F|`. */
+        size(): number;
+        /** Returns the twists. */
+        twists(): [bigint, bigint][];
+        /** Returns the design with the twists named by their index in the unit list, the units in turning order from one. */
+        with_twists(units: ArrayLike<number>): radix.Radix;
+        /** Returns the level-`L` points in exact ring coordinates scaled by `b^L`. */
+        words(level: number): [bigint, bigint][];
     }
 }
 export declare namespace roulette {
@@ -1320,10 +1686,14 @@ export declare namespace shape {
     export function crossing_shell(radius: number | bigint, number: number | bigint, level: number): [bigint, bigint][];
     /** Builds the whole crossing tree of one radius, pruned by the seats the design keeps. */
     export function crossing_tree(radius: number | bigint, number: number | bigint, keep: boolean[]): shape.Shell;
+    /** Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is. */
+    export function fit(shape: shape.Shape, extents: ArrayLike<number>): shape.Shape;
     /** Builds a named shape of the dimension, centered at one half on every axis. */
     export function named(name: string, dimension: number, radius: shape.Frac): shape.Shape;
     /** Counts a design's filled cells against every integer radius about one centre, in exact integer arithmetic. */
     export function radial_census(types: Tensor, centre: ArrayLike<number | bigint>, r_max: number | bigint): shape.RadialCounts[];
+    /** Returns the least radius, in den-ths up to one, at which the named shape covers the whole unit box, or none when it does not by one. */
+    export function reach(name: string, dimension: number, den: number): number | undefined;
     /** Replicates each design cell base to the extra per axis and keeps a sub-cell only where its own region passes. */
     export function refine(types: Tensor, shape: shape.Shape, base: number, extra: number, keep_cut: boolean): Tensor;
     /** Classifies every cell of the grid, packing Out, Cut and In as 0, 1 and 2; the first extent sets the lattice side. */
@@ -1385,7 +1755,7 @@ export declare namespace shape {
         flip(region: shape.Region): shape.Region;
     };
     /** An exact region of the unit box, scaled onto the lattice by the side. */
-    export type Shape = { Ball: { center: shape.FracData[]; radius: shape.FracData } } | { Polytope: { walls: shape.Half[] } } | { Anti: string };
+    export type Shape = { Ball: { center: shape.FracData[]; radius: shape.FracData } } | { Polytope: { walls: shape.Half[] } } | { Anti: string } | { Window: { inner: string; low: shape.FracData[]; high: shape.FracData[] } };
     /** The per-region tallies of a shape over a design, indexed Out, Cut, In. */
     export interface ShapeCensus {
         /** The cell count of each region. */
@@ -1433,10 +1803,14 @@ export declare namespace six {
     export function census(cell: Cell6d, include_grid: boolean): six.Census;
     /** Counts the connected pieces of the fill, triangles joined across shared edges. */
     export function components(cell: Cell6d): number;
+    /** Returns the hexagons in a disc of the given rings about one centre: 1, 7, 19, 37 and on. */
+    export function copies(rings: number): number;
     /** Slices a cube through its center across the main diagonal into a hexagon. */
     export function cut(cell: Cell): Cell6d;
     /** Builds the coded 3d design and slices its central hexagon. */
     export function cut_design(code: string | number | bigint, number: number, level: number, base: number): Cell6d;
+    /** Tessellates a hexagonal cell over the disc of the given rings about one centre, keeping its projection and orientation and taking the start parity of the uncropped sheet the disc sits in; no rings is the cell itself. */
+    export function disc(cell: Cell6d, rings: number): Cell6d;
     /** The three corners of the east-pointing triangle at the grid column and row. */
     export function east(x: number | bigint, y: number | bigint): [bigint, bigint][];
     /** Returns the Euler characteristic of the cell's mesh, counting the backdrop only on request. */
@@ -1827,6 +2201,64 @@ export declare namespace spirograph {
         orbits: number;
         /** The rotation order of the whole picture: the ratio's numerator on a circle, none elsewhere. */
         fold: number;
+    }
+}
+export declare namespace sumset {
+    /** Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`. */
+    export function pairs(level: number): sumset.Pair[];
+    /** The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB. */
+    export function DEEPEST(): number;
+    /** The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer. */
+    export function WIDEST(): number;
+    export type PairData = Record<string, unknown>;
+    /** A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` read by `three()` and `m` by `four()`. */
+    export class Pair {
+        /** Names the pair `(k, m)`. */
+        constructor(three: number, four: number);
+        free(): void;
+        /** Reads the Pair from its plain data. */
+        static from(data: PairData): Pair;
+        /** Writes the Pair as plain data. */
+        toJSON(): PairData;
+        /** Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`. */
+        clean(): boolean;
+        /** Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs. */
+        copy(): boolean;
+        /** The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`. */
+        energy(): string;
+        /** The base-4 level `m`. */
+        four(): number;
+        /** The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none. */
+        gap(): [bigint, bigint] | undefined;
+        /** The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`. */
+        largest(): bigint;
+        /** The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz. */
+        ratio(energy: string | number | bigint): number;
+        /** The scaling `tau = 4^m/3^k`. */
+        scale(): number;
+        /** The base-3 level `k`. */
+        three(): number;
+    }
+    export type SumsetData = Record<string, unknown>;
+    /** The sumset `S = A + B` of Erdos problem 125 up to `3^level`: `A` the integers whose base-3 digits are all `0` or `1`, `B` those whose base-4 digits are. */
+    export class Sumset {
+        /** Builds `S meet [0, 3^level]`. */
+        constructor(level: number);
+        free(): void;
+        /** Whether `x` is in `S`, or `None` past the top. */
+        contains(x: number | bigint): boolean | undefined;
+        /** Counts `card(S meet [1, x])`, or `None` past the top. */
+        count(x: number | bigint): bigint | undefined;
+        /** Reads the density `D(x) = card(S meet [1, x])/x`, or `None` at zero and past the top. */
+        density(x: number | bigint): number | undefined;
+        /** Reads the least and the greatest `D(x)` over each window `[edges[i], edges[i + 1])`, `None` for an empty window. */
+        extremes(edges: ArrayLike<number | bigint>): ([number, number] | undefined)[];
+        /** Reads the share of members in each of `cells` equal runs of the integers `[low, high)`, the strip of `S` a page draws. */
+        fills(low: number | bigint, high: number | bigint, cells: number): Float64Array;
+        /** The level the array was built to. */
+        level(): number;
+        /** The largest integer the array holds, `3^level`. */
+        top(): bigint;
     }
 }
 export declare namespace three {

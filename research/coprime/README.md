@@ -1,0 +1,48 @@
+---
+title: The coprimality spine
+lead: The coprimality spine: exact base-local factors on every design, the census behind them, the window at dimension one with the band automaton's critical out-degree and its algebraic block rate, and primes on a design, where the least base below the quarter threshold is 21 at one missing digit and 32 at two, the one-digit family closes at 34 and the two-digit family closes at 21 against the third.
+figure: research-coprime
+slug: coprime
+---
+
+# The coprimality spine
+
+The coprimality spine: exact base-local factors on every design, the census behind them, the window at dimension one with the band automaton's critical out-degree and its algebraic block rate, and primes on a design, where the least base below the quarter threshold is 21 at one missing digit and 32 at two, the one-digit family closes at 34 and the two-digit family closes at 21 against the third.
+
+- [notes/coprime.md](notes/coprime.md): The coprimality spine
+- [claims/b-visibility.md](claims/b-visibility.md): b-visibility
+- [claims/coprimality-at-dimension-one.md](claims/coprimality-at-dimension-one.md): Coprimality at dimension one
+- [claims/coprimality-density.md](claims/coprimality-density.md): Coprimality density
+- [claims/density-theorem-boundary.md](claims/density-theorem-boundary.md): Density theorem boundary
+- [claims/diagonal-designs.md](claims/diagonal-designs.md): Diagonal designs
+- [claims/dimension-one.md](claims/dimension-one.md): Dimension one
+- [claims/gasket-rays-and-the-window.md](claims/gasket-rays-and-the-window.md): Gasket rays and the window
+- [claims/gaussian-primes-on-a-design.md](claims/gaussian-primes-on-a-design.md): Gaussian primes on a design
+- [claims/moment-ladder-and-lemma-b.md](claims/moment-ladder-and-lemma-b.md): Moment ladder and Lemma B
+- [claims/primes-on-a-design.md](claims/primes-on-a-design.md): Primes on a design
+- [claims/ratio-set-power-saving.md](claims/ratio-set-power-saving.md): The ratio-set power saving
+- [claims/repunit-layer.md](claims/repunit-layer.md): The repunit layer
+- [claims/second-moment-of-the-rays.md](claims/second-moment-of-the-rays.md): The second moment of the rays
+- [papers/unconditional-mertens-at-large-base.md](papers/unconditional-mertens-at-large-base.md): An Unconditional Mertens Bound at Large Base
+- [refs.md](refs.md): the references this topic cites
+- [lab/py/band-return-times/](lab/py/band-return-times/): The band automaton of a direction `(z1, z2)` with `z1 + z2 = w` and `3 | z1`
+- [lab/py/digit-transform-norms/](lab/py/digit-transform-norms/): The `l^1` norms of a design's digit transform in `dim` dimensions
+- [lab/py/digit-uniform-bound/](lab/py/digit-uniform-bound/): One bound on the digit transform of every one-missing-digit set in a base at once
+- [lab/py/function-field-density/](lab/py/function-field-density/): Digit-restricted coprimality over `F_3[t]`
+- [lab/py/gasket-witness-weights/](lab/py/gasket-witness-weights/): Reparametrises the gasket residual `R(level)` by the witness `z` instead of by the multiplier pair `(s,t)`
+- [lab/py/gaussian-digits/](lab/py/gaussian-digits/): The numbers of the Gaussian design on coprime, section PRIMES ON A DESIGN, subsection Gaussian primes on a design
+- [lab/py/mrlybang-density-classes/](lab/py/mrlybang-density-classes/): A mrlybang code is a set `P` of parity corners in `{0,1}^3`
+- [lab/py/occupancy-decay/](lab/py/occupancy-decay/): Counts the occupied rays of the ternary gasket at `level` inside a height window, against the first moment of the same window, and measures the digit-congruence density available to any residue-class attack on Conjecture O.
+- [lab/py/prime-dissection/](lab/py/prime-dissection/): The numbers of the dissection for the von Mangoldt function on coprime, section PRIMES ON A DESIGN
+- [lab/py/ratio-set-saving/](lab/py/ratio-set-saving/): Decides exactly, at no level cap, which coprime directions lie in the ratio set of the gasket `G = {(u,v) 
+- [lab/py/slice-coprimality/](lab/py/slice-coprimality/): Coprimality of the points of a 3D parity design on a diagonal slice `x + y + z = s`.
+- [lab/py/sponge-visible-census/](lab/py/sponge-visible-census/): Exact count `A(level)` of visible (gcd 1) nonzero points of the Menger sponge at that level, without enumerating the `20^level` points.
+- [lab/rs/coprime-terms/](lab/rs/coprime-terms/): Exact `A(level)`, the points of a base-3 mask design at level `level` with coprime coordinates, without walking the `fill^level` points
+- [lab/rs/design-census/](lab/rs/design-census/): The three design censuses in this tree, rerun in full.
+- [lab/rs/dimension-one-ladder/](lab/rs/dimension-one-ladder/): Regenerates the coprime terms of the three base-three mask designs, the moment ladder of the ternary gasket, and the occupied-ray census.
+- [figures/paper-coprime-density-above-dimension-one.ts](figures/paper-coprime-density-above-dimension-one.ts): paper-coprime-density-above-dimension-one
+- [figures/paper-gasket-ray-machine.ts](figures/paper-gasket-ray-machine.ts): paper-gasket-ray-machine
+- [figures/paper-lemma-b-pincer.ts](figures/paper-lemma-b-pincer.ts): paper-lemma-b-pincer
+- [figures/paper-menger-pairwise-coprimality.ts](figures/paper-menger-pairwise-coprimality.ts): paper-menger-pairwise-coprimality
+- [figures/paper-unconditional-mertens-at-large-base.ts](figures/paper-unconditional-mertens-at-large-base.ts): paper-unconditional-mertens-at-large-base
+- [figures/research-coprime.ts](figures/research-coprime.ts): research-coprime

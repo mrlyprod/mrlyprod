@@ -6,25 +6,10 @@
   "tint": "indigo",
   "menu": "/menu/",
   "cart": "/cart/",
+  "desk": "polygons",
   "company": "MrlyProd, Inc.",
   "tagline": "The mathematics of designs on the corners of a cube, and the instruments that measure them.",
   "tree": [
-    { "name": "Home", "href": "/" },
-    {
-      "name": "Research",
-      "nodes": [
-        { "name": "Research", "href": "/research/" },
-        { "name": "Wiki", "href": "/research/wiki/" }
-      ]
-    },
-    { "name": "Demos", "href": "/demos/" },
-    { "name": "Blog", "href": "/blog/" },
-    { "name": "Apps" },
-    { "name": "MrlyMath", "href": "/mrlymath/" },
-    { "name": "Code", "href": "/git/" },
-    { "name": "Pages" },
-    { "name": "Stats", "href": "/stats/" },
-    { "name": "Cart", "href": "/cart/" },
     {
       "name": "Root",
       "nodes": [
@@ -60,7 +45,7 @@
   "git": { "root": "..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
   "llms": {
     "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, with Rust crates doing the arithmetic and the browser only painting. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
-    "legend": "Links are page sources in markdown: /raw/site/pages/x.md is /x/, /raw/site/blog/x/index.md is /blog/x/, /raw/pkgs/mrlyrs/NAMES.md is /mrlymath/; a link outside /raw/ is the page."
+    "legend": "Links are page sources in markdown: /raw/site/apps/x/page.md is /x/, /raw/site/apps/blog/x/index.md is /blog/x/, /raw/pkgs/mrlyrs/NAMES.md is /mrlymath/; a link outside /raw/ is the page."
   },
   "fonts": {
     "out": "ui/fonts",

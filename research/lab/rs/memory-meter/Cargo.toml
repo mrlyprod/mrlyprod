@@ -1,6 +1,0 @@
-[package]
-name = "memory-meter"
-edition.workspace = true
-
-[dependencies]
-mrlyrs.workspace = true

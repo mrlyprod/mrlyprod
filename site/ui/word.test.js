@@ -1,26 +1,28 @@
 import { expect, test } from 'bun:test';
-import SITE from '../site.json';
-import { doors, word } from './word.js';
+import { state } from '../scripts/site.ts';
+import { word } from './word.js';
 
-const list = doors(SITE.tree);
+const { site, rows } = state();
 
-test('every menu door names itself and home names nothing', () => {
-  const rows = list.map(([href, name]) => [word(href, list), name]);
-  expect(rows.every(([got, want]) => got === want)).toBe(true);
-  expect(list.length).toBeGreaterThan(5);
+const list = site.doors;
+
+test('every app with a folder route is a door that names itself by its title, and home names nothing', () => {
+  const apps = rows.filter((row) => row.meta.id && row.route !== '/' && row.route.endsWith('/'));
+  expect(list.map(([href]) => href).sort()).toEqual(apps.map((row) => row.route).sort());
+  expect(apps.map((row) => word(row.route, list))).toEqual(apps.map((row) => row.title.toLowerCase()));
   expect(word('/', list)).toBe('');
 });
 
 test('a deep route takes its deepest door, else its first segment, and a file names nothing', () => {
   const rows = [
-    ['/research/wiki/rep-tiles/', 'wiki'],
-    ['/research/claims/beneath/', 'research'],
+    ['/research/beneath/', 'research'],
     ['/research/', 'research'],
     ['/git/site/kit/push.ts', 'code'],
-    ['/demos/sponge/', 'demos'],
     ['/about/', 'about'],
     ['/settings/', 'settings'],
     ['/404.html', ''],
   ];
   expect(rows.map(([route]) => word(route, list))).toEqual(rows.map(([, name]) => name));
+  expect(word('/a/b/x/', [['/a/b/', 'b'], ['/a/', 'a']])).toBe('b');
+  expect(word('/raw/x/', list)).toBe('raw');
 });

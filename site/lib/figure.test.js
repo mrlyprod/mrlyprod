@@ -39,7 +39,7 @@ test('a route change frees every host canvas', () => {
     disconnect() {}
   };
   const node = { width: 800, height: 800 };
-  const host = { dataset: { figure: 'site-home' }, closest: () => null, querySelector: () => node, setAttribute() {}, removeAttribute() {} };
+  const host = { dataset: { figure: 'home' }, closest: () => null, querySelector: () => node, setAttribute() {}, removeAttribute() {} };
   scan({ querySelectorAll: () => [host] });
   drop();
   globalThis.IntersectionObserver = real;

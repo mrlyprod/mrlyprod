@@ -28,13 +28,13 @@ test('Pick shows a strip of the classes for a small space and none for the cube 
 });
 
 test('Thumbs mark the picked code and name the named ones', () => {
-  const html = renderToStaticMarkup(<Thumbs math={math} dim={2} base={2} codes={['5', '7']} code="7" names={[{ code: '7', name: 'carpet' }]} onPick={() => {}} />);
+  const html = renderToStaticMarkup(<Thumbs math={math} dim={2} base={2} codes={['11', '7']} code="7" onPick={() => {}} />);
   expect(html).toContain('aria-pressed="true" aria-label="carpet 7"');
-  expect(html).toContain('aria-pressed="false" aria-label="bang 5"');
-  expect([...html.matchAll(/<small>([^<]*)<\/small>/g)].map((found) => found[1])).toEqual(['5', 'carpet']);
+  expect(html).toContain('aria-pressed="false" aria-label="bang 11"');
+  expect([...html.matchAll(/<small>([^<]*)<\/small>/g)].map((found) => found[1])).toEqual(['11', 'carpet']);
 });
 
 test('Thumbs take the full width of their row, so a wrapping flex column cannot size the grid as one column', () => {
-  const html = renderToStaticMarkup(<Thumbs math={math} dim={2} base={2} codes={['5']} code="5" names={[]} onPick={() => {}} />);
+  const html = renderToStaticMarkup(<Thumbs math={math} dim={2} base={2} codes={['5']} code="5" onPick={() => {}} />);
   expect(html).toContain('<div class="designs" style="width:100%">');
 });

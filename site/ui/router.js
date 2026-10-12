@@ -1,13 +1,13 @@
 import { css } from 'site:css';
-import { pages } from 'site:pages';
 import { rows, site } from 'site:routes';
-import { LAYOUT } from './pages/index.js';
+import { paint } from './crumbs.js';
 import { deeps, match, named, sort, trail, walled } from './route.js';
 
 const FRESH = 30000;
 const STILL = '(prefers-reduced-motion: reduce)';
 const SIDES = ['left', 'right'];
 const ONCE = `${site.prefix}reload`;
+const SHELLS = { app: () => import('./app.jsx'), prose: () => import('./prose.jsx') };
 
 /* STATE */
 
@@ -42,9 +42,9 @@ function source(row) {
   return text;
 }
 
-function page(kind) {
-  const thunk = pages[kind];
-  return thunk ? thunk() : Promise.reject(new Error(`router: no page draws the kind ${kind}`));
+function page(row) {
+  const shell = SHELLS[row.kind];
+  return shell ? shell().then((one) => one.page(row)) : Promise.reject(new Error(`router: no shell draws the kind ${row.kind}`));
 }
 
 const sheets = new Map();
@@ -75,8 +75,8 @@ function figures() {
 /* RENDER */
 
 async function prepare(row, url) {
-  const layout = LAYOUT[row.kind] ?? {};
-  const [kind, text] = await Promise.all([page(row.kind), source(row)]);
+  const [kind, text] = await Promise.all([page(row), source(row)]);
+  const layout = kind.layout ?? {};
   const sheet = wear(layout.sheet);
   const host = document.createElement(layout.bare ? 'div' : 'article');
   if (!layout.bare) host.className = 'prose';
@@ -103,25 +103,12 @@ function head(row, url) {
   const canonical = meta('link[rel="canonical"]', () => Object.assign(document.createElement('link'), { rel: 'canonical' }));
   canonical.href = site.root + (row.meta?.deep ? url.pathname : row.route);
   const robots = meta('meta[name="robots"]');
-  if (row.kind === 'missing' && !robots) document.head.append(Object.assign(document.createElement('meta'), { name: 'robots', content: 'noindex' }));
-  if (row.kind !== 'missing') robots?.remove();
+  const lost = row.meta?.id === 'missing';
+  if (lost && !robots) document.head.append(Object.assign(document.createElement('meta'), { name: 'robots', content: 'noindex' }));
+  if (!lost) robots?.remove();
 }
 
-function crumbs(row, url) {
-  const list = document.querySelector('.subheader .crumbs ol');
-  const steps = trail(row, url.pathname);
-  list.replaceChildren(
-    ...steps.map((step, n) => {
-      const item = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = step.href;
-      a.textContent = step.name;
-      if (n === steps.length - 1) a.setAttribute('aria-current', 'page');
-      item.append(a);
-      return item;
-    }),
-  );
-}
+const crumbs = (row, url) => paint(trail(row, url.pathname));
 
 /* FRAME */
 
@@ -266,7 +253,7 @@ function hint(event) {
   const a = aim(event);
   if (!a || sort(a, location, DEEP) !== 'page') return;
   const row = match(rows, a.pathname);
-  page(row.kind).catch(() => {});
+  page(row).catch(() => {});
   source(row).catch(() => {});
 }
 

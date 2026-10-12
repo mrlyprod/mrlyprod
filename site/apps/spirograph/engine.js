@@ -2,7 +2,6 @@ export const KINDS = [['in', 'Inside a circle'], ['out', 'Outside a circle'], ['
 export const MODES = [['fill', 'Filled cells'], ['void', 'Empty cells'], ['both', 'Both'], ['corners', 'Corners']];
 export const NUMBERS = [3, 5, 7];
 export const BASE = 3;
-export const CODES = 512;
 export const BANDS = 8;
 export const PAD = 24;
 export const PACE = 0.5;
@@ -27,22 +26,13 @@ const attempt = (fn) => {
 
 /* DESIGN */
 
-export function bits(code) {
-  let n = 0;
-  for (let c = code; c; c >>>= 1) n += c & 1;
-  return n;
-}
-
-export function roll(rand) {
-  let code;
-  do code = 1 + Math.floor(rand() * (CODES - 2));
-  while (bits(code) < FEW);
-  return code;
+export function roll(math, rand) {
+  return math.bang.random_code(2, BASE, new math.Rng(Math.floor(rand() * 2 ** 32)), FEW);
 }
 
 export function design(math, value, rand) {
   const typed = String(value.code ?? '').trim();
-  const rolled = String(roll(rand));
+  const rolled = roll(math, rand);
   return typed && attempt(() => math.two.create(typed, value.number, 1, 0, BASE)) ? typed : rolled;
 }
 

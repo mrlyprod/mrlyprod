@@ -63,13 +63,12 @@ export function Pick({ label, value, onChange, options, ...rest }) {
 }
 
 export function Slider({ label, value, onChange, min, max, step = 1, zero, unit, commit, ...rest }) {
-  const [at, now, type] = useDraft(value, onChange, commit, number);
-  const word = said(zero, now);
+  const word = said(zero, value);
   return (
     <label>
       <span>{label}</span>
-      <span className="num">{word ?? now}{unit && !word ? ` ${unit}` : ''}</span>
-      <input ref={at} type="range" min={min} max={max} step={step} value={now} onChange={type} {...rest} />
+      <span className="num">{word ?? value}{unit && !word ? ` ${unit}` : ''}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(number(e.target))} {...rest} />
     </label>
   );
 }
@@ -167,8 +166,8 @@ function List({ row, value, values, set }) {
 }
 
 const KNOB = {
-  slider: (row, props, values) => <Slider {...props} min={row.min} max={maxOf(row, values)} step={row.step} unit={row.unit} zero={row.zero} commit />,
-  number: (row, props, values) => <Text {...props} type="number" inputMode="decimal" min={row.min} max={maxOf(row, values)} step={row.step} zero={row.zero} commit />,
+  slider: (row, props, values, units) => <Slider {...props} min={row.min} max={maxOf(row, values, units)} step={row.step} unit={row.unit} zero={row.zero} />,
+  number: (row, props, values, units) => <Text {...props} type="number" inputMode="decimal" min={row.min} max={maxOf(row, values, units)} step={row.step} zero={row.zero} commit />,
   toggle: (row, props) => <Toggle {...props} />,
   pick: (row, props, values) => <Pick {...props} options={optionsOf(row, values)} />,
   segment: (row, props, values) => <Segment {...props} options={optionsOf(row, values)} />,
@@ -176,15 +175,15 @@ const KNOB = {
   list: (row, props, values) => <List row={row} value={props.value} values={values} set={props.onChange} />,
 };
 
-export function Knob({ row, value, values, onChange }) {
+export function Knob({ row, value, values, units, onChange }) {
   const all = values ?? { [row.key]: value };
-  return KNOB[row.kind](row, { label: row.label ?? row.key, value: value ?? row.def, onChange: (v) => onChange(tidy([row], { ...all, [row.key]: v })) }, all);
+  return KNOB[row.kind](row, { label: row.label ?? row.key, value: value ?? row.def, onChange: (v) => onChange(tidy([row], { ...all, [row.key]: v }, units)) }, all, units);
 }
 
-export function Knobs({ spec, value, onChange }) {
+export function Knobs({ spec, value, units, onChange }) {
   return describe(spec, value).map(({ name, rows }) => (
     <Group key={name} name={name}>
-      {rows.map((row) => <Knob key={row.key} row={row} value={value?.[row.key]} values={value} onChange={onChange} />)}
+      {rows.map((row) => <Knob key={row.key} row={row} value={value?.[row.key]} values={value} units={units} onChange={onChange} />)}
     </Group>
   ));
 }

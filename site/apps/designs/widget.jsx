@@ -3,7 +3,7 @@ import { text } from '../../lib/export.js';
 import { Bar } from '../../lib/frame.jsx';
 import { Group, Segment } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { codes, distinct, gallery, named, next, roll, total } from './engine.js';
+import { codes, distinct, gallery, next, roll, total } from './engine.js';
 import { Thumbs, read, useUnit } from './pick.jsx';
 import { make } from './scene.js';
 
@@ -19,7 +19,7 @@ const ROWS = [
   ['Side', (info) => info.side],
   ['Fills', (info) => info.fills],
   ['Voids', (info) => info.voids],
-  ['Ratio', (info) => (info.fills / (info.fills + info.voids)).toFixed(4)],
+  ['Ratio', (info) => info.ratio.toFixed(4)],
   ['Perimeter', (info) => info.perimeter],
   ['Surface', (info) => info.surface],
   ['Euler', (info) => info.euler],
@@ -58,7 +58,6 @@ export function Widget({ value, onChange, onReady, onExport, unit, three: given 
   const listed = Boolean(math && codes(math, dim, base));
   const shown = listed ? filter : 'named';
   const list = useMemo(() => (math ? gallery(math, dim, base, shown) : []), [math, dim, base, shown]);
-  const names = useMemo(() => (math ? named(math, dim, base) : []), [math, dim, base]);
   now.current = { list, code: info?.code ?? code, level: value.level, seed: value.seed, dim, base };
   const staged = Boolean(math && (dim !== 3 || three));
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math, three }), [math, three]);
@@ -100,7 +99,7 @@ export function Widget({ value, onChange, onReady, onExport, unit, three: given 
         <div className="controls">
           <Group name={heading}>
             <Segment label="Show" value={shown} options={listed ? FILTERS : FILTERS.slice(2)} onChange={setFilter} />
-            {math && <Thumbs math={math} dim={dim} base={base} codes={list ?? []} code={info?.code ?? code} names={names} onPick={(v) => onChange({ code: v })} />}
+            {math && <Thumbs math={math} dim={dim} base={base} codes={list ?? []} code={info?.code ?? code} onPick={(v) => onChange({ code: v })} />}
           </Group>
         </div>
       </Bar>

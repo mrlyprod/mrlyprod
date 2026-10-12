@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { BEAT, HOLD, LEAST, MOST, ORBIT, PACE, SWAY, UNIT, arc, bend, cap, choose, corner, curves, drift, fit, looping, phase, picture, schedule, study, trail } from './engine.js';
+import { BEAT, HOLD, LEAST, MOST, ORBIT, PACE, SWAY, UNIT, arc, bend, choose, corner, curves, drift, fit, looping, phase, picture, schedule, study, trail } from './engine.js';
 import { SPEC } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -11,14 +11,8 @@ const value = (over) => ({ ...defaults(SPEC), seed: 1, base: 3, code: '', ...ove
 
 const SHADES = { accent: '#008cff', dim: 'rgb(0, 63, 115)', fill: 'rgba(0, 140, 255, 0.08)' };
 
-const walk = (code, base, level) => {
-  const drawn = math.arcs.draw(code, base, level);
-  return { drawn, plan: curves(drawn) };
-};
-
-test('the level cap keeps the cells under the budget: eight at base 2, five at base 3, and five for a base it does not know', () => {
-  expect([cap(2), cap(3), cap(undefined), cap('5')]).toEqual([8, 5, 5, 5]);
-  const level = (over) => tidy(SPEC, { ...value({ level: 9 }), ...over }).level;
+test('the level runs to eight at base 2 and five at base 3', () => {
+  const level = (over) => tidy(SPEC, { ...value({ level: 9 }), ...over }, { math }).level;
   expect([level({ base: 2 }), level({ base: 3 }), level({ base: 3, level: 2 })]).toEqual([8, 5, 2]);
 });
 
@@ -47,20 +41,8 @@ test('a filled cell wraps its upper-left and lower-right corners, an empty one t
   expect([corner(1, 0, 2, 3), corner(1, 1, 2, 3), corner(0, 0, 2, 3), corner(0, 1, 2, 3)]).toEqual([[2, 3], [3, 4], [3, 3], [2, 4]]);
 });
 
-test('the walk finds the loops and the strands the crate counts, each arc once, on every base-2 code and the named base-3 designs', () => {
-  const cases = [];
-  for (let code = 0; code < 16; code++) for (let level = 1; level <= 4; level++) cases.push([code, 2, level]);
-  for (const code of [495, 186, 455, 341, 170, 16]) for (let level = 1; level <= 3; level++) cases.push([code, 3, level]);
-  for (const [code, base, level] of cases) {
-    const { drawn, plan } = walk(code, base, level);
-    const loops = plan.closed.reduce((sum, one) => sum + one, 0);
-    expect([code, base, level, plan.loops, plan.strands, loops, plan.closed.length - loops, plan.bounds.at(-1)]).toEqual([code, base, level, drawn.loops, drawn.strands, drawn.loops, drawn.strands, 2 * drawn.side * drawn.side]);
-    expect(new Set(plan.order).size).toBe(plan.order.length);
-  }
-});
-
 test('the arcs of a curve chain through shared midpoints, a loop closes and a strand ends on the border', () => {
-  const { plan } = walk(495, 3, 2);
+  const plan = curves(math, 495, 3, 2);
   const ends = (j) => {
     const g = arc(plan, plan.order[j]);
     const v = `${g.cx},${g.y + 0.5}`;
@@ -77,14 +59,8 @@ test('the arcs of a curve chain through shared midpoints, a loop closes and a st
   }
 });
 
-test("a loop bit of the crate that the walk does not find is refused", () => {
-  const { drawn } = walk(495, 3, 2);
-  expect(() => curves({ ...drawn, cells: drawn.cells.map((byte) => byte ^ 2) })).toThrow('disagree');
-  expect(() => curves({ ...drawn, loops: drawn.loops + 1 })).toThrow('crate counts');
-});
-
 test('the one loop of the diagonal is the circle round the centre, its arcs sweeping a quarter each', () => {
-  const { plan } = walk(9, 2, 1);
+  const plan = curves(math, 9, 2, 1);
   expect([plan.loops, plan.strands]).toEqual([1, 4]);
   const k = plan.closed.indexOf(1);
   const arcs = Array.from(plan.order.subarray(plan.bounds[k], plan.bounds[k + 1]), (a) => arc(plan, a));
@@ -93,7 +69,7 @@ test('the one loop of the diagonal is the circle round the centre, its arcs swee
   expect(new Set(arcs.map((g) => `${g.x},${g.y}`)).size).toBe(4);
 });
 
-test('the study memoises the walk, checks it against the crate and reads the law', () => {
+test('the study memoises the curves and reads the law', () => {
   const plan = study(math, value({ code: '495', level: 2 }), rng(1));
   expect(plan.facts).toEqual({ code: '495', name: 'carpet', base: 3, level: 2, side: 9, cells: 81, filled: 64, loops: 3, strands: 18, law: { formula: '(8^n - 1)/7 - 3^n + n + 1', loops: 3 } });
   expect(plan.lit.length).toBe(3);

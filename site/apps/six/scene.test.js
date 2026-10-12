@@ -87,6 +87,6 @@ test('the scene hands its facts to the widget and wants the unit', () => {
 });
 
 test('the level runs to the cap of the number and the rings', () => {
-  const level = (value) => tidy(SPEC, { ...defaults(SPEC), level: 3, ...value }).level;
+  const level = (value) => tidy(SPEC, { ...defaults(SPEC), level: 3, ...value }, { math }).level;
   expect([level({ number: 3 }), level({ number: 5 }), level({ number: 9 }), level({ number: 3, radius: 1 }), level({ number: 3, radius: 4 }), level({ number: 7, radius: 1 })]).toEqual([3, 2, 1, 3, 2, 1]);
 });

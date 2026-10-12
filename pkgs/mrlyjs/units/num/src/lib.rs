@@ -4,6 +4,14 @@ mod hand;
 
 use wasm_bindgen::prelude::*;
 
+/// Grows the named packing and lays every circle of positive curvature as `x, y, r, k` in one flat run: the root's own circles first in root order, then the grown ones in curvature order.
+#[wasm_bindgen]
+pub fn apollonian_flat(name: &str, cap: JsValue) -> Result<Vec<f64>, JsValue> {
+    let cap = hand::i64_from_js(&cap)?;
+    let value = mrlyrs::num::apollonian::flat(name, cap).map_err(hand::throw)?;
+    Ok(value)
+}
+
 /// The bilinear form `B(u, v) = (sum u)(sum v) - 2 sum u v` that the reflection preserves.
 #[wasm_bindgen]
 pub fn apollonian_form(u: JsValue, v: JsValue) -> Result<JsValue, JsValue> {
@@ -98,69 +106,6 @@ pub fn apollonian_touches(p: JsValue) -> Result<JsValue, JsValue> {
     let p = hand::from_js::<mrlyrs::num::apollonian::Packing>(&p)?;
     let value = mrlyrs::num::apollonian::touches(&p);
     hand::to_js(&value)
-}
-
-/// Returns whether each sensor is essential, in the order given: whether removing it deletes a lag from the coarray, which happens exactly when some lag `t != 0` has all its pairs through it, the one pair of a lag of weight `1` or the two pairs `(s, s - t)` and `(s + t, s)` of a lag of weight `2`.
-#[wasm_bindgen]
-pub fn arrays_essential(sensors: JsValue) -> Result<JsValue, JsValue> {
-    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
-    let value = mrlyrs::num::arrays::essential(&sensors);
-    hand::to_js(&value)
-}
-
-/// Returns the fractal array of the generator at the base and level, ascending: every `sum_(i < level) g_i base^i` with each digit `g_i` in the generator.
-#[wasm_bindgen]
-pub fn arrays_fractal(generator: JsValue, base: JsValue, level: u32) -> Result<Vec<u64>, JsValue> {
-    let generator = hand::list_from_js(&generator, hand::u64_from_js)?;
-    let base = hand::u64_from_js(&base)?;
-    let value = mrlyrs::num::arrays::fractal(&generator, base, level).map_err(hand::throw)?;
-    Ok(value)
-}
-
-/// Returns the holes of the coarray, ascending: the lags between `-span` and `span` that no pair of sensors makes.
-#[wasm_bindgen]
-pub fn arrays_holes(sensors: JsValue) -> Result<Vec<i64>, JsValue> {
-    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
-    let value = mrlyrs::num::arrays::holes(&sensors);
-    Ok(value)
-}
-
-/// Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.
-#[wasm_bindgen]
-pub fn arrays_law(generator: JsValue, level: u32) -> Result<JsValue, JsValue> {
-    let generator = hand::list_from_js(&generator, hand::u64_from_js)?;
-    let value = mrlyrs::num::arrays::law(&generator, level);
-    hand::option_to_js(value.as_ref(), |x1| {
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(x1.0),
-            JsValue::from(x1.1),
-        ]))
-    })
-}
-
-/// Returns the lags that removing the sensor deletes from the coarray, ascending: those every pair of which holds it; empty when the sensor is inessential or absent.
-#[wasm_bindgen]
-pub fn arrays_lost(sensors: JsValue, sensor: JsValue) -> Result<Vec<i64>, JsValue> {
-    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
-    let sensor = hand::u64_from_js(&sensor)?;
-    let value = mrlyrs::num::arrays::lost(&sensors, sensor);
-    Ok(value)
-}
-
-/// Returns the paired sensors, ascending: each `g` with a partner `h` whose lag `g - h` has weight `1`, the set `U` of condition C1 of Cohen and Eldar; a paired sensor is essential.
-#[wasm_bindgen]
-pub fn arrays_paired(sensors: JsValue) -> Result<Vec<u64>, JsValue> {
-    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
-    let value = mrlyrs::num::arrays::paired(&sensors);
-    Ok(value)
-}
-
-/// Returns the coarray weights of the sensors, `w(t)` for every lag `t` from `-span` to `span` at index `t + span`, `span` the largest sensor less the least: the count of ordered pairs `(p, q)` of sensors with `p - q = t`.
-#[wasm_bindgen]
-pub fn arrays_weights(sensors: JsValue) -> Result<Vec<u64>, JsValue> {
-    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
-    let value = mrlyrs::num::arrays::weights(&sensors);
-    Ok(value)
 }
 
 /// Adds two sequences term by term over their shared length.
@@ -315,261 +260,6 @@ pub fn boolean_sac(code: JsValue, n: usize) -> Result<f64, JsValue> {
 pub fn boolean_walsh_spectrum(code: JsValue, n: usize) -> Result<Vec<i64>, JsValue> {
     let code = hand::u128_from_js(&code)?;
     let value = mrlyrs::num::boolean::walsh_spectrum(code, n);
-    Ok(value)
-}
-
-/// Returns the digits a bitmask names inside the base, ascending.
-#[wasm_bindgen]
-pub fn design_digits_of(mask: u32, base: JsValue) -> Result<Vec<u64>, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let value = mrlyrs::num::design::digits_of(mask, base);
-    Ok(value)
-}
-
-/// Returns the density echo, the sum of mu(n) A_F(n)/n over the whole numbers up to each grid point divided by x to the exponent, sieving the Mobius values to the largest element.
-#[wasm_bindgen]
-pub fn design_echo_series(
-    values: JsValue,
-    log_x: &[f64],
-    exponent: f64,
-) -> Result<Vec<f64>, JsValue> {
-    let values = hand::list_from_js(&values, hand::u64_from_js)?;
-    let value = mrlyrs::num::design::echo_series(&values, log_x, exponent);
-    Ok(value)
-}
-
-/// Returns the elements of the digit design below the base raised to the depth, ascending: the whole numbers of at most that many base digits, every digit drawn from the set and the leading digit nonzero.
-#[wasm_bindgen]
-pub fn design_elements(base: JsValue, digits: JsValue, depth: usize) -> Result<Vec<u64>, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-    let value = mrlyrs::num::design::elements(base, &digits, depth);
-    Ok(value)
-}
-
-/// Returns the log grid uniform over the span of the elements, from the log of the first to the log of the last.
-#[wasm_bindgen]
-pub fn design_log_grid(values: JsValue, samples: usize) -> Result<Vec<f64>, JsValue> {
-    let values = hand::list_from_js(&values, hand::u64_from_js)?;
-    let value = mrlyrs::num::design::log_grid(&values, samples);
-    Ok(value)
-}
-
-/// Returns the running median of the power over a window of the given width, the window clamped at the ends.
-#[wasm_bindgen]
-pub fn design_median_floor(power: &[f64], width: usize) -> Result<Vec<f64>, JsValue> {
-    let value = mrlyrs::num::design::median_floor(power, width);
-    Ok(value)
-}
-
-/// Returns the running design Mobius meter, the partial sums of the Mobius values along the elements.
-#[wasm_bindgen]
-pub fn design_meter(mu: &[i8]) -> Result<Vec<i64>, JsValue> {
-    let value = mrlyrs::num::design::meter(mu);
-    Ok(value)
-}
-
-/// Returns the distance from the ordinate to the nearest entry of the list, infinite when the list is empty.
-#[wasm_bindgen]
-pub fn design_nearest(value: f64, list: &[f64]) -> Result<f64, JsValue> {
-    let value = mrlyrs::num::design::nearest(value, list);
-    Ok(value)
-}
-
-/// Returns the bins inside the band that rise above both neighbours and clear the score threshold, strongest first.
-#[wasm_bindgen]
-pub fn design_peaks(
-    gamma: &[f64],
-    score: &[f64],
-    band: JsValue,
-    threshold: f64,
-) -> Result<Vec<usize>, JsValue> {
-    let band = hand::from_js::<(f64, f64)>(&band)?;
-    let value = mrlyrs::num::design::peaks(gamma, score, band, threshold).map_err(hand::throw)?;
-    Ok(value)
-}
-
-/// Returns the design's pole lattice below the top, the ordinates 2 pi j over log q of the poles its Dirichlet series carries.
-#[wasm_bindgen]
-pub fn design_pole_lattice(base: JsValue, top: f64) -> Result<Vec<f64>, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let value = mrlyrs::num::design::pole_lattice(base, top);
-    Ok(value)
-}
-
-/// Reads the running meter at every point of the log grid and divides by x to the exponent.
-#[wasm_bindgen]
-pub fn design_resample(
-    values: JsValue,
-    running: JsValue,
-    exponent: f64,
-    log_x: &[f64],
-) -> Result<Vec<f64>, JsValue> {
-    let values = hand::list_from_js(&values, hand::u64_from_js)?;
-    let running = hand::list_from_js(&running, hand::i64_from_js)?;
-    let value = mrlyrs::num::design::resample(&values, &running, exponent, log_x);
-    Ok(value)
-}
-
-/// Returns the power over its local median floor, the score a peak is read against.
-#[wasm_bindgen]
-pub fn design_score(power: &[f64], width: usize) -> Result<Vec<f64>, JsValue> {
-    let value = mrlyrs::num::design::score(power, width);
-    Ok(value)
-}
-
-/// Returns the count of elements the design holds at the depth, the length [`elements`] returns without building them.
-#[wasm_bindgen]
-pub fn design_size(digits: JsValue, depth: usize) -> Result<JsValue, JsValue> {
-    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-    let value = mrlyrs::num::design::size(&digits, depth);
-    Ok(JsValue::from_str(&value.to_string()))
-}
-
-/// Returns the frequency axis and the power spectrum of the series: the mean removed, a Hann window laid on, a real transform taken, and bin j read as the ordinate 2 pi j over the log range.
-#[wasm_bindgen]
-pub fn design_spectrum(log_x: &[f64], series: &[f64]) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::num::design::spectrum(log_x, series).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[
-        hand::typed(&(value.0)[..]),
-        hand::typed(&(value.1)[..]),
-    ]))
-}
-
-/// Returns the root mean square of the upper half of the series, the size the echo and the meter are compared at.
-#[wasm_bindgen]
-pub fn design_upper_rms(series: &[f64]) -> Result<f64, JsValue> {
-    let value = mrlyrs::num::design::upper_rms(series);
-    Ok(value)
-}
-
-/// Returns `Q = floor(y^(3/5))`, the largest denominator the dissection admits, exact in integers.
-#[wasm_bindgen]
-pub fn dissection_cap(y: JsValue) -> Result<u64, JsValue> {
-    let y = hand::u64_from_js(&y)?;
-    let value = mrlyrs::num::dissection::cap(y);
-    Ok(value)
-}
-
-/// Returns the chain's certificate exponent at one missing digit, `alpha_1 = log_base(z base/(base - 1))`, the same at every missing digit.
-#[wasm_bindgen]
-pub fn dissection_chain_exponent(base: JsValue) -> Result<f64, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let value = mrlyrs::num::dissection::chain_exponent(base);
-    Ok(value)
-}
-
-/// Returns the chain's margin at the bar, the cubic cleared of denominators at `w = base^(1/5)(1 - 1/base)`, positive exactly when the root sits below `w` and `alpha_1 < 1/5`.
-#[wasm_bindgen]
-pub fn dissection_chain_margin(base: JsValue) -> Result<f64, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let value = mrlyrs::num::dissection::chain_margin(base);
-    Ok(value)
-}
-
-/// Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection.
-#[wasm_bindgen]
-pub fn dissection_chain_root(base: JsValue) -> Result<f64, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let value = mrlyrs::num::dissection::chain_root(base);
-    Ok(value)
-}
-
-/// Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive.
-#[wasm_bindgen]
-pub fn dissection_chain_wall() -> Result<u64, JsValue> {
-    let value = mrlyrs::num::dissection::chain_wall();
-    Ok(value)
-}
-
-/// Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads.
-#[wasm_bindgen]
-pub fn dissection_consecutive(digits: JsValue) -> Result<bool, JsValue> {
-    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-    let value = mrlyrs::num::dissection::consecutive(&digits);
-    Ok(value)
-}
-
-/// Returns the last continued-fraction convergent `l/d` of `a/y` whose denominator is at most the cap, the Dirichlet fraction of the dissection.
-#[wasm_bindgen]
-pub fn dissection_fraction(a: JsValue, y: JsValue, cap: JsValue) -> Result<JsValue, JsValue> {
-    let a = hand::u64_from_js(&a)?;
-    let y = hand::u64_from_js(&y)?;
-    let cap = hand::u64_from_js(&cap)?;
-    let value = mrlyrs::num::dissection::fraction(a, y, cap);
-    Ok(hand::tuple_to_js(&[
-        JsValue::from(value.0),
-        JsValue::from(value.1),
-    ]))
-}
-
-/// Returns `kappa_F = (base/phi(base)) #{f in F : gcd(f, base) = 1}/fill`, the main-term constant of the prime count, as a reduced fraction.
-#[wasm_bindgen]
-pub fn dissection_kappa(base: JsValue, digits: JsValue) -> Result<JsValue, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-    let value = mrlyrs::num::dissection::kappa(base, &digits);
-    Ok(hand::tuple_to_js(&[
-        JsValue::from(value.0),
-        JsValue::from(value.1),
-    ]))
-}
-
-/// Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`.
-#[wasm_bindgen]
-pub fn dissection_masses(base: JsValue, digits: JsValue, level: u32) -> Result<Vec<f64>, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-    let value = mrlyrs::num::dissection::masses(base, &digits, level);
-    Ok(value)
-}
-
-/// Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere.
-#[wasm_bindgen]
-pub fn dissection_reach(base: JsValue, missing: JsValue) -> Result<String, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let missing = hand::u64_from_js(&missing)?;
-    let value = mrlyrs::num::dissection::reach(base, missing);
-    Ok(value.to_string())
-}
-
-/// Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate.
-#[wasm_bindgen]
-pub fn dissection_reading(base: JsValue, fill: usize, masses: &[f64]) -> Result<f64, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let value = mrlyrs::num::dissection::reading(base, fill, masses);
-    Ok(value)
-}
-
-/// Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`].
-#[wasm_bindgen]
-pub fn dissection_regions(base: JsValue, level: u32, z: JsValue) -> Result<JsValue, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let z = hand::u64_from_js(&z)?;
-    let value = mrlyrs::num::dissection::regions(base, level, z);
-    hand::to_js(&value)
-}
-
-/// Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span.
-#[wasm_bindgen]
-pub fn dissection_tally(
-    base: JsValue,
-    digits: JsValue,
-    level: usize,
-    samples: usize,
-) -> Result<JsValue, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-    let value = mrlyrs::num::dissection::tally(base, &digits, level, samples);
-    hand::to_js(&value)
-}
-
-/// Returns `|hat F_level(a/base^level)|` at every `a < base^level`, built one digit at a time from `hat F_j(t) = hat F(t) hat F_(j-1)(base t)`.
-#[wasm_bindgen]
-pub fn dissection_weights(base: JsValue, digits: JsValue, level: u32) -> Result<Vec<f64>, JsValue> {
-    let base = hand::u64_from_js(&base)?;
-    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-    let value = mrlyrs::num::dissection::weights(base, &digits, level);
     Ok(value)
 }
 
@@ -896,53 +586,6 @@ pub fn kummer_witness(prime: JsValue, top: JsValue, bottom: JsValue) -> Result<J
     })
 }
 
-/// Returns the Lyndon cofactor `Z(s) = zeta_F(s) (1 - k q^(-s))` and the bound it is known to.
-#[wasm_bindgen]
-pub fn ladder_cofactor(
-    design: &ladder_Design,
-    s: &zeta_Complex,
-    tolerance: f64,
-) -> Result<JsValue, JsValue> {
-    let value =
-        mrlyrs::num::ladder::cofactor(&design.inner, s.inner, tolerance).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[
-        JsValue::from(zeta_Complex { inner: value.0 }),
-        hand::to_js(&value.1)?,
-    ]))
-}
-
-/// Returns the residue of `zeta_F` at `s_(m,j) = alpha - m + 2 pi i j / log q` and the bound it is known to.
-#[wasm_bindgen]
-pub fn ladder_residue(
-    design: &ladder_Design,
-    m: usize,
-    j: JsValue,
-    tolerance: f64,
-) -> Result<JsValue, JsValue> {
-    let j = hand::i64_from_js(&j)?;
-    let value =
-        mrlyrs::num::ladder::residue(&design.inner, m, j, tolerance).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[
-        JsValue::from(zeta_Complex { inner: value.0 }),
-        hand::to_js(&value.1)?,
-    ]))
-}
-
-/// Returns `zeta_F(s)` and the bound it is known to.
-#[wasm_bindgen]
-pub fn ladder_zeta(
-    design: &ladder_Design,
-    s: &zeta_Complex,
-    tolerance: f64,
-) -> Result<JsValue, JsValue> {
-    let value =
-        mrlyrs::num::ladder::zeta(&design.inner, s.inner, tolerance).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[
-        JsValue::from(zeta_Complex { inner: value.0 }),
-        hand::to_js(&value.1)?,
-    ]))
-}
-
 /// Counts the ordered pairs of coprime coordinates between one and n: twice the totient sum less one.
 #[wasm_bindgen]
 pub fn lattice_coprime_pairs(n: usize) -> Result<u64, JsValue> {
@@ -1006,55 +649,6 @@ pub fn lattice_zeta_whole(s: u32) -> Result<f64, JsValue> {
     Ok(value)
 }
 
-/// Returns the count of allowed windows `card W`, the bits the code sets inside its window range.
-#[wasm_bindgen]
-pub fn memory_allowed_windows(rule: &memory_Rule) -> Result<usize, JsValue> {
-    let value = mrlyrs::num::memory::allowed_windows(&rule.inner);
-    Ok(value)
-}
-
-/// Returns the accepted words of the level as cell indices of the `2^L` grid, `x` from bit `0` of every digit, `y` from bit `1`, `z` from bit `2`, coarsest digit first.
-#[wasm_bindgen]
-pub fn memory_cells(rule: &memory_Rule, level: usize) -> Result<Vec<u64>, JsValue> {
-    let value = mrlyrs::num::memory::cells(&rule.inner, level);
-    Ok(value)
-}
-
-/// Returns `N_W(L)`, the count of accepted words, for `L = 1 ..= levels`, and stops early on the level whose count overruns a `u64`.
-#[wasm_bindgen]
-pub fn memory_counts(rule: &memory_Rule, levels: usize) -> Result<Vec<u64>, JsValue> {
-    let value = mrlyrs::num::memory::counts(&rule.inner, levels);
-    Ok(value)
-}
-
-/// Returns the growth exponent `log_2 rho`, the growth per digit of the accepted word count.
-#[wasm_bindgen]
-pub fn memory_exponent(rule: &memory_Rule) -> Result<f64, JsValue> {
-    let value = mrlyrs::num::memory::exponent(&rule.inner);
-    Ok(value)
-}
-
-/// Returns the memory number `kappa(W) = log_2(card W) / k - log_2 rho`, the bits a digit spends on memory.
-#[wasm_bindgen]
-pub fn memory_kappa(rule: &memory_Rule) -> Result<f64, JsValue> {
-    let value = mrlyrs::num::memory::kappa(&rule.inner);
-    Ok(value)
-}
-
-/// Returns the Perron root of the transfer matrix, the count's growth per level.
-#[wasm_bindgen]
-pub fn memory_perron(rule: &memory_Rule) -> Result<f64, JsValue> {
-    let value = mrlyrs::num::memory::perron(&rule.inner);
-    Ok(value)
-}
-
-/// Returns the transfer matrix on the `(k - 1)`-windows: entry `(s, t)` is one when the window that overlaps state `s` onto state `t` is allowed.
-#[wasm_bindgen]
-pub fn memory_transfer(rule: &memory_Rule) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::num::memory::transfer(&rule.inner);
-    hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
-}
-
 /// Returns the run-boundary word, one wherever a letter differs from the next.
 #[wasm_bindgen]
 pub fn morse_boundary(word: &[u8]) -> Result<Vec<u8>, JsValue> {
@@ -1113,6 +707,13 @@ pub fn morse_lift(kind: JsValue, side: usize) -> Result<Vec<u8>, JsValue> {
     Ok(value)
 }
 
+/// Keeps the sites lit in both grids of the same length, site by site.
+#[wasm_bindgen]
+pub fn morse_mask(a: &[u8], b: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let value = mrlyrs::num::morse::mask(a, b);
+    Ok(value)
+}
+
 /// Folds a tile of the side into its Kronecker power at the level, one bit per site.
 #[wasm_bindgen]
 pub fn morse_power(tile: &[u8], number: usize, level: usize) -> Result<Vec<u8>, JsValue> {
@@ -1131,6 +732,13 @@ pub fn morse_repeat(tile: &[u8], number: usize, side: usize) -> Result<Vec<u8>, 
 #[wasm_bindgen]
 pub fn morse_runs(word: &[u8]) -> Result<Vec<usize>, JsValue> {
     let value = mrlyrs::num::morse::runs(word);
+    Ok(value)
+}
+
+/// Reads a design plus-minus: a filled cell is plus, zero, and a void is minus, one.
+#[wasm_bindgen]
+pub fn morse_signs(types: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let value = mrlyrs::num::morse::signs(types);
     Ok(value)
 }
 
@@ -1245,50 +853,6 @@ pub fn prime_squares(number: usize) -> Result<JsValue, JsValue> {
 pub fn prime_study(limit: usize) -> Result<JsValue, JsValue> {
     let value = mrlyrs::num::prime::study(limit);
     hand::to_js(&value)
-}
-
-/// Returns the flowsnake as a radix design: base `3 + omega` of norm seven on the hexagonal lattice, the full residue system, code `127`.
-#[wasm_bindgen]
-pub fn radix_flowsnake() -> Result<radix_Radix, JsValue> {
-    let value = mrlyrs::num::radix::flowsnake().map_err(hand::throw)?;
-    Ok(radix_Radix { inner: value })
-}
-
-/// Returns the Sierpinski gasket as a radix design: base `2` on the hexagonal lattice, three of the four residues, code `7`.
-#[wasm_bindgen]
-pub fn radix_gasket() -> Result<radix_Radix, JsValue> {
-    let value = mrlyrs::num::radix::gasket().map_err(hand::throw)?;
-    Ok(radix_Radix { inner: value })
-}
-
-/// Returns the Koch curve as a radix design: base `3` on the hexagonal lattice, digits `0, 1, 2 + omega, 2`, twists `1, e^(i pi/3), e^(-i pi/3), 1`.
-#[wasm_bindgen]
-pub fn radix_koch() -> Result<radix_Radix, JsValue> {
-    let value = mrlyrs::num::radix::koch().map_err(hand::throw)?;
-    Ok(radix_Radix { inner: value })
-}
-
-/// Returns the terdragon as a radix design: base `2 + omega` on the hexagonal lattice, the full residue system, code `7`, twisted by `1, omega, 1`.
-#[wasm_bindgen]
-pub fn radix_terdragon() -> Result<radix_Radix, JsValue> {
-    let value = mrlyrs::num::radix::terdragon().map_err(hand::throw)?;
-    Ok(radix_Radix { inner: value })
-}
-
-/// Returns the plane design of a cell code as a radix design: base the rational integer `m`, of norm `m^2`, on the square lattice, no twist, digits the box residues `{x + y i : 0 <= x, y < m}`.
-#[wasm_bindgen]
-pub fn radix_tile(m: JsValue, code: JsValue) -> Result<radix_Radix, JsValue> {
-    let m = hand::u64_from_js(&m)?;
-    let code = hand::u128_from_js(&code)?;
-    let value = mrlyrs::num::radix::tile(m, code).map_err(hand::throw)?;
-    Ok(radix_Radix { inner: value })
-}
-
-/// Returns the twindragon as a radix design: base `1 + i` on the square lattice, the full residue system, code `3`.
-#[wasm_bindgen]
-pub fn radix_twindragon() -> Result<radix_Radix, JsValue> {
-    let value = mrlyrs::num::radix::twindragon().map_err(hand::throw)?;
-    Ok(radix_Radix { inner: value })
 }
 
 /// Returns the Basel sum of the reciprocal squares over n terms, walking to pi squared over six.
@@ -1641,13 +1205,6 @@ pub fn spiral_snail(base: JsValue, top: JsValue, growth: JsValue) -> Result<JsVa
     hand::to_js(&value)
 }
 
-/// Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`.
-#[wasm_bindgen]
-pub fn sumset_pairs(level: u32) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::num::sumset::pairs(level).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(JsValue::from(sumset_Pair { inner: *x1 })))
-}
-
 /// The smooth window on [1, 2]: exp(4 - 1/((u - 1)(2 - u))) inside, zero outside, every derivative vanishing at the ends and a peak of one at u = 3/2.
 #[wasm_bindgen]
 pub fn zeta_bump(u: f64) -> Result<f64, JsValue> {
@@ -1671,9 +1228,10 @@ pub fn zeta_kernel(p: f64) -> Result<f64, JsValue> {
 
 /// Returns the Mellin transform of the bump at a complex s, the integral of bump(u) u^(s - 1) over [1, 2], by a 4096-node midpoint rule.
 #[wasm_bindgen]
-pub fn zeta_mellin(s: &zeta_Complex) -> Result<zeta_Complex, JsValue> {
-    let value = mrlyrs::num::zeta::mellin(s.inner);
-    Ok(zeta_Complex { inner: value })
+pub fn zeta_mellin(s: JsValue) -> Result<JsValue, JsValue> {
+    let s = hand::from_js::<mrlyrs::num::zeta::Complex>(&s)?;
+    let value = mrlyrs::num::zeta::mellin(s);
+    hand::to_js(&value)
 }
 
 /// Returns the main term of the smoothed novelty: six over pi squared times the bump's transform at two.
@@ -1686,10 +1244,15 @@ pub fn zeta_novelty_main() -> Result<f64, JsValue> {
 /// Sums the waves of the zeros at log y: twice the real part of the coefficients times y to the minus i gamma, the smoothed error over y to the three halves that the zeros predict.
 #[wasm_bindgen]
 pub fn zeta_novelty_wave(gammas: &[f64], coef: JsValue, log_y: f64) -> Result<f64, JsValue> {
-    let coef = hand::list_from_js(&coef, |x1| {
-        hand::from_js::<mrlyrs::num::zeta::Complex>(&hand::plain(x1)?)
-    })?;
+    let coef = hand::from_js::<Vec<mrlyrs::num::zeta::Complex>>(&coef)?;
     let value = mrlyrs::num::zeta::novelty_wave(gammas, &coef, log_y);
+    Ok(value)
+}
+
+/// Returns the explicit formula over the zeros at the given ordinates at every sample x.
+#[wasm_bindgen]
+pub fn zeta_psi_curve(gammas: &[f64], samples: &[f64]) -> Result<Vec<f64>, JsValue> {
+    let value = mrlyrs::num::zeta::psi_curve(gammas, samples);
     Ok(value)
 }
 
@@ -1697,6 +1260,13 @@ pub fn zeta_novelty_wave(gammas: &[f64], coef: JsValue, log_y: f64) -> Result<f6
 #[wasm_bindgen]
 pub fn zeta_psi_formula(x: f64, gammas: &[f64]) -> Result<f64, JsValue> {
     let value = mrlyrs::num::zeta::psi_formula(x, gammas);
+    Ok(value)
+}
+
+/// Returns how far the explicit formula over the zeros at the given ordinates lands from the staircase at the whole number x.
+#[wasm_bindgen]
+pub fn zeta_psi_gap(x: usize, gammas: &[f64]) -> Result<f64, JsValue> {
+    let value = mrlyrs::num::zeta::psi_gap(x, gammas);
     Ok(value)
 }
 
@@ -1709,9 +1279,10 @@ pub fn zeta_psi_stair(x: usize) -> Result<Vec<f64>, JsValue> {
 
 /// Returns a positive real base raised to a complex exponent.
 #[wasm_bindgen]
-pub fn zeta_raise(base: f64, exponent: &zeta_Complex) -> Result<zeta_Complex, JsValue> {
-    let value = mrlyrs::num::zeta::raise(base, exponent.inner);
-    Ok(zeta_Complex { inner: value })
+pub fn zeta_raise(base: f64, exponent: JsValue) -> Result<JsValue, JsValue> {
+    let exponent = hand::from_js::<mrlyrs::num::zeta::Complex>(&exponent)?;
+    let value = mrlyrs::num::zeta::raise(base, exponent);
+    hand::to_js(&value)
 }
 
 /// Returns the sharp novelty error at y: y squared times the totient sum over the scales from 1 over y to 2 over y, both ends in, less nine over pi squared, from the prefix sums of the totients, which must reach 2 over y.
@@ -1758,85 +1329,10 @@ pub fn apollonian_ROOTS() -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
-/// The most sensors [`fractal`] builds, `2^20`.
+/// The numbers [`flat`] lays per circle: the centre's two coordinates, the radius and the curvature.
 #[wasm_bindgen]
-pub fn arrays_MOST() -> Result<u64, JsValue> {
-    let value = mrlyrs::num::arrays::MOST;
-    Ok(value)
-}
-
-/// The relative rounding allowance the double-precision matrix ladder charges against the scale it carries.
-#[wasm_bindgen]
-pub fn automaton_ROUNDING() -> Result<f64, JsValue> {
-    let value = mrlyrs::num::automaton::ROUNDING;
-    Ok(value)
-}
-
-/// The ordinates of the first fourteen nontrivial zeros of the Riemann zeta function, the imaginary parts of the zeros on the critical line in ascending order.
-#[wasm_bindgen]
-pub fn design_ZETA_ORDINATES() -> Result<Vec<f64>, JsValue> {
-    let value = mrlyrs::num::design::ZETA_ORDINATES;
-    Ok(value.to_vec())
-}
-
-/// The bar region A sets on the certificate exponent, `alpha_1 < 1/5`: the whole `l^1` mass against the minor-arc `x^(4/5)`.
-#[wasm_bindgen]
-pub fn dissection_BAR_A() -> Result<f64, JsValue> {
-    let value = mrlyrs::num::dissection::BAR_A;
-    Ok(value)
-}
-
-/// The bar region B sets, `alpha_1 < 1/4`: the hybrid `l^1` mass against the `d^(-1/2)` decay.
-#[wasm_bindgen]
-pub fn dissection_BAR_B() -> Result<f64, JsValue> {
-    let value = mrlyrs::num::dissection::BAR_B;
-    Ok(value)
-}
-
-/// The base the chain is scanned to; from here the closed-form cap `1 + sqrt(2 (2/pi) log base + 0.97)` keeps it below the bar.
-#[wasm_bindgen]
-pub fn dissection_CAP_BASE() -> Result<u64, JsValue> {
-    let value = mrlyrs::num::dissection::CAP_BASE;
-    Ok(value)
-}
-
-/// The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`.
-#[wasm_bindgen]
-pub fn dissection_CERTIFIED() -> Result<JsValue, JsValue> {
-    let value = mrlyrs::num::dissection::CERTIFIED;
-    hand::list_to_js(&value, |x1| {
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(x1.0),
-            JsValue::from(x1.1),
-        ]))
-    })
-}
-
-/// The least base whose every one-missing-digit set carries a per-digit shifted-grid certificate below `1/5`, `lab/py/digit-transform-norms`, verbs `fifth` and `fifthbelow`; base 114 missing 56 is certified above.
-#[wasm_bindgen]
-pub fn dissection_DIGIT_WALL() -> Result<u64, JsValue> {
-    let value = mrlyrs::num::dissection::DIGIT_WALL;
-    Ok(value)
-}
-
-/// The least base with some missing digit certified below `1/5`, `lab/py/digit-transform-norms`, verb `fifth`.
-#[wasm_bindgen]
-pub fn dissection_FIRST_BELOW() -> Result<u64, JsValue> {
-    let value = mrlyrs::num::dissection::FIRST_BELOW;
-    Ok(value)
-}
-
-/// The constant `gamma'` of the digit-uniform chain, `(2/pi)(gamma + log(8/pi))` rounded up at seven decimals.
-#[wasm_bindgen]
-pub fn dissection_GAMMA() -> Result<f64, JsValue> {
-    let value = mrlyrs::num::dissection::GAMMA;
-    Ok(value)
-}
-
-/// The least base whose every one-missing-digit set carries a window certificate below `1/5`, `lab/py/prime-dissection`, verb `window`.
-#[wasm_bindgen]
-pub fn dissection_WINDOW_WALL() -> Result<u64, JsValue> {
-    let value = mrlyrs::num::dissection::WINDOW_WALL;
+pub fn apollonian_STRIDE() -> Result<usize, JsValue> {
+    let value = mrlyrs::num::apollonian::STRIDE;
     Ok(value)
 }
 
@@ -1851,34 +1347,6 @@ pub fn kummer_MOST() -> Result<u64, JsValue> {
 #[wasm_bindgen]
 pub fn kummer_TABLE() -> Result<u64, JsValue> {
     let value = mrlyrs::num::kummer::TABLE;
-    Ok(value)
-}
-
-/// The relative rounding allowance the double-precision ladder charges against the scale it carries.
-#[wasm_bindgen]
-pub fn ladder_ROUNDING() -> Result<f64, JsValue> {
-    let value = mrlyrs::num::ladder::ROUNDING;
-    Ok(value)
-}
-
-/// The largest digit span a rule may read, so its code fits a `u64`.
-#[wasm_bindgen]
-pub fn memory_SPAN() -> Result<usize, JsValue> {
-    let value = mrlyrs::num::memory::SPAN;
-    Ok(value)
-}
-
-/// The sweep cap of the power iteration.
-#[wasm_bindgen]
-pub fn memory_SWEEPS() -> Result<usize, JsValue> {
-    let value = mrlyrs::num::memory::SWEEPS;
-    Ok(value)
-}
-
-/// The absolute `l^1` move of the normalised iterate that stops the power iteration, counted only when it holds over three consecutive sweeps.
-#[wasm_bindgen]
-pub fn memory_TOLERANCE() -> Result<f64, JsValue> {
-    let value = mrlyrs::num::memory::TOLERANCE;
     Ok(value)
 }
 
@@ -1928,20 +1396,6 @@ pub fn series_VISIBLE() -> Result<f64, JsValue> {
 #[wasm_bindgen]
 pub fn sieve_PLANE_LIMIT() -> Result<f64, JsValue> {
     let value = mrlyrs::num::sieve::PLANE_LIMIT;
-    Ok(value)
-}
-
-/// The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB.
-#[wasm_bindgen]
-pub fn sumset_DEEPEST() -> Result<u32, JsValue> {
-    let value = mrlyrs::num::sumset::DEEPEST;
-    Ok(value)
-}
-
-/// The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer.
-#[wasm_bindgen]
-pub fn sumset_WIDEST() -> Result<u32, JsValue> {
-    let value = mrlyrs::num::sumset::WIDEST;
     Ok(value)
 }
 
@@ -2025,115 +1479,6 @@ impl apollonian_Circle {
     }
 }
 
-/// A memory design read as a matrix ladder: the rule, the transfer matrix on its `(k-1)`-window states, and the peel depth its Dirichlet series is continued from.
-#[wasm_bindgen]
-pub struct automaton_Automaton {
-    inner: mrlyrs::num::automaton::Automaton,
-}
-
-#[wasm_bindgen]
-impl automaton_Automaton {
-    /// Reads the Automaton from its plain data.
-    #[wasm_bindgen(js_name = "from")]
-    pub fn from_plain(data: JsValue) -> Result<automaton_Automaton, JsValue> {
-        Ok(automaton_Automaton {
-            inner: hand::from_js(&data)?,
-        })
-    }
-    /// Writes the Automaton as plain data.
-    #[wasm_bindgen(js_name = "toJSON")]
-    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
-        hand::to_js(&self.inner)
-    }
-    /// Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of [`crate::num::memory::perron`].
-    pub fn abscissa(&self) -> Result<f64, JsValue> {
-        let value = self.inner.abscissa();
-        Ok(value)
-    }
-    /// Returns the base `q = 2^D`.
-    pub fn base(&self) -> Result<u64, JsValue> {
-        let value = self.inner.base();
-        Ok(value)
-    }
-    /// Returns the matrix Lyndon cofactor `Z_W(s) = det(I - q^(-s) T) zeta_W(s)` and the bound it is known to.
-    pub fn cofactor(&self, s: &zeta_Complex, tolerance: f64) -> Result<JsValue, JsValue> {
-        let value = self
-            .inner
-            .cofactor(s.inner, tolerance)
-            .map_err(hand::throw)?;
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(zeta_Complex { inner: value.0 }),
-            hand::to_js(&value.1)?,
-        ]))
-    }
-    /// Returns the coefficients `c_0 .. c_n` of `det(I - x T) = sum c_i x^i`, the ladder denominator read as a polynomial in `x = q^(-s)`.
-    pub fn denominator(&self) -> Result<Vec<f64>, JsValue> {
-        let value = self.inner.denominator();
-        Ok(value)
-    }
-    /// Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of [`crate::num::memory::transfer`], entry `(u', u)` counting the letters carrying `u` to `u'`.
-    pub fn matrix(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.matrix();
-        hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
-    }
-    /// Builds the ladder of a rule, choosing the peel depth.
-    #[wasm_bindgen(constructor)]
-    pub fn new(rule: &memory_Rule) -> Result<automaton_Automaton, JsValue> {
-        let value = mrlyrs::num::automaton::Automaton::new(&rule.inner).map_err(hand::throw)?;
-        Ok(automaton_Automaton { inner: value })
-    }
-    /// Returns the peel depth `P`.
-    pub fn peel(&self) -> Result<usize, JsValue> {
-        let value = self.inner.peel();
-        Ok(value)
-    }
-    /// Returns the pole spacing `2 pi / log q`.
-    pub fn period(&self) -> Result<f64, JsValue> {
-        let value = self.inner.period();
-        Ok(value)
-    }
-    /// Returns the Collatz-Wielandt bracket `(low, high)` of the Perron root of the transfer matrix, the ratios the ladder divides with.
-    pub fn perron(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.perron();
-        hand::to_js(&value)
-    }
-    /// Returns the residue of `zeta_W` at a simple pole `w0` of the resolvent and the bound it is known to.
-    pub fn residue(&self, w0: &zeta_Complex, tolerance: f64) -> Result<JsValue, JsValue> {
-        let value = self
-            .inner
-            .residue(w0.inner, tolerance)
-            .map_err(hand::throw)?;
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(zeta_Complex { inner: value.0 }),
-            hand::to_js(&value.1)?,
-        ]))
-    }
-    /// Returns the rule.
-    pub fn rule(&self) -> Result<memory_Rule, JsValue> {
-        let value = self.inner.rule();
-        Ok(memory_Rule { inner: value })
-    }
-    /// Returns the state count `q^(k-1)`.
-    pub fn states(&self) -> Result<usize, JsValue> {
-        let value = self.inner.states();
-        Ok(value)
-    }
-    /// Builds the ladder at an explicit peel depth, at least the rule width and at least two.
-    pub fn with_peel(rule: &memory_Rule, peel: usize) -> Result<automaton_Automaton, JsValue> {
-        let value =
-            mrlyrs::num::automaton::Automaton::with_peel(&rule.inner, peel).map_err(hand::throw)?;
-        Ok(automaton_Automaton { inner: value })
-    }
-    /// Returns `zeta_W(s)` and the bound it is known to.
-    pub fn zeta(&self, s: &zeta_Complex, tolerance: f64) -> Result<JsValue, JsValue> {
-        let value = self.inner.zeta(s.inner, tolerance).map_err(hand::throw)?;
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(zeta_Complex { inner: value.0 }),
-            hand::to_js(&value.1)?,
-        ]))
-    }
-}
-
 /// The symmetric window of one ring: every point within a reach, with the norms sieved once.
 #[wasm_bindgen]
 pub struct gauss_Window {
@@ -2203,182 +1548,6 @@ impl gauss_Window {
     }
 }
 
-/// A digit design: the base `q`, the digit set `F` its elements are written with, and the peel depth `P` its ladder starts at.
-#[wasm_bindgen]
-pub struct ladder_Design {
-    inner: mrlyrs::num::ladder::Design,
-}
-
-#[wasm_bindgen]
-impl ladder_Design {
-    /// Reads the Design from its plain data.
-    #[wasm_bindgen(js_name = "from")]
-    pub fn from_plain(data: JsValue) -> Result<ladder_Design, JsValue> {
-        Ok(ladder_Design {
-            inner: hand::from_js(&data)?,
-        })
-    }
-    /// Writes the Design as plain data.
-    #[wasm_bindgen(js_name = "toJSON")]
-    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
-        hand::to_js(&self.inner)
-    }
-    /// Returns the abscissa `alpha = log_q k`.
-    pub fn abscissa(&self) -> Result<f64, JsValue> {
-        let value = self.inner.abscissa();
-        Ok(value)
-    }
-    /// Returns the base.
-    pub fn base(&self) -> Result<u64, JsValue> {
-        let value = self.inner.base();
-        Ok(value)
-    }
-    /// Returns the digit set, ascending.
-    pub fn digits(&self) -> Result<Vec<u64>, JsValue> {
-        let value = self.inner.digits();
-        Ok(value.to_vec())
-    }
-    /// Builds a design on the base and the digit set, choosing the peel depth.
-    #[wasm_bindgen(constructor)]
-    pub fn new(base: JsValue, digits: JsValue) -> Result<ladder_Design, JsValue> {
-        let base = hand::u64_from_js(&base)?;
-        let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-        let value = mrlyrs::num::ladder::Design::new(base, &digits).map_err(hand::throw)?;
-        Ok(ladder_Design { inner: value })
-    }
-    /// Returns the peel depth.
-    pub fn peel(&self) -> Result<usize, JsValue> {
-        let value = self.inner.peel();
-        Ok(value)
-    }
-    /// Returns the pole spacing `2 pi / log q`.
-    pub fn period(&self) -> Result<f64, JsValue> {
-        let value = self.inner.period();
-        Ok(value)
-    }
-    /// Returns the pole `s_(m,j) = alpha - m + 2 pi i j / log q`.
-    pub fn pole(&self, m: usize, j: JsValue) -> Result<zeta_Complex, JsValue> {
-        let j = hand::i64_from_js(&j)?;
-        let value = self.inner.pole(m, j);
-        Ok(zeta_Complex { inner: value })
-    }
-    /// Builds a design at an explicit peel depth, at least two.
-    pub fn with_peel(
-        base: JsValue,
-        digits: JsValue,
-        peel: usize,
-    ) -> Result<ladder_Design, JsValue> {
-        let base = hand::u64_from_js(&base)?;
-        let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-        let value =
-            mrlyrs::num::ladder::Design::with_peel(base, &digits, peel).map_err(hand::throw)?;
-        Ok(ladder_Design { inner: value })
-    }
-}
-
-/// A rule on `k` consecutive digits of a design word.
-#[wasm_bindgen]
-pub struct memory_Rule {
-    inner: mrlyrs::num::memory::Rule,
-}
-
-#[wasm_bindgen]
-impl memory_Rule {
-    /// Reads the Rule from its plain data.
-    #[wasm_bindgen(js_name = "from")]
-    pub fn from_plain(data: JsValue) -> Result<memory_Rule, JsValue> {
-        Ok(memory_Rule {
-            inner: hand::from_js(&data)?,
-        })
-    }
-    /// Writes the Rule as plain data.
-    #[wasm_bindgen(js_name = "toJSON")]
-    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
-        hand::to_js(&self.inner)
-    }
-    /// The dimension `D`, one to three.
-    #[wasm_bindgen(getter)]
-    pub fn dimension(&self) -> Result<usize, JsValue> {
-        let value = self.inner.dimension;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_dimension(&mut self, value: usize) -> Result<(), JsValue> {
-        self.inner.dimension = value;
-        Ok(())
-    }
-    /// The window width `k`, at least one.
-    #[wasm_bindgen(getter)]
-    pub fn width(&self) -> Result<usize, JsValue> {
-        let value = self.inner.width;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_width(&mut self, value: usize) -> Result<(), JsValue> {
-        self.inner.width = value;
-        Ok(())
-    }
-    /// The window code, bit `w` set when window `w` is allowed.
-    #[wasm_bindgen(getter)]
-    pub fn code(&self) -> Result<u64, JsValue> {
-        let value = self.inner.code;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_code(&mut self, value: JsValue) -> Result<(), JsValue> {
-        let value = hand::u64_from_js(&value)?;
-        self.inner.code = value;
-        Ok(())
-    }
-    /// Returns whether a word, coarsest digit first, is accepted.
-    pub fn accepts(&self, word: &[usize]) -> Result<bool, JsValue> {
-        let value = self.inner.accepts(word);
-        Ok(value)
-    }
-    /// Returns whether the window is allowed, and false for any window out of range.
-    pub fn allowed(&self, window: usize) -> Result<bool, JsValue> {
-        let value = self.inner.allowed(window);
-        Ok(value)
-    }
-    /// Returns the letters that stand in at least one allowed window.
-    pub fn alphabet(&self) -> Result<Vec<usize>, JsValue> {
-        let value = self.inner.alphabet();
-        Ok(value)
-    }
-    /// Returns the count of rules of this shape, `2^(2^(k D))`.
-    pub fn codes(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.codes();
-        Ok(JsValue::from_str(&value.to_string()))
-    }
-    /// Returns the rule that allows every window.
-    pub fn full(dimension: usize, width: usize) -> Result<memory_Rule, JsValue> {
-        let value = mrlyrs::num::memory::Rule::full(dimension, width).map_err(hand::throw)?;
-        Ok(memory_Rule { inner: value })
-    }
-    /// Returns the letter count `2^D`, the digit vectors of the cube's corners.
-    pub fn letters(&self) -> Result<usize, JsValue> {
-        let value = self.inner.letters();
-        Ok(value)
-    }
-    /// Builds a rule from its dimension, its width and its code.
-    #[wasm_bindgen(constructor)]
-    pub fn new(dimension: usize, width: usize, code: JsValue) -> Result<memory_Rule, JsValue> {
-        let code = hand::u64_from_js(&code)?;
-        let value = mrlyrs::num::memory::Rule::new(dimension, width, code).map_err(hand::throw)?;
-        Ok(memory_Rule { inner: value })
-    }
-    /// Returns the state count `2^((k - 1) D)`, the windows of one digit less that the transfer matrix runs on.
-    pub fn states(&self) -> Result<usize, JsValue> {
-        let value = self.inner.states();
-        Ok(value)
-    }
-    /// Returns the window count `2^(k D)`.
-    pub fn windows(&self) -> Result<usize, JsValue> {
-        let value = self.inner.windows();
-        Ok(value)
-    }
-}
-
 /// The sieve of Eratosthenes taken one prime at a time, each number remembering which prime struck it.
 #[wasm_bindgen]
 pub struct prime_Sieve {
@@ -2442,455 +1611,6 @@ impl prime_Sieve {
     }
 }
 
-/// The base of a radix design: a ring and an element of norm at least two, the scale every word is read against.
-#[wasm_bindgen]
-pub struct radix_Base {
-    inner: mrlyrs::num::radix::Base,
-}
-
-#[wasm_bindgen]
-impl radix_Base {
-    /// Reads the Base from its plain data.
-    #[wasm_bindgen(js_name = "from")]
-    pub fn from_plain(data: JsValue) -> Result<radix_Base, JsValue> {
-        Ok(radix_Base {
-            inner: hand::from_js(&data)?,
-        })
-    }
-    /// Writes the Base as plain data.
-    #[wasm_bindgen(js_name = "toJSON")]
-    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
-        hand::to_js(&self.inner)
-    }
-    /// Returns the index in the canonical residue system of the class of a point.
-    pub fn class(&self, z: JsValue) -> Result<usize, JsValue> {
-        let z = (
-            hand::i64_from_js(&hand::item(&z, 0)?)?,
-            hand::i64_from_js(&hand::item(&z, 1)?)?,
-        );
-        let value = self.inner.class(z).map_err(hand::throw)?;
-        Ok(value)
-    }
-    /// Returns whether two points are congruent modulo the base.
-    pub fn congruent(&self, z: JsValue, w: JsValue) -> Result<bool, JsValue> {
-        let z = (
-            hand::i64_from_js(&hand::item(&z, 0)?)?,
-            hand::i64_from_js(&hand::item(&z, 1)?)?,
-        );
-        let w = (
-            hand::i64_from_js(&hand::item(&w, 0)?)?,
-            hand::i64_from_js(&hand::item(&w, 1)?)?,
-        );
-        let value = self.inner.congruent(z, w);
-        Ok(value)
-    }
-    /// Returns the symmetry group of the base as permutations of the canonical residue indices: every unit multiplication, and every unit times conjugation when the conjugate of the base is an associate of the base.
-    pub fn group(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.group().map_err(hand::throw)?;
-        hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
-    }
-    /// Returns whether the conjugate of the base is an associate of the base, which is when the mirror joins the symmetry group.
-    pub fn mirrored(&self) -> Result<bool, JsValue> {
-        let value = self.inner.mirrored();
-        Ok(value)
-    }
-    /// Fixes a base in a ring.
-    #[wasm_bindgen(constructor)]
-    pub fn new(ring: JsValue, value: JsValue) -> Result<radix_Base, JsValue> {
-        let ring = hand::from_js::<mrlyrs::num::gauss::Ring>(&ring)?;
-        let value = (
-            hand::i64_from_js(&hand::item(&value, 0)?)?,
-            hand::i64_from_js(&hand::item(&value, 1)?)?,
-        );
-        let value = mrlyrs::num::radix::Base::new(ring, value).map_err(hand::throw)?;
-        Ok(radix_Base { inner: value })
-    }
-    /// Returns the norm `q` of the base: the count of residue classes and the square of the scale.
-    pub fn norm(&self) -> Result<u64, JsValue> {
-        let value = self.inner.norm();
-        Ok(value)
-    }
-    /// Returns the base raised to a level.
-    pub fn power(&self, level: usize) -> Result<JsValue, JsValue> {
-        let value = self.inner.power(level);
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(value.0),
-            JsValue::from(value.1),
-        ]))
-    }
-    /// Returns the canonical complete residue system modulo the base: the `q` representatives of least norm, ties broken by argument in `[0, 2 pi)`.
-    pub fn residues(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.residues().map_err(hand::throw)?;
-        hand::list_to_js(&value, |x1| {
-            Ok(hand::tuple_to_js(&[
-                JsValue::from(x1.0),
-                JsValue::from(x1.1),
-            ]))
-        })
-    }
-    /// Returns the ring.
-    pub fn ring(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.ring();
-        hand::to_js(&value)
-    }
-    /// Returns the base element.
-    pub fn value(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.value();
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(value.0),
-            JsValue::from(value.1),
-        ]))
-    }
-}
-
-/// A radix design: a digit set inside one ring, placed by a base with a unit twist per digit.
-#[wasm_bindgen]
-pub struct radix_Radix {
-    inner: mrlyrs::num::radix::Radix,
-}
-
-#[wasm_bindgen]
-impl radix_Radix {
-    /// Reads the Radix from its plain data.
-    #[wasm_bindgen(js_name = "from")]
-    pub fn from_plain(data: JsValue) -> Result<radix_Radix, JsValue> {
-        Ok(radix_Radix {
-            inner: hand::from_js(&data)?,
-        })
-    }
-    /// Writes the Radix as plain data.
-    #[wasm_bindgen(js_name = "toJSON")]
-    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
-        hand::to_js(&self.inner)
-    }
-    /// Returns the base.
-    pub fn base(&self) -> Result<radix_Base, JsValue> {
-        let value = self.inner.base();
-        Ok(radix_Base { inner: value })
-    }
-    /// Returns whether every digit is the canonical representative of its class.
-    pub fn canonical(&self) -> Result<bool, JsValue> {
-        let value = self.inner.canonical().map_err(hand::throw)?;
-        Ok(value)
-    }
-    /// Returns the code of the classes the digits occupy, which names the design only when the digits are the canonical representatives.
-    pub fn code(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.code().map_err(hand::throw)?;
-        Ok(JsValue::from_str(&value.to_string()))
-    }
-    /// Returns the digits.
-    pub fn digits(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.digits();
-        hand::list_to_js(value, |x1| {
-            Ok(hand::tuple_to_js(&[
-                JsValue::from(x1.0),
-                JsValue::from(x1.1),
-            ]))
-        })
-    }
-    /// Returns the similarity dimension `log |F| / log sqrt(q)`, the ratio of the digit count to the scale of the base.
-    pub fn dimension(&self) -> Result<f64, JsValue> {
-        let value = self.inner.dimension();
-        Ok(value)
-    }
-    /// Returns the count of distinct level-`L` points: the glue count, which is the fill exactly when no two words name one point.
-    pub fn distinct(&self, level: usize) -> Result<usize, JsValue> {
-        let value = self.inner.distinct(level);
-        Ok(value)
-    }
-    /// Returns the count of words of a level, `|F|^L`.
-    pub fn fill(&self, level: usize) -> Result<JsValue, JsValue> {
-        let value = self.inner.fill(level);
-        Ok(JsValue::from_str(&value.to_string()))
-    }
-    /// Builds an untwisted design from a code over the canonical residue system, bit `i` of the code selecting residue `i`.
-    pub fn from_code(base: &radix_Base, code: JsValue) -> Result<radix_Radix, JsValue> {
-        let code = hand::u128_from_js(&code)?;
-        let value = mrlyrs::num::radix::Radix::from_code(base.inner, code).map_err(hand::throw)?;
-        Ok(radix_Radix { inner: value })
-    }
-    /// Builds a design from a base, a digit list and a unit twist per digit.
-    #[wasm_bindgen(constructor)]
-    pub fn new(
-        base: &radix_Base,
-        digits: JsValue,
-        twists: JsValue,
-    ) -> Result<radix_Radix, JsValue> {
-        let digits = hand::list_from_js(&digits, |x1| {
-            Ok((
-                hand::i64_from_js(&hand::item(x1, 0)?)?,
-                hand::i64_from_js(&hand::item(x1, 1)?)?,
-            ))
-        })?;
-        let twists = hand::list_from_js(&twists, |x1| {
-            Ok((
-                hand::i64_from_js(&hand::item(x1, 0)?)?,
-                hand::i64_from_js(&hand::item(x1, 1)?)?,
-            ))
-        })?;
-        let value =
-            mrlyrs::num::radix::Radix::new(base.inner, digits, twists).map_err(hand::throw)?;
-        Ok(radix_Radix { inner: value })
-    }
-    /// Returns the level-`L` points in the plane, the scaled words divided by `b^L`.
-    pub fn plane(&self, level: usize) -> Result<JsValue, JsValue> {
-        let value = self.inner.plane(level);
-        hand::to_js(&value)
-    }
-    /// Returns the ring.
-    pub fn ring(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.ring();
-        hand::to_js(&value)
-    }
-    /// Returns the digit count `|F|`.
-    pub fn size(&self) -> Result<usize, JsValue> {
-        let value = self.inner.size();
-        Ok(value)
-    }
-    /// Returns the twists.
-    pub fn twists(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.twists();
-        hand::list_to_js(value, |x1| {
-            Ok(hand::tuple_to_js(&[
-                JsValue::from(x1.0),
-                JsValue::from(x1.1),
-            ]))
-        })
-    }
-    /// Returns the design with the twists named by their index in the unit list, the units in turning order from one.
-    pub fn with_twists(&self, units: &[usize]) -> Result<radix_Radix, JsValue> {
-        let value = self.inner.clone().with_twists(units).map_err(hand::throw)?;
-        Ok(radix_Radix { inner: value })
-    }
-    /// Returns the level-`L` points in exact ring coordinates scaled by `b^L`.
-    pub fn words(&self, level: usize) -> Result<JsValue, JsValue> {
-        let value = self.inner.words(level);
-        hand::list_to_js(&value, |x1| {
-            Ok(hand::tuple_to_js(&[
-                JsValue::from(x1.0),
-                JsValue::from(x1.1),
-            ]))
-        })
-    }
-}
-
-/// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` read by `three()` and `m` by `four()`.
-#[wasm_bindgen]
-pub struct sumset_Pair {
-    inner: mrlyrs::num::sumset::Pair,
-}
-
-#[wasm_bindgen]
-impl sumset_Pair {
-    /// Reads the Pair from its plain data.
-    #[wasm_bindgen(js_name = "from")]
-    pub fn from_plain(data: JsValue) -> Result<sumset_Pair, JsValue> {
-        Ok(sumset_Pair {
-            inner: hand::from_js(&data)?,
-        })
-    }
-    /// Writes the Pair as plain data.
-    #[wasm_bindgen(js_name = "toJSON")]
-    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
-        hand::to_js(&self.inner)
-    }
-    /// Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`.
-    pub fn clean(&self) -> Result<bool, JsValue> {
-        let value = self.inner.clean();
-        Ok(value)
-    }
-    /// Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs.
-    pub fn copy(&self) -> Result<bool, JsValue> {
-        let value = self.inner.copy();
-        Ok(value)
-    }
-    /// The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`.
-    pub fn energy(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.energy();
-        Ok(JsValue::from_str(&value.to_string()))
-    }
-    /// The base-4 level `m`.
-    pub fn four(&self) -> Result<u32, JsValue> {
-        let value = self.inner.four();
-        Ok(value)
-    }
-    /// The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none.
-    pub fn gap(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.gap();
-        hand::option_to_js(value.as_ref(), |x1| {
-            Ok(hand::tuple_to_js(&[
-                JsValue::from(x1.0),
-                JsValue::from(x1.1),
-            ]))
-        })
-    }
-    /// The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`.
-    pub fn largest(&self) -> Result<u64, JsValue> {
-        let value = self.inner.largest();
-        Ok(value)
-    }
-    /// Names the pair `(k, m)`.
-    #[wasm_bindgen(constructor)]
-    pub fn new(three: u32, four: u32) -> Result<sumset_Pair, JsValue> {
-        let value = mrlyrs::num::sumset::Pair::new(three, four).map_err(hand::throw)?;
-        Ok(sumset_Pair { inner: value })
-    }
-    /// The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz.
-    pub fn ratio(&self, energy: JsValue) -> Result<f64, JsValue> {
-        let energy = hand::u128_from_js(&energy)?;
-        let value = self.inner.ratio(energy);
-        Ok(value)
-    }
-    /// The scaling `tau = 4^m/3^k`.
-    pub fn scale(&self) -> Result<f64, JsValue> {
-        let value = self.inner.scale();
-        Ok(value)
-    }
-    /// The base-3 level `k`.
-    pub fn three(&self) -> Result<u32, JsValue> {
-        let value = self.inner.three();
-        Ok(value)
-    }
-}
-
-/// The sumset `S = A + B` of Erdos problem 125 up to `3^level`: `A` the integers whose base-3 digits are all `0` or `1`, `B` those whose base-4 digits are.
-#[wasm_bindgen]
-pub struct sumset_Sumset {
-    inner: mrlyrs::num::sumset::Sumset,
-}
-
-#[wasm_bindgen]
-impl sumset_Sumset {
-    /// Whether `x` is in `S`, or `None` past the top.
-    pub fn contains(&self, x: JsValue) -> Result<JsValue, JsValue> {
-        let x = hand::u64_from_js(&x)?;
-        let value = self.inner.contains(x);
-        hand::to_js(&value)
-    }
-    /// Counts `card(S meet [1, x])`, or `None` past the top.
-    pub fn count(&self, x: JsValue) -> Result<JsValue, JsValue> {
-        let x = hand::u64_from_js(&x)?;
-        let value = self.inner.count(x);
-        hand::option_to_js(value.as_ref(), |x1| Ok(JsValue::from(*x1)))
-    }
-    /// Reads the density `D(x) = card(S meet [1, x])/x`, or `None` at zero and past the top.
-    pub fn density(&self, x: JsValue) -> Result<JsValue, JsValue> {
-        let x = hand::u64_from_js(&x)?;
-        let value = self.inner.density(x);
-        hand::to_js(&value)
-    }
-    /// Reads the least and the greatest `D(x)` over each window `[edges[i], edges[i + 1])`, `None` for an empty window.
-    pub fn extremes(&self, edges: JsValue) -> Result<JsValue, JsValue> {
-        let edges = hand::list_from_js(&edges, hand::u64_from_js)?;
-        let value = self.inner.extremes(&edges).map_err(hand::throw)?;
-        hand::to_js(&value)
-    }
-    /// Reads the share of members in each of `cells` equal runs of the integers `[low, high)`, the strip of `S` a page draws.
-    pub fn fills(&self, low: JsValue, high: JsValue, cells: usize) -> Result<Vec<f64>, JsValue> {
-        let low = hand::u64_from_js(&low)?;
-        let high = hand::u64_from_js(&high)?;
-        let value = self.inner.fills(low, high, cells).map_err(hand::throw)?;
-        Ok(value)
-    }
-    /// The level the array was built to.
-    pub fn level(&self) -> Result<u32, JsValue> {
-        let value = self.inner.level();
-        Ok(value)
-    }
-    /// Builds `S meet [0, 3^level]`.
-    #[wasm_bindgen(constructor)]
-    pub fn new(level: u32) -> Result<sumset_Sumset, JsValue> {
-        let value = mrlyrs::num::sumset::Sumset::new(level).map_err(hand::throw)?;
-        Ok(sumset_Sumset { inner: value })
-    }
-    /// The largest integer the array holds, `3^level`.
-    pub fn top(&self) -> Result<u64, JsValue> {
-        let value = self.inner.top();
-        Ok(value)
-    }
-}
-
-/// A complex number: a real and an imaginary part.
-#[wasm_bindgen]
-pub struct zeta_Complex {
-    inner: mrlyrs::num::zeta::Complex,
-}
-
-#[wasm_bindgen]
-impl zeta_Complex {
-    /// Reads the Complex from its plain data.
-    #[wasm_bindgen(js_name = "from")]
-    pub fn from_plain(data: JsValue) -> Result<zeta_Complex, JsValue> {
-        Ok(zeta_Complex {
-            inner: hand::from_js(&data)?,
-        })
-    }
-    /// Writes the Complex as plain data.
-    #[wasm_bindgen(js_name = "toJSON")]
-    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
-        hand::to_js(&self.inner)
-    }
-    /// The real part.
-    #[wasm_bindgen(getter)]
-    pub fn re(&self) -> Result<f64, JsValue> {
-        let value = self.inner.re;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_re(&mut self, value: f64) -> Result<(), JsValue> {
-        self.inner.re = value;
-        Ok(())
-    }
-    /// The imaginary part.
-    #[wasm_bindgen(getter)]
-    pub fn im(&self) -> Result<f64, JsValue> {
-        let value = self.inner.im;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_im(&mut self, value: f64) -> Result<(), JsValue> {
-        self.inner.im = value;
-        Ok(())
-    }
-    /// Returns the modulus.
-    pub fn abs(&self) -> Result<f64, JsValue> {
-        let value = self.inner.abs();
-        Ok(value)
-    }
-    /// Returns the principal argument.
-    pub fn arg(&self) -> Result<f64, JsValue> {
-        let value = self.inner.arg();
-        Ok(value)
-    }
-    /// Returns the default Complex.
-    #[wasm_bindgen(js_name = "default")]
-    pub fn default_() -> Result<zeta_Complex, JsValue> {
-        let value = mrlyrs::num::zeta::Complex::default();
-        Ok(zeta_Complex { inner: value })
-    }
-    /// Returns the exponential.
-    pub fn exp(&self) -> Result<zeta_Complex, JsValue> {
-        let value = self.inner.exp();
-        Ok(zeta_Complex { inner: value })
-    }
-    /// Returns the principal logarithm.
-    pub fn ln(&self) -> Result<zeta_Complex, JsValue> {
-        let value = self.inner.ln();
-        Ok(zeta_Complex { inner: value })
-    }
-    /// Builds a complex number from its parts.
-    #[wasm_bindgen(constructor)]
-    pub fn new(re: f64, im: f64) -> Result<zeta_Complex, JsValue> {
-        let value = mrlyrs::num::zeta::Complex::new(re, im);
-        Ok(zeta_Complex { inner: value })
-    }
-    /// Returns a unit complex number at the given angle.
-    pub fn turn(angle: f64) -> Result<zeta_Complex, JsValue> {
-        let value = mrlyrs::num::zeta::Complex::turn(angle);
-        Ok(zeta_Complex { inner: value })
-    }
-}
-
 /// The critical line: the Bernoulli numbers and the Euler-Maclaurin weights the two engines share, built once.
 #[wasm_bindgen]
 pub struct zeta_Line {
@@ -2911,7 +1631,7 @@ impl zeta_Line {
     pub fn to_plain(&self) -> Result<JsValue, JsValue> {
         hand::to_js(&self.inner)
     }
-    /// Counts the zeros on the line below t.
+    /// Counts the zeros on the line below t: the sign changes of Z on ten steps a Gram interval, the Riemann-Siegel main sum turned from step to step and its remainder read only where it could flip the sign.
     pub fn count(&self, t: f64) -> Result<usize, JsValue> {
         let value = self.inner.count(t);
         Ok(value)
@@ -2934,9 +1654,9 @@ impl zeta_Line {
         Ok(value)
     }
     /// Returns zeta at one half plus i t by the complex Euler-Maclaurin sum: t plus ten terms and seven Bernoulli corrections.
-    pub fn maclaurin(&self, t: f64) -> Result<zeta_Complex, JsValue> {
+    pub fn maclaurin(&self, t: f64) -> Result<JsValue, JsValue> {
         let value = self.inner.maclaurin(t);
-        Ok(zeta_Complex { inner: value })
+        hand::to_js(&value)
     }
     /// Builds the line: the even Bernoulli numbers through the fourteenth and their Euler-Maclaurin weights.
     #[wasm_bindgen(constructor)]
@@ -2947,23 +1667,18 @@ impl zeta_Line {
     /// Returns the wave coefficient of every zero at the given ordinates: F(rho) zeta(rho - 1) over zeta'(rho) at rho one half plus i gamma, F the Mellin transform of the bump.
     pub fn novelty_coefficients(&self, gammas: &[f64]) -> Result<JsValue, JsValue> {
         let value = self.inner.novelty_coefficients(gammas);
-        hand::list_to_js(&value, |x1| Ok(JsValue::from(zeta_Complex { inner: *x1 })))
+        hand::to_js(&value)
     }
     /// Returns zeta and its derivative together at any complex s but one, by the same Euler-Maclaurin sum: the modulus of t plus ten terms and seven Bernoulli corrections, each term differentiated in s.
-    pub fn pair(&self, s: &zeta_Complex) -> Result<JsValue, JsValue> {
-        let value = self.inner.pair(s.inner);
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(zeta_Complex { inner: value.0 }),
-            JsValue::from(zeta_Complex { inner: value.1 }),
-        ]))
+    pub fn pair(&self, s: JsValue) -> Result<JsValue, JsValue> {
+        let s = hand::from_js::<mrlyrs::num::zeta::Complex>(&s)?;
+        let value = self.inner.pair(s);
+        hand::to_js(&value)
     }
     /// Returns zeta on the line and Z(t) together, from the engine that serves the t.
     pub fn point(&self, t: f64) -> Result<JsValue, JsValue> {
         let value = self.inner.point(t);
-        Ok(hand::tuple_to_js(&[
-            JsValue::from(zeta_Complex { inner: value.0 }),
-            hand::to_js(&value.1)?,
-        ]))
+        hand::to_js(&value)
     }
     /// Returns the largest gap between the two engines over the t range on a grid.
     pub fn seam(&self, t0: f64, t1: f64, steps: usize) -> Result<f64, JsValue> {
@@ -3316,6 +2031,55 @@ impl spiral_Mark {
     /// Returns every Mark in canonical order.
     pub fn all() -> Result<JsValue, JsValue> {
         let value = mrlyrs::num::spiral::Mark::all();
+        hand::to_js(&value)
+    }
+}
+
+/// A complex number: a real and an imaginary part.
+#[wasm_bindgen]
+pub struct zeta_Complex {}
+
+#[wasm_bindgen]
+impl zeta_Complex {
+    /// Returns the modulus.
+    pub fn abs(z: JsValue) -> Result<f64, JsValue> {
+        let z = hand::from_js::<mrlyrs::num::zeta::Complex>(&z)?;
+        let value = mrlyrs::num::zeta::Complex::abs(z);
+        Ok(value)
+    }
+    /// Returns the principal argument.
+    pub fn arg(z: JsValue) -> Result<f64, JsValue> {
+        let z = hand::from_js::<mrlyrs::num::zeta::Complex>(&z)?;
+        let value = mrlyrs::num::zeta::Complex::arg(z);
+        Ok(value)
+    }
+    /// Returns the default Complex.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::num::zeta::Complex::default();
+        hand::to_js(&value)
+    }
+    /// Returns the exponential.
+    pub fn exp(z: JsValue) -> Result<JsValue, JsValue> {
+        let z = hand::from_js::<mrlyrs::num::zeta::Complex>(&z)?;
+        let value = mrlyrs::num::zeta::Complex::exp(z);
+        hand::to_js(&value)
+    }
+    /// Returns the principal logarithm.
+    pub fn ln(z: JsValue) -> Result<JsValue, JsValue> {
+        let z = hand::from_js::<mrlyrs::num::zeta::Complex>(&z)?;
+        let value = mrlyrs::num::zeta::Complex::ln(z);
+        hand::to_js(&value)
+    }
+    /// Builds a complex number from its parts.
+    #[wasm_bindgen(js_name = "new")]
+    pub fn new_(re: f64, im: f64) -> Result<JsValue, JsValue> {
+        let value = mrlyrs::num::zeta::Complex::new(re, im);
+        hand::to_js(&value)
+    }
+    /// Returns a unit complex number at the given angle.
+    pub fn turn(angle: f64) -> Result<JsValue, JsValue> {
+        let value = mrlyrs::num::zeta::Complex::turn(angle);
         hand::to_js(&value)
     }
 }

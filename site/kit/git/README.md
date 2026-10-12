@@ -2,14 +2,14 @@
 
 - The kit's code viewer: `/git/` browses the repo the site lives in, `/raw/` serves its exact bytes.
 - The input is always this repo's own tree, never another; the `git` block in `site.json` is `{ root, slug, branch }`, `branch` defaulting to `main`.
-- `/git/` is one row of kind `git` with `meta.deep`: the router answers every path under it with that row, and the browser draws each file and folder.
+- `/git/` is the `git` app with `deep`: the router answers every path under it with that row, and the browser draws each file and folder.
 - `git.ts` is the build half, with `fs` and `git ls-files`; `view.ts` draws, with neither; `client.ts` runs the page; `code.ts` paints.
 - `../../scripts/site.ts` calls `tree()` for the raw list and `forest()` for `git.json`; `../../lib/git.js` calls `start()`.
 
 ## TREE
 
 - The file list is `git ls-files` when a `.git` is there, and a plain walk of the tree when it is not, so a checkout and an untarred Lambda see the same paths.
-- Every tracked file is listed, dotfiles included, and `scripts/site.ts` drops `research/`; the walk fallback skips `.git .cache .venv __pycache__ node_modules dist target data pkg`.
+- Every tracked file is listed, dotfiles included; the walk fallback skips `.git .cache .venv __pycache__ node_modules dist target data pkg`.
 - `/git.json` is the whole tree: `{ base, name, slug, branch, c }`, a node `{ n, k, i?, s?, c? }` (name, `d` or `f`, seti icon, file size, children), folders first, then by name.
 - It sits at the root because the `/git/` row owns every path under `/git/`; the left pane's tree reads the same file.
 

@@ -1,3 +1,12 @@
+/* TOPIC */
+
+html:has(dialog.topic[open]) { overflow: hidden; }
+dialog.topic { inset: 0; width: min(54rem, calc(100vw - 2 * var(--s3))); height: fit-content; max-width: none; max-height: calc(100svh - 2 * var(--s4)); margin: auto; padding: 0; border: var(--hair); border-radius: var(--r3); background: var(--bg); color: var(--fg); box-shadow: var(--float); overflow-y: auto; overscroll-behavior: contain; }
+dialog.topic::backdrop { background: color-mix(in srgb, var(--bg) 70%, transparent); }
+dialog.topic .body { padding: 0 var(--s5) var(--s6); }
+dialog.topic .gallery { margin-top: var(--s6); }
+dialog.topic .close { position: sticky; top: 0; z-index: var(--z-bar); display: flex; justify-content: flex-end; padding: var(--s2) 0; background: var(--bg); }
+
 /* TEXT */
 
 .sub { color: var(--dim); margin-top: var(--s2); max-width: 72ch; }

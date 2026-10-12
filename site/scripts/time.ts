@@ -1,0 +1,114 @@
+import { readFileSync, rmSync } from "node:fs";
+import { cpus, tmpdir } from "node:os";
+import { join, relative, resolve } from "node:path";
+import { ink, raster, type Ink, type Pen } from "../../pkgs/mrlyjs/view/index.js";
+import { dark, light } from "../kit/theme/theme.js";
+import { mrlyjs, roster } from "./site.ts";
+
+/* RECIPE */
+
+const REPO = resolve(import.meta.dir, "..", "..");
+const MRLYJS = join(REPO, "pkgs", "mrlyjs");
+const OUT = join(tmpdir(), "mrly-time");
+const SIZE = [1024, 1024];
+const WARM = 3;
+const GATE = { warm: 150, cold: 500 };
+const FREE = new Set(["about"]);
+const THEMES = { dark, light };
+
+type Theme = keyof typeof THEMES;
+type Unit = { initSync: (options: { module: Uint8Array }) => unknown };
+type Figure = { default: (pen: Pen, ink: Ink, t: number) => void; size?: number[]; still?: number; units?: Record<string, Unit> };
+type Job = { name: string; file: string; theme: Theme };
+type Done = { cold: number; warm: number; units: string[] } | { error: string };
+
+/* WORKER */
+
+async function draw({ file, theme }: Job): Promise<Done> {
+  try {
+    const figure: Figure = await import(file);
+    const units = Object.entries(figure.units ?? {});
+    for (const [unit, door] of units) door.initSync({ module: readFileSync(join(MRLYJS, "pkg", unit, `mrlyjs_${unit}_bg.wasm`)) });
+    const [width, height] = figure.size ?? SIZE;
+    const tint = ink(THEMES[theme]);
+    const once = () => {
+      const pen = raster(width, height, tint.ground);
+      const start = performance.now();
+      figure.default(pen, tint, figure.still ?? 0);
+      return performance.now() - start;
+    };
+    const cold = once();
+    const warm = Array.from({ length: WARM }, once).sort((a, b) => a - b)[WARM >> 1];
+    return { cold, warm, units: units.map(([unit]) => unit) };
+  } catch (error) {
+    return { error: (error instanceof Error ? error.message : String(error)).split("\n")[0] };
+  }
+}
+
+function serve() {
+  self.onmessage = async ({ data }: MessageEvent<Job>) => postMessage(await draw(data));
+}
+
+/* MAIN */
+
+function run(job: Job) {
+  return new Promise<Done>((done) => {
+    const worker = new Worker(import.meta.url);
+    worker.onmessage = ({ data }: MessageEvent<Done>) => {
+      worker.terminate();
+      done(data);
+    };
+    worker.onerror = (event) => {
+      worker.terminate();
+      done({ error: event.message || "the worker died" });
+    };
+    worker.postMessage(job);
+  });
+}
+
+const ms = (value: number) => value.toFixed(1).padStart(9);
+
+async function main() {
+  const wanted = process.argv.slice(2);
+  const list = roster().filter((one) => !wanted.length || wanted.includes(one.name));
+  rmSync(OUT, { recursive: true, force: true });
+  const built = await Bun.build({ entrypoints: list.map((one) => one.file), root: REPO, outdir: OUT, target: "bun", plugins: [mrlyjs] });
+  if (!built.success) throw new Error(`time: the figures failed to bundle\n${built.logs.join("\n")}`);
+  const rows = [];
+  for (const { name, file } of list) {
+    const row = { name, cold: 0, warm: 0, units: [] as string[], error: "", research: relative(REPO, file).startsWith("research/") };
+    for (const theme of Object.keys(THEMES) as Theme[]) {
+      const done = await run({ name, file: join(OUT, relative(REPO, file).replace(/\.ts$/, ".js")), theme });
+      if ("error" in done) row.error ||= `${theme}: ${done.error}`;
+      else {
+        row.cold = Math.max(row.cold, done.cold);
+        row.warm = Math.max(row.warm, done.warm);
+        row.units = done.units;
+      }
+    }
+    rows.push(row);
+  }
+  rows.sort((a, b) => b.warm - a.warm || a.name.localeCompare(b.name));
+  const slow = (row: (typeof rows)[number]) => [row.warm > GATE.warm && "over warm", row.cold > GATE.cold && "over cold"].filter(Boolean).join(", ");
+  const flag = (row: (typeof rows)[number]) => (row.error ? `FAILED ${row.error}` : FREE.has(row.name) ? "excluded" : row.research && slow(row) ? `warning, ${slow(row)}` : slow(row));
+  const width = Math.max(...rows.map((row) => row.name.length));
+  const over = rows.filter((row) => !FREE.has(row.name) && (row.error || (!row.research && slow(row))));
+  const warned = rows.filter((row) => !row.error && row.research && slow(row));
+  const lines = [
+    `site/scripts/time.ts, bun ${Bun.version}, ${cpus()[0]?.model ?? "cpu"}`,
+    "- The raster pen in Bun is a proxy for the browser's canvas() pen: same figures, same kit, a different paint.",
+    `- cold: the first draw in a fresh worker; warm: the median of ${WARM} draws after it; each the slower of dark and light; pen build and unit init not timed.`,
+    `- gate: ${GATE.warm} ms warm, ${GATE.cold} ms cold on the icons; a research figure over it is a warning, judged with its topic; ${[...FREE].join(", ")} excluded.`,
+    "",
+    `${"name".padEnd(width)}  ${"cold ms".padStart(9)}  ${"warm ms".padStart(9)}  ${"units".padEnd(6)}  flag`,
+    ...rows.map((row) => `${row.name.padEnd(width)}  ${ms(row.cold)}  ${ms(row.warm)}  ${(row.units.join(",") || "-").padEnd(6)}  ${flag(row)}`.trimEnd()),
+    "",
+    `${rows.length} figures, ${over.length} over the gate, ${warned.length} research warnings${warned.length ? `: ${warned.map((row) => row.name).join(", ")}` : ""}`,
+  ];
+  console.log(lines.join("\n"));
+  rmSync(OUT, { recursive: true, force: true });
+  process.exit(over.length ? 1 : 0);
+}
+
+if (!Bun.isMainThread) serve();
+else if (import.meta.main) await main();

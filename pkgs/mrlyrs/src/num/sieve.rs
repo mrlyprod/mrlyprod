@@ -681,7 +681,7 @@ fn gamma_step(r: Complex) -> Complex {
     }
     let near = Complex::new(low, 0.0);
     let far = near + delta;
-    let main = ln_one_plus(delta * (1.0 / low)) * (low - 0.5) + delta * far.ln() - delta;
+    let main = ln_one_plus(delta * (1.0 / low)) * (low - 0.5) + delta * Complex::ln(far) - delta;
     sum + main + stirling(far) - stirling(near)
 }
 

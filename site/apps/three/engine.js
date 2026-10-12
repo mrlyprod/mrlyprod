@@ -1,5 +1,5 @@
 import { tidy } from '../../lib/knobs.js';
-import { named, resolve, title, word } from '../designs/engine.js';
+import { settle, title } from '../designs/engine.js';
 import { DESIGN } from '../designs/scene.js';
 
 export const DIM = 3;
@@ -15,7 +15,7 @@ const uses = (view, key) => USES[view]?.includes(key) ?? false;
 
 export const GROW = [
   { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Grow' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value) => cap(value.number), step: 1, group: 'Grow' },
+  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value, units) => units && cap(units.math, value.number), step: 1, group: 'Grow' },
 ];
 
 export const CUT = [
@@ -30,11 +30,7 @@ const count = (v) => Number(v);
 
 /* DESIGN */
 
-export function cap(number) {
-  let level = 1;
-  while (number ** (DIM * (level + 1)) <= BUDGET) level++;
-  return level;
-}
+export const cap = (math, number) => math.bang.level_cap(number, DIM, BUDGET);
 
 export function total(math, base) {
   return Number(math.bang.factory.total_codes(DIM, base));
@@ -44,8 +40,8 @@ export function tag(facts) {
   return `${facts.base === 3 ? 'b3 ' : ''}${facts.name || 'code'} ${facts.code}`;
 }
 
-export function grow(value) {
-  return tidy(GROW, value);
+export function grow(value, units) {
+  return tidy(GROW, value, units);
 }
 
 export function rows(view) {
@@ -57,14 +53,14 @@ export function cutting(value) {
   return Object.fromEntries(rows(all.view).map((row) => [row.key, all[row.key]]));
 }
 
-export function staged(value) {
+export function staged(value, units) {
   const kept = Object.entries(value).filter(([key]) => !OWN.includes(key));
-  return { ...Object.fromEntries(kept), ...grow(value), ...cutting(value) };
+  return { ...Object.fromEntries(kept), ...grow(value, units), ...cutting(value) };
 }
 
 export function design(math, value, rand) {
   const { base, code } = tidy(DESIGN, { ...value, dim: DIM });
-  return { base, code: String(resolve(code, total(math, base), rand)) };
+  return { base, code: settle(math, DIM, base, code, rand) };
 }
 
 export function crop(math, grown, name, radius) {
@@ -116,7 +112,8 @@ const CUTS = { slice, diagonal, hex: hexagon };
 
 export function study(math, value, rand) {
   const { base, code } = design(math, value, rand);
-  const { number, level } = grow(value);
+  const { number, level: asked } = grow(value);
+  const level = Math.min(asked, cap(math, number));
   const cut = cutting(value);
   const grown = math.three.create(code, number, level, base);
   const shaped = value.crop ? crop(math, grown, value.crop, value.radius) : null;
@@ -128,7 +125,7 @@ export function study(math, value, rand) {
     number,
     level,
     side: cell.shape[0],
-    name: word(named(math, DIM, base), code),
+    name: math.name.of(code, DIM, base) ?? '',
     title: title(math, DIM, base, code),
     fills: read.fills,
     voids: read.voids,

@@ -7,7 +7,7 @@ import { FADE, FILL, LOOKS, PAD, arc, cap, drift, fit, phase, picture, study } f
 const SHAPE = DESIGN.map((row) => (row.key === 'base' ? { ...row, def: 3 } : row));
 
 export const SPEC = [
-  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value) => cap(value.base), step: 1, group: 'Arcs' },
+  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value, units) => units && cap(units.math, value.base), step: 1, group: 'Arcs' },
   { key: 'look', label: 'Show', kind: 'segment', def: 'all', options: LOOKS, group: 'Arcs' },
   { key: 'width', label: 'Width', kind: 'slider', def: 0.16, min: 0.04, max: 0.5, step: 0.02, group: 'Arcs' },
   { key: 'cells', label: 'Cells', kind: 'toggle', def: 1, group: 'Arcs' },
@@ -15,8 +15,11 @@ export const SPEC = [
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
 ];
 
+export const units = () => import('./unit.js');
+
 export const PAGE = {
   spec: SPEC,
+  units,
   record: true,
   keys: [
     { key: 'Enter', label: 'Random', act: 'random', button: true },
@@ -27,8 +30,6 @@ export const PAGE = {
     level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
   },
 };
-
-export const units = () => import('./unit.js');
 
 const REST = 1000;
 const CHUNK = 8192;
@@ -42,7 +43,7 @@ export function make(canvas, view, opts = {}) {
   if (!math) throw new Error('arcs: the scene wants mrlyjs/math as opts.math');
   const ctx = canvas.getContext('2d');
   const shape = tidy(SHAPE, opts);
-  const value = { ...shape, ...tidy(SPEC, { ...opts, ...shape }) };
+  const value = { ...shape, ...tidy(SPEC, { ...opts, ...shape }, opts) };
   const plan = study(math, value, view.rand);
   const { side, filled, order, dir, bounds, closed, lit, clock } = plan;
   const live = value.wander === 1 && value.look !== 'strands' && lit.length > 0;

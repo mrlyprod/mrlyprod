@@ -108,8 +108,8 @@ test('a shot draws the sheet edge to edge at the size over the paper and hands b
 });
 
 test('the level runs to the cap of the side and the sheet, and the radius to the reach of the shape', () => {
-  const level = (value) => tidy(SPEC, { ...defaults(SPEC), level: 5, ...value }).level;
+  const level = (value) => tidy(SPEC, { ...defaults(SPEC), level: 5, ...value }, { math }).level;
   expect([level({ number: 3, x: 1, y: 1 }), level({ number: 3 }), level({ number: 5 }), level({ number: 7, x: 12, y: 12 })]).toEqual([5, 4, 2, 1]);
-  const radius = (value) => tidy(SPEC, { ...defaults(SPEC), radius: 32, ...value }).radius;
+  const radius = (value) => tidy(SPEC, { ...defaults(SPEC), radius: 32, ...value }, { math }).radius;
   expect([radius({ crop: 'ball' }), radius({ crop: 'box' }), radius({ crop: 'diamond' }), radius({ crop: 'octagon' }), radius({ crop: 'triangle' }), radius({ crop: '' })]).toEqual([23, 16, 32, 22, 32, 32]);
 });

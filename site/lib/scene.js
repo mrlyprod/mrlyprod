@@ -73,7 +73,6 @@ const SHORT = 540;
 const DEBT = 4;
 
 export function run(canvas, make, opts = {}) {
-  const rand = rng(opts.seed);
   let still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   let skin = paints(canvas, opts.tint);
   let gone = false;
@@ -85,7 +84,7 @@ export function run(canvas, make, opts = {}) {
   let lent = false;
   let fall = null;
   let owed = 0;
-  const view = { rand, look: () => skin, still, w: 1, h: 1, dpr: 1, t: 0, fixed: false };
+  const view = { rand: rng(opts.seed), look: () => skin, still, w: 1, h: 1, dpr: 1, t: 0, fixed: false };
   const size = () => {
     const shot = held?.frame;
     view.fixed = Boolean(shot);
@@ -242,6 +241,15 @@ export function run(canvas, make, opts = {}) {
     last = 0;
     if (size()) saver.size?.();
     if (still || paused) saver.draw();
+  };
+  stop.set = (next) => {
+    if (gone || !saver.set) return false;
+    if (next.seed !== opts.seed) view.rand = rng(next.seed);
+    opts = next;
+    skin = paints(canvas, opts.tint);
+    saver.set(next);
+    if (still || paused) saver.draw();
+    return true;
   };
   Object.defineProperty(stop, 'late', { get: () => late });
   stop.scene = saver;

@@ -122,6 +122,111 @@ pub fn draw(code: Code, base: usize, level: usize) -> Result<Arcs> {
     trace(side, &on)
 }
 
+// THE CURVES
+
+/// One curve of an arcs drawing: its arcs in walking order, the way each is walked, and whether it closes.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Curve {
+    /// The arcs in walking order, arc `2 i` the lower and arc `2 i + 1` the upper arc of cell `i`.
+    pub arcs: Vec<usize>,
+    /// One sign an arc: 1 when walked from its end on a left or right edge to its end on a bottom or top edge, -1 the other way.
+    pub dir: Vec<i8>,
+    /// True for a loop, false for a strand.
+    pub closed: bool,
+}
+
+fn corner(filled: bool, which: usize, x: usize, y: usize) -> (usize, usize) {
+    match (which == 1, filled) {
+        (true, true) => (x + 1, y + 1),
+        (true, false) => (x, y + 1),
+        (false, true) => (x, y),
+        (false, false) => (x + 1, y),
+    }
+}
+
+fn walk(
+    ends: &[(usize, usize)],
+    at: &[[usize; 2]],
+    seen: &mut [bool],
+    start: usize,
+    from: usize,
+) -> Curve {
+    let (mut a, mut node) = (start, from);
+    let mut curve = Curve {
+        arcs: Vec::new(),
+        dir: Vec::new(),
+        closed: false,
+    };
+    loop {
+        seen[a] = true;
+        let (upright, across) = ends[a];
+        let entered = upright == node;
+        curve.arcs.push(a);
+        curve.dir.push(if entered { 1 } else { -1 });
+        node = if entered { across } else { upright };
+        let next = if at[node][0] == a {
+            at[node][1]
+        } else {
+            at[node][0]
+        };
+        if next == usize::MAX {
+            return curve;
+        }
+        if next == start {
+            curve.closed = true;
+            return curve;
+        }
+        a = next;
+    }
+}
+
+/// Walks level `level` of `bang dim 2, base b, code c` in arcs into its curves: first the strands, from each boundary midpoint in turn, across edges before upright ones, then the loops, each from its first unwalked arc.
+///
+/// The corner of an arc is its cell's lower-left or upper-right for a filled cell, lower-right or upper-left for a deleted one, as in [`draw`].
+///
+/// # Errors
+///
+/// Errors on a code outside the digit space of the base, or a side past the machine word.
+pub fn curves(code: Code, base: usize, level: usize) -> Result<Vec<Curve>> {
+    let arcs = draw(code, base, level)?;
+    let n = arcs.side;
+    let rows = n * (n + 1);
+    let count = 2 * n * n;
+    let mut ends = vec![(0, 0); count];
+    let mut at = vec![[usize::MAX; 2]; 2 * rows];
+    for i in 0..n * n {
+        let (x, y) = (i % n, i / n);
+        for which in 0..2 {
+            let (cx, cy) = corner(arcs.cells[i] & 1 == 1, which, x, y);
+            let a = 2 * i + which;
+            let (upright, across) = (rows + y * (n + 1) + cx, cy * n + x);
+            ends[a] = (upright, across);
+            for node in [upright, across] {
+                let slot = usize::from(at[node][0] != usize::MAX);
+                at[node][slot] = a;
+            }
+        }
+    }
+    let edge = |node: usize| match node < rows {
+        true => node < n || node >= n * n,
+        false => [0, n].contains(&((node - rows) % (n + 1))),
+    };
+    let mut seen = vec![false; count];
+    let mut out = Vec::new();
+    for node in (0..2 * rows).filter(|&node| edge(node)) {
+        let a = at[node][0];
+        if a != usize::MAX && !seen[a] {
+            out.push(walk(&ends, &at, &mut seen, a, node));
+        }
+    }
+    for a in 0..count {
+        if !seen[a] {
+            out.push(walk(&ends, &at, &mut seen, a, ends[a].0));
+        }
+    }
+    Ok(out)
+}
+
 // THE LAWS
 
 /// A proved closed form of a design's loop count, read at one level.
@@ -209,6 +314,91 @@ mod tests {
         }
         assert_eq!(law(Code::from(511u128), 3, 2).unwrap(), None);
         assert!(law(Code::from(16u128), 2, 2).is_err());
+    }
+
+    #[test]
+    fn the_walk_finds_the_loops_and_the_strands_the_count_finds_each_arc_once() {
+        let mut cases: Vec<(u128, usize, usize)> = Vec::new();
+        for code in 0..16 {
+            cases.extend((1..=4).map(|level| (code, 2, level)));
+        }
+        for code in [495, 186, 455, 341, 170, 16] {
+            cases.extend((1..=3).map(|level| (code, 3, level)));
+        }
+        for (code, base, level) in cases {
+            let drawn = draw(Code::from(code), base, level).unwrap();
+            let walked = curves(Code::from(code), base, level).unwrap();
+            let loops = walked.iter().filter(|curve| curve.closed).count() as u64;
+            let strands = walked.len() as u64 - loops;
+            let mut order: Vec<usize> =
+                walked.iter().flat_map(|curve| curve.arcs.clone()).collect();
+            order.sort_unstable();
+            assert_eq!(
+                (loops, strands),
+                (drawn.loops, drawn.strands),
+                "{code} {base} {level}"
+            );
+            assert_eq!(order, (0..2 * drawn.side * drawn.side).collect::<Vec<_>>());
+            for curve in &walked {
+                assert_eq!(curve.arcs.len(), curve.dir.len());
+                for &a in &curve.arcs {
+                    let bit = (drawn.cells[a >> 1] >> (1 + (a & 1))) & 1;
+                    assert_eq!(bit == 1, curve.closed, "{code} {base} {level} arc {a}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_arcs_of_a_curve_chain_through_shared_midpoints_a_loop_closes_and_a_strand_ends_on_the_border(
+    ) {
+        let drawn = draw(Code::from(495u128), 3, 2).unwrap();
+        let n = drawn.side;
+        let ends = |a: usize, dir: i8| {
+            let (i, which) = (a >> 1, a & 1);
+            let (x, y) = (i % n, i / n);
+            let (cx, cy) = corner(drawn.cells[i] & 1 == 1, which, x, y);
+            let (upright, across) = ((2 * cx, 2 * y + 1), (2 * x + 1, 2 * cy));
+            if dir > 0 {
+                (upright, across)
+            } else {
+                (across, upright)
+            }
+        };
+        let border = |(u, v): (usize, usize)| u == 0 || v == 0 || u == 2 * n || v == 2 * n;
+        for curve in curves(Code::from(495u128), 3, 2).unwrap() {
+            let steps: Vec<_> = curve
+                .arcs
+                .iter()
+                .zip(&curve.dir)
+                .map(|(&a, &d)| ends(a, d))
+                .collect();
+            for pair in steps.windows(2) {
+                assert_eq!(pair[0].1, pair[1].0);
+            }
+            let (first, last) = (steps[0].0, steps[steps.len() - 1].1);
+            match curve.closed {
+                true => assert_eq!(last, first),
+                false => assert_eq!((border(first), border(last)), (true, true)),
+            }
+        }
+    }
+
+    #[test]
+    fn the_one_loop_of_the_diagonal_is_the_circle_round_the_centre() {
+        let walked = curves(Code::from(9u128), 2, 1).unwrap();
+        let loops: Vec<&Curve> = walked.iter().filter(|curve| curve.closed).collect();
+        assert_eq!((loops.len(), walked.len() - loops.len()), (1, 4));
+        let cells = draw(Code::from(9u128), 2, 1).unwrap().cells;
+        let corners: Vec<(usize, usize)> = loops[0]
+            .arcs
+            .iter()
+            .map(|&a| corner(cells[a >> 1] & 1 == 1, a & 1, (a >> 1) % 2, (a >> 1) / 2))
+            .collect();
+        assert_eq!(corners, [(1, 1); 4]);
+        let mut held: Vec<usize> = loops[0].arcs.iter().map(|&a| a >> 1).collect();
+        held.sort_unstable();
+        assert_eq!(held, [0, 1, 2, 3]);
     }
 
     #[test]

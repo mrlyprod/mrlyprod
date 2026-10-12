@@ -6,6 +6,7 @@ CIRCLE_CAP: int
 CURVATURE_CAP: int
 ORDER_CAP: int
 ROOTS: list[str]
+STRIDE: int
 
 class Circle:
     """A circle in the integer coordinates `(k, k x, k y)`: a line is `k = 0` with `(k x, k y)` its outward unit normal, and the curvature is negative on the circle that contains a bounded packing."""
@@ -35,6 +36,9 @@ class Circle:
         """Reads plain data into the class."""
     def to_dict(self) -> Any:
         """Returns the value as plain data."""
+
+def flat(name: str, cap: int) -> list[float]:
+    """Grows the named packing and lays every circle of positive curvature as `x, y, r, k` in one flat run: the root's own circles first in root order, then the grown ones in curvature order."""
 
 def form(u: list[int], v: list[int]) -> int:
     """The bilinear form `B(u, v) = (sum u)(sum v) - 2 sum u v` that the reflection preserves."""

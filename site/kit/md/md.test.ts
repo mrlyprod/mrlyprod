@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { figures, front, inline, render, slug, summary } from "./md.ts";
+import { figures, front, inline, mathml, render, slug, summary } from "./md.ts";
 
 const math = (tex: string, display: boolean) => `<m${display ? " d" : ""}>${tex}</m>`;
 
@@ -41,7 +41,7 @@ describe("md", () => {
   });
 
   test("figures lists the lone images that name a figure, not a file, an inline image or code", () => {
-    expect(figures("![a](site-home)\n\nsee ![b](x) here\n\n![c](pic.png)\n\n```\n![d](y)\n```\n\n![e](blog-x)")).toEqual(["site-home", "blog-x"]);
+    expect(figures("![a](home)\n\nsee ![b](x) here\n\n![c](pic.png)\n\n```\n![d](y)\n```\n\n![e](blog-x)")).toEqual(["home", "blog-x"]);
   });
 
   test("math is inline at $, display at $$ on its own line or block, with escaped braces unescaped", () => {
@@ -89,5 +89,10 @@ describe("md", () => {
   test("front matter is key colon value lines", () => {
     expect(front("---\ntitle: T\nlead: L\n---\nbody")).toEqual({ data: { title: "T", lead: "L" }, body: "body" });
     expect(front("body").data).toEqual({});
+  });
+
+  test("mathml loads KaTeX only for a text that holds a dollar", async () => {
+    expect(await mathml("no tex")).toBeUndefined();
+    expect(render("$x^2$", { math: await mathml("$x^2$") })).toContain("<math");
   });
 });

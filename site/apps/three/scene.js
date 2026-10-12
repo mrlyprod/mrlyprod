@@ -17,8 +17,11 @@ export const SPEC = [
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
 ];
 
+export const units = () => import('./unit.js');
+
 export const PAGE = {
   spec: SPEC,
+  units,
   gestures: true,
   record: true,
   keys: [
@@ -87,7 +90,7 @@ function flat(canvas, view, plan) {
 export function make(canvas, view, opts = {}) {
   const math = opts.math;
   if (!math) throw new Error('three: the scene wants mrlyjs/math as opts.math');
-  const value = { ...tidy(SPEC, opts), base: opts.base, code: opts.code };
+  const value = { ...tidy(SPEC, opts, opts), base: opts.base, code: opts.code };
   const plan = study(math, value, view.rand);
   const start = view.rand() * TAU;
   return value.view === 'solid' ? solid(canvas, view, opts.three, math, plan, start, value.spin) : flat(canvas, view, plan);

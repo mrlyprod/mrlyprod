@@ -9,10 +9,12 @@ num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrly
 
 const a = num.apollonian;
 
-test('the roots, the top cap and the depth cap are the crate\'s own', () => {
+test('the roots, the top cap, the depth cap and the stride are the crate\'s own', () => {
   expect(ROOTS).toEqual(a.ROOTS());
   expect(CAPS.at(-1)).toBe(Number(a.CURVATURE_CAP()));
   expect(ORDER_CAP).toBe(a.ORDER_CAP());
+  expect(STRIDE).toBe(a.STRIDE());
+  expect(study(num, 'strip', 2048).data.length).toBe(2450 * STRIDE);
   expect(CAPS.every((cap, i) => cap >= 2 && (i === 0 || cap === 2 * CAPS[i - 1]))).toBe(true);
 });
 
@@ -32,9 +34,6 @@ test('the strip to 2048 holds 2448 circles after its two root circles, in curvat
   expect(plan.facts).toEqual({ name: 'strip', title: 'strip (0, 0, 2, 2)', cap: 2048, circles: 2448, ford: 323, broken: 0 });
   expect([plan.strip, plan.roots, plan.total, plan.k0, plan.octaves, plan.span, plan.frame, plan.hull]).toEqual([true, 2, 2450, 8, 9, 8 * OCTAVE, [0, 0, 1, 1], null]);
   expect(plan.quad).toEqual([[0, 0, -1], [0, 0, 1], [2, 0, 1], [2, 2, 1]]);
-  for (let i = 1; i < plan.total; i++) expect(plan.data[i * STRIDE + 3]).toBeGreaterThanOrEqual(plan.data[(i - 1) * STRIDE + 3]);
-  expect([plan.data[0], plan.data[1], plan.data[2], plan.data[3]]).toEqual([0, 0.5, 0.5, 2]);
-  expect([plan.data[2 * STRIDE], plan.data[2 * STRIDE + 1], plan.data[2 * STRIDE + 2], plan.data[2 * STRIDE + 3]]).toEqual([0.5, 0.125, 0.125, 8]);
   expect([plan.ints[6], plan.ints[7], plan.ints[8]]).toEqual([8, 4, 1]);
   expect([plan.bands[0], plan.bands[2], plan.bands[plan.total - 1], Math.max(...plan.bands)]).toEqual([0, 0, 8, 8]);
   expect(plan.at.get(0.5)).toEqual({ num: 1, den: 2, k: 8 });

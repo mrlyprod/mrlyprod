@@ -1,0 +1,9 @@
+[package]
+name = "code-factorisation"
+edition = "2021"
+
+[dependencies]
+mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+num-bigint = "0.4"
+
+[workspace]
