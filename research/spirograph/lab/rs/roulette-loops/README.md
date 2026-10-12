@@ -25,7 +25,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p roulette-loops`
+- `cargo run --release --manifest-path research/spirograph/lab/rs/roulette-loops/Cargo.toml`
 - About three minutes, single threaded; prints only, writes nothing, holds a few megabytes.
 
 ## WITNESSES

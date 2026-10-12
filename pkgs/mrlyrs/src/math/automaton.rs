@@ -357,7 +357,7 @@ fn log_binomial(top: f64, pick: usize) -> f64 {
 fn poly(logs: &[f64], w: Complex) -> Complex {
     let mut acc = Complex::new(0.0, 0.0);
     for &l in logs {
-        acc = acc + Complex::exp((-w) * l );
+        acc = acc + Complex::exp((-w) * l);
     }
     acc
 }
@@ -795,7 +795,9 @@ impl Automaton {
         let x = raise(base, -w0);
         let slope = self.det_slope(x);
         let den = -x * base.ln() * slope;
-        if Complex::abs(self.det(x)) > 1e-8 * self.charpoly.iter().map(|c| c.abs()).sum::<f64>().max(1.0) {
+        if Complex::abs(self.det(x))
+            > 1e-8 * self.charpoly.iter().map(|c| c.abs()).sum::<f64>().max(1.0)
+        {
             return value_error(format!(
                 "w0 = {} + {}i is not a root of det(I - q^(-w) T).",
                 w0.re, w0.im

@@ -21,3 +21,8 @@ The roulette a design draws: the coincidence law that counts its distinct curves
 - [lab/rs/roulette-reaches/](lab/rs/roulette-reaches/): Finds the reaches at which three or four of a wheel's trochoids run through one point on a circle track, and reads them back off `mrlyrs::math::spirograph::point` and `mrlyrs::math::spirograph::trace`.
 - [figures/research-spirograph.ts](figures/research-spirograph.ts): research-spirograph
 - [figures/research-spirograph.json](figures/research-spirograph.json): research-spirograph census
+
+## Lost
+
+- The loop threshold as the edge of a design's node laws: inside a track with `a < 2b` the seat threshold `(a - b)/b` bites first; the Refuted row in [claims/spirograph-nodes.md](claims/spirograph-nodes.md).
+- Three closed forms for the cover between the walls, the full annulus, the summed areas of the distinct curves and the single simple curve's form: each fails; the Refuted rows in [claims/spirograph-walls.md](claims/spirograph-walls.md).

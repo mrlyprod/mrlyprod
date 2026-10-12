@@ -42,6 +42,12 @@ export const boolean = {
     sac: wasm.boolean_sac,
     walsh_spectrum: wasm.boolean_walsh_spectrum,
 };
+export const chladni = {
+    ladder: wasm.chladni_ladder,
+    lines: wasm.chladni_lines,
+    plate: wasm.chladni_plate,
+    shake: wasm.chladni_shake,
+};
 export const factor = {
     aliquot: wasm.factor_aliquot,
     coprime: wasm.factor_coprime,

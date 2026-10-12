@@ -2,7 +2,7 @@
 
 Integer sequences fall out of the fractal work: cell counts, coprimality counts, Euler characteristics, design counts. This page is the ledger they are cited from. Every entry below meets the same standard, and nothing is listed that does not.
 
-The registry behind this page is `ledger`, which reads every measure of every design as a sequence and renders this page through `cargo run -p ledger`; the b-files behind the submitted entries live in `bijection/lab/rs/oeis-terms`. The [sequences demo](/sequences/) searches the same registry live in the browser: type terms, a name, a record or a code and read the design that writes them; the tour walks a dozen of these sequences with a live picture each, the odd-side law first. The formal census of these sequences, with the fill law, the general exposed-face recurrence and the A056040 identification, is the [sequence-census paper](https://github.com/carlomitchener/carlomitchener/tree/main/research/sequence-census). The fractal work itself stays on [the front page](../README.md) and the pages that cite this ledger.
+The registry behind this page is `ledger`, which reads every measure of every design as a sequence and renders this page through `cargo run --manifest-path research/shared/ledger/Cargo.toml`; the b-files behind the submitted entries live in `bijection/lab/rs/oeis-terms`. The [sequences demo](/sequences/) searches the same registry live in the browser: type terms, a name, a record or a code and read the design that writes them; the tour walks a dozen of these sequences with a live picture each, the odd-side law first. The formal census of these sequences, with the fill law, the general exposed-face recurrence and the A056040 identification, is the [sequence-census paper](https://github.com/carlomitchener/carlomitchener/tree/main/research/sequence-census). The fractal work itself stays on [the front page](../README.md) and the pages that cite this ledger.
 
 ## WHY IT MATTERS
 
@@ -145,7 +145,7 @@ Every OEIS entry this ledger holds, read against the live entry on its name, its
 
 ## DOCS
 
-- `ledger` - the registry: every measure of every design as a sequence, the curated records with their shifts, and this page, rendered by `cargo run -p ledger` and pinned by a test.
+- `ledger` - the registry: every measure of every design as a sequence, the curated records with their shifts, and this page, rendered by `cargo run --manifest-path research/shared/ledger/Cargo.toml` and pinned by a test.
 - `bijection/lab/rs/oeis-terms` - the b-files behind the submitted entries: A396934 to `n = 20`, A398348 to `n = 14`.
 - `coprime/lab/rs/design-census` - the fill-class and coprimality censuses behind the established entries.
 - `cuts/lab/py/slice-ladder-controls` - the generator behind both candidate rows.

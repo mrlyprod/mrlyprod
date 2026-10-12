@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { BUDGET, GAIN, HOLD, LIMIT, REACH, ROLLS, STALL, STILL, aim, bake, board, cap, ceiling, fills, grow, heat, home, kin, lay, open, pair, plan, reads, roll, room, roots, series, spread, step, top, turn } from './engine.js';
+import { BUDGET, GAIN, HOLD, LIMIT, REACH, ROLLS, STALL, STILL, aim, bake, board, cap, ceiling, fills, grow, heat, home, kin, lay, open, pair, plan, reads, roll, room, roots, series, spread, step, top } from './engine.js';
 import { SPEC } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -256,11 +256,4 @@ test('the layout puts the boards side by side or stacked, whichever gives the bi
   const tiny = lay(100, 100, 243, 16, 16);
   expect(tiny.cell).toBeLessThan(1);
   expect(tiny.cell).toBeGreaterThan(0);
-});
-
-test('a turn of half a circle takes blue to orange and twice is the colour again, grey staying grey', () => {
-  expect(turn('#008cff', 180)).toBe('#ff7300');
-  expect(turn(turn('#008cff', 180), 180)).toBe('#008cff');
-  expect(turn('rgb(0, 140, 255)', 180)).toBe('#ff7300');
-  expect(turn('#808080', 90)).toBe('#808080');
 });

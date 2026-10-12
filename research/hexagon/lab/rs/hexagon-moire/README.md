@@ -15,7 +15,7 @@
 
 ## RUN
 
-- `bash scripts/cargo.sh cargo run --release -p hexagon-moire` from `mrlyprod/`
+- `cargo run --release --manifest-path research/hexagon/lab/rs/hexagon-moire/Cargo.toml` from `mrlyprod/`
 
 ## WITNESSES
 

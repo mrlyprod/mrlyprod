@@ -23,3 +23,13 @@ The design's own zeta function: an explicit zero-free half plane and the census 
 - [figures/paper-design-dirichlet-inverse.ts](figures/paper-design-dirichlet-inverse.ts): paper-design-dirichlet-inverse
 - [figures/research-zeta.ts](figures/research-zeta.ts): research-zeta
 - [figures/research-zeta.json](figures/research-zeta.json): research-zeta census
+
+## Lost
+
+- A functional equation for `zeta_F`, or Weil's theorem carried to it: the Hurwitz reflection moves the kernel and never relates `zeta_F(s)` to `zeta_F(1 - s)`, and the evaluation `P -> P(base)` is no bridge (THE WALL AND THE PRODUCTS; [claims/digit-designs-and-the-euler-product.md](claims/digit-designs-and-the-euler-product.md)).
+- An Euler product on a proper design, or the conjecture on the design's own Mobius `nu_F`: the indicator of `S_F` is multiplicative only at the full digit set, and a certified zero right of the abscissa refutes every square-root bound for `nu_F`, so the conjecture lives on `mu` restricted to `S_F` ([claims/digit-designs-and-the-euler-product.md](claims/digit-designs-and-the-euler-product.md)).
+- Gluing `zeta_F M_F = 1 + D_F`: the abscissa of `D_F` is exactly `alpha`, so the glue gains nothing (THE IDENTITY).
+- The per-denominator split of the position pairing: its `l^1` mass sits at the top level, the large sieve does not rescue it on the major arcs, and the exact second moment prices the whole grid at `(alpha + 1)/2` (THE WALL AND THE PRODUCTS).
+- Laws for the second family of zeros: no curve, no symmetry axis, no counting law in `alpha` or the fill, and the rightmost zero's gain is no function of `alpha` and `fill/base` (THE ZEROS; the Refuted rows in [claims/zeros-of-the-design-zeta.md](claims/zeros-of-the-design-zeta.md)).
+- The design's pole lattice and the quadratic `L`-zeros as frequencies of the Mobius meter: the meter oscillates at the zeta ordinates and carries neither (THE METER).
+- Nyman-Beurling on a proper design: the closure reaches `chi` only when the set holds every squarefree integer, so a design's distance plateaus (at base 3 `{0,1}` its limit lies in `[0.101926, 0.104579]`) and the criterion is a floor, not a route (THE CLOSURE PROBLEM).

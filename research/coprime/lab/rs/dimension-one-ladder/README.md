@@ -7,8 +7,8 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p dimension-one-ladder` runs the carpet and plus to level 18, the sponge to level 16, the census at level 13..16, about two minutes on eight cores.
-- `... -p dimension-one-ladder -- terms carpet 20` or `census 13 14` picks one job; the kept rows reach level 20 for the two planar designs and level 18 for the sponge, and print from `terms/` labelled stored only.
+- `cargo run --release --manifest-path research/coprime/lab/rs/dimension-one-ladder/Cargo.toml` runs the carpet and plus to level 18, the sponge to level 16, the census at level 13..16, about two minutes on eight cores.
+- `... --manifest-path research/coprime/lab/rs/dimension-one-ladder/Cargo.toml -- terms carpet 20` or `census 13 14` picks one job; the kept rows reach level 20 for the two planar designs and level 18 for the sponge, and print from `terms/` labelled stored only.
 - `uv run python research/coprime/lab/rs/dimension-one-ladder/ladder.py` runs the ladder in about a second.
 
 ## WITNESSES

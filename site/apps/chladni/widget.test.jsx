@@ -1,11 +1,15 @@
 import { expect, test } from 'bun:test';
-import { status } from './widget.jsx';
+import { rows } from './widget.jsx';
 
-test('the readouts go to the status as rows: both peak rings with their wavelengths, and the windows as counts', () => {
-  const stat = { gen: 64, live: 100, share: 0.3051, peak: 7, wave: 36.571, maskPeak: 1, maskWave: 256, span: 27, cells: 512, birth: '145 to 192', survive: '145 to 247', error: '' };
-  expect(status(stat)).toEqual([['gen', 64], ['live', 100], ['share', '0.305'], ['still', 'ring 7, 36.57 cells'], ['mask', 'ring 1, 256.00 cells'], ['span', 27], ['cells', 512], ['born', '145 to 192'], ['stay', '145 to 247']]);
+test('the plate reads its figure, pitch and grains, the sign left out when n equals m', () => {
+  expect(rows({ view: 'plate', n: 3, m: 5, sign: -1, pitch: 5.8309518948, grains: 40000 })).toEqual([['figure', '(3, 5, -)'], ['pitch', '5.831'], ['grains', '40000']]);
+  expect(rows({ view: 'plate', n: 4, m: 4, sign: 0, pitch: 5.656854, grains: 1 })[0]).toEqual(['figure', '(4, 4)']);
 });
 
-test('a stat with no still reads as its error alone', () => {
-  expect(status({ error: 'the mask is empty.' })).toEqual([['error', 'the mask is empty.']]);
+test('the carpet reads k, lambda, its domains against the bound as one row, and the grains left', () => {
+  expect(rows({ view: 'carpet', k: 8, count: 48, lambda: 0.0123456789, domains: 5, bound: 8, grains: 31234 })).toEqual([['k', '8 of 48'], ['lambda', '0.012346'], ['domains', '5 of 8'], ['grains left', '31234']]);
+});
+
+test('an error reads as its error alone', () => {
+  expect(rows({ error: 'the carpet waits for its door' })).toEqual([['error', 'the carpet waits for its door']]);
 });

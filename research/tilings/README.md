@@ -18,3 +18,8 @@ Which levels of a dimension-one design tile the integers: a closed condition on 
 - [figures/paper-spectral-tiling-levels.ts](figures/paper-spectral-tiling-levels.ts): paper-spectral-tiling-levels
 - [figures/research-tilings.ts](figures/research-tilings.ts): research-tilings
 - [figures/research-tilings.json](figures/research-tilings.json): research-tilings census
+
+## Lost
+
+- Levels that tile exactly when the digit set tiles its residues: false at base 6 by `{0, 2}`, and the repair by the gcd false at base 12 by `{0, 1, 8, 9}` (The guess is false).
+- The prime-size converse through `p` integers pairwise incongruent mod `b` whose differences reach non-prime-power orders: the non-tiling `{0, 1, 251, 375, 501}` at base 510 has five such integers, and the covering bound replaces the route (The converse at prime size).

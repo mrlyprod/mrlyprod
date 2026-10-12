@@ -23,3 +23,7 @@ The census the other way round: which integers the whole registry writes, which 
 - [figures/paper-sequence-census.ts](figures/paper-sequence-census.ts): paper-sequence-census
 - [figures/research-integers.ts](figures/research-integers.ts): research-integers
 - [figures/research-integers.json](figures/research-integers.json): research-integers census
+
+## Lost
+
+- The pure law, that an imaginary quadratic field first appears at the least dim with `2 dim (dim - 1) >= abs(d_K)`: false at dim 7, discriminant `-87`; the Refuted row in [claims/fill-polynomials.md](claims/fill-polynomials.md).

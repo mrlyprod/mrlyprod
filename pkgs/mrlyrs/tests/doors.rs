@@ -387,6 +387,58 @@ const BAD: &[(&str, fn())] = &[
             let _ = num::fft::convolve_with(&[1.0; 9], &[1.0; 16], &[1.0; 16], 4);
         },
     ),
+    ("num::chladni::plate, a sign of two", || {
+        let _ = num::chladni::plate(1, 2, 2, 8);
+    }),
+    ("num::chladni::plate, a size of zero", || {
+        let _ = num::chladni::plate(1, 2, 1, 0);
+    }),
+    ("num::chladni::plate, a size past the cap", || {
+        let _ = num::chladni::plate(1, 2, 1, usize::MAX);
+    }),
+    ("num::chladni::plate, a wave number past the cap", || {
+        let _ = num::chladni::plate(usize::MAX, 2, 1, 8);
+    }),
+    ("num::chladni::ladder, a cap past the cap", || {
+        let _ = num::chladni::ladder(usize::MAX);
+    }),
+    ("num::chladni::shake, a side whose square overflows", || {
+        let _ = num::chladni::shake(&[0.0; 4], usize::MAX, &[0.5, 0.5], 0, 1, 1);
+    }),
+    (
+        "num::chladni::shake, a field that is not the side squared",
+        || {
+            let _ = num::chladni::shake(&[0.0; 5], 2, &[0.5, 0.5], 0, 1, 1);
+        },
+    ),
+    ("num::chladni::shake, a field holding an infinity", || {
+        let _ = num::chladni::shake(&[f64::INFINITY; 4], 2, &[0.5, 0.5], 0, 1, 1);
+    }),
+    ("num::chladni::shake, an odd count of grains", || {
+        let _ = num::chladni::shake(&[0.0; 4], 2, &[0.5], 0, 1, 1);
+    }),
+    ("num::chladni::shake, steps past the cap", || {
+        let _ = num::chladni::shake(&[0.0; 4], 2, &[0.5, 0.5], u64::MAX, usize::MAX, 1);
+    }),
+    ("num::chladni::shake, grains far off the plate", || {
+        let _ = num::chladni::shake(
+            &[1.0, -1.0, f64::NAN, 0.5],
+            2,
+            &[1e30, -7.0, f32::INFINITY, 0.5],
+            u64::MAX,
+            2,
+            1,
+        );
+    }),
+    ("num::chladni::lines, a side of zero", || {
+        let _ = num::chladni::lines(&[], 0);
+    }),
+    ("num::chladni::lines, a side whose square overflows", || {
+        let _ = num::chladni::lines(&[0.0; 4], usize::MAX);
+    }),
+    ("num::chladni::lines, a field of holes and zeros", || {
+        let _ = num::chladni::lines(&[f64::NAN, 0.0, -0.0, f64::NAN], 2);
+    }),
     ("num::sieve::cells, a letter that is not odd", || {
         let _ = num::sieve::cells(&[4], 2);
     }),
@@ -422,6 +474,39 @@ const BAD: &[(&str, fn())] = &[
     // MATH
     ("math::atoms::carpet_2d, a zero side", || {
         let _ = math::atoms::carpet_2d(0);
+    }),
+    ("math::nodal::figures, a code past its range", || {
+        let _ = math::nodal::figures(u64::MAX, 3, 3, 8);
+    }),
+    ("math::nodal::figures, a level past every cap", || {
+        let _ = math::nodal::figures(7, 3, usize::MAX, 8);
+    }),
+    ("math::nodal::figures, a number of zero", || {
+        let _ = math::nodal::figures(7, 0, 3, 8);
+    }),
+    ("math::nodal::figures, a design in pieces", || {
+        let _ = math::nodal::figures(1, 3, 3, 8);
+    }),
+    ("math::nodal::figures, a count past the cells", || {
+        let _ = math::nodal::figures(7, 3, 2, usize::MAX);
+    }),
+    ("math::nodal::figures, a count of zero", || {
+        let _ = math::nodal::figures(7, 3, 2, 0);
+    }),
+    ("math::nodal::holds, a code past its range", || {
+        let _ = math::nodal::holds(u64::MAX, 3, 3);
+    }),
+    (
+        "math::nodal::holds, a number of one at a level past every cap",
+        || {
+            let _ = math::nodal::holds(7, 1, usize::MAX);
+        },
+    ),
+    ("math::nodal::holds, a number past the side cap", || {
+        let _ = math::nodal::holds(7, usize::MAX, 1);
+    }),
+    ("math::nodal::holds, a level of zero", || {
+        let _ = math::nodal::holds(7, 3, 0);
     }),
     (
         "math::spectrum::symmetric_eigenvalues, a crooked matrix",

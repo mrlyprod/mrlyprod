@@ -22,3 +22,9 @@ What a second multiplicatively independent base does to a design: Cobham and Cob
 - [figures/paper-erdos-125-upper-density.ts](figures/paper-erdos-125-upper-density.ts): paper-erdos-125-upper-density
 - [figures/paper-erdos-125-upper-density.json](figures/paper-erdos-125-upper-density.json): paper-erdos-125-upper-density census
 - [figures/research-cobham.ts](figures/research-cobham.ts): research-cobham
+
+## Lost
+
+- A bound on the energy ratio `Q(k, m)` over the clean pairs: the Nazarov-Peres-Shmerkin resonances make it unbounded (Object S, "Proved (the energy ratio is unbounded)").
+- The global planar budget: false at `dim = 2` with product designs (The budget in the plane is false).
+- The two-base count as a two-frequency instrument: at `3^47` the cell base 3 `{0, 1}` against base 5 `{0, 1, 2}` does not carry both lattice frequencies, the joint constraint destroying the oscillation each design carries alone, a Conjecture (Reading a two-base count for two frequencies).

@@ -3,6 +3,8 @@
 - `scripts/bridge.sh` runs `cargo run -q -p bridge` under the cargo lock: it parses `pkgs/mrlyrs/src` (not `src/bin`) with `syn`, writes `pkgs/bridge/manifest.json`, prints the skip report and the per-unit counts, then runs every backend listed in `BACKENDS` in `main.rs`.
 - It exits 1 on a name collision, on a skippable written function missing from `skip.txt`, or on a `skip.txt` line naming nothing; the manifest is written first either way.
 - `scripts/bridge.sh check` writes nothing: it prints `stale: <path>` for every file a run would change, the manifest and the version stamps included, and exits 1 on any, or on a refusal above; the research gate runs it, so a new `pub fn` cannot leave the bridge stale.
+- The bridge never deletes a file: when a module moves or goes, remove its old folder under `pkgs/mrlypy/python/mrlypy/` by hand; `check` cannot see an orphan.
+- mrlypy tests run on a fresh wheel (`uvx maturin build --release` in `pkgs/mrlypy`, then pytest on it); `uv run --with ./pkgs/mrlypy` reuses a stale cached wheel.
 - `model.rs` is the contract: `Manifest { krate, version, modules, types, consts, functions }`, serde with `preserve_order`; read the JSON or the types.
 - The one version is the `version` line of `pkgs/mrlyrs/Cargo.toml`: the manifest and the unit crates take it, `version.rs` stamps the `version` line of `pkgs/mrlypy/Cargo.toml` and `pkgs/mrlyjs/package.json`, maturin reads mrlypy's; `scripts/bump.sh` moves it, and `bridge bump` gates a publish against the highest `v*` tag's manifest, read from the tag at `pkgs/bridge/manifest.json`.
 

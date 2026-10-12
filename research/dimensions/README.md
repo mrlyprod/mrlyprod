@@ -24,3 +24,9 @@ Complex dimensions: every design in the lattice class, the carpet proved not Min
 - [figures/paper-sponge-measurability.ts](figures/paper-sponge-measurability.ts): paper-sponge-measurability
 - [figures/research-dimensions.ts](figures/research-dimensions.ts): research-dimensions
 - [figures/research-dimensions.json](figures/research-dimensions.json): research-dimensions census
+
+## Lost
+
+- The Lapidus-Maier inverse spectral problem on a design: every one-base design is lattice, so the machinery is empty here ([notes/dimensions.md](notes/dimensions.md)).
+- A nonlattice design or periodic composition: none exists, by block reduction (Composition multiplies the base).
+- A single ripple about a fixed point as a nonlattice detector: it keeps that map's period, so one point at a time never sees the unequal split; two ripples about different fixed points do (What the detectors see).

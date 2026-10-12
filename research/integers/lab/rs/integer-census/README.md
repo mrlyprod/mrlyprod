@@ -14,7 +14,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p integer-census -- <directory>`
+- `cargo run --release --manifest-path research/integers/lab/rs/integer-census/Cargo.toml -- <directory>`
 - Three and a half minutes on 8 cores at 4 threads, peak memory under 100 MB.
 - Prints the census tables; writes `rows.csv`, `multiset.csv` and `MANIFEST.md` into the directory given, or into a temporary directory it names on stdout. Nothing is written beside this file.
 - `rows.csv` carries the key, the tier, the closed form or `none`, the first 8 rendered terms and the full list of integers the row writes, so it rebuilds `multiset.csv` on its own.

@@ -16,7 +16,7 @@
 
 ## RUN
 
-- `bash scripts/cargo.sh cargo run --release -p design-windows -- count 3 82`: under 7 seconds.
+- `cargo run --release --manifest-path research/windows/lab/rs/design-windows/Cargo.toml -- count 3 82`: under 7 seconds.
 - `count 3 244 495`: the carpet to `k = 244`, about 2 seconds; `count 2 129`: under a second.
 - `scan 3 6 12`: about 46 seconds; `scan 2 7 17` under a second; `scan 3 7 16 495`: about 8 seconds.
 - `kind 2` and `kind 3`: under a second each. Prints only, writes nothing.

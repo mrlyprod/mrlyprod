@@ -157,7 +157,7 @@ impl Design {
 fn poly(logs: &[f64], w: Complex) -> Complex {
     let mut acc = Complex::new(0.0, 0.0);
     for &l in logs {
-        acc = acc + Complex::exp((-w) * l );
+        acc = acc + Complex::exp((-w) * l);
     }
     acc
 }
@@ -374,7 +374,8 @@ pub fn residue(design: &Design, m: usize, j: i64, tolerance: f64) -> Result<(Com
             coefficient = coefficient * ((-w) - (l as f64 - 1.0)) * (1.0 / l as f64);
             let weight = raise(base, (-w) - l as f64) * coefficient * design.gamma[l];
             acc = acc + weight * values[level - l];
-            err += Complex::abs(weight) * (bounds[level - l] + ROUNDING * Complex::abs(values[level - l]));
+            err += Complex::abs(weight)
+                * (bounds[level - l] + ROUNDING * Complex::abs(values[level - l]));
         }
         let den = 1.0 - base.powi(level as i32);
         values.push(acc * (1.0 / den));
@@ -521,7 +522,10 @@ mod tests {
             let deep = Design::with_peel(2, &[0, 1], 8).unwrap();
             let (a, ba) = zeta(&shallow, s, 1e-8).unwrap();
             let (b, bb) = zeta(&deep, s, 1e-8).unwrap();
-            assert!(Complex::abs(a - b) < ba + bb, "{s:?} {a:?} {b:?} {ba:e} {bb:e}");
+            assert!(
+                Complex::abs(a - b) < ba + bb,
+                "{s:?} {a:?} {b:?} {ba:e} {bb:e}"
+            );
         }
     }
 

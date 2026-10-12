@@ -14,7 +14,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p code-factorisation`
+- `cargo run --release --manifest-path research/magic/lab/rs/code-factorisation/Cargo.toml`
 - About four seconds; prints only, writes nothing, and holds two 983025-key sets at a time.
 
 ## WITNESSES

@@ -454,11 +454,6 @@ static DOORS: &[Door] = &[
     ("life.Source.read", "(text: str) -> (life.Source, str)?", Some(door_life_source_read)),
     ("life.affine", "(rule: u8) -> bool", Some(door_life_affine)),
     ("life.animate", "(seed: Cell2d, config: life.Config) -> life.Life", Some(door_life_animate)),
-    ("life.chladni.kernel", "(mask: Tensor, size: usize) -> Cell2d", Some(door_life_chladni_kernel)),
-    ("life.chladni.next", "(cell: Cell2d, mask: Tensor, birth: (f64, f64), survive: (f64, f64)) -> Cell2d", Some(door_life_chladni_next)),
-    ("life.chladni.profile", "(cell: Cell2d) -> life.chladni.Profile", Some(door_life_chladni_profile)),
-    ("life.chladni.run", "(mask: Tensor, birth: (f64, f64), survive: (f64, f64), size: usize, steps: usize, density: f64, seed: u64) -> Cell2d", Some(door_life_chladni_run)),
-    ("life.chladni.spectrum", "(cell: Cell2d) -> [f64]", Some(door_life_chladni_spectrum)),
     ("life.churn", "(grids: [Cell2d]) -> f64", Some(door_life_churn)),
     ("life.corner_bits", "(rule: u8) -> [u8]", Some(door_life_corner_bits)),
     ("life.counts", "(seq: life.Source, max_neighbors: usize, include_zeros: bool, include_ones: bool) -> [usize]", Some(door_life_counts)),
@@ -863,6 +858,8 @@ static DOORS: &[Door] = &[
     ("math.name.Word.to_url", "(self: math.name.Word) -> String", Some(door_math_name_word_to_url)),
     ("math.name.of", "(code: Code, dim: usize, base: usize) -> String?", Some(door_math_name_of)),
     ("math.name.words", "(dim: usize, base: usize) -> [(String, String)]", Some(door_math_name_words)),
+    ("math.nodal.figures", "(code: u64, number: usize, level: usize, count: usize) -> math.nodal.Figures", Some(door_math_nodal_figures)),
+    ("math.nodal.holds", "(code: u64, number: usize, level: usize) -> bool", Some(door_math_nodal_holds)),
     ("math.press.Press.add", "(self: math.press.Press, number: u128, weight: i128) -> null # uncallable: mutates its argument in place", None),
     ("math.press.Press.new", "(dimension: usize, base: usize) -> math.press.Press", Some(door_math_press_press_new)),
     ("math.press.Press.total", "(self: math.press.Press, code: Code) -> i128", Some(door_math_press_press_total)),
@@ -1211,6 +1208,10 @@ static DOORS: &[Door] = &[
     ("num.boolean.nonlinearity", "(code: u128, n: usize) -> i64", Some(door_num_boolean_nonlinearity)),
     ("num.boolean.sac", "(code: u128, n: usize) -> f64", Some(door_num_boolean_sac)),
     ("num.boolean.walsh_spectrum", "(code: u128, n: usize) -> [i64]", Some(door_num_boolean_walsh_spectrum)),
+    ("num.chladni.ladder", "(cap: usize) -> [num.chladni.Rung]", Some(door_num_chladni_ladder)),
+    ("num.chladni.lines", "(field: [f64], side: usize) -> [f64]", Some(door_num_chladni_lines)),
+    ("num.chladni.plate", "(n: usize, m: usize, sign: i32, size: usize) -> [f64]", Some(door_num_chladni_plate)),
+    ("num.chladni.shake", "(field: [f64], side: usize, grains: [f32], from: u64, steps: usize, seed: u64) -> [f32]", Some(door_num_chladni_shake)),
     ("num.factor.aliquot", "(number: usize) -> usize", Some(door_num_factor_aliquot)),
     ("num.factor.coprime", "(a: usize, b: usize) -> bool", Some(door_num_factor_coprime)),
     ("num.factor.divisors", "(number: u64) -> [u64]", Some(door_num_factor_divisors)),
@@ -3235,61 +3236,6 @@ fn door_life_animate(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: mrlyrs::life::Config = take!(name, 1, &args[1]);
     match mrlyrs::life::animate(&a0, &a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_life_chladni_kernel(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::life::chladni::kernel(&a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_life_chladni_next(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    let a2: (f64, f64) = take!(name, 2, &args[2]);
-    let a3: (f64, f64) = take!(name, 3, &args[3]);
-    match mrlyrs::life::chladni::next(&a0, &a1, a2, a3) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_life_chladni_profile(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::life::chladni::profile(&a0) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_life_chladni_run(name: &str, args: &[Value]) -> Done {
-    count(name, args, 7)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    let a1: (f64, f64) = take!(name, 1, &args[1]);
-    let a2: (f64, f64) = take!(name, 2, &args[2]);
-    let a3: usize = take!(name, 3, &args[3]);
-    let a4: usize = take!(name, 4, &args[4]);
-    let a5: f64 = take!(name, 5, &args[5]);
-    let a6: u64 = take!(name, 6, &args[6]);
-    match mrlyrs::life::chladni::run(&a0, a1, a2, a3, a4, a5, a6) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_life_chladni_spectrum(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::life::chladni::spectrum(&a0) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -7203,6 +7149,29 @@ fn door_math_name_words(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::math::name::words(a0, a1)))
 }
 
+fn door_math_nodal_figures(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    let a3: usize = take!(name, 3, &args[3]);
+    match mrlyrs::math::nodal::figures(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_nodal_holds(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    match mrlyrs::math::nodal::holds(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_math_press_press_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
@@ -10504,6 +10473,51 @@ fn door_num_boolean_walsh_spectrum(name: &str, args: &[Value]) -> Done {
     let a0: u128 = big(name, 0, &args[0])?;
     let a1: usize = take!(name, 1, &args[1]);
     Ok(give!(mrlyrs::num::boolean::walsh_spectrum(a0, a1)))
+}
+
+fn door_num_chladni_ladder(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    match mrlyrs::num::chladni::ladder(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_chladni_lines(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    match mrlyrs::num::chladni::lines(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_chladni_plate(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: i32 = take!(name, 2, &args[2]);
+    let a3: usize = take!(name, 3, &args[3]);
+    match mrlyrs::num::chladni::plate(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_chladni_shake(name: &str, args: &[Value]) -> Done {
+    count(name, args, 6)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: Vec<f32> = take!(name, 2, &args[2]);
+    let a3: u64 = take!(name, 3, &args[3]);
+    let a4: usize = take!(name, 4, &args[4]);
+    let a5: u64 = take!(name, 5, &args[5]);
+    match mrlyrs::num::chladni::shake(&a0, a1, &a2, a3, a4, a5) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_factor_aliquot(name: &str, args: &[Value]) -> Done {

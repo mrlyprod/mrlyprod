@@ -17,3 +17,7 @@ Self-similar curves on the triangular lattice as one-stroke print paths, and the
 - [lab/rs/radix-census/](lab/rs/radix-census/): Classifies every twisted radix design at the seven bases of the radix dial, `2`, `1+i`, `2+i` in `Z[i]` and `2`, `1+w`, `3`, `2+w` in `Z[w]`, as having unit steps, being a curve, being one piece and being plane-filling, each decided at every level and not at a cut level.
 - [figures/research-toolpaths.ts](figures/research-toolpaths.ts): research-toolpaths
 - [figures/research-toolpaths.json](figures/research-toolpaths.json): research-toolpaths census
+
+## Lost
+
+- Unit steps at level 3 as a test for every level: false for the canonical twisted radix pairs; the Refuted row in [claims/radix-census.md](claims/radix-census.md).

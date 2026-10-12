@@ -49,7 +49,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p roulette-nodes`
+- `cargo run --release --manifest-path research/spirograph/lab/rs/roulette-nodes/Cargo.toml`
 - About two minutes; prints only, writes nothing.
 - The verbs `scratch`, `law`, `gap`, `torus`, `centre` and `regions` run one section each.
 

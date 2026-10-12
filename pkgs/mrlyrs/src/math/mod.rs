@@ -12,6 +12,7 @@
 //! - `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.
 //! - `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.
 //! - `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.
+//! - `nodal` rings the plate a design cuts: its lowest modes, their nodal domains and Courant bounds, the Chladni figures of the design.
 //! - `shape` crops a cell against a rational shape, cell by cell, with no floats.
 //! - `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.
 //! - `moire` layers one design at many scales into an interference field.
@@ -65,6 +66,8 @@ pub mod memory;
 pub mod moire;
 /// The mrly names: one canonical JSON object for every mathematical thing.
 pub mod name;
+/// The Chladni figures of a design: the lowest modes of the plate it cuts, in a canonical basis, with their nodal domains, Courant bounds and rasters.
+pub mod nodal;
 /// The sequence press: the integers a design's digit rule keeps, weighed all at once.
 pub mod press;
 /// The radix designs: a digit set inside the residues of a base in a ring, a unit twist per digit, and the points their words land on.
@@ -106,10 +109,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::round_trip;
+    use crate::math::memory::Rule;
     use crate::math::shape::{Frac, Region};
     use crate::math::spin::Blend;
     use crate::math::spirograph::{Kind, Pencil};
-    use crate::math::memory::Rule;
     use crate::math::tourbillon::Eye;
 
     #[test]

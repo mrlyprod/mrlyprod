@@ -33,42 +33,42 @@
 ## RUN
 
 ```
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- census 10 5 32 4
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- census 12 5 32 4
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- cell 3,4,5 4 34
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- cell 3,6,9,10,12 2 34
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- control
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- set 3,5,6,9 1 20000
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- route 10 12
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- deep 10 6 31 4
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- deep 12 3 31 4
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,4,8,9 5 33
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,5,7,9 5 33
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,4,9,10 5 33
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,5,6,9 5 34
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,6,8,9,10 5 34
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,4,6 4 33
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,4,6 5 34
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,5,8,9 5 34
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,4,5 6 34
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,6,8,9,12 3 33
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcell 3,6,9,10,12 3 33
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- wcontrol 16
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- split 3,4,5 5 31333640736 64
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- chainless 27
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- forced 26
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- windowed 27
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- jumps 10 6 31 4
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- trace 3,4,5 3 26
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- windows 3,4,5 1 6 30
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- graham 2 5 3 26
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- refute 27
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- ternary 6 200 8
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- band 419 475 70 8
-bash scripts/cargo.sh cargo run --release -p mixed-powers -- band 419 473 100 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- census 10 5 32 4
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- census 12 5 32 4
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- cell 3,4,5 4 34
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- cell 3,6,9,10,12 2 34
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- control
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- set 3,5,6,9 1 20000
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- route 10 12
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- deep 10 6 31 4
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- deep 12 3 31 4
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,4,8,9 5 33
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,5,7,9 5 33
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,4,9,10 5 33
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,5,6,9 5 34
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,6,8,9,10 5 34
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,4,6 4 33
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,4,6 5 34
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,5,8,9 5 34
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,4,5 6 34
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,6,8,9,12 3 33
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcell 3,6,9,10,12 3 33
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- wcontrol 16
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- split 3,4,5 5 31333640736 64
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- chainless 27
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- forced 26
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- windowed 27
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- jumps 10 6 31 4
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- trace 3,4,5 3 26
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- windows 3,4,5 1 6 30
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- graham 2 5 3 26
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- refute 27
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- ternary 6 200 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- band 419 475 70 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- band 419 473 100 8
 ```
 
-- `bash scripts/cargo.sh cargo test --release -p mixed-powers`, `11` tests, under `1` s after the build.
+- `cargo test --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml`, `11` tests, under `1` s after the build.
 
 ## READS
 

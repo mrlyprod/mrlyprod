@@ -16,7 +16,7 @@
 ## RUN
 
 ```
-bash scripts/cargo.sh cargo run --release -p radix-census -- census curves junction named
+cargo run --release --manifest-path research/toolpaths/lab/rs/radix-census/Cargo.toml -- census curves junction named
 ```
 
 - Run from `mrlyprod/`. Verbs may be given in any combination and run in order in one process; no argument runs `census`.

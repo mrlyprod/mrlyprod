@@ -2,7 +2,8 @@ import { light } from '../../kit/theme/theme.js';
 import { tidy } from '../../lib/knobs.js';
 import { TINTS, rgb, rng, veil } from '../../lib/scene.js';
 import { num, runs, sheet } from '../../lib/svg.js';
-import { HOLD, HOT, NUMBERS, TURN, aim, bake, budget, cap, heat, keeping, lay, plan, roots, series, top, turn } from './engine.js';
+import { turn } from '../../lib/turn.js';
+import { HOLD, HOT, NUMBERS, TURN, aim, bake, budget, cap, heat, keeping, lay, plan, roots, series, top } from './engine.js';
 
 export const SPEC = [
   { key: 'a', label: 'Code A', kind: 'text', def: '127', group: 'Race' },

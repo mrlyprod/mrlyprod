@@ -24,3 +24,8 @@ The object beneath a design as three slots, accept, place and glue: the memory d
 - [lab/rs/memory-meter/](lab/rs/memory-meter/): The Mobius meter of a memory rule
 - [lab/rs/radix-designs/](lab/rs/radix-designs/): Dials the place slot of a design
 - [figures/research-beneath.ts](figures/research-beneath.ts): research-beneath
+
+## Lost
+
+- `kappa` as an order on the Mobius meter: grouped by `kappa` the normalised peaks follow no order, and the factor over the full line reaches `6.375774` with no rate read (The memory meter).
+- The fill law under a twist: a twisted radix design does not inherit it, witness `Z[i]` at base 2 with digits `{0, 1}` and twists `1, -1`; the Refuted row in [claims/radix-dial.md](claims/radix-dial.md).

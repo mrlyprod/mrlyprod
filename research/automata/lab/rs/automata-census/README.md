@@ -12,7 +12,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p automata-census`
+- `cargo run --release --manifest-path research/automata/lab/rs/automata-census/Cargo.toml`
 - About half a second; prints only, writes nothing, and holds one 256-rule diagram batch at a time, six batches in all, `T = 64, 128, 256` at `pad = T` and `pad = 2T`; the batch is about 34 MB at `T = 256`.
 
 ## WITNESSES

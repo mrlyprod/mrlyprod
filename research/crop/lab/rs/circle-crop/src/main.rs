@@ -1090,7 +1090,7 @@ fn transform(tag: &str, dimension: usize, point: &[f64]) {
 // MAIN
 
 fn main() {
-    println!("circle-crop generator: CARGO_BUILD_JOBS=4 cargo run --release -p circle-crop");
+    println!("circle-crop generator: cargo run --release --manifest-path research/crop/lab/rs/circle-crop/Cargo.toml");
     println!("circle-crop convention: cells are indexed x in [0,3^L)^D, a cell counts when its centre x+1/2 lies in the closed ball, corner balls sit at the lattice corner 0 and centre balls at the grid centre 3^L/2");
     gauss(2, 5);
     gauss(3, 3);

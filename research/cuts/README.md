@@ -22,3 +22,7 @@ The six-gasket theorem: a diagonal cut through one parity solid is Sierpinski al
 - [lab/py/pascal-shear/](lab/py/pascal-shear/): The level-`level` cell set of the 2D design with code `7`, tile `[[1, 1], [1, 0]]`, is `{(i, j) in [0, 2^level)^2 
 - [lab/py/slice-ladder-controls/](lab/py/slice-ladder-controls/): Checks the anti-diagonal profile identity `P_{A (x) B}(t) = P_A(t^side_B) P_B(t)` on every base-2 word of length 2 and 3, counting mismatches.
 - [figures/research-cuts.ts](figures/research-cuts.ts): research-cuts
+
+## Lost
+
+- A fixed-epsilon spectral separation for the slice transfer matrix: none exists, `lambda_1/abs(lambda_2) = (dim+2)/(dim-2) + O(dim^-3)` tends to 1; the row in [claims/slice-sign-law-in-every-dimension.md](claims/slice-sign-law-in-every-dimension.md).

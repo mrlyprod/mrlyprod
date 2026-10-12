@@ -39,13 +39,6 @@ export const step = wasm.step;
 export const surjective = wasm.surjective;
 export const tessellate = wasm.tessellate;
 export const wolfram_class = wasm.wolfram_class;
-export const chladni = {
-    kernel: wasm.chladni_kernel,
-    next: wasm.chladni_next,
-    profile: wasm.chladni_profile,
-    run: wasm.chladni_run,
-    spectrum: wasm.chladni_spectrum,
-};
 export const elementary = {
     output: wasm.elementary_output,
 };

@@ -2,132 +2,12 @@
 
 use crate::core::error::{value_error, Result};
 use crate::math::graph::models::Network;
+use crate::num::eigen::{implicit_ql, tridiagonalise};
 use std::cmp::Ordering;
 
-const SWEEPS: usize = 60;
 const ZERO: f64 = 1e-12;
 
 // SOLVER
-
-fn tridiagonalise(a: &mut [Vec<f64>]) -> (Vec<f64>, Vec<f64>) {
-    let n = a.len();
-    let mut d = vec![0.0; n];
-    let mut e = vec![0.0; n];
-    for i in (1..n).rev() {
-        let l = i - 1;
-        let mut h = 0.0;
-        let mut scale = 0.0;
-        if l > 0 {
-            for k in 0..=l {
-                scale += a[i][k].abs();
-            }
-        }
-        if l == 0 || scale == 0.0 {
-            e[i] = a[i][l];
-            continue;
-        }
-        for k in 0..=l {
-            a[i][k] /= scale;
-            h += a[i][k] * a[i][k];
-        }
-        let mut f = a[i][l];
-        let g = if f >= 0.0 { -h.sqrt() } else { h.sqrt() };
-        e[i] = scale * g;
-        h -= f * g;
-        a[i][l] = f - g;
-        f = 0.0;
-        for j in 0..=l {
-            let mut sum = 0.0;
-            for k in 0..=j {
-                sum += a[j][k] * a[i][k];
-            }
-            for k in (j + 1)..=l {
-                sum += a[k][j] * a[i][k];
-            }
-            e[j] = sum / h;
-            f += e[j] * a[i][j];
-        }
-        let hh = f / (h + h);
-        for j in 0..=l {
-            let f = a[i][j];
-            let g = e[j] - hh * f;
-            e[j] = g;
-            for k in 0..=j {
-                a[j][k] -= f * e[k] + g * a[i][k];
-            }
-        }
-    }
-    e[0] = 0.0;
-    for i in 0..n {
-        d[i] = a[i][i];
-    }
-    (d, e)
-}
-
-fn implicit_ql(d: &mut [f64], e: &mut [f64]) -> Result<()> {
-    let n = d.len();
-    for i in 1..n {
-        e[i - 1] = e[i];
-    }
-    if n > 0 {
-        e[n - 1] = 0.0;
-    }
-    for l in 0..n {
-        let mut sweeps = 0;
-        loop {
-            let mut m = l;
-            while m + 1 < n {
-                let dd = d[m].abs() + d[m + 1].abs();
-                if e[m].abs() <= f64::EPSILON * dd {
-                    break;
-                }
-                m += 1;
-            }
-            if m == l {
-                break;
-            }
-            sweeps += 1;
-            if sweeps > SWEEPS {
-                return value_error("The QL iteration did not converge.");
-            }
-            let mut g = (d[l + 1] - d[l]) / (2.0 * e[l]);
-            let mut r = g.hypot(1.0);
-            g = d[m] - d[l] + e[l] / (g + if g >= 0.0 { r.abs() } else { -r.abs() });
-            let mut s = 1.0;
-            let mut c = 1.0;
-            let mut p = 0.0;
-            let mut underflow = false;
-            let mut i = m;
-            while i > l {
-                i -= 1;
-                let f = s * e[i];
-                let b = c * e[i];
-                r = f.hypot(g);
-                e[i + 1] = r;
-                if r == 0.0 {
-                    d[i + 1] -= p;
-                    e[m] = 0.0;
-                    underflow = true;
-                    break;
-                }
-                s = f / r;
-                c = g / r;
-                g = d[i + 1] - p;
-                r = (d[i] - g) * s + 2.0 * c * b;
-                p = s * r;
-                d[i + 1] = g + p;
-                g = c * r - b;
-            }
-            if underflow {
-                continue;
-            }
-            d[l] -= p;
-            e[l] = g;
-            e[m] = 0.0;
-        }
-    }
-    Ok(())
-}
 
 /// Returns the eigenvalues of a dense real symmetric matrix in ascending order.
 ///
@@ -159,8 +39,8 @@ pub fn symmetric_eigenvalues(matrix: &[Vec<f64>]) -> Result<Vec<f64>> {
         }
     }
     let mut work: Vec<Vec<f64>> = matrix.to_vec();
-    let (mut d, mut e) = tridiagonalise(&mut work);
-    implicit_ql(&mut d, &mut e)?;
+    let (mut d, mut e) = tridiagonalise(&mut work, false);
+    implicit_ql(&mut d, &mut e, None)?;
     if d.iter().any(|v| v.is_nan()) {
         return value_error("The spectrum is not a number; the matrix carries a NaN or overflows.");
     }

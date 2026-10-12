@@ -9,7 +9,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p sponge-window`
+- `cargo run --release --manifest-path research/dimensions/lab/rs/sponge-window/Cargo.toml`
 - About 8 seconds after the build; prints only, writes nothing.
 
 ## WITNESSES

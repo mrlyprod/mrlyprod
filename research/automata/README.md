@@ -21,3 +21,8 @@ An elementary cellular automaton is a three-dimensional design read as a rule an
 - [lab/rs/automata-census/](lab/rs/automata-census/): Reads the 256 elementary cellular automata as the 256 base-2 designs of `bang dim 3`, then measures how much of the design tree survives as dynamics.
 - [lab/rs/life-atlas/](lab/rs/life-atlas/): Runs the mini preset of `atlas` and reads every settled frame as a design
 - [figures/research-automata.ts](figures/research-automata.ts): research-automata
+
+## Lost
+
+- Chladni figures in Larger-than-Life: the search found none and its code left the library; the Chladni figures of a design are the nodal domains of section 13, The waves.
+- The waves as a route to the Riemann hypothesis: they are not one; what stays open is the lobe conjecture.

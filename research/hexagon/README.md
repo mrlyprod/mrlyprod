@@ -18,3 +18,7 @@ The moire of the stacked diagonal slices: the exact cut-ink laws, the doubling s
 - [lab/rs/hexagon-moire/](lab/rs/hexagon-moire/): The stack of diagonal cube slices, one hexagon per odd side n, for the carpet, net, tree and void designs.
 - [figures/research-hexagon.ts](figures/research-hexagon.ts): research-hexagon
 - [figures/research-hexagon.json](figures/research-hexagon.json): research-hexagon census
+
+## Lost
+
+- A frame-free decay coefficient for the ghost star: none exists, since widening the arm to a band moves the coefficient over a family (The ghost star, "There is no frame-free decay coefficient").

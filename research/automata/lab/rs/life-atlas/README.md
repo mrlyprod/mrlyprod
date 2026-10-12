@@ -14,7 +14,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p life-atlas`
+- `cargo run --release --manifest-path research/automata/lab/rs/life-atlas/Cargo.toml`
 - About twenty seconds; prints only, writes nothing.
 
 ## WITNESSES

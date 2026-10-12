@@ -1,159 +1,324 @@
 import { tidy } from '../../lib/knobs.js';
-import { veil } from '../../lib/scene.js';
-import { counted, maskName, maskOf, population, windowsOf } from '../life/engine.js';
-import { PANE, runs, slug, worn } from '../life/scene.js';
+import { TINTS, rng } from '../../lib/scene.js';
+import { CHUNK, COUNT, HOLD, NUMBERS, POUR, RATE, REST, ROOM, TAP, TOP, base, codes, fill, highest, inks, keyOf, known, ladder, live, lowest, paint, raster, rungOf, scatter, sprinkle, stamp } from './engine.js';
 
-const NUMBERS = [3, 5, 7, 9].map((n) => [n, String(n)]);
-const LEVELS = [1, 2, 3, 4, 5];
+const VIEWS = [['plate', 'Plate'], ['carpet', 'Carpet']];
+const LOOKS = [['sand', 'Sand'], ['field', 'Field'], ['lines', 'Lines']];
+const GRAINS = [[10000, '10k'], [20000, '20k'], [40000, '40k'], [80000, '80k']];
+
+const plate = (value) => value.view !== 'carpet';
+const carpet = (value) => value.view === 'carpet';
+const sanded = (value) => value.look === 'sand';
 
 export const SPEC = [
-  { key: 'born', label: 'Born', kind: 'text', def: '0.283-0.375', group: 'Rule', when: PANE },
-  { key: 'stay', label: 'Stay', kind: 'text', def: '0.283-0.483', group: 'Rule', when: PANE },
-  { key: 'code', label: 'Code', kind: 'text', def: '7', group: 'Mask', when: PANE },
-  { key: 'number', label: 'Side', kind: 'pick', def: 3, options: NUMBERS, group: 'Mask', when: PANE },
-  { key: 'size', label: 'Size', kind: 'segment', def: 256, options: [[128, '128'], [256, '256']], group: 'Run', when: PANE },
-  { key: 'level', label: 'Level', kind: 'pick', def: 3, options: (value) => LEVELS.filter((n) => value.number ** n <= value.size).map((n) => [n, String(n)]), group: 'Mask', when: PANE },
-  { key: 'steps', label: 'Steps', kind: 'slider', def: 64, min: 1, max: 128, step: 1, group: 'Run', when: PANE },
-  { key: 'density', label: 'Density', kind: 'slider', def: 0.45, min: 0.05, max: 0.95, step: 0.01, group: 'Run', when: PANE },
+  { key: 'view', label: 'View', kind: 'segment', def: 'plate', options: VIEWS, group: 'Figure' },
+  { key: 'n', label: 'n', kind: 'slider', def: 3, min: 0, max: TOP, step: 1, when: plate, group: 'Figure' },
+  { key: 'm', label: 'm', kind: 'slider', def: 5, min: 0, max: TOP, step: 1, when: plate, group: 'Figure' },
+  { key: 'sign', label: 'Sign', kind: 'segment', def: -1, options: [[1, '+'], [-1, '-']], when: (value) => plate(value) && value.n !== value.m, group: 'Figure' },
+  { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), when: carpet, group: 'Figure' },
+  { key: 'code', label: 'Design', kind: 'pick', def: '7', options: codes, when: carpet, group: 'Figure' },
+  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: lowest, max: highest, step: 1, when: carpet, group: 'Figure' },
+  { key: 'k', label: 'k', kind: 'slider', def: 8, min: 1, max: (value) => known(value) ?? COUNT, step: 1, keep: true, when: carpet, group: 'Figure' },
+  { key: 'look', label: 'Look', kind: 'segment', def: 'sand', options: LOOKS, group: 'Look' },
+  { key: 'grains', label: 'Grains', kind: 'segment', def: 40000, options: GRAINS, when: sanded, group: 'Look' },
+  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
 ];
 
-export const PRESETS = [
-  ['Bugs', { born: '0.283-0.375', stay: '0.283-0.483' }],
-  ['Conway', { code: '7', number: 3, level: 1, born: '0.375', stay: '0.25-0.375' }],
+const ABOUT = [
+  'A square plate rings in a figure: where it moves, sand bounces off, and where it stays still, the sand piles up. The still lines are the zero set of cos(n pi x) cos(m pi y) plus or minus cos(m pi x) cos(n pi y); n, m and the sign pick the figure, and Play walks the figures in order of pitch, the sand settling on each.',
+  'Carpet cuts the plate as a design: its cells are the plate and its holes are gone. The figures are the lowest modes of the graph of its cells, k in order of pitch; sand on a hole falls through, and a new figure pours in fresh sand to make up the loss. The status counts the nodal domains of figure k against the bound Courant gives it.',
+  'Sand shakes the grains, Field paints the signed amplitude and Lines traces the zero set alone; at a saddle Lines may join two domains. A tap or a drag sprinkles sand, and Reroll sprinkles afresh. The counts are in [the automata note](/research/automata/).',
 ];
+
+const signed = (value) => (value.n === value.m ? '' : value.sign > 0 ? 'p' : 'm');
+
+export const named = (value) => (carpet(value) ? `chladni-${value.code}-${value.number}-${value.level}-k${value.k}-${value.seed}` : `chladni-${value.n}-${value.m}${signed(value)}-${value.seed}`);
+
+export const units = () => import('./unit.js');
 
 export const PAGE = {
   spec: SPEC,
-  about: [
-    'A soup run under a Larger-than-Life rule on a big design mask settles into a still with a grain of its own.',
-    "The rule is two windows on the share of the mask that is alive: a dead cell is born inside the birth window, a live cell stays inside the survive window. Bugs is Evans' rule, birth 34 to 45 and survive 34 to 58 of 120, kept as fractions so it moves to any mask. [Life](/life/) runs the same masks on whole counts.",
-    "The status reads the grain: the ring where the still's spectrum peaks is the wavelength the rule prefers, beside the mask's own. Ring k on a torus of side N is N / k cells.",
-    'Every change runs the soup to the still at once. Step or a tap adds one generation; Run goes back to the still. The family is written up in [the automata note](/research/automata/).',
-  ],
-  name: (value) => ['chladni', slug(worn(PRESETS, value) || `b${value.born} s${value.stay}`), value.seed].join('-'),
-  keys: [
-    { key: 'Enter', label: 'Step', act: 'step', button: true },
-    { key: ['0', 'Home'], label: 'Run', act: 'run' },
-  ],
-  actions: { step: (scene) => scene.step(), run: (scene) => scene.rerun() },
+  units,
+  record: true,
+  gestures: true,
+  about: ABOUT,
+  name: named,
+  keys: [{ key: 'Enter', label: (value, scene) => (scene?.walking?.() ? 'Stop' : 'Play'), act: 'walk', button: true }],
+  actions: { walk: (scene) => scene.walk?.() },
 };
 
-const FIT = 0.96;
-const GROUND = 0.07;
+const FIT = 0.94;
+const LINE = 1.5;
+const TOLD = 100;
+
+const sorts = (value) => [value.seed, value.view, value.grains, carpet(value) ? [value.code, value.number, value.level].join(' ') : ''].join('|');
+
+export function fit(view, side) {
+  const most = Math.max(1, Math.floor(Math.min(view.w, view.h) * FIT));
+  const edge = side && most >= side ? Math.floor(most / side) * side : most;
+  return { x: Math.floor((view.w - edge) / 2), y: Math.floor((view.h - edge) / 2), side: edge };
+}
 
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
+  const { num, math } = opts;
+  if (!num) throw new Error('chladni: the scene wants mrlyjs/num as opts.num');
+  const units = { num, math };
   const ctx = canvas.getContext('2d');
-  const { life, math } = opts;
-  let value = { ...tidy(SPEC, opts), seed: opts.seed };
-  let kept = '';
+  const read = (next) => ({ ...tidy(SPEC, next, units), seed: next.seed >>> 0 });
+  let value = read(opts);
   let shape = null;
-  let maskRing = null;
-  let rule = null;
+  let grains = new Float32Array(0);
+  let done = 0;
+  let hand = 0;
+  let clock = { t: 0, step: 0 };
+  let walk = null;
+  let ink = null;
+  let face = null;
   let field = null;
-  let ring = null;
-  let extra = 0;
-  let error = '';
-  let skin = null;
+  let trace = null;
+  let last = null;
   let dirty = true;
+  let told = -Infinity;
+  let said = '';
   let gone = false;
-  const cell = () => ({ shape: [value.size, value.size], types: field });
-  const mould = () => {
-    const key = [value.code, value.number, value.level, value.size].join('|');
-    if (key === kept) return;
-    shape = maskOf(life, value, value.size);
-    shape.named = maskName(math, shape.code);
-    maskRing = life.chladni.profile(life.chladni.kernel(shape.mask, value.size));
-    kept = key;
+  let pressed = false;
+  let woke = false;
+  const pages = {};
+  const page = (kind, side) => {
+    if (pages[kind]?.side !== side) {
+      const one = new OffscreenCanvas(side, side);
+      const image = new ImageData(side, side);
+      pages[kind] = { side, canvas: one, pen: one.getContext('2d'), image, words: new Uint32Array(image.data.buffer) };
+    }
+    return pages[kind];
   };
-  const read = () => {
-    ring = life.chladni.profile(cell());
+  const calm = () => view.still || (woke && !walk);
+  const dress = () => {
+    const next = inks(view.look());
+    if (ink && JSON.stringify(next) === JSON.stringify(ink)) return;
+    ink = next;
+    face = null;
+    field = null;
+    dirty = true;
   };
-  const settle = () => {
-    try {
-      mould();
-      rule = windowsOf(life, value, shape.cells);
-      field = life.chladni.run(shape.mask, rule.birth, rule.survive, value.size, value.steps, value.density, Number(value.seed) || 0).types;
-      extra = 0;
-      read();
-      error = '';
-    } catch (thrown) {
-      error = String(thrown?.message ?? thrown);
+  const sync = () => {
+    if (shape?.key === keyOf(value)) return;
+    const want = raster(units, value);
+    if (shape?.mask !== want.mask) face = null;
+    shape = want;
+    field = null;
+    trace = null;
+    dirty = true;
+  };
+  const steps = (to) => {
+    if (shape.error) return;
+    while (done < to) {
+      const n = Math.min(CHUNK, to - done);
+      grains = num.chladni.shake(shape.data, shape.side, grains, done, n, value.seed);
+      done += n;
+      dirty = true;
     }
   };
-  const tell = () => {
-    if (gone) return;
-    if (!field) {
-      opts.onStat?.({ error });
+  const anchor = (t = view.t) => {
+    clock = { t, step: done };
+  };
+  const touched = (t = view.t) => {
+    anchor(t);
+    hand = done;
+  };
+  const due = (t) => Math.min(hand + REST, clock.step + Math.floor(((t - clock.t) * RATE) / 1000));
+  const run = (t) => {
+    if (!sanded(value) || shape.error) return;
+    if (!calm()) steps(due(t));
+    else if (!pressed) steps(hand + REST);
+  };
+  const epoch = (rested) => {
+    grains = shape.error ? new Float32Array(0) : sprinkle(rng(value.seed), shape.data, shape.side, value.grains);
+    done = 0;
+    hand = 0;
+    anchor();
+    dirty = true;
+    if (rested) steps(REST);
+  };
+  const order = () => (carpet(value) ? Array.from({ length: Math.max(0, (shape.made?.values.length ?? 0) - 1) }, (_, i) => ({ k: i + 2 })) : ladder(num).map(({ n, m, sign }) => ({ n, m, sign })));
+  const place = () => (carpet(value) ? (shape.k ?? 2) - 2 : rungOf(num, value));
+  const top = () => {
+    const want = value.grains - live(grains);
+    if (shape.error || want <= 0) return;
+    grains = fill(grains, sprinkle(view.rand, shape.data, shape.side, want), value.grains);
+  };
+  const turned = (t) => {
+    sync();
+    top();
+    touched(t);
+  };
+  const show = (next, t) => {
+    value = { ...value, ...next };
+    turned(t);
+    opts.onWalk?.(next);
+  };
+  const stride = () => {
+    if (!walk) return;
+    const j = Math.floor((view.t - walk.t) / HOLD);
+    if (j <= walk.j) return;
+    const at = walk.t + j * HOLD;
+    run(at);
+    walk.j = j;
+    show(walk.list[(walk.from + j) % walk.list.length], at);
+  };
+  const rebase = (next) => {
+    const list = order();
+    if (!list.length) {
+      walk = null;
       return;
     }
-    const live = population(field);
-    opts.onStat?.({
-      gen: value.steps + extra,
-      live,
-      share: live / field.length,
-      peak: ring.peak_ring,
-      wave: ring.wavelength,
-      maskPeak: maskRing.peak_ring,
-      maskWave: maskRing.wavelength,
-      span: shape.span,
-      cells: shape.cells,
-      birth: counted(rule.birth, shape.cells),
-      survive: counted(rule.survive, shape.cells),
-      name: rule.name,
-      label: `${shape.named || `code ${shape.code}`}, side ${shape.number}, level ${shape.level}`,
-      mask: shape.mask,
-      error,
-    });
+    walk = { list, from: (place() + next + list.length) % list.length, t: view.t, j: next ? -1 : 0 };
   };
-  const dress = () => {
-    const { accent } = view.look();
-    skin = { ink: accent, dim: veil(accent, GROUND) };
+  const stat = () => {
+    if (shape.error) return { error: shape.error };
+    const left = live(grains);
+    if (carpet(value)) {
+      const i = shape.k - 1;
+      return { view: 'carpet', k: shape.k, count: shape.made.values.length, lambda: shape.made.values[i], domains: shape.made.domains[i], bound: shape.made.bound[i], grains: left };
+    }
+    const rung = ladder(num)[rungOf(num, value)];
+    return { view: 'plate', n: value.n, m: value.m, sign: value.n === value.m ? 0 : value.sign, pitch: rung?.pitch ?? null, grains: left };
   };
-  const paint = () => {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.globalAlpha = 1;
-    ctx.clearRect(0, 0, view.w, view.h);
+  const tell = (force) => {
+    if (gone || (!force && view.t - told < TOLD)) return;
+    const now = stat();
+    const key = JSON.stringify(now);
+    told = view.t;
+    if (key === said) return;
+    said = key;
+    opts.onTell?.(now);
+  };
+  const ground = (box) => {
+    const one = page('mask', shape.side);
+    if (face !== one) {
+      face = one;
+      one.words.set(base(shape, ink));
+      one.pen.putImageData(one.image, 0, 0);
+    }
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(one.canvas, box.x, box.y, box.side, box.side);
+  };
+  const sand = (box) => {
+    const side = Math.max(1, Math.round(box.side / view.dpr));
+    const one = page('sand', side);
+    one.words.fill(0);
+    stamp(one.words, grains, side, ink.sand);
+    one.pen.putImageData(one.image, 0, 0);
+    ctx.drawImage(one.canvas, box.x, box.y, box.side, box.side);
+  };
+  const lines = (box) => {
+    trace ??= num.chladni.lines(shape.data, shape.side);
+    ctx.strokeStyle = ink.ink;
+    ctx.lineWidth = LINE * view.dpr;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < trace.length; i += 4) {
+      ctx.moveTo(box.x + trace[i] * box.side, box.y + trace[i + 1] * box.side);
+      ctx.lineTo(box.x + trace[i + 2] * box.side, box.y + trace[i + 3] * box.side);
+    }
+    ctx.stroke();
+  };
+  const amplitude = (box) => {
+    const one = page('field', shape.side);
+    if (field !== one) {
+      field = one;
+      one.image.data.set(paint(shape, ink));
+      one.pen.putImageData(one.image, 0, 0);
+    }
+    ctx.imageSmoothingEnabled = shape.smooth;
+    ctx.drawImage(one.canvas, box.x, box.y, box.side, box.side);
+  };
+  const frame = () => {
     dirty = false;
-    if (!field) return;
-    const side = Math.min(view.w, view.h) * FIT;
-    const x = (view.w - side) / 2;
-    const y = (view.h - side) / 2;
-    ctx.fillStyle = skin.dim;
-    ctx.fillRect(x, y, side, side);
-    ctx.fillStyle = skin.ink;
-    runs(ctx, field, value.size, value.size, x, y, side / value.size);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, view.w, view.h);
+    if (shape.error) return;
+    const box = fit(view, shape.smooth ? 0 : shape.side);
+    if (value.look === 'field') amplitude(box);
+    else ground(box);
+    if (sanded(value)) sand(box);
+    if (value.look === 'lines') lines(box);
   };
   const draw = () => {
-    if (dirty) paint();
+    if (view.fixed && !walk) march();
+    stride();
+    sync();
+    run(view.t);
+    if (!dirty) return;
+    frame();
+    tell(done === hand + REST);
   };
-  const theme = () => {
-    dress();
-    paint();
-  };
-  const step = () => {
-    if (!field) return;
-    field = life.chladni.next(cell(), shape.mask, rule.birth, rule.survive).types;
-    extra++;
-    read();
-    tell();
-    paint();
-  };
-  const rerun = () => {
-    settle();
-    tell();
-    paint();
+  const march = () => {
+    if (walk) {
+      walk = null;
+      return false;
+    }
+    rebase(1);
+    if (!walk) return false;
+    woke ||= view.still;
+    view.wake?.();
+    stride();
+    return true;
   };
   const set = (next) => {
-    value = { ...tidy(SPEC, next), seed: next.seed };
-    rerun();
+    const was = value;
+    value = read(next);
+    if (sorts(value) !== sorts(was)) {
+      sync();
+      epoch(false);
+      if (walk) rebase(0);
+    } else if (keyOf(value) !== keyOf(was)) {
+      turned();
+      if (walk) rebase(0);
+    }
+    if (sanded(value) && !sanded(was)) anchor();
+    dress();
+    dirty = true;
+    tell(true);
   };
+  const touch = (u, v, start) => {
+    if (!sanded(value) || shape.error || (!start && !last)) return null;
+    if (start) pressed = true;
+    const box = fit(view, shape.smooth ? 0 : shape.side);
+    const x = (u * view.w - box.x) / box.side;
+    const y = (v * view.h - box.y) / box.side;
+    const css = box.side / view.dpr;
+    const count = start ? TAP : Math.floor(Math.hypot(x - last.x, y - last.y) * css * POUR);
+    if (!start && !count) return null;
+    last = { x, y };
+    const points = scatter(view.rand, x, y, count, shape.data, shape.side);
+    if (!points.length) return null;
+    grains = fill(grains, points, ROOM * value.grains);
+    touched();
+    dirty = true;
+    draw();
+    tell(true);
+    return null;
+  };
+  const lift = () => {
+    if (!pressed) return null;
+    pressed = false;
+    last = null;
+    draw();
+    tell(true);
+    return null;
+  };
+  const size = () => {
+    dirty = true;
+  };
+  const theme = () => dress();
   const stop = () => {
     gone = true;
   };
   dress();
-  settle();
-  tell();
-  return { still: true, draw, size: paint, theme, set, step, rerun, stop };
+  sync();
+  epoch(true);
+  return { draw, set, size, theme, stop, touch, lift, stat, walk: march, walking: () => Boolean(walk) };
 }

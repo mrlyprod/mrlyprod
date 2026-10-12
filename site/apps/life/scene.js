@@ -32,7 +32,7 @@ export const PRESETS = [
 
 export const wears = (value, preset) => Object.entries(preset).every(([key, v]) => String(value[key]) === String(v));
 
-export const slug = (text) => String(text).toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
+const slug = (text) => String(text).toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
 
 export const worn = (presets, value) => presets.find(([, one]) => wears(value, one))?.[0] ?? '';
 

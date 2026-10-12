@@ -16,15 +16,15 @@
 ## RUN
 
 ```
-CARGO_BUILD_JOBS=4 cargo run --release -p three-base-thin -- budget
-CARGO_BUILD_JOBS=4 cargo run --release -p three-base-thin -- control
-CARGO_BUILD_JOBS=4 cargo run --release -p three-base-thin -- seven 17
-CARGO_BUILD_JOBS=4 cargo run --release -p three-base-thin -- reach 80000
-CARGO_BUILD_JOBS=4 cargo run --release -p three-base-thin -- ten 70
-CARGO_BUILD_JOBS=4 cargo run --release -p three-base-thin -- ten 140
+cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml -- budget
+cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml -- control
+cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml -- seven 17
+cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml -- reach 80000
+cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml -- ten 70
+cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml -- ten 140
 ```
 
-- `CARGO_BUILD_JOBS=4 cargo test -p three-base-thin`, `7` tests, `1.18` s after the build.
+- `cargo test --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml`, `7` tests, `1.18` s after the build.
 
 ## READS
 

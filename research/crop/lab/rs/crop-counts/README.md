@@ -10,7 +10,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p crop-counts`
+- `cargo run --release --manifest-path research/crop/lab/rs/crop-counts/Cargo.toml`
 - Under five seconds; prints only, writes nothing.
 
 ## WITNESSES

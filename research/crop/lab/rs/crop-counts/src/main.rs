@@ -78,7 +78,7 @@ fn line(label: &str, name: &str, dimension: usize, radius: Frac, types: &Tensor)
 }
 
 fn main() {
-    println!("crop-counts generator: CARGO_BUILD_JOBS=4 cargo run --release -p crop-counts");
+    println!("crop-counts generator: cargo run --release --manifest-path research/crop/lab/rs/crop-counts/Cargo.toml");
     let half = Frac::new(1, 2).unwrap();
     for level in 0..=5usize {
         let carpet = design(2, level);

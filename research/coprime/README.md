@@ -46,3 +46,13 @@ The coprimality spine: exact base-local factors on every design, the census behi
 - [figures/paper-menger-pairwise-coprimality.ts](figures/paper-menger-pairwise-coprimality.ts): paper-menger-pairwise-coprimality
 - [figures/paper-unconditional-mertens-at-large-base.ts](figures/paper-unconditional-mertens-at-large-base.ts): paper-unconditional-mertens-at-large-base
 - [figures/research-coprime.ts](figures/research-coprime.ts): research-coprime
+
+## Lost
+
+- Higher moments of the carry matrix toward Lemma B at dimension one: the ladder stops at `0.447931`, never `1/2`, and a per-ray-maximum bound stops at `1/2`, both Proved; absolute-value character bounds have a heuristic ceiling at `0.586752` (The window at dimension one).
+- The other routes to Lemma B at dimension one, componentwise Fourier transfer, sieves that drop signs, occupancy: each exact obstacle stands in the obstruction table of The window at dimension one.
+- Weil's theorem as a route to the coprimality window: over `F_3[t]` the restricted coprime count grows like `4^n`, a positive density, so the window is empty there (The function field diagnostic; the Refuted row in [claims/coprimality-at-dimension-one.md](claims/coprimality-at-dimension-one.md)).
+- `min_x Sigma_1 = 2` at every interior digit of a one-missing-digit set: false at the constant-phase digit `2 a_0 = base - 1`, least counterexample base 3 missing 1, where it is `sqrt 3`; the Refuted row in [claims/primes-on-a-design.md](claims/primes-on-a-design.md).
+- The floor `min_s Sigma_1(s) = 2` on the Gaussian one-digit sets: false at 135 orbits; the Refuted row in [claims/gaussian-primes-on-a-design.md](claims/gaussian-primes-on-a-design.md).
+- Mitsui's bound as the minor-arc lemma over `Z[i]`: it saves a power of the logarithm, not the power the gate asks (Gaussian primes on a design).
+- Separating a smoothed square through the characters: its cost grows like a curved boundary, so that route stops at the gate `1/6`, a reading of one route stated as a Conjecture, while a polar box grows only logarithmically (Gaussian primes on a design).

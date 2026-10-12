@@ -12,7 +12,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p oeis-terms`
+- `cargo run --release --manifest-path research/bijection/lab/rs/oeis-terms/Cargo.toml`
 - An optional argument lowers the top A396934 level, e.g. `-- 16`.
 - The full domain runs in under half a minute on eight cores.
 

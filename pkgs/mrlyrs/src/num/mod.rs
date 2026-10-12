@@ -8,6 +8,8 @@
 //! - `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.
 //! - `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.
 //! - `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.
+//! - `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.
+//! - `eigen`: the crate's symmetric eigensolvers: the dense Householder and QL pair with vectors, and the shift-invert block Lanczos on a banded Cholesky for the lowest pairs of a sparse matrix.
 //! - `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.
 //! - `fft`: the fast Fourier transform in one and two dimensions.
 //! - `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.
@@ -32,6 +34,9 @@ pub mod apollonian;
 pub mod blend;
 /// The boolean-function measures: Walsh spectra, nonlinearity, balance and avalanche.
 pub mod boolean;
+/// The Chladni plate: the figures of a free square plate, their ladder by pitch, sand shaken onto a raster's still lines and those lines traced.
+pub mod chladni;
+pub(crate) mod eigen;
 /// The divisor arithmetic: factorizations, divisors, totients, radicals, the Mobius values and the exact whole-number arithmetic under them.
 pub mod factor;
 /// The fast Fourier transform in one and two dimensions.
@@ -57,6 +62,7 @@ pub mod zeta;
 
 #[cfg(test)]
 mod tests {
+    use super::chladni::Rung;
     use super::gauss::Ring;
     use super::lattice::farey;
     use super::prime::study;
@@ -78,6 +84,16 @@ mod tests {
         assert_eq!(
             point,
             serde_json::from_str(&serde_json::to_string(&point).unwrap()).unwrap()
+        );
+        let rung = Rung {
+            n: 3,
+            m: 5,
+            sign: -1,
+            pitch: 34f64.sqrt(),
+        };
+        assert_eq!(
+            rung,
+            serde_json::from_str(&serde_json::to_string(&rung).unwrap()).unwrap()
         );
         assert_eq!(
             Ring::Eisenstein,

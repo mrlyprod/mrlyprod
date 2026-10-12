@@ -3,8 +3,8 @@ import pytest
 
 from mrlypy import core, gen, life
 from mrlypy.core import Rng, colors, paint, tensor
-from mrlypy.math import cell, six, three, two
-from mrlypy.num import factor, series, sumset
+from mrlypy.math import cell, six, sumset, three, two
+from mrlypy.num import factor, series
 
 DTYPES = (np.uint8, np.uint16, np.uint32, np.int32)
 

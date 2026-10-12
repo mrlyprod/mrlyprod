@@ -17,9 +17,9 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p spin-census`
+- `cargo run --release --manifest-path research/spin/lab/rs/spin-census/Cargo.toml`
 - About thirty seconds; prints only, writes nothing. Peak memory is the pad-8192 transform, about 1.1 GB.
-- `CARGO_BUILD_JOBS=4 cargo run --release -p spin-census -- shape` runs the shape reading, the one verb group the default pass leaves out.
+- `cargo run --release --manifest-path research/spin/lab/rs/spin-census/Cargo.toml -- shape` runs the shape reading, the one verb group the default pass leaves out.
 - About two minutes and 0.4 GB, the peak being the base-5 sweep holding 4.2 million packed censuses; the `dim 3` sweep visits all `2^27` codes and keeps 2.85 million.
 
 ## WITNESSES

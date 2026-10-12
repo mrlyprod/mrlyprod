@@ -283,13 +283,6 @@ export const life = {
     surjective: wasm.life_surjective,
     tessellate: wasm.life_tessellate,
     wolfram_class: wasm.life_wolfram_class,
-    chladni: {
-        kernel: wasm.life_chladni_kernel,
-        next: wasm.life_chladni_next,
-        profile: wasm.life_chladni_profile,
-        run: wasm.life_chladni_run,
-        spectrum: wasm.life_chladni_spectrum,
-    },
     elementary: {
         output: wasm.life_elementary_output,
     },
@@ -649,6 +642,10 @@ export const math = {
         of: wasm.math_name_of,
         words: wasm.math_name_words,
     },
+    nodal: {
+        figures: wasm.math_nodal_figures,
+        holds: wasm.math_nodal_holds,
+    },
     press: {
         CORNERS: wasm.math_press_CORNERS,
         Press: wasm.math_press_Press,
@@ -999,6 +996,12 @@ export const num = {
         nonlinearity: wasm.num_boolean_nonlinearity,
         sac: wasm.num_boolean_sac,
         walsh_spectrum: wasm.num_boolean_walsh_spectrum,
+    },
+    chladni: {
+        ladder: wasm.num_chladni_ladder,
+        lines: wasm.num_chladni_lines,
+        plate: wasm.num_chladni_plate,
+        shake: wasm.num_chladni_shake,
     },
     factor: {
         aliquot: wasm.num_factor_aliquot,

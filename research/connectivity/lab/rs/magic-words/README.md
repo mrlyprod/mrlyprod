@@ -26,7 +26,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p magic-words`
+- `cargo run --release --manifest-path research/connectivity/lab/rs/magic-words/Cargo.toml`
 - About two seconds; prints only, writes nothing, and holds one `1024 x 1024` raster at a time.
 
 ## WITNESSES

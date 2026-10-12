@@ -19,66 +19,6 @@ pub fn animate(seed: JsValue, config: &Config) -> Result<Life, JsValue> {
     Ok(Life { inner: value })
 }
 
-/// Draws a mask centred in a size-square picture, the mask centre at size over two.
-#[wasm_bindgen]
-pub fn chladni_kernel(mask: JsValue, size: usize) -> Result<JsValue, JsValue> {
-    let mask = hand::tensor_from_js(&mask)?;
-    let value = mrlyrs::life::chladni::kernel(&mask, size).map_err(hand::throw)?;
-    hand::cell2d_to_js(&value)
-}
-
-/// Advances a square grid one generation on a wrapped torus: a dead cell is born and a live one kept when its mask count over the mask budget lies in the closed birth or survive window, the count read by FFT convolution.
-#[wasm_bindgen]
-pub fn chladni_next(
-    cell: JsValue,
-    mask: JsValue,
-    birth: JsValue,
-    survive: JsValue,
-) -> Result<JsValue, JsValue> {
-    let cell = hand::cell2d_from_js(&cell)?;
-    let mask = hand::tensor_from_js(&mask)?;
-    let birth = hand::from_js::<(f64, f64)>(&birth)?;
-    let survive = hand::from_js::<(f64, f64)>(&survive)?;
-    let value = mrlyrs::life::chladni::next(&cell, &mask, birth, survive).map_err(hand::throw)?;
-    hand::cell2d_to_js(&value)
-}
-
-/// Reads the ring means of a square 0/1 grid's log spectrum, its peak ring past the centre and that ring's wavelength in cells.
-#[wasm_bindgen]
-pub fn chladni_profile(cell: JsValue) -> Result<JsValue, JsValue> {
-    let cell = hand::cell2d_from_js(&cell)?;
-    let value = mrlyrs::life::chladni::profile(&cell).map_err(hand::throw)?;
-    hand::to_js(&value)
-}
-
-/// Runs a seeded soup of the given density for the given steps on a size-square torus under the closed birth and survive windows.
-#[wasm_bindgen]
-pub fn chladni_run(
-    mask: JsValue,
-    birth: JsValue,
-    survive: JsValue,
-    size: usize,
-    steps: usize,
-    density: f64,
-    seed: JsValue,
-) -> Result<JsValue, JsValue> {
-    let mask = hand::tensor_from_js(&mask)?;
-    let birth = hand::from_js::<(f64, f64)>(&birth)?;
-    let survive = hand::from_js::<(f64, f64)>(&survive)?;
-    let seed = hand::u64_from_js(&seed)?;
-    let value = mrlyrs::life::chladni::run(&mask, birth, survive, size, steps, density, seed)
-        .map_err(hand::throw)?;
-    hand::cell2d_to_js(&value)
-}
-
-/// Returns the centred log magnitude spectrum of a square 0/1 grid, scaled to at most one by its peak.
-#[wasm_bindgen]
-pub fn chladni_spectrum(cell: JsValue) -> Result<Vec<f64>, JsValue> {
-    let cell = hand::cell2d_from_js(&cell)?;
-    let value = mrlyrs::life::chladni::spectrum(&cell).map_err(hand::throw)?;
-    Ok(value)
-}
-
 /// Returns the mean fraction of sites changed between consecutive grids.
 #[wasm_bindgen]
 pub fn churn(grids: JsValue) -> Result<f64, JsValue> {

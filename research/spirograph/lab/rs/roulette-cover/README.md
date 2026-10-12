@@ -11,7 +11,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p roulette-cover`
+- `cargo run --release --manifest-path research/spirograph/lab/rs/roulette-cover/Cargo.toml`
 - About two and a half seconds; prints only, writes nothing. Peak memory is the 2048 raster, about 30 MB.
 
 ## WITNESSES

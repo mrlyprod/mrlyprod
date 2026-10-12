@@ -53,7 +53,7 @@
 
 ## RUN
 
-- `bash scripts/cargo.sh cargo run --release -p circle-crop`
+- `cargo run --release --manifest-path research/crop/lab/rs/circle-crop/Cargo.toml`
 - Under a minute, peak grid `3^9` squared and `3^6` cubed; prints only, writes nothing.
 
 ## WITNESSES

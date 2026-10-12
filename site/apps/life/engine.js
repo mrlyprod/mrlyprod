@@ -74,33 +74,6 @@ export function ruleOf(life, value, cells) {
   return { birth: birth.counts, survive: survive.counts, name: `B${birth.name}/S${survive.name}` };
 }
 
-const FRACTION = /\d*\.\d+|\d+/g;
-
-function share(life, text, cells) {
-  const clean = String(text ?? '').trim();
-  if (clean.includes('.')) {
-    const edges = (clean.match(FRACTION) ?? []).map(Number);
-    if (!edges.length) return { window: [1, 0], name: '-' };
-    const lo = Math.min(...edges);
-    const hi = Math.max(...edges);
-    return { window: [lo, hi], name: lo === hi ? `${lo}` : `${lo}-${hi}` };
-  }
-  const { counts, name } = side(life, text, cells);
-  return { window: counts.length ? [counts[0] / cells, counts[counts.length - 1] / cells] : [1, 0], name };
-}
-
-export function windowsOf(life, value, cells) {
-  const birth = share(life, value.born, cells);
-  const survive = share(life, value.stay, cells);
-  return { birth: birth.window, survive: survive.window, name: `B${birth.name}/S${survive.name}` };
-}
-
-export function counted([lo, hi], cells) {
-  const from = Math.ceil(lo * cells - 1e-9);
-  const to = Math.floor(hi * cells + 1e-9);
-  return !cells || from > to ? 'none' : from === to ? `${from}` : `${from} to ${to}`;
-}
-
 /* MASK */
 
 export const dimOf = (value) => (Number(value?.dim) === 1 ? 1 : 2);
@@ -124,11 +97,11 @@ export function fitLevel(number, cap) {
   return l;
 }
 
-export function maskOf(life, value, cap) {
+export function maskOf(life, value) {
   const dim = dimOf(value);
   const code = codeOf(value.code, dim);
   const number = Number(value.number) || 3;
-  const level = levelOf(number, value.level, cap ?? SPANS[dim]);
+  const level = levelOf(number, value.level, SPANS[dim]);
   const made = life.design_mask(dim, code, number, level);
   const mask = dim === 1 ? { shape: [1, made.shape[0]], data: made.data } : made;
   let cells = 0;

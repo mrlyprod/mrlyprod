@@ -1,7 +1,7 @@
 # occupancy-decay
 
 - Counts the occupied rays of the ternary gasket at `level` inside a height window, against the first moment of the same window, and measures the digit-congruence density available to any residue-class attack on Conjecture O.
-- Conventions, printed by the census itself: the height of a ray is `max(z_1, z_2)` of its primitive direction, the window `octave <= alpha level` is read as the threshold `height <= 3^(alpha level)`, and the octave is `floor(log_3 height)`, one below the desk generator `lab/rs/dimension-one-ladder/src/census.rs`, which returns `floor(log_3 height) + 1` above `height = 1`; ray totals here exclude the two fibre rays that the desk totals include.
+- Conventions, printed by the census itself: the height of a ray is `max(z_1, z_2)` of its primitive direction, the window `octave <= alpha level` is read as the threshold `height <= 3^(alpha level)`, and the octave is `floor(log_3 height)`, one below the generator `lab/rs/dimension-one-ladder/src/census.rs`, which returns `floor(log_3 height) + 1` above `height = 1`; ray totals here exclude the two fibre rays that the Rust census totals include.
 - `A(level, alpha)` counts distinct occupied rays in the window and `F(level, alpha) = Sum_z M_level(z)` counts the gasket points carrying them, so `F/A` is the mean multiplier count of a windowed ray and `F` is the first moment Conjecture O is allowed no access to.
 - Ratio set: `R_k = {u v^(-1) mod 3^k : (u,v) in G_k, u > 0, 3 does not divide v}` and `sigma_k = |R_k|/3^k`, the exact density of the mod-`3^k` occupancy constraint, with the congruence-collinear pair count `M_2(k) = Sum_r m(r)^2` and its Cauchy-Schwarz floor `sigma_k >= (3^(k-1) - 2^(k-1))^2 / (3^k M_2(k))`.
 - Prime sum: `Sum_{p > 3^(beta level)} N_level(p)` at target zero from a smallest-prime-factor sieve over the gcd histogram of `G_level`, against the first-moment bound `(F(level, 3^((1-beta) level)) + 2^(level+1)) / beta`.
@@ -16,7 +16,7 @@
 ## CLAIMS
 
 - `A(level, 0.5533)` reads `822, 1976, 3770, 8000, 16366, 34716, 65342, 139050, 258036` at `level 10..18` with `log_3 A / level` inside `[0.6109, 0.6345]` and `theta = log A / log X` inside `[1.1041, 1.1467]`; at `alpha = 1/2` the same bands are `[0.5416, 0.5798]` and `[1.0833, 1.1596]`, so the earlier reading `0.543 .. 0.557` does not reproduce.
-- Occupied non-fibre ray totals `3151656, 9491964, 28545340` at `level 14, 15, 16` and `1044840` at `level 13`, two above each in the fibre-counting convention, a second builder for the desk census rows.
+- Occupied non-fibre ray totals `3151656, 9491964, 28545340` at `level 14, 15, 16` and `1044840` at `level 13`, two above each in the fibre-counting convention, a second builder for the census rows.
 - `F(level, 0.5533)/A(level, 0.5533)` reads `5.41, 5.20, 5.52, 5.64, 5.63, 5.86, 5.79, 6.08, 5.92` at `level 10..18` while `log_3 F / level` falls `0.7645 -> 0.7201`: the first moment and the ray count share one exponent, the gap `0.0966` at `level 17` being `log(F/A)/(level log 3)`.
 - At a fixed height the two part company: `A(level, 3^5) = 384 .. 474` over `level 10..18` while `F(level, 3^5) = 2728 .. 51694`, mean multiplicity `7.10 -> 109.06`, the shift rays carrying it.
 - `R_k` is indexed by the modulus `3^k` and `R_1` is empty under the hypothesis `u > 0`, so the sequence starts at `k = 2` and carries that offset wherever it is quoted, `lab/py/ratio-set-saving` included.

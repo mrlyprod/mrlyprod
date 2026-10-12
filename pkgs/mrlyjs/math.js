@@ -350,6 +350,10 @@ export const name = {
     of: wasm.name_of,
     words: wasm.name_words,
 };
+export const nodal = {
+    figures: wasm.nodal_figures,
+    holds: wasm.nodal_holds,
+};
 export const press = {
     CORNERS: wasm.press_CORNERS,
     Press: wasm.press_Press,

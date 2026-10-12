@@ -17,7 +17,7 @@
 
 ## RUN
 
-- `cargo run --release -p apollonian`
+- `cargo run --release --manifest-path research/apollonian/lab/rs/apollonian/Cargo.toml`
 - The verbs `ford`, `strip`, `census` and `design` run one section each; about fourteen seconds in total, `census` twelve of them. Prints only, writes nothing.
 - `N(T)` in every table is the node count, so the root quadruple is excluded: four circles in the bounded column, one in the strip column.
 

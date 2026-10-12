@@ -1107,7 +1107,7 @@ def perden():
     print("and at a = 1/2 that is x^eps ((x d)^(1/2) + x d^(-1/2)), the first and third terms of the d-form")
     print("minor-arc bound Theorem L5 owes, whose middle term x^(4/5) is the unconditional Vaughan piece;")
     print("this row applies eq. 6 at an arbitrary arc denominator d, so it holds only within the printed")
-    print("range on Q that the source carries and the desk has not read, unlike the blocks above, where the")
+    print("range on Q that the source carries and is unread here, unlike the blocks above, where the")
     print("min caps the PROPOSITION by the uniform THEOREM at the level that decides")
     print()
     print("THE WALL IT MOVES: none, and no wall row is printed here")

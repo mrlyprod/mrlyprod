@@ -20,3 +20,8 @@ Franel's identity on the Farey fractions whose denominators lie in a digit desig
 - [figures/paper-franel-converse.json](figures/paper-franel-converse.json): paper-franel-converse census
 - [figures/research-franel.ts](figures/research-franel.ts): research-franel
 - [figures/research-franel.json](figures/research-franel.json): research-franel census
+
+## Lost
+
+- Square-root cancellation on average over a flat family of designs: not cheap, it costs the zero-free half plane `Re s > 1 - alpha/2` for `zeta` (The average over designs).
+- The accepting-set law uniform in coprime `d <= Q^theta`: the design's own repunits refute it (The repunits; the Refuted row in [claims/franel-on-a-digit-design.md](claims/franel-on-a-digit-design.md)).

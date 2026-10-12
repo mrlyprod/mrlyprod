@@ -44,3 +44,9 @@ The algebra of the stack: stacking is Dirichlet convolution and the group knows 
 - [figures/paper-novelty-meter.json](figures/paper-novelty-meter.json): paper-novelty-meter census
 - [figures/research-stack.ts](figures/research-stack.ts): research-stack
 - [figures/research-stack.json](figures/research-stack.json): research-stack census
+
+## Lost
+
+- The smoothed novelty meter as a route to the Riemann hypothesis: on a finite range it renders the first zeros, so it can neither certify nor refute the hypothesis; the Refuted row in [claims/novelty-meter.md](claims/novelty-meter.md).
+- The design horocycle as a route: no semigroup orbit carries a density-zero design, the horocycle sampled on the design's Cantor set puts the digits on the position and not on the cusp index, and the meter gives back only holomorphy of `Z_F` (The design horocycle).
+- Reweighting the layers: they form a dilation system with symbol `zeta(1 + s)`, so no reweighting moves the line (The layers as a dilation system).

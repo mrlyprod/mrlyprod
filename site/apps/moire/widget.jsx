@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bar } from '../../lib/frame.jsx';
 import { Btn, Fold, Icon, Pick as Select } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
+import { useTouch } from '../../lib/touch.js';
 import { Pick } from '../designs/pick.jsx';
 import { drawn, presetOf, presets } from './engine.js';
 import { make } from './scene.js';
@@ -38,36 +39,6 @@ export function useLatest(fn) {
 export function useStatus(onStatus, rows) {
   const key = JSON.stringify(rows);
   useEffect(() => onStatus?.(rows), [key]);
-}
-
-const at = (e) => {
-  const box = e.currentTarget.getBoundingClientRect();
-  return [(e.clientX - box.left) / box.width, (e.clientY - box.top) / box.height];
-};
-
-export function useTouch(handle, change) {
-  const down = useRef(false);
-  const send = (e, start) => {
-    const patch = handle.current?.touch?.(...at(e), start);
-    if (patch) change.current(patch);
-  };
-  const up = (e) => {
-    if (!down.current) return;
-    down.current = false;
-    const patch = handle.current?.lift?.(...at(e));
-    if (patch) change.current(patch);
-  };
-  return {
-    onPointerDown: (e) => {
-      if (e.button) return;
-      e.currentTarget.setPointerCapture?.(e.pointerId);
-      down.current = true;
-      send(e, true);
-    },
-    onPointerMove: (e) => down.current && send(e, false),
-    onPointerUp: up,
-    onPointerCancel: up,
-  };
 }
 
 export const patch = ({ dim, ...rest }) => rest;

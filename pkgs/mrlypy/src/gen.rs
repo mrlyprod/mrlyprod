@@ -4245,98 +4245,6 @@ pub mod life {
     use pyo3::types::PyDict;
     use pyo3::IntoPyObjectExt;
 
-    /// A soup on a design mask under birth and survive share windows, stepped by FFT and read by its spectrum.
-    pub mod chladni {
-        use crate::hand::{ok, PyCell2d, PyCellNd, PySerde, PyTensor};
-        use pyo3::prelude::*;
-        use pyo3::types::PyDict;
-        use pyo3::IntoPyObjectExt;
-
-        /// Draws a mask centred in a size-square picture, the mask centre at size over two.
-        #[pyfunction]
-        #[pyo3(name = "kernel", signature = (mask, size))]
-        pub fn kernel<'py>(
-            py: Python<'py>,
-            mask: PyTensor,
-            size: usize,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let mask = mask.0;
-            let out = mrlyrs::life::chladni::kernel(&mask, size);
-            (PyCellNd(ok(out)?)).into_bound_py_any(py)
-        }
-
-        /// Advances a square grid one generation on a wrapped torus: a dead cell is born and a live one kept when its mask count over the mask budget lies in the closed birth or survive window, the count read by FFT convolution.
-        #[pyfunction]
-        #[pyo3(name = "next", signature = (cell, mask, birth, survive))]
-        pub fn next<'py>(
-            py: Python<'py>,
-            cell: PyCell2d,
-            mask: PyTensor,
-            birth: (f64, f64),
-            survive: (f64, f64),
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let cell = cell.0;
-            let mask = mask.0;
-            let out = mrlyrs::life::chladni::next(&cell, &mask, birth, survive);
-            (PyCellNd(ok(out)?)).into_bound_py_any(py)
-        }
-
-        /// Reads the ring means of a square 0/1 grid's log spectrum, its peak ring past the centre and that ring's wavelength in cells.
-        #[pyfunction]
-        #[pyo3(name = "profile", signature = (cell))]
-        pub fn profile<'py>(py: Python<'py>, cell: PyCell2d) -> PyResult<Bound<'py, PyAny>> {
-            let cell = cell.0;
-            let out = mrlyrs::life::chladni::profile(&cell);
-            (PySerde(ok(out)?)).into_bound_py_any(py)
-        }
-
-        /// Runs a seeded soup of the given density for the given steps on a size-square torus under the closed birth and survive windows.
-        #[pyfunction]
-        #[pyo3(name = "run", signature = (mask, birth, survive, size, steps, density, seed))]
-        pub fn run<'py>(
-            py: Python<'py>,
-            mask: PyTensor,
-            birth: (f64, f64),
-            survive: (f64, f64),
-            size: usize,
-            steps: usize,
-            density: f64,
-            seed: u64,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let mask = mask.0;
-            let out = mrlyrs::life::chladni::run(&mask, birth, survive, size, steps, density, seed);
-            (PyCellNd(ok(out)?)).into_bound_py_any(py)
-        }
-
-        /// Returns the centred log magnitude spectrum of a square 0/1 grid, scaled to at most one by its peak.
-        #[pyfunction]
-        #[pyo3(name = "spectrum", signature = (cell))]
-        pub fn spectrum<'py>(py: Python<'py>, cell: PyCell2d) -> PyResult<Bound<'py, PyAny>> {
-            let cell = cell.0;
-            let out = mrlyrs::life::chladni::spectrum(&cell);
-            (ok(out)?).into_bound_py_any(py)
-        }
-
-        pub fn init(
-            py: Python<'_>,
-            parent: &Bound<'_, PyModule>,
-            sys: &Bound<'_, PyDict>,
-        ) -> PyResult<()> {
-            let m = PyModule::new(py, "mrlypy.life.chladni")?;
-            m.setattr("__doc__", "A soup on a design mask under birth and survive share windows, stepped by FFT and read by its spectrum.")?;
-            m.add_function(wrap_pyfunction!(kernel, &m)?)?;
-            m.add_function(wrap_pyfunction!(next, &m)?)?;
-            m.add_function(wrap_pyfunction!(profile, &m)?)?;
-            m.add_function(wrap_pyfunction!(run, &m)?)?;
-            m.add_function(wrap_pyfunction!(spectrum, &m)?)?;
-            let names: Vec<&str> = vec!["kernel", "next", "profile", "run", "spectrum"];
-            m.add("__all__", names)?;
-            parent.add("chladni", &m)?;
-            sys.set_item("mrlypy._mrlypy.life.chladni", &m)?;
-            Ok(())
-        }
-    }
-
     /// The elementary automata: their stepping, their space-time diagrams and the card of one rule.
     pub mod elementary {
         use pyo3::prelude::*;
@@ -5332,7 +5240,7 @@ pub mod life {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrlypy.life")?;
-        m.setattr("__doc__", "The engine: a rule over a grid, stepped, recorded, measured and rendered.\nThe engine: a rule over a grid, stepped, recorded, measured and rendered.\n\n- `step`: one generation of a grid under birth and survive counts.\n- `chladni`: a soup on a design mask under share windows, stepped by FFT and read by its spectrum.\n- `animate`: a seed run until it fixes, loops or times out.\n- `models`: the run config and the recorded life.\n- `metrics`: the entropy and churn readings of a run.\n- `crop`: the centred cropping and tiling of a run's frames.\n- `mask`: the design masks a rule reads and the lattice they generate.\n- `source`: the named sources of neighbor counts, and the counts they lay down.\n- `elementary`: the one-line automata and the card of one rule.\n- `render`: the frames and the visit heatmap of a run, as images.\n- `rule`: the canonical name of a rule.\n\nThe doors: [`next_grid`](crate::life::next_grid), [`animate`](crate::life::animate()),\n[`entropy`](crate::life::entropy), [`churn`](crate::life::churn),\n[`counts`](crate::life::counts), [`frames`](crate::life::frames),\n[`heatmap`](crate::life::heatmap), [`history`](crate::life::history) and\n[`Rule`](crate::life::Rule).")?;
+        m.setattr("__doc__", "The engine: a rule over a grid, stepped, recorded, measured and rendered.\nThe engine: a rule over a grid, stepped, recorded, measured and rendered.\n\n- `step`: one generation of a grid under birth and survive counts.\n- `animate`: a seed run until it fixes, loops or times out.\n- `models`: the run config and the recorded life.\n- `metrics`: the entropy and churn readings of a run.\n- `crop`: the centred cropping and tiling of a run's frames.\n- `mask`: the design masks a rule reads and the lattice they generate.\n- `source`: the named sources of neighbor counts, and the counts they lay down.\n- `elementary`: the one-line automata and the card of one rule.\n- `render`: the frames and the visit heatmap of a run, as images.\n- `rule`: the canonical name of a rule.\n\nThe doors: [`next_grid`](crate::life::next_grid), [`animate`](crate::life::animate()),\n[`entropy`](crate::life::entropy), [`churn`](crate::life::churn),\n[`counts`](crate::life::counts), [`frames`](crate::life::frames),\n[`heatmap`](crate::life::heatmap), [`history`](crate::life::history) and\n[`Rule`](crate::life::Rule).")?;
         m.add_class::<Config>()?;
         m.add_class::<Counts>()?;
         m.add_class::<Life>()?;
@@ -5410,7 +5318,6 @@ pub mod life {
             "Fate",
         ];
         m.add("__all__", names)?;
-        chladni::init(py, &m, sys)?;
         elementary::init(py, &m, sys)?;
         render::init(py, &m, sys)?;
         source::init(py, &m, sys)?;
@@ -11978,6 +11885,57 @@ pub mod math {
         }
     }
 
+    /// The Chladni figures of a design: the lowest modes of the plate it cuts, in a canonical basis, with their nodal domains, Courant bounds and rasters.
+    pub mod nodal {
+        use crate::hand::{ok, PySerde};
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+        use pyo3::IntoPyObjectExt;
+
+        /// Rings the plate cut as the design `math::two::create(code, number, level, 0, 2)`: its cells joined to their four neighbours, free at the rim and at every hole, the combinatorial Laplacian `D - A`. Returns the lowest `count` modes, `count` clamped to the cells and to 64, each in a canonical basis: eigenvalues within `1e-8` form a cluster, split by the design's transpose, left-right and up-down mirrors in that order and then by the diagonal `x + sqrt(2) y`, each figure projected exactly onto its mirror parities and signed so its first largest cell is positive. A figure's domains are the 4-connected runs of one strict sign, cells within `1e-9` of its peak left out; its bound is the 1-based index of the last member of its cluster, the last cluster closed before the cut.
+        #[pyfunction]
+        #[pyo3(name = "figures", signature = (code, number, level, count))]
+        pub fn figures<'py>(
+            py: Python<'py>,
+            code: u64,
+            number: usize,
+            level: usize,
+            count: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::math::nodal::figures(code, number, level, count);
+            (PySerde(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Answers whether a 2D base-2 design cuts a plate the figures can ring: one 4-connected piece of 16 to 10,000 cells on a side of at most 128. The cells are counted before the design is built.
+        #[pyfunction]
+        #[pyo3(name = "holds", signature = (code, number, level))]
+        pub fn holds<'py>(
+            py: Python<'py>,
+            code: u64,
+            number: usize,
+            level: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::math::nodal::holds(code, number, level);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrlypy.math.nodal")?;
+            m.setattr("__doc__", "The Chladni figures of a design: the lowest modes of the plate it cuts, in a canonical basis, with their nodal domains, Courant bounds and rasters.")?;
+            m.add_function(wrap_pyfunction!(figures, &m)?)?;
+            m.add_function(wrap_pyfunction!(holds, &m)?)?;
+            let names: Vec<&str> = vec!["figures", "holds"];
+            m.add("__all__", names)?;
+            parent.add("nodal", &m)?;
+            sys.set_item("mrlypy._mrlypy.math.nodal", &m)?;
+            Ok(())
+        }
+    }
+
     /// The sequence press: the integers a design's digit rule keeps, weighed all at once.
     pub mod press {
         use crate::hand::{ok, PyCode, PySerde};
@@ -16978,7 +16936,7 @@ pub mod math {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrlypy.math")?;
-        m.setattr("__doc__", "The designs in space: codes, cells, cubes, hexagons, their counts, graphs and names.\nThe designs in space.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level\ninto a fractal design, and the same code always unfolds into the same shape, so a design can be\nnamed, counted and drawn again from its number alone. Half the module generates and half\nmeasures; everything rests on the tensors and cells of [`crate::core`] and the sequences of\n[`crate::num`].\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `spin` spins a raster about its centre; `tourbillon` stacks the turned parity carpets.\n- `spirograph` rolls a byte grid as a wheel; `roulette` counts where its curves cross.\n- `name` prints and parses the one canonical JSON object of every design, rule, tile and word.\n- `arrays`: a sparse sensor array, its difference coarray and weights, its essential sensors, and the fractal array a generator grows.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.\n\nThe doors are [`crate::math::atoms::carpet_2d`], [`crate::math::bang::bang`],\n[`crate::math::two::carpet`], [`crate::math::two::census()`], [`crate::math::two::to_json`],\n[`crate::math::counts::fill`], [`crate::math::three::census::surface`] and\n[`crate::math::spectrum::laplacian_spectrum`].")?;
+        m.setattr("__doc__", "The designs in space: codes, cells, cubes, hexagons, their counts, graphs and names.\nThe designs in space.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level\ninto a fractal design, and the same code always unfolds into the same shape, so a design can be\nnamed, counted and drawn again from its number alone. Half the module generates and half\nmeasures; everything rests on the tensors and cells of [`crate::core`] and the sequences of\n[`crate::num`].\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.\n- `nodal` rings the plate a design cuts: its lowest modes, their nodal domains and Courant bounds, the Chladni figures of the design.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `spin` spins a raster about its centre; `tourbillon` stacks the turned parity carpets.\n- `spirograph` rolls a byte grid as a wheel; `roulette` counts where its curves cross.\n- `name` prints and parses the one canonical JSON object of every design, rule, tile and word.\n- `arrays`: a sparse sensor array, its difference coarray and weights, its essential sensors, and the fractal array a generator grows.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.\n\nThe doors are [`crate::math::atoms::carpet_2d`], [`crate::math::bang::bang`],\n[`crate::math::two::carpet`], [`crate::math::two::census()`], [`crate::math::two::to_json`],\n[`crate::math::counts::fill`], [`crate::math::three::census::surface`] and\n[`crate::math::spectrum::laplacian_spectrum`].")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         arcs::init(py, &m, sys)?;
@@ -16995,6 +16953,7 @@ pub mod math {
         memory::init(py, &m, sys)?;
         moire::init(py, &m, sys)?;
         name::init(py, &m, sys)?;
+        nodal::init(py, &m, sys)?;
         press::init(py, &m, sys)?;
         radix::init(py, &m, sys)?;
         roulette::init(py, &m, sys)?;
@@ -17545,6 +17504,82 @@ pub mod num {
             m.add("__all__", names)?;
             parent.add("boolean", &m)?;
             sys.set_item("mrlypy._mrlypy.num.boolean", &m)?;
+            Ok(())
+        }
+    }
+
+    /// The Chladni plate: the figures of a free square plate, their ladder by pitch, sand shaken onto a raster's still lines and those lines traced.
+    pub mod chladni {
+        use crate::hand::{ok, PySerde};
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+        use pyo3::IntoPyObjectExt;
+
+        /// Lists every distinct plate figure with `0 <= n <= m <= cap` but `(0, 0)`, both signs when `n < m` and the sign 1 when `n == m`, by pitch, then `n`, then the sign 1 before -1.
+        #[pyfunction]
+        #[pyo3(name = "ladder", signature = (cap))]
+        pub fn ladder<'py>(py: Python<'py>, cap: usize) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::chladni::ladder(cap);
+            ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+        }
+
+        /// Traces the zero set of a plate raster by marching squares on the lattice of cell centres, its holes and its rim ghosted to the mean of their plate neighbours so the lines run to every free edge: segments `x0, y0, x1, y1` in `[0, 1]` back to back, pieces inside a NaN cell dropped, a saddle joined by the mean of its four corners.
+        #[pyfunction]
+        #[pyo3(name = "lines", signature = (field, side))]
+        pub fn lines<'py>(
+            py: Python<'py>,
+            field: Vec<f64>,
+            side: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::chladni::lines(&field, side);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Samples the Chladni figure `cos(n pi x) cos(m pi y) + sign cos(m pi x) cos(n pi y)` of a free square plate at the cell centres `(i + 1/2) / size` of a row-major `size` by `size` raster, `x` along a row, scaled so the largest magnitude is 1, or all zero when no centre rises past `1e-12`; when `n == m` it is the single product for either sign.
+        #[pyfunction]
+        #[pyo3(name = "plate", signature = (n, m, sign, size))]
+        pub fn plate<'py>(
+            py: Python<'py>,
+            n: usize,
+            m: usize,
+            sign: i32,
+            size: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::chladni::plate(n, m, sign, size);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Shakes sand on a plate raster: grains are `x, y` pairs in `[0, 1)` over the row-major `side` by `side` field, a NaN pair an empty slot that stays NaN, a NaN cell a hole. Each step moves a grain a random length `kick |f| + floor` in a random direction plus a drift `-0.3 f grad f / max|grad f|^2`, with `kick = 0.6 / max|grad f|` read off the raster by finite differences and a fixed kick on a flat field, the field read bilinearly with its holes and its rim ghosted to the mean of their plate neighbours. The rim reflects; a grain on a hole falls through and becomes NaN. Step `from + i` of grain `j` draws from a counter keyed by `(seed, from + i, j)`, so six steps are three and three.
+        #[pyfunction]
+        #[pyo3(name = "shake", signature = (field, side, grains, from_, steps, seed))]
+        pub fn shake<'py>(
+            py: Python<'py>,
+            field: Vec<f64>,
+            side: usize,
+            grains: Vec<f32>,
+            from_: u64,
+            steps: usize,
+            seed: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::chladni::shake(&field, side, &grains, from_, steps, seed);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrlypy.num.chladni")?;
+            m.setattr("__doc__", "The Chladni plate: the figures of a free square plate, their ladder by pitch, sand shaken onto a raster's still lines and those lines traced.")?;
+            m.add_function(wrap_pyfunction!(ladder, &m)?)?;
+            m.add_function(wrap_pyfunction!(lines, &m)?)?;
+            m.add_function(wrap_pyfunction!(plate, &m)?)?;
+            m.add_function(wrap_pyfunction!(shake, &m)?)?;
+            let names: Vec<&str> = vec!["ladder", "lines", "plate", "shake"];
+            m.add("__all__", names)?;
+            parent.add("chladni", &m)?;
+            sys.set_item("mrlypy._mrlypy.num.chladni", &m)?;
             Ok(())
         }
     }
@@ -20197,12 +20232,13 @@ pub mod num {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrlypy.num")?;
-        m.setattr("__doc__", "The integers: primes, divisors, series, lattices, spectra and networks.\nThe instruments of number: primes, divisors, series, spectra and lattices.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: [`gcd`](crate::num::factor::gcd), [`factorial`](crate::num::factor::factorial), [`divisors`](crate::num::factor::divisors), [`mobius`](crate::num::factor::mobius).\n- The primality test: [`is_prime`](crate::num::prime::is_prime).\n- The zeta value above one: [`zeta`](crate::num::series::zeta).")?;
+        m.setattr("__doc__", "The integers: primes, divisors, series, lattices, spectra and networks.\nThe instruments of number: primes, divisors, series, spectra and lattices.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.\n- `eigen`: the crate's symmetric eigensolvers: the dense Householder and QL pair with vectors, and the shift-invert block Lanczos on a banded Cholesky for the lowest pairs of a sparse matrix.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: [`gcd`](crate::num::factor::gcd), [`factorial`](crate::num::factor::factorial), [`divisors`](crate::num::factor::divisors), [`mobius`](crate::num::factor::mobius).\n- The primality test: [`is_prime`](crate::num::prime::is_prime).\n- The zeta value above one: [`zeta`](crate::num::series::zeta).")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         apollonian::init(py, &m, sys)?;
         blend::init(py, &m, sys)?;
         boolean::init(py, &m, sys)?;
+        chladni::init(py, &m, sys)?;
         factor::init(py, &m, sys)?;
         fft::init(py, &m, sys)?;
         gauss::init(py, &m, sys)?;

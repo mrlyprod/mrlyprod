@@ -2,7 +2,8 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { Bar } from '../../lib/frame.jsx';
 import { Btn, Fold, Knob, Pick as Select, Slider, Text } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { fixed, roll, useLatest, useMath, useStatus, useTouch } from '../moire/widget.jsx';
+import { useTouch } from '../../lib/touch.js';
+import { fixed, roll, useLatest, useMath, useStatus } from '../moire/widget.jsx';
 import { EYES, SCHEDULES, eyeOf, label, place, settle, trim } from './engine.js';
 import { SPEC, make } from './scene.js';
 

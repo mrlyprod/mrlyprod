@@ -1,7 +1,7 @@
 from typing import Any, Literal
 
 from numpy.typing import NDArray
-from . import chladni, elementary, render, source
+from . import elementary, render, source
 
 class Config:
     """The rulebook of a life run."""

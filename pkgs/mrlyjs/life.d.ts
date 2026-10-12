@@ -325,27 +325,6 @@ export class Source {
     /** Reads a canonical name off the front of the text, returning the tail left over. */
     static read(text: string): [Source, string] | undefined;
 }
-export declare namespace chladni {
-    /** Draws a mask centred in a size-square picture, the mask centre at size over two. */
-    export function kernel(mask: Tensor, size: number): Cell;
-    /** Advances a square grid one generation on a wrapped torus: a dead cell is born and a live one kept when its mask count over the mask budget lies in the closed birth or survive window, the count read by FFT convolution. */
-    export function next(cell: Cell, mask: Tensor, birth: [number, number], survive: [number, number]): Cell;
-    /** Reads the ring means of a square 0/1 grid's log spectrum, its peak ring past the centre and that ring's wavelength in cells. */
-    export function profile(cell: Cell): chladni.Profile;
-    /** Runs a seeded soup of the given density for the given steps on a size-square torus under the closed birth and survive windows. */
-    export function run(mask: Tensor, birth: [number, number], survive: [number, number], size: number, steps: number, density: number, seed: number | bigint): Cell;
-    /** Returns the centred log magnitude spectrum of a square 0/1 grid, scaled to at most one by its peak. */
-    export function spectrum(cell: Cell): Float64Array;
-    /** The radial reading of a field's log spectrum: the ring means, the peak ring past the centre and its wavelength in cells. */
-    export interface Profile {
-        /** The mean of every ring of integer radius, ring 0 through size over two. */
-        profile: number[];
-        /** The ring past the centre where the profile peaks, a tie broken at the smaller ring. */
-        peak_ring: number;
-        /** The size over the peak ring, or zero when there is no ring past the centre. */
-        wavelength: number;
-    }
-}
 export declare namespace elementary {
     /** Returns the bit a rule sends the neighbourhood to, reading bit `4l + 2c + r` in Wolfram's numbering off the low bit of each cell. */
     export function output(rule: number, l: number, c: number, r: number): number;

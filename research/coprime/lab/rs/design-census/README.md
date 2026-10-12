@@ -8,7 +8,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p design-census`
+- `cargo run --release --manifest-path research/coprime/lab/rs/design-census/Cargo.toml`
 - Half a minute on 8 cores; writes `sequences.csv` and `counts.csv` beside this file.
 
 ## WITNESSES

@@ -657,9 +657,7 @@ fn main() {
         SWEEP_HI - SWEEP_LO
     );
     println!();
-    println!(
-        "SHARPENED COST-OUT, the GRH rung re-costed at every one-step constant this desk proves"
-    );
+    println!("SHARPENED COST-OUT, the GRH rung re-costed at every one-step constant proved here");
     println!(
         "`1 + Phi_q/q` is step 3; `Psi_q` is the sharpening with the phase identity, `q >= 17`;"
     );

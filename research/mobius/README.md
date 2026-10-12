@@ -39,3 +39,10 @@ The Mobius meter across digit designs: exact transfer between scaled columns, th
 - [figures/paper-sparse-mertens-under-grh.ts](figures/paper-sparse-mertens-under-grh.ts): paper-sparse-mertens-under-grh
 - [figures/paper-sparse-mertens-under-grh.json](figures/paper-sparse-mertens-under-grh.json): paper-sparse-mertens-under-grh census
 - [figures/research-mobius.ts](figures/research-mobius.ts): research-mobius
+
+## Lost
+
+- Coefficient-free routes to the Type II sum: two box witnesses floor them at `x^alpha` on the dense cells, and the statement for every digit set stays a Conjecture (The meter and its yardstick).
+- Weighting the frequency grid by denominator: it buys no exponent, since the `l^1` mass of the digit transform sits at the top denominator; the Refuted row in [claims/digit-restricted-mobius-meter.md](claims/digit-restricted-mobius-meter.md).
+- The pair route at base 10: certified `beta > 1/4` at all ten one-missing-digit sets kills both branches of the criterion (The pair route, "Base 10 is refuted at every excluded digit").
+- The pair route below `fill = base^(3/4)`: the Parseval floor `m_t >= 1 - alpha` shuts the gate (The pair route).

@@ -8,7 +8,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p spectral-spacings`
+- `cargo run --release --manifest-path research/complexity/lab/rs/spectral-spacings/Cargo.toml`
 - About ten seconds after the build, exits 0.
 
 ## WITNESSES

@@ -24,9 +24,9 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p memory-meter`
+- `cargo run --release --manifest-path research/beneath/lab/rs/memory-meter/Cargo.toml`
 - About thirty seconds on one thread, `23s` of it the sieve; peak resident set about `2.15 GB`, one `i8` and one `u8` per integer. Prints only, writes nothing.
-- An optional depth argument runs a shallower table at the same phases: `-p memory-meter -- 28` takes about seven seconds and `0.6 GB`, and its rows are the first `81` phases of the deep run verbatim.
+- An optional depth argument runs a shallower table at the same phases: `--manifest-path research/beneath/lab/rs/memory-meter/Cargo.toml -- 28` takes about seven seconds and `0.6 GB`, and its rows are the first `81` phases of the deep run verbatim.
 
 ## READS
 

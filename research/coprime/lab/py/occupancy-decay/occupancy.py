@@ -133,7 +133,7 @@ def cmd_census(args):
     alphas = args.alphas
     caps = [j for j in args.caps]
     print("convention height max(z1,z2), window height <= 3^(alpha n), octave floor(log_3 h),"
-          " desk octave = octave + 1 above h = 1, ray totals exclude the two fibre rays")
+          " ladder octave = octave + 1 above h = 1, ray totals exclude the two fibre rays")
     print("n alpha A F meanM expA expF theta box A/box")
     seen = {}
     for n in args.levels:

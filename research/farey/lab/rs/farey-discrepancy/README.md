@@ -17,9 +17,9 @@ Three verbs on one object: the node set of the scale stack, and the Franel-Landa
 
 ## RUN
 
-- `bash scripts/cargo.sh cargo run --release -p farey-discrepancy` from `mrlyprod/` runs all three verbs; append `-- stack`, `-- meter` or `-- design` for one.
+- `cargo run --release --manifest-path research/farey/lab/rs/farey-discrepancy/Cargo.toml` from `mrlyprod/` runs all three verbs; append `-- stack`, `-- meter` or `-- design` for one.
 - `stack` and `meter` take under a second at 0.7 GB peak; `design` takes a minute at a few megabytes. Prints only, writes nothing.
-- `bash scripts/cargo.sh cargo test --release -p farey-discrepancy` checks both restricted counts against brute-force enumeration at base 3, base 10 without 9 and the full set.
+- `cargo test --release --manifest-path research/farey/lab/rs/farey-discrepancy/Cargo.toml` checks both restricted counts against brute-force enumeration at base 3, base 10 without 9 and the full set.
 
 ## WITNESSES
 

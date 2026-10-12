@@ -20,3 +20,7 @@ Boolean complexity of the catalog, and the Laplacian spectra of the fractals it 
 - [lab/py/laplacian-degeneracy/](lab/py/laplacian-degeneracy/): Builds the level-`level` Sierpinski triangle as the design-code-7 base-2 tile Kronecker-substituted into itself, `level = 1..8`, and checks the array against the `i AND j = 0` characterisation instead of assuming it.
 - [lab/rs/spectral-spacings/](lab/rs/spectral-spacings/): Computes the unfolded nearest-neighbour level spacings of graph Laplacians, both combinatorial `D - A` and normalised `I - D^-1/2 A D^-1/2` for the degree matrix `D` and the adjacency matrix `A`, for the carpet cell graph at level 3, 4 (512 and 4096 nodes), the Menger sponge cell graph at level 2 (400), the sponge's diagonal slice on the plane `x + y + z = const` at level 2, 3 (306 and 2250) and the Sierpinski gasket at level 5, 6 (243 and 729), after two controls, a seeded random graph on 400 nodes at `p = 0.1` and the `20 x 20` square lattice.
 - [figures/research-complexity.ts](figures/research-complexity.ts): research-complexity
+
+## Lost
+
+- Graph-Laplacian spacings as a Hilbert-Polya test: every fractal clusters, and nothing in it concerns the Riemann hypothesis (Spacings: the spectra cluster).

@@ -10,7 +10,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p walk-dimension`
+- `cargo run --release --manifest-path research/walks/lab/rs/walk-dimension/Cargo.toml`
 - About six minutes; writes `walks-fig.png` to `data/mrlyprod/research/walks/lab/rs/walk-dimension/`, and the figures console then pins it.
 
 ## WITNESSES

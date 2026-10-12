@@ -248,7 +248,6 @@
         "The engine: a rule over a grid, stepped, recorded, measured and rendered.",
         "",
         "- `step`: one generation of a grid under birth and survive counts.",
-        "- `chladni`: a soup on a design mask under share windows, stepped by FFT and read by its spectrum.",
         "- `animate`: a seed run until it fixes, loops or times out.",
         "- `models`: the run config and the recorded life.",
         "- `metrics`: the entropy and churn readings of a run.",
@@ -274,14 +273,6 @@
         "The run of a seed until it fixes, loops or times out."
       ],
       "items": 0
-    },
-    {
-      "path": "life::chladni",
-      "file": "life/chladni.rs",
-      "docs": [
-        "A soup on a design mask under birth and survive share windows, stepped by FFT and read by its spectrum."
-      ],
-      "items": 6
     },
     {
       "path": "life::crop",
@@ -374,6 +365,7 @@
         "- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.",
         "- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.",
         "- `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.",
+        "- `nodal` rings the plate a design cuts: its lowest modes, their nodal domains and Courant bounds, the Chladni figures of the design.",
         "- `shape` crops a cell against a rational shape, cell by cell, with no floats.",
         "- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.",
         "- `moire` layers one design at many scales into an interference field.",
@@ -810,6 +802,14 @@
       "items": 0
     },
     {
+      "path": "math::nodal",
+      "file": "math/nodal.rs",
+      "docs": [
+        "The Chladni figures of a design: the lowest modes of the plate it cuts, in a canonical basis, with their nodal domains, Courant bounds and rasters."
+      ],
+      "items": 3
+    },
+    {
       "path": "math::press",
       "file": "math/press.rs",
       "docs": [
@@ -1132,6 +1132,8 @@
         "- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.",
         "- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.",
         "- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.",
+        "- `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.",
+        "- `eigen`: the crate's symmetric eigensolvers: the dense Householder and QL pair with vectors, and the shift-invert block Lanczos on a banded Cholesky for the lowest pairs of a sparse matrix.",
         "- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.",
         "- `fft`: the fast Fourier transform in one and two dimensions.",
         "- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.",
@@ -1175,6 +1177,14 @@
         "The boolean-function measures: Walsh spectra, nonlinearity, balance and avalanche."
       ],
       "items": 4
+    },
+    {
+      "path": "num::chladni",
+      "file": "num/chladni.rs",
+      "docs": [
+        "The Chladni plate: the figures of a free square plate, their ladder by pitch, sand shaken onto a raster's still lines and those lines traced."
+      ],
+      "items": 5
     },
     {
       "path": "num::factor",
@@ -4718,7 +4728,7 @@
     {
       "path": "life::Boundary",
       "name": "Boundary",
-      "defined_at": "life/mod.rs:58",
+      "defined_at": "life/mod.rs:55",
       "docs": [
         "The edge policy of a life grid."
       ],
@@ -4989,7 +4999,7 @@
     {
       "path": "life::Fate",
       "name": "Fate",
-      "defined_at": "life/mod.rs:76",
+      "defined_at": "life/mod.rs:73",
       "docs": [
         "The ending of a life run."
       ],
@@ -5528,73 +5538,6 @@
           ]
         }
       ],
-      "alias": null
-    },
-    {
-      "path": "life::chladni::Profile",
-      "name": "Profile",
-      "defined_at": "life/chladni.rs:13",
-      "docs": [
-        "The radial reading of a field's log spectrum: the ring means, the peak ring past the centre and its wavelength in cells."
-      ],
-      "kind": "struct",
-      "cross": {
-        "kind": "plain"
-      },
-      "derives": [
-        "Clone",
-        "Debug",
-        "PartialEq",
-        "Serialize",
-        "Deserialize"
-      ],
-      "serde": [],
-      "const_generic": false,
-      "fields": [
-        {
-          "name": "profile",
-          "public": true,
-          "docs": [
-            "The mean of every ring of integer radius, ring 0 through size over two."
-          ],
-          "serde": [],
-          "serde_skip": false,
-          "ty": {
-            "t": "vec",
-            "item": {
-              "t": "scalar",
-              "name": "f64"
-            }
-          }
-        },
-        {
-          "name": "peak_ring",
-          "public": true,
-          "docs": [
-            "The ring past the centre where the profile peaks, a tie broken at the smaller ring."
-          ],
-          "serde": [],
-          "serde_skip": false,
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "wavelength",
-          "public": true,
-          "docs": [
-            "The size over the peak ring, or zero when there is no ring past the centre."
-          ],
-          "serde": [],
-          "serde_skip": false,
-          "ty": {
-            "t": "scalar",
-            "name": "f64"
-          }
-        }
-      ],
-      "variants": [],
       "alias": null
     },
     {
@@ -8653,6 +8596,108 @@
                 "t": "scalar",
                 "name": "usize"
               }
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "math::nodal::Figures",
+      "name": "Figures",
+      "defined_at": "math/nodal.rs:22",
+      "docs": [
+        "The Chladni figures of a design: the lowest modes of the plate cut as the design, each with its nodal domains, its Courant bound and its raster."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "side",
+          "public": true,
+          "docs": [
+            "The side of the design's square raster."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "values",
+          "public": true,
+          "docs": [
+            "The lowest eigenvalues of the plate's Laplacian `D - A`, ascending."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        },
+        {
+          "name": "domains",
+          "public": true,
+          "docs": [
+            "The strong nodal domain count of each figure."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "bound",
+          "public": true,
+          "docs": [
+            "The Courant bound of each figure: the 1-based index of the last member of its eigenvalue's cluster."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "fields",
+          "public": true,
+          "docs": [
+            "The figures as row-major `side * side` rasters back to back, NaN off the plate, each scaled so its largest magnitude is 1."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "f64"
             }
           }
         }
@@ -12471,6 +12516,84 @@
           "ty": {
             "t": "scalar",
             "name": "i64"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::chladni::Rung",
+      "name": "Rung",
+      "defined_at": "num/chladni.rs:22",
+      "docs": [
+        "One figure of the square plate: its two wave numbers, the sign that joins the two products and its pitch."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "n",
+          "public": true,
+          "docs": [
+            "The smaller wave number."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "m",
+          "public": true,
+          "docs": [
+            "The larger wave number."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "sign",
+          "public": true,
+          "docs": [
+            "The sign joining the two products, 1 or -1, and 1 when the wave numbers agree."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "i32"
+          }
+        },
+        {
+          "name": "pitch",
+          "public": true,
+          "docs": [
+            "The pitch `sqrt(n^2 + m^2)`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
           }
         }
       ],
@@ -25087,7 +25210,7 @@
       "path": "life::Boundary::all",
       "name": "all",
       "module": "life",
-      "defined_at": "life/mod.rs:58",
+      "defined_at": "life/mod.rs:55",
       "docs": [
         "Returns every Boundary in canonical order."
       ],
@@ -25114,7 +25237,7 @@
       "path": "life::Boundary::name",
       "name": "name",
       "module": "life",
-      "defined_at": "life/mod.rs:58",
+      "defined_at": "life/mod.rs:55",
       "docs": [
         "Returns the Boundary's display name."
       ],
@@ -25142,7 +25265,7 @@
       "path": "life::Boundary::wrap",
       "name": "wrap",
       "module": "life",
-      "defined_at": "life/mod.rs:71",
+      "defined_at": "life/mod.rs:68",
       "docs": [
         "Returns whether the edges wrap."
       ],
@@ -25405,7 +25528,7 @@
       "path": "life::Fate::all",
       "name": "all",
       "module": "life",
-      "defined_at": "life/mod.rs:76",
+      "defined_at": "life/mod.rs:73",
       "docs": [
         "Returns every Fate in canonical order."
       ],
@@ -25432,7 +25555,7 @@
       "path": "life::Fate::name",
       "name": "name",
       "module": "life",
-      "defined_at": "life/mod.rs:76",
+      "defined_at": "life/mod.rs:73",
       "docs": [
         "Returns the Fate's display name."
       ],
@@ -26212,344 +26335,6 @@
       }
     },
     {
-      "path": "life::chladni::kernel",
-      "name": "kernel",
-      "module": "life::chladni",
-      "defined_at": "life/chladni.rs:118",
-      "docs": [
-        "Draws a mask centred in a size-square picture, the mask centre at size over two.",
-        "",
-        "# Errors",
-        "",
-        "Errs when the size is no power of two, the mask is not square, past the size or empty."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "mask",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "hand",
-              "name": "Tensor",
-              "dim": null
-            }
-          }
-        },
-        {
-          "name": "size",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "hand",
-          "name": "CellNd",
-          "dim": 2
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "life::chladni::next",
-      "name": "next",
-      "module": "life::chladni",
-      "defined_at": "life/chladni.rs:136",
-      "docs": [
-        "Advances a square grid one generation on a wrapped torus: a dead cell is born and a live one kept when its mask count over the mask budget lies in the closed birth or survive window, the count read by FFT convolution.",
-        "",
-        "# Errors",
-        "",
-        "Errs when the grid is not square with a power-of-two side, or the mask is not square, past the side or empty."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "cell",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "hand",
-              "name": "CellNd",
-              "dim": 2
-            }
-          }
-        },
-        {
-          "name": "mask",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "hand",
-              "name": "Tensor",
-              "dim": null
-            }
-          }
-        },
-        {
-          "name": "birth",
-          "ty": {
-            "t": "tuple",
-            "items": [
-              {
-                "t": "scalar",
-                "name": "f64"
-              },
-              {
-                "t": "scalar",
-                "name": "f64"
-              }
-            ]
-          }
-        },
-        {
-          "name": "survive",
-          "ty": {
-            "t": "tuple",
-            "items": [
-              {
-                "t": "scalar",
-                "name": "f64"
-              },
-              {
-                "t": "scalar",
-                "name": "f64"
-              }
-            ]
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "hand",
-          "name": "CellNd",
-          "dim": 2
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "life::chladni::profile",
-      "name": "profile",
-      "module": "life::chladni",
-      "defined_at": "life/chladni.rs:192",
-      "docs": [
-        "Reads the ring means of a square 0/1 grid's log spectrum, its peak ring past the centre and that ring's wavelength in cells.",
-        "",
-        "# Errors",
-        "",
-        "Errs when the grid is not square with a power-of-two side."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "cell",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "hand",
-              "name": "CellNd",
-              "dim": 2
-            }
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "plain",
-          "path": "life::chladni::Profile"
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "life::chladni::run",
-      "name": "run",
-      "module": "life::chladni",
-      "defined_at": "life/chladni.rs:154",
-      "docs": [
-        "Runs a seeded soup of the given density for the given steps on a size-square torus under the closed birth and survive windows.",
-        "",
-        "# Errors",
-        "",
-        "Errs when the size is no power of two, or the mask is not square, past the size or empty."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "mask",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "hand",
-              "name": "Tensor",
-              "dim": null
-            }
-          }
-        },
-        {
-          "name": "birth",
-          "ty": {
-            "t": "tuple",
-            "items": [
-              {
-                "t": "scalar",
-                "name": "f64"
-              },
-              {
-                "t": "scalar",
-                "name": "f64"
-              }
-            ]
-          }
-        },
-        {
-          "name": "survive",
-          "ty": {
-            "t": "tuple",
-            "items": [
-              {
-                "t": "scalar",
-                "name": "f64"
-              },
-              {
-                "t": "scalar",
-                "name": "f64"
-              }
-            ]
-          }
-        },
-        {
-          "name": "size",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "steps",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "density",
-          "ty": {
-            "t": "scalar",
-            "name": "f64"
-          }
-        },
-        {
-          "name": "seed",
-          "ty": {
-            "t": "scalar",
-            "name": "u64"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "hand",
-          "name": "CellNd",
-          "dim": 2
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "life::chladni::spectrum",
-      "name": "spectrum",
-      "module": "life::chladni",
-      "defined_at": "life/chladni.rs:179",
-      "docs": [
-        "Returns the centred log magnitude spectrum of a square 0/1 grid, scaled to at most one by its peak.",
-        "",
-        "# Errors",
-        "",
-        "Errs when the grid is not square with a power-of-two side."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "cell",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "hand",
-              "name": "CellNd",
-              "dim": 2
-            }
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "f64"
-          }
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
       "path": "life::churn",
       "name": "churn",
       "module": "life",
@@ -27312,7 +27097,7 @@
       "path": "life::moore",
       "name": "moore",
       "module": "life",
-      "defined_at": "life/mod.rs:54",
+      "defined_at": "life/mod.rs:51",
       "docs": [
         "Builds the 3 by 3 Moore mask, every site on but the center.",
         "",
@@ -43988,6 +43773,117 @@
       }
     },
     {
+      "path": "math::nodal::figures",
+      "name": "figures",
+      "module": "math::nodal",
+      "defined_at": "math/nodal.rs:348",
+      "docs": [
+        "Rings the plate cut as the design `math::two::create(code, number, level, 0, 2)`: its cells joined to their four neighbours, free at the rim and at every hole, the combinatorial Laplacian `D - A`. Returns the lowest `count` modes, `count` clamped to the cells and to 64, each in a canonical basis: eigenvalues within `1e-8` form a cluster, split by the design's transpose, left-right and up-down mirrors in that order and then by the diagonal `x + sqrt(2) y`, each figure projected exactly onto its mirror parities and signed so its first largest cell is positive. A figure's domains are the 4-connected runs of one strict sign, cells within `1e-9` of its peak left out; its bound is the 1-based index of the last member of its cluster, the last cluster closed before the cut.",
+        "",
+        "# Errors",
+        "",
+        "Errs on what `holds` refuses, or when the solver does not settle."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "code",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "number",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "count",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "math::nodal::Figures"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::nodal::holds",
+      "name": "holds",
+      "module": "math::nodal",
+      "defined_at": "math/nodal.rs:339",
+      "docs": [
+        "Answers whether a 2D base-2 design cuts a plate the figures can ring: one 4-connected piece of 16 to 10,000 cells on a side of at most 128. The cells are counted before the design is built.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the code is not a 2D base-2 code, 0 to 15."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "code",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "number",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "bool"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::press::Press::add",
       "name": "add",
       "module": "math::press",
@@ -50890,7 +50786,7 @@
       "path": "math::spectrum::clusters",
       "name": "clusters",
       "module": "math::spectrum",
-      "defined_at": "math/spectrum.rs:241",
+      "defined_at": "math/spectrum.rs:121",
       "docs": [
         "Groups eigenvalues into runs split by consecutive gaps above the tolerance, each run its mean and its size.",
         "",
@@ -50957,7 +50853,7 @@
       "path": "math::spectrum::laplacian",
       "name": "laplacian",
       "module": "math::spectrum",
-      "defined_at": "math/spectrum.rs:181",
+      "defined_at": "math/spectrum.rs:61",
       "docs": [
         "Builds the Laplacian of a network, the combinatorial `D - A` or the normalised `I - D^-1/2 A D^-1/2`.",
         "",
@@ -51017,7 +50913,7 @@
       "path": "math::spectrum::laplacian_spectrum",
       "name": "laplacian_spectrum",
       "module": "math::spectrum",
-      "defined_at": "math/spectrum.rs:224",
+      "defined_at": "math/spectrum.rs:104",
       "docs": [
         "Returns the ascending Laplacian spectrum of a network, combinatorial or normalised.",
         "",
@@ -51080,7 +50976,7 @@
       "path": "math::spectrum::multiplicity",
       "name": "multiplicity",
       "module": "math::spectrum",
-      "defined_at": "math/spectrum.rs:260",
+      "defined_at": "math/spectrum.rs:140",
       "docs": [
         "Counts the eigenvalues within the tolerance of a value."
       ],
@@ -51129,7 +51025,7 @@
       "path": "math::spectrum::spectral_exponent",
       "name": "spectral_exponent",
       "module": "math::spectrum",
-      "defined_at": "math/spectrum.rs:327",
+      "defined_at": "math/spectrum.rs:207",
       "docs": [
         "Reads the spectral exponent: twice the log-log slope of the integrated density of states over its low window."
       ],
@@ -51174,7 +51070,7 @@
       "path": "math::spectrum::spectral_fit",
       "name": "spectral_fit",
       "module": "math::spectrum",
-      "defined_at": "math/spectrum.rs:300",
+      "defined_at": "math/spectrum.rs:180",
       "docs": [
         "Fits the low window of the integrated density of states in log-log: the intercept, the slope and the fitted count.",
         "",
@@ -51235,7 +51131,7 @@
       "path": "math::spectrum::spectral_points",
       "name": "spectral_points",
       "module": "math::spectrum",
-      "defined_at": "math/spectrum.rs:277",
+      "defined_at": "math/spectrum.rs:157",
       "docs": [
         "Builds the integrated density of states as points, each an eigenvalue and its rank fraction.",
         "",
@@ -51291,7 +51187,7 @@
       "path": "math::spectrum::symmetric_eigenvalues",
       "name": "symmetric_eigenvalues",
       "module": "math::spectrum",
-      "defined_at": "math/spectrum.rs:147",
+      "defined_at": "math/spectrum.rs:27",
       "docs": [
         "Returns the eigenvalues of a dense real symmetric matrix in ascending order.",
         "",
@@ -60377,6 +60273,245 @@
         "item": {
           "t": "scalar",
           "name": "i64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::chladni::ladder",
+      "name": "ladder",
+      "module": "num::chladni",
+      "defined_at": "num/chladni.rs:81",
+      "docs": [
+        "Lists every distinct plate figure with `0 <= n <= m <= cap` but `(0, 0)`, both signs when `n < m` and the sign 1 when `n == m`, by pitch, then `n`, then the sign 1 before -1.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the cap is over 64."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cap",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "plain",
+            "path": "num::chladni::Rung"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::chladni::lines",
+      "name": "lines",
+      "module": "num::chladni",
+      "defined_at": "num/chladni.rs:363",
+      "docs": [
+        "Traces the zero set of a plate raster by marching squares on the lattice of cell centres, its holes and its rim ghosted to the mean of their plate neighbours so the lines run to every free edge: segments `x0, y0, x1, y1` in `[0, 1]` back to back, pieces inside a NaN cell dropped, a saddle joined by the mean of its four corners.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the side is 0, or the field is not the side squared or holds an infinity."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "field",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        },
+        {
+          "name": "side",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::chladni::plate",
+      "name": "plate",
+      "module": "num::chladni",
+      "defined_at": "num/chladni.rs:38",
+      "docs": [
+        "Samples the Chladni figure `cos(n pi x) cos(m pi y) + sign cos(m pi x) cos(n pi y)` of a free square plate at the cell centres `(i + 1/2) / size` of a row-major `size` by `size` raster, `x` along a row, scaled so the largest magnitude is 1, or all zero when no centre rises past `1e-12`; when `n == m` it is the single product for either sign.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the sign is not 1 or -1, the size is 0 or over 1024, or a wave number is over 64."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "n",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "m",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "sign",
+          "ty": {
+            "t": "scalar",
+            "name": "i32"
+          }
+        },
+        {
+          "name": "size",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::chladni::shake",
+      "name": "shake",
+      "module": "num::chladni",
+      "defined_at": "num/chladni.rs:261",
+      "docs": [
+        "Shakes sand on a plate raster: grains are `x, y` pairs in `[0, 1)` over the row-major `side` by `side` field, a NaN pair an empty slot that stays NaN, a NaN cell a hole. Each step moves a grain a random length `kick |f| + floor` in a random direction plus a drift `-0.3 f grad f / max|grad f|^2`, with `kick = 0.6 / max|grad f|` read off the raster by finite differences and a fixed kick on a flat field, the field read bilinearly with its holes and its rim ghosted to the mean of their plate neighbours. The rim reflects; a grain on a hole falls through and becomes NaN. Step `from + i` of grain `j` draws from a counter keyed by `(seed, from + i, j)`, so six steps are three and three.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the side is 0, the field is not the side squared or holds an infinity, the grains hold an odd count or over 400,000 pairs, or the steps are over 64."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "field",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        },
+        {
+          "name": "side",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "grains",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "f32"
+            }
+          }
+        },
+        {
+          "name": "from",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "steps",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "seed",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "f32"
+          }
         }
       },
       "dims": [],

@@ -20,7 +20,7 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p roulette-reaches`
+- `cargo run --release --manifest-path research/spirograph/lab/rs/roulette-reaches/Cargo.toml`
 - A few minutes; prints only, writes nothing, holds a few megabytes.
 
 ## WITNESSES

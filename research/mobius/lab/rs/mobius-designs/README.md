@@ -10,9 +10,9 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release -p mobius-designs`
+- `cargo run --release --manifest-path research/mobius/lab/rs/mobius-designs/Cargo.toml`
 - About five minutes on six threads; prints only, writes nothing.
-- `cargo test -p mobius-designs` pins `mu` against the sieve to 50000, the Miller-Rabin witnesses against six strong pseudoprimes, the two meter methods against each other, the scaled-family identities at depth 8, the counting closed forms, the ascending enumeration order, the running maximum against a prefix recount, and the Mertens anchors `-1, 1, 2, -23, -48` at `10^1..10^5`.
+- `cargo test --manifest-path research/mobius/lab/rs/mobius-designs/Cargo.toml` pins `mu` against the sieve to 50000, the Miller-Rabin witnesses against six strong pseudoprimes, the two meter methods against each other, the scaled-family identities at depth 8, the counting closed forms, the ascending enumeration order, the running maximum against a prefix recount, and the Mertens anchors `-1, 1, 2, -23, -48` at `10^1..10^5`.
 
 ## WITNESSES
 

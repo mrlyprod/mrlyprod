@@ -15,3 +15,9 @@ The open Erdos problems that are questions about digit designs, ranked by the od
 - [lab/rs/mixed-powers/](lab/rs/mixed-powers/): Computes, for a finite base set `D` of integers `>= 3` and a level `k >= 1`, whether every large integer is a sum of distinct terms of the multiset `M_k(D)` of powers `d^j`, `d` in `D`, `j >= k`, one copy per base
 - [figures/research-erdos.ts](figures/research-erdos.ts): research-erdos
 - [figures/research-erdos.json](figures/research-erdos.json): research-erdos census
+
+## Lost
+
+- The two-part route of Fan and of Bergelson and Simmons below `sum 1/(d-1) = 2`: no two disjoint infinite parts of the powers are both syndetic there (The two-part route is dead below two).
+- Linear surplus with `H_1 = {0}` as a completeness criterion: `2 F_m - 1` is incomplete; the Refuted row in [claims/erdos.md](claims/erdos.md).
+- The chain-excluded lemma and its windowed repair: explicit multisets with surplus, `H_1 = {0}` and no chain are incomplete, so no window criterion decides problem 124 (The windowed lemma).

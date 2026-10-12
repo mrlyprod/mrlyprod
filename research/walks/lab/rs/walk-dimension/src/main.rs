@@ -353,10 +353,10 @@ fn main() {
         spectral.iter().chain(&walker).all(|dw| *dw >= 2.0 - 0.01)
     );
     let here = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let desk = here.ancestors().nth(6).expect("the desk");
-    let folder = desk
+    let root = here.ancestors().nth(6).expect("the root");
+    let folder = root
         .join("data")
-        .join(here.strip_prefix(desk).expect("under the desk"));
+        .join(here.strip_prefix(root).expect("under the root"));
     std::fs::create_dir_all(&folder).expect("the data folder");
     let figure = folder.join("walks-fig.png");
     figure::write(
@@ -369,6 +369,6 @@ fn main() {
     );
     println!(
         "wrote {}",
-        figure.strip_prefix(desk).expect("under the desk").display()
+        figure.strip_prefix(root).expect("under the root").display()
     );
 }

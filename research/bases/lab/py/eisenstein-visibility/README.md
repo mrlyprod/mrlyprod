@@ -25,5 +25,5 @@ About 3 s and 0.1 s. Domain is the source domain: prec 60, 200000 Dirichlet pair
 ## NOTE
 
 - bases.md:76 states a bound, not a value: the printed last convergent denominator `1805284405980` is what clears `10^11`.
-- bases.md:173 claims byte-for-byte redrawing; the regenerated figure is not: on 2026-10-04 it differed from the pinned one by at most 12 levels on 1.1 percent of its pixels.
+- bases.md:173 claims byte-for-byte redrawing; the regenerated figure is not: it differs from the pinned one by at most 12 levels on 1.1 percent of its pixels.
 - The recorded transcript labels the reflection residual `~1e-40` where the value is `-1.1035169449471404E-42`; bases.md:174 records that already, so the label is dropped here and the identity printed plainly.

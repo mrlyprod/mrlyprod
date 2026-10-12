@@ -1418,66 +1418,6 @@ pub fn life_animate(seed: JsValue, config: &life_Config) -> Result<life_Life, Js
     Ok(life_Life { inner: value })
 }
 
-/// Draws a mask centred in a size-square picture, the mask centre at size over two.
-#[wasm_bindgen]
-pub fn life_chladni_kernel(mask: JsValue, size: usize) -> Result<JsValue, JsValue> {
-    let mask = hand::tensor_from_js(&mask)?;
-    let value = mrlyrs::life::chladni::kernel(&mask, size).map_err(hand::throw)?;
-    hand::cell2d_to_js(&value)
-}
-
-/// Advances a square grid one generation on a wrapped torus: a dead cell is born and a live one kept when its mask count over the mask budget lies in the closed birth or survive window, the count read by FFT convolution.
-#[wasm_bindgen]
-pub fn life_chladni_next(
-    cell: JsValue,
-    mask: JsValue,
-    birth: JsValue,
-    survive: JsValue,
-) -> Result<JsValue, JsValue> {
-    let cell = hand::cell2d_from_js(&cell)?;
-    let mask = hand::tensor_from_js(&mask)?;
-    let birth = hand::from_js::<(f64, f64)>(&birth)?;
-    let survive = hand::from_js::<(f64, f64)>(&survive)?;
-    let value = mrlyrs::life::chladni::next(&cell, &mask, birth, survive).map_err(hand::throw)?;
-    hand::cell2d_to_js(&value)
-}
-
-/// Reads the ring means of a square 0/1 grid's log spectrum, its peak ring past the centre and that ring's wavelength in cells.
-#[wasm_bindgen]
-pub fn life_chladni_profile(cell: JsValue) -> Result<JsValue, JsValue> {
-    let cell = hand::cell2d_from_js(&cell)?;
-    let value = mrlyrs::life::chladni::profile(&cell).map_err(hand::throw)?;
-    hand::to_js(&value)
-}
-
-/// Runs a seeded soup of the given density for the given steps on a size-square torus under the closed birth and survive windows.
-#[wasm_bindgen]
-pub fn life_chladni_run(
-    mask: JsValue,
-    birth: JsValue,
-    survive: JsValue,
-    size: usize,
-    steps: usize,
-    density: f64,
-    seed: JsValue,
-) -> Result<JsValue, JsValue> {
-    let mask = hand::tensor_from_js(&mask)?;
-    let birth = hand::from_js::<(f64, f64)>(&birth)?;
-    let survive = hand::from_js::<(f64, f64)>(&survive)?;
-    let seed = hand::u64_from_js(&seed)?;
-    let value = mrlyrs::life::chladni::run(&mask, birth, survive, size, steps, density, seed)
-        .map_err(hand::throw)?;
-    hand::cell2d_to_js(&value)
-}
-
-/// Returns the centred log magnitude spectrum of a square 0/1 grid, scaled to at most one by its peak.
-#[wasm_bindgen]
-pub fn life_chladni_spectrum(cell: JsValue) -> Result<Vec<f64>, JsValue> {
-    let cell = hand::cell2d_from_js(&cell)?;
-    let value = mrlyrs::life::chladni::spectrum(&cell).map_err(hand::throw)?;
-    Ok(value)
-}
-
 /// Returns the mean fraction of sites changed between consecutive grids.
 #[wasm_bindgen]
 pub fn life_churn(grids: JsValue) -> Result<f64, JsValue> {
@@ -4366,6 +4306,27 @@ pub fn math_name_words(dim: usize, base: usize) -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
+/// Rings the plate cut as the design `math::two::create(code, number, level, 0, 2)`: its cells joined to their four neighbours, free at the rim and at every hole, the combinatorial Laplacian `D - A`. Returns the lowest `count` modes, `count` clamped to the cells and to 64, each in a canonical basis: eigenvalues within `1e-8` form a cluster, split by the design's transpose, left-right and up-down mirrors in that order and then by the diagonal `x + sqrt(2) y`, each figure projected exactly onto its mirror parities and signed so its first largest cell is positive. A figure's domains are the 4-connected runs of one strict sign, cells within `1e-9` of its peak left out; its bound is the 1-based index of the last member of its cluster, the last cluster closed before the cut.
+#[wasm_bindgen]
+pub fn math_nodal_figures(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    count: usize,
+) -> Result<JsValue, JsValue> {
+    let code = hand::u64_from_js(&code)?;
+    let value = mrlyrs::math::nodal::figures(code, number, level, count).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
+/// Answers whether a 2D base-2 design cuts a plate the figures can ring: one 4-connected piece of 16 to 10,000 cells on a side of at most 128. The cells are counted before the design is built.
+#[wasm_bindgen]
+pub fn math_nodal_holds(code: JsValue, number: usize, level: usize) -> Result<bool, JsValue> {
+    let code = hand::u64_from_js(&code)?;
+    let value = mrlyrs::math::nodal::holds(code, number, level).map_err(hand::throw)?;
+    Ok(value)
+}
+
 /// Returns the number of designs of the dimension and base that contain the number.
 #[wasm_bindgen]
 pub fn math_press_containing(
@@ -6969,6 +6930,44 @@ pub fn num_boolean_sac(code: JsValue, n: usize) -> Result<f64, JsValue> {
 pub fn num_boolean_walsh_spectrum(code: JsValue, n: usize) -> Result<Vec<i64>, JsValue> {
     let code = hand::u128_from_js(&code)?;
     let value = mrlyrs::num::boolean::walsh_spectrum(code, n);
+    Ok(value)
+}
+
+/// Lists every distinct plate figure with `0 <= n <= m <= cap` but `(0, 0)`, both signs when `n < m` and the sign 1 when `n == m`, by pitch, then `n`, then the sign 1 before -1.
+#[wasm_bindgen]
+pub fn num_chladni_ladder(cap: usize) -> Result<JsValue, JsValue> {
+    let value = mrlyrs::num::chladni::ladder(cap).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
+/// Traces the zero set of a plate raster by marching squares on the lattice of cell centres, its holes and its rim ghosted to the mean of their plate neighbours so the lines run to every free edge: segments `x0, y0, x1, y1` in `[0, 1]` back to back, pieces inside a NaN cell dropped, a saddle joined by the mean of its four corners.
+#[wasm_bindgen]
+pub fn num_chladni_lines(field: &[f64], side: usize) -> Result<Vec<f64>, JsValue> {
+    let value = mrlyrs::num::chladni::lines(field, side).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Samples the Chladni figure `cos(n pi x) cos(m pi y) + sign cos(m pi x) cos(n pi y)` of a free square plate at the cell centres `(i + 1/2) / size` of a row-major `size` by `size` raster, `x` along a row, scaled so the largest magnitude is 1, or all zero when no centre rises past `1e-12`; when `n == m` it is the single product for either sign.
+#[wasm_bindgen]
+pub fn num_chladni_plate(n: usize, m: usize, sign: i32, size: usize) -> Result<Vec<f64>, JsValue> {
+    let value = mrlyrs::num::chladni::plate(n, m, sign, size).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Shakes sand on a plate raster: grains are `x, y` pairs in `[0, 1)` over the row-major `side` by `side` field, a NaN pair an empty slot that stays NaN, a NaN cell a hole. Each step moves a grain a random length `kick |f| + floor` in a random direction plus a drift `-0.3 f grad f / max|grad f|^2`, with `kick = 0.6 / max|grad f|` read off the raster by finite differences and a fixed kick on a flat field, the field read bilinearly with its holes and its rim ghosted to the mean of their plate neighbours. The rim reflects; a grain on a hole falls through and becomes NaN. Step `from + i` of grain `j` draws from a counter keyed by `(seed, from + i, j)`, so six steps are three and three.
+#[wasm_bindgen]
+pub fn num_chladni_shake(
+    field: &[f64],
+    side: usize,
+    grains: &[f32],
+    from: JsValue,
+    steps: usize,
+    seed: JsValue,
+) -> Result<Vec<f32>, JsValue> {
+    let from = hand::u64_from_js(&from)?;
+    let seed = hand::u64_from_js(&seed)?;
+    let value =
+        mrlyrs::num::chladni::shake(field, side, grains, from, steps, seed).map_err(hand::throw)?;
     Ok(value)
 }
 

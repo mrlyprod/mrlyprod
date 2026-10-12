@@ -263,6 +263,44 @@ pub fn boolean_walsh_spectrum(code: JsValue, n: usize) -> Result<Vec<i64>, JsVal
     Ok(value)
 }
 
+/// Lists every distinct plate figure with `0 <= n <= m <= cap` but `(0, 0)`, both signs when `n < m` and the sign 1 when `n == m`, by pitch, then `n`, then the sign 1 before -1.
+#[wasm_bindgen]
+pub fn chladni_ladder(cap: usize) -> Result<JsValue, JsValue> {
+    let value = mrlyrs::num::chladni::ladder(cap).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
+/// Traces the zero set of a plate raster by marching squares on the lattice of cell centres, its holes and its rim ghosted to the mean of their plate neighbours so the lines run to every free edge: segments `x0, y0, x1, y1` in `[0, 1]` back to back, pieces inside a NaN cell dropped, a saddle joined by the mean of its four corners.
+#[wasm_bindgen]
+pub fn chladni_lines(field: &[f64], side: usize) -> Result<Vec<f64>, JsValue> {
+    let value = mrlyrs::num::chladni::lines(field, side).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Samples the Chladni figure `cos(n pi x) cos(m pi y) + sign cos(m pi x) cos(n pi y)` of a free square plate at the cell centres `(i + 1/2) / size` of a row-major `size` by `size` raster, `x` along a row, scaled so the largest magnitude is 1, or all zero when no centre rises past `1e-12`; when `n == m` it is the single product for either sign.
+#[wasm_bindgen]
+pub fn chladni_plate(n: usize, m: usize, sign: i32, size: usize) -> Result<Vec<f64>, JsValue> {
+    let value = mrlyrs::num::chladni::plate(n, m, sign, size).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Shakes sand on a plate raster: grains are `x, y` pairs in `[0, 1)` over the row-major `side` by `side` field, a NaN pair an empty slot that stays NaN, a NaN cell a hole. Each step moves a grain a random length `kick |f| + floor` in a random direction plus a drift `-0.3 f grad f / max|grad f|^2`, with `kick = 0.6 / max|grad f|` read off the raster by finite differences and a fixed kick on a flat field, the field read bilinearly with its holes and its rim ghosted to the mean of their plate neighbours. The rim reflects; a grain on a hole falls through and becomes NaN. Step `from + i` of grain `j` draws from a counter keyed by `(seed, from + i, j)`, so six steps are three and three.
+#[wasm_bindgen]
+pub fn chladni_shake(
+    field: &[f64],
+    side: usize,
+    grains: &[f32],
+    from: JsValue,
+    steps: usize,
+    seed: JsValue,
+) -> Result<Vec<f32>, JsValue> {
+    let from = hand::u64_from_js(&from)?;
+    let seed = hand::u64_from_js(&seed)?;
+    let value =
+        mrlyrs::num::chladni::shake(field, side, grains, from, steps, seed).map_err(hand::throw)?;
+    Ok(value)
+}
+
 /// Returns the sum of the proper divisors of the number, its divisor sum less itself, zero for zero and for one.
 #[wasm_bindgen]
 pub fn factor_aliquot(number: usize) -> Result<usize, JsValue> {

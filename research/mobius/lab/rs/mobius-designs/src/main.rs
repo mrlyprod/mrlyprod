@@ -155,7 +155,7 @@ fn crosscheck(mu: &[i8], primes: &[u64]) {
 // MAIN
 
 fn main() {
-    println!("mobius-designs generator: CARGO_BUILD_JOBS=4 cargo run --release -p mobius-designs");
+    println!("mobius-designs generator: cargo run --release --manifest-path research/mobius/lab/rs/mobius-designs/Cargo.toml");
     let primes = small_primes(1024);
     let mu = mu_sieve(SIEVE_LIMIT);
     let (ctrl, kem_m, kem_a, kem_x) = controls_and_kempner(&mu);

@@ -1316,27 +1316,6 @@ export declare namespace life {
         /** Reads a canonical name off the front of the text, returning the tail left over. */
         static read(text: string): [life.Source, string] | undefined;
     }
-    export namespace chladni {
-        /** Draws a mask centred in a size-square picture, the mask centre at size over two. */
-        export function kernel(mask: Tensor, size: number): Cell;
-        /** Advances a square grid one generation on a wrapped torus: a dead cell is born and a live one kept when its mask count over the mask budget lies in the closed birth or survive window, the count read by FFT convolution. */
-        export function next(cell: Cell, mask: Tensor, birth: [number, number], survive: [number, number]): Cell;
-        /** Reads the ring means of a square 0/1 grid's log spectrum, its peak ring past the centre and that ring's wavelength in cells. */
-        export function profile(cell: Cell): life.chladni.Profile;
-        /** Runs a seeded soup of the given density for the given steps on a size-square torus under the closed birth and survive windows. */
-        export function run(mask: Tensor, birth: [number, number], survive: [number, number], size: number, steps: number, density: number, seed: number | bigint): Cell;
-        /** Returns the centred log magnitude spectrum of a square 0/1 grid, scaled to at most one by its peak. */
-        export function spectrum(cell: Cell): Float64Array;
-        /** The radial reading of a field's log spectrum: the ring means, the peak ring past the centre and its wavelength in cells. */
-        export interface Profile {
-            /** The mean of every ring of integer radius, ring 0 through size over two. */
-            profile: number[];
-            /** The ring past the centre where the profile peaks, a tie broken at the smaller ring. */
-            peak_ring: number;
-            /** The size over the peak ring, or zero when there is no ring past the centre. */
-            wavelength: number;
-        }
-    }
     export namespace elementary {
         /** Returns the bit a rule sends the neighbourhood to, reading bit `4l + 2c + r` in Wolfram's numbering off the low bit of each cell. */
         export function output(rule: number, l: number, c: number, r: number): number;
@@ -2707,6 +2686,25 @@ export declare namespace math {
             to_url(): string;
         }
     }
+    export namespace nodal {
+        /** Rings the plate cut as the design `math::two::create(code, number, level, 0, 2)`: its cells joined to their four neighbours, free at the rim and at every hole, the combinatorial Laplacian `D - A`. Returns the lowest `count` modes, `count` clamped to the cells and to 64, each in a canonical basis: eigenvalues within `1e-8` form a cluster, split by the design's transpose, left-right and up-down mirrors in that order and then by the diagonal `x + sqrt(2) y`, each figure projected exactly onto its mirror parities and signed so its first largest cell is positive. A figure's domains are the 4-connected runs of one strict sign, cells within `1e-9` of its peak left out; its bound is the 1-based index of the last member of its cluster, the last cluster closed before the cut. */
+        export function figures(code: number | bigint, number: number, level: number, count: number): math.nodal.Figures;
+        /** Answers whether a 2D base-2 design cuts a plate the figures can ring: one 4-connected piece of 16 to 10,000 cells on a side of at most 128. The cells are counted before the design is built. */
+        export function holds(code: number | bigint, number: number, level: number): boolean;
+        /** The Chladni figures of a design: the lowest modes of the plate cut as the design, each with its nodal domains, its Courant bound and its raster. */
+        export interface Figures {
+            /** The side of the design's square raster. */
+            side: number;
+            /** The lowest eigenvalues of the plate's Laplacian `D - A`, ascending. */
+            values: number[];
+            /** The strong nodal domain count of each figure. */
+            domains: number[];
+            /** The Courant bound of each figure: the 1-based index of the last member of its eigenvalue's cluster. */
+            bound: number[];
+            /** The figures as row-major `side * side` rasters back to back, NaN off the plate, each scaled so its largest magnitude is 1. */
+            fields: number[];
+        }
+    }
     export namespace press {
         /** Returns the number of designs of the dimension and base that contain the number. */
         export function containing(number: string | number | bigint, dimension: number, base: number): string;
@@ -4010,6 +4008,27 @@ export declare namespace num {
         export function sac(code: string | number | bigint, n: number): number;
         /** Returns the Walsh spectrum of an n-input boolean function packed as a truth-table code. */
         export function walsh_spectrum(code: string | number | bigint, n: number): BigInt64Array;
+    }
+    export namespace chladni {
+        /** Lists every distinct plate figure with `0 <= n <= m <= cap` but `(0, 0)`, both signs when `n < m` and the sign 1 when `n == m`, by pitch, then `n`, then the sign 1 before -1. */
+        export function ladder(cap: number): num.chladni.Rung[];
+        /** Traces the zero set of a plate raster by marching squares on the lattice of cell centres, its holes and its rim ghosted to the mean of their plate neighbours so the lines run to every free edge: segments `x0, y0, x1, y1` in `[0, 1]` back to back, pieces inside a NaN cell dropped, a saddle joined by the mean of its four corners. */
+        export function lines(field: ArrayLike<number>, side: number): Float64Array;
+        /** Samples the Chladni figure `cos(n pi x) cos(m pi y) + sign cos(m pi x) cos(n pi y)` of a free square plate at the cell centres `(i + 1/2) / size` of a row-major `size` by `size` raster, `x` along a row, scaled so the largest magnitude is 1, or all zero when no centre rises past `1e-12`; when `n == m` it is the single product for either sign. */
+        export function plate(n: number, m: number, sign: number, size: number): Float64Array;
+        /** Shakes sand on a plate raster: grains are `x, y` pairs in `[0, 1)` over the row-major `side` by `side` field, a NaN pair an empty slot that stays NaN, a NaN cell a hole. Each step moves a grain a random length `kick |f| + floor` in a random direction plus a drift `-0.3 f grad f / max|grad f|^2`, with `kick = 0.6 / max|grad f|` read off the raster by finite differences and a fixed kick on a flat field, the field read bilinearly with its holes and its rim ghosted to the mean of their plate neighbours. The rim reflects; a grain on a hole falls through and becomes NaN. Step `from + i` of grain `j` draws from a counter keyed by `(seed, from + i, j)`, so six steps are three and three. */
+        export function shake(field: ArrayLike<number>, side: number, grains: ArrayLike<number>, from: number | bigint, steps: number, seed: number | bigint): Float32Array;
+        /** One figure of the square plate: its two wave numbers, the sign that joins the two products and its pitch. */
+        export interface Rung {
+            /** The smaller wave number. */
+            n: number;
+            /** The larger wave number. */
+            m: number;
+            /** The sign joining the two products, 1 or -1, and 1 when the wave numbers agree. */
+            sign: number;
+            /** The pitch `sqrt(n^2 + m^2)`. */
+            pitch: number;
+        }
     }
     export namespace factor {
         /** Returns the sum of the proper divisors of the number, its divisor sum less itself, zero for zero and for one. */

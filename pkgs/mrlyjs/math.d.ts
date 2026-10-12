@@ -1446,6 +1446,25 @@ export declare namespace name {
         to_url(): string;
     }
 }
+export declare namespace nodal {
+    /** Rings the plate cut as the design `math::two::create(code, number, level, 0, 2)`: its cells joined to their four neighbours, free at the rim and at every hole, the combinatorial Laplacian `D - A`. Returns the lowest `count` modes, `count` clamped to the cells and to 64, each in a canonical basis: eigenvalues within `1e-8` form a cluster, split by the design's transpose, left-right and up-down mirrors in that order and then by the diagonal `x + sqrt(2) y`, each figure projected exactly onto its mirror parities and signed so its first largest cell is positive. A figure's domains are the 4-connected runs of one strict sign, cells within `1e-9` of its peak left out; its bound is the 1-based index of the last member of its cluster, the last cluster closed before the cut. */
+    export function figures(code: number | bigint, number: number, level: number, count: number): nodal.Figures;
+    /** Answers whether a 2D base-2 design cuts a plate the figures can ring: one 4-connected piece of 16 to 10,000 cells on a side of at most 128. The cells are counted before the design is built. */
+    export function holds(code: number | bigint, number: number, level: number): boolean;
+    /** The Chladni figures of a design: the lowest modes of the plate cut as the design, each with its nodal domains, its Courant bound and its raster. */
+    export interface Figures {
+        /** The side of the design's square raster. */
+        side: number;
+        /** The lowest eigenvalues of the plate's Laplacian `D - A`, ascending. */
+        values: number[];
+        /** The strong nodal domain count of each figure. */
+        domains: number[];
+        /** The Courant bound of each figure: the 1-based index of the last member of its eigenvalue's cluster. */
+        bound: number[];
+        /** The figures as row-major `side * side` rasters back to back, NaN off the plate, each scaled so its largest magnitude is 1. */
+        fields: number[];
+    }
+}
 export declare namespace num {
     export namespace gauss {
         /** The two rings of whole numbers in the plane, each a pair (a, b) on its own lattice. */

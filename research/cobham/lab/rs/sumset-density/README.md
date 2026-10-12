@@ -20,16 +20,16 @@
 ## RUN
 
 ```
-CARGO_BUILD_JOBS=4 cargo run --release -p sumset-density -- density 17
-CARGO_BUILD_JOBS=4 cargo run --release -p sumset-density -- density 22
-CARGO_BUILD_JOBS=4 cargo run --release -p sumset-density -- energy 22
-CARGO_BUILD_JOBS=4 cargo run --release -p sumset-density -- ladder 29 energies.tsv
-CARGO_BUILD_JOBS=4 cargo run --release -p sumset-density -- constants
-CARGO_BUILD_JOBS=4 cargo run --release -p sumset-density -- phases 17 4096
-CARGO_BUILD_JOBS=4 cargo run --release -p sumset-density -- control
+cargo run --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.toml -- density 17
+cargo run --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.toml -- density 22
+cargo run --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.toml -- energy 22
+cargo run --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.toml -- ladder 29 energies.tsv
+cargo run --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.toml -- constants
+cargo run --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.toml -- phases 17 4096
+cargo run --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.toml -- control
 ```
 
-- `CARGO_BUILD_JOBS=4 cargo test --release -p sumset-density`, `11` tests, `1.8` s after the build.
+- `cargo test --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.toml`, `11` tests, `1.8` s after the build.
 
 ## READS
 

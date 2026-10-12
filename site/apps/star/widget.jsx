@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { Bar } from '../../lib/frame.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { fixed, roll, useLatest, useMath, useStatus, useTouch } from '../moire/widget.jsx';
+import { useTouch } from '../../lib/touch.js';
+import { fixed, roll, useLatest, useMath, useStatus } from '../moire/widget.jsx';
 import { LEAST, MOST } from './engine.js';
 import { make } from './scene.js';
 

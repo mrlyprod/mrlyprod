@@ -270,6 +270,9 @@ mod tests {
         assert!(page.contains(
             "| 8a9e4ce8 | carpet | `sequence_dim=2_code=7_measure=fills_axis=side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225`"
         ));
-        assert_eq!(page, disk, "run `cargo run -p ledger`");
+        assert_eq!(
+            page, disk,
+            "run `cargo run --manifest-path research/shared/ledger/Cargo.toml`"
+        );
     }
 }

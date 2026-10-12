@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as life from '../../../pkgs/mrlyjs/life.js';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { rng } from '../../lib/scene.js';
-import { BOARD, LINE, codeOf, counted, destiny, drawn, fate, fitLevel, hash, lattice, levelOf, maskName, maskOf, parse, population, ruleOf, sources, sow, spell, told, windowsOf } from './engine.js';
+import { BOARD, LINE, codeOf, destiny, drawn, fate, fitLevel, hash, lattice, levelOf, maskName, maskOf, parse, population, ruleOf, sources, sow, spell, told } from './engine.js';
 
 life.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/life/mrlyjs_life_bg.wasm', import.meta.url)).arrayBuffer() });
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -26,16 +26,6 @@ test('counts spell as digits under ten and as runs above', () => {
 test('a rule cuts its counts to the mask budget and names itself', () => {
   expect(ruleOf(life, { born: '3', stay: '23' }, 8)).toEqual({ birth: [3], survive: [2, 3], name: 'B3/S23' });
   expect(ruleOf(life, { born: '3 9', stay: '-' }, 8)).toEqual({ birth: [3], survive: [], name: 'B3/S-' });
-});
-
-test('a chladni window reads fractions as edges and counts as shares of the mask, and an empty side never fires', () => {
-  expect(windowsOf(life, { born: '0.283-0.375', stay: '.25 .5' }, 512)).toEqual({ birth: [0.283, 0.375], survive: [0.25, 0.5], name: 'B0.283-0.375/S0.25-0.5' });
-  expect(windowsOf(life, { born: '3', stay: '23' }, 8)).toEqual({ birth: [0.375, 0.375], survive: [0.25, 0.375], name: 'B3/S23' });
-  expect(windowsOf(life, { born: '-', stay: '.' }, 8)).toEqual({ birth: [1, 0], survive: [1, 0], name: 'B-/S-' });
-});
-
-test('a window reads back as the whole counts of the mask it lets through', () => {
-  expect([counted([0.283, 0.375], 120), counted([0.375, 0.375], 8), counted([1, 0], 8), counted([0.4, 0.45], 8)]).toEqual(['34 to 45', '3', 'none', 'none']);
 });
 
 test('a side named after a sequence draws its counts inside the budget without zero and one, and spells the name', () => {

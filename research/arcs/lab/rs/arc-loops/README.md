@@ -9,7 +9,7 @@
 
 ## RUN
 
-- `cargo run --release -p arc-loops -- <verb>`, verb one of `check`, `two`, `carpet`, `gains`, `lengths`, `bases`, `census`, or `all` for every one; each prints only and writes nothing.
+- `cargo run --release --manifest-path research/arcs/lab/rs/arc-loops/Cargo.toml -- <verb>`, verb one of `check`, `two`, `carpet`, `gains`, `lengths`, `bases`, `census`, or `all` for every one; each prints only and writes nothing.
 - `check`: under one second. Every code at base 2 to level 7 and at base 3 to level 4, the three counts and the strand count against each other, the three images of each code under the half turn and the two diagonal reflections, the glued void block against its formula, and the parity route against the full code.
 - `two`: under one second. The base 2 lemmas of codes 7, 11 and 9 against the glued matching at levels 1 to 14, and their gains.
 - `carpet`: about one second. Union-find and cycle rank to level 7, the block recursion to level 15, the law, the matching lemma at levels 0 to 10 and the gain split `10 |P_n| + 3n`.
@@ -18,7 +18,7 @@
 - `bases`: about fifty seconds. The parity codes and the one-cell deletions at base 4 to level 12 and at base 5 to level 10, with the distinct nonzero sequences they give and their OEIS hits.
 - `census`: about two minutes and 1.1 GB. Every code at base 2 to level 24 and every class at base 3 to level 14, the classes without a fit rerun to level 17.
 
-- `cargo test -p arc-loops`: three tests, the three counts at base 2 to level 5, the carpet law to level 8, and the glued void block.
+- `cargo test --manifest-path research/arcs/lab/rs/arc-loops/Cargo.toml`: three tests, the three counts at base 2 to level 5, the carpet law to level 8, and the glued void block.
 
 ## WITNESSES
 

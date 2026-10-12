@@ -9,7 +9,7 @@
 - A scene app adds `scene.js` (`SPEC`, `PAGE`, `make`; no React, no DOM beyond its canvas), `widget.jsx` (the React around it) and `index.jsx`.
 - `index.jsx` is one line, `export const { mount, unmount } = page(Widget, defaults, PAGE)`; `defaults` holds `seed` and any url key outside the spec.
 - `unit.js` loads the wasm, one block per `mrlyjs/<unit>`, and exports the units and `ready`; no scene, engine or widget imports a unit, a figure names its own, and a test calls `initSync` itself.
-- A family shares its first app's code by relative path: life (chladni, wolfram), two (crop), three (slices, cuts), moire (tourbillon, star), spin (radial), sequences (plot, tour).
+- A family shares its first app's code by relative path: life (wolfram), two (crop), three (slices, cuts), moire (tourbillon, star), spin (radial), sequences (plot, tour).
 - `designs/pick.jsx` is the shared design picker (`Pick`, `Picker`, `Thumbs`).
 - A `deep: true` app (`git`, `research`) owns every path under its route and is no scene page.
 - An id is typed nowhere but its folder: the chrome and the lock name no saver (`apps.test.js`).
@@ -95,7 +95,7 @@
 - `arcs`: quarter arcs in every cell join into strands and loops, counted against the law.
 - `blog`: the post list; each `blog/<slug>/` holds a post's `index.md` and `icon.js`.
 - `cart`: coming soon.
-- `chladni`: a soup on a big design mask settles into a still with a grain of its own.
+- `chladni`: sand on a ringing plate or a design runs to the nodal lines, as sand, field or lines.
 - `contact`: prose: where to write, and every account the company keeps.
 - `crop`: a shape keeps only the cells of a design it reaches: in, cut and out.
 - `cuts`: the diagonal cuts of the gasket cube, all one size, as points or a section.
