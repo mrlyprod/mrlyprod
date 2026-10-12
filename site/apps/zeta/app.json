@@ -1,6 +1,6 @@
 {
   "title": "Zeta",
-  "line": "Zeta, the critical line walked: put s = 1/2 + it, let t grow, and the point loops round the plane, straight through the origin at every zero, a ring and a count at each pass; start anywhere up to ten thousand, or turn to the stairs and fold the zeros one by one into the staircase of the primes; keep the picture and the zeros as a list.",
+  "line": "Walk zeta up the critical line through its zeros, then fold them into the primes.",
   "menu": "play",
   "saver": true
 }

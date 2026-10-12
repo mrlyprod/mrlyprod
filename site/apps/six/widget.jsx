@@ -1,84 +1,98 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/export.js';
 import { Bar } from '../../lib/frame.jsx';
-import { Group } from '../../lib/knobs.jsx';
+import { Btn, Group } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { roll } from '../designs/engine.js';
 import { Pick, read } from '../designs/pick.jsx';
-import { DIM, PROJECTIONS } from './engine.js';
-import { make } from './scene.js';
+import { DIM, PRESETS, VIEWS, reroll } from './engine.js';
+import { make, name } from './scene.js';
 
-const VIEWS = PROJECTIONS.map(([key]) => key);
+const ORDER = VIEWS.map(([key]) => key);
 
-const COUNTS = [
-  ['Triangles', (f) => f.triangles],
-  ['Filled', (f) => f.fills],
-  ['Empty', (f) => f.voids],
-  ['Pieces', (f) => f.pieces],
-  ['Holes', (f) => f.holes],
-  ['Euler', (f) => f.euler],
-  ['Copies', (f) => (f.copies > 1 ? f.copies : '')],
-];
+const by = ([w, h]) => `${w} x ${h}`;
 
-const Count = ({ name, children }) => (
-  <label>
-    <span>{name}</span>
-    <span className="num">{children}</span>
-  </label>
-);
+export function rows(f) {
+  if (!f) return [];
+  return [
+    ['design', f.name ? `${f.name} ${f.code}` : f.title],
+    ['side', f.side],
+    ['level', `${f.level} of ${f.top}`],
+    ['copies', f.copies],
+    ['filled', f.fills],
+    ['exposed', f.exposed],
+    ['one copy exposed', f.alone],
+    ['tile', by(f.tile)],
+    ['sheet', by(f.sheet)],
+    ['triangles', f.triangles],
+    ['empty', f.voids],
+    ['pieces', f.pieces],
+    ['holes', f.holes],
+    ['corners', f.corners],
+    ['edges', f.edges],
+    ['euler', f.euler],
+  ].map(([name, v]) => [name, String(v)]);
+}
 
-export function Widget({ value, onChange, onReady, onExport }) {
-  const [unit, setUnit] = useState(null);
+export const label = (f) => `${f ? f.name || f.title : 'a cube design'} repeated into a sheet`;
+
+export function Presets({ value, onChange }) {
+  return (
+    <Group name="Presets" after="Sheet">
+      {PRESETS.map(([x, y]) => (
+        <Btn key={`${x}.${y}`} on={value.sheet !== 'disc' && value.x === x && value.y === y} onClick={() => onChange({ sheet: 'rect', x, y })}>
+          tile({x},{y})
+        </Btn>
+      ))}
+    </Group>
+  );
+}
+
+export function Pane({ value, onChange, unit }) {
+  return (
+    <>
+      <Group name="Design">{unit ? <Pick value={{ ...read(value), dim: DIM }} onChange={({ base, code }) => onChange({ base, code })} math={unit} dims={[DIM]} /> : <span>loading</span>}</Group>
+      <Presets value={value} onChange={onChange} />
+    </>
+  );
+}
+
+export function Widget({ value, onChange, onReady, onExport, onStatus, units }) {
+  const unit = units?.math;
   const [facts, setFacts] = useState(null);
   const live = useRef(null);
   const now = useRef(value);
   const change = useRef(onChange);
+  const seed = useRef(value.seed);
   now.current = value;
   change.current = onChange;
   useEffect(() => {
-    let on = true;
-    import('./unit.js').then(({ math, ready }) => ready.then(() => on && setUnit(() => math)));
-    return () => {
-      on = false;
-    };
-  }, []);
-  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math: unit }), [unit]);
+    if (seed.current === value.seed) return;
+    seed.current = value.seed;
+    if (unit) change.current({ code: reroll(unit, read(now.current).base, value.seed) });
+  }, [value.seed]);
+  useEffect(() => onStatus?.(rows(facts)), [facts]);
+  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math: unit, onFacts: setFacts }), [unit]);
+  const hands = {
+    crop: () => change.current({ overhang: now.current.overhang === 1 ? 0 : 1 }),
+    view: (step) => change.current({ view: ORDER[(ORDER.indexOf(now.current.view) + step + ORDER.length) % ORDER.length] }),
+    deeper: (step) => change.current({ level: now.current.level + step }),
+  };
   const ready = (handle) => {
     live.current = handle;
-    setFacts(handle?.facts ?? null);
-    const hands = {
-      random: () => change.current({ code: roll(unit, DIM, read(now.current).base) }),
-      view: (by) => change.current({ projection: VIEWS[(VIEWS.indexOf(now.current.projection) + by + VIEWS.length) % VIEWS.length] }),
-      deeper: (by) => change.current({ level: now.current.level + by }),
-    };
     onReady?.(handle && { ...handle, ...hands });
   };
-  const pick = ({ base, code }) => onChange({ base, code });
-  const keep = () => {
-    const picture = live.current?.svg?.();
-    if (picture) text(picture, `six-${now.current.seed}`, 'svg');
+  const keep = (kind, tail) => () => {
+    const picture = live.current?.[kind]?.();
+    if (picture) text(picture, `${name(now.current, units)}${tail}`, 'svg');
   };
-  const have = Boolean(facts);
-  useEffect(() => onExport?.(have ? [['SVG', keep]] : []), [have]);
-  const f = facts;
+  const have = Boolean(unit);
+  useEffect(() => onExport?.(have ? [['SVG', keep('svg', '')], ['SVG tile', keep('tile', '-tile')]] : []), [have]);
   return (
     <>
-      {unit && <Scene make={scene} value={value} onReady={ready} />}
+      {unit && <Scene make={scene} value={value} onReady={ready} role="img" aria-label={label(facts)} onClick={() => hands.view(1)} />}
       <Bar side="right">
-        <Group name="Design">{unit ? <Pick value={{ ...read(value), dim: DIM }} onChange={pick} math={unit} dims={[DIM]} /> : <span>loading</span>}</Group>
+        <Pane value={value} onChange={onChange} unit={unit} />
       </Bar>
-      <Bar side="status">
-        {!unit && <span>loading</span>}
-        {f && <span>{f.name ? `${f.name} ${f.code}` : f.title}</span>}
-        {f && <span>side {f.side}</span>}
-      </Bar>
-      {f && (
-        <Bar side="right">
-          <Group name="Counts">
-            {COUNTS.filter(([, get]) => get(f) !== '').map(([name, get]) => <Count key={name} name={name}>{get(f)}</Count>)}
-          </Group>
-        </Bar>
-      )}
     </>
   );
 }

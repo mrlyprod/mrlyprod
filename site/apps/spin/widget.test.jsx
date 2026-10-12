@@ -2,11 +2,19 @@ import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { Frame } from '../../lib/frame.jsx';
-import { Design, Needles, Profile, Spectrum, Widget, read } from './widget.jsx';
+import { Accordion, Knobs, useAccordion } from '../../lib/knobs.jsx';
+import { SPEC } from './scene.js';
+import { Needles, Pane, Widget, next, rows } from './widget.jsx';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
-const value = { seed: 1, base: 3, code: '', number: 3, level: 3, rpm: 33, glow: 1, show: 'both', copies: 6, blend: 'mean', tint: '' };
+function Shared({ children }) {
+  return <Accordion.Provider value={useAccordion('', SPEC)}>{children}</Accordion.Provider>;
+}
+
+const order = (html) => [...html.matchAll(/<(?:section|details)([^>]*)>(?:<summary>)?(?:<h3>([^<]*)<\/h3>)?/g)].filter(([, attrs]) => attrs.includes('order:')).map(([, attrs, name]) => [Number(attrs.match(/order:(\d+)/)[1]), name ?? '']).sort(([a], [b]) => a - b).map(([, name]) => name);
+
+const value = { seed: 1, source: 'flat', base: 3, code: '495', number: 3, level: 4, rpm: 33, glow: 1, ramp: 'heat', levels: 64, invert: 0, tint: '' };
 
 test('the widget mounts its stage only once the unit is in hand', () => {
   const page = (unit) => renderToStaticMarkup(<Frame label="Spin"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
@@ -14,54 +22,25 @@ test('the widget mounts its stage only once the unit is in hand', () => {
   expect(page(math)).toContain('<canvas');
 });
 
-test('the design group holds the picker pinned to the plane, the number and a level capped by it', () => {
-  const html = renderToStaticMarkup(<Design value={{ ...value, code: '495' }} onChange={() => {}} math={math} />);
-  expect(html).toContain('<option value="495" selected="">carpet</option>');
-  expect(html).toContain('<input type="text" value="495"/>');
-  expect(html).toContain('aria-label="Base"');
-  expect(html).not.toContain('aria-label="Dim"');
-  expect(html).toContain('>Number<');
-  expect(html).toContain('max="5"');
-  expect(renderToStaticMarkup(<Design value={{ ...value, number: 9, level: 5 }} onChange={() => {}} math={math} />)).toContain('max="2"');
-  expect(renderToStaticMarkup(<Design value={value} onChange={() => {}} math={null} />)).toContain('loading');
-});
-
-test('a design write drops the dim the picker carries and a number change caps the level with it', () => {
-  const wrote = [];
-  const tree = Design({ value: { ...value, level: 5 }, onChange: (patch) => wrote.push(patch), math }).props.children;
-  tree[0].props.onChange({ dim: 2, base: 2, code: '7' });
-  tree[1].props.onChange('9');
-  expect(wrote).toEqual([{ base: 2, code: '7' }, { number: 9, level: 2 }]);
-  expect(read({ base: '2', code: ' 7 ', number: '9', level: '9' })).toEqual({ base: 2, code: '7', number: 9, level: 2 });
-  expect(read({ number: '3', level: '9' }).level).toBe(5);
-});
-
-test('the needles are the demo presets as buttons, the one at the rpm lit', () => {
+test('the needles are the demo presets as buttons, the one at the rpm lit, and a tap moves to the next', () => {
   const html = renderToStaticMarkup(<Needles rpm={900} onChange={() => {}} />);
   expect(html.match(/<button /g)).toHaveLength(5);
   expect(html).toContain('class="on">900<');
-  expect(html).not.toContain('class="on">33<');
   const wrote = [];
   Needles({ rpm: 33, onChange: (patch) => wrote.push(patch) }).props.children[4].props.onClick();
   expect(wrote).toEqual([{ rpm: 900 }]);
+  expect([next(0), next(33), next(500), next(900)]).toEqual([33, 45, 899, 33]);
 });
 
-test('the profile chart draws the circle mean over the radius with the dark disc and the inner edge marked', () => {
-  const profile = Float32Array.from([0, 0, 0.5, 1, 0.25]);
-  const html = renderToStaticMarkup(<Profile profile={profile} peak={1} disc={2} inner={3} reach={4} />);
-  expect(html).toContain('<polyline points="0.0,48.0 60.0,48.0 120.0,24.0 180.0,0.0 240.0,36.0"');
-  expect(html).toContain('<polygon points="0,48 0.0,48.0');
-  expect(html.match(/<line /g)).toHaveLength(2);
-  expect(html).toContain('x1="120.0"');
-  expect(html).toContain('x1="180.0"');
-  expect(renderToStaticMarkup(<Profile profile={profile} peak={1} disc={0} inner={3} reach={4} />).match(/<line /g)).toHaveLength(1);
+test('the readouts are the demo stats, the pace leading them while the platter turns', () => {
+  const facts = { kind: 'flat', code: '495', name: 'carpet', side: 81, fills: 4096, mass: 4096.04, disc: 0, peak: 1, reach: 57.28, order: 4 };
+  expect(rows(facts, null).map(([name]) => name)).toEqual(['name', 'side', 'filled', 'mass of the rings', 'dark disc to', 'brightest ring', 'last ring at', 'rotation order']);
+  expect(rows(facts, { hz: 60, deg: 90, seen: 0 }).slice(0, 4)).toEqual([['name', 'carpet 495'], ['screen', '60 Hz'], ['per frame', '90.0°'], ['seen', '0.0°']]);
+  expect(rows({ ...facts, kind: 'moire', code: 'weave', name: 'weave', fills: null, order: 0 }, { hz: 60, deg: 3, seen: 0 }).filter(([name]) => ['name', 'filled', 'seen', 'rotation order'].includes(name))).toEqual([['name', 'weave'], ['rotation order', 'round']]);
+  expect(rows(null, null)).toEqual([]);
 });
 
-test('the spectrum draws one bar per order with power, the orders the stack keeps in the accent', () => {
-  const html = renderToStaticMarkup(<Spectrum power={[10, 0, 0, 0, 4, 0, 1]} copies={4} />);
-  expect(html.match(/<rect /g)).toHaveLength(3);
-  expect(html).toContain('fill="var(--fg)"');
-  expect(html).toContain('fill="var(--accent)"');
-  expect(html).toContain('fill="var(--dim)"');
-  expect(html).toContain('height="48"');
+test('the pane reads the view and its speed rows, the needles, the source, then the look, and the wheel drops the needles', () => {
+  const pane = (view) => order(renderToStaticMarkup(<Shared><Pane value={{ ...value, view }} onChange={() => {}} math={math} /><Knobs spec={SPEC} value={{ ...value, view }} onChange={() => {}} /></Shared>));
+  expect([pane('table'), pane('wheel')]).toEqual([['', 'Needles', 'Source', 'Look'], ['', 'Source', 'Look']]);
 });

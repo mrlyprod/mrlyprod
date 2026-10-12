@@ -1,15 +1,14 @@
 import * as num from "mrlyjs/num";
-import { frame, Grid } from "mrlyjs/view";
+import { mix } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { num };
 
-const REACH = 15;
+const REACH = 7;
 const SIDE = 2 * REACH + 1;
-const CELL = 33;
-const GAP = 0.14;
-const FAINT = 0.3;
-const HALF = 0.5;
-const WANT = { points: 961, split: 232, inert: 12, ramified: 4, units: 4 };
+const DOT = 0.54;
+const LINK = 0.58;
+const WANT = { points: 225, split: 64, inert: 8, ramified: 4, units: 4 };
 const CLASSES = { Composite: 0, Split: 1, Inert: 2, Ramified: 3, Unit: 4, Zero: 5 };
 
 let fates = null;
@@ -35,15 +34,30 @@ function facts() {
   return grid;
 }
 
-export default function draw(pen, ink) {
+function prime(grid, a, b) {
+  if (Math.abs(a) > REACH || Math.abs(b) > REACH || Math.hypot(a, b) > REACH + 0.5) return false;
+  const fate = grid[(REACH - b) * SIDE + (a + REACH)];
+  return fate >= 1 && fate <= 3;
+}
+
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "green", 0.15);
   const grid = facts();
-  const w = CELL * SIDE;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - w) / 2), w, w), SIDE, SIDE, GAP);
-  const tones = [ink.mix(ink.ground, ink.dim, FAINT), ink.blue, ink.mix(ink.ground, ink.blue, HALF), ink.fg, ink.dim, null];
-  for (let row = 0; row < SIDE; row++) {
-    for (let col = 0; col < SIDE; col++) {
-      const tone = tones[grid[row * SIDE + col]];
-      if (tone) cells.fill(pen, col, row, tone);
+  const cell = box.w / SIDE;
+  const [cx, cy] = box.center();
+  const at = (a, b) => [cx + a * cell, cy - b * cell];
+  const tone = (a, b) => mix(paint.white, paint.light, (Math.hypot(a, b) / REACH) ** 3);
+  for (let b = -REACH; b <= REACH; b++) {
+    for (let a = -REACH; a <= REACH; a++) {
+      if (!prime(grid, a, b)) continue;
+      for (const s of [1, -1]) if (prime(grid, a + 1, b + s)) pen.segment(at(a, b), at(a + 1, b + s), cell * LINK, tone(a + 0.5, b + s / 2));
+    }
+  }
+  for (let b = -REACH; b <= REACH; b++) {
+    for (let a = -REACH; a <= REACH; a++) {
+      if (!prime(grid, a, b)) continue;
+      const [x, y] = at(a, b);
+      pen.disc(x, y, cell * DOT, tone(a, b));
     }
   }
 }

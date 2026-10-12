@@ -1,48 +1,78 @@
+import { palette } from '../../kit/theme/palette.js';
+import { dark, light } from '../../kit/theme/theme.js';
 import { tidy } from '../../lib/knobs.js';
-import { TINTS, rgb } from '../../lib/scene.js';
+import { rgb } from '../../lib/scene.js';
 import { DESIGN } from '../designs/scene.js';
-import { CELLS, DESIGNED, FOLDS, IN, LIFTS, PAD, VIEWS, camera, fits, lay, panels, phase, picture, reach, sides, study, tower } from './engine.js';
+import { CELLS, COLOURS, FALLBACK, FOLDS, GRIDS, LEVELS, LIFTS, PAD, PAINTS, READS, ROUNDS, VIEWS, cap, fits, lay, picture, pictureOf, sideOf, sides, study, tower } from './engine.js';
+
+const never = () => false;
+
+const word = (value) => value.view === 'word';
+
+const reads = (kind) => (value) => pictureOf(value) === kind;
 
 export const SPEC = [
-  { key: 'view', label: 'View', kind: 'pick', def: 'plane', options: VIEWS, group: 'View' },
-  { key: 'lift', label: 'Lift', kind: 'pick', def: '', options: LIFTS, group: 'View', when: (value) => value.view === 'plane' },
-  { key: 'fold', label: 'Fold', kind: 'segment', def: 'sign', options: FOLDS, group: 'View', when: (value) => value.view === 'filter' },
-  { key: 'number', label: 'Tile side', kind: 'pick', def: 0, options: sides, group: 'Grid', when: (value) => DESIGNED.includes(value.view) },
-  { key: 'level', label: 'Level', kind: 'slider', def: 7, min: 1, max: reach, step: 1, group: 'Grid' },
-  { key: 'cell', label: 'Cell', kind: 'pick', def: 0, options: CELLS, group: 'Grid', when: (value) => value.view !== 'word' },
-  { key: 'grow', label: 'Grow', kind: 'toggle', def: 1, group: 'Motion' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  { key: 'view', label: 'View', kind: 'segment', def: 'plane', options: VIEWS, group: 'View' },
+  { key: 'read', label: 'Read', kind: 'segment', def: 'power', options: READS, group: 'View', when: (value) => value.view === 'design' },
+  { key: 'round', label: 'Rounds', kind: 'slider', def: 6, min: 1, max: ROUNDS, step: 1, show: (v) => `${v} · ${2 ** v} letters`, group: 'View', when: word },
+  { key: 'colour', label: 'Colour', kind: 'segment', def: 'letters', options: COLOURS, group: 'View', when: word },
+  { key: 'lift', label: 'Lift', kind: 'pick', def: 'Parity', options: LIFTS, group: 'View', when: reads('plane') },
+  { key: 'level', label: 'Level', kind: 'slider', def: 6, min: 1, max: LEVELS, step: 1, show: (v) => `${v} · side ${2 ** v}`, group: 'View', when: reads('plane') },
+  { key: 'fold', label: 'Fold', kind: 'pick', def: 'sign', options: FOLDS, group: 'View', when: reads('filter') },
+  { key: 'number', label: 'Tile side', kind: 'pick', def: 0, options: sides, group: 'Design', when: never },
+  { key: 'power', label: 'Level', kind: 'slider', def: 5, min: 1, max: (value) => cap(sideOf(value)), step: 1, show: (v, value) => `${v} · side ${sideOf(value) ** v}`, group: 'View', when: reads('power') },
+  { key: 'depth', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value) => cap(sideOf(value)) - 1, step: 1, show: (v, value) => `${v} · side ${sideOf(value) ** (v + 1)}`, group: 'View', when: reads('filter') },
+  { key: 'cell', label: 'Cell', kind: 'pick', def: 0, options: CELLS, group: 'View', when: (value) => GRIDS.includes(pictureOf(value)) },
 ];
+
+export const tidied = (value) => ({ ...value, ...tidy(DESIGN, value), ...tidy(SPEC, value) });
+
+export function file(value) {
+  const one = tidied(value);
+  const code = /^\d+$/.test(one.code) ? one.code : FALLBACK;
+  const parts = { word: ['word', one.round, ...(one.colour === 'runs' ? ['runs'] : [])], plane: [one.lift.toLowerCase(), one.level], power: [code, 'power', one.power], filter: [code, 'filter', one.depth] }[pictureOf(one)];
+  return ['morse', ...parts].join('-');
+}
 
 export const PAGE = {
   spec: SPEC,
-  record: true,
+  name: file,
+  about: [
+    'The Thue-Morse word is one digit rule built twice. Substitution grows it from a single 0, every 0 becoming 01 and every 1 becoming 10; bit parity reads letter n as t(n), the parity of the one-bits of n, and the two agree letter for letter. Word stacks the rounds, orange for letter 0 (plus one) and blue for letter 1 (minus one), and Play steps them.',
+    'Coloured by runs, yellow for a run of one and pink for a run of two, the word shows why no letter comes three times in a row: t(2n) = t(n) and t(2n+1) = 1 - t(n), so it changes at every even place. The places where it changes spell the period-doubling word. A rule that changes with the scale is a word, and its grammar is in [the magic words note](/research/magic/).',
+    'Lifts puts the word on the plane four ways. Parity, t(i) xor t(j), is the Kronecker power of one two-by-two tile, and that tile is a design read plus-minus. And is the Walsh-Hadamard pattern, a power too. Xor is the Parity grid again, since t carries xor to xor. Sum carries, and carrying is no digit rule, so it never folds past side two. A tap moves to the next lift.',
+    'Design reads any design plus-minus. Sign power draws the power of its own plus-minus tile. Filter blows a level up and draws its difference with the next. In the plus-minus fold what is left is the tile repeated, not Thue-Morse: at tile side two it is off Thue-Morse at exactly half the sites, the score of a coin. [Moire](/moire/) stacks one design over its scales, and [Sequences](/sequences/) holds the ledger the designs write.',
+  ],
   keys: [
-    { key: 'Enter', label: 'Again', act: 'again', button: true },
+    { key: 'Enter', label: (value, handle) => (handle?.playing?.() ? 'Stop' : 'Play'), act: 'play', button: true, when: word },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'View', act: 'view' },
   ],
   actions: {
-    again: (scene) => scene.again(),
+    play: (scene) => scene.toggle?.(),
     level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
     view: (scene, e) => scene.turn?.(e.key === 'ArrowLeft' ? -1 : 1),
   },
 };
 
-export const units = () => import('./unit.js');
+export function inks(canvas) {
+  const css = typeof getComputedStyle === 'function' && canvas ? getComputedStyle(canvas) : null;
+  const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
+  const base = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches ? dark : light;
+  return { plus: palette.orange, minus: palette.blue, one: palette.yellow, two: palette.pink, diff: palette.pink, unlit: read('--panel', base.panel) };
+}
 
-const REST = 1000;
-
-function stamp(types, w, h, [r, g, b]) {
+export function stamp(types, w, h, colours) {
   const page = new OffscreenCanvas(w, h);
   const pen = page.getContext('2d');
   const image = pen.createImageData(w, h);
   const data = image.data;
   for (let i = 0; i < w * h; i++) {
-    if (!types[i]) continue;
-    data[i * 4] = r;
-    data[i * 4 + 1] = g;
-    data[i * 4 + 2] = b;
+    const colour = colours[types[i]];
+    if (!colour) continue;
+    data[i * 4] = colour[0];
+    data[i * 4 + 1] = colour[1];
+    data[i * 4 + 2] = colour[2];
     data[i * 4 + 3] = 255;
   }
   pen.putImageData(image, 0, 0);
@@ -54,73 +84,64 @@ function stamp(types, w, h, [r, g, b]) {
 export function make(canvas, view, opts = {}) {
   const { num, math } = opts;
   if (!num || !math) throw new Error('morse: the scene wants mrlyjs/num and mrlyjs/math as opts.num and opts.math');
+  const units = { num, math };
   const ctx = canvas.getContext('2d');
-  const value = { ...tidy(DESIGN, opts), ...tidy(SPEC, opts) };
-  const plan = study({ num, math }, value, view.rand);
-  const { level, side, panels: grids, rows } = plan;
-  const live = value.grow === 1;
-  let origin = 0;
+  let value = tidied(opts);
+  let plan = study(units, value);
+  let ink = null;
+  let source = null;
+  let box = null;
   let dirty = true;
-  let boxes = null;
-  let sources = [];
-  let strips = [];
   const paint = () => {
-    const ink = rgb(view.look().accent);
-    sources = grids.map((grid) => stamp(grid.types, side, side, ink));
-    strips = rows.map((letters) => stamp(letters, letters.length, 1, ink));
+    ink = inks(canvas);
+    source = plan.types ? stamp(plan.types, plan.side, plan.side, PAINTS[plan.paint].map((key) => rgb(ink[key]))) : null;
   };
   const fit = () => {
-    const pad = PAD * view.dpr;
-    boxes = plan.view === 'word' ? tower(view.w, view.h, level, pad) : panels(view.w, view.h, grids.length).map((panel) => lay(panel, side, value.cell * view.dpr, pad));
+    const { w, h, dpr } = view;
+    box = plan.rows.length ? tower(w, h, plan.rows, dpr) : lay(w, h, plan.side, value.cell * dpr, PAD * dpr);
   };
-  const grid = (at) => {
-    const [sx, sy, s] = camera(plan, at.level, at.p);
-    ctx.globalAlpha = at.alpha;
-    sources.forEach((source, i) => {
-      const box = boxes[i];
-      ctx.drawImage(source, sx, sy, s, s, box.x, box.y, box.size, box.size);
-    });
-  };
-  const strip = (at) => {
-    strips.forEach((source, k) => {
-      const share = k < at.level ? 1 : k === at.level ? at.p : 0;
-      if (!share) return;
-      ctx.globalAlpha = at.alpha * share;
-      const row = boxes.rows[k];
-      ctx.drawImage(source, boxes.x, row.y, boxes.w, row.h);
+  const letters = () => {
+    const colours = PAINTS[plan.paint].map((key) => ink[key]);
+    plan.rows.forEach((row, k) => {
+      const at = box[k];
+      colours.forEach((colour, v) => {
+        ctx.fillStyle = colour;
+        for (let i = 0; i < row.length; i++) {
+          if (row[i] !== v) continue;
+          const x = Math.round(at.x + i * at.step);
+          ctx.fillRect(x, at.y, Math.max(1, Math.round(at.x + (i + 1) * at.step) - x - at.gap), at.h);
+        }
+      });
     });
   };
   const draw = () => {
-    if (!live && !dirty) return;
+    if (!dirty) return;
     dirty = false;
-    if (!boxes) fit();
-    const at = phase(view.t - origin, level, view.still || !live);
+    if (!box) fit();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, view.w, view.h);
     ctx.imageSmoothingEnabled = false;
-    if (plan.view === 'word') strip(at);
-    else grid(at);
-    ctx.globalAlpha = 1;
-  };
-  const touch = () => {
-    dirty = true;
-    if (!live) draw();
+    if (source) ctx.drawImage(source, 0, 0, plan.side, plan.side, box.x, box.y, box.size, box.size);
+    else letters();
   };
   const size = () => {
-    boxes = null;
-    touch();
+    box = null;
+    dirty = true;
   };
   const theme = () => {
     paint();
-    touch();
+    dirty = true;
   };
-  const again = () => {
-    if (!live) return;
-    origin = view.t - IN;
-    if (view.still) view.wake?.();
-    else draw();
+  const set = (next) => {
+    if (word(next) !== word(value)) return false;
+    value = tidied(next);
+    const was = plan;
+    plan = study(units, value);
+    if (plan !== was) paint();
+    box = null;
+    dirty = true;
   };
-  const svg = fits(plan) ? () => picture(plan, view.look().accent) : undefined;
+  const svg = () => (fits(plan) ? picture(plan, ink) : null);
   paint();
-  return { draw, every: live ? undefined : REST, size, theme, again, svg, facts: plan.facts };
+  return { draw, size, theme, set, svg, still: !word(value), facts: () => plan.facts };
 }

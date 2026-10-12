@@ -1,35 +1,43 @@
-import { frame, Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = {};
 
-const CELL = 64;
+const LENGTH = 1.2;
+const HALF = 0.11;
+const TIP = 0.26;
+const LEAD = 0.4;
+const BAND = 0.07;
+const LINE = 0.065;
+const LIFT = 0.05;
+const SWEEP = 0.66;
+const SAG = 0.1;
+const STEPS = 24;
+const K = Math.SQRT1_2;
 
-const ART = [
-  "0000000000000",
-  "0000000000400",
-  "0000000004440",
-  "0000000011400",
-  "0000000111000",
-  "0000001110000",
-  "0000011100000",
-  "0000111000000",
-  "0001110000000",
-  "0055100000000",
-  "0555000000000",
-  "0050000000000",
-  "0000222222200",
-];
-
-export default function draw(pen, ink) {
-  const cols = ART[0].length;
-  const rows = ART.length;
-  const tone = { "1": ink.fg, "2": ink.blue, "4": ink.pink, "5": ink.orange };
-  for (const line of ART) {
-    if (line.length !== cols) throw new Error(`blog: row ${line} is not ${cols} wide`);
-    for (const c of line) if (c !== "0" && !tone[c]) throw new Error(`blog: no tone for ${c}`);
-  }
-  const w = CELL * cols;
-  const h = CELL * rows;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - h) / 2), w, h), cols, rows, 0);
-  ART.forEach((line, row) => [...line].forEach((c, col) => c !== "0" && cells.fill(pen, col, row, tone[c])));
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "yellow", 0.16);
+  const w = box.w;
+  const [bx, by] = box.center();
+  const cx = bx + LIFT * w * K;
+  const cy = by - LIFT * w * K;
+  const half = HALF * w;
+  const span = (LENGTH / 2) * w;
+  const reach = span * K;
+  if (reach > w / 2) throw new Error(`blog: the pencil reaches ${reach.toFixed(0)} from centre, the box allows ${(w / 2).toFixed(0)}`);
+  const at = (t, v) => [cx + (t + v) * K, cy + (v - t) * K];
+  const t0 = -span + TIP * w;
+  const cap = span - half;
+  const facet = [...paint.light.slice(0, 3), 110];
+  pen.polygon([at(t0, -half), at(cap, -half), at(cap, half), at(t0, half)], paint.white);
+  pen.disc(...at(cap, 0), half, paint.white);
+  pen.polygon([at(t0, half / 3), at(cap, half / 3), at(cap, half), at(t0, half)], facet);
+  pen.polygon([at(cap - BAND * w * 2, -half), at(cap - BAND * w, -half), at(cap - BAND * w, half), at(cap - BAND * w * 2, half)], paint.light);
+  pen.polygon([at(t0, -half), at(t0, half), at(-span, 0)], paint.deep);
+  pen.polygon([at(-span + TIP * w * LEAD, -half * LEAD), at(-span + TIP * w * LEAD, half * LEAD), at(-span, 0)], paint.ink);
+  const [tx, ty] = at(-span, 0);
+  const line = Array.from({ length: STEPS + 1 }, (_, i) => {
+    const s = i / STEPS;
+    return [tx + s * SWEEP * w, ty + SAG * w * Math.sin(Math.PI * s)];
+  });
+  pen.polyline(line, LINE * w, paint.light);
 }

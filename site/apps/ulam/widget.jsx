@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/export.js';
 import { Bar } from '../../lib/frame.jsx';
-import { Group } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { factors, formula, step, title } from './engine.js';
-import { SPEC, make, said } from './scene.js';
-
-const MAX_C = SPEC.find((row) => row.key === 'c').max;
+import { rng } from '../../lib/scene.js';
+import { REACH, factors, formula, shuffle, step } from './engine.js';
+import { make, named } from './scene.js';
 
 const pct = (x, places = 1) => `${(x * 100).toFixed(places)}%`;
+
+const LABEL = 'The sheet: the whole numbers wound from one on the lattice, the marked ones lit and the quadratic in orange and blue';
 
 export function streak(line) {
   if (!line.count) return 'off the sheet';
@@ -16,45 +16,32 @@ export function streak(line) {
   return `${line.streak}, then ${line.next.n} = ${factors(line.next.factors)}`;
 }
 
-export const pin = (f, patch) => ({ roll: 0, lattice: f.lattice, a: f.a, b: f.b, c: f.c, ...patch });
+export const values = (line) => (line.values.length ? `${line.values.join(' ')}${line.more ? ' …' : ''}` : 'none on the sheet');
 
-const ROLLED = [['Lattice', (f) => title(f.lattice)]];
+export function verdict(pick) {
+  if (pick.n === 1) return 'one, neither prime nor composite';
+  return pick.prime ? 'prime' : `composite, ${factors(pick.factors)}`;
+}
 
-const SHEET = [
-  ['Rings', (f) => f.rings],
-  ['Numbers', (f) => f.top],
-  ['Primes', (f) => f.primes],
-  ['Density', (f) => pct(f.density, 2)],
-];
+export const rolled = (unit, seed, was) => (unit && seed !== was ? shuffle(unit, rng(seed)) : null);
 
-const LIT = [['Lit', (f) => f.lit]];
+export function readouts(f) {
+  const pick = f.pick?.off ? [['Cell', 'off the sheet']] : f.pick ? [['Cell', `${f.pick.n} on ring ${f.pick.ring} at ${f.pick.x}, ${f.pick.y}`], ['Verdict', verdict(f.pick)]] : [];
+  const line = f.line ? [['Values', values(f.line)], ['Streak', streak(f.line)], ['Hits', `${f.line.hits} of ${f.line.count}`], ['Share', pct(f.line.share)]] : [];
+  const lit = f.mark === 'prime' ? [] : [['Lit', f.lit]];
+  return [...(f.line ? [['Line', formula(f.a, f.b, f.c)]] : []), ...pick, ...line, ['Numbers', f.top], ['Primes', f.primes], ['Density', pct(f.density, 2)], ...lit];
+}
 
-const LINE = [
-  ['Line', (f) => formula(f.a, f.b, f.c)],
-  ['Landings', (f) => f.line.count],
-  ['Hits', (f) => `${f.line.hits} of ${f.line.count}`],
-  ['Share', (f) => pct(f.line.share)],
-  ['Streak', (f) => streak(f.line)],
-];
-
-export const counts = (f) => [...(f.rolled ? ROLLED : []), ...SHEET, ...(f.mark === 'prime' ? [] : LIT), ...(f.line ? LINE : [])].map(([name, get]) => [name, get(f)]);
-
-const Fact = ({ name, value }) => (
-  <label>
-    <span>{name}</span>
-    <span className="num">{value}</span>
-  </label>
-);
-
-export function Widget({ value, onChange, onReady, onExport, unit: given }) {
+export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }) {
   const [loaded, setLoaded] = useState(null);
   const unit = given ?? loaded;
   const [facts, setFacts] = useState(null);
-  const [picked, setPicked] = useState(null);
   const live = useRef(null);
-  const known = useRef(null);
   const now = useRef(value);
   now.current = value;
+  const change = useRef(onChange);
+  change.current = onChange;
+  const seed = useRef(value.seed);
   useEffect(() => {
     if (given) return undefined;
     let on = true;
@@ -63,53 +50,43 @@ export function Widget({ value, onChange, onReady, onExport, unit: given }) {
       on = false;
     };
   }, [given]);
-  const told = useCallback((next) => {
-    known.current = next;
-    setFacts(next);
-  }, []);
-  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onFacts: told }), [unit, told]);
+  useEffect(() => {
+    const next = rolled(unit, value.seed, seed.current);
+    if (!next) return;
+    seed.current = value.seed;
+    onChange(next);
+  }, [unit, value.seed]);
+  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onFacts: setFacts }), [unit]);
   const ready = (handle) => {
     live.current = handle;
-    told(handle?.facts ?? null);
-    setPicked(null);
-    const hands = {
-      line: (by) => {
-        const f = known.current;
-        if (!f || !f.line) return;
-        const c = step(unit, f.c, by, MAX_C);
-        if (c !== f.c) onChange(pin(f, { c }));
-      },
-      lattice: () => {
-        const f = known.current;
-        if (f) onChange(pin(f, { lattice: f.lattice === 'hex' ? 'square' : 'hex' }));
-      },
+    setFacts(handle?.facts ?? null);
+    const line = (by) => {
+      const { a, c } = now.current;
+      const next = a > 0 ? step(unit, c, by, REACH) : c;
+      if (next !== c) change.current({ c: next });
     };
-    onReady?.(handle && { ...handle, ...hands });
+    onReady?.(handle && { ...handle, line });
   };
   const tap = (e) => {
     const box = e.currentTarget.getBoundingClientRect();
-    setPicked(live.current?.pick((e.clientX - box.left) / box.width, (e.clientY - box.top) / box.height) ?? null);
+    live.current?.pick((e.clientX - box.left) / box.width, (e.clientY - box.top) / box.height);
   };
   const keep = (kind) => {
     const body = live.current?.[kind]?.();
-    if (body) text(body, `ulam-${now.current.seed}`, kind);
+    if (body) text(body, named(now.current), kind);
   };
   const have = Boolean(facts);
   const lined = Boolean(facts?.line);
   useEffect(() => onExport?.(have ? [['SVG', () => keep('svg')], ...(lined ? [['CSV', () => keep('csv')]] : [])] : []), [have, lined]);
-  const f = facts;
+  const rows = facts ? readouts(facts) : [];
+  const said = JSON.stringify(rows);
+  useEffect(() => onStatus?.(rows), [said]);
   return (
     <>
-      {unit && <Scene make={scene} value={value} onReady={ready} onClick={tap} />}
-      <Bar side="status">
-        {!unit && <span>loading</span>}
-        {f && <span>{picked ? said(picked) : f.line ? formula(f.a, f.b, f.c) : `${f.primes} primes in ${f.top}`}</span>}
-      </Bar>
-      {f && (
-        <Bar side="right">
-          <Group name="Counts">
-            {counts(f).map(([name, shown]) => <Fact key={name} name={name} value={shown} />)}
-          </Group>
+      {unit && <Scene make={scene} value={value} onReady={ready} onClick={tap} aria-label={LABEL} />}
+      {!unit && (
+        <Bar side="status">
+          <span>loading</span>
         </Bar>
       )}
     </>

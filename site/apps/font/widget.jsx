@@ -1,11 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Bar } from '../../lib/frame.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { cut } from './engine.js';
+import { cut, facts, gallery } from './engine.js';
 import { Gallery } from './gallery.jsx';
 import { PAGE, make } from './scene.js';
 
-export function Widget({ value, onChange, onReady, onExport }) {
+export function status(value, plan, known) {
+  if (value.view === 'text') return plan ? [['board', `${plan.cols}x${plan.rows}`], ['frames', plan.frames], ['time', `${(plan.frames / plan.fps / value.speed).toFixed(1)} s`]] : [];
+  return known ? [['pens', known.pens], ['strokes', known.strokes], ['flagged', known.flagged]] : [];
+}
+
+export function added(value, plan, char) {
+  const was = value.view === 'text' ? value.text || plan?.text || '' : value.text;
+  return { view: 'text', text: cut(`${was}${char}`) };
+}
+
+export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   const [font, setFont] = useState(null);
   const [plan, setPlan] = useState(null);
   const live = useRef(null);
@@ -16,27 +26,31 @@ export function Widget({ value, onChange, onReady, onExport }) {
       on = false;
     };
   }, []);
-  const made = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, font }), [font]);
+  const kinds = useMemo(() => (font ? gallery(font) : null), [font]);
+  const known = useMemo(() => (kinds ? facts(kinds) : null), [kinds]);
+  const fps = useMemo(() => (font ? font.FPS() : 25), [font]);
+  const made = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, font, kinds, onPlan: setPlan }), [font, kinds]);
   const ready = (handle) => {
     live.current = handle;
-    setPlan(handle?.plan ?? null);
     onReady?.(handle);
   };
   const act = (name) => () => live.current && PAGE.actions[name](live.current);
-  const have = Boolean(plan);
-  useEffect(() => onExport?.(have ? [['JSON', act('json')], ['SVG', act('svg')]] : []), [have]);
-  const add = (char) => onChange({ text: cut(`${value.text || plan?.text || ''}${char}`) });
+  useEffect(() => onExport?.(font ? [['JSON', act('json')], ['SVG', act('svg')]] : []), [font]);
+  const rows = status(value, plan, known);
+  const said = JSON.stringify(rows);
+  useEffect(() => onStatus?.(rows), [said]);
+  const tap = (e) => {
+    const canvas = e.currentTarget;
+    const box = canvas.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    live.current?.tap?.(((e.clientX - box.left) * canvas.width) / box.width, ((e.clientY - box.top) * canvas.height) / box.height);
+  };
   return (
     <>
-      {font && <Scene make={made} value={value} onReady={ready} />}
-      {font && (
+      {font && <Scene make={made} value={value} onReady={ready} onPointerDown={tap} />}
+      {kinds && (
         <Bar side="left">
-          <Gallery font={font} tint={value.tint} onPick={add} />
-        </Bar>
-      )}
-      {plan && (
-        <Bar side="status">
-          <span>{plan.cols}x{plan.rows} · {plan.frames.length} frames · {(plan.frames.length / plan.fps / value.speed).toFixed(1)} s</span>
+          <Gallery kinds={kinds} tint={value.tint} rate={fps * value.speed} hold={value.hold} onPick={(char) => onChange(added(value, plan, char))} />
         </Bar>
       )}
     </>

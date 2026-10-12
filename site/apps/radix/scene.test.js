@@ -2,11 +2,10 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import * as num from '../../../pkgs/mrlyjs/num.js';
 import { hit } from '../../lib/keys.js';
-import { defaults, describe } from '../../lib/knobs.js';
-import { rng } from '../../lib/scene.js';
+import { defaults, describe, tidy } from '../../lib/knobs.js';
 import { keymap, live } from '../../lib/scene.jsx';
-import { FADE, GAP, HOLD, PAD, STEP, lattice, lay, study } from './engine.js';
-import { PAGE, SPEC, make } from './scene.js';
+import { GAP, PAD, lattice, lay, preset, study } from './engine.js';
+import { PAGE, SPEC, file, make } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -38,113 +37,85 @@ globalThis.OffscreenCanvas = class {
   }
 };
 
-const open = (value, still = false, w = 800, h = 600) => {
+const base = (over) => ({ ...defaults(SPEC), seed: 1, ...over });
+
+const named = (name, over) => base({ ...preset(num, math, name), ...over });
+
+const open = (value = base(), still = false, w = 800, h = 600) => {
+  pages.length = 0;
   const log = [];
   const told = [];
-  const levels = [];
-  const view = { rand: rng(1), look: () => ({ paper: '#000000', accent: '#008cff' }), still, w, h, dpr: 2, t: 0 };
-  view.wake = () => {
-    view.still = false;
-    told.push('wake');
-  };
-  const scene = make({ getContext: () => pen(log) }, view, { ...defaults(SPEC), seed: 1, code: '', shape: 'twindragon', level: 6, math, num, onLevel: (one) => levels.push(one), ...value });
+  const view = { look: () => ({ paper: '#000000', accent: '#008cff' }), still, w, h, dpr: 2, t: 0 };
+  const scene = make({ id: 'screen', getContext: () => pen(log) }, view, { ...value, math, num, onFacts: (one) => told.push(one) });
   const quiet = log.length;
   const at = (t) => {
     view.t = t;
     log.length = 0;
     scene.draw();
-    return log;
+    return [...log];
   };
-  return { view, scene, told, levels, log, quiet, at };
+  const set = (patch) => scene.set({ ...value, ...patch });
+  return { view, scene, told, log, quiet, at, set };
 };
 
-const laid = (page) => page.log.slice(page.log.findLastIndex(([name]) => name === 'clearRect')).filter(([name]) => name === 'rect' || name === 'moveTo').length;
+const laid = (page) => page.log.slice(page.log.findLastIndex(([name]) => name === 'clearRect'));
 
-const shown = (log) => log.filter(([name]) => name === 'drawImage').map(([, page]) => Number(page.slice(4)));
+const cells = (page) => laid(page).filter(([name]) => name === 'rect' || name === 'moveTo').length;
+
+const shown = (log) => log.filter(([name]) => name === 'drawImage').map(([, page]) => page);
 
 const alphas = (log) => log.filter(([name]) => name === 'globalAlpha').map(([, a]) => a);
 
-test('make draws nothing, the first draw lays level one on a layer in the accent and fades it in', () => {
-  pages.length = 0;
-  const live = open({});
+test('make draws nothing and tells the facts of its level once', () => {
+  const live = open();
   expect(live.quiet).toBe(0);
-  const log = live.at(FADE / 2);
+  expect(live.told).toHaveLength(1);
+  expect(live.told[0]).toMatchObject({ level: 5, fill: 1024, distinct: 1024, cap: 8 });
+});
+
+test('the first draw lays the level on a layer in the accent and shows it whole', () => {
+  const live = open(base({ line: 0, level: 2 }));
+  const log = live.at(0);
   expect(pages).toHaveLength(1);
-  expect(laid(pages[0])).toBe(2);
+  expect(cells(pages[0])).toBe(16);
   expect(pages[0].log).toContainEqual(['fillStyle', '#008cff']);
-  expect(shown(log)).toEqual([0]);
-  expect(alphas(log)).toEqual([0.5, 1]);
+  expect(shown(log)).toEqual(['page0']);
 });
 
-test('a level fades over the one before it on two layers, then the earlier layer is let go', () => {
-  pages.length = 0;
-  const live = open({});
-  live.at(STEP);
-  const mid = live.at(STEP + FADE / 2);
-  expect(pages).toHaveLength(2);
-  expect(shown(mid).sort()).toEqual([0, 1]);
-  expect(alphas(mid)).toEqual([0.75, 0.5, 1]);
-  const done = live.at(STEP + FADE);
-  expect(shown(done)).toHaveLength(1);
-  expect(alphas(done)).toEqual([1, 1]);
-  live.at(2 * STEP + FADE / 2);
-  expect(pages).toHaveLength(2);
-  expect([laid(pages[0]), laid(pages[1])].sort((a, b) => a - b)).toEqual([4, 8]);
+test('a line traces every word in order with one stroke, fitted to the words and not their cells', () => {
+  const live = open();
+  live.at(0);
+  const marks = laid(pages[0]);
+  expect([marks.filter(([name]) => name === 'moveTo').length, marks.filter(([name]) => name === 'lineTo').length, marks.filter(([name]) => name === 'stroke').length]).toEqual([1, 1023, 1]);
+  expect(marks).toContainEqual(['strokeStyle', '#008cff']);
+  const xs = marks.filter(([name]) => name === 'moveTo' || name === 'lineTo').map(([, x]) => x);
+  expect(Math.min(...xs)).toBeCloseTo(2 * PAD);
+  expect(Math.max(...xs)).toBeGreaterThan(800 - 3 * PAD);
+  expect(Math.max(...xs)).toBeLessThanOrEqual(800 - 2 * PAD);
 });
 
-test('a picture at a t is the same reached in one jump or by steps', () => {
-  pages.length = 0;
-  const stepped = open({});
-  for (let t = 0; t < 3 * STEP + FADE / 3; t += 100) stepped.at(t);
-  const last = [...stepped.at(3 * STEP + FADE / 3)];
-  const layers = pages.map(laid).sort((a, b) => a - b);
-  pages.length = 0;
-  const jumped = open({});
-  const once = [...jumped.at(3 * STEP + FADE / 3)];
-  expect(alphas(once)).toEqual(alphas(last));
-  expect(pages.map(laid).sort((a, b) => a - b)).toEqual(layers);
-  expect(layers).toEqual([8, 16]);
-});
-
-test('a draw at the same t paints nothing more, a resize or a theme change repaints', () => {
-  const live = open({});
-  const t = 2 * STEP + FADE;
-  live.at(t);
-  expect(live.at(t)).toEqual([]);
+test('a draw with nothing new paints nothing more, a resize or a theme change repaints', () => {
+  const live = open();
+  live.at(100);
+  expect(live.at(100)).toEqual([]);
   live.scene.size();
-  expect(shown(live.at(t))).toHaveLength(1);
+  expect(shown(live.at(100))).toHaveLength(1);
   live.scene.theme();
-  expect(shown(live.at(t))).toHaveLength(1);
-  expect(live.at(t)).toEqual([]);
+  expect(shown(live.at(100))).toHaveLength(1);
+  expect(live.at(100)).toEqual([]);
 });
 
-test('under reduced motion the one draw lays the top level whole, fitted inside the padding', () => {
-  pages.length = 0;
-  const still = open({}, true);
-  const log = still.at(0);
-  expect(pages).toHaveLength(1);
-  expect(laid(pages[0])).toBe(64);
-  expect(alphas(log)).toEqual([1, 1]);
-  const marks = pages[0].log.filter(([name]) => name === 'moveTo' || name === 'lineTo');
-  const xs = marks.map(([, x]) => x);
-  const ys = marks.map(([, , y]) => y);
-  expect(Math.min(...xs)).toBeGreaterThanOrEqual(2 * PAD - 1);
-  expect(Math.max(...xs)).toBeLessThanOrEqual(800 - 2 * PAD + 1);
-  expect(Math.min(...ys)).toBeGreaterThanOrEqual(2 * PAD - 1);
-  expect(Math.max(...ys)).toBeLessThanOrEqual(600 - 2 * PAD + 1);
-  expect(still.at(0)).toEqual([]);
-});
-
-test('every level of every shape fits inside the padding, on a wide stage and a tall one, so no early cell is cut', () => {
-  for (const [shape, code, w, h] of [['gasket', '', 1184, 756], ['gasket', '', 390, 700], ['twindragon', '', 390, 700], ['koch', '', 700, 400], ['tile', '495', 800, 600]]) {
-    pages.length = 0;
-    const live = open({ shape, code, level: 6 }, false, w, h);
-    for (let level = 1; level <= live.scene.facts.level; level++) {
-      const page = pages[shown(live.at((level - 1) * STEP + FADE)).at(-1)];
-      const marks = page.log.slice(page.log.findLastIndex(([name]) => name === 'clearRect')).filter(([name]) => name === 'moveTo' || name === 'lineTo' || name === 'rect');
-      const xs = marks.flatMap(([name, x, , width]) => (name === 'rect' ? [x, x + width] : [x]));
-      const ys = marks.flatMap(([name, , y, , height]) => (name === 'rect' ? [y, y + height] : [y]));
-      expect(marks.length).toBeGreaterThan(0);
+test('every level of every preset fits inside the padding, on a wide stage and a tall one', () => {
+  for (const [name, w, h] of [['gasket', 1184, 756], ['gasket', 390, 700], ['twindragon', 390, 700], ['koch', 700, 400], ['carpet', 800, 600], ['flowsnake', 390, 700]]) {
+    const live = open(named(name, { line: 0, level: 1 }), false, w, h);
+    const top = live.told[0].cap;
+    for (let level = 1; level <= top; level++) {
+      live.set({ ...preset(num, math, name), line: 0, level });
+      const page = pages[Number(shown(live.at(level * 1000)).at(-1).slice(4))];
+      expect(cells(page)).toBe(live.told.at(-1).fill);
+      const marks = laid(page).filter(([key]) => key === 'moveTo' || key === 'lineTo' || key === 'rect');
+      const xs = marks.flatMap(([key, x, , width]) => (key === 'rect' ? [x, x + width] : [x]));
+      const ys = marks.flatMap(([key, , y, , height]) => (key === 'rect' ? [y, y + height] : [y]));
       expect(Math.min(...xs)).toBeGreaterThanOrEqual(2 * PAD - 1);
       expect(Math.max(...xs)).toBeLessThanOrEqual(w - 2 * PAD + 1);
       expect(Math.min(...ys)).toBeGreaterThanOrEqual(2 * PAD - 1);
@@ -153,87 +124,32 @@ test('every level of every shape fits inside the padding, on a wide stage and a 
   }
 });
 
-test('past the hold the growth starts over, fading level one in over the top level', () => {
-  const live = open({});
-  const loop = 6 * STEP + HOLD;
-  live.at(6 * STEP + FADE);
-  expect(live.at(6 * STEP + HOLD / 2)).toEqual([]);
-  const again = live.at(loop + FADE / 2);
-  expect(shown(again)).toHaveLength(2);
-  expect(alphas(again)).toEqual([0.75, 0.5, 1]);
-  expect(live.levels.at(-1).level).toBe(1);
-});
-
 test('big cells are polygons with a gap and small ones are squares at least a device pixel wide', () => {
-  pages.length = 0;
-  const live = open({ level: 17 });
-  live.at(FADE);
-  expect(pages[0].log.filter(([name]) => name === 'moveTo')).toHaveLength(2);
-  expect(pages[0].log.filter(([name]) => name === 'lineTo')).toHaveLength(6);
-  live.at(16 * STEP + FADE);
-  const tiny = pages.find((page) => page.log.some(([name]) => name === 'rect'));
-  const rects = tiny.log.filter(([name]) => name === 'rect');
+  const big = open(named('twindragon', { level: 1 }));
+  big.at(0);
+  expect([laid(pages[0]).filter(([name]) => name === 'moveTo').length, laid(pages[0]).filter(([name]) => name === 'lineTo').length]).toEqual([2, 6]);
+  const small = open(named('twindragon', { level: 17 }));
+  small.at(0);
+  const rects = laid(pages[0]).filter(([name]) => name === 'rect');
   expect(rects).toHaveLength(131072);
   expect(rects.every(([, , , w, h]) => w >= 2 && w === h)).toBe(true);
 });
 
 test('at an odd level the cells of the turned lattice are drawn wider than its pitch, so no holes show between them', () => {
-  pages.length = 0;
-  const live = open({ level: 17, grow: 0 }, true, 4000, 3000);
+  const live = open(named('twindragon', { level: 17 }), true, 4000, 3000);
   live.at(0);
-  const plan = study(num, math, { ...defaults(SPEC), seed: 1, code: '', shape: 'twindragon', level: 17 }, rng(1));
+  const plan = study(num, math, named('twindragon'));
   const pitch = lattice(plan.norm, plan.sides, 17).spacing * lay(plan.stage, 4000, 3000, PAD * 2).k;
-  const rects = pages[0].log.filter(([name]) => name === 'rect');
+  const rects = laid(pages[0]).filter(([name]) => name === 'rect');
   expect(rects).toHaveLength(131072);
   expect(rects.every(([, , , w, h]) => w === h && Math.abs(w - pitch * Math.SQRT2) < 1e-6)).toBe(true);
   expect(pitch).toBeGreaterThan(2);
 });
 
-test('the scene tells each level once with its fill and its distinct count', () => {
-  const live = open({ shape: 'terdragon', level: 4 });
+test('a cell size pins the scale so a cell is that many css pixels wide', () => {
+  const live = open(named('carpet', { level: 2, cell: 8 }), true);
   live.at(0);
-  live.at(STEP);
-  live.at(STEP + 1);
-  live.at(3 * STEP);
-  expect(live.levels).toEqual([{ level: 1, fill: 3, distinct: 3 }, { level: 2, fill: 9, distinct: 7 }, { level: 4, fill: 81, distinct: 43 }]);
-});
-
-test('again restarts the growth from now and wakes a still scene', () => {
-  const live = open({});
-  live.at(4 * STEP);
-  expect(live.levels.at(-1).level).toBe(5);
-  live.scene.again();
-  expect(live.levels.at(-1).level).toBe(1);
-  live.at(4 * STEP + STEP + FADE);
-  expect(live.levels.at(-1).level).toBe(2);
-  const still = open({}, true);
-  still.at(0);
-  still.scene.again();
-  expect(still.told).toEqual(['wake']);
-});
-
-test('with grow off the scene rests at the top level, draws on its interval only when touched, and again does nothing', () => {
-  const live = open({ grow: 0 });
-  expect(live.scene.every).toBe(1000);
-  expect(alphas(live.at(0))).toEqual([1, 1]);
-  expect(live.at(5000)).toEqual([]);
-  live.scene.again();
-  expect(live.at(5001)).toEqual([]);
-  live.scene.size();
-  expect(live.log.filter(([name]) => name === 'drawImage')).toHaveLength(1);
-});
-
-test('with grow off the Again key leaves the map, so it is no primary and Enter does nothing', () => {
-  const map = (grow) => keymap(live(PAGE.keys, { ...defaults(SPEC), grow }));
-  expect([map(1).some((row) => row.button), map(0).some((row) => row.button)]).toEqual([true, false]);
-  expect([hit(map(1), { key: 'Enter' })?.act, hit(map(0), { key: 'Enter' })]).toEqual(['again', null]);
-});
-
-test('a cell size pins the scale so a top cell is that many css pixels wide', () => {
-  pages.length = 0;
-  const live = open({ shape: 'tile', code: '495', level: 2, cell: 8 }, true);
-  live.at(0);
-  const marks = pages[0].log.filter(([name]) => name === 'moveTo' || name === 'lineTo');
+  const marks = laid(pages[0]).filter(([name]) => name === 'moveTo' || name === 'lineTo');
   expect(marks.filter(([name]) => name === 'moveTo')).toHaveLength(64);
   const xs = marks.slice(0, 4).map(([, x]) => x);
   const ys = marks.slice(0, 4).map(([, , y]) => y);
@@ -241,9 +157,55 @@ test('a cell size pins the scale so a top cell is that many css pixels wide', ()
   expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(16 * (1 - GAP));
 });
 
-test('the level knob hides for a random shape and the facts name the design', () => {
-  const shown = (shape) => describe(SPEC, { ...defaults(SPEC), shape }).flatMap(({ rows }) => rows.map((row) => row.key));
-  expect(shown('')).toEqual(['shape', 'grow', 'cell', 'tint']);
-  expect(shown('koch')).toEqual(['shape', 'level', 'grow', 'cell', 'tint']);
-  expect(open({}).scene.facts).toMatchObject({ kind: 'twindragon', name: 'Twindragon', level: 6, fill: 64 });
+test('the scene is still, so a set lands on the new level at once in one copy, with no fade', () => {
+  const live = open();
+  live.at(100);
+  live.set({ level: 6 });
+  const log = live.at(100);
+  expect([live.scene.still, shown(log).length, alphas(log)]).toEqual([true, 1, []]);
+  expect(pages.some((page) => page.log.some(([name, from]) => name === 'drawImage' && from === 'pagescreen'))).toBe(false);
+});
+
+test('a level layer is kept, so stepping back to it is a copy and not a relay', () => {
+  const live = open();
+  live.at(100);
+  live.set({ level: 6 });
+  live.at(1000);
+  live.set({ level: 5 });
+  live.at(2000);
+  expect(pages.flatMap((page) => page.log.filter(([name]) => name === 'stroke'))).toHaveLength(2);
+});
+
+test('a set of the digits remakes the design and tells its facts, a set of the look relays it, and an unchanged set does nothing', () => {
+  const live = open();
+  live.at(100);
+  live.set({ d: '0:0_1:0_1:1', t: '0_0_0' });
+  expect(live.told.at(-1)).toMatchObject({ digits: 3, fill: 243, code: '7', canonical: true });
+  live.at(1000);
+  const told = live.told.length;
+  live.set({ d: '0:0_1:0_1:1', t: '0_0_0', tint: 'red' });
+  expect(live.told).toHaveLength(told);
+  expect(shown(live.at(2000))).toHaveLength(1);
+  expect(live.at(3000)).toEqual([]);
+  live.set({ d: '0:0_1:0_1:1', t: '0_0_0', tint: 'red' });
+  expect(live.at(4000)).toEqual([]);
+});
+
+test('Enter drops the twists only while a digit is turned', () => {
+  const map = (value) => keymap(live(PAGE.keys, value));
+  expect([map(base()).some((row) => row.button), map(base({ t: '0_0_0_0' })).some((row) => row.button)]).toEqual([true, false]);
+  expect([hit(map(base()), { key: 'Enter' })?.act, hit(map(base({ t: '0_0_0_0' })), { key: 'Enter' })]).toEqual(['flat', null]);
+});
+
+test('an export is named by the ring, the base, the level and the drawing', () => {
+  expect([file(base()), file(base({ ring: 'gaussian', base: '2:1', level: 3, line: 0 }))]).toEqual(['radix-eisenstein-3-5-line', 'radix-gaussian-2+i-3-cells']);
+});
+
+test('the design rows live in the widget pane and only the look rows in the knobs', () => {
+  expect(describe(SPEC, base()).flatMap(({ rows }) => rows.map((row) => row.key))).toEqual(['cell', 'tint']);
+});
+
+test('the level cap follows the digit count and a base its ring lacks falls back to 3', () => {
+  expect(tidy(SPEC, base({ d: '0:0_1:0', level: 40 })).level).toBe(17);
+  expect(tidy(SPEC, base({ ring: 'gaussian', base: '3:1' })).base).toBe('3:0');
 });

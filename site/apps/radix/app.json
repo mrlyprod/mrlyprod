@@ -1,6 +1,5 @@
 {
   "title": "Radix",
-  "line": "Radix, a design's digits placed by a base of the plane: the twindragon at 1 + i, the terdragon at 2 + w, the flowsnake at 3 + w, the Koch curve at 3, the gasket at 2, or any 3 by 3 tile at the whole base 3, grown a level at a time with the fill, the distinct points and the dimension read out.",
-  "menu": "play",
-  "saver": true
+  "line": "Pick a base of the plane and its digits, twist them, and watch a curve or dragon appear.",
+  "menu": "play"
 }

@@ -1,4 +1,5 @@
 import * as math from "mrlyjs/math";
+import { plate } from "../../lib/icon.js";
 
 export const units = { math };
 
@@ -8,11 +9,9 @@ const LEVEL = 2;
 const BASE = 3;
 const STEPS = 96;
 const WHEEL = 256;
-const MARGIN = 0.08;
 const TURN = 0.35;
 const GHOSTS = [[0.3, 0.3], [0.15, 0.55]];
 const GAP = 0.08;
-const SHADE = 0.45;
 const WANT = { fills: 64 };
 
 let plan = null;
@@ -49,22 +48,21 @@ function stamp(pen, cx, cy, span, turn, color) {
   }
 }
 
-export default function draw(pen, ink) {
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "orange", 0.14);
   const { wheel } = study();
-  const box = pen.frame(MARGIN);
   const [cx, cy] = box.center();
   const r = box.radius();
-  const [br, bg, bb] = ink.blue;
   const colors = new Uint8Array(wheel.length * 4);
   for (let i = 0; i < wheel.length; i++) {
-    colors[i * 4] = br;
-    colors[i * 4 + 1] = bg;
-    colors[i * 4 + 2] = bb;
-    colors[i * 4 + 3] = Math.round(255 * SHADE * wheel[i]);
+    colors[i * 4] = 255;
+    colors[i * 4 + 1] = 255;
+    colors[i * 4 + 2] = 255;
+    colors[i * 4 + 3] = Math.round(110 * wheel[i]);
   }
   pen.image(cx - r, cy - r, 2 * r, 2 * r, { shape: [WHEEL, WHEEL], colors });
   const span = r * Math.SQRT2;
-  for (const [lag, tone] of GHOSTS) stamp(pen, cx, cy, span, TURN - lag, ink.mix(ink.ground, ink.blue, tone));
-  stamp(pen, cx, cy, span, TURN, ink.fg);
-  pen.ring(cx, cy, r, 3, ink.dim);
+  for (const [lag, tone] of GHOSTS) stamp(pen, cx, cy, span, TURN - lag, [255, 255, 255, Math.round(255 * tone * 0.5)]);
+  stamp(pen, cx, cy, span, TURN, paint.white);
+  pen.ring(cx, cy, r, 4, paint.light);
 }

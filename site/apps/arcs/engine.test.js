@@ -2,42 +2,36 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { BEAT, HOLD, LEAST, MOST, ORBIT, PACE, SWAY, UNIT, arc, bend, choose, corner, curves, drift, fit, looping, phase, picture, schedule, study, trail } from './engine.js';
+import { AUTO, BEAT, KEEP, LEAST, MOST, PACE, THICK, THIN, UNIT, arc, bend, corner, curves, fit, looping, picture, resolve, schedule, study, thick, trail } from './engine.js';
 import { SPEC } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
-const value = (over) => ({ ...defaults(SPEC), seed: 1, base: 3, code: '', ...over });
+const value = (over) => ({ ...defaults(SPEC), seed: 1, base: 3, code: '495', ...over });
 
-const SHADES = { accent: '#008cff', dim: 'rgb(0, 63, 115)', fill: 'rgba(0, 140, 255, 0.08)' };
+const SHADES = { loop: '#ff8f2c', strand: '#008cff', dim: 'rgb(115, 64, 20)', fill: '#1f1f20' };
 
-test('the level runs to eight at base 2 and five at base 3', () => {
-  const level = (over) => tidy(SPEC, { ...value({ level: 9 }), ...over }, { math }).level;
-  expect([level({ base: 2 }), level({ base: 3 }), level({ base: 3, level: 2 })]).toEqual([8, 5, 2]);
+test('the level runs to eight at base 2, five at base 3, four at base 4 and three at base 5', () => {
+  const level = (over) => tidy(SPEC, value({ level: 9, ...over }), { math }).level;
+  expect([level({ base: 2 }), level({ base: 3 }), level({ base: 4 }), level({ base: 5 }), level({ base: 3, level: 2 })]).toEqual([8, 5, 4, 3, 2]);
 });
 
-test('a typed code is kept modulo the count, a blank or unreadable one rolls a design that loops at the level, the same for one seed', () => {
-  expect(choose(math, value({ code: '495' }), rng(1))).toBe('495');
-  expect(choose(math, value({ code: '600' }), rng(1))).toBe('88');
-  expect(choose(math, value({ code: '-1' }), rng(1))).toBe('511');
-  const rolled = choose(math, value({}), rng(1));
-  expect(rolled).toBe(choose(math, value({ code: 'carpet' }), rng(1)));
-  expect(math.arcs.draw(rolled, 3, 3).loops).toBeGreaterThan(0);
-  const looping = Array.from({ length: 40 }, (_, seed) => math.arcs.draw(choose(math, value({}), rng(seed)), 3, 3).loops > 0);
-  expect(looping.every(Boolean)).toBe(true);
-  expect(new Set(Array.from({ length: 40 }, (_, seed) => choose(math, value({}), rng(seed)))).size).toBeGreaterThan(20);
+test('a blank code is the carpet of its base, a design word is its code and any other text is kept for the crate to read', () => {
+  expect([2, 3, 4, 5].map((base) => resolve(math, base, ''))).toEqual([2, 3, 4, 5].map((base) => math.name.words(2, base).find(([, word]) => word === 'carpet')[0]));
+  expect([resolve(math, 2, ''), resolve(math, 3, ' ')]).toEqual(['7', '495']);
+  expect([resolve(math, 2, 'Net'), resolve(math, 3, '600'), resolve(math, 2, 'abc')]).toEqual(['14', '600', 'abc']);
 });
 
-test('a rolled design loops at the level it is asked for, at base 2 where most codes never loop', () => {
-  for (const level of [2, 3, 5]) {
-    const rolled = Array.from({ length: 60 }, (_, seed) => looping(math, 2, level, rng(seed)));
-    expect(rolled.every((code) => math.arcs.draw(code, 2, level).loops > 0)).toBe(true);
-    expect(new Set(rolled).size).toBeGreaterThan(2);
+test('a rolled design loops at the level it is asked for at every base, the same for one seed', () => {
+  for (const [base, level] of [[2, 1], [2, 3], [3, 2], [4, 2], [5, 1]]) {
+    const rolled = Array.from({ length: 20 }, (_, seed) => looping(math, base, level, rng(seed)));
+    expect([base, level, rolled.every((code) => math.arcs.draw(code, base, level).loops > 0)]).toEqual([base, level, true]);
+    expect(looping(math, base, level, rng(3))).toBe(rolled[3]);
   }
-  expect(looping(math, 3, 3, rng(4))).toBe(choose(math, value({ level: 3 }), rng(4)));
+  expect(new Set(Array.from({ length: 20 }, (_, seed) => looping(math, 3, 3, rng(seed)))).size).toBeGreaterThan(10);
 });
 
-test('a filled cell wraps its upper-left and lower-right corners, an empty one the other two', () => {
+test('a filled cell wraps its lower-left and upper-right corners, an empty one the other two, row 0 at the bottom', () => {
   expect([corner(1, 0, 2, 3), corner(1, 1, 2, 3), corner(0, 0, 2, 3), corner(0, 1, 2, 3)]).toEqual([[2, 3], [3, 4], [3, 3], [2, 4]]);
 });
 
@@ -69,17 +63,29 @@ test('the one loop of the diagonal is the circle round the centre, its arcs swee
   expect(new Set(arcs.map((g) => `${g.x},${g.y}`)).size).toBe(4);
 });
 
-test('the study memoises the curves and reads the law', () => {
-  const plan = study(math, value({ code: '495', level: 2 }), rng(1));
+test('the study reads the counts and the law, lights every loop in the crate order and clamps the level to the cap', () => {
+  const plan = study(math, value({ level: 2 }));
   expect(plan.facts).toEqual({ code: '495', name: 'carpet', base: 3, level: 2, side: 9, cells: 81, filled: 64, loops: 3, strands: 18, law: { formula: '(8^n - 1)/7 - 3^n + n + 1', loops: 3 } });
-  expect(plan.lit.length).toBe(3);
-  expect(plan.clock.span).toBe(LEAST);
-  const again = study(math, value({ code: '495', level: 2 }), rng(1));
-  expect(again.order).toBe(plan.order);
-  expect(Array.from(again.lit)).toEqual(Array.from(plan.lit));
-  expect(Array.from(study(math, value({ code: '495', level: 2 }), rng(2)).lit)).not.toEqual(Array.from(plan.lit));
-  expect(study(math, value({ code: '5', base: 2, level: 2 }), rng(1)).facts).toMatchObject({ name: 'vtree', side: 4, loops: 0, strands: 8, law: { formula: '0', loops: 0 } });
-  expect(study(math, value({ code: '500', level: 2 }), rng(1)).facts.law).toBe(null);
+  expect(Array.from(plan.lit)).toEqual(Array.from(plan.closed.keys()).filter((k) => plan.closed[k]));
+  expect(study(math, value({ base: 2, code: '', level: 5 })).facts).toMatchObject({ code: '7', name: 'carpet', side: 32, loops: 50, strands: 64, law: { loops: 50 } });
+  expect(study(math, value({ base: 2, code: '5', level: 2 })).facts).toMatchObject({ name: 'vtree', side: 4, loops: 0, strands: 8, law: { formula: '0', loops: 0 } });
+  expect(study(math, value({ code: '500', level: 2 })).facts.law).toBe(null);
+  expect(study(math, value({ base: 5, code: '', level: 9 })).facts.level).toBe(3);
+});
+
+test('a code the crate cannot read is a fault in its own words with nothing to draw', () => {
+  const bad = study(math, value({ base: 2, code: '99' }));
+  expect(bad.side).toBe(undefined);
+  expect(bad.facts).toEqual({ code: '99', base: 2, level: 5, fault: 'code 99 out of range for dimension 2 base 2 (0..15).' });
+  expect(study(math, value({ code: 'abc' })).facts.fault).toContain('decimal');
+});
+
+test('the study keeps the last few plans, so a level dragged back is the same plan, and lets the oldest go', () => {
+  const one = study(math, value({ level: 2 }));
+  study(math, value({ level: 3 }));
+  expect(study(math, value({ level: 2 }))).toBe(one);
+  for (let code = 1; code <= KEEP; code++) study(math, value({ code: String(code), level: 1 }));
+  expect(study(math, value({ level: 2 }))).not.toBe(one);
 });
 
 test('the schedule traces loops one after another at the pace, spreads a few over the least span and caps many at the most', () => {
@@ -87,7 +93,7 @@ test('the schedule traces loops one after another at the pace, spreads a few ove
   const few = schedule([4, 8]);
   expect([few.span, few.start[0], few.end[0], few.end[1]]).toEqual([LEAST, 0, beat(4), LEAST]);
   expect(few.start[1]).toBe(LEAST - beat(8));
-  const lengths = Array.from({ length: 20 }, (_, i) => 8 + i * 2);
+  const lengths = Array.from({ length: 12 }, (_, i) => 8 + i * 2);
   const some = schedule(lengths);
   const sum = lengths.reduce((a, len) => a + beat(len), 0);
   expect(some.span).toBe(sum);
@@ -111,32 +117,19 @@ test('a compressed schedule starts its loops out of order, so the lists by start
   }
 });
 
-test('the phase runs over the span and the hold then starts over, and a still is past everything', () => {
-  expect([phase(0, 6000, false), phase(3000, 6000, false), phase(6000 + HOLD - 1, 6000, false), phase(6000 + HOLD, 6000, false)]).toEqual([0, 3000, 6000 + HOLD - 1, 0]);
-  expect(phase(-100, 6000, false)).toBe(6000 + HOLD - 100);
-  expect(phase(5, 6000, true)).toBe(Infinity);
-});
-
-test('the drift is nothing at t 0, sways inside half the margin of each axis and is a function of t alone', () => {
-  const box = { px: 60, x: 130, y: 30 };
-  expect(drift(0, box)).toEqual([0, 0]);
-  const points = Array.from({ length: 400 }, (_, i) => drift(i * 250, box));
-  expect(points.every(([x, y]) => Math.abs(x) <= SWAY * box.x && Math.abs(y) <= SWAY * box.y)).toBe(true);
-  expect(Math.max(...points.map(([x]) => x))).toBeGreaterThan(0.9 * SWAY * box.x);
-  expect(Math.min(...points.map(([, y]) => y))).toBeLessThan(-0.9 * SWAY * box.y);
-  expect(drift(ORBIT[0] * Math.PI / 2, box)[0]).toBeCloseTo(SWAY * box.x, 6);
-  expect(drift(1234, box)).toEqual(drift(1234, { ...box }));
-  expect(drift(1234, { px: 1, x: -5, y: -5 })).toEqual([0, 0]);
-});
-
 test('the fit centres the square on the stage inside the padding', () => {
   expect(fit(9, 800, 600, 30)).toEqual({ px: 60, x: 130, y: 30 });
   expect(fit(4, 400, 1000, 0)).toEqual({ px: 100, x: 0, y: 300 });
 });
 
-test('a trail is one move and an arc per step, closed on a loop, and the picture is a sheet of rects and two paths in the shades', () => {
+test('an auto stroke is a share of a cell held between a hair and three pixels, a set one a share never under a device pixel', () => {
+  expect([thick(0, 10, 2), thick(0, 1, 2), thick(0, 200, 2)]).toEqual([AUTO * 10, THIN * 2, THICK * 2]);
+  expect([thick(0.3, 100, 2), thick(0.02, 10, 2)]).toEqual([30, 2]);
+});
+
+test('a trail is one move and an arc per step, closed on a loop, and the picture is a flipped sheet of rects and two paths in the shades', () => {
   expect(bend(5, 10, 15, true)).toBe('A5 5 0 0 1 10 15');
-  const plan = study(math, value({ code: '9', base: 2, level: 1 }), rng(1));
+  const plan = study(math, value({ code: '9', base: 2, level: 1 }));
   const loop = trail(plan, plan.closed.indexOf(1), UNIT);
   expect(loop.match(/A/g)).toHaveLength(4);
   expect(loop.startsWith('M')).toBe(true);
@@ -145,16 +138,16 @@ test('a trail is one move and an arc per step, closed on a loop, and the picture
   const strand = trail(plan, plan.closed.indexOf(0), UNIT);
   expect(strand.match(/A/g)).toHaveLength(1);
   expect(strand.endsWith('Z')).toBe(false);
-  const text = picture(plan, { look: 'all', width: 0.16, cells: 1 }, SHADES);
-  expect(text.startsWith('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">')).toBe(true);
+  const text = picture(plan, { look: 'all', width: 0, cells: 1 }, SHADES);
+  expect(text.startsWith('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><g transform="matrix(1 0 0 -1 0 20)">')).toBe(true);
   expect(text.match(/<rect /g)).toHaveLength(2);
   expect(text).toContain(`<g fill="${SHADES.fill}">`);
   expect(text.match(/<path /g)).toHaveLength(2);
-  expect(text).toContain(`stroke="${SHADES.dim}" stroke-width="1.6"`);
-  expect(text).toContain(`stroke="${SHADES.accent}"`);
+  expect(text).toContain(`stroke="${SHADES.strand}" stroke-width="1.6"`);
+  expect(text).toContain(`stroke="${SHADES.loop}"`);
   const bare = picture(plan, { look: 'loops', width: 0.3, cells: 0 }, SHADES);
   expect(bare.match(/<path /g)).toHaveLength(1);
   expect(bare).not.toContain('<rect');
   expect(bare).toContain('stroke-width="3"');
-  expect(picture(plan, { look: 'strands', width: 0.3, cells: 0 }, SHADES)).not.toContain(SHADES.accent);
+  expect(picture(plan, { look: 'strands', width: 0.3, cells: 0 }, SHADES)).not.toContain(SHADES.loop);
 });

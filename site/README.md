@@ -3,7 +3,7 @@
 - mrly.net: one static shell, one router, one table of routes; every page is drawn in the browser.
 - Rust is the only math; the browser only draws.
 - Browser floor: iOS 16.4 / Safari 16.4 (remark-gfm's lookbehind regex in the prose chunk, OffscreenCanvas in the figure pen).
-- Dependencies: React, KaTeX, Shiki, the unified markdown chain and Three.js (the 3D stage of the designs app, loaded lazily); `bun install` fetches them.
+- Dependencies: React, KaTeX, Shiki, the unified markdown chain and Three.js (the 3D stages of designs, three and graphs, loaded lazily); `bun install` fetches them.
 - `ui/README.md` has the shell, the router, the pages and the chrome; `kit/README.md` has the tools; `apps/README.md` has the apps.
 
 ## SHAPE
@@ -19,6 +19,7 @@ request /about/
 ## THE UNIT
 
 - `apps/<id>/` is the only unit: every route on mrly.net is one folder, `/<id>/`; `home` is `/`.
+- `apps/README.md` has the app contract: the scene, the widget, the spec, the chrome, the rules and a map of every app.
 - `app.json`: `title`, `line` (the lead), `menu` (`play`, `read` or `tool`), and `saver`, `hidden`, `deep` (each `true` or absent), `source` (a repo path of a markdown page), `route` (`/404.html` for `missing`). No other field; nothing else is configured.
 - The page is exactly one of `index.jsx`, `page.md` or `source`.
 - `index.jsx` exports `mount(at)` and `unmount(at)`, an island under the still (title, figure, `<noscript>`), wide, bare and wearing `lib/mrly.css`; or `render(row, site, host, { text, rows, url, left, right })`, `unmount(host)`, optional `mount(host)`, a page drawn before the swap; an optional `layout` (`left`, `right`, `wide`, `bare`, `sheet`) overrides the island's.
@@ -52,6 +53,7 @@ request /about/
 - `loop` in seconds, with `frames`: an animated figure only; none in the live set.
 - `units`: the `mrlyjs` wasm units it imports, e.g. `{ math }`; the caller initialises them before the first draw.
 - `ink` is `ink(tinted(dark | light, ...))` from `kit/theme`: the tint's hue sits in the blue slot.
+- An app icon is a plate drawn with `lib/icon.js` on a clear ground: the build lists every `apps/<id>/icon.js` as a plate; a research or blog figure keeps the ink ground.
 - A figure is a pure function of its inputs: no file, DOM, Date or Math.random.
 - A figure asserts its facts and throws when one breaks; heavy facts are memoised at module level; pixels are never cached.
 - The pen and the kit live in `../pkgs/mrlyjs/view`: `canvas` in the browser, `raster` in Bun and the tests.
@@ -75,7 +77,7 @@ request /about/
 
 - `scripts/site.ts` is one Bun plugin; Bun cannot import a computed path, so each lazy family is a module of `() => import()` thunks.
 - `site:routes`: `{ site, rows }`.
-- `site:figures`: name to figure chunk, plus the wasm urls of the live units.
+- `site:figures`: name to figure chunk, the wasm urls of the live units, and the plates.
 - `site:apps`: id to app chunk, `own` (the apps whose index.jsx exports `render`), plus `lock`, the desk and its lock screen.
 - `site:css`: the `git` and `mrly` sheet urls.
 - `apps:scenes`: the saver scenes, the desk first, then by title.

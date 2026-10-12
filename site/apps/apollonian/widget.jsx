@@ -1,91 +1,69 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { text } from '../../lib/export.js';
-import { Bar } from '../../lib/frame.jsx';
-import { Group } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { said, step } from './engine.js';
-import { make } from './scene.js';
-
-const ROWS = [
-  ['Circles', (f) => f.circles],
-  ['Ford', (f) => f.ford],
-  ['Nodes', (f) => f.nodes],
-  ['Brightness', (f) => (f.bright === null ? null : `${f.bright} of ${f.want}`)],
-];
+import { rng } from '../../lib/scene.js';
+import { roll, said, step } from './engine.js';
+import { file, make } from './scene.js';
 
 const at = (e) => {
   const box = e.currentTarget.getBoundingClientRect();
   return [(e.clientX - box.left) / box.width, (e.clientY - box.top) / box.height];
 };
 
-const Fact = ({ name, value }) => (
-  <label>
-    <span>{name}</span>
-    <span className="num">{value}</span>
-  </label>
-);
+function stack(s) {
+  if (!s) return [];
+  return [['stack', `Q = ${s.order}`], ['brightness', `${s.bright} of Q(Q + 1)/2 = ${s.want}`], ['nodes lit', String(s.nodes)], ['touched', String(s.touched)], ['missed', String(s.missed)], [`off-Ford below ${s.reach}`, String(s.offford)]];
+}
 
-export function Widget({ value, onChange, onReady, onExport, unit: given }) {
-  const [loaded, setLoaded] = useState(null);
-  const unit = given ?? loaded;
+export function rows(f) {
+  if (!f) return [];
+  const line = f.line === null ? [['line', 'none in this root, so no Ford circles and no stack']] : [['Ford', `${f.ford} of ${f.line} on the line`]];
+  const census = [['drawn', String(f.drawn)], ['quadruples', String(f.quads)], ['broken', String(f.broken)], ['strayed', String(f.strayed)]];
+  const off = f.line === null ? [] : [['off-Ford', String(f.line - f.ford)]];
+  return [...(f.circle ? [['circle', said(f.circle)]] : []), ['root', f.title], ['N(T)', `${f.circles} to T = ${f.cap}`], ...line, ...stack(f.shadow), ...census, ...off];
+}
+
+export function Widget({ value, onChange, onReady, onExport, onStatus, units }) {
+  const unit = units?.num;
   const live = useRef(null);
   const now = useRef(value);
   now.current = value;
-  const [facts, setFacts] = useState(null);
-  const [tapped, setTapped] = useState(null);
+  const hooks = useRef({});
+  hooks.current = { onChange, onStatus };
+  const seed = useRef(value.seed);
   useEffect(() => {
-    if (given) return undefined;
-    let on = true;
-    import('./unit.js').then(({ num, ready }) => ready.then(() => on && setLoaded(() => num)));
-    return () => {
-      on = false;
-    };
-  }, [given]);
-  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, once: true }), [unit]);
+    if (seed.current === value.seed) return;
+    seed.current = value.seed;
+    onChange?.(roll(rng(value.seed)));
+  }, [value.seed]);
+  const tell = useCallback((facts) => hooks.current.onStatus?.(rows(facts)), []);
+  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onTell: tell }), [unit, tell]);
   const deeper = (by) => {
-    const next = step(now.current.cap, by);
-    if (next !== now.current.cap) onChange({ cap: next });
+    const cap = step(now.current.cap, by);
+    if (cap !== now.current.cap) hooks.current.onChange?.({ cap });
   };
   const ready = (handle) => {
     live.current = handle;
-    setFacts(handle?.facts ?? null);
-    setTapped(null);
-    const again = () => {
-      handle.again();
-      setTapped(null);
-    };
-    onReady?.(handle && { ...handle, deeper, again });
+    if (!handle) hooks.current.onStatus?.([]);
+    onReady?.(handle && { ...handle, deeper });
   };
   const down = (e) => {
     if (e.button) return;
-    setTapped(live.current?.tap(...at(e)) ?? null);
+    live.current?.tap(...at(e));
   };
   const keep = () => {
     const picture = live.current?.svg?.();
-    if (picture) text(picture, `apollonian-${now.current.seed}`, 'svg');
+    if (picture) text(picture, file(now.current), 'svg');
   };
   const dump = () => {
-    const rows = live.current?.json?.();
-    if (rows) text(rows, `apollonian-${now.current.seed}`, 'json');
+    const list = live.current?.json?.();
+    if (list) text(list, file(now.current), 'json');
   };
-  const have = Boolean(facts);
+  const have = Boolean(unit);
   useEffect(() => onExport?.(have ? [['SVG', keep], ['JSON', dump]] : []), [have]);
-  const f = facts;
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} />}
-      <Bar side="status">
-        {!unit && <span>loading</span>}
-        {f && <span>{f.title}</span>}
-        {tapped && <span>{said(tapped)}</span>}
-      </Bar>
-      {f && (
-        <Bar side="right">
-          <Group name="Counts">
-            {ROWS.map(([name, get]) => (get(f) === null ? null : <Fact key={name} name={name} value={get(f)} />))}
-          </Group>
-        </Bar>
-      )}
     </>
   );
 }

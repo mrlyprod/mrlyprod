@@ -75,6 +75,8 @@ const folders = (dir: string) => (existsSync(dir) ? readdirSync(dir, { withFileT
 
 const drawn = (dir: string) => (existsSync(dir) ? readdirSync(dir).filter((name) => name.endsWith(".ts") && !/\.(test|d)\.ts$/.test(name)).sort() : []);
 
+export const plates = (figures: Figure[]) => figures.filter((one) => dirname(dirname(one.file)) === APPS).map((one) => one.name);
+
 export function roster(): Figure[] {
   const found = [
     ...folders(APPS).map((id) => ({ name: id, file: join(APPS, id, "icon.js") })),
@@ -240,7 +242,7 @@ export const own = (list: App[]) => list.filter((one) => one.page === "index.jsx
 export function modules(ready: Ready): Record<string, string> {
   return {
     "site:routes": `export const site = ${JSON.stringify(ready.site)};\nexport const rows = ${JSON.stringify(ready.rows)};`,
-    "site:figures": [...ready.units.map((unit) => `import ${unit} from ${JSON.stringify(unitWasm(unit))};`), `export const units = { ${ready.units.join(", ")} };`, `export const figures = ${thunks(ready.figures.map((one) => [one.name, one.file]))};`].join("\n"),
+    "site:figures": [...ready.units.map((unit) => `import ${unit} from ${JSON.stringify(unitWasm(unit))};`), `export const units = { ${ready.units.join(", ")} };`, `export const figures = ${thunks(ready.figures.map((one) => [one.name, one.file]))};`, `export const plates = ${JSON.stringify(plates(ready.figures))};`].join("\n"),
     "site:apps": `export const apps = ${thunks(appFiles(ready.apps))};\nexport const own = new Set(${JSON.stringify(own(ready.apps))});\nexport const lock = () => import(${JSON.stringify(LOCK)});`,
     "site:css": `export const css = ${JSON.stringify(ready.css)};`,
     "apps:scenes": `export const scenes = ${thunks(savers(ready.apps).map((one) => [one.id, join(APPS, one.id, "scene.js")]))};`,

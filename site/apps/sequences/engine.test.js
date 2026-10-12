@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
-import { DEEP, MEASURES, TABLE, applies, badge, csv, identify, json, lead, ledger, numbers, parse, picks, print, search } from './engine.js';
+import { CANON, DEEP, MEASURES, SPACES, TABLE, applies, badge, closed, csv, identify, json, keyed, lead, ledger, numbers, parse, picks, plotted, print, search } from './engine.js';
 import RECORDS from './records.json' with { type: 'json' };
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -91,6 +91,7 @@ test('a seed leads with a row that draws a picture: the empty design and flat re
   expect(lead(book, list, at('2-2-15-voids-level')).key).toBe('2-2-15-surface-level');
   expect(lead(book, list, at('2-2-0-fills-level')).key).toBe(list[0].key);
   expect(lead(book, list.filter((row) => row.code === '0'), 3).key).toBe('2-2-0-voids-side');
+  expect(lead(book, list, 0, list[0].key)).not.toBe(list[0]);
 });
 
 test('the keyed records read their design sequences at their shifts', () => {
@@ -135,7 +136,7 @@ test('search takes a window of terms, a name, a code, a measure or a record id',
   const list = book.keys(2, 2);
   while (book.sweep(2, 2));
   const found = (row) => badge(RECORDS, row, row.terms);
-  const names = (q) => search(list, q, found, (code) => book.typed(2, 2, code)).map((row) => row.key);
+  const names = (q) => search(list, q, { found, typed: (code) => book.typed(2, 2, code) }).map((row) => row.key);
   expect(names('8, 21, 40')).toEqual(['2-2-7-fills-side']);
   expect(names('64 512')).toContain('2-2-7-fills-level');
   expect(names('carpet').every((k) => k.startsWith('2-2-7-'))).toBe(true);
@@ -146,6 +147,38 @@ test('search takes a window of terms, a name, a code, a measure or a record id',
   expect(names('9').slice(0, 2)).toEqual(['2-2-9-fills-level', '2-2-9-fills-side']);
   expect(names('7').filter((k) => k.startsWith('2-2-7-'))).toHaveLength(16);
   expect(numbers('a, 2')).toBe(null);
+});
+
+test('the ledger spans every space when the space is any: a typed code reads in each space that holds it', () => {
+  expect(book.keys('', '').length).toBe(SPACES.reduce((sum, [d, b]) => sum + book.keys(d, b).length, 0));
+  expect(book.keys(3, '').every((row) => row.dim === 3 && row.base === 2)).toBe(true);
+  expect(new Set(book.typed('', '', '7').map((row) => `${row.dim}-${row.base}`))).toEqual(new Set(['2-2', '2-3', '3-2']));
+  expect(book.progress('', '').total).toBe(book.keys('', '').length);
+});
+
+test('a sequence name or a record names its row before the sweep reads it', () => {
+  const fresh = ledger(math);
+  const named = (needle) => [fresh.file(needle), ...keyed(RECORDS, needle).map((record) => fresh.file(record.key))].filter(Boolean);
+  const names = (q) => search(fresh.keys('', ''), q, { named }).map((row) => row.key);
+  expect(names('sequence_dim=3_code=23_measure=surface_axis=level')[0]).toBe('3-2-23-surface-level');
+  expect(names('A000567')[0]).toBe(CANON);
+  expect(names('octagonal')[0]).toBe(CANON);
+  expect(fresh.file('bang_nonsense')).toBe(null);
+});
+
+test('a badge carries the shift of the record against the ledger, and the closed form is the own record formula', () => {
+  const read = (k) => {
+    const row = book.row(k);
+    book.read(row, 8, DEEP.cells);
+    return row;
+  };
+  const carpet = read(key(2, 2, 7, 'fills', 'side'));
+  expect(badge(RECORDS, carpet, carpet.terms)).toMatchObject({ id: 'A000567', shift: 0, status: 'Proved' });
+  const centred = read(key(2, 2, 9, 'fills', 'side'));
+  expect(badge(RECORDS, centred, centred.terms)).toMatchObject({ id: 'A001844', shift: -1 });
+  expect(closed(RECORDS, carpet)).toBe('k(3k - 2)');
+  expect(closed(RECORDS, read(key(2, 2, 7, 'voids', 'side')))).toBe('');
+  expect(plotted(carpet, 12)).toBe('../plot/?dim=2&base=2&code=7&measure=fills&axis=side&terms=12');
 });
 
 test('a pick is a dot list of valid keys, six at most, printed back as it was parsed', () => {

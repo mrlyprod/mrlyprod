@@ -1,29 +1,27 @@
-import { frame, Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = {};
 
-const SIDE = 33;
-const CELL = 25;
 const BARS = 16;
 const PEAK = 2;
 const DECAY = 4.5;
 const REACH = 15;
+const WIDTH = 0.74;
 
 const envelope = (k) => (k < PEAK ? (k + 1) / (PEAK + 1) : Math.exp(-(k - PEAK) / DECAY));
 
 export default function draw(pen, ink) {
-  const w = CELL * SIDE;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - w) / 2), w, w), SIDE, SIDE, 0);
-  const mid = (SIDE - 1) / 2;
+  const { box, paint } = plate(pen, "pink", 0.16);
   const heights = Array.from({ length: BARS }, (_, k) => Math.max(0, Math.round(REACH * envelope(k) * (0.62 + 0.38 * Math.abs(Math.cos(k * 1.9))))));
   const top = heights.indexOf(Math.max(...heights));
   if (top > BARS / 4) throw new Error(`sfx: the burst peaks at bar ${top}, not in its first quarter`);
   if (heights.at(-1) > 1) throw new Error("sfx: the burst does not die away");
-  for (let col = 0; col < SIDE; col++) cells.fill(pen, col, mid, ink.dim);
+  const [, cy] = box.center();
+  const slot = box.w / BARS;
+  const w = slot * WIDTH;
   heights.forEach((h, k) => {
-    const env = envelope(k);
-    const tone = env > 0.6 ? ink.fg : env > 0.25 ? ink.blue : ink.mix(ink.ground, ink.blue, 0.55);
-    const col = 1 + 2 * k;
-    for (let row = mid - h; row <= mid + h; row++) cells.fill(pen, col, row, tone);
+    const half = Math.max(w / 2, (h / REACH) * (box.h / 2));
+    const x = box.x + k * slot + (slot - w) / 2;
+    pen.round_rect(x, cy - half, w, 2 * half, w / 2, ink.mix(paint.light, paint.white, Math.min(1, envelope(k) / 0.6)));
   });
 }

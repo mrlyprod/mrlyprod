@@ -1,51 +1,58 @@
 import { tidy } from '../../lib/knobs.js';
-import { TINTS, rgb, rng, veil } from '../../lib/scene.js';
+import { TINTS, paints, rgb, rng, veil } from '../../lib/scene.js';
 import { sheet } from '../../lib/svg.js';
-import { BAND, CAPS, DUST, HOLD, LEAST, LOOKS, PAD, ROOTS, STRIDE, choose, clock, count, depth, glyph, hit, layout, named, reach, shade, stack, study, thick } from './engine.js';
-import { box as rect, discs, labels, rings, rules } from './shapes.js';
-
-const onStrip = (value) => choose(value.root, rng(value.seed)) === 'strip';
+import { CAPS, HOLD, INKS, LEAST, LOOKS, PAD, ROOTS, SIX, STRIDE, clock, count, glyph, hit, layout, named, nib, reach, roll, shade, study } from './engine.js';
+import { circles, clip, labels, rules } from './shapes.js';
 
 export const SPEC = [
-  { key: 'root', label: 'Root', kind: 'pick', def: '', options: [['', 'Random'], ...ROOTS.map((name) => [name, named(name)])], group: 'Packing' },
-  { key: 'cap', label: 'Cap', kind: 'pick', def: 2048, options: CAPS.map((cap) => [cap, String(cap)]), group: 'Packing' },
-  { key: 'look', label: 'Look', kind: 'pick', def: 'fill', options: LOOKS, group: 'Look' },
+  { key: 'root', label: 'Root quadruple', kind: 'pick', def: 'strip', options: ROOTS.map((name) => [name, named(name)]), group: 'Packing' },
+  { key: 'cap', label: 'Curvature cap T', kind: 'pick', def: 2048, options: CAPS.map((cap) => [cap, String(cap)]), group: 'Packing' },
+  { key: 'ink', label: 'Ink', kind: 'pick', def: 'size', options: INKS, group: 'Look' },
+  { key: 'look', label: 'Discs', kind: 'segment', def: 'wash', options: LOOKS, group: 'Look' },
+  { key: 'labels', label: 'Curvatures', kind: 'toggle', def: 0, group: 'Look' },
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
-  { key: 'ford', label: 'Ford', kind: 'toggle', def: 0, group: 'Look', when: onStrip },
-  { key: 'order', label: 'Depth', kind: 'slider', def: 0, min: 0, max: (value) => stack(value.cap), step: 1, group: 'Stack', when: onStrip },
 ];
+
+export const ABOUT = [
+  'Four mutually tangent circles obey Descartes\' rule. Swap one for the other circle that touches the remaining three and its curvature is k\' = 2(k1 + k2 + k3) - k4, with no square root. Written as the integer triple (k, kx, ky), a circle moves by the same rule in all three numbers, so an integer root quadruple grows the whole packing in exact integers, up to the curvature cap T.',
+  'The strip root is two lines a unit apart. The circles it grows that rest on the lower line are exactly the Ford circles: over each reduced fraction a/b sits a circle of curvature 2b^2 touching the line at a/b. The Ford ink sets them apart.',
+  'Info reads the Farey stack at the deepest depth Q the cap covers, 2Q^2 at most T: a node at each fraction a/b with b at most Q, lit floor(Q/b) times, every one touched by the Ford circle over it. The stack is the one [the Farey note](/research/farey/) builds.',
+  'Tap a circle to read its triple and the fraction it rests on; Reroll draws a new root, cap and look. The growth, its six invariant checks, the census N(T), the Ford test and the stack are computed in Rust. The dimension of the packing, which sets how fast N(T) grows, is in [the Apollonian note](/research/apollonian/).',
+];
+
+export const units = () => import('./unit.js');
+
+export const file = (value) => `apollonian-${value.root === 'strip' ? 'strip' : `bounded-${String(value.root).replace('-', '').split(',').join('-')}`}-${value.cap}`;
 
 export const PAGE = {
   spec: SPEC,
-  record: true,
-  keys: [
-    { key: 'Enter', label: 'Again', act: 'again', button: true },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Cap', act: 'cap' },
-  ],
+  units,
+  name: file,
+  about: ABOUT,
+  keys: [{ key: ['ArrowUp', 'ArrowDown'], label: 'Cap T', act: 'cap' }],
   actions: {
-    again: (scene) => scene.again(),
     cap: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
   },
 };
 
-export const units = () => import('./unit.js');
-
 export const FACE = 'Noto Sans Mono';
 
 const TAU = Math.PI * 2;
-const WASH = 0.14;
-const EDGE = 0.45;
-const GAP = 6;
+const WASH = 0.15;
+const DIM = 0.45;
+const EDGE = 1.5;
+const HULL = 1.3;
 const HALO = [4, 2];
-const DIM = 0.2;
-const FAINT = 0.3;
-const REST = 0.4;
-const WIDTHS = [0.6, 1.4];
-const TICK = 4;
+const NIBS = 16;
 
 const mix = (a, b, t) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(', ')})`;
 
 const font = (size) => `${size}px "${FACE}", ui-monospace, monospace`;
+
+export const fg = (paper) => {
+  const [r, g, b] = rgb(paper);
+  return 0.299 * r + 0.587 * g + 0.114 * b < 128 ? '#ffffff' : '#000000';
+};
 
 /* SCENE */
 
@@ -53,171 +60,144 @@ export function make(canvas, view, opts = {}) {
   const num = opts.num;
   if (!num) throw new Error('apollonian: the scene wants mrlyjs/num as opts.num');
   const ctx = canvas.getContext('2d');
-  const value = tidy(SPEC, opts);
-  const name = choose(value.root, view.rand);
-  const plan = study(num, name, value.cap);
-  const { bars, ...counts } = depth(num, plan, value.order);
-  const { data, ints, bands, fords, total, roots, strip, octaves } = plan;
-  const look = value.look;
-  const once = Boolean(opts.once);
-  const apart = strip && value.ford === 1;
-  const widths = apart ? WIDTHS : Array.from({ length: octaves }, (_, b) => thick(b, octaves));
-  const tones = widths.length;
-  const tone = apart ? (i) => fords[i] : (i) => bands[i];
-  let origin = 0;
+  const whole = !view.lock;
+  const tell = opts.onTell;
+  let value = null;
+  let plan = null;
   let lap = -1;
   let drawn = 0;
-  let lit = 0;
   let layer = null;
   let pen = null;
   let box = null;
   let picked = null;
-  let accent = '#000';
-  let paper = '#fff';
-  let wash = '';
-  let shades = [];
-  let edges = [];
-  const paint = () => {
-    const paints = view.look();
-    accent = paints.accent;
-    paper = paints.paper;
-    const a = rgb(accent);
-    const p = rgb(paper);
-    shades = apart ? [mix(p, a, FAINT), accent] : Array.from({ length: octaves }, (_, b) => mix(p, a, shade(b, octaves)));
-    edges = apart ? [veil(accent, REST), accent] : shades.map(() => accent);
-    wash = mix(p, a, WASH);
+  let dirty = true;
+  let paper = '';
+  let accent = '';
+  let ink = '';
+  let dim = '';
+  let inks = [];
+  const tone = (i) => {
+    if (i < plan.roots) return 0;
+    if (value.ink === 'size') return 1 + plan.hues[i];
+    if (value.ink === 'shade') return 1 + plan.bands[i];
+    if (value.ink === 'ford') return plan.fords[i] ? 1 : 2;
+    return 1;
   };
-  const band = () => (strip && bars.length ? Math.round(view.h * BAND) : 0);
+  const fills = (t) => (value.look === 'wash' ? veil(inks[t], WASH) : value.look === 'solid' ? inks[t] : null);
+  const strokes = (t) => (value.look === 'solid' ? paper : inks[t]);
+  const paint = () => {
+    const skin = view.look();
+    paper = skin.paper;
+    accent = skin.accent;
+    ink = fg(paper);
+    const p = rgb(paper);
+    const a = rgb(accent);
+    dim = mix(p, rgb(ink), DIM);
+    const rest = {
+      size: () => SIX.map((hue) => paints(canvas, hue).accent),
+      shade: () => Array.from({ length: plan.octaves }, (_, b) => mix(p, a, shade(b, plan.octaves))),
+      ford: () => [accent, dim],
+      one: () => [ink],
+    };
+    inks = [value.look === 'solid' ? dim : ink, ...rest[value.ink]()];
+  };
+  const look = () => [value.root, value.cap, value.ink, value.look, value.labels, value.tint].join('|');
   const reset = () => {
-    box = layout(plan.frame, strip, view.w, view.h, PAD * view.dpr, band());
+    box = layout(plan.frame, view.w, view.h, PAD * view.dpr);
     layer = new OffscreenCanvas(view.w, view.h);
     pen = layer.getContext('2d');
     pen.textAlign = 'center';
     pen.textBaseline = 'middle';
     drawn = 0;
-    lit = 0;
+    dirty = true;
   };
   const X = (x) => box.ox + x * box.k;
   const Y = (y) => box.oy - y * box.k;
-  const extend = (to, K) => {
-    const [j0, j1] = box.periods;
-    if (to > drawn) {
-      const groups = Array.from({ length: tones }, () => []);
-      for (let i = drawn; i < to; i++) if (data[i * STRIDE + 2] * box.k >= DUST) groups[tone(i)].push(i);
-      groups.forEach((group, t) => {
-        if (!group.length) return;
-        pen.beginPath();
-        for (const i of group) {
-          const r = data[i * STRIDE + 2] * box.k;
-          const y = Y(data[i * STRIDE + 1]);
-          for (let j = j0; j <= j1; j++) {
-            const x = X(data[i * STRIDE] + j);
-            pen.moveTo(x + r, y);
-            pen.arc(x, y, r, 0, TAU);
-          }
-        }
-        if (look === 'fill') {
-          pen.fillStyle = shades[t];
-          pen.fill();
-        } else {
-          pen.strokeStyle = edges[t];
-          pen.lineWidth = widths[t] * view.dpr;
-          pen.stroke();
-        }
-      });
-      if (look === 'labels') {
-        let last = 0;
-        let ink = '';
-        for (let i = drawn; i < to; i++) {
-          const text = String(ints[i * 3]);
-          const size = Math.floor(glyph(data[i * STRIDE + 2] * box.k, text.length));
-          if (size < LEAST * view.dpr) continue;
-          if (size !== last) pen.font = font(size);
-          last = size;
-          if (edges[tone(i)] !== ink) {
-            ink = edges[tone(i)];
-            pen.fillStyle = ink;
-          }
-          const y = Y(data[i * STRIDE + 1]);
-          for (let j = j0; j <= j1; j++) pen.fillText(text, X(data[i * STRIDE] + j), y);
-        }
-      }
-      if (apart) {
-        const half = TICK * view.dpr;
-        pen.beginPath();
-        for (let i = drawn; i < to; i++) {
-          if (!fords[i]) continue;
-          for (let j = j0; j <= j1; j++) {
-            const x = X(data[i * STRIDE] + j);
-            pen.moveTo(x, box.line - half);
-            pen.lineTo(x, box.line + half);
-          }
-        }
-        pen.strokeStyle = accent;
-        pen.lineWidth = view.dpr;
-        pen.stroke();
-      }
-      drawn = to;
+  const period = (u, v, k) => {
+    const [x0, y0, x1, y1] = plan.frame;
+    return [u(x0), v(y1), (x1 - x0) * k, (y1 - y0) * k];
+  };
+  const sorted = (from, to, k) => {
+    const sets = new Map();
+    for (let i = from; i < to; i++) {
+      const key = tone(i) * NIBS + Math.round(nib(plan.data[i * STRIDE + 2] * k) * 10);
+      const set = sets.get(key);
+      if (set) set.push(i);
+      else sets.set(key, [i]);
     }
-    if (lit < bars.length && bars[lit].k <= K) {
-      const top = box.line + GAP * view.dpr;
-      const tall = band() - 2 * GAP * view.dpr;
-      const groups = new Map();
-      while (lit < bars.length && bars[lit].k <= K) {
-        const bar = bars[lit++];
-        if (!groups.has(bar.h)) groups.set(bar.h, []);
-        groups.get(bar.h).push(bar.x);
+    return sets;
+  };
+  const extend = (to) => {
+    if (to <= drawn) return;
+    const { data, ints, strip } = plan;
+    pen.save();
+    if (strip) {
+      pen.beginPath();
+      pen.rect(...period(X, Y, box.k));
+      pen.clip();
+    }
+    for (const [key, list] of sorted(drawn, to, box.k / view.dpr)) {
+      const t = Math.floor(key / NIBS);
+      pen.beginPath();
+      for (const i of list) {
+        const r = data[i * STRIDE + 2] * box.k;
+        const x = X(data[i * STRIDE]);
+        const y = Y(data[i * STRIDE + 1]);
+        pen.moveTo(x + r, y);
+        pen.arc(x, y, r, 0, TAU);
       }
-      pen.lineWidth = view.dpr;
-      for (const [h, xs] of groups) {
-        pen.strokeStyle = veil(accent, DIM + (1 - DIM) * h);
-        pen.beginPath();
-        for (const x of xs) {
-          for (let j = j0; j <= j1; j++) {
-            const px = X(x + j);
-            pen.moveTo(px, top);
-            pen.lineTo(px, top + tall * h);
-          }
-        }
-        pen.stroke();
+      const fill = fills(t);
+      if (fill) {
+        pen.fillStyle = fill;
+        pen.fill();
+      }
+      pen.strokeStyle = strokes(t);
+      pen.lineWidth = ((key % NIBS) / 10) * view.dpr;
+      pen.stroke();
+    }
+    if (value.labels) {
+      let last = 0;
+      for (let i = drawn; i < to; i++) {
+        const text = String(ints[i * 3]);
+        const size = Math.floor(glyph(data[i * STRIDE + 2] * box.k, text.length));
+        if (size < LEAST * view.dpr) continue;
+        if (size !== last) pen.font = font(size);
+        last = size;
+        pen.fillStyle = strokes(tone(i));
+        pen.fillText(text, X(data[i * STRIDE]), Y(data[i * STRIDE + 1]));
       }
     }
+    pen.restore();
+    drawn = to;
   };
   const container = () => {
-    if (strip) {
-      const top = Y(plan.frame[3]);
-      const bottom = box.line;
-      if (look === 'fill') {
-        ctx.fillStyle = wash;
-        ctx.fillRect(0, top, view.w, bottom - top);
-      } else {
-        ctx.strokeStyle = veil(accent, EDGE);
-        ctx.lineWidth = view.dpr;
-        ctx.beginPath();
-        ctx.moveTo(0, top);
-        ctx.lineTo(view.w, top);
-        ctx.moveTo(0, bottom);
-        ctx.lineTo(view.w, bottom);
-        ctx.stroke();
+    const [x0, y0, x1, y1] = plan.frame;
+    if (plan.strip) {
+      ctx.strokeStyle = dim;
+      ctx.lineWidth = EDGE * view.dpr;
+      ctx.beginPath();
+      for (const y of [y0, y1]) {
+        ctx.moveTo(X(x0), Y(y));
+        ctx.lineTo(X(x1), Y(y));
       }
+      ctx.stroke();
     } else if (plan.hull) {
       const { cx, cy, r } = plan.hull;
       ctx.beginPath();
       ctx.arc(X(cx), Y(cy), r * box.k, 0, TAU);
-      if (look === 'fill') {
-        ctx.fillStyle = wash;
+      if (value.look !== 'rings') {
+        ctx.fillStyle = veil(ink, WASH);
         ctx.fill();
-      } else {
-        ctx.strokeStyle = accent;
-        ctx.lineWidth = thick(0, octaves) * view.dpr;
-        ctx.stroke();
       }
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = HULL * view.dpr;
+      ctx.stroke();
     }
   };
   const halo = () => {
-    const { i, j } = picked;
+    const { data } = plan;
     ctx.beginPath();
-    ctx.arc(X(data[i * STRIDE] + j), Y(data[i * STRIDE + 1]), data[i * STRIDE + 2] * box.k, 0, TAU);
+    ctx.arc(X(data[picked * STRIDE]), Y(data[picked * STRIDE + 1]), data[picked * STRIDE + 2] * box.k, 0, TAU);
     ctx.strokeStyle = paper;
     ctx.lineWidth = HALO[0] * view.dpr;
     ctx.stroke();
@@ -226,55 +206,62 @@ export function make(canvas, view, opts = {}) {
     ctx.stroke();
   };
   const reached = () => {
-    const { loop, share } = clock(view.t - origin, plan.span, HOLD, view.still, once);
-    const K = reach(plan.k0, value.cap, share);
-    return { loop, K, to: count(data, roots, total, K) };
+    const { loop, share } = clock(view.t, plan.span, HOLD, whole || view.still);
+    return { loop, to: count(plan.data, plan.roots, plan.total, reach(plan.k0, value.cap, share)) };
   };
   const draw = () => {
-    const { loop, K, to } = reached();
+    const { loop, to } = reached();
     if (!layer || loop !== lap || to < drawn) {
       reset();
       lap = loop;
     }
-    extend(to, K);
+    if (!dirty && to === drawn) return;
+    extend(to);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, view.w, view.h);
     container();
     ctx.drawImage(layer, 0, 0);
-    if (picked) halo();
+    if (picked !== null) halo();
+    dirty = false;
   };
-  const read = (i, j) => {
+  const read = (i) => {
+    const { ints, data, strip, at } = plan;
     const k = ints[i * 3];
-    const x = ints[i * 3 + 1] + j * k;
+    const x = ints[i * 3 + 1];
     const y = ints[i * 3 + 2];
     const c = num.apollonian.Circle.from({ k, x, y });
     const line = strip && num.apollonian.on_line(c);
     const ford = line && num.apollonian.is_ford(c);
     c.free();
     const cx = data[i * STRIDE];
-    const base = ford ? (plan.at.get(cx) ?? (Number.isInteger(cx) ? { num: cx, den: 1 } : null)) : null;
-    const touch = base && { num: base.num + j * base.den, den: base.den };
+    const touch = ford ? (at.get(cx) ?? (Number.isInteger(cx) ? { num: cx, den: 1 } : null)) : null;
     return { k, x, y, line, ford, num: touch?.num, den: touch?.den };
   };
+  const facts = () => ({ ...plan.facts, circle: picked === null ? null : read(picked) });
   const tap = (u, v) => {
     if (!box) return null;
-    let x = (u * view.w - box.ox) / box.k;
+    const x = (u * view.w - box.ox) / box.k;
     const y = (box.oy - v * view.h) / box.k;
-    let j = 0;
-    if (strip) {
-      j = Math.floor(x);
-      x -= j;
-    }
-    const i = hit(data, drawn, x, y);
-    picked = i < 0 || (picked && picked.i === i && picked.j === j) ? null : { i, j };
+    const [x0, , x1] = plan.frame;
+    const i = !plan.strip || (x >= x0 && x <= x1) ? hit(plan.data, drawn, x, y) : -1;
+    picked = i < 0 || picked === i ? null : i;
+    dirty = true;
     draw();
-    return picked ? read(i, j) : null;
+    tell?.(facts());
+    return picked === null ? null : read(picked);
   };
-  const again = () => {
-    origin = view.t;
-    picked = null;
-    if (view.still) view.wake?.();
-    else draw();
+  const set = (next) => {
+    const rolled = next.root === undefined ? roll(rng(next.seed)) : null;
+    const was = { plan, look: value && look() };
+    value = tidy(SPEC, rolled ? { ...rolled, ...next, root: rolled.root } : next);
+    plan = study(num, value.root, value.cap);
+    if (plan !== was.plan) picked = null;
+    if (look() !== was.look) {
+      paint();
+      layer = null;
+    }
+    dirty = true;
+    tell?.(facts());
   };
   const theme = () => {
     paint();
@@ -287,51 +274,40 @@ export function make(canvas, view, opts = {}) {
     const dpr = view.dpr;
     const w = view.w / dpr;
     const h = view.h / dpr;
-    const tall = band() / dpr;
-    const css = layout(plan.frame, strip, w, h, PAD, tall);
+    const css = layout(plan.frame, w, h, PAD);
     const U = (x) => css.ox + x * css.k;
     const V = (y) => css.oy - y * css.k;
-    const [j0, j1] = css.periods;
-    const spread = (cx, fn) => {
-      for (let j = j0; j <= j1; j++) fn(U(cx + j));
-    };
+    const { data, ints, strip, frame } = plan;
+    const [x0, y0, x1, y1] = frame;
     const parts = [];
-    if (strip) {
-      const top = V(plan.frame[3]);
-      parts.push(look === 'fill' ? rect(0, top, w, css.line - top, wash) : rules([[0, top, w, top], [0, css.line, w, css.line]], veil(accent, EDGE), 1));
-    } else if (plan.hull) {
-      const { cx, cy, r } = plan.hull;
-      parts.push(look === 'fill' ? discs([[U(cx), V(cy), r * css.k]], wash) : rings([[U(cx), V(cy), r * css.k]], accent, thick(0, octaves)));
+    if (strip) parts.push(rules([[U(x0), V(y0), U(x1), V(y0)], [U(x0), V(y1), U(x1), V(y1)]], dim, EDGE));
+    else if (plan.hull) parts.push(circles([[U(plan.hull.cx), V(plan.hull.cy), plan.hull.r * css.k]], { fill: value.look === 'rings' ? 'none' : veil(ink, WASH), stroke: ink, width: HULL }));
+    const body = [];
+    for (const [key, list] of sorted(0, drawn, css.k)) {
+      const t = Math.floor(key / NIBS);
+      body.push(circles(list.map((i) => [U(data[i * STRIDE]), V(data[i * STRIDE + 1]), data[i * STRIDE + 2] * css.k]), { fill: fills(t) ?? 'none', stroke: strokes(t), width: (key % NIBS) / 10 }));
     }
-    const groups = Array.from({ length: tones }, () => []);
-    const texts = Array.from({ length: tones }, () => []);
-    const ticks = [];
-    for (let i = 0; i < drawn; i++) {
-      if (apart && fords[i]) spread(data[i * STRIDE], (x) => ticks.push([x, css.line - TICK, x, css.line + TICK]));
-      const r = data[i * STRIDE + 2] * css.k;
-      if (r < DUST) continue;
-      const y = V(data[i * STRIDE + 1]);
-      spread(data[i * STRIDE], (x) => groups[tone(i)].push([x, y, r]));
-      if (look !== 'labels') continue;
-      const text = String(ints[i * 3]);
-      const size = Math.floor(glyph(r, text.length));
-      if (size >= LEAST) spread(data[i * STRIDE], (x) => texts[tone(i)].push([x, y, size, text]));
+    if (value.labels) {
+      const texts = new Map();
+      for (let i = 0; i < drawn; i++) {
+        const text = String(ints[i * 3]);
+        const size = Math.floor(glyph(data[i * STRIDE + 2] * css.k, text.length));
+        if (size < LEAST) continue;
+        const colour = strokes(tone(i));
+        if (!texts.has(colour)) texts.set(colour, []);
+        texts.get(colour).push([U(data[i * STRIDE]), V(data[i * STRIDE + 1]), size, text]);
+      }
+      for (const [colour, list] of texts) body.push(labels(list, colour, FACE));
     }
-    groups.forEach((group, t) => parts.push(look === 'fill' ? discs(group, shades[t]) : rings(group, edges[t], widths[t])));
-    texts.forEach((group, t) => parts.push(labels(group, edges[t], FACE)));
-    parts.push(rules(ticks, accent, 1));
-    const top = css.line + GAP;
-    const room = tall - 2 * GAP;
-    const struts = [];
-    for (let b = 0; b < lit; b++) spread(bars[b].x, (x) => struts.push([x, top, x, top + room * bars[b].h, DIM + (1 - DIM) * bars[b].h]));
-    parts.push(rules(struts, accent, 1));
+    parts.push(strip ? clip('period', period(U, V, css.k), body.join('')) : body.join(''));
     return sheet(w, h, parts.join(''));
   };
   const json = () => {
-    const circles = [];
-    for (let i = roots; i < total; i++) circles.push([ints[i * 3], ints[i * 3 + 1], ints[i * 3 + 2]]);
-    return JSON.stringify({ root: name, quadruple: plan.quad, cap: value.cap, circles });
+    const { ints, roots, total } = plan;
+    const list = [];
+    for (let i = roots; i < total; i++) list.push([ints[i * 3], ints[i * 3 + 1], ints[i * 3 + 2]]);
+    return JSON.stringify({ root: value.root, quadruple: plan.quad, cap: value.cap, circles: list });
   };
-  paint();
-  return { draw, size, theme, again, tap, svg, json, facts: { ...plan.facts, ...counts }, font: FACE };
+  set(opts);
+  return { draw, size, theme, set, tap, svg, json, still: whole, font: FACE };
 }

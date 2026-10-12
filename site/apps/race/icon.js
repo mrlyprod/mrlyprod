@@ -1,5 +1,6 @@
 import * as math from "mrlyjs/math";
-import { Grid, frame } from "mrlyjs/view";
+import { Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { math };
 
@@ -10,11 +11,9 @@ const SIDE = 27;
 const CODES = ["127", "239"];
 const SEEDS = [7, 784];
 const WALKERS = 90;
-const STEPS = 160;
-const MARGIN = 0.06;
-const GAP = 0.06;
-const FADE = 0.35;
-const WARM = 0.45;
+const STEPS = 120;
+const TRAIL = 130;
+const RING = 0.95;
 const WANT = { fills: 343 };
 const MOVES = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
@@ -69,30 +68,32 @@ function study() {
   return swarms;
 }
 
-function team(pen, ink, box, swarm, tint) {
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "red", 0.16);
+  const [fast, slow] = study();
   const cells = new Grid(box, SIDE, SIDE, 0);
-  const faint = ink.mix(ink.ground, tint, FADE);
-  const warm = ink.mix(ink.ground, tint, WARM + FADE);
-  cells.paint(pen, { shape: [SIDE, SIDE], types: swarm.filled }, (type) => (type ? faint : null));
-  cells.paint(pen, { shape: [SIDE, SIDE], types: swarm.seen }, (type) => (type ? warm : null));
+  const shape = [SIDE, SIDE];
   const unit = box.w / SIDE;
   const spot = (i) => [box.x + ((i % SIDE) + 0.5) * unit, box.y + (Math.floor(i / SIDE) + 0.5) * unit];
-  for (const walker of swarm.at) {
+  const [hx, hy] = spot(fast.home);
+  const finish = box.radius() * RING;
+  const inside = (i) => {
+    const [x, y] = spot(i);
+    return Math.hypot(x - hx, y - hy) < finish - unit;
+  };
+  const clip = (seen) => Uint8Array.from(seen, (on, i) => (on && inside(i) ? 1 : 0));
+  cells.paint(pen, { shape, types: clip(slow.seen) }, (type) => (type ? [...paint.light.slice(0, 3), TRAIL] : null));
+  cells.paint(pen, { shape, types: clip(fast.seen) }, (type) => (type ? [255, 255, 255, TRAIL] : null));
+  for (const walker of slow.at) {
+    if (!inside(walker)) continue;
     const [x, y] = spot(walker);
-    pen.disc(x, y, unit * 0.5, tint);
+    pen.disc(x, y, unit * 0.55, paint.light);
   }
-  const [hx, hy] = spot(swarm.home);
-  pen.ring(hx, hy, swarm.spread * unit, unit * 0.35, tint);
-  pen.rect(hx - unit * 0.5, hy - unit * 0.5, unit, unit, ink.fg);
-}
-
-export default function draw(pen, ink) {
-  const [fast, slow] = study();
-  const area = pen.area(MARGIN);
-  const gap = area.w * GAP;
-  const side = Math.min((area.w - gap) / 2, area.h);
-  const top = area.y + (area.h - side) / 2;
-  const left = area.x + (area.w - 2 * side - gap) / 2;
-  team(pen, ink, frame(left, top, side, side), fast, ink.blue);
-  team(pen, ink, frame(left + side + gap, top, side, side), slow, ink.orange);
+  for (const walker of fast.at) {
+    if (!inside(walker)) continue;
+    const [x, y] = spot(walker);
+    pen.disc(x, y, unit * 0.55, paint.white);
+  }
+  pen.ring(hx, hy, finish, unit * 1.5, paint.white);
+  pen.rect(hx - unit * 0.7, hy - unit * 0.7, unit * 1.4, unit * 1.4, paint.ink);
 }

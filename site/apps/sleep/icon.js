@@ -1,40 +1,44 @@
 import * as math from "mrlyjs/math";
-import { frame, Grid, grid } from "mrlyjs/view";
+import { Grid, grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { math };
 
-const SIDE = 23;
-const CELL = 36;
 const TILE = 5;
-const AT = [5, 17];
-const PATH = [[9, 17], [21, 5], [17, 1]];
-const STEP = 2;
+const SIDE = 11;
+const STEP = 3;
+const ALPHA = [255, 140, 60];
+const LIT = 21;
 
-export default function draw(pen, ink) {
+let memo = null;
+
+function study() {
+  if (memo) return memo;
   const tile = math.atoms.carpet_2d(TILE);
   if ([...tile.data].join("") !== grid.LOGO.join("")) throw new Error(`sleep: the carpet of ${TILE} is not the mark`);
-  const [top, left] = AT;
-  const [corner, floor, wall] = PATH;
-  if (left + TILE !== SIDE - 1 || corner[0] !== top + TILE - 1 || corner[1] !== left) throw new Error("sleep: the tile does not lean on the right wall");
-  if (floor[0] !== SIDE - 2 || wall[1] !== 1) throw new Error("sleep: the path does not bounce off the floor and the left wall");
-  const w = CELL * SIDE;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - w) / 2), w, w), SIDE, SIDE, 0);
-  for (let i = 0; i < SIDE; i++) {
-    for (const [row, col] of [[0, i], [SIDE - 1, i], [i, 0], [i, SIDE - 1]]) cells.fill(pen, col, row, ink.dim);
-  }
-  let k = 0;
-  for (let leg = 0; leg + 1 < PATH.length; leg++) {
-    const [r0, c0] = PATH[leg];
-    const [r1, c1] = PATH[leg + 1];
-    const n = Math.abs(r1 - r0);
-    if (Math.abs(c1 - c0) !== n) throw new Error(`sleep: leg ${leg} is not a diagonal`);
-    for (let s = leg ? 1 : 0; s <= n; s++, k++) {
-      const row = r0 + Math.sign(r1 - r0) * s;
-      const col = c0 + Math.sign(c1 - c0) * s;
-      if (k % STEP === 0 && k > 0) cells.fill(pen, col, row, ink.blue);
+  const spots = ALPHA.map((_, k) => [k * STEP, SIDE - TILE - k * STEP]);
+  const far = spots[spots.length - 1];
+  if (far[0] + TILE !== SIDE || far[1] !== 0) throw new Error(`sleep: the trail ends at ${far}, not in the far corner of ${SIDE}`);
+  const owner = new Int8Array(SIDE * SIDE).fill(-1);
+  const types = new Uint8Array(SIDE * SIDE);
+  spots.forEach(([top, left], k) => {
+    for (let row = 0; row < TILE; row++) {
+      for (let col = 0; col < TILE; col++) {
+        const i = (top + row) * SIDE + left + col;
+        if (owner[i] >= 0) continue;
+        owner[i] = k;
+        if (tile.data[row * TILE + col]) types[i] = k + 1;
+      }
     }
-  }
-  for (let row = 0; row < TILE; row++) {
-    for (let col = 0; col < TILE; col++) if (tile.data[row * TILE + col]) cells.fill(pen, left + col, top + row, ink.fg);
-  }
+  });
+  const shown = ALPHA.map((_, k) => types.filter((t) => t === k + 1).length);
+  if (shown[0] !== LIT || shown.some((n) => n === 0)) throw new Error(`sleep: the layers show ${shown} cells, want ${LIT} for the tile and some for every ghost`);
+  memo = { shape: [SIDE, SIDE], types };
+  return memo;
+}
+
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "indigo", 0.16);
+  const tones = [null, ...ALPHA.map((a) => [...paint.white.slice(0, 3), a])];
+  new Grid(box, SIDE, SIDE, 0).paint(pen, study(), (type) => tones[type]);
 }

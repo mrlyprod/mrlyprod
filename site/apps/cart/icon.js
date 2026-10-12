@@ -1,35 +1,25 @@
-import { frame, grid, Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = {};
 
-const CELL = 55;
+const STROKE = 0.075;
+const HANDLE = [[0.03, 0.1], [0.19, 0.1], [0.33, 0.64]];
+const BASKET = [[0.24, 0.3], [0.97, 0.3], [0.86, 0.64], [0.33, 0.64]];
+const WHEELS = [[0.43, 0.86], [0.78, 0.86]];
+const WHEEL = 0.1;
+const HUB = 0.028;
 
-const CART = [
-  "11000000000000",
-  "00100000000000",
-  "00010000000000",
-  "00001111111111",
-  "00001000000001",
-  "00001000000001",
-  "00000100000010",
-  "00000011111100",
-  "00000010000100",
-  "00000111001110",
-  "00000010000100",
-];
-
-export default function draw(pen, ink) {
-  const cols = CART[0].length;
-  const rows = CART.length;
-  const w = CELL * cols;
-  const h = CELL * rows;
-  const x = Math.round((pen.width - w) / 2);
-  const y = Math.round((pen.height - h) / 2);
-  const cells = new Grid(frame(x, y, w, h), cols, rows, 0);
-  cells.carpet(pen, grid.mask(CART, 1), ink.fg);
-  for (const col of [5, 6, 7, 10, 11, 12]) cells.fill(pen, col, 9, ink.orange);
-  for (const row of [8, 10]) {
-    cells.fill(pen, 6, row, ink.orange);
-    cells.fill(pen, 11, row, ink.orange);
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "orange", 0.18);
+  const at = ([u, v]) => box.at(u, v);
+  const thick = box.w * STROKE;
+  pen.polyline(HANDLE.map(at), thick, paint.white);
+  pen.polygon(BASKET.map(at), paint.white);
+  pen.polyline([...BASKET, BASKET[0]].map(at), thick, paint.white);
+  for (const u of [0.46, 0.64]) pen.segment(at([u, 0.3]), at([u, 0.64]), thick * 0.4, paint.light);
+  for (const wheel of WHEELS) {
+    pen.disc(...at(wheel), box.w * WHEEL, paint.white);
+    pen.disc(...at(wheel), box.w * (WHEEL - 0.018), paint.deep);
+    pen.disc(...at(wheel), box.w * HUB, paint.white);
   }
 }

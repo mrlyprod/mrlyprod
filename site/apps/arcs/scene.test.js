@@ -2,8 +2,8 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults, describe as groups } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { HOLD, PAD, drift, fit, study } from './engine.js';
-import { SPEC, make } from './scene.js';
+import { PAD, fit, study, thick } from './engine.js';
+import { SPEC, file, make, shades } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
@@ -38,12 +38,21 @@ globalThis.OffscreenCanvas = class {
   }
 };
 
+const LOOK = { paper: '#000000', accent: '#ff8f2c' };
+
+const INKS = shades(null, LOOK, 'blue');
+
+const START = { ...defaults(SPEC), seed: 1, base: 3, code: '495', level: 2 };
+
 const open = (value, still = false, w = 800, h = 600) => {
   const log = [];
   const mine = [];
+  const told = [];
+  let contexts = 0;
   owner = mine;
-  const view = { rand: rng(1), look: () => ({ paper: '#000000', accent: '#008cff' }), still, w, h, dpr: 2, t: 0 };
-  const scene = make({ getContext: () => pen(log) }, view, { ...defaults(SPEC), seed: 1, base: 3, code: '495', level: 2, math, ...value });
+  const view = { rand: rng(1), look: () => LOOK, still, w, h, dpr: 2, t: 0, wake: () => (view.still = false) };
+  const canvas = { getContext: () => (contexts++, pen(log)) };
+  const scene = make(canvas, view, { ...START, math, onTell: (facts) => told.push(facts), ...value });
   const at = (t) => {
     owner = mine;
     view.t = t;
@@ -52,113 +61,107 @@ const open = (value, still = false, w = 800, h = 600) => {
     return log;
   };
   const laid = () => mine.reduce((sum, sheet) => sum + arcs(sheet.log), 0);
-  return { view, scene, log, at, mine, laid };
+  return { view, scene, log, at, mine, laid, told, contexts: () => contexts };
 };
 
-const PLAN = study(math, { ...defaults(SPEC), seed: 1, base: 3, code: '495', level: 2 }, rng(1));
+const PLAN = study(math, START);
 const ARCS = 2 * PLAN.side * PLAN.side;
 const LOOPED = Array.from(PLAN.lit).reduce((sum, k) => sum + PLAN.bounds[k + 1] - PLAN.bounds[k], 0);
 const SPAN = PLAN.clock.span;
 
-const moves = (log) => log.filter(([name]) => name === 'setTransform').map(([, ...matrix]) => matrix);
+test('the paints are two hues, the loops in the tint and the strands in their own, the cells in the line and a faint loop for a trace', () => {
+  expect(INKS).toEqual({ loop: '#ff8f2c', strand: '#008cff', dim: 'rgb(115, 64, 20)', fill: '#1f1f20' });
+  expect(shades(null, { paper: '#ffffff', accent: '#ff8f2c' }, 'green')).toMatchObject({ strand: '#32cc58', fill: '#dddddf' });
+});
 
-test('a picture at a t is the same reached in one jump or by steps', () => {
+test('the scene is still: make draws nothing and tells its facts, the first draw lays every arc once with the loops lit, and a draw after is a no-op', () => {
+  const still = open({});
+  expect(still.log).toEqual([]);
+  expect([still.scene.every, still.scene.still]).toEqual([undefined, true]);
+  expect(still.told).toEqual([PLAN.facts]);
+  expect(arcs(still.at(0))).toBe(0);
+  expect(still.laid()).toBe(ARCS);
+  const [layer] = still.mine;
+  expect(layer.log).toContainEqual(['strokeStyle', INKS.strand]);
+  expect(layer.log).toContainEqual(['strokeStyle', INKS.loop]);
+  expect(layer.log).toContainEqual(['fillStyle', INKS.fill]);
+  expect(layer.log).not.toContainEqual(['strokeStyle', INKS.dim]);
+  expect(still.at(5000)).toEqual([]);
+  expect(still.laid()).toBe(ARCS);
+});
+
+test('the picture is laid flipped so row 0 sits at the bottom, on the square fitted to the stage', () => {
+  const still = open({});
+  still.at(0);
+  const box = fit(PLAN.side, 800, 600, PAD * 2);
+  const log = still.mine[0].log;
+  expect(log[0]).toEqual(['setTransform', 1, 0, 0, -1, 0, 600]);
+  const centres = log.filter(([name]) => name === 'arc').map(([, x, y, r]) => [x, y, r]);
+  expect(centres.every(([x, y, r]) => r === box.px / 2 && x >= box.x && x <= box.x + PLAN.side * box.px && y >= box.y && y <= box.y + PLAN.side * box.px)).toBe(true);
+  expect(log).toContainEqual(['lineWidth', thick(0, box.px, 2)]);
+});
+
+test('a resize or a theme lays the picture again on the next draw', () => {
+  const still = open({});
+  still.at(0);
+  const was = sheets.length;
+  still.scene.size();
+  expect(arcs(still.mine.at(-1).log)).toBe(ARCS);
+  still.at(100);
+  expect(sheets.length).toBe(was + 1);
+  still.scene.theme();
+  still.at(200);
+  expect(sheets.length).toBe(was + 2);
+  expect(still.at(300)).toEqual([]);
+});
+
+test('a set keeps the canvas and its context: a look knob lays again with the same plan, a design knob plans again and tells, the seed alone does nothing', () => {
+  const live = open({});
+  live.at(0);
+  const was = sheets.length;
+  live.scene.set({ ...START, seed: 9 });
+  expect(live.at(100)).toEqual([]);
+  live.scene.set({ ...START, width: 0.3 });
+  live.at(200);
+  expect(sheets.length).toBe(was + 1);
+  expect(live.told).toHaveLength(1);
+  live.scene.set({ ...START, width: 0.3, level: 3 });
+  live.at(300);
+  expect(live.told.at(-1)).toMatchObject({ level: 3, side: 27 });
+  expect(arcs(live.mine.at(-1).log)).toBe(2 * 27 * 27);
+  expect(live.contexts()).toBe(1);
+});
+
+test('a trace dims the loops, lights them in turn by t, then ends lit and waits', () => {
+  const live = open({});
+  live.at(1000);
+  expect(live.scene.trace()).toBe(true);
+  const [, back, layer] = live.mine;
+  expect(back.log).toContainEqual(['strokeStyle', INKS.dim]);
+  expect(layer.log).toContainEqual(['drawImage', 'layer', 0, 0]);
+  expect(arcs(live.at(1000 + SPAN / 3))).toBeGreaterThan(0);
+  const done = live.at(1000 + SPAN);
+  expect(arcs(done)).toBe(0);
+  expect(live.mine.at(-1).log).toContainEqual(['strokeStyle', INKS.loop]);
+  expect(live.at(1000 + 2 * SPAN)).toEqual([]);
+});
+
+test('a trace at a t is the same reached in one jump or by steps', () => {
   const stepped = open({});
-  for (let t = 0; t <= 2000; t += 100) stepped.at(t);
+  stepped.scene.trace();
+  for (let t = 0; t <= 1200; t += 100) stepped.at(t);
   const log = [...stepped.log];
   const jumped = open({});
-  const once = [...jumped.at(2000)];
+  jumped.scene.trace();
+  const once = [...jumped.at(1200)];
   expect(jumped.laid()).toBe(stepped.laid());
   expect(once).toEqual(log);
   expect(stepped.laid()).toBeGreaterThan(ARCS);
   expect(stepped.laid()).toBeLessThan(ARCS + LOOPED);
-  expect(arcs(once)).toBeGreaterThan(0);
-});
-
-test('make draws nothing, the first draw lays every arc faint and the loops light in turn until all are lit and held', () => {
-  const live = open({});
-  expect(live.log).toEqual([]);
-  expect(live.scene.every).toBe(undefined);
-  const first = live.at(0);
-  expect(live.laid()).toBe(ARCS);
-  expect(first.filter(([name]) => name === 'drawImage')).toHaveLength(1);
-  const [back, layer] = live.mine;
-  expect(back.log).toContainEqual(['strokeStyle', 'rgb(0, 63, 115)']);
-  expect(back.log).toContainEqual(['fillStyle', 'rgba(0, 140, 255, 0.08)']);
-  expect(layer.log).toContainEqual(['drawImage', 'layer', 0, 0]);
-  const done = live.at(SPAN);
-  expect(live.laid()).toBe(ARCS + LOOPED);
-  expect(arcs(done)).toBe(0);
-  expect(layer.log).toContainEqual(['strokeStyle', '#008cff']);
-  expect(arcs(live.at(SPAN + HOLD / 2))).toBe(0);
-  expect(live.laid()).toBe(ARCS + LOOPED);
-});
-
-test('past the span and the hold the loops go faint again by copying the faint layer, with no arc stroked and no canvas made', () => {
-  const live = open({});
-  live.at(SPAN);
-  const was = [sheets.length, live.laid()];
-  live.at(SPAN + HOLD + 100);
-  expect([sheets.length, live.laid()]).toEqual(was);
-  const log = live.mine.at(-1).log;
-  const cut = log.findLastIndex(([name]) => name === 'clearRect');
-  expect(log[cut + 1]).toEqual(['drawImage', 'layer', 0, 0]);
-  expect(arcs(log.slice(cut))).toBe(0);
-  live.at(SPAN + HOLD + 200 + SPAN);
-  expect(live.laid()).toBe(ARCS + 2 * LOOPED);
-});
-
-test('under reduced motion the first draw lays every loop lit and a second draw adds nothing', () => {
-  const still = open({}, true);
-  expect(arcs(still.at(0))).toBe(0);
-  expect(still.laid()).toBe(ARCS + LOOPED);
-  const was = [sheets.length, still.laid()];
-  still.at(0);
-  expect([sheets.length, still.laid()]).toEqual(was);
-});
-
-test('with wander off the scene is a still of lit loops: one draw lays it, a draw after is a no-op, and a resize or a theme lays it again', () => {
-  const fixed = open({ wander: 0 });
-  expect(fixed.scene.every).toBe(1000);
-  expect(fixed.at(0).length).toBeGreaterThan(0);
-  expect(fixed.laid()).toBe(ARCS);
-  expect(fixed.mine.at(-1).log).toContainEqual(['strokeStyle', '#008cff']);
-  expect(fixed.at(1000)).toEqual([]);
-  const was = sheets.length;
-  fixed.scene.size();
-  expect(sheets.length).toBe(was + 1);
-  fixed.scene.theme();
-  expect(sheets.length).toBe(was + 2);
-  expect(fixed.at(2000)).toEqual([]);
-});
-
-test('the look keeps the loops or the strands alone, and strands alone never animate', () => {
-  const loops = open({ look: 'loops' }, true);
-  loops.at(0);
-  expect(loops.laid()).toBe(2 * LOOPED);
-  const strands = open({ look: 'strands' });
-  expect(strands.scene.every).toBe(1000);
-  strands.at(0);
-  expect(strands.laid()).toBe(ARCS - LOOPED);
-  expect(strands.mine.at(-1).log).not.toContainEqual(['strokeStyle', '#008cff']);
-  const bare = open({ cells: 0 }, true);
-  bare.at(0);
-  expect(bare.mine.some(({ log }) => log.some(([name]) => name === 'rect'))).toBe(false);
-});
-
-test('wander is a knob only where loops can light, so Show strands hides it', () => {
-  const shown = (look) => groups(SPEC, { look }).flatMap((group) => group.rows.map((row) => row.key));
-  expect([shown('all').includes('wander'), shown('loops').includes('wander'), shown('strands').includes('wander')]).toEqual([true, true, false]);
-});
-
-test('with no design key the scene draws base 3 at level 3 as the page does, a grid that loops', () => {
-  const bare = open({ base: undefined, code: '', level: undefined });
-  expect(bare.scene.facts).toMatchObject({ base: 3, level: 3, side: 27 });
-  expect(bare.scene.facts.loops).toBeGreaterThan(0);
 });
 
 test('every loop in progress is traced although a packed schedule starts the loops out of order', () => {
-  const packed = study(math, { ...defaults(SPEC), seed: 1, base: 3, code: '495', level: 4 }, rng(1));
+  const packed = study(math, { ...START, level: 4 });
   const { start, end, dur, span } = packed.clock;
   expect(Array.from(start).some((s, i) => i && s < start[i - 1])).toBe(true);
   const owed = (t) =>
@@ -170,46 +173,67 @@ test('every loop in progress is traced although a packed schedule starts the loo
       return sum + whole + (f * n - whole > 0 ? 1 : 0);
     }, 0);
   const live = open({ level: 4 });
+  live.scene.trace();
   for (const t of [span / 4, span / 2, (3 * span) / 4]) {
     expect(owed(t)).toBeGreaterThan(0);
     expect(arcs(live.at(t))).toBe(owed(t));
   }
 });
 
-test('a wandering picture sways by the drift of its t, and a still, a fixed or a resting one sits centred', () => {
-  const box = fit(9, 800, 600, PAD * 2);
-  const centred = [1, 0, 0, 1, 0, 0];
-  const live = open({});
-  expect(moves(live.at(0)).at(-1)).toEqual(centred);
-  const [dx, dy] = drift(3000, box);
-  expect([dx !== 0, dy !== 0]).toEqual([true, true]);
-  expect(moves(live.at(3000)).at(-1)).toEqual([1, 0, 0, 1, dx, dy]);
-  expect(moves(open({}, true).at(0)).at(-1)).toEqual(centred);
-  expect(moves(open({ wander: 0 }).at(3000)).at(-1)).toEqual(centred);
+test('under reduced motion a trace wakes the scene, and a design knob ends a trace lit', () => {
+  const still = open({}, true);
+  still.at(0);
+  still.scene.trace();
+  expect(still.view.still).toBe(false);
+  still.scene.set({ ...START, code: '186' });
+  still.at(SPAN / 2);
+  expect(still.mine.at(-1).log).not.toContainEqual(['strokeStyle', INKS.dim]);
+  expect(still.at(SPAN)).toEqual([]);
 });
 
-test('the arcs sit on the square fitted to the stage with the stroke a share of a cell, never under a device pixel', () => {
-  const live = open({ width: 0.2 }, true);
-  live.at(0);
-  const box = fit(9, 800, 600, PAD * 2);
-  const log = live.mine.flatMap((sheet) => sheet.log);
-  expect(log).toContainEqual(['lineWidth', 0.2 * box.px]);
-  const centres = log.filter(([name]) => name === 'arc').map(([, x, y, r]) => [x, y, r]);
-  expect(centres.every(([x, y, r]) => r === box.px / 2 && x >= box.x && x <= box.x + 9 * box.px && y >= box.y && y <= box.y + 9 * box.px)).toBe(true);
-  const thin = open({ width: 0.04, level: 5 }, true);
-  thin.at(0);
-  expect(thin.mine.flatMap((sheet) => sheet.log)).toContainEqual(['lineWidth', 2]);
+test('the look keeps the loops or the strands alone, strands alone cannot trace, and cells off shade nothing', () => {
+  const loops = open({ look: 'loops' });
+  loops.at(0);
+  expect(loops.laid()).toBe(LOOPED);
+  const strands = open({ look: 'strands' });
+  strands.at(0);
+  expect(strands.laid()).toBe(ARCS - LOOPED);
+  expect(strands.scene.trace()).toBe(false);
+  const bare = open({ cells: 0 });
+  bare.at(0);
+  expect(bare.mine.some(({ log }) => log.some(([name]) => name === 'rect'))).toBe(false);
 });
 
-test('a design with no loops is a still and the svg is written in the shades on screen', () => {
-  const none = open({ base: 2, code: '5', level: 3 });
-  expect(none.scene.every).toBe(1000);
-  expect(none.scene.facts).toMatchObject({ loops: 0, strands: 16 });
+test('with no design key the scene draws the base 2 carpet at level 5, where the law meets fifty loops', () => {
+  const bare = open({ base: undefined, code: undefined, level: undefined });
+  expect(bare.scene.facts).toMatchObject({ code: '7', name: 'carpet', base: 2, level: 5, side: 32, loops: 50, law: { loops: 50 } });
+});
+
+test('a bad code clears the stage, tells the fault and has no svg', () => {
+  const bad = open({ base: 2, code: '99' });
+  const log = bad.at(0);
+  expect(log.filter(([name]) => name === 'clearRect')).toHaveLength(1);
+  expect(log.filter(([name]) => name === 'drawImage')).toHaveLength(0);
+  expect(bad.told[0].fault).toContain('out of range');
+  expect(bad.scene.svg()).toBe(null);
+  expect(bad.scene.trace()).toBe(false);
+});
+
+test('the svg is written in the paints on screen', () => {
   const live = open({});
   live.at(100);
   const text = live.scene.svg();
-  expect(text).toContain('stroke="rgb(0, 63, 115)"');
-  expect(text).toContain('stroke="#008cff"');
-  expect(text).toContain('fill="rgba(0, 140, 255, 0.08)"');
+  expect(text).toContain(`stroke="${INKS.strand}"`);
+  expect(text).toContain(`stroke="${INKS.loop}"`);
+  expect(text).toContain(`fill="${INKS.fill}"`);
   expect(text.match(/A5 5 0 0 /g)).toHaveLength(ARCS);
+});
+
+test('an export is named by the design, the base and the level', () => {
+  expect([file({ base: 2, code: '', level: 5 }, { math }), file({ base: 3, code: 'carpet', level: 2 }, { math }), file({ base: 2, code: '9 x', level: 1 })]).toEqual(['arcs-7-base2-level5', 'arcs-495-base3-level2', 'arcs-9-x-base2-level1']);
+});
+
+test('the design keys stay out of the knobs, which open on the arcs', () => {
+  const shown = groups(SPEC, START).map(({ name, rows }) => [name, rows.map((row) => row.key)]);
+  expect(shown).toEqual([['Arcs', ['level', 'cells', 'look', 'width']], ['Colour', ['tint', 'strand']]]);
 });

@@ -1,6 +1,5 @@
 {
   "title": "Morse",
-  "line": "Morse, the Thue-Morse word as a mrly object: the word grown by substitution, lifted to the plane four ways and grown a Kronecker power at a time, and any design read plus-minus beside its own fold or filtered against its next level, with the runs and the faults counted.",
-  "menu": "play",
-  "saver": true
+  "line": "The Thue-Morse word, built two ways, lifted to the plane and read off any design.",
+  "menu": "play"
 }

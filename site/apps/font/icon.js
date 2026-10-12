@@ -1,12 +1,13 @@
 import * as font from "mrlyjs/font";
 import { frame, Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { font };
 
 const TEXT = "Aa";
 const PEN = 1;
 const WRITTEN = 0.6;
-const MARGIN = 0.08;
+const GHOST = 110;
 
 let facts = null;
 
@@ -32,15 +33,15 @@ function study() {
   return facts;
 }
 
-export default function draw(pen, ink) {
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "purple", 0.14);
   const { rows, cols, done, path, from } = study();
-  const box = pen.frame(MARGIN);
   const cell = Math.floor(Math.min(box.w / cols, box.h / rows));
   const w = cell * cols;
   const h = cell * rows;
   const cells = new Grid(frame(Math.round(box.x + (box.w - w) / 2), Math.round(box.y + (box.h - h) / 2), w, h), cols, rows, 0);
-  const faint = ink.mix(ink.ground, ink.blue, 0.3);
+  const ghost = [255, 255, 255, GHOST];
   const k = Math.round(path.length * WRITTEN);
-  for (const [r, c] of done) cells.fill(pen, c, r, ink.fg);
-  path.forEach(([r, c], i) => cells.fill(pen, from + c, r, i < k ? ink.blue : faint));
+  for (const [r, c] of done) cells.fill(pen, c, r, paint.white);
+  path.forEach(([r, c], i) => cells.fill(pen, from + c, r, i < k ? paint.light : ghost));
 }

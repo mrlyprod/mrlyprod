@@ -1,5 +1,6 @@
 import * as math from "mrlyjs/math";
 import { hex } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { math };
 
@@ -9,9 +10,9 @@ const LEVEL = 2;
 const BASE = 2;
 const SIDE = 9;
 const WANT = { fills: 306, voids: 180 };
-const MARGIN = 0.08;
+const INSET = 0.16;
 const GAP = 2;
-const FAINT = 0.22;
+const GHOST = 45;
 
 let slice = null;
 
@@ -25,7 +26,8 @@ function facts() {
   return slice;
 }
 
-export default function draw(pen, ink) {
-  const tones = { [math.six.FILL()]: ink.blue, [math.six.VOID()]: ink.mix(ink.ground, ink.blue, FAINT) };
-  hex.draw(pen, pen.frame(MARGIN), facts(), GAP, (type) => tones[type] ?? null);
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "teal", INSET);
+  const tones = { [math.six.FILL()]: paint.white, [math.six.VOID()]: [...paint.white.slice(0, 3), GHOST] };
+  hex.draw(pen, box, facts(), GAP, (type) => tones[type] ?? null);
 }

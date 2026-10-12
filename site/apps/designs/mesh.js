@@ -1,4 +1,6 @@
 export const TILT = Math.atan(Math.SQRT1_2);
+export const THETA = 0.62;
+export const SWING = -Math.PI / 2 - THETA;
 const SPAN = 2;
 
 export function mesh(quads) {

@@ -1,28 +1,33 @@
-import { frame, grid, Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = {};
 
-const CELL = 70;
+const LOBE = 0.27;
+const DROP = 0.62;
+const LIFT = 0.1;
+const GLINT = 0.11;
 
-const HEART = [
-  "01100000110",
-  "11110001111",
-  "11111111111",
-  "11111111111",
-  "11111111111",
-  "01111111110",
-  "00111111100",
-  "00011111000",
-  "00001110000",
-  "00000100000",
-];
+function tangent(center, tip, r, side) {
+  const dx = tip[0] - center[0];
+  const dy = tip[1] - center[1];
+  const d = Math.hypot(dx, dy);
+  if (d <= r) throw new Error(`donate: the tip sits inside a lobe, ${d.toFixed(1)} from its centre at radius ${r.toFixed(1)}`);
+  const turn = Math.atan2(dy, dx) + side * Math.acos(r / d);
+  return [center[0] + r * Math.cos(turn), center[1] + r * Math.sin(turn)];
+}
 
-export default function draw(pen, ink) {
-  const cols = HEART[0].length;
-  const rows = HEART.length;
-  const w = CELL * cols;
-  const h = CELL * rows;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - h) / 2), w, h), cols, rows, 0);
-  cells.carpet(pen, grid.mask(HEART, 1), ink.fg);
-  for (const [col, row] of [[2, 2], [3, 2], [2, 3]]) cells.fill(pen, col, row, ink.red);
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "red", 0.18);
+  const [cx, cy] = box.center();
+  const r = box.w * LOBE;
+  const ty = cy - box.h * LIFT;
+  const left = [cx - r, ty];
+  const right = [cx + r, ty];
+  const tip = [cx, ty + box.h * DROP];
+  const a = tangent(left, tip, r, 1);
+  const b = tangent(right, tip, r, -1);
+  pen.disc(left[0], left[1], r, paint.white);
+  pen.disc(right[0], right[1], r, paint.white);
+  pen.polygon([a, tip, b, [cx, ty]], paint.white);
+  pen.arc([left[0], left[1]], r * 0.62, [Math.PI * 1.05, Math.PI * 1.55], box.w * GLINT, paint.light);
 }

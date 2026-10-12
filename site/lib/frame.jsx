@@ -18,9 +18,8 @@ export function calm(box) {
 }
 
 export function slot(frame, side, doc = globalThis.document) {
-  if (side === 'top') return doc?.querySelector('.subheader .actions') ?? null;
   if (frame) return frame.nodes[side] ?? null;
-  return side === 'right' ? (doc?.querySelector('#right .controls') ?? null) : null;
+  return side === 'right' || side === 'tail' ? (doc?.querySelector('#right .controls') ?? null) : null;
 }
 
 export function Opener({ side, label, icon, few }) {
@@ -41,7 +40,7 @@ export function Frame({ label, gestures, children }) {
     return () => setHeld((was) => ({ ...was, [side]: was[side] - 1 }));
   }, []);
   const frame = useMemo(() => ({ claim, nodes }), [claim, nodes]);
-  const has = (side) => held[side] > 0;
+  const has = (side) => held[side] > 0 || (side === 'right' && held.tail > 0);
   const sides = Object.keys(OPENERS).filter(has);
   const bottom = sides.length > 0 || BOTTOM.some(has);
   return (
@@ -62,6 +61,7 @@ export function Frame({ label, gestures, children }) {
         {has('right') && (
           <aside className="pane right" id="right" aria-label={OPENERS.right[0]} ref={calm}>
             <section className="controls" aria-label="Controls" ref={ref('right')} />
+            <div className="controls tail" ref={ref('tail')} />
             <button type="button" className="done" data-pane="right" aria-controls="right">Done</button>
           </aside>
         )}

@@ -1,36 +1,57 @@
 import { tidy } from '../../lib/knobs.js';
-import { TINTS, rgb } from '../../lib/scene.js';
+import { TINTS, rgb, rng } from '../../lib/scene.js';
+import { settle } from '../designs/engine.js';
 import { DESIGN } from '../designs/scene.js';
-import { DIM, NUMBERS, ORIENTS, PROJECTIONS, RINGS, SCALE, cap, fit, kinds, mesh, study, turned, wrap } from './engine.js';
+import { DIM, NUMBERS, REPEATS, RINGS, SCALE, SHEETS, VIEWS, cap, copies, croppable, fit, kinds, mesh, studio, wrap } from './engine.js';
+
+const rect = (value) => value.sheet !== 'disc';
 
 export const SPEC = [
-  { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Shape' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 2, min: 1, max: (value, units) => units && cap(units.math, value.number, units.math.six.copies(value.radius)), step: 1, group: 'Shape' },
-  { key: 'projection', label: 'View', kind: 'segment', def: 'iso', options: PROJECTIONS, group: 'View' },
-  { key: 'orient', label: 'Point', kind: 'segment', def: 'pointy', options: ORIENTS, group: 'View' },
-  { key: 'radius', label: 'Rings', kind: 'slider', def: 0, min: 0, max: RINGS, step: 1, group: 'View' },
-  { key: 'invert', label: 'Invert', kind: 'toggle', def: 0, group: 'View' },
+  { key: 'view', label: 'View', kind: 'segment', def: 'cut', options: VIEWS },
+  { key: 'sheet', label: 'Shape', kind: 'segment', def: 'rect', options: SHEETS, group: 'Sheet' },
+  { key: 'x', label: 'Across', kind: 'slider', def: 5, min: 1, max: REPEATS, step: 1, group: 'Sheet', when: rect },
+  { key: 'y', label: 'Down', kind: 'slider', def: 5, min: 1, max: REPEATS, step: 1, group: 'Sheet', when: rect },
+  { key: 'radius', label: 'Rings', kind: 'slider', def: 2, min: 0, max: RINGS, step: 1, group: 'Sheet', when: (value) => !rect(value) },
+  { key: 'overhang', label: 'Keep the overhang', kind: 'toggle', def: 1, group: 'Sheet', when: croppable },
+  { key: 'number', label: 'Side', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Tile' },
+  { key: 'level', label: 'Level', kind: 'slider', def: 2, min: 1, max: (value, units) => units && cap(units.math, value.number, copies(units.math, value)), step: 1, group: 'Tile', keep: true },
+  { key: 'turn', label: 'Quarter turn', kind: 'toggle', def: 0, group: 'Look' },
+  { key: 'invert', label: 'Invert', kind: 'toggle', def: 0, group: 'Look' },
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
 ];
 
 export const units = () => import('./unit.js');
 
+const ABOUT = [
+  'One cube design seen on the triangular lattice makes a hexagon: its middle slice, its three facing sides, or its isometric skin. Copies of the hexagon interlock into a sheet.',
+  'The fills multiply by the copy count. The exposed edges, the rim of the filled triangles, do not: each copy buries the edges it shares with a neighbour, so the sheet exposes less than one copy times the copies.',
+  'Crop trims the jagged overhang to a clean rectangle, and cuts fills away with it.',
+  'Tap the picture or press the arrows for the next view. Reroll rolls a new design. [Slices](/slices/) counts a single hexagon, and [the core](/research/core/) says why a design\'s symmetries belong to the infinite tiling.',
+];
+
+export function name(value, units) {
+  const { base, code } = tidy(DESIGN, { ...value, dim: DIM });
+  return `six-${units?.math ? settle(units.math, DIM, base, code, rng(value.seed)) : code}-${value.view}`;
+}
+
 export const PAGE = {
   spec: SPEC,
   units,
+  about: ABOUT,
+  name,
   keys: [
-    { key: 'Enter', label: 'Random', act: 'random', button: true },
+    { key: 'Enter', label: 'Crop', act: 'crop', button: true, when: (value) => croppable(value) && value.overhang === 1 },
+    { key: 'Enter', label: 'Uncrop', act: 'crop', button: true, when: (value) => croppable(value) && value.overhang !== 1 },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'View', act: 'view' },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
   ],
   actions: {
-    random: (scene) => scene.random?.(),
+    crop: (scene) => scene.crop?.(),
     view: (scene, e) => scene.view?.(e.key === 'ArrowLeft' ? -1 : 1),
     level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
   },
 };
 
-const REST = 1000;
 const PAD = 24;
 const VOID = 0.1;
 const LEFT = 0.72;
@@ -53,12 +74,25 @@ export function make(canvas, view, opts = {}) {
   const math = opts.math;
   if (!math) throw new Error('six: the scene wants mrlyjs/math as opts.math');
   const ctx = canvas.getContext('2d');
-  const value = { ...tidy(SPEC, opts, opts), ...tidy(DESIGN, { ...opts, dim: DIM }) };
-  const { one, sheet, facts } = study(math, value, view.rand);
-  const turn = turned(sheet.orientation, value.orient);
-  const built = mesh(math, sheet, turn);
+  const tell = opts.onFacts;
+  const study = studio(math);
   const codes = kinds(math);
-  let dirty = true;
+  let now = null;
+  let built = null;
+  let made = '';
+  let turn = false;
+  const take = (next) => {
+    const value = { ...tidy(SPEC, next, { math }), ...tidy(DESIGN, { ...next, dim: DIM }), seed: next.seed };
+    now = study(value);
+    turn = value.turn === 1;
+    const key = `${now.key}${turn}`;
+    if (key !== made) {
+      built = mesh(math, now.drawn, turn);
+      made = key;
+    }
+    tell?.(now.facts);
+  };
+  take(opts);
   const paint = () => {
     const look = tones(view.look());
     const { k, ox, oy } = fit(built.box, view.w, view.h, PAD * view.dpr);
@@ -75,19 +109,12 @@ export function make(canvas, view, opts = {}) {
       }
       ctx.fill();
     }
-    dirty = false;
   };
-  const draw = () => {
-    if (dirty) paint();
-  };
-  const touch = () => {
-    dirty = true;
-    paint();
-  };
-  const svg = () => {
+  const custom = () => {
     const look = tones(view.look());
-    const custom = Object.fromEntries(Object.entries(codes).map(([name, type]) => [String(type), [look[name] ?? [0, 0, 0, 0]]]));
-    return wrap(math.six.rect_svg(math.six.paint(one, custom), SCALE), one.orientation === 'Horizontal', turn);
+    return Object.fromEntries(Object.entries(codes).map(([name, type]) => [String(type), [look[name] ?? [0, 0, 0, 0]]]));
   };
-  return { draw, every: REST, size: touch, theme: touch, svg, facts };
+  const svg = () => wrap(math.six.svg(math.six.paint(now.drawn, custom()), SCALE, undefined, 0, undefined), now.drawn.orientation === 'Horizontal', turn);
+  const tile = () => wrap(math.six.rect_svg(math.six.paint(now.one, custom()), SCALE), now.one.orientation === 'Horizontal', turn);
+  return { draw: paint, still: true, set: take, svg, tile };
 }

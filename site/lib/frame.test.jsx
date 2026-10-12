@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { classed, find, mount, text } from './dom.js';
 import { Bar, calm, Frame, slot } from './frame.jsx';
 
 test('on the server a frame is its stage alone: a filled Bar claims its side only after layout', () => {
@@ -26,4 +27,15 @@ test('the right bar lets go of a control a pointer changed and keeps one a key s
   change('key again');
   quit();
   expect([blurred, Object.keys(on)]).toEqual([['pointer'], []]);
+});
+
+test('the tail bar lands after every right bar, whatever mounts first, and opens the right pane on its own', async () => {
+  const pane = await mount(async (draw, host) => {
+    const at = () => find(host, classed('right'));
+    await draw(<Frame label="Sky"><Bar side="tail">seed</Bar></Frame>);
+    const alone = text(at());
+    await draw(<Frame label="Sky"><Bar side="tail">seed</Bar><Bar side="right">look</Bar></Frame>);
+    return [alone, text(at())];
+  });
+  expect(pane).toEqual(['seedDone', 'lookseedDone']);
 });

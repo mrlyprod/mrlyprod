@@ -1,6 +1,6 @@
 {
   "title": "Apollonian",
-  "line": "Apollonian, a packing of tangent circles grown in exact integers from a root quadruple and filling in one octave of curvature a second; on the strip the circles resting on the line are the Ford circles, lit apart with a tick at each tangency, and Depth lays the Farey stack beneath them; a tap reads a circle's triple.",
+  "line": "Tangent circles grown in exact integers; on the strip the line circles are Ford circles.",
   "menu": "play",
   "saver": true
 }

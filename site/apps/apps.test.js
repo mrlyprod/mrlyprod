@@ -25,6 +25,10 @@ test('every folder is an app: a root word with a title and a line, a saver holdi
   expect(savers.filter((one) => !existsSync(join(import.meta.dir, one.id, 'scene.js')) || !existsSync(join(import.meta.dir, one.id, 'widget.jsx'))).map((one) => one.id)).toEqual([]);
 });
 
+test('every line is at most 90 characters', () => {
+  expect(APPS.filter((one) => one.line.length > 90).map((one) => one.id)).toEqual([]);
+});
+
 test('every saver scene exports make', async () => {
   expect(savers.length).toBeGreaterThan(0);
   for (const { id } of savers) expect([id, typeof (await import(`./${id}/scene.js`)).make]).toEqual([id, 'function']);

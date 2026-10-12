@@ -1,4 +1,4 @@
-export const KINDS = [['pins', 'Pins'], ['steps', 'Steps'], ['sums', 'Sums'], ['ratios', 'Ratios'], ['diffs', 'Differences'], ['digits', 'Digits']];
+export const KINDS = [['pins', 'Pins'], ['log', 'Log pins'], ['steps', 'Steps'], ['sums', 'Sums'], ['ratios', 'Ratios'], ['diffs', 'Differences'], ['digits', 'Digits']];
 
 const HEAD = 15;
 
@@ -25,11 +25,11 @@ export function span(values) {
   return tops.length ? { hi: Math.max(...tops), lo: Math.min(...tops) } : { hi: 0, lo: 0 };
 }
 
-export function scale(rows) {
+export function scale(rows, force = false) {
   const all = rows.flatMap((row) => row.terms);
   const { hi, lo } = span(all);
   const max = all.reduce((best, t) => (log10(t) > log10(best) ? t : best), all[0] ?? '0');
-  const log = hi - lo >= 2;
+  const log = force || hi - lo >= 2;
   const floor = log ? Math.floor(lo) : 0;
   const top = log ? Math.ceil(hi) : hi;
   const at = (t) => {

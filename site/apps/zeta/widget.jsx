@@ -1,45 +1,40 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/export.js';
 import { Bar } from '../../lib/frame.jsx';
-import { Group } from '../../lib/knobs.jsx';
 import { Scene } from '../../lib/scene.jsx';
-import { make } from './scene.js';
+import { REACH, ZEROS, roll } from './engine.js';
+import { PAGE, make } from './scene.js';
 
-const tee = (t) => (Number.isInteger(t) ? String(t) : t.toFixed(2));
+const SWIPE = 6;
 
-const ROWS = {
-  walk: [
-    ['From', (f) => tee(f.from)],
-    ['To', (f) => tee(f.to)],
-    ['Zeros', (f) => f.zeros],
-    ['First zero', (f) => (f.zeros ? f.first : '-')],
-    ['Reach', (f) => f.reach.toFixed(2)],
-  ],
-  stairs: [
-    ['Up to', (f) => f.x],
-    ['Zeros', (f) => f.zeros],
-    ['Last zero', (f) => (f.zeros ? f.last.toFixed(2) : '-')],
-    ['psi', (f) => f.psi.toFixed(3)],
-    ['Formula', (f) => f.formula.toFixed(3)],
-    ['Gap', (f) => f.gap.toFixed(3)],
-  ],
-};
+const SCRUB = REACH / 2;
 
-const Fact = ({ name, value }) => (
-  <label>
-    <span>{name}</span>
-    <span className="num">{value}</span>
-  </label>
-);
+const four = (v) => v.toFixed(4);
 
-export function Widget({ value, onReady, onExport, unit: given }) {
+export function rows(view, said) {
+  if (!said) return [];
+  const { walk, stairs } = said;
+  if (view === 'stairs') return [['x', String(stairs.x)], ['zeros', String(stairs.zeros)], ['psi(x)', four(stairs.psi)], ['formula', four(stairs.formula)], ['gap', four(stairs.gap)]];
+  const out = [['t', walk.t.toFixed(2)], ['zeros below t', String(walk.count)], ['next zero', walk.next === null ? 'past the list' : walk.next.toFixed(6)], ['Z(t)', four(walk.z)], ['re', four(walk.re)], ['im', four(walk.im)], ['theta', four(walk.theta)]];
+  walk.list.forEach(([zero, past], i) => out.push([`zero ${i + 1}`, `${zero.toFixed(6)}${past ? ' passed' : ''}`]));
+  return out;
+}
+
+export function scrub(grab, dx) {
+  const share = dx / Math.max(1, grab.w);
+  return grab.view === 'stairs' ? { zeros: Math.round(grab.zeros + share * ZEROS) } : { t: grab.t + share * SCRUB };
+}
+
+export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }) {
   const [loaded, setLoaded] = useState(null);
   const unit = given ?? loaded;
   const live = useRef(null);
   const now = useRef(value);
   now.current = value;
-  const [facts, setFacts] = useState(null);
-  const [pass, setPass] = useState(null);
+  const hooks = useRef({});
+  hooks.current = { onChange, onStatus };
+  const seed = useRef(value.seed);
+  const grab = useRef(null);
   useEffect(() => {
     if (given) return undefined;
     let on = true;
@@ -48,39 +43,59 @@ export function Widget({ value, onReady, onExport, unit: given }) {
       on = false;
     };
   }, [given]);
-  const tell = useCallback((count, t) => setPass({ count, t }), []);
-  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onPass: tell }), [unit, tell]);
+  useEffect(() => {
+    if (seed.current === value.seed) return;
+    seed.current = value.seed;
+    onChange?.(roll(value.seed));
+  }, [value.seed]);
+  const tell = useCallback((said) => {
+    if (said.t !== now.current.t) hooks.current.onChange?.({ t: said.t });
+    hooks.current.onStatus?.(rows(now.current.view, said));
+  }, []);
+  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onTell: tell }), [unit, tell]);
   const ready = (handle) => {
     live.current = handle;
-    setFacts(handle?.facts ?? null);
-    if (!handle) setPass(null);
+    if (!handle) hooks.current.onStatus?.([]);
     onReady?.(handle);
   };
   const keep = () => {
     const picture = live.current?.svg?.();
-    if (picture) text(picture, `zeta-${now.current.seed}`, 'svg');
+    if (picture) text(picture, PAGE.name(now.current), 'svg');
   };
   const sheet = () => {
-    const rows = live.current?.csv?.();
-    if (rows) text(rows, `zeta-${now.current.seed}`, 'csv');
+    const list = live.current?.csv?.();
+    if (list) text(list, 'zeta-zeros', 'csv');
   };
-  const have = Boolean(facts);
+  const have = Boolean(unit);
   useEffect(() => onExport?.(have ? [['SVG', keep], ['CSV', sheet]] : []), [have]);
-  const f = facts;
-  const p = pass;
+  const down = (e) => {
+    if (!live.current) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    grab.current = { x: e.clientX, w: box.width, view: now.current.view, t: now.current.t, zeros: now.current.zeros, moved: false };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const move = (e) => {
+    const one = grab.current;
+    if (!one) return;
+    const dx = e.clientX - one.x;
+    if (!one.moved && Math.abs(dx) < SWIPE) return;
+    one.moved = true;
+    onChange?.(scrub(one, dx));
+  };
+  const up = () => {
+    const one = grab.current;
+    grab.current = null;
+    if (one && !one.moved) live.current?.go?.();
+  };
+  const cancel = () => {
+    grab.current = null;
+  };
   return (
     <>
-      {unit && <Scene make={scene} value={value} onReady={ready} />}
-      <Bar side="status">
-        {!unit && <span>loading</span>}
-        {f && <span>{p?.count ?? 0} of {f.zeros} zeros</span>}
-        {f && p?.count > 0 && <span>zero {f.first + p.count - 1} at {p.t.toFixed(3)}</span>}
-      </Bar>
-      {f && (
-        <Bar side="right">
-          <Group name="Counts">
-            {ROWS[f.face].map(([name, get]) => <Fact key={name} name={name} value={get(f)} />)}
-          </Group>
+      {unit && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={cancel} style={{ cursor: 'ew-resize' }} />}
+      {!unit && (
+        <Bar side="status">
+          <span>loading</span>
         </Bar>
       )}
     </>

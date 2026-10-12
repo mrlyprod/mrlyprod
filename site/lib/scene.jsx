@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Bar, Frame } from './frame.jsx';
 import { island } from './island.jsx';
-import { Hints, Keys, useKeys } from './keys.jsx';
-import { defaults as knobs, tidy } from './knobs.js';
-import { Btn, Export, Group, Icon, Knob, Knobs } from './knobs.jsx';
+import { Hints, Info, Keys, flip, useKeys } from './keys.jsx';
+import { asked, defaults as knobs, tidy } from './knobs.js';
+import { Accordion, Btn, Export, Fold, Icon, Knob, Knobs, Menu, useAccordion } from './knobs.jsx';
 import { share, useQuery } from './query.js';
 import { run } from './scene.js';
 import { record as capture } from './space/record.js';
 
+const Stage = createContext(null);
+
 export function Scene({ make, value, onReady, ...rest }) {
+  const stage = useContext(Stage);
   const at = useRef(null);
   const live = useRef(null);
   const made = useRef('');
@@ -18,7 +21,7 @@ export function Scene({ make, value, onReady, ...rest }) {
   const key = JSON.stringify(value);
   useEffect(() => {
     const canvas = at.current;
-    const stop = run(canvas, make, value);
+    const stop = run(canvas, make, value, { still: stage?.still });
     live.current = stop;
     made.current = key;
     ready.current?.({ ...stop.scene, canvas, pause: stop.pause, play: stop.play, fix: stop.fix });
@@ -38,6 +41,12 @@ export function Scene({ make, value, onReady, ...rest }) {
 
 const PAUSE = { key: ' ', label: 'Pause', act: 'pause' };
 
+const PLAY = { ...PAUSE, label: (value, handle) => (handle?.playing?.() === false ? 'Play' : 'Pause') };
+
+const WATCH = 250;
+
+const SHOWN = 4;
+
 const RECORD = { key: 'v', label: 'Record', act: 'record' };
 
 const RATIOS = ['9:16', '16:9'];
@@ -49,6 +58,17 @@ const BASE = [
   { key: 'z', label: 'Zen', act: 'zen' },
   { key: '?', label: 'Keys', act: 'keys' },
 ];
+
+const MORE = [
+  { key: 'e', label: 'Export', act: 'export' },
+  { key: 'i', label: 'Info', act: 'info' },
+];
+
+export const tail = (told) => MORE.filter((row) => told || row.act !== 'info');
+
+const COPIED = 1500;
+
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 export function quiet(on) {
   if (typeof document === 'undefined') return;
@@ -90,15 +110,24 @@ export function resume(handle, paused) {
   return false;
 }
 
-export const keymap = (keys) => [PAUSE, ...keys, ...BASE.filter((row) => !keyed(keys, row.key))];
+export const keymap = (keys, more = [], { still = false, own = false } = {}) => [...(still ? [] : [own ? PLAY : PAUSE]), ...keys, ...[BASE[0], ...more, ...BASE.slice(1)].filter((row) => !keyed(keys, row.key))];
+
+export const labels = (map, value, handle) => map.map((row) => (typeof row.label === 'function' ? { ...row, label: row.label(value, handle) } : row));
+
+const owns = (handle) => typeof handle?.toggle === 'function' && typeof handle?.playing === 'function';
+
+export const called = (name, id, value, units) => (typeof name === 'function' ? name(value, units) : `${id}-${value.seed}`);
+
+const resting = (handle, own, paused) => (own ? handle?.playing?.() === false : paused);
 
 export const live = (map, value) => map.filter((row) => !row.when || row.when(value));
 
 export const menu = (record, begin, more = []) => [...(record ? RATIOS.map((at) => [`Video ${at}`, () => begin(at)]) : []), ...more];
 
-function App({ Widget, defaults, spec, units, keys, actions, gestures, record, id, title }) {
+function App({ Widget, defaults, spec, units, keys, actions, gestures, record, about = [], id, title, calm = false, name, saver = false }) {
   const [raw, set] = useQuery(defaults);
   const value = spec ? { ...raw, ...tidy(spec, raw, units) } : raw;
+  const url = spec ? { ...value, ...asked(spec, raw, units) } : value;
   const scene = useRef(null);
   const [kept, keep] = useState('');
   const [paused, setPaused] = useState(false);
@@ -108,6 +137,15 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, i
   const [rec, setRec] = useState('');
   const [zen, setZen] = useState(false);
   const [more, setMore] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [copied, setCopied] = useState(false);
+  const hush = useRef(0);
+  const [fixed, setFixed] = useState(false);
+  const [mode, setMode] = useState({ still: calm, own: false });
+  const [, setSign] = useState('');
+  const folds = useAccordion(id, spec);
+  const stage = useMemo(() => ({ still: calm }), [calm]);
+  const status = useCallback((next) => setRows((was) => (same(was, next ?? []) ? was : (next ?? []))), []);
   useEffect(() => {
     quiet(zen);
     if (!zen) return undefined;
@@ -128,20 +166,36 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, i
   };
   const onChange = (patch) => {
     const next = { ...value, ...patch };
-    write(spec ? { ...next, ...tidy(spec, next, units) } : next);
+    write(spec ? { ...next, ...tidy(spec, next, units), ...asked(spec, { ...raw, ...patch }, units) } : next);
   };
-  useEffect(() => write(value), []);
+  useEffect(() => write(url), []);
   const ready = useCallback((handle) => {
     take.current?.stop();
     scene.current = handle;
     setPaused(false);
+    setFixed(Boolean(handle?.fix));
+    setMode({ still: calm || Boolean(handle?.still), own: owns(handle) });
   }, []);
   const all = useMemo(() => (record ? [...keys, RECORD] : keys), [keys, record]);
   const on = live(all, value);
-  const map = useMemo(() => keymap(on), [all, on.map((row) => all.indexOf(row)).join()]);
+  const told = about.length > 0 || rows.length > 0;
+  const map = useMemo(() => keymap(on, tail(told), mode), [all, on.map((row) => all.indexOf(row)).join(), told, mode]);
+  const shown = labels(map, value, scene.current);
+  const signed = useRef(null);
+  signed.current = () => [mode.own ? scene.current?.playing?.() : '', ...labels(map, value, scene.current).map((row) => row.label)].join('|');
+  const sync = () => setSign(signed.current());
+  const watching = mode.own || map.some((row) => typeof row.label === 'function');
+  useEffect(() => {
+    if (!watching) return undefined;
+    const timer = setInterval(sync, WATCH);
+    return () => clearInterval(timer);
+  }, [watching]);
+  const file = called(name, id, value, units);
   const pause = () => {
     const handle = scene.current;
-    if (handle) setPaused(toggle(handle, paused, Boolean(take.current), cut));
+    if (!handle) return;
+    if (mode.own && !take.current) handle.toggle();
+    else setPaused(toggle(handle, paused, Boolean(take.current), cut));
   };
   const begin = (at) => {
     const handle = scene.current;
@@ -149,7 +203,7 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, i
     ratio.current = at;
     setPaused(resume(handle, paused));
     try {
-      const one = capture(handle, { ratio: at, name: `${id}-${value.seed}`, audio: handle.sound?.() });
+      const one = capture(handle, { ratio: at, name: file, audio: handle.sound?.() });
       take.current = one;
       setTaking(at);
       one.done.then(() => {
@@ -163,6 +217,7 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, i
   };
   const cut = () => take.current?.stop();
   useEffect(() => cut, []);
+  useEffect(() => () => clearTimeout(hush.current), []);
   useEffect(() => {
     if (!taking) return undefined;
     const tick = () => setRec(`rec ${clock(take.current?.secs() ?? 0)} ${taking} late ${take.current?.late() ?? 0}`);
@@ -170,61 +225,96 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, i
     const timer = setInterval(tick, 250);
     return () => clearInterval(timer);
   }, [taking]);
-  const acts = { pause, reroll: () => onChange({ seed: roll() }), zen: () => setZen((was) => !was), record: () => (take.current ? cut() : begin(ratio.current)), ...Object.fromEntries(Object.entries(actions).map(([act, fn]) => [act, (e) => scene.current && fn(scene.current, e)])) };
+  const base = { pause, reroll: () => onChange({ seed: roll() }), zen: () => setZen((was) => !was), record: () => (take.current ? cut() : begin(ratio.current)), ...Object.fromEntries(Object.entries(actions).map(([act, fn]) => [act, (e) => scene.current && fn(scene.current, e)])) };
+  const acts = Object.fromEntries(Object.entries(base).map(([act, fn]) => [act, (e) => {
+    fn(e);
+    sync();
+  }]));
   useKeys(map, acts);
-  const primary = map.find((row) => row.button && acts[row.act]);
+  const primary = shown.find((row) => row.button && acts[row.act]);
   const pick = `${id}${share(value)}`;
-  const saver = () => {
+  const screen = () => {
     window.dispatchEvent(new CustomEvent('saver', { detail: pick }));
     keep(pick);
   };
+  const copy = () => {
+    navigator.clipboard?.writeText(`${location.origin}${location.pathname}${share(url)}`).then(() => {
+      clearTimeout(hush.current);
+      setCopied(true);
+      hush.current = setTimeout(() => setCopied(false), COPIED);
+    }, () => {});
+  };
+  const extras = [...(saver ? [[kept === pick ? 'Screensaver set' : 'Set as screensaver', screen]] : []), ['Copy link', copy, 'link'], ['Keys', () => flip('dialog.keys')], ['Zen', acts.zen]];
+  const view = spec ? live(spec.filter((row) => row.key === 'view'), value)[0] : undefined;
   return (
-    <Frame label={title} gestures={gestures}>
-      <Widget value={value} onChange={onChange} onReady={ready} onExport={setMore} />
-      <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
-        <Icon name="fullscreen_exit" />
-      </Btn>
-      <Bar side="top">
-        <Btn className="icon" aria-label="Zen" onClick={acts.zen}>
-          <Icon name="fullscreen" />
-        </Btn>
-      </Bar>
-      {spec && (
-        <Bar side="right">
-          <Knobs spec={spec} value={value} units={units} onChange={onChange} />
-          <Group name="Seed">
-            <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
-            <Btn onClick={acts.reroll}>
+    <Accordion.Provider value={folds}>
+      <Stage.Provider value={stage}>
+        <Frame label={title} gestures={gestures}>
+          <Widget value={value} onChange={onChange} onReady={ready} onExport={setMore} onStatus={status} units={units} />
+          <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
+            <Icon name="fullscreen_exit" />
+          </Btn>
+          {spec && (
+            <Bar side="right">
+              <Knobs spec={spec} value={value} units={units} onChange={onChange} />
+            </Bar>
+          )}
+          {spec && (
+            <Bar side="tail">
+              <Fold name="Seed" live={String(value.seed)} open={folds.has('Seed')} onToggle={(on) => folds.flip('Seed', on)}>
+                <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
+              </Fold>
+            </Bar>
+          )}
+          <Bar side="status">
+            {told && (
+              <Btn className="icon info" aria-label="Info" onClick={() => flip('dialog.info')}>
+                <Icon name="info" />
+              </Btn>
+            )}
+            <span>seed {value.seed}</span>
+            {!mode.still && resting(scene.current, mode.own, paused) && <span>paused</span>}
+            {taking && <span>{rec}</span>}
+            {copied && <span>link copied</span>}
+            {rows.slice(0, SHOWN).map(([label, v]) => <span key={label} className="out">{label} {v}</span>)}
+          </Bar>
+          <Bar side="hints">
+            <Hints map={shown} />
+          </Bar>
+          <Bar side="actions">
+            {view && (
+              <div className="views">
+                <Knob row={view} value={value.view} values={value} units={units} onChange={onChange} />
+              </div>
+            )}
+            {taking && (
+              <Btn primary onClick={cut}>
+                Stop
+              </Btn>
+            )}
+            {primary && (
+              <Btn primary onClick={acts[primary.act]}>
+                {primary.label}
+              </Btn>
+            )}
+            <Btn className="reroll" onClick={acts.reroll}>
               <Icon name="casino" />
               Reroll
             </Btn>
-          </Group>
-        </Bar>
-      )}
-      <Bar side="status">
-        <span>seed {value.seed}</span>
-        {paused && <span>paused</span>}
-        {taking && <span>{rec}</span>}
-      </Bar>
-      <Bar side="hints">
-        <Hints map={map} />
-      </Bar>
-      <Bar side="actions">
-        {taking && (
-          <Btn primary onClick={cut}>
-            Stop
-          </Btn>
-        )}
-        {primary && (
-          <Btn primary onClick={acts[primary.act]}>
-            {primary.label}
-          </Btn>
-        )}
-        <Export className="export" canvas={() => scene.current?.canvas ?? document.querySelector('.frame canvas')} name={`${id}-${value.seed}`} draw={() => scene.current?.draw?.()} more={menu(record, begin, more)} />
-        <Btn className="keep" onClick={saver}>{kept === pick ? 'Screensaver set' : 'Set as screensaver'}</Btn>
-      </Bar>
-      <Keys map={map} />
-    </Frame>
+            <Btn className="export" onClick={() => flip('dialog.export')}>
+              <Icon name="download" />
+              Export
+            </Btn>
+            <Menu className="icon more" aria-label="More" rows={extras}>
+              <Icon name="more_horiz" />
+            </Menu>
+          </Bar>
+          <Keys map={shown} />
+          {told && <Info about={about} rows={rows} />}
+          <Export canvas={() => scene.current?.canvas ?? document.querySelector('.frame canvas')} name={file} draw={() => scene.current?.draw?.()} fix={fixed && !taking ? (next) => scene.current?.fix?.(next) : undefined} more={menu(record, begin, more)} />
+        </Frame>
+      </Stage.Provider>
+    </Accordion.Provider>
   );
 }
 
@@ -253,12 +343,15 @@ export function Held({ units, still, ...rest }) {
   return on ? <App {...rest} units={held ?? undefined} /> : null;
 }
 
-export function page(Widget, defaults, { spec, units, keys = [], actions = {}, gestures = false, record = false } = {}) {
+export const saves = (context, id) => Boolean(context?.site?.savers?.some((one) => one.id === id));
+
+export function page(Widget, defaults, { spec, units, keys = [], actions = {}, gestures = false, record = false, about = [], still: calm = false, name } = {}) {
   const start = values(defaults, spec);
-  return island((host) => {
+  return island((host, context) => {
     const still = host.nextElementSibling;
     const title = still?.querySelector('h1')?.textContent ?? '';
+    const id = host.dataset.app;
     seeded(Object.keys(start));
-    return { node: <Held units={units} still={still} Widget={Widget} defaults={start} spec={spec} keys={keys} actions={actions} gestures={gestures} record={record} id={host.dataset.app} title={title} />, close: () => still && host.after(still) };
+    return { node: <Held units={units} still={still} Widget={Widget} defaults={start} spec={spec} keys={keys} actions={actions} gestures={gestures} record={record} about={about} id={id} title={title} calm={calm} name={name} saver={saves(context, id)} />, close: () => still && host.after(still) };
   });
 }

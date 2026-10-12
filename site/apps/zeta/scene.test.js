@@ -1,9 +1,10 @@
 import { expect, test } from 'bun:test';
 import * as num from '../../../pkgs/mrlyjs/num.js';
 import { defaults, describe, tidy } from '../../lib/knobs.js';
+import { shown } from '../../lib/knobs.jsx';
 import { rng } from '../../lib/scene.js';
-import { BANDS, BEAT, FLASH, GHOST, HOLD, KEEP, PIP, fold, study } from './engine.js';
-import { SPEC, make } from './scene.js';
+import { BEAT, FLASH, FOLDING, HEAD, HOLD, PAD, REACH, index, plane, snap, study } from './engine.js';
+import { PAGE, SPEC, make } from './scene.js';
 
 num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
@@ -11,7 +12,7 @@ const pen = (log) =>
   new Proxy(
     {},
     {
-      get: (_, key) => (...args) => log.push([key, ...args.map((arg) => (arg && typeof arg === 'object' && !Array.isArray(arg) ? 'layer' : arg))]),
+      get: (_, key) => (...args) => log.push([key, ...args]),
       set: (_, key, v) => {
         log.push([key, v]);
         return true;
@@ -19,264 +20,260 @@ const pen = (log) =>
     },
   );
 
-const sheets = [];
+const DPR = 2;
 
-globalThis.OffscreenCanvas = class {
-  constructor(w, h) {
-    this.width = w;
-    this.height = h;
-    this.log = [];
-    sheets.push(this);
-  }
-  getContext() {
-    return pen(this.log);
-  }
-};
-
-const open = (value, still = false, w = 800, h = 600) => {
+const open = (value = {}, { still = false, w = 800, h = 600, lock = false } = {}) => {
   const log = [];
   const told = [];
-  const passes = [];
-  const view = { rand: rng(1), look: () => ({ paper: '#000000', accent: '#008cff' }), still, w, h, dpr: 2, t: 0 };
+  const woke = [];
+  const view = { rand: rng(1), look: () => ({ paper: '#000000', accent: '#008cff' }), still, lock, w, h, dpr: DPR, t: 0, fixed: false };
   view.wake = () => {
     view.still = false;
-    told.push('wake');
+    woke.push('wake');
   };
-  const scene = make({ getContext: () => pen(log) }, view, { ...defaults(SPEC), seed: 1, from: 0.5, num, onPass: (count, t) => passes.push([count, t]), ...value });
+  const start = { ...defaults(SPEC), seed: 1, ...value };
+  const scene = make({ getContext: () => pen(log) }, view, { ...start, num, ...(lock ? {} : { onTell: (said) => told.push(said) }) });
   const at = (t) => {
     view.t = t;
     log.length = 0;
     scene.draw();
-    return log;
+    return [...log];
   };
-  return { view, scene, told, passes, log, at };
+  const set = (patch) => {
+    Object.assign(start, patch);
+    scene.set({ ...start });
+  };
+  return { view, scene, told, woke, at, set, last: () => told.at(-1) };
 };
 
-const PLAN = study(num, 0.5, 60);
+const plan = study(num);
 
-const whole = PLAN.n - 1;
+const spot = (t, w = 800, h = 600) => {
+  const i = index(t);
+  const box = plane({ x: 0, y: 0, w, h }, plan.peak[i], PAD * DPR);
+  return [box.ox + plan.xs[i] * box.k, box.oy - plan.ys[i] * box.k];
+};
 
-const laid = () => sheets.at(-1).log.filter(([name]) => name === 'lineTo' || name === 'arc').length;
+const dot = (log) => log.find(([name, , , r]) => name === 'arc' && r === HEAD * DPR).slice(1, 3);
 
-const rings = (log, x, y) => log.filter(([name, cx, cy]) => name === 'arc' && cx === x && cy === y);
+const texts = (log) => log.filter(([name]) => name === 'fillText').map(([, text]) => text);
 
-test('a picture at a t is the same reached in one jump or by steps', () => {
-  const stepped = open({});
-  for (let t = 0; t <= 7000; t += 250) stepped.at(t);
-  const count = laid();
-  const log = [...stepped.log];
-  const jumped = open({});
-  const once = [...jumped.at(7000)];
-  expect(laid()).toBe(count);
-  expect(once).toEqual(log);
-  expect(count).toBeGreaterThan(0);
-  expect(count).toBeLessThan(whole);
+const strokes = (log) => {
+  const out = [];
+  let pts = [];
+  for (const [name, x, y] of log) {
+    if (name === 'beginPath') pts = [];
+    if (name === 'moveTo' || name === 'lineTo') pts.push(x, y);
+    if (name === 'stroke') out.push(pts);
+  }
+  return out;
+};
+
+const flashes = (log) => log.filter(([name, v]) => name === 'strokeStyle' && /^rgba\(255, 209, 0, 0\.\d+\)$/.test(v));
+
+test('the page opens standing at its head and waits, telling the head and the reading', () => {
+  const page = open();
+  expect(dot(page.at(0))).toEqual(spot(30));
+  expect(dot(page.at(5000))).toEqual(spot(30));
+  expect([page.scene.playing(), page.scene.word()]).toEqual([false, 'Play']);
+  expect(page.last()).toMatchObject({ t: 30, walk: { count: 3 }, stairs: { x: 100, zeros: 10 } });
 });
 
-test('under reduced motion the first draw lays the whole walk, tells every zero once, and draws no flash', () => {
-  const still = open({}, true);
-  const log = still.at(0);
-  expect(laid()).toBe(whole);
-  expect(still.passes).toEqual([[13, PLAN.zeros[12]]]);
-  expect(rings(log, 400 - 0, 0).length).toBe(0);
-  still.at(0);
-  expect(laid()).toBe(whole);
-  expect(still.passes).toHaveLength(1);
+test('go walks the head from where it stands at the speed, stands at the end and offers a replay from zero', () => {
+  const page = open({ speed: 4 });
+  page.at(0);
+  page.scene.go();
+  expect(page.scene.word()).toBe('Pause');
+  page.at(1000);
+  expect(page.last().t).toBe(34);
+  page.at(100000);
+  expect([page.last().t, page.scene.word()]).toEqual([REACH, 'Replay']);
+  expect(dot(page.at(110000))).toEqual(spot(REACH));
+  page.scene.go();
+  expect([page.last().t, page.scene.word()]).toEqual([0, 'Pause']);
 });
 
-test('a pass through the origin is told with its count and its t, and flashes a ring at the origin that fades within the flash', () => {
-  const live = open({ speed: 2 });
-  const first = PLAN.zeros[0];
-  const walked = (t) => live.at((t - 0.5) * 500);
-  const before = walked(first - 0.1);
-  expect(live.passes).toEqual([[0, null]]);
-  const origin = before.find(([name]) => name === 'arc').slice(1, 3);
-  expect(rings(before, ...origin)).toHaveLength(1);
-  const just = walked(first + 0.1);
-  expect(live.passes).toEqual([[0, null], [1, first]]);
-  expect(rings(just, ...origin)).toHaveLength(2);
-  const later = live.at((first + 0.1 - 0.5) * 500 + FLASH + 1);
-  expect(rings(later, ...origin)).toHaveLength(1);
-  expect(live.passes).toHaveLength(2);
+test('go while walking pauses the head where it is', () => {
+  const page = open({ speed: 4 });
+  page.scene.go();
+  page.at(500);
+  page.scene.go();
+  expect([page.last().t, page.scene.word()]).toEqual([32, 'Play']);
+  expect(dot(page.at(5000))).toEqual(spot(32));
 });
 
-test('past the span and the hold the walk starts over on a fresh layer and the count resets', () => {
-  const live = open({ speed: 2 });
-  live.at(30000);
-  expect(laid()).toBe(whole);
-  expect(live.passes.at(-1)[0]).toBe(13);
-  live.at(30000 + HOLD / 2);
-  expect(laid()).toBe(whole);
-  expect(live.at(30000 + HOLD / 2)).toContainEqual(['globalAlpha', 1]);
-  live.at(30000 + HOLD + 50);
-  expect(laid()).toBeLessThan(whole / 10);
-  expect(live.passes.at(-1)[0]).toBe(0);
+test('a t from the knobs moves the head and stops the walk, while the echo of a told t leaves the walk going', () => {
+  const page = open({ speed: 4 });
+  page.scene.go();
+  page.at(1000);
+  page.set({ t: 34 });
+  expect(page.scene.playing()).toBe(true);
+  page.at(2000);
+  expect(page.last().t).toBe(38);
+  page.set({ t: 10 });
+  expect([page.last().t, page.scene.playing()]).toEqual([10, false]);
+  expect(dot(page.at(3000))).toEqual(spot(10));
 });
 
-test('the dots look lays beads on the layer and on the trail, the line look strokes, and both strokes the trail with beads over it', () => {
-  const dots = open({ look: 'dots' }, true);
-  const trail = dots.at(0);
-  expect(sheets.at(-1).log.some(([name]) => name === 'arc')).toBe(true);
-  expect(sheets.at(-1).log.some(([name]) => name === 'lineTo')).toBe(false);
-  expect(trail.filter(([name]) => name === 'lineTo')).toHaveLength(2);
-  expect(trail.filter(([name]) => name === 'fill').length).toBeGreaterThan(2);
-  const line = open({ look: 'line' }, true);
-  const stroked = line.at(0);
-  expect(sheets.at(-1).log.some(([name]) => name === 'lineTo')).toBe(true);
-  expect(stroked.filter(([name]) => name === 'lineTo').length).toBeGreaterThan(2);
-  expect(stroked.filter(([name]) => name === 'fill')).toHaveLength(1);
-  const both = open({ look: 'both' }, true);
-  const mixed = both.at(0);
-  expect(sheets.at(-1).log.some(([name]) => name === 'lineTo')).toBe(true);
-  expect(mixed.some(([name]) => name === 'lineTo')).toBe(true);
-  expect(mixed.filter(([name]) => name === 'fill').length).toBeGreaterThan(2);
+test('each zero the walk passes flashes a ring out of the origin that is gone within the flash', () => {
+  const page = open({ t: 14, speed: 4 });
+  page.at(0);
+  expect(flashes(page.at(10))).toHaveLength(0);
+  page.scene.go();
+  page.at(100);
+  expect(flashes(page.at(150))).toHaveLength(1);
+  expect(flashes(page.at(100 + FLASH + 20))).toHaveLength(0);
 });
 
-test('again restarts the walk from now and wakes a still scene', () => {
-  const live = open({});
-  live.at(20000);
-  const before = laid();
-  live.scene.again();
-  live.at(20100);
-  expect(laid()).toBeLessThan(before / 4);
-  const still = open({}, true);
-  still.at(0);
-  still.scene.again();
-  expect(still.told).toEqual(['wake']);
-  still.at(10);
-  expect(laid()).toBeLessThan(10);
+test('the arrows hop the head from zero to zero, counting the zero it lands on, and back to the start', () => {
+  const page = open();
+  page.scene.hop(1);
+  expect(page.last().walk.t).toBe(plan.zeros[3]);
+  expect(page.last()).toMatchObject({ t: snap(plan.zeros[3]), walk: { count: 4 } });
+  for (let k = 0; k < 4; k++) page.scene.hop(-1);
+  expect(page.last().walk.t).toBe(0);
 });
 
-test('a resize or a theme lays the ghost again in the paint of the moment', () => {
-  const live = open({});
-  live.at(5000);
-  const was = sheets.length;
-  live.scene.size();
-  live.at(5000);
-  expect(sheets.length).toBe(was + 1);
-  live.scene.theme();
-  live.at(5000);
-  expect(sheets.length).toBe(was + 2);
-  expect(sheets.at(-1).log).toContainEqual(['strokeStyle', '#008cff']);
+test('the lock walks by itself, holds at the end, fades and starts again from zero', () => {
+  const lock = open({}, { lock: true });
+  lock.at(0);
+  expect(dot(lock.at(1000))).toEqual(spot(34));
+  const end = 1000 + ((REACH - 34) / 4) * 1000;
+  expect(dot(lock.at(end))).toEqual(spot(REACH));
+  expect(lock.at(end + HOLD - 300)).toContainEqual(['fillStyle', 'rgba(255, 143, 44, 0.5)']);
+  lock.at(end + HOLD);
+  expect(dot(lock.at(end + HOLD + 1000))).toEqual(spot(4));
 });
 
-test('the svg and the csv of the scene are the walk shown, in the accent', () => {
-  const live = open({}, true);
-  live.at(0);
-  const text = live.scene.svg();
-  expect(text).toContain('stroke="#008cff"');
-  expect(text).toContain('width="400" height="300"');
-  expect(live.scene.csv().split('\n')[1]).toBe('1,14.134725');
-  expect(live.scene.facts).toMatchObject({ from: 0.5, to: 60.5, zeros: 13, first: 1 });
+test('a take walks the page by itself like the lock', () => {
+  const page = open();
+  page.view.fixed = true;
+  page.at(0);
+  page.at(1000);
+  expect([page.last().t, page.scene.playing()]).toEqual([34, true]);
 });
 
-test('the trail is capped at the span and a from past the top is clamped, while the defaults are a fixed point of tidy', () => {
+test('under reduced motion the page draws its still and go wakes it', () => {
+  const page = open({}, { still: true });
+  expect(dot(page.at(0))).toEqual(spot(30));
+  page.scene.go();
+  expect(page.woke).toEqual(['wake']);
+  page.at(1000);
+  expect(page.last().t).toBe(34);
+});
+
+test('the stairs draw every zero the slider asks for at once, and a fold folds them in one by one, telling each, and stands', () => {
+  const page = open({ view: 'stairs', zeros: 10 });
+  page.at(0);
+  expect(page.last().stairs.zeros).toBe(10);
+  page.set({ zeros: 40 });
+  expect(page.last().stairs.zeros).toBe(40);
+  page.at(10);
+  page.scene.go();
+  expect([page.scene.word(), page.last().stairs.zeros]).toEqual(['Fold', 0]);
+  page.at(10 + FOLDING / 2);
+  expect(page.last().stairs.zeros).toBe(20);
+  page.at(10 + FOLDING + 10);
+  expect(page.last().stairs.zeros).toBe(40);
+  page.at(20 + FOLDING * 3);
+  expect(page.last().stairs.zeros).toBe(40);
+});
+
+test('Space on the stairs stands a fold with every zero in, and folds again once it stands', () => {
+  const page = open({ view: 'stairs', zeros: 40 });
+  page.at(0);
+  page.scene.toggle();
+  page.at(FOLDING / 2);
+  const mid = [page.scene.playing(), page.last().stairs.zeros];
+  page.scene.toggle();
+  expect([mid, page.scene.playing(), page.last().stairs.zeros]).toEqual([[true, 20], false, 40]);
+  page.scene.toggle();
+  expect(page.scene.playing()).toBe(true);
+});
+
+test('the Enter row is the primary and reads its word from the scene, or from the view before one is ready', () => {
+  const [enter] = PAGE.keys;
+  const page = open();
+  page.scene.go();
+  expect([enter.button, enter.label({ view: 'walk' }, page.scene), enter.label({ view: 'walk' }, null), enter.label({ view: 'stairs' }, null)]).toEqual([true, 'Pause', 'Play', 'Fold']);
+});
+
+test('the export is named by the view shown: the head on the walk, x and the zeros on the stairs', () => {
+  expect([PAGE.name({ view: 'walk', t: 30.05, x: 100, zeros: 10 }), PAGE.name({ view: 'stairs', t: 30, x: 250, zeros: 12 })]).toEqual(['zeta-walk-30.05', 'zeta-stairs-250-12']);
+});
+
+test('the t slider reads with two decimals', () => {
+  const row = SPEC.find((one) => one.key === 't');
+  expect([shown(row, 30), shown(row, 34.45)]).toEqual(['30.00', '34.45']);
+});
+
+test('the lock folds the stairs over and over, the formula leaving the no-zero guess and coming back to it', () => {
+  const lock = open({ view: 'stairs', zeros: 10 }, { lock: true });
+  const length = 11 * BEAT;
+  const same = (t) => {
+    const [guess, formula] = strokes(lock.at(t));
+    return formula.every((v, i) => v === guess[i]);
+  };
+  expect([same(0), same(length), same(length + HOLD + 10)]).toEqual([true, false, true]);
+});
+
+test('the stage carries no words: neither view writes a label or a number on the picture', () => {
+  expect(texts(open().at(0))).toEqual([]);
+  expect(texts(open({ view: 'stairs' }).at(0))).toEqual([]);
+});
+
+test('the view puts one picture on the stage, and a walk left running waits while the stairs show', () => {
+  const page = open({ speed: 4 });
+  page.at(0);
+  page.scene.go();
+  page.at(1000);
+  page.set({ view: 'stairs' });
+  const stairs = page.at(5000);
+  expect(stairs.some(([name]) => name === 'arc')).toBe(false);
+  expect(page.scene.word()).toBe('Fold');
+  page.set({ view: 'walk' });
+  const walk = page.at(5100);
+  expect(walk.some(([name]) => name === 'clip')).toBe(false);
+  expect(dot(walk)).toEqual(spot(34.4));
+});
+
+test('a tint or a resize reaches the running scene: the new ink paints the walk and the walk centres on the new stage, phone aspect too', () => {
+  let accent = '#008cff';
+  const page = open();
+  page.view.look = () => ({ paper: '#000000', accent });
+  page.at(0);
+  accent = '#ff3d40';
+  page.set({ tint: 'red' });
+  expect(page.at(10)).toContainEqual(['strokeStyle', 'rgba(255, 61, 64, 1)']);
+  Object.assign(page.view, { w: 390, h: 844 });
+  expect(dot(page.at(20))).toEqual(spot(30, 390, 844));
+});
+
+test('the defaults are a fixed point of tidy, the view leads the first group and each view shows its own knobs', () => {
   const value = { ...defaults(SPEC), seed: 1 };
   expect({ ...value, ...tidy(SPEC, value) }).toEqual(value);
-  expect(tidy(SPEC, { ...value, span: 20, trail: 50 }).trail).toBe(20);
-  expect(tidy(SPEC, { ...value, from: 1e9 }).from).toBe(10000);
-  expect(tidy(SPEC, { ...value, from: -5 }).from).toBe(0);
+  expect(value.view).toBe('walk');
+  const names = (view) => describe(SPEC, { ...value, view }).map((group) => [group.name, group.rows.map((row) => row.key)]);
+  expect(names('walk')).toEqual([['Zeta', ['view', 't', 'speed']], ['Look', ['look', 'trail', 'tint']]]);
+  expect(names('stairs')).toEqual([['Zeta', ['view', 'zeros', 'x']], ['Look', ['tint']]]);
 });
 
-test('the ghost is laid in solid ink and blitted at the ghost alpha, so no seam or crossing darkens it', () => {
-  const live = open({});
-  const log = live.at(5000);
-  const ghost = sheets.at(-1).log;
-  expect(ghost.filter(([name]) => name === 'strokeStyle').every(([, color]) => color === '#008cff')).toBe(true);
-  expect(ghost).not.toContainEqual(['strokeStyle', expect.stringContaining('rgba')]);
-  const blit = log.findIndex(([name]) => name === 'drawImage');
-  expect(log[blit - 1]).toEqual(['globalAlpha', GHOST]);
-  const dots = open({ look: 'dots' });
-  dots.at(5000);
-  expect(sheets.at(-1).log.filter(([name]) => name === 'fillStyle').every(([, color]) => color === '#008cff')).toBe(true);
-});
-
-test('a bead at the joint of two bands is laid once and the trail strokes with flat caps', () => {
-  const live = open({ look: 'both' }, true);
-  const log = live.at(0);
-  const radius = PIP * 2;
-  const beads = log.filter(([name, , , r]) => name === 'arc' && r === radius).map(([, x, y]) => `${x},${y}`);
-  expect(beads.length).toBeGreaterThan(BANDS);
-  expect(new Set(beads).size).toBe(beads.length);
-  expect(log.some(([name, cap]) => name === 'lineCap' && cap !== 'butt')).toBe(false);
-});
-
-test('a ring from the last zero of the walk rings out through the hold and is gone before the hold ends', () => {
-  const length = (60 / 2) * 1000;
-  const live = open({ speed: 2 });
-  const origin = live.at(0).find(([name]) => name === 'arc').slice(1, 3);
-  const rung = (play) => rings(live.at(play), ...origin).length - 1;
-  const zero = ((PLAN.zeros.at(-1) - 0.5) / 2) * 1000;
-  expect(zero + FLASH).toBeGreaterThan(length);
-  expect(rung(length + 1)).toBe(1);
-  expect(rung(zero + FLASH + 1)).toBe(0);
-  expect(rung(length + HOLD / 2)).toBe(0);
+test('the svg is the picture shown', () => {
+  const page = open();
+  page.at(0);
+  const text = page.scene.svg();
+  expect(text).toContain('width="400" height="300"');
+  expect(text).toContain('stroke="#008cff"');
 });
 
 test('a canvas smaller than its padding draws every arc with a radius of zero or more', () => {
   for (const [w, h] of [[1, 150], [300, 1], [1, 1]]) {
     for (const still of [false, true]) {
-      const live = open({}, still, w, h);
-      const log = [...live.at(0), ...live.at(5000)];
+      const page = open({}, { still, w, h });
+      const log = [...page.at(0), ...page.at(5000)];
       const arcs = log.filter(([name]) => name === 'arc');
       expect(arcs.length).toBeGreaterThan(0);
       expect(arcs.every(([, x, y, r]) => Number.isFinite(x) && Number.isFinite(y) && r >= 0)).toBe(true);
     }
   }
-});
-
-test('a trail is capped to the point budget and the walk keeps it inside', () => {
-  const value = { ...defaults(SPEC), seed: 1, from: 10000, span: 300 };
-  const tight = tidy(SPEC, { ...value, trail: 300 });
-  expect(tight.trail).toBeLessThan(300);
-  const plan = study(num, 10000, 300);
-  expect(Math.round(tight.trail * plan.per)).toBeLessThanOrEqual(KEEP);
-});
-
-test('the walk face shows the walk and look knobs and the stairs face shows the zeros and the reach', () => {
-  const names = (value) => describe(SPEC, { ...defaults(SPEC), ...value }).map((group) => [group.name, group.rows.map((row) => row.key)]);
-  expect(names({})).toEqual([['Face', ['face']], ['Walk', ['from', 'span', 'speed']], ['Look', ['look', 'trail', 'tint']]]);
-  expect(names({ face: 'stairs' })).toEqual([['Face', ['face']], ['Stairs', ['zeros', 'x']], ['Look', ['tint']]]);
-});
-
-const climb = (value, still = false) => open({ face: 'stairs', ...value }, still);
-
-test('the stairs fold in one zero a beat, tell each with its t, hold at the full formula and start over', () => {
-  const live = climb({ zeros: 10, x: 100 });
-  const plan = fold(num, 100, 10);
-  live.at(0);
-  expect(live.passes).toEqual([[0, null]]);
-  live.at(BEAT * 3 + 10);
-  expect(live.passes.at(-1)).toEqual([3, plan.gammas[2]]);
-  live.at(BEAT * 11 + 10);
-  expect(live.passes.at(-1)).toEqual([10, plan.gammas[9]]);
-  live.at(BEAT * 11 + HOLD / 2);
-  expect(live.passes.at(-1)[0]).toBe(10);
-  live.at(BEAT * 11 + HOLD + 10);
-  expect(live.passes.at(-1)[0]).toBe(0);
-  expect(live.scene.facts).toMatchObject({ face: 'stairs', zeros: 10, x: 100 });
-});
-
-test('the stairs draw the filled steps, the dashed guess and the formula, and a still shows every zero folded', () => {
-  const live = climb({ zeros: 10 }, true);
-  const log = live.at(0);
-  expect(live.passes).toEqual([[10, fold(num, 100, 10).gammas[9]]]);
-  expect(log.filter(([name]) => name === 'stroke')).toHaveLength(4);
-  expect(log.filter(([name]) => name === 'fill')).toHaveLength(1);
-  expect(log).toContainEqual(['setLineDash', [8, 10]]);
-  expect(log.filter(([name]) => name === 'arc')).toHaveLength(0);
-  expect(live.scene.svg()).toContain('<clipPath');
-  expect(live.scene.csv().split('\n')).toHaveLength(12);
-  expect(live.scene.csv().split('\n')[1]).toBe('1,14.134725');
-});
-
-test('again restarts the stairs from the smooth guess and wakes a still scene', () => {
-  const live = climb({ zeros: 10 });
-  live.at(BEAT * 20);
-  live.scene.again();
-  expect(live.passes.at(-1)[0]).toBe(0);
-  const still = climb({}, true);
-  still.at(0);
-  still.scene.again();
-  expect(still.told).toEqual(['wake']);
 });

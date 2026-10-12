@@ -1,13 +1,13 @@
 import * as num from "mrlyjs/num";
-import { frame, Grid } from "mrlyjs/view";
+import { Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { num };
 
-const LEVEL = 5;
+const LEVEL = 2;
 const SIDE = 2 ** LEVEL;
-const CELL = 30;
 const GAP = 0.12;
-const FAINT = 0.3;
+const CORNER = 0.24;
 const WANT = { tile: "0110", level: LEVEL, plus: SIDE * SIDE / 2 };
 
 let lift = null;
@@ -25,12 +25,14 @@ function signs() {
   return grid;
 }
 
-export default function draw(pen, ink) {
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "yellow", 0.18);
   const grid = signs();
-  const w = CELL * SIDE;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - w) / 2), w, w), SIDE, SIDE, GAP);
-  const faint = ink.mix(ink.ground, ink.dim, FAINT);
+  const cells = new Grid(box, SIDE, SIDE, GAP);
   for (let row = 0; row < SIDE; row++) {
-    for (let col = 0; col < SIDE; col++) cells.fill(pen, col, row, grid[row * SIDE + col] ? faint : ink.blue);
+    for (let col = 0; col < SIDE; col++) {
+      const [x, y, w, h] = cells.cell(col, row);
+      pen.round_rect(x, y, w, h, w * CORNER, grid[row * SIDE + col] ? paint.deep : paint.white);
+    }
   }
 }

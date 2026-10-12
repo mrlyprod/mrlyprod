@@ -1,11 +1,16 @@
+import { pick, rng } from '../../lib/scene.js';
+
 export const SIDE = 3;
 export const LIMIT = 512;
 const BUDGET = 60000;
 const ROTATION = 0;
+const HOME = 'carpet';
+const UPTO = { 2: 4, 3: 2 };
 
 const worlds = new Map();
 const groups = new Map();
 const reps = new Map();
+const runs = new Map();
 
 /* SPACE */
 
@@ -33,6 +38,27 @@ export function settle(math, dim, base, code, rand) {
   if (text === '' || !Number.isFinite(Number(text))) return roll(math, dim, base, rand);
   const count = total(math, dim, base);
   return String(((Math.floor(Number(text)) % count) + count) % count);
+}
+
+export function home(math, dim, base) {
+  const words = math.name.words(dim, base);
+  return (words.find(([, name]) => name === HOME) ?? words[0])?.[0] ?? '0';
+}
+
+export function canon(math, dim, base, code) {
+  const text = String(code ?? '').trim();
+  return text === '' || !Number.isFinite(Number(text)) ? home(math, dim, base) : settle(math, dim, base, text);
+}
+
+export function drawn(math, dim, base, list, code, seed) {
+  const rand = rng(seed);
+  const others = (list ?? []).filter((one) => one !== String(code));
+  return others.length ? pick(rand, others) : roll(math, dim, base, rand);
+}
+
+export function sequence(math, base) {
+  if (!runs.has(base)) runs.set(base, { upto: UPTO[base], terms: math.bang.baseq.sequence(base, UPTO[base]).map(String) });
+  return runs.get(base);
 }
 
 /* CLASSES */

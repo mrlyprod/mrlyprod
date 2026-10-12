@@ -1,6 +1,6 @@
 {
   "title": "MrlyMath",
-  "line": "A design is one string: one JSON object per named thing, and every other name a view cut from it.",
+  "line": "A design is one string: one JSON object per thing, every other name a view of it.",
   "menu": "read",
   "source": "pkgs/mrlyrs/NAMES.md"
 }

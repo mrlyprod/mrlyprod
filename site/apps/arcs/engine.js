@@ -1,42 +1,54 @@
-import { settle, total } from '../designs/engine.js';
+import { total } from '../designs/engine.js';
 import { num as fix, runs, sheet } from '../../lib/svg.js';
 
 export const DIM = 2;
 export const BUDGET = 65536;
+export const BASES = [[2, '2'], [3, '3'], [4, '4'], [5, '5']];
 export const LOOKS = [['all', 'All'], ['loops', 'Loops'], ['strands', 'Strands']];
+export const CANON = 'carpet';
 export const UNIT = 10;
 export const PAD = 16;
-export const SWAY = 0.5;
-export const ORBIT = [7000, 5300];
+export const AUTO = 0.16;
+export const THIN = 0.6;
+export const THICK = 3;
 export const BEAT = 400;
 export const PACE = 40;
-export const LEAST = 3000;
-export const MOST = 40000;
-export const HOLD = 4000;
-export const FILL = 0.08;
+export const LEAST = 2000;
+export const MOST = 12000;
 export const FADE = 0.55;
+export const TRIES = 64;
+export const KEEP = 8;
 const HALF = Math.PI / 2;
 
 /* ROOM */
 
-export const cap = (math, base) => math.bang.level_cap(Number(base) === 2 ? 2 : 3, DIM, BUDGET);
+export const cap = (math, base) => math.bang.level_cap(Number(base), DIM, BUDGET);
 
 /* DESIGN */
 
-export function looping(math, base, level, rand = Math.random) {
-  const pool = Array.from({ length: total(math, DIM, base) - 1 }, (_, i) => i + 1);
-  for (let i = 0; i < pool.length; i++) {
-    const j = i + Math.floor(rand() * (pool.length - i));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-    if (math.arcs.draw(pool[i], base, level).loops) return String(pool[i]);
-  }
-  return String(pool[0]);
+export const names = (math, base) => math.name.words(DIM, base);
+
+export function resolve(math, base, text) {
+  const raw = String(text ?? '').trim();
+  const words = names(math, base);
+  if (raw === '') return (words.find(([, word]) => word === CANON) ?? words[0])[0];
+  return words.find(([, word]) => word === raw.toLowerCase())?.[0] ?? raw;
 }
 
-export function choose(math, value, rand) {
-  const text = String(value.code ?? '').trim();
-  if (text !== '' && Number.isFinite(Number(text))) return settle(math, DIM, value.base, text, rand);
-  return looping(math, value.base, value.level, rand);
+const loops = (math, code, base, level) => math.arcs.draw(String(code), base, level).loops > 0;
+
+export function looping(math, base, level, rand = Math.random) {
+  const count = total(math, DIM, base);
+  let code = 1;
+  for (let i = 0; i < TRIES; i++) {
+    code = 1 + Math.floor(rand() * (count - 1));
+    if (loops(math, code, base, level)) return String(code);
+  }
+  for (let k = 1; k < count - 1; k++) {
+    const one = ((code - 1 + k) % (count - 1)) + 1;
+    if (loops(math, one, base, level)) return String(one);
+  }
+  return String(code);
 }
 
 /* ARCS */
@@ -76,37 +88,40 @@ export function curves(math, code, base, level) {
 
 /* STUDY */
 
-let kept = null;
+const kept = new Map();
 
-export function shuffle(list, rand) {
-  for (let i = list.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    const t = list[i];
-    list[i] = list[j];
-    list[j] = t;
-  }
-  return list;
+function plan(math, code, base, level) {
+  const drawn = curves(math, code, base, level);
+  const law = math.arcs.law(code, base, level);
+  const lit = [];
+  for (let k = 0; k < drawn.closed.length; k++) if (drawn.closed[k]) lit.push(k);
+  const clock = schedule(lit.map((k) => drawn.bounds[k + 1] - drawn.bounds[k]));
+  let filled = 0;
+  for (const on of drawn.filled) filled += on;
+  const facts = { code, name: math.name.of(code, DIM, base) ?? '', base, level, side: drawn.side, cells: drawn.side * drawn.side, filled, loops: drawn.loops, strands: drawn.strands, law: law ? { formula: law.formula, loops: Number(law.loops) } : null };
+  return { ...drawn, code, lit: Int32Array.from(lit), clock, facts };
 }
 
-export function study(math, value, rand) {
-  const { base } = value;
-  const level = Math.min(value.level, cap(math, base));
-  const code = choose(math, { ...value, level }, rand);
+export function study(math, value) {
+  const base = Number(value.base);
+  const level = Math.max(1, Math.min(value.level, cap(math, base)));
+  const code = resolve(math, base, value.code);
   const key = `${base}:${code}:${level}`;
-  if (!kept || kept.math !== math || kept.key !== key) {
-    const plan = curves(math, code, base, level);
-    const law = math.arcs.law(code, base, level);
-    kept = { math, key, plan, law: law ? { formula: law.formula, loops: Number(law.loops) } : null };
+  const hit = kept.get(key);
+  if (hit && hit.math === math) {
+    kept.delete(key);
+    kept.set(key, hit);
+    return hit.plan;
   }
-  const { plan, law } = kept;
-  const loops = [];
-  for (let k = 0; k < plan.closed.length; k++) if (plan.closed[k]) loops.push(k);
-  const lit = Int32Array.from(shuffle(loops, rand));
-  const clock = schedule(Array.from(lit, (k) => plan.bounds[k + 1] - plan.bounds[k]));
-  let filled = 0;
-  for (const on of plan.filled) filled += on;
-  const facts = { code, name: math.name.of(code, DIM, base) ?? '', base, level, side: plan.side, cells: plan.side * plan.side, filled, loops: plan.loops, strands: plan.strands, law };
-  return { ...plan, code, lit, clock, facts };
+  let made;
+  try {
+    made = plan(math, code, base, level);
+  } catch (error) {
+    return { code, facts: { code, base, level, fault: String(error?.message ?? error) } };
+  }
+  kept.set(key, { math, plan: made });
+  while (kept.size > KEEP) kept.delete(kept.keys().next().value);
+  return made;
 }
 
 /* TIME */
@@ -130,21 +145,16 @@ export function schedule(lengths) {
   return { span, dur, start, end, byStart: by(start), byEnd: by(end) };
 }
 
-export function phase(t, span, still) {
-  if (still) return Infinity;
-  const loop = span + HOLD;
-  return ((t % loop) + loop) % loop;
-}
-
-export function drift(t, box) {
-  return [SWAY * Math.max(0, box.x) * Math.sin(t / ORBIT[0]), SWAY * Math.max(0, box.y) * Math.sin(t / ORBIT[1])];
-}
-
 /* LAYOUT */
 
 export function fit(side, w, h, pad) {
   const px = Math.max(1, Math.min(w, h) - 2 * pad) / side;
   return { px, x: (w - px * side) / 2, y: (h - px * side) / 2 };
+}
+
+export function thick(width, px, dpr) {
+  if (width > 0) return Math.max(dpr, width * px);
+  return Math.max(THIN * dpr, Math.min(THICK * dpr, AUTO * px));
 }
 
 /* SVG */
@@ -177,8 +187,8 @@ export function picture(plan, value, shades) {
   const strands = [];
   const loops = [];
   for (let k = 0; k < closed.length; k++) (closed[k] ? loops : strands).push(trail(plan, k, UNIT));
-  const stroke = (d, color) => `<path d="${d}" fill="none" stroke="${color}" stroke-width="${fix(value.width * UNIT)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  if (value.look !== 'loops' && strands.length) body.push(stroke(strands.join(''), shades.dim));
-  if (value.look !== 'strands' && loops.length) body.push(stroke(loops.join(''), shades.accent));
-  return sheet(w, w, body.join(''));
+  const stroke = (d, color) => `<path d="${d}" fill="none" stroke="${color}" stroke-width="${fix((value.width || AUTO) * UNIT)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (value.look !== 'loops' && strands.length) body.push(stroke(strands.join(''), shades.strand));
+  if (value.look !== 'strands' && loops.length) body.push(stroke(loops.join(''), shades.loop));
+  return sheet(w, w, `<g transform="matrix(1 0 0 -1 0 ${fix(w)})">${body.join('')}</g>`);
 }

@@ -1,75 +1,90 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Btn } from '../../lib/knobs.jsx';
 import { HUES } from '../../lib/scene.js';
-import { gallery } from './engine.js';
 import { marks } from '../../lib/svg.js';
+import { SLOT, pen } from './engine.js';
 
 const ALL = 'all';
 
-const GRID = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(6.5rem, 1fr))', gap: 'var(--s2)', padding: '0 var(--s2)' };
+const GRID = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(5.5rem, 1fr))', gap: 'var(--s2)', padding: '0 var(--s2)' };
 
 const FILTER = { padding: '0 var(--s2)' };
 
 const CARD = { padding: 'var(--s2)', textAlign: 'center' };
 
-const lifts = (n) => (n ? ` · ${n} lift${n > 1 ? 's' : ''}` : '');
-
 const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export function Mark({ glyph, tint = '', upto = null }) {
+const mouse = (e) => e.pointerType === 'mouse';
+
+export function Mark({ glyph, tint = '', k = null }) {
   const fill = `var(--${HUES.includes(tint) ? tint : 'accent'})`;
-  const cells = upto === null ? glyph.cells : glyph.order.slice(0, upto);
+  const cells = glyph.frames[k ?? glyph.frames.length - 1];
+  const dx = Math.floor((SLOT - glyph.cols) / 2);
+  const dy = Math.floor((SLOT - glyph.rows) / 2);
   return (
-    <svg viewBox={`-1 -1 ${glyph.cols + 2} ${glyph.rows + 2}`} shapeRendering="crispEdges" style={{ fill }} aria-hidden="true">
-      {marks(cells, glyph.cols).map(([x, y]) => <rect key={`${x},${y}`} x={x} y={y} width="1" height="1" />)}
+    <svg viewBox={`-1 -1 ${SLOT + 2} ${SLOT + 2}`} shapeRendering="crispEdges" style={{ fill }} aria-hidden="true">
+      {marks(cells, glyph.cols).map(([x, y]) => <rect key={`${x},${y}`} x={x + dx} y={y + dy} width="1" height="1" />)}
     </svg>
   );
 }
 
-function Card({ glyph, tint, fps, onPick }) {
-  const [upto, setUpto] = useState(null);
+function Card({ glyph, tint, rate, hold, onPick }) {
+  const [k, setK] = useState(null);
   const timer = useRef(0);
   const rest = () => {
     clearInterval(timer.current);
     timer.current = 0;
   };
-  const write = () => {
-    if (!glyph.order.length || still()) return;
+  const write = (once) => {
+    const n = glyph.frames.length;
+    if (n < 2 || still()) return;
     rest();
-    let k = 0;
-    setUpto(0);
+    let tick = 0;
+    setK(0);
     timer.current = setInterval(() => {
-      k++;
-      setUpto(k);
-      if (k >= glyph.order.length) rest();
-    }, 1000 / fps);
+      tick++;
+      if (once && tick >= n - 1) {
+        rest();
+        setK(null);
+      } else setK(pen(tick, n, hold));
+    }, 1000 / rate);
   };
   const done = () => {
     rest();
-    setUpto(null);
+    setK(null);
   };
   const pick = () => {
-    write();
+    if (!timer.current) write(true);
     onPick(glyph.char);
   };
   useEffect(() => rest, []);
   return (
-    <button type="button" className="card" style={CARD} title={glyph.name} aria-label={`${glyph.name}, ${glyph.strokes} strokes of a floor of ${glyph.floor}${lifts(glyph.lifts)}: add it to the text`} onClick={pick} onPointerEnter={write} onPointerLeave={done} onFocus={write} onBlur={done}>
-      <Mark glyph={glyph} tint={tint} upto={upto} />
+    <button
+      type="button"
+      className={glyph.flag ? 'card on' : 'card'}
+      style={CARD}
+      title={glyph.name}
+      aria-label={`${glyph.name}, ${glyph.strokes} strokes of a floor of ${glyph.floor}${glyph.flag ? `, ${glyph.flag}` : ''}: add it to the text`}
+      onClick={pick}
+      onPointerEnter={(e) => mouse(e) && write(false)}
+      onPointerLeave={(e) => mouse(e) && done()}
+      onFocus={(e) => e.currentTarget.matches?.(':focus-visible') && write(false)}
+      onBlur={done}
+    >
+      <Mark glyph={glyph} tint={tint} k={k} />
       <div className="code">{glyph.label}</div>
-      <div className="name">{glyph.strokes} of {glyph.floor}{lifts(glyph.lifts)}</div>
+      <div className="name">{glyph.strokes} of {glyph.floor}</div>
+      {glyph.flag && <span className="chip refuted">{glyph.flag}</span>}
     </button>
   );
 }
 
-export function Gallery({ font, tint, onPick }) {
-  const kinds = useMemo(() => gallery(font), [font]);
-  const fps = useMemo(() => font.FPS(), [font]);
+export function Gallery({ kinds, tint, rate, hold, onPick }) {
   const [kind, setKind] = useState(ALL);
   const shown = kinds.filter((one) => kind === ALL || one.id === kind).flatMap((one) => one.glyphs);
   return (
-    <section aria-label="Glyphs">
-      <h3>Glyphs</h3>
+    <section aria-label="Pens">
+      <h3>Pens</h3>
       <div className="filter" style={FILTER}>
         <Btn on={kind === ALL} onClick={() => setKind(ALL)}>All<span>{kinds.reduce((n, one) => n + one.glyphs.length, 0)}</span></Btn>
         {kinds.map((one) => (
@@ -77,7 +92,7 @@ export function Gallery({ font, tint, onPick }) {
         ))}
       </div>
       <div style={GRID}>
-        {shown.map((glyph) => <Card key={glyph.char} glyph={glyph} tint={tint} fps={fps} onPick={onPick} />)}
+        {shown.map((glyph) => <Card key={glyph.char} glyph={glyph} tint={tint} rate={rate} hold={hold} onPick={onPick} />)}
       </div>
     </section>
   );

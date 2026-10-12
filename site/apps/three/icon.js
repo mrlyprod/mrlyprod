@@ -1,29 +1,26 @@
 import * as math from "mrlyjs/math";
 import { iso } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { math };
 
-const CODE = 23;
-const NUMBER = 3;
-const LEVEL = 3;
-const BASE = 2;
-const FILLS = 20;
-const MARGIN = 0.08;
-const SIDES = [0.72, 0.5];
+const LEVEL = 2;
+const WANT = { fills: 20 ** LEVEL };
 
-let quads = null;
+let memo;
 
-function facts() {
-  if (quads) return quads;
-  const cell = math.three.create(CODE, NUMBER, LEVEL, BASE);
-  const read = math.three.census(cell);
-  if (read.fills !== FILLS ** LEVEL) throw new Error(`three: the sponge fills ${read.fills} cells, want ${FILLS ** LEVEL}`);
-  quads = math.three.quads(cell);
-  if (quads.length !== Number(read.surface)) throw new Error(`three: ${quads.length} quads, the census says ${read.surface} exposed faces`);
-  return quads;
+function quads() {
+  if (memo) return memo;
+  const sponge = math.three.create(23, 3, LEVEL, 2);
+  const fills = math.three.fills(sponge);
+  if (fills !== WANT.fills) throw new Error(`three: sponge fills ${fills}, want ${WANT.fills}`);
+  memo = math.three.quads(sponge);
+  const surface = Number(math.three.surface(sponge));
+  if (memo.length !== surface) throw new Error(`three: ${memo.length} quads, the sponge shows ${surface} faces`);
+  return memo;
 }
 
-export default function draw(pen, ink) {
-  const shade = [ink.blue, ...SIDES.map((k) => ink.mix(ink.ground, ink.blue, k))];
-  iso.draw(pen, pen.frame(MARGIN), facts(), shade);
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "blue", 0.16);
+  iso.draw(pen, box, quads(), [paint.white, paint.light, paint.deep], null);
 }

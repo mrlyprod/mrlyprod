@@ -1,17 +1,18 @@
 import * as num from "mrlyjs/num";
+import { plate } from "../../lib/icon.js";
 
 export const units = { num };
 
 const ROOT = "-1,2,2,3";
 const CAP = 256;
 const WANT = 558;
+const HALVES = 2;
 const SEEDS = 3;
 const STRIDE = 4;
 const EPS = 1e-9;
-const MARGIN = 0.05;
-const WASH = 0.08;
-const PALE = 0.25;
-const RIM = 2;
+const FLOOR = 110;
+const RIM = 0.016;
+const SHRINK = 0.93;
 
 let plan = null;
 
@@ -29,13 +30,12 @@ function study() {
   return plan;
 }
 
-export default function draw(pen, ink) {
+export default function draw(pen) {
+  const { box, paint, size } = plate(pen, "cyan", 0.16);
   const { data, bands, octaves, count } = study();
-  const box = pen.frame(MARGIN);
   const [cx, cy] = box.center();
-  const R = box.w / 2;
-  const shades = Array.from({ length: octaves }, (_, b) => ink.mix(ink.ground, ink.blue, PALE + (1 - PALE) * (b / (octaves - 1))));
-  pen.disc(cx, cy, R, ink.mix(ink.ground, ink.blue, WASH));
-  for (let i = 0; i < count; i++) pen.disc(cx + data[i * STRIDE] * R, cy - data[i * STRIDE + 1] * R, data[i * STRIDE + 2] * R, shades[bands[i]]);
-  pen.ring(cx, cy, R, RIM, ink.dim);
+  const R = box.radius();
+  const tones = Array.from({ length: octaves }, (_, b) => [255, 255, 255, Math.round(255 - (255 - FLOOR) * (b / (octaves - 1)))]);
+  for (let i = 0; i < count; i++) pen.disc(cx + data[i * STRIDE] * R, cy - data[i * STRIDE + 1] * R, data[i * STRIDE + 2] * R * SHRINK, i < HALVES ? paint.light : tones[bands[i]]);
+  pen.ring(cx, cy, R, size * RIM, paint.white);
 }

@@ -1,24 +1,28 @@
+import { pick } from '../../lib/scene.js';
+
 export const ROOTS = ['strip', '-1,2,2,3', '-2,3,6,7', '-3,4,12,13'];
 export const CAPS = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192];
+export const ROLLED = CAPS.slice(-5);
 export const ORDER_CAP = 64;
-export const LOOKS = [['fill', 'Filled'], ['rings', 'Rings'], ['labels', 'Labelled']];
+export const INKS = [['size', 'By curvature'], ['shade', 'Octave shades'], ['ford', 'Ford circles apart'], ['one', 'One ink']];
+export const LOOKS = [['wash', 'Wash'], ['solid', 'Solid'], ['rings', 'Rings']];
+export const SIX = ['blue', 'teal', 'green', 'yellow', 'orange', 'pink'];
 export const OCTAVE = 1000;
 export const HOLD = 4000;
 export const PAD = 24;
-export const BAND = 0.22;
-export const DUST = 0.4;
 export const LEAST = 9;
 export const PALE = 0.55;
-export const ACROSS = 3;
-const EDGE_BIAS = 1e-6;
 export const STRIDE = 4;
+const KEEP = 6;
 
-export const named = (name) => (name === 'strip' ? 'Strip' : `(${name.split(',').join(', ')})`);
+export const named = (name) => (name === 'strip' ? 'Strip' : `Bounded (${name.split(',').join(', ')})`);
 
 export const stack = (cap) => Math.min(ORDER_CAP, Math.floor(Math.sqrt(cap / 2)));
 
-export function choose(root, rand) {
-  return root || ROOTS[Math.floor(rand() * ROOTS.length)];
+export function roll(rand) {
+  const root = pick(rand, ROOTS);
+  const cap = pick(rand, ROLLED);
+  return { root, cap, ink: pick(rand, INKS)[0], look: pick(rand, LOOKS)[0] };
 }
 
 export function step(cap, by) {
@@ -28,10 +32,23 @@ export function step(cap, by) {
 
 /* STUDY */
 
-let slot = null;
+const PLANS = new Map();
 
 export function study(num, name, cap) {
-  if (slot?.name === name && slot.cap === cap) return slot;
+  const id = `${name}|${cap}`;
+  const kept = PLANS.get(id);
+  if (kept) {
+    PLANS.delete(id);
+    PLANS.set(id, kept);
+    return kept;
+  }
+  const plan = grown(num, name, cap);
+  PLANS.set(id, plan);
+  if (PLANS.size > KEEP) PLANS.delete(PLANS.keys().next().value);
+  return plan;
+}
+
+function grown(num, name, cap) {
   const a = num.apollonian;
   const packing = a.grow(name, cap);
   const quad = packing.root.map((c) => [c.k, c.x, c.y]);
@@ -44,6 +61,7 @@ export function study(num, name, cap) {
   const k0 = packing.circles[0]?.k ?? inner.at(-1)?.k ?? cap;
   const octaves = Math.max(1, Math.ceil(Math.log2(cap / k0)) + 1);
   const bands = Uint8Array.from({ length: total }, (_, i) => Math.min(octaves - 1, Math.max(0, Math.floor(Math.log2(data[i * STRIDE + 3] / k0)))));
+  const hues = Uint8Array.from({ length: total }, (_, i) => Math.floor(Math.log2(data[i * STRIDE + 3])) % SIX.length);
   const touches = packing.strip ? a.touches(packing) : [];
   const at = new Map(touches.map((t) => [t.num / t.den, t]));
   const fords = new Uint8Array(total);
@@ -55,19 +73,24 @@ export function study(num, name, cap) {
       circle.free();
     });
   }
+  const circles = packing.circles.length;
   const facts = {
     name,
     title: `${name === 'strip' ? 'strip ' : ''}(${quad.map(([k]) => k).join(', ')})`,
     cap,
-    circles: packing.circles.length,
-    ford: packing.strip ? touches.length : null,
+    circles,
+    drawn: circles + packing.root.filter((c) => c.k !== 0).length,
+    quads: packing.quads,
     broken: packing.broken,
+    strayed: packing.strayed,
+    line: packing.strip ? touches.length : null,
+    ford: packing.strip ? fords.subarray(inner.length).reduce((n, v) => n + v, 0) : null,
+    shadow: packing.strip ? shadow(num, packing, data, inner.length, stack(cap)) : null,
   };
-  slot = {
+  return {
     name,
     strip: packing.strip,
     cap,
-    packing: packing.strip ? packing : null,
     frame: Array.from(a.frame(packing)),
     quad,
     k0,
@@ -77,36 +100,27 @@ export function study(num, name, cap) {
     data,
     ints,
     bands,
+    hues,
     fords,
     hull: hull ? { cx: hull.x / hull.k || 0, cy: hull.y / hull.k || 0, r: -1 / hull.k } : null,
     at,
     span: Math.max(0, Math.log2(cap / k0)) * OCTAVE,
     facts,
-    depths: new Map(),
   };
-  return slot;
 }
 
-const FLAT = { bars: [], nodes: null, bright: null, want: null };
-
-export function depth(num, plan, order) {
-  if (!plan.strip || order <= 0) return FLAT;
-  if (plan.depths.has(order)) return plan.depths.get(order);
-  const lit = count(plan.data, plan.roots, plan.total, 2 * order * order) - plan.roots;
-  const shadow = num.apollonian.shadow({ ...plan.packing, circles: plan.packing.circles.slice(0, lit) }, order);
-  const root = plan.data[3];
-  const bars = num.lattice.farey(order).map((n) => ({ x: n.num / n.den, h: n.brightness / order, k: plan.at.get(n.num / n.den)?.k ?? root })).sort((p, q) => p.k - q.k);
-  const read = { bars, nodes: shadow.nodes, bright: Number(shadow.bright), want: Number(shadow.want) };
-  plan.depths.set(order, read);
-  return read;
+export function shadow(num, packing, data, roots, order) {
+  const lit = count(data, roots, roots + packing.circles.length, 2 * order * order) - roots;
+  const read = num.apollonian.shadow({ ...packing, circles: packing.circles.slice(0, lit) }, order);
+  return { order, reach: read.reach, covered: read.covered, nodes: read.nodes, touched: read.touched, missed: read.missed, offford: read.offford, bright: Number(read.bright), want: Number(read.want) };
 }
 
 /* TIME */
 
-export function clock(t, span, hold, still, once = false) {
+export function clock(t, span, hold, still) {
   if (still) return { loop: 0, share: 1 };
   const whole = span + hold;
-  const loop = once ? 0 : Math.floor(t / whole);
+  const loop = Math.floor(t / whole);
   const local = t - loop * whole;
   return { loop, share: span > 0 ? Math.min(1, local / span) : 1 };
 }
@@ -128,17 +142,12 @@ export function count(data, from, to, K) {
 
 /* LAYOUT */
 
-export function layout(frame, strip, w, h, pad, band) {
+export function layout(frame, w, h, pad) {
   const [x0, y0, x1, y1] = frame;
-  const room = Math.max(1, h - 2 * pad - band);
+  const room = Math.max(1, h - 2 * pad);
   const wide = Math.max(1, w - 2 * pad);
-  const fit = Math.min(wide / (x1 - x0 || 1), room / (y1 - y0 || 1));
-  const k = strip ? Math.min(fit, w / ACROSS / (x1 - x0 || 1)) : fit;
-  const ox = w / 2 - ((x0 + x1) / 2) * k;
-  const top = (h - (y1 - y0) * k - band) / 2;
-  const oy = top + y1 * k;
-  const periods = strip ? [Math.ceil(-ox / k - 1 + EDGE_BIAS), Math.floor((w - ox) / k - EDGE_BIAS)] : [0, 0];
-  return { k, ox, oy, periods, line: oy - y0 * k };
+  const k = Math.min(wide / (x1 - x0 || 1), room / (y1 - y0 || 1));
+  return { k, ox: w / 2 - ((x0 + x1) / 2) * k, oy: h / 2 + ((y0 + y1) / 2) * k };
 }
 
 export function hit(data, shown, x, y) {
@@ -161,8 +170,8 @@ export function shade(band, bands) {
   return bands > 1 ? PALE + (1 - PALE) * (band / (bands - 1)) : 1;
 }
 
-export function thick(band, bands) {
-  return 1.4 - 0.9 * (bands > 1 ? band / (bands - 1) : 0);
+export function nib(px) {
+  return Math.min(1.3, Math.max(0.4, px / 12));
 }
 
 export function said(read) {

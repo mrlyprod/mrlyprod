@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
-import { BUDGET, GAIN, HOLD, LEAST, LIMIT, NOTCH, REACH, ROLLS, SHARE, STALL, STILL, board, cap, ceiling, fills, goal, grow, heat, home, kin, lay, most, open, pair, plan, reads, roll, room, roots, series, spread, step, turn } from './engine.js';
+import { BUDGET, GAIN, HOLD, LIMIT, REACH, ROLLS, STALL, STILL, aim, bake, board, cap, ceiling, fills, grow, heat, home, kin, lay, open, pair, plan, reads, roll, room, roots, series, spread, step, top, turn } from './engine.js';
 import { SPEC } from './scene.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
@@ -22,23 +22,14 @@ test('the level cap keeps a board under the budget of cells', () => {
   }
 });
 
-test('the goal is the finish share of the half side, never under one cell', () => {
-  expect([goal(81, 50), goal(81, 100), goal(9, 50), goal(3, 10), goal(243, 25)]).toEqual([20, 40, 2, 1, 30]);
-});
-
-test('the most a board offers is the top share whose goal stays within the reach in cells, never under the least', () => {
-  expect([3, 9, 27, 81, 243, 5, 25, 125, 7, 49, 343].map(most)).toEqual([55, 55, 55, 55, 20, 55, 55, 45, 55, 55, 15]);
-  for (const side of [81, 243, 125, 343]) {
-    const top = most(side);
-    expect(goal(side, top)).toBeLessThanOrEqual(REACH);
-    if (top < SHARE) expect(goal(side, top + NOTCH)).toBeGreaterThan(REACH);
-  }
-  expect(most(2187)).toBe(LEAST);
+test('the most a finish asks is 55 hundredths of the half side, never past the reach of a swarm or under one cell', () => {
+  expect([3, 9, 27, 81, 243, 5, 25, 125, 7, 49, 343].map(top)).toEqual([1, 2, 7, 22, 28, 1, 7, 28, 2, 13, 28]);
+  expect(Math.max(...[3, 9, 27, 81, 243, 2187].map(top))).toBe(REACH);
 });
 
 test('a sparse pair ends at the goal at the most its board offers', () => {
   const end = (level, a, b, seed) => {
-    const { plan: laid, walk } = race({ level, a, b, finish: most(3 ** level) }, seed);
+    const { plan: laid, walk } = race({ level, a, b, finish: top(3 ** level) }, seed);
     const run = series(laid, walk);
     run.finish();
     return run.state.over.how;
@@ -102,7 +93,7 @@ test('a pair rolled from a seed is the same twice, and a typed side is kept with
 });
 
 test('a rolled pair is always of one mass, never solid, and both sides spread past the goal when evenly spread over their room', () => {
-  const far = goal(81, 50);
+  const far = value().finish;
   const seeds = [34 * 7919 + 13, ...Array.from({ length: 150 }, (_, i) => i * 7919 + 13)];
   for (const seed of seeds) {
     const [a, b] = pair(math, value(), roots(rng(seed)).code);
@@ -111,7 +102,7 @@ test('a rolled pair is always of one mass, never solid, and both sides spread pa
 });
 
 test('the ceiling of a code is the rms of its room, which a far cell would overstate', () => {
-  const far = goal(81, 50);
+  const far = value().finish;
   for (const code of ['75', '420', '201', '39', '456', '294', '480', '15']) expect(ceiling(math, value(), code)).toBeLessThan(far);
   expect(ceiling(math, value(), '127')).toBe(grow(math, value(), '127').rms);
   expect(ceiling(math, value(), '127')).toBeGreaterThan(far);
@@ -125,12 +116,11 @@ test('the kin of a code are the other codes of its mass, never empty or solid', 
   expect(kin(math, value(), '511', 512)).toEqual([]);
 });
 
-test('the plan reads the typed codes, the goal and the keep of the fade per tick', () => {
+test('the plan reads the typed codes, the finish in cells and the keep of the fade per tick, none by default', () => {
   const { plan: laid } = race({ a: '127', b: '239' });
   expect(laid.sides.map((side) => side.code)).toEqual(['127', '239']);
-  expect([laid.side, laid.goal, laid.walkers, laid.speed, laid.still]).toEqual([81, 20, 300, 60, Math.floor(STILL / 600)]);
-  expect(laid.keep).toBeCloseTo(0.8 ** (1 / 60));
-  expect(race({ heat: 0 }).plan.keep).toBe(1);
+  expect([laid.side, laid.goal, laid.walkers, laid.speed, laid.still, laid.keep]).toEqual([81, 20, 300, 720, Math.floor(STILL / 600), 1]);
+  expect(race({ heat: 20, speed: 60 }).plan.keep).toBeCloseTo(0.8 ** (1 / 60));
 });
 
 test('heat decays by the keep a tick since its stamp and holds when nothing fades', () => {
@@ -145,7 +135,7 @@ test('the spread is the root mean square distance of the walkers from home', () 
   expect(spread(new Int32Array(0), 4, 3)).toBe(0);
 });
 
-test('a step moves every walker one blind step onto a filled cell or leaves it, heats the cell it stands on, and logs the reach', () => {
+test('a step moves every walker one blind step onto a filled cell or leaves it, heats only the cells walkers arrive on, and logs the reach', () => {
   const { plan: laid, walk } = race({ a: '127', b: '239', walkers: 50 });
   const state = open(laid);
   expect(state.at.map((at) => at.length)).toEqual([50, 50]);
@@ -158,7 +148,10 @@ test('a step moves every walker one blind step onto a filled cell or leaves it, 
       expect(filled[i]).toBe(1);
       expect(Math.abs(Math.floor(i / side) - Math.floor(from / side)) + Math.abs((i % side) - (from % side))).toBeLessThanOrEqual(1);
     }
-    expect(state.trail[s].reduce((sum, h) => sum + h, 0)).toBeCloseTo(50);
+    const moved = [...at].filter((i) => i !== from).length;
+    expect(moved).toBeGreaterThan(0);
+    expect(state.trail[s].reduce((sum, h) => sum + h, 0)).toBe(moved);
+    expect(state.trail[s][from]).toBe(0);
   });
   expect([state.tick, state.log.length, state.reach[0] > 0, state.over]).toEqual([1, 2, true, null]);
 });
@@ -177,7 +170,6 @@ test('the race ends at the goal with the side that reached it, and is the same i
   expect(jumped.state.reach[0]).toBeGreaterThanOrEqual(laid.goal);
   expect(jumped.state.reach[1]).toBeLessThan(laid.goal);
   expect(jumped.state.log.length).toBe(jumped.state.over.tick + 1);
-  expect(jumped.tally).toEqual([1, 0, 0]);
 });
 
 test('a finish with a limit stops short of the end without a judgement, and a later finish carries on to the same end', () => {
@@ -186,9 +178,9 @@ test('a finish with a limit stops short of the end without a judgement, and a la
   whole.finish();
   const cut = series(laid, walk);
   cut.finish(100);
-  expect([cut.state.tick, cut.state.over, cut.tally]).toEqual([100, null, [0, 0, 0]]);
+  expect([cut.state.tick, cut.state.over]).toEqual([100, null]);
   cut.finish();
-  expect([cut.state.over, cut.tally, [...cut.state.at[0]]]).toEqual([whole.state.over, whole.tally, [...whole.state.at[0]]]);
+  expect([cut.state.over, [...cut.state.at[0]]]).toEqual([whole.state.over, [...whole.state.at[0]]]);
 });
 
 test('a board with no way out stalls into a judgement and an empty board fields no walker', () => {
@@ -196,13 +188,47 @@ test('a board with no way out stalls into a judgement and an empty board fields 
   const run = series(dust.plan, dust.walk);
   run.finish();
   expect(run.state.over).toMatchObject({ tick: STALL, winner: -1, how: 'stall' });
-  expect(run.tally).toEqual([0, 0, 1]);
   const none = race({ a: '0', b: '127', level: 2 });
   expect(open(none.plan).at[0].length).toBe(0);
   expect([GAIN > 0, LIMIT > STALL]).toEqual([true, true]);
 });
 
-test('the series holds after a finish, then runs the next race on the next walk seed and keeps the tally', () => {
+test('a new finish ends a race past it, and a goal end below a raised finish runs on', () => {
+  const { plan: laid, walk } = race({ a: '127', b: '239' });
+  const run = series(laid, walk, Infinity);
+  run.to(400);
+  expect(run.state.over).toBe(null);
+  const far = Math.max(...run.state.reach);
+  aim(run.state, { ...laid, goal: Math.floor(far) });
+  expect(run.state.over).toMatchObject({ tick: 400, how: 'goal' });
+  aim(run.state, { ...laid, goal: Math.ceil(far) + 1 });
+  expect(run.state.over).toBe(null);
+  run.state.over = { tick: 400, winner: 0, how: 'stall' };
+  aim(run.state, laid);
+  expect(run.state.over.how).toBe('stall');
+});
+
+test('a bake folds the fade so far into every trail and stamps it now', () => {
+  const { plan: laid, walk } = race({ a: '127', b: '239', heat: 50, speed: 6 });
+  const run = series(laid, walk);
+  run.to(30);
+  const { state } = run;
+  const seen = state.trail[0].map((h, i) => heat(h, state.stamp[0][i], state.tick, laid.keep));
+  bake(state, laid.keep);
+  expect([...state.trail[0]].map((h) => Math.round(h * 1e4))).toEqual([...seen].map((h) => Math.round(h * 1e4)));
+  expect(state.stamp[0].every((t) => t === 30)).toBe(true);
+});
+
+test('with no hold the series stays on the finished race', () => {
+  const { plan: laid, walk } = race({ a: '127', b: '239' });
+  const run = series(laid, walk, Infinity);
+  run.finish();
+  const end = run.state.over;
+  run.to(end.tick * 100);
+  expect([run.k, run.state.over]).toEqual([0, end]);
+});
+
+test('the series holds after a finish, then runs the next race on the next walk seed', () => {
   const { plan: laid, walk } = race({ a: '127', b: '239' });
   const run = series(laid, walk);
   run.finish();
@@ -217,7 +243,6 @@ test('the series holds after a finish, then runs the next race on the next walk 
   const again = series(laid, walk);
   again.to(end + hold + 5);
   expect([...again.state.at[1]]).toEqual([...run.state.at[1]]);
-  expect(again.tally).toEqual([1, 0, 0]);
   expect(again.version).toBe(run.version);
 });
 

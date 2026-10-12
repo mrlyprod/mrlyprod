@@ -1,14 +1,19 @@
-import { frame, Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = {};
 
-const SIDE = 63;
-const CELL = 13;
+const COLS = 63;
+const ROWS = 40;
 const SUB = 3;
-const HOME = { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 };
+const HOME = { xMin: -1.575, xMax: 1.575, yMin: -1, yMax: 1 };
 const SEED = [-0.8, 0.156];
 const MAX = 100;
-const BANDS = [[24, 1], [10, 0.55], [5, 0.3], [3, 0.14]];
+const RIM = [3, 24];
+const GLOW = 0.8;
+const PIXELS = 256;
+const REACH = 1.6;
+const TURN = Math.PI / 4;
+const WANT = { inside: 688 };
 
 function escape(x, y) {
   let zr = x;
@@ -23,44 +28,64 @@ function escape(x, y) {
   return n;
 }
 
-function slowest(col, row) {
-  let most = 0;
-  for (let j = 0; j < SUB; j++) {
-    for (let i = 0; i < SUB; i++) {
-      const x = HOME.xMin + ((col + (i + 0.5) / SUB) / SIDE) * (HOME.xMax - HOME.xMin);
-      const y = HOME.yMax - ((row + (j + 0.5) / SUB) / SIDE) * (HOME.yMax - HOME.yMin);
-      most = Math.max(most, escape(x, y));
-    }
-  }
-  return most;
-}
-
 let memo;
 
-function counts() {
+function field() {
   if (memo) return memo;
-  const out = new Uint8Array(SIDE * SIDE);
-  for (let row = 0; row < SIDE; row++) for (let col = 0; col < SIDE; col++) out[row * SIDE + col] = slowest(col, row);
+  const w = COLS * SUB;
+  const h = ROWS * SUB;
+  const fine = new Uint8Array(w * h);
+  for (let row = 0; row < h; row++) {
+    const y = HOME.yMax - ((row + 0.5) / h) * (HOME.yMax - HOME.yMin);
+    for (let col = 0; col < w; col++) {
+      const x = HOME.xMin + ((col + 0.5) / w) * (HOME.xMax - HOME.xMin);
+      fine[row * w + col] = escape(x, y);
+    }
+  }
+  const out = new Uint8Array(COLS * ROWS);
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      let most = 0;
+      for (let j = 0; j < SUB; j++) for (let i = 0; i < SUB; i++) most = Math.max(most, fine[(row * SUB + j) * w + col * SUB + i]);
+      out[row * COLS + col] = most;
+    }
+  }
   for (let at = 0; at < out.length; at++) if (out[at] !== out[out.length - 1 - at]) throw new Error(`julia: cell ${at} breaks the symmetry z to -z`);
   const inside = out.filter((n) => n === MAX).length;
-  if (inside !== 761) throw new Error(`julia: ${inside} cells hold the set, want 761`);
-  memo = out;
+  if (inside !== WANT.inside) throw new Error(`julia: ${inside} cells hold the set, want ${WANT.inside}`);
+  memo = turned();
   return memo;
 }
 
-export default function draw(pen, ink) {
-  const w = CELL * SIDE;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - w) / 2), w, w), SIDE, SIDE, 0);
-  const tones = BANDS.map(([from, share]) => [from, ink.mix(ink.ground, ink.blue, share)]);
-  const steps = counts();
-  for (let row = 0; row < SIDE; row++) {
-    for (let col = 0; col < SIDE; col++) {
-      const n = steps[row * SIDE + col];
-      if (n === MAX) cells.fill(pen, col, row, ink.fg);
-      else {
-        const band = tones.find(([from]) => n >= from);
-        if (band) cells.fill(pen, col, row, band[1]);
-      }
+function turned() {
+  const steps = new Uint8Array(PIXELS * PIXELS);
+  const c = Math.cos(TURN);
+  const s = Math.sin(TURN);
+  for (let row = 0; row < PIXELS; row++) {
+    const v = REACH * (1 - (2 * (row + 0.5)) / PIXELS);
+    for (let col = 0; col < PIXELS; col++) {
+      const u = REACH * ((2 * (col + 0.5)) / PIXELS - 1);
+      steps[row * PIXELS + col] = escape(u * c + v * s, v * c - u * s);
     }
   }
+  return { shape: [PIXELS, PIXELS], steps };
+}
+
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "purple", 0.04);
+  const { shape, steps } = field();
+  const [lo, hi] = RIM;
+  const colors = new Uint8ClampedArray(steps.length * 4);
+  for (let at = 0; at < steps.length; at++) {
+    const n = steps[at];
+    if (n >= hi) {
+      colors.set(paint.white, at * 4);
+      continue;
+    }
+    const share = Math.max(0, (n - lo) / (hi - lo)) ** GLOW;
+    if (share <= 0) continue;
+    colors.set(paint.light.slice(0, 3), at * 4);
+    colors[at * 4 + 3] = Math.round(255 * share);
+  }
+  pen.image(box.x, box.y, box.w, box.h, { shape, colors });
 }

@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { defaults, describe, tidy } from './knobs.js';
+import { asked, defaults, describe, tidy } from './knobs.js';
 
 const SPEC = [
   { key: 'seed', kind: 'number', def: 7, min: 0, step: 1, group: 'Seed' },
@@ -124,4 +124,27 @@ test('a row whose when is false leaves describe, and an emptied group goes with 
   expect(keys({ kind: 'star' })).toEqual([['Design', ['dim', 'level']], ['Stack', ['kind', 'combine']], ['Rule', ['rule', 'born']], ['Sky', ['set']]]);
   expect(keys({ kind: 'moire' })).toEqual([['Design', ['dim', 'level']], ['Stack', ['kind', 'combine']], ['Sky', ['set']]]);
   expect(tidy(LIVE, { kind: 'moire', rule: 9, born: '36' })).toMatchObject({ rule: 9, born: '36' });
+});
+
+test('a min or options that is a function reads the value and the units, as max does', () => {
+  const spec = [
+    { key: 'side', kind: 'pick', def: 3, options: (value, units) => units?.sides ?? [3] },
+    { key: 'level', kind: 'slider', def: 2, min: (value, units) => units?.low ?? 1, max: 9, step: 1 },
+  ];
+  expect([tidy(spec, { side: 5, level: 1 }), tidy(spec, { side: 5, level: 1 }, { sides: [3, 5], low: 4 })]).toEqual([{ side: 3, level: 1 }, { side: 5, level: 4 }]);
+});
+
+test('a keep row hands the scene the capped value while asked keeps the raw one the url holds, junk going to the default', () => {
+  const spec = [
+    { key: 'sheet', kind: 'slider', def: 1, min: 1, max: 4, step: 1 },
+    { key: 'level', kind: 'slider', def: 2, min: 1, max: (value) => 6 - value.sheet, step: 1, keep: true },
+    { key: 'depth', kind: 'slider', def: 2, min: 1, max: (value) => 6 - value.sheet, step: 1 },
+  ];
+  const value = { sheet: 4, level: 5, depth: 5 };
+  expect([tidy(spec, value), asked(spec, value), asked(spec, { level: 'x' })]).toEqual([{ sheet: 4, level: 2, depth: 2 }, { level: 5 }, { level: 2 }]);
+});
+
+test('a keep row snaps the asked value to the grid of its live min, so the url and the scene agree', () => {
+  const spec = [{ key: 'level', kind: 'slider', def: 3, min: () => 1, max: () => 7, step: 2, keep: true }];
+  expect([asked(spec, { level: 5 }), tidy(spec, { level: 5 }), asked(spec, { level: 10 }), tidy(spec, { level: 10 })]).toEqual([{ level: 5 }, { level: 5 }, { level: 11 }, { level: 7 }]);
 });

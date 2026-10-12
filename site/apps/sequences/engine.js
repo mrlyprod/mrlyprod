@@ -19,15 +19,19 @@ export const MEASURES = [
 ];
 
 export const AXES = [
-  { slug: 'level', label: 'Level', start: 1, step: 1 },
-  { slug: 'side', label: 'Side', start: 3, step: 2 },
+  { slug: 'level', label: 'Level', start: 1, step: 1, first: 1, say: 'level L', at: (number) => `level L at side ${number}` },
+  { slug: 'side', label: 'Side', start: 3, step: 2, first: 2, say: 'odd side 2k - 1', at: () => 'odd side 2k - 1 at level 1' },
 ];
 
 export const TABLE = { terms: 8, cells: 30000 };
 
-export const DEEP = { cells: 150000 };
+export const DEEP = { cells: 500000 };
+
+export const TERMS = { min: 4, max: 32 };
 
 export const MOST = 6;
+
+export const CANON = '2-2-7-fills-side';
 
 const LEAD = 4;
 
@@ -37,13 +41,19 @@ const PROFILE = 4;
 
 const blank = (one) => Number(one.code) === 0;
 
-const measure = (slug) => MEASURES.find((one) => one.slug === slug);
+export const measureOf = (slug) => MEASURES.find((one) => one.slug === slug);
 
-const axisOf = (slug) => AXES.find((one) => one.slug === slug);
+export const axisOf = (slug) => AXES.find((one) => one.slug === slug) ?? AXES[0];
+
+export const spaces = (dim, base) => SPACES.filter(([d, b]) => (!dim || d === Number(dim)) && (!base || b === Number(base)));
 
 export function applies(one, dim, base) {
-  return one.dims.includes(dim) && (!one.base || one.base === base);
+  return spaces(dim, base).some(([d, b]) => one.dims.includes(d) && (!one.base || one.base === b));
 }
+
+export const number = (row) => Math.max(row.base, 3);
+
+export const spot = (row, index) => (row.axis === 'level' ? { number: number(row), level: index + 1 } : { number: 2 * index + 3, level: 1 });
 
 /* KEYS */
 
@@ -53,8 +63,8 @@ export function parse(key) {
   const [dim, base, code, m, axis] = String(key).split('-');
   const d = Number(dim);
   const b = Number(base);
-  if (!SPACES.some(([x, y]) => x === d && y === b) || !/^\d+$/.test(code ?? '') || !measure(m) || !axisOf(axis)) return null;
-  if (!applies(measure(m), d, b)) return null;
+  if (!SPACES.some(([x, y]) => x === d && y === b) || !/^\d+$/.test(code ?? '') || !measureOf(m) || !AXES.some((one) => one.slug === axis)) return null;
+  if (!applies(measureOf(m), d, b)) return null;
   return { dim: d, base: b, code, measure: m, axis };
 }
 
@@ -62,7 +72,9 @@ export function picks(text) {
   return [...new Set(String(text ?? '').split('.').map((one) => one.trim()).filter((one) => parse(one)))].slice(0, MOST);
 }
 
-export const place = (axis, index) => (axis === 'level' ? { number: null, level: index + 1 } : { number: 2 * index + 3, level: 1 });
+export const plotted = (row, count) => `../plot/?dim=${row.dim}&base=${row.base}&code=${row.code}&measure=${row.measure}&axis=${row.axis}&terms=${count}`;
+
+export const ledgered = (terms) => `../sequences/?q=${encodeURIComponent(terms.join(', '))}`;
 
 /* NUMBERS */
 
@@ -99,8 +111,12 @@ export function badge(records, row, terms) {
   if (!found.length) return null;
   const own = found.find(({ record }) => record.key && record.key === row.file);
   const { record, at } = own ?? found[0];
-  return { id: record.id, name: record.name, at, status: own ? record.status : 'Collision' };
+  return { id: record.id, name: record.name, at, shift: at - axisOf(row.axis).first, status: own ? record.status : 'Collision' };
 }
+
+export const closed = (records, row) => records.find((record) => record.key && record.key === row.file)?.formula ?? '';
+
+export const keyed = (records, needle) => records.filter((record) => record.key && `${record.id} ${record.name}`.toLowerCase().includes(needle));
 
 /* LEDGER */
 
@@ -111,15 +127,15 @@ export function ledger(math) {
   const slices = new Map();
   const profiles = new Map();
   const rows = new Map();
-  const spaces = new Map();
+  const memos = new Map();
   const swept = new Map();
-  const tile = (dim, base, code, number, level) => (dim === 2 ? math.two.create(code, number, level, 0, base) : math.three.create(code, number, level, base));
+  const tile = (dim, base, code, side, level) => (dim === 2 ? math.two.create(code, side, level, 0, base) : math.three.create(code, side, level, base));
   const memo = (map, id, make) => {
     if (!map.has(id)) map.set(id, make());
     return map.get(id);
   };
   const names = (dim) =>
-    memo(spaces, `names-${dim}`, () => {
+    memo(memos, `names-${dim}`, () => {
       const total = 1 << (1 << dim);
       const cells = Array.from({ length: total }, (_, code) => tile(dim, 2, String(code), 3, 1).types.join(''));
       const named = [...math.bang.sources('Classics', dim).map((one) => one.design), ...math.bang.catalog.antis(dim)];
@@ -145,7 +161,7 @@ export function ledger(math) {
     return { code: String(code), name, label: name ? `${name} ${code}` : `code ${code}`, cells: [...tile(dim, base, String(code), 3, 1).types] };
   };
   const designs = (dim, base) =>
-    memo(spaces, `${dim}-${base}`, () => {
+    memo(memos, `${dim}-${base}`, () => {
       const codes = base === 2 ? math.bang.universe_codes(dim) : math.bang.baseq.representatives(base, dim).map(([code]) => code);
       const made = codes.map((code) => design(dim, base, code));
       return [...made.filter((one) => !blank(one)), ...made.filter(blank)];
@@ -158,12 +174,13 @@ export function ledger(math) {
       return false;
     }
   };
-  const keys = (dim, base) =>
-    memo(spaces, `keys-${dim}-${base}`, () => {
+  const space = (dim, base) =>
+    memo(memos, `keys-${dim}-${base}`, () => {
       const out = [];
       for (const one of designs(dim, base)) out.push(...lines(dim, base, one.code));
       return out;
     });
+  const keys = (dim, base) => spaces(dim, base).flatMap(([d, b]) => space(d, b));
   const lines = (dim, base, code) => {
     const out = [];
     for (const one of MEASURES) {
@@ -172,61 +189,66 @@ export function ledger(math) {
     }
     return out;
   };
-  const typed = (dim, base, code) => (/^\d+$/.test(String(code)) && holds(dim, base, code) ? lines(dim, base, code) : []);
+  const typed = (dim, base, code) => (/^\d+$/.test(String(code)) ? spaces(dim, base).flatMap(([d, b]) => (holds(d, b, code) ? lines(d, b, code) : [])) : []);
   const row = (key) =>
     memo(rows, print(key), () => {
       const { dim, base, code, measure: m, axis } = key;
       const { name, label, cells } = design(dim, base, code);
-      return { key: print(key), dim, base, code, measure: m, axis, name, label, cells, file: new math.name.Sequence(code, dim, base, m, axis).to_file(), terms: [], stop: 0 };
+      return { key: print(key), dim, base, code, measure: m, axis, name, label, cells, file: new math.name.Sequence(code, dim, base, m, axis).to_file(), terms: [], stop: 0, error: '' };
     });
-  const spot = (one, index) => {
-    const at = place(one.axis, index);
-    return { number: at.number ?? Math.max(one.base, 3), level: at.level };
+  const file = (text) => {
+    try {
+      const named = math.name.Sequence.from_file(String(text).trim()).toJSON();
+      const key = { dim: named.dim, base: named.base ?? 2, code: String(named.code), measure: named.measure, axis: named.axis };
+      return parse(print(key)) ? row(key) : null;
+    } catch {
+      return null;
+    }
   };
   const cost = (one, index) => {
-    const kind = measure(one.measure).kind;
-    const { number, level } = spot(one, index);
+    const kind = measureOf(one.measure).kind;
+    const { number: side, level } = spot(one, index);
     if (kind === 'closed') return 0;
-    if (kind === 'profile') return (one.dim * (number ** level - 1) + 1) / PROFILE;
-    if (kind === 'cut') return number ** (2 * level);
-    return number ** (one.dim * level);
+    if (kind === 'profile') return (one.dim * (side ** level - 1) + 1) / PROFILE;
+    if (kind === 'cut') return side ** (2 * level);
+    return side ** (one.dim * level);
   };
-  const tally = (one, number, level) =>
-    memo(census, `${one.dim}-${one.base}-${one.code}-${number}-${level}`, () => {
-      const cell = tile(one.dim, one.base, one.code, number, level);
+  const tally = (one, side, level) =>
+    memo(census, `${one.dim}-${one.base}-${one.code}-${side}-${level}`, () => {
+      const cell = tile(one.dim, one.base, one.code, side, level);
       return one.dim === 2 ? math.two.census(cell) : math.three.census(cell);
     });
-  const slice = (one, number, level) => memo(slices, `${one.code}-${number}-${level}`, () => math.six.cut_design(one.code, number, level, one.base));
-  const profile = (one, number, level) =>
-    memo(profiles, `${one.dim}-${one.base}-${one.code}-${number}-${level}`, () => math.counts.profile_of_tile(math.bang.factory.create(one.code, number, one.dim, one.base, 1), level).map(BigInt));
+  const slice = (one, side, level) => memo(slices, `${one.code}-${side}-${level}`, () => math.six.cut_design(one.code, side, level, one.base));
+  const profile = (one, side, level) =>
+    memo(profiles, `${one.dim}-${one.base}-${one.code}-${side}-${level}`, () => math.counts.profile_of_tile(math.bang.factory.create(one.code, side, one.dim, one.base, 1), level).map(BigInt));
   const term = (one, index) => {
     const { dim, base, code } = one;
-    const { number, level } = spot(one, index);
+    const { number: side, level } = spot(one, index);
     switch (one.measure) {
       case 'fills':
-        return math.counts.fill(code, number, dim, level, base);
+        return math.counts.fill(code, side, dim, level, base);
       case 'voids':
-        return math.counts.void_(code, number, dim, level, base);
+        return math.counts.void_(code, side, dim, level, base);
       case 'surface':
-        return math.counts.exposure(code, number, dim, level, base);
+        return math.counts.exposure(code, side, dim, level, base);
       case 'peak':
-        return profile(one, number, level).reduce((top, v) => (v > top ? v : top), 0n).toString();
+        return profile(one, side, level).reduce((top, v) => (v > top ? v : top), 0n).toString();
       case 'heights':
-        return String(profile(one, number, level).filter((v) => v > 0n).length);
+        return String(profile(one, side, level).filter((v) => v > 0n).length);
       case 'triangles':
-        return math.counts.cut_fills(code, number, level);
+        return math.counts.cut_fills(code, side, level);
       case 'cutvoids':
-        return math.counts.cut_voids(code, number, level);
+        return math.counts.cut_voids(code, side, level);
       case 'profills':
-        return math.counts.pro_fills(code, number, level);
+        return math.counts.pro_fills(code, side, level);
       case 'provoids':
-        return math.counts.pro_voids(code, number, level);
+        return math.counts.pro_voids(code, side, level);
       case 'holes':
-        return String(math.six.holes(slice(one, number, level)));
+        return String(math.six.holes(slice(one, side, level)));
       case 'pieces':
-        return String(math.six.components(slice(one, number, level)));
+        return String(math.six.components(slice(one, side, level)));
       default:
-        return String(tally(one, number, level)[one.measure]);
+        return String(tally(one, side, level)[one.measure]);
     }
   };
   const step = (one, count, cells) => {
@@ -240,8 +262,9 @@ export function ledger(math) {
     try {
       one.terms.push(term(one, index));
       one.stop = index + 1 < count ? cost(one, index + 1) : 0;
-    } catch {
+    } catch (error) {
       one.stop = Infinity;
+      one.error = String(error?.message ?? error);
     }
     return true;
   };
@@ -252,46 +275,59 @@ export function ledger(math) {
     return { terms: one.terms.slice(0, count), capped: capped(one, count, cells) };
   };
   const sweep = (dim, base, count = TABLE.terms, cells = TABLE.cells) => {
-    const id = `${dim}-${base}`;
-    const list = keys(dim, base);
-    let at = swept.get(id) ?? 0;
-    while (at < list.length) {
-      if (step(list[at], count, cells)) {
-        swept.set(id, at);
-        return true;
+    for (const [d, b] of spaces(dim, base)) {
+      const id = `${d}-${b}`;
+      const list = space(d, b);
+      let at = swept.get(id) ?? 0;
+      while (at < list.length) {
+        if (step(list[at], count, cells)) {
+          swept.set(id, at);
+          return true;
+        }
+        at++;
       }
-      at++;
+      swept.set(id, at);
     }
-    swept.set(id, at);
     return false;
   };
-  const progress = (dim, base) => ({ done: Math.min(swept.get(`${dim}-${base}`) ?? 0, keys(dim, base).length), total: keys(dim, base).length });
-  return { designs, keys, typed, row, read, step, sweep, progress, capped };
+  const progress = (dim, base) =>
+    spaces(dim, base).reduce(
+      (sum, [d, b]) => {
+        const total = space(d, b).length;
+        return { done: sum.done + Math.min(swept.get(`${d}-${b}`) ?? 0, total), total: sum.total + total };
+      },
+      { done: 0, total: 0 },
+    );
+  return { designs, keys, typed, row, file, read, step, sweep, progress, capped };
 }
 
 /* LEAD */
 
 export const flat = (terms) => terms.length > 1 && terms.every((one) => one === terms[0]);
 
-export function lead(book, list, at) {
+export function lead(book, list, at, not = '') {
   for (let i = 0; i < list.length; i++) {
     const row = list[(at + i) % list.length];
-    if (!blank(row) && !flat(book.read(row, LEAD, TABLE.cells).terms)) return row;
+    if (row.key !== not && !blank(row) && !flat(book.read(row, LEAD, TABLE.cells).terms)) return row;
   }
-  return list[at] ?? null;
+  for (let i = 0; i < list.length; i++) {
+    const row = list[(at + i) % list.length];
+    if (row.key !== not) return row;
+  }
+  return null;
 }
 
 /* SEARCH */
 
-const mention = (row, hit) => `${row.label} ${row.measure} ${row.axis} ${row.dim}d base ${row.base} ${hit ? `${hit.id} ${hit.name}` : ''}`.toLowerCase();
+const mention = (row, hit) => `${row.label} ${row.measure} ${row.axis} ${row.dim}d base ${row.base} ${row.file} ${hit ? `${hit.id} ${hit.name}` : ''}`.toLowerCase();
 
-export function search(list, q, found, typed = () => []) {
+export function search(list, q, { found = () => null, typed = () => [], named = () => [] } = {}) {
   const text = String(q ?? '').trim();
   if (!text) return list;
   const terms = numbers(text);
   if (terms && terms.length > 1) return list.filter((row) => window(row.terms, terms) >= 0);
   const needle = text.toLowerCase();
-  const own = terms ? typed(terms[0]) : [];
+  const own = terms ? typed(terms[0]) : named(needle);
   const keys = new Set(own.map((row) => row.key));
   return [...own, ...list.filter((row) => !keys.has(row.key) && mention(row, found(row)).includes(needle))];
 }

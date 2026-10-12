@@ -1,44 +1,50 @@
 import * as life from "mrlyjs/life";
-import { frame, Grid } from "mrlyjs/view";
+import { Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { life };
 
-const SIDE = 21;
-const CELL = 44;
-const CODE = 7;
-const NUMBER = 3;
-const LEVEL = 2;
-const GEN = 4;
-const WANT = [64, 56];
+const GLIDER = [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]];
+const SIDE = 9;
+const START = 1;
+const PERIOD = 4;
+const GHOSTS = [128, 88, 56, 28];
+const FIELD = 3 + GHOSTS.length;
+const GAP = 0.1;
+const CORNER = 0.26;
+const MOORE = { shape: [3, 3], data: Uint8Array.from([1, 1, 1, 1, 0, 1, 1, 1, 1]) };
 
-let grown = null;
+let proven = false;
 
-function grow() {
-  if (grown) return grown;
-  const design = life.design_mask(2, CODE, NUMBER, LEVEL);
-  const span = design.shape[0];
-  const off = (SIDE - span) >> 1;
+function prove() {
+  if (proven) return;
   const seed = new Uint8Array(SIDE * SIDE);
-  for (let r = 0; r < span; r++) for (let c = 0; c < span; c++) seed[(off + r) * SIDE + off + c] = design.data[r * span + c];
-  const mask = life.design_mask(2, CODE, NUMBER, 1);
+  for (const [c, r] of GLIDER) seed[(START + r) * SIDE + START + c] = 1;
   let cell = { shape: [SIDE, SIDE], types: seed };
-  for (let g = 0; g < GEN; g++) cell = life.next_grid(cell, [3], [2, 3], mask, "Constant");
-  const now = Uint8Array.from(cell.types);
-  const count = (cells) => cells.reduce((a, b) => a + b, 0);
-  const counts = [count(seed), count(now)];
-  if (counts.join() !== WANT.join()) throw new Error(`life: the carpet runs ${counts.join(", ")} live, want ${WANT.join(", ")}`);
-  for (let r = 0; r < SIDE; r++) for (let c = 0; c < SIDE; c++) if (now[r * SIDE + c] !== now[c * SIDE + r] || now[r * SIDE + c] !== now[(SIDE - 1 - r) * SIDE + c]) throw new Error("life: generation 4 lost the carpet's symmetry");
-  grown = { seed, now };
-  return grown;
+  for (let g = 0; g < PERIOD; g++) {
+    cell = life.next_grid(cell, [3], [2, 3], MOORE, "Constant");
+    const alive = cell.types.reduce((a, b) => a + b, 0);
+    if (alive !== GLIDER.length) throw new Error(`life: generation ${g + 1} has ${alive} live cells, the glider has ${GLIDER.length}`);
+  }
+  for (const [c, r] of GLIDER) if (!cell.types[(START + 1 + r) * SIDE + START + 1 + c]) throw new Error(`life: after ${PERIOD} generations the glider is not one step down the diagonal`);
+  proven = true;
 }
 
-export default function draw(pen, ink) {
-  const { seed, now } = grow();
-  const w = CELL * SIDE;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - w) / 2), w, w), SIDE, SIDE, 0.12);
-  const ghost = ink.mix(ink.ground, ink.dim, 0.45);
-  for (let i = 0; i < SIDE * SIDE; i++) {
-    if (now[i]) cells.fill(pen, i % SIDE, Math.floor(i / SIDE), ink.blue);
-    else if (seed[i]) cells.fill(pen, i % SIDE, Math.floor(i / SIDE), ghost);
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "green", 0.16);
+  prove();
+  const cells = new Grid(box, FIELD, FIELD, GAP);
+  const alpha = new Map();
+  const stamp = (off, a) => {
+    for (const [c, r] of GLIDER) {
+      const key = (off + r) * FIELD + off + c;
+      alpha.set(key, Math.max(alpha.get(key) ?? 0, a));
+    }
+  };
+  GHOSTS.forEach((a, i) => stamp(GHOSTS.length - 1 - i, a));
+  stamp(GHOSTS.length, 255);
+  for (const [key, a] of alpha) {
+    const [x, y, w, h] = cells.cell(key % FIELD, Math.floor(key / FIELD));
+    pen.round_rect(x, y, w, h, w * CORNER, a === 255 ? paint.white : [255, 255, 255, a]);
   }
 }

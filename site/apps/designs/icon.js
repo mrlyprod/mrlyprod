@@ -1,5 +1,6 @@
 import * as math from "mrlyjs/math";
 import { Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = { math };
 
@@ -8,9 +9,11 @@ const BASE = 2;
 const SIDE = 3;
 const LEVEL = 2;
 const COLS = 4;
-const MARGIN = 0.08;
-const GAP = 14;
 const CLASSES = 6;
+const CARPET = 7;
+const SHOW = [1, 14, 6, 3, CARPET, 5, 13, 9, 11];
+const ACROSS = 3;
+const GAP = 0.05;
 
 let rows = null;
 
@@ -20,18 +23,23 @@ function facts() {
   const total = Number(math.bang.factory.total_codes(DIM, BASE));
   if (total !== COLS * COLS) throw new Error(`designs: ${total} codes do not fill a ${COLS} by ${COLS} board`);
   if (leaders.size !== CLASSES) throw new Error(`designs: ${leaders.size} classes, want ${CLASSES}`);
-  rows = Array.from({ length: total }, (_, code) => ({ code, cell: math.two.create(code, SIDE, LEVEL, 0, BASE), leads: leaders.has(String(code)) }));
+  if (SHOW.length !== ACROSS * ACROSS || SHOW[Math.floor(SHOW.length / 2)] !== CARPET) throw new Error(`designs: the ${ACROSS} by ${ACROSS} board must centre the carpet ${CARPET}`);
+  if (!leaders.has(String(CARPET))) throw new Error(`designs: the carpet ${CARPET} does not lead its class`);
+  rows = Array.from({ length: total }, (_, code) => ({ code, cell: math.two.create(code, SIDE, LEVEL, 0, BASE) }));
   const lit = rows.reduce((sum, row) => sum + math.two.fills(row.cell), 0);
   const want = rows.reduce((sum, row) => sum + Number(math.counts.fill(row.code, SIDE, DIM, LEVEL, BASE)), 0);
   if (lit !== want) throw new Error(`designs: the grown cells light ${lit}, the counts say ${want}`);
   return rows;
 }
 
-export default function draw(pen, ink) {
-  const faded = ink.mix(ink.ground, ink.blue, 0.45);
-  const panels = pen.frame(MARGIN).panels(COLS, COLS, GAP);
-  facts().forEach(({ cell, leads }, i) => {
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "indigo", 0.17);
+  const all = facts();
+  const panels = box.panels(ACROSS, ACROSS, box.w * GAP);
+  SHOW.forEach((code, i) => {
+    const { cell } = all[code];
     const [h, w] = cell.shape;
-    new Grid(panels[i], w, h, 0).paint(pen, cell, (type) => (type ? (leads ? ink.blue : faded) : null));
+    const tone = code === CARPET ? paint.white : paint.light;
+    new Grid(panels[i], w, h, 0).paint(pen, cell, (type) => (type ? tone : null));
   });
 }

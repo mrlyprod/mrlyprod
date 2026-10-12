@@ -1,50 +1,62 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/export.js';
 import { Bar } from '../../lib/frame.jsx';
-import { Group } from '../../lib/knobs.jsx';
 import { rng } from '../../lib/scene.js';
 import { Scene } from '../../lib/scene.jsx';
-import { pair, roots } from './engine.js';
-import { make } from './scene.js';
-
-export const LABELS = ['A', 'B'];
-
-const ROWS = [
-  ['Name', (f) => f.name || f.title],
-  ['Fill', (f) => `${f.fills} of ${f.of}`],
-  ['Dimension', (f) => f.dimension.toFixed(3)],
-  ['Room', (f) => `${f.cells} of ${f.lit}`],
-];
-
-const cells = (x) => x.toFixed(1);
-
-const roll = () => Math.floor(Math.random() * 4294967296);
+import { pair } from './engine.js';
+import { make, named } from './scene.js';
 
 const ENDS = { stall: 'stalled', limit: 'time up' };
 
-export function said(stat) {
-  const { over, reach, tally } = stat;
+const roll = () => Math.floor(Math.random() * 4294967296);
+
+export const again = (seed) => (Number(seed) + 1) >>> 0;
+
+const call = (side) => side.name || `code ${side.code}`;
+
+export function fate({ phase, reach, over, sides }) {
+  const name = (s) => call(sides[s]);
+  if (over) {
+    const when = `at step ${over.tick}`;
+    if (over.how === 'goal') return over.winner < 0 ? `dead heat ${when}` : `${name(over.winner)} wins ${when}`;
+    return `${ENDS[over.how]} ${when}, ${over.winner < 0 ? 'level' : `${name(over.winner)} ahead`}`;
+  }
+  if (phase === 'ready') return 'at the start';
   const lead = reach[0] > reach[1] ? 0 : reach[1] > reach[0] ? 1 : -1;
-  const ahead = (side, verb) => (side < 0 ? 'level' : `${LABELS[side]} ${verb}`);
-  const word = !over ? ahead(lead, 'leads') : over.how === 'goal' ? (over.winner < 0 ? 'draw' : ahead(over.winner, 'wins')) : `${ENDS[over.how]}, ${ahead(over.winner, 'ahead')}`;
-  const score = tally[0] + tally[1] + tally[2] ? ` ${tally[0]}-${tally[1]}` : '';
-  return `${word}${score}`;
+  return `${lead < 0 ? 'level' : `${name(lead)} leads`}${phase === 'held' ? ', paused' : ''}`;
 }
 
-const Fact = ({ name, value }) => (
-  <label>
-    <span>{name}</span>
-    <span className="num">{value}</span>
-  </label>
-);
+const both = (sides, show) => {
+  const [a, b] = sides.map(show);
+  return a === b ? a : `${a} · ${b}`;
+};
 
-export function Widget({ value, onChange, onReady, onExport, unit: given }) {
+export function rows(stat) {
+  if (!stat) return [];
+  const { sides, reach, goal } = stat;
+  const names = sides.map(call);
+  const tags = names[0] === names[1] ? names.map((name, i) => `${name} ${'AB'[i]}`) : names;
+  return [
+    ['race', fate(stat)],
+    ['step', String(stat.tick)],
+    [tags[0], `${reach[0].toFixed(1)} of ${goal} cells`],
+    [tags[1], `${reach[1].toFixed(1)} of ${goal} cells`],
+    ['mass', both(sides, (side) => `${side.fills} of ${side.of}`)],
+    ['dimension', both(sides, (side) => side.dimension.toFixed(3))],
+    ['room', both(sides, (side) => `${side.cells} of ${side.lit}`)],
+    ['board', `${stat.side} by ${stat.side}`],
+    ['walkers', String(stat.walkers)],
+  ];
+}
+
+export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }) {
   const [loaded, setLoaded] = useState(null);
   const unit = given ?? loaded;
   const live = useRef(null);
   const now = useRef(value);
   now.current = value;
-  const [facts, setFacts] = useState(null);
+  const hooks = useRef({});
+  hooks.current = { onChange, onStatus };
   const [stat, setStat] = useState(null);
   useEffect(() => {
     if (given) return undefined;
@@ -54,54 +66,44 @@ export function Widget({ value, onChange, onReady, onExport, unit: given }) {
       on = false;
     };
   }, [given]);
-  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math: unit, onStat: setStat }), [unit]);
+  const tell = useCallback((next) => {
+    setStat(next);
+    hooks.current.onStatus?.(rows(next));
+  }, []);
+  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math: unit, onTell: tell }), [unit, tell]);
+  const go = () => {
+    const handle = live.current;
+    if (!handle) return;
+    if (handle.phase?.() === 'done') hooks.current.onChange?.({ seed: again(now.current.seed) });
+    else handle.go?.();
+  };
+  const fresh = () => {
+    if (!unit) return;
+    const [a, b] = pair(unit, now.current, rng(roll()));
+    hooks.current.onChange?.({ a, b });
+  };
   const ready = (handle) => {
     live.current = handle;
-    setFacts(handle?.facts ?? null);
-    setStat(handle?.stat?.() ?? null);
-    const hands = {
-      random: () => {
-        const seed = roll();
-        const [a, b] = pair(unit, now.current, roots(rng(seed)).code);
-        onChange({ seed, a, b });
-      },
-    };
-    onReady?.(handle && { ...handle, ...hands });
+    if (!handle) hooks.current.onStatus?.([]);
+    onReady?.(handle && { ...handle, go, toggle: go, pair: fresh });
   };
   const keep = () => {
     const picture = live.current?.svg?.();
-    if (picture) text(picture, `race-${now.current.seed}`, 'svg');
+    if (picture) text(picture, named(now.current), 'svg');
   };
   const log = () => {
-    const rows = live.current?.csv?.();
-    if (rows) text(rows, `race-${now.current.seed}`, 'csv');
+    const list = live.current?.csv?.();
+    if (list) text(list, named(now.current), 'csv');
   };
-  const have = Boolean(facts);
+  const have = Boolean(unit);
   useEffect(() => onExport?.(have ? [['SVG', keep], ['CSV', log]] : []), [have]);
-  const f = facts;
-  const s = stat;
+  const names = stat?.sides.map(call);
   return (
     <>
-      {unit && <Scene make={scene} value={value} onReady={ready} />}
-      <Bar side="status">
-        {!unit && <span>loading</span>}
-        {s && <span>{said(s)}</span>}
-        {s && <span>step {s.tick}</span>}
-        {s && <span>{LABELS[0]} {cells(s.reach[0])}</span>}
-        {s && <span>{LABELS[1]} {cells(s.reach[1])}</span>}
-      </Bar>
-      {f && (
-        <Bar side="right">
-          {f.sides.map((side, i) => (
-            <Group key={LABELS[i]} name={`${LABELS[i]} ${side.code}`}>
-              {ROWS.map(([name, get]) => <Fact key={name} name={name} value={get(side)} />)}
-            </Group>
-          ))}
-          <Group name="Course">
-            <Fact name="Board" value={`${f.side} by ${f.side}`} />
-            <Fact name="Goal" value={`${f.goal} cells`} />
-            <Fact name="Walkers" value={f.walkers} />
-          </Group>
+      {unit && <Scene make={scene} value={value} onReady={ready} onClick={go} role="img" aria-label={names ? `${names[0]} against ${names[1]}` : 'Two boards of walkers'} style={{ cursor: 'pointer' }} />}
+      {!unit && (
+        <Bar side="status">
+          <span>loading</span>
         </Bar>
       )}
     </>

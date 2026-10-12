@@ -1,6 +1,6 @@
 {
   "title": "Snake",
-  "line": "Snake, the first game: the mrly marks play food, head and body. A saver when it plays itself.",
+  "line": "The first game: the mrly marks play food, head and body.",
   "menu": "play",
   "saver": true
 }

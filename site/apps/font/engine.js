@@ -2,6 +2,12 @@ import { pick } from '../../lib/scene.js';
 
 export const LIMIT = 80;
 
+export const LIFTS = 5;
+
+export const SLOT = 7;
+
+export const GAP = 2;
+
 export const SAMPLES = ['hello, world!', 'mrlyprod', 'simple, beautiful, useful', 'one desk', 'the 108 pens', 'mrly.net'];
 
 export const KINDS = [
@@ -23,48 +29,70 @@ export function slug(text) {
 
 /* PLAN */
 
-export function plan(font, { text, pad = 1, hold = 25, loop = 1 }) {
-  const written = cut(text);
-  const write = font.animate(written, pad);
-  const anim = loop ? font.cycle(write, font.merge(written, pad), hold) : write;
-  return { text: written, rows: anim.rows, cols: anim.cols, fps: anim.fps, frames: anim.frames, still: write.frames.length - 1 };
+export function written(font, text, pad = 1) {
+  const words = cut(text);
+  return { text: words, pad, write: font.animate(words, pad), merge: font.merge(words, pad) };
 }
 
-export function at({ frames, fps }, t, speed = 1, loop = 1) {
-  const n = frames.length;
-  if (n < 2) return 0;
-  const k = Math.floor((t / 1000) * fps * speed + 1e-9);
-  return loop ? k % n : Math.min(k, n - 1);
+export function plan(font, { text, pad = 1, hold = 25, loop = 1 }, made = written(font, text, pad)) {
+  const { write, merge } = made;
+  const anim = loop ? font.cycle(write, merge, hold) : write;
+  const n = write.frames.length;
+  return { text: made.text, rows: anim.rows, cols: anim.cols, fps: anim.fps, frames: anim.frames, still: n - 1, hold: loop ? hold : 0, moves: loop ? [n, merge.length, merge.length, n] : [n] };
 }
 
-/* GALLERY */
+export const index = (k, n, loop = 1) => (n < 2 ? 0 : loop ? ((k % n) + n) % n : Math.min(Math.max(0, k), n - 1));
 
-function lit(rows) {
-  const cells = [];
-  rows.forEach((row, r) => {
-    for (let c = 0; c < row.length; c++) if (row[c] === '1') cells.push(r * row.length + c);
-  });
-  return cells;
+export const pen = (k, n, hold, loop = 1) => Math.min(loop ? index(k, n + hold) : Math.max(0, k), n - 1);
+
+export function shift(k, moves, hold, next) {
+  let from = 0;
+  let to = 0;
+  for (const len of moves) {
+    const off = k - from;
+    if (off < len) return to + off;
+    if (off < len + hold) return next ? to + len + Math.min(off - len, next - 1) : to + len - 1;
+    from += len + hold;
+    to += len + next;
+  }
+  return Math.max(0, to - 1);
 }
 
-const lead = (rows) => Math.max(0, [...(rows[0] ?? '')].findIndex((_, c) => rows.some((row) => row[c] === '1')));
+export function common(a, b) {
+  let n = 0;
+  while (n < a.length && n < b.length && a[n] === b[n]) n++;
+  return a.slice(0, n);
+}
 
-export function study(font, glyph) {
+export const cells = (font, text, pad = 1) => (text ? font.animate(text, pad).frames.length - 1 : 0);
+
+/* PENS */
+
+export const flag = (strokes, floor, lifts) => (strokes > floor ? 'over floor' : lifts >= LIFTS ? `${lifts} lifts` : '');
+
+export function study(font, glyph, kind = '') {
   const { char, rows } = glyph;
-  const cols = rows[0]?.length ?? 0;
+  const anim = font.animate(char, 0);
   const strokes = font.strokes(char).length;
+  const lifts = Math.max(0, strokes - 1);
+  const floor = font.floor(font.trim(rows));
   const name = font.name_of(char).toLowerCase();
-  const order = font.path(char).map(([r, c]) => r * cols + c + lead(rows));
-  return { char, label: char.trim() ? char : name, name, rows: rows.length, cols, cells: lit(rows), order, strokes, floor: font.floor(font.trim(rows)), lifts: Math.max(0, strokes - 1) };
+  return { char, kind, label: char.trim() ? char : name, name, rows: anim.rows, cols: anim.cols, frames: anim.frames, strokes, floor, lifts, flag: flag(strokes, floor, lifts) };
 }
 
 export function gallery(font) {
   return KINDS.map((kind) => ({
     ...kind,
     glyphs: font[kind.door]().map((glyph) => {
-      const seen = study(font, glyph);
+      const seen = study(font, glyph, kind.id);
       glyph.free?.();
       return seen;
     }),
   }));
+}
+
+export function facts(kinds) {
+  const pens = kinds.flatMap((kind) => kind.glyphs);
+  const flagged = pens.filter((one) => one.flag).map((one) => one.char);
+  return { pens: pens.length, strokes: pens.reduce((n, one) => n + one.strokes, 0), flagged: flagged.join(' ') || 'none' };
 }

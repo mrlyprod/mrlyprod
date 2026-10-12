@@ -1,4 +1,5 @@
 import { lock as saver } from 'site:apps';
+import { ICONS, VIEWBOX } from '../lib/icons.js';
 import { word } from './word.js';
 
 const DOCK = '(min-width: 74rem)';
@@ -532,6 +533,17 @@ function close() {
 
 /* EXPLORER */
 
+function chevron() {
+  const svg = document.createElementNS(SVG, 'svg');
+  const path = document.createElementNS(SVG, 'path');
+  for (const [name, value] of [['viewBox', VIEWBOX], ['width', '16'], ['height', '16'], ['fill', 'currentColor'], ['aria-hidden', 'true']]) svg.setAttribute(name, value);
+  path.setAttribute('d', ICONS.expand_more);
+  svg.append(path);
+  return svg;
+}
+
+const turns = (summary) => summary.querySelector(':scope > svg') ?? summary.prepend(chevron());
+
 let forest = null;
 
 const fetchTree = (url) => (forest ??= fetch(url).then((reply) => (reply.ok ? reply.json() : null)).catch(() => null));
@@ -545,7 +557,7 @@ function find(node, path) {
   return at;
 }
 
-function branch(base, kid, path) {
+export function branch(base, kid, path) {
   const li = document.createElement('li');
   const a = document.createElement('a');
   if (kid.k !== 'd') {
@@ -565,7 +577,7 @@ function branch(base, kid, path) {
   const details = document.createElement('details');
   details.dataset.lazy = path;
   const summary = document.createElement('summary');
-  summary.append(a);
+  summary.append(chevron(), a);
   details.append(summary, document.createElement('ul'));
   li.append(details);
   return li;
@@ -616,6 +628,7 @@ function wire(event) {
   screen(read(KEY.saver));
   cart();
   once('.contents', contents);
+  once('.tree summary', turns);
   once('.top .mark', (mark) => {
     folds(mark);
     knock(mark);

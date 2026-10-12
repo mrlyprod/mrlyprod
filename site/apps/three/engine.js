@@ -1,140 +1,214 @@
-import { tidy } from '../../lib/knobs.js';
-import { settle, title } from '../designs/engine.js';
-import { DESIGN } from '../designs/scene.js';
+import { settle } from '../designs/engine.js';
 
 export const DIM = 3;
-export const DEN = 32;
-export const BUDGET = 60000;
+export const CARPET = '23';
 export const NUMBERS = [2, 3, 4, 5];
 export const SHAPES = ['ball', 'box', 'diamond', 'octahedron', 'tetrahedron', 'pyramid'];
-export const VIEWS = [['solid', 'Solid'], ['slice', 'Slice'], ['diagonal', 'Diagonal'], ['hex', 'Hexagon']];
-export const AXES = ['x', 'y', 'z'];
-export const USES = { solid: [], slice: ['axis', 'at'], diagonal: ['at'], hex: [] };
+export const DEN = 120;
+export const REACH = 108;
+export const SIDE = 128;
+export const CROPPED = 81;
+export const FACES = 400000;
+export const CUBES = 250000;
+export const TALLY = 600000;
+export const COUNTED = 600000;
+export const LAYERS = 21;
+export const COMBINES = [['sum', 'Sum'], ['xor', 'Xor'], ['and', 'And']];
+export const SIZES = [48, 64, 80];
+export const RAMPS = [['fire', 'Fire'], ['heat', 'Heat'], ['diverge', 'Diverge']];
+export const PLANES = [['x', 'X plane', [1, 0, 0]], ['y', 'Y plane', [0, 1, 0]], ['z', 'Z plane', [0, 0, 1]], ['d', 'Diagonal', [1, 1, 1]]];
+export const WIDE = { x: 256, y: 256, z: 256, d: 384 };
+const MERGE = { sum: 'Sum', xor: 'Xor', and: 'And' };
 
-const uses = (view, key) => USES[view]?.includes(key) ?? false;
+const n = (v) => Number(v);
 
-export const GROW = [
-  { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Grow' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value, units) => units && cap(units.math, value.number), step: 1, group: 'Grow' },
-];
+/* MEMO */
 
-export const CUT = [
-  { key: 'view', label: 'View', kind: 'pick', def: 'solid', options: VIEWS, group: 'Cut' },
-  { key: 'axis', label: 'Axis', kind: 'segment', def: 2, options: AXES.map((axis, i) => [i, axis.toUpperCase()]), group: 'Cut', when: (value) => uses(value.view, 'axis') },
-  { key: 'at', label: 'Plane', kind: 'slider', def: 0.5, min: 0, max: 1, step: 0.01, group: 'Cut', when: (value) => uses(value.view, 'at') },
-];
+export function memo(limit = 8) {
+  const kept = new Map();
+  return (key, make) => {
+    if (kept.has(key)) {
+      const one = kept.get(key);
+      kept.delete(key);
+      kept.set(key, one);
+      return one;
+    }
+    const one = make();
+    kept.set(key, one);
+    while (kept.size > limit) {
+      const [first, old] = kept.entries().next().value;
+      kept.delete(first);
+      old?.free?.();
+    }
+    return one;
+  };
+}
 
-const OWN = [...GROW, ...CUT].map((row) => row.key);
+const cells = memo(6);
+const derived = memo(16);
+const fields = memo(3);
+const meshes = memo(2);
+const ids = new WeakMap();
+let next = 0;
 
-const count = (v) => Number(v);
+function keyOf(one) {
+  if (!ids.has(one)) ids.set(one, ++next);
+  return ids.get(one);
+}
 
 /* DESIGN */
 
-export const cap = (math, number) => math.bang.level_cap(number, DIM, BUDGET);
+export const cap = (math, number, crop) => math.bang.level_cap(number, 1, crop ? CROPPED : SIDE);
 
-export function total(math, base) {
-  return Number(math.bang.factory.total_codes(DIM, base));
+export const counted = (math, number) => math.bang.level_cap(number, DIM, COUNTED);
+
+export const side = (math, number, level) => n(math.counts.grid(number, 1, level));
+
+export function top(math, number, count, centre) {
+  const edge = side(math, number, Math.min(count, counted(math, number)));
+  return centre === 'centre' ? Math.floor((edge - 1) / 2) : edge - 1;
 }
 
-export function tag(facts) {
-  return `${facts.base === 3 ? 'b3 ' : ''}${facts.name || 'code'} ${facts.code}`;
+export function design(math, value) {
+  const base = Number(value.base) === 3 ? 3 : 2;
+  const text = String(value.code ?? '').trim();
+  return { base, code: settle(math, DIM, base, text || CARPET) };
 }
 
-export function grow(value, units) {
-  return tidy(GROW, value, units);
+export function named(math, code, base) {
+  return math.name.of(code, DIM, base) ?? '';
 }
 
-export function rows(view) {
-  return CUT.filter((row) => !row.when || row.when({ view }));
+export function tag(name, code, base) {
+  return `${base === 3 ? 'b3 ' : ''}${name || 'code'} ${code}`;
 }
 
-export function cutting(value) {
-  const all = tidy(CUT, value);
-  return Object.fromEntries(rows(all.view).map((row) => [row.key, all[row.key]]));
+export function grown(math, code, base, number, level) {
+  return cells(`${code} ${base} ${number} ${level}`, () => math.three.create(code, number, level, base));
 }
 
-export function staged(value, units) {
-  const kept = Object.entries(value).filter(([key]) => !OWN.includes(key));
-  return { ...Object.fromEntries(kept), ...grow(value, units), ...cutting(value) };
+export const tensor = (cell) => ({ shape: cell.shape, data: cell.types });
+
+export const flat = (kept) => ({ shape: kept.shape, types: kept.data });
+
+export function faces(math, cell) {
+  return meshes(keyOf(cell), () => math.three.quads(cell));
 }
 
-export function design(math, value, rand) {
-  const { base, code } = tidy(DESIGN, { ...value, dim: DIM });
-  return { base, code: settle(math, DIM, base, code, rand) };
+export function tally(math, cell) {
+  return derived(`tally ${keyOf(cell)}`, () => (cell.types.length <= TALLY ? math.three.census(cell) : null));
 }
 
-export function crop(math, grown, name, radius) {
-  const frac = new math.shape.Frac(radius, DEN);
-  const shape = math.shape.named(name, DIM, frac);
+export function load(math, cell, cubes) {
+  return derived(`load ${keyOf(cell)} ${cubes}`, () => (cubes ? math.three.fills(cell) : n(math.three.surface(cell))));
+}
+
+/* CROP */
+
+export function region(math, name, radius, anti, den = DEN) {
+  const frac = new math.shape.Frac(radius, den);
+  const core = math.shape.named(name, DIM, frac);
   frac.free();
-  const tensor = { shape: grown.shape, data: grown.types };
-  const kept = math.shape.crop(tensor, shape, true);
-  const { filled } = math.shape.census(shape, tensor);
-  return { cell: { shape: kept.shape, types: kept.data }, out: filled[0], cut: filled[1], in: filled[2] };
+  return anti ? { Anti: core } : core;
 }
 
-/* CUTS */
-
-export function slice(math, plan, value) {
-  const side = plan.cell.shape[0];
-  const index = Math.round(value.at * (side - 1));
-  const flat = math.three.slice(plan.cell, value.axis, index);
-  const read = math.two.census(flat);
-  return { kind: 'slice', flat, side, facts: { reading: `${AXES[value.axis]} ${index + 1} of ${side}`, fills: read.fills, voids: read.voids, euler: count(read.euler) } };
+export function walls(core) {
+  const list = core?.Polytope?.walls;
+  if (!list) return null;
+  return list.map(({ normal, offset }) => {
+    const size = Math.hypot(...normal);
+    const reach = n(offset.num) / n(offset.den);
+    const sum = normal.reduce((a, b) => a + b, 0);
+    return { normal: normal.map((one) => -one / size), constant: (2 * reach - sum) / size };
+  });
 }
 
-export function diagonal(math, plan, value) {
-  const { code, number, level, base, cell } = plan;
-  const counts = math.three.profile(code, number, level, base).map(count);
-  const support = math.three.support(counts) ?? null;
-  const [low, high] = support ?? [0, 0];
-  const height = low + Math.round(value.at * (high - low));
-  const side = cell.shape[0];
-  const listed = support ? math.three.diagonal_slice(code, number, level, base, height) : [];
-  const kept = listed.filter(([x, y, z]) => cell.types[(x * side + y) * side + z]);
-  const points = kept.map((at) => math.three.project(at));
-  const span = support ? counts.slice(low, high + 1) : [0];
-  const facts = { reading: `height ${height} of ${high}`, cells: kept.length, support: support ? `${low} to ${high}` : 'none', least: Math.min(...span), most: Math.max(...span), constant: span.every((c) => c === span[0]) ? 'yes' : 'no' };
-  return { kind: 'diagonal', points, height, facts };
+export function cropped(math, cell, value) {
+  const { crop, radius, anti, policy } = value;
+  return derived(`crop ${keyOf(cell)} ${crop} ${radius} ${anti} ${policy}`, () => {
+    const shape = region(math, crop, radius, Number(anti) === 1);
+    const kept = math.shape.crop(tensor(cell), shape, policy !== 'inside');
+    const { filled } = math.shape.census(shape, tensor(cell));
+    const out = flat(kept);
+    return { cell: out, out: n(filled[0]), cut: n(filled[1]), in: n(filled[2]), after: n(math.three.surface(out)) };
+  });
 }
 
-export function hexagon(math, plan) {
-  const hex = math.six.cut(plan.cell);
-  const read = math.six.census(hex, false);
-  const codes = { fill: math.six.FILL(), void: math.six.VOID() };
-  const facts = { reading: `hexagon of ${plan.cell.shape[0]}`, triangles: read.triangles, fills: read.fills, voids: read.voids, pieces: math.six.components(hex), holes: math.six.holes(hex), euler: count(read.euler) };
-  return { kind: 'hex', hex, codes, facts };
+/* CIRCLE */
+
+export function circle(math, made, value) {
+  const { code, base } = made;
+  const { number, centre } = value;
+  const level = Math.min(value.count, counted(math, number));
+  return derived(`circle ${code} ${base} ${number} ${level} ${centre}`, () => {
+    const cell = grown(math, code, base, number, level);
+    const edge = cell.shape[0];
+    const last = top(math, number, level, centre);
+    const origin = centre === 'centre' ? [edge, edge, edge] : [0, 0, 0];
+    const rows = math.shape.radial_census(tensor(cell), origin, last);
+    return {
+      side: edge,
+      top: last,
+      seen: rows.map((row) => n(row.seen)),
+      inside: rows.map((row) => n(row.inside)),
+      cut: rows.map((row) => n(row.cut)),
+      mass: n(math.counts.fill(code, number, DIM, 1, base)),
+      d: math.counts.dimension(code, number, DIM, base),
+    };
+  });
 }
 
-const CUTS = { slice, diagonal, hex: hexagon };
+export function reading(count, r) {
+  const at = Math.max(1, Math.min(r, count.top));
+  return { at, seen: count.seen[at], inside: count.inside[at], cut: count.cut[at] };
+}
 
-/* STUDY */
+/* FIELD */
 
-export function study(math, value, rand) {
-  const { base, code } = design(math, value, rand);
-  const { number, level: asked } = grow(value);
-  const level = Math.min(asked, cap(math, number));
-  const cut = cutting(value);
-  const grown = math.three.create(code, number, level, base);
-  const shaped = value.crop ? crop(math, grown, value.crop, value.radius) : null;
-  const cell = shaped ? shaped.cell : grown;
-  const read = math.three.census(cell);
-  const facts = {
-    code,
-    base,
-    number,
-    level,
-    side: cell.shape[0],
-    name: math.name.of(code, DIM, base) ?? '',
-    title: title(math, DIM, base, code),
-    fills: read.fills,
-    voids: read.voids,
-    surface: count(read.surface),
-    faces: read.faces,
-    euler: read.euler,
-    dimension: math.counts.dimension(code, number, DIM, base),
-    crop: shaped ? { in: shaped.in, cut: shaped.cut, out: shaped.out } : null,
-  };
-  const plan = { code, base, number, level, cell };
-  return { cell, facts, cut: CUTS[cut.view]?.(math, plan, cut) ?? null };
+export const odd = (limit) => Array.from({ length: (Math.max(1, Math.floor(limit)) + 1) >> 1 }, (_, i) => 2 * i + 1);
+
+export function field(math, made, value) {
+  const { code, base } = made;
+  const { limit, combine, depth, size } = value;
+  return fields(`${code} ${base} ${limit} ${combine} ${depth} ${size}`, () => {
+    const spec = math.moire.Spec.new(code, base, DIM);
+    const scales = Uint32Array.from(odd(limit));
+    const volume = math.moire.volume(spec, scales, MERGE[combine] ?? MERGE.sum, depth, size);
+    return { volume, layers: scales.length, voxels: volume.data.length, min: volume.min(), max: volume.max(), free: () => volume.free() };
+  });
+}
+
+export function most(math, value) {
+  return field(math, design(math, value), value).max;
+}
+
+const hex = (c) => `#${c.slice(0, 3).map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+
+export function colorizer(ink, ramp, levels) {
+  const line = (ink.Ramp[ramp] ?? ink.Ramp.fire)();
+  const count = Math.max(2, Math.floor(levels));
+  return { Bins: { background: hex(line.at(0)), ramp: Array.from({ length: count }, (_, i) => hex(line.at(i / (count - 1)))) } };
+}
+
+export function plane(math, made, key, offset, paint) {
+  return derived(`plane ${keyOf(made)} ${key} ${offset} ${paint.levels} ${paint.invert} ${JSON.stringify(paint.colorizer)}`, () => {
+    const [, , normal] = PLANES.find(([one]) => one === key);
+    const frame = math.moire.frame(normal, offset);
+    const wide = WIDE[key];
+    const [values, mask] = made.volume.plane(frame, wide);
+    const sheet = math.moire.Field.from_data(values, wide);
+    const image = math.moire.render(sheet, paint.colorizer, Math.max(2, Math.floor(paint.levels)), false, Number(paint.invert) === 1, 1);
+    sheet.free();
+    const colors = Uint8Array.from(image.colors);
+    for (let i = 0; i < mask.length; i++) if (!mask[i]) colors[i * 4 + 3] = 0;
+    return { key, offset, frame, pixels: { shape: image.shape, colors } };
+  });
+}
+
+export function shell(math, made, value) {
+  return derived(`shell ${keyOf(made)} ${value.threshold} ${value.crop} ${value.radius} ${value.anti} ${value.policy}`, () => {
+    const solid = flat(made.volume.solid(value.threshold));
+    const cell = value.crop ? cropped(math, solid, value).cell : solid;
+    return { cell, count: made.volume.count(value.threshold), faces: n(math.three.surface(cell)) };
+  });
 }

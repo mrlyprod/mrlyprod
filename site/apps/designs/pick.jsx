@@ -44,7 +44,7 @@ export function useTheme() {
 
 /* THUMBS */
 
-export function Thumb({ math, dim, base, code, px = 56, tick = 0 }) {
+export function Thumb({ math, dim, base, code, px = 56, tick = 0, hue = '' }) {
   const at = useRef(null);
   useEffect(() => {
     const canvas = at.current;
@@ -54,22 +54,25 @@ export function Thumb({ math, dim, base, code, px = 56, tick = 0 }) {
       const side = Math.round(px * dpr);
       canvas.width = side;
       canvas.height = side;
-      thumb(canvas.getContext('2d'), math, dim, base, code, side, paints(canvas));
+      thumb(canvas.getContext('2d'), math, dim, base, code, side, paints(canvas, hue));
     });
-  }, [math, dim, base, code, px, tick]);
+  }, [math, dim, base, code, px, tick, hue]);
   return <canvas ref={at} width={px} height={px} aria-hidden="true" />;
 }
 
-export function Thumbs({ math, dim, base, codes, code, onPick, px, className = 'designs' }) {
+export function Thumbs({ math, dim, base, codes, code, onPick, px, className = 'designs', tone, note }) {
   const tick = useTheme();
   return (
     <div className={className} style={FILL}>
       {codes.map((one) => {
         const name = math.name.of(one, dim, base) ?? '';
+        const form = note?.(one) ?? '';
+        const label = note ? `${one}${name ? ` ${name}` : ''}` : name || one;
         return (
-          <button type="button" key={one} className={one === String(code) ? 'on' : undefined} aria-pressed={one === String(code)} aria-label={`${name || 'bang'} ${one}`} title={name || undefined} onClick={() => onPick(one)}>
-            <Thumb math={math} dim={dim} base={base} code={one} px={px} tick={tick} />
-            <small>{name || one}</small>
+          <button type="button" key={one} className={one === String(code) ? 'on' : undefined} aria-pressed={one === String(code)} aria-label={`${name || 'bang'} ${one}${form ? `, ${form}` : ''}`} title={[name, form].filter(Boolean).join(', ') || undefined} onClick={() => onPick(one)}>
+            <Thumb math={math} dim={dim} base={base} code={one} px={px} tick={tick} hue={tone?.(one) ?? ''} />
+            <small>{label}</small>
+            {form && <small>{form}</small>}
           </button>
         );
       })}

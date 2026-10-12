@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { rng } from '../../lib/scene.js';
-import { census, classes, codes, facts, gallery, grow, next, roll, settle, title, total } from './engine.js';
+import { census, classes, codes, drawn, facts, gallery, grow, next, roll, settle, title, total } from './engine.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
@@ -35,4 +35,11 @@ test('the gallery filters to all, classes or named, and stepping wraps around th
   expect(gallery(math, 3, 3, 'all')).toBe(null);
   const list = ['0', '1', '3'];
   expect([next(list, '1', 1), next(list, '3', 1), next(list, '0', -1), next(list, '9', 1), next(null, '9', 1)]).toEqual(['3', '0', '3', '0', '9']);
+});
+
+test('a reroll draws another class from the seed, the same one for the same seed, and rolls a code where no list is walked', () => {
+  const list = gallery(math, 3, 2, 'classes');
+  const draws = Array.from({ length: 32 }, (_, seed) => drawn(math, 3, 2, list, '23', seed));
+  expect([draws.every((one) => list.includes(one) && one !== '23'), new Set(draws).size > 4, drawn(math, 3, 2, list, '23', 9)]).toEqual([true, true, draws[9]]);
+  expect(drawn(math, 3, 3, null, '1', 5)).toBe(roll(math, 3, 3, rng(5)));
 });

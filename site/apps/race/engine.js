@@ -6,8 +6,6 @@ export const NUMBERS = [3, 5, 7];
 export const BUDGET = 131072;
 export const STILL = 1500000;
 export const SHARE = 55;
-export const LEAST = 10;
-export const NOTCH = 5;
 export const REACH = 28;
 export const HOT = 12;
 export const HOLD = 3000;
@@ -29,15 +27,13 @@ export function cap(number) {
   return level;
 }
 
-export function goal(side, finish) {
-  return Math.max(1, Math.round((((side - 1) / 2) * finish) / 100));
+export function top(side) {
+  return Math.max(1, Math.min(REACH, Math.round((((side - 1) / 2) * SHARE) / 100)));
 }
 
-export function most(side) {
-  let share = SHARE;
-  while (share > LEAST && goal(side, share) > REACH) share -= NOTCH;
-  return share;
-}
+export const keeping = (fade, speed) => (fade ? (1 - fade / 100) ** (1 / speed) : 1);
+
+export const budget = (walkers) => Math.max(1, Math.floor(STILL / (2 * walkers)));
 
 /* CODES */
 
@@ -143,7 +139,7 @@ export function board(math, value, code) {
 
 export function pair(math, value, rand, typed = [null, null]) {
   const count = total(math, DIM, value.base);
-  const far = goal(value.number ** value.level, value.finish);
+  const far = value.finish;
   const able = (code) => ceiling(math, value, code) >= far;
   const any = (not) => {
     let code = null;
@@ -183,8 +179,7 @@ export function plan(math, value, rand) {
   const count = total(math, DIM, value.base);
   const codes = pair(math, value, rand, [reads(value.a, count), reads(value.b, count)]);
   const sides = codes.map((code) => board(math, value, code));
-  const side = sides[0].side;
-  return { sides, side, goal: goal(side, value.finish), walkers: value.walkers, speed: value.speed, still: Math.max(1, Math.floor(STILL / (2 * value.walkers))), keep: value.heat ? (1 - value.heat / 100) ** (1 / value.speed) : 1 };
+  return { sides, side: sides[0].side, goal: value.finish, walkers: value.walkers, speed: value.speed, still: budget(value.walkers), keep: keeping(value.heat, value.speed) };
 }
 
 export function heat(value, stamp, tick, keep) {
@@ -217,6 +212,11 @@ export function open(plan) {
 
 const verdict = ([a, b]) => (a > b ? 0 : b > a ? 1 : -1);
 
+function reached(state, plan) {
+  const hit = state.reach.map((r) => r >= plan.goal);
+  return hit[0] || hit[1] ? { tick: state.tick, winner: hit[0] && hit[1] ? verdict(state.reach) : hit[0] ? 0 : 1, how: 'goal' } : null;
+}
+
 export function step(state, plan, rand) {
   if (state.over) return state;
   const tick = state.tick + 1;
@@ -232,8 +232,9 @@ export function step(state, plan, rand) {
       const [dr, dc] = MOVES[Math.floor(rand() * 4)];
       const nr = r + dr;
       const nc = c + dc;
-      if (nr >= 0 && nc >= 0 && nr < side && nc < side && filled[nr * side + nc]) at[w] = nr * side + nc;
-      const j = at[w];
+      const j = nr * side + nc;
+      if (nr < 0 || nc < 0 || nr >= side || nc >= side || !filled[j]) continue;
+      at[w] = j;
       trail[j] = heat(trail[j], stamp[j], tick, keep) + 1;
       stamp[j] = tick;
     }
@@ -245,24 +246,39 @@ export function step(state, plan, rand) {
   });
   state.tick = tick;
   state.log.push([state.reach[0], state.reach[1]]);
-  const hit = state.reach.map((r) => r >= plan.goal);
-  if (hit[0] || hit[1]) state.over = { tick, winner: hit[0] && hit[1] ? verdict(state.reach) : hit[0] ? 0 : 1, how: 'goal' };
-  else if (tick - Math.max(state.since[0], state.since[1]) >= STALL) state.over = { tick, winner: verdict(state.reach), how: 'stall' };
+  state.over = reached(state, plan);
+  if (state.over) return state;
+  if (tick - Math.max(state.since[0], state.since[1]) >= STALL) state.over = { tick, winner: verdict(state.reach), how: 'stall' };
   else if (tick >= LIMIT) state.over = { tick, winner: verdict(state.reach), how: 'limit' };
+  return state;
+}
+
+export function aim(state, plan) {
+  if (!state.over) state.over = reached(state, plan);
+  else if (state.over.how === 'goal' && !reached(state, plan)) state.over = null;
+  return state;
+}
+
+export function bake(state, keep) {
+  state.trail.forEach((trail, s) => {
+    const stamp = state.stamp[s];
+    for (let i = 0; i < trail.length; i++) {
+      trail[i] = heat(trail[i], stamp[i], state.tick, keep);
+      stamp[i] = state.tick;
+    }
+  });
   return state;
 }
 
 /* SERIES */
 
-export function series(plan, walk) {
-  const hold = Math.ceil((HOLD * plan.speed) / 1000);
-  const tally = [0, 0, 0];
+export function series(plan, walk, wait = HOLD) {
+  const hold = Number.isFinite(wait) ? Math.ceil((wait * plan.speed) / 1000) : Infinity;
   let k = 0;
   let start = 0;
   let version = 0;
   let state = open(plan);
   let rand = rng((walk + k) >>> 0);
-  const count = () => tally[state.over.winner < 0 ? 2 : state.over.winner]++;
   const next = () => {
     start += state.over.tick + hold;
     k++;
@@ -281,7 +297,6 @@ export function series(plan, walk) {
       if (state.tick >= local) return;
       step(state, plan, rand);
       version++;
-      if (state.over) count();
     }
   };
   const finish = (limit = Infinity) => {
@@ -290,9 +305,8 @@ export function series(plan, walk) {
       step(state, plan, rand);
       version++;
     }
-    if (state.over) count();
   };
-  return { to, finish, get state() { return state; }, get k() { return k; }, get start() { return start; }, get tally() { return tally; }, get version() { return version; } };
+  return { to, finish, get state() { return state; }, get k() { return k; }, get start() { return start; }, get version() { return version; } };
 }
 
 /* LAYOUT */

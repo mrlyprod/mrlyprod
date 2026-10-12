@@ -1,49 +1,90 @@
-import { num, sheet } from '../../lib/svg.js';
-import { settle, title } from '../designs/engine.js';
+import { rng } from '../../lib/scene.js';
+import { num, sheet as paper } from '../../lib/svg.js';
+import { roll, settle, title } from '../designs/engine.js';
 
 export const DIM = 3;
 export const NUMBERS = [3, 5, 7, 9];
-export const PROJECTIONS = [['iso', 'Iso'], ['pro', 'Ortho'], ['cut', 'Cut']];
-export const ORIENTS = [['pointy', 'Pointy'], ['flat', 'Flat']];
+export const VIEWS = [['cut', 'Middle slice'], ['pro', 'Three sides'], ['iso', 'Iso skin']];
+export const SHEETS = [['rect', 'Rectangle'], ['disc', 'Disc']];
+export const PRESETS = [[5, 5], [3, 9]];
 export const ORDER = ['VOID', 'FILL', 'UP', 'LEFT', 'RIGHT'];
 export const BUDGET = 32000;
+export const REPEATS = 12;
 export const RINGS = 4;
 export const RATIO = Math.sqrt(3) / 2;
 export const SCALE = 8;
 
 /* SIZE */
 
-export const cap = (math, number, copies) => math.bang.level_cap(number, 2, Math.floor(BUDGET / (6 * copies)));
+export const copies = (math, value) => (value.sheet === 'disc' ? math.six.copies(value.radius) : value.x * value.y);
+
+export const cap = (math, number, n) => math.bang.level_cap(number, 2, Math.floor(BUDGET / (6 * n)));
+
+export const croppable = (value) => value.sheet !== 'disc' && value.x >= 2 && value.y >= 2;
+
+export const cropped = (value) => croppable(value) && Number(value.overhang) !== 1;
+
+export const reroll = (math, base, seed) => roll(math, DIM, base, rng(seed));
 
 /* STUDY */
 
-export function study(math, value, rand) {
+const keyed = (...parts) => JSON.stringify(parts);
+
+export function studio(math) {
   const six = math.six;
-  const code = settle(math, DIM, value.base, value.code, rand);
-  const n = six.copies(value.radius);
-  const level = Math.min(value.level, cap(math, value.number, n));
-  const side = value.number ** level;
-  const grown = math.three.create(code, value.number, level, value.base);
-  const cube = value.invert ? math.cell.models.anti(grown) : grown;
-  const one = six[value.projection](cube);
-  const sheet = six.disc(one, value.radius);
-  const seen = value.projection === 'iso' ? six.skin(one) : one;
-  const tally = six.census(seen, false);
-  const facts = {
-    code,
-    name: math.name.of(code, DIM, value.base) ?? '',
-    title: title(math, DIM, value.base, code),
-    level,
-    side,
-    copies: n,
-    triangles: tally.triangles,
-    fills: tally.fills,
-    voids: tally.voids,
-    pieces: six.components(seen),
-    holes: six.holes(seen),
-    euler: Number(six.euler(seen, false)),
+  const held = new Map();
+  const layer = (name, key, build) => {
+    const was = held.get(name);
+    if (was?.key === key) return was.out;
+    const out = build();
+    held.set(name, { key, out });
+    return out;
   };
-  return { one, sheet, facts };
+  return (value) => {
+    const n = copies(math, value);
+    const top = cap(math, value.number, n);
+    const level = Math.min(value.level, top);
+    const blank = String(value.code ?? '').trim() === '';
+    const code = layer('code', keyed(value.base, value.code, blank ? value.seed : 0), () => settle(math, DIM, value.base, value.code, rng(value.seed)));
+    const grown = keyed(code, value.number, level, value.base, value.invert);
+    const cube = layer('cube', grown, () => {
+      const made = math.three.create(code, value.number, level, value.base);
+      return value.invert ? math.cell.models.anti(made) : made;
+    });
+    const seen = keyed(grown, value.view);
+    const one = layer('one', seen, () => six[value.view](cube));
+    const crop = cropped(value);
+    const disc = value.sheet === 'disc';
+    const key = keyed(seen, disc ? ['disc', value.radius] : [value.x, value.y, crop]);
+    const sheet = layer('sheet', key, () => (disc ? six.disc(one, value.radius) : six.tile_cell(one, value.x, value.y, crop)));
+    const drawn = layer('drawn', key, () => six.framed(sheet));
+    const facts = layer('facts', keyed(key, top), () => {
+      const skin = six.skin(sheet);
+      const tally = six.census(skin, false);
+      return {
+        code,
+        name: math.name.of(code, DIM, value.base) ?? '',
+        title: title(math, DIM, value.base, code),
+        level,
+        top,
+        side: value.number ** level,
+        copies: n,
+        tile: [six.width(one), six.height(one)],
+        sheet: [six.width(sheet), six.height(sheet)],
+        triangles: tally.triangles,
+        fills: tally.fills,
+        voids: tally.voids,
+        exposed: six.fills_only(skin).boundary_edges,
+        alone: six.fills_only(six.skin(one)).boundary_edges,
+        pieces: six.components(skin),
+        holes: six.holes(skin),
+        corners: tally.vertices,
+        edges: tally.edges,
+        euler: tally.euler,
+      };
+    });
+    return { key, cube, one, sheet, drawn, facts };
+  };
 }
 
 /* MESH */
@@ -51,10 +92,6 @@ export function study(math, value, rand) {
 export function kinds(math) {
   const six = math.six;
   return { VOID: six.VOID(), FILL: six.FILL(), GRID: six.GRID(), UP: six.UP(), LEFT: six.LEFT(), RIGHT: six.RIGHT() };
-}
-
-export function turned(orientation, orient) {
-  return (orient === 'flat') !== (orientation === 'Horizontal');
 }
 
 export function bounds(groups) {
@@ -109,5 +146,5 @@ export function wrap(text, across, turn) {
   const H = h * sy;
   const [width, height] = turn ? [H, W] : [W, H];
   const transform = `${turn ? `translate(${num(H, 3)} 0) rotate(90) ` : ''}scale(${num(sx, 3)} ${num(sy, 3)})`;
-  return sheet(width, height, `<g transform="${transform}">${body.trim()}</g>`);
+  return paper(width, height, `<g transform="${transform}">${body.trim()}</g>`);
 }

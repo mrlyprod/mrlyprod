@@ -1,17 +1,15 @@
 import * as math from "mrlyjs/math";
+import { plate } from "../../lib/icon.js";
 
 export const units = { math };
 
 const CODE = 239;
 const NUMBER = 3;
-const LEVEL = 3;
+const LEVEL = 2;
 const BASE = 3;
-const MARGIN = 0.08;
-const DOT = 0.2;
-const LINE = 0.08;
-const FADES = [0.72, 0.48, 0.22, 0];
-const ROLES = ["Alone", "Tip", "Through", "Junction"];
-const WANT = { nodes: 343, branches: 402, tips: 44, junctions: 156, pieces: 1 };
+const DOT = 0.3;
+const LINE = 0.14;
+const WANT = { nodes: 49, branches: 54, tips: 8, junctions: 18, pieces: 1 };
 
 let plan = null;
 
@@ -23,37 +21,23 @@ function study() {
   const read = { nodes: census.nodes, branches: census.branches, tips: census.tips, junctions: census.junctions, pieces: census.components };
   const got = Object.values(read).join();
   if (got !== Object.values(WANT).join()) throw new Error(`graphs: the core graph of ${CODE} reads ${got}, want ${Object.values(WANT).join()}`);
-  const nodes = net.nodes;
-  const positions = new Float64Array(nodes.length * 2);
-  nodes.forEach((node, i) => positions.set(node.position, i * 2));
-  const branches = net.branches;
-  const pairs = new Uint32Array(branches.length * 2);
-  branches.forEach((branch, j) => {
-    pairs[2 * j] = branch.parent;
-    pairs[2 * j + 1] = branch.child;
-  });
-  const roles = Uint8Array.from(math.graph.roles(net), (role) => ROLES.indexOf(role));
+  const positions = new Float64Array(net.nodes.length * 2);
+  net.nodes.forEach((node, i) => positions.set(node.position, i * 2));
+  const pairs = new Uint32Array(net.branches.length * 2);
+  net.branches.forEach((branch, j) => pairs.set([branch.parent, branch.child], 2 * j));
   net.free();
-  plan = { side: cell.shape[0], positions, pairs, roles };
+  plan = { side: cell.shape[0], positions, pairs };
   return plan;
 }
 
-export default function draw(pen, ink) {
-  const { side, positions, pairs, roles } = study();
-  const box = pen.frame(MARGIN);
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "orange", 0.16);
+  const { side, positions, pairs } = study();
   const k = box.w / side;
   const at = (i) => [box.x + positions[2 * i] * k, box.y + positions[2 * i + 1] * k];
-  const shades = FADES.map((t) => ink.mix(ink.blue, ink.ground, t));
-  for (let s = 0; s < shades.length; s++) {
-    for (let j = 0; j < pairs.length; j += 2) {
-      const a = pairs[j];
-      const b = pairs[j + 1];
-      if (Math.min(roles[a], roles[b]) !== s) continue;
-      pen.segment(at(a), at(b), LINE * k, shades[s]);
-    }
-  }
-  for (let i = 0; i < roles.length; i++) {
+  for (let j = 0; j < pairs.length; j += 2) pen.segment(at(pairs[j]), at(pairs[j + 1]), LINE * k, paint.light);
+  for (let i = 0; i < positions.length / 2; i++) {
     const [x, y] = at(i);
-    pen.disc(x, y, DOT * k, shades[roles[i]]);
+    pen.disc(x, y, DOT * k, paint.white);
   }
 }

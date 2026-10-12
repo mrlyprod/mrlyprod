@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { figures as named } from "../kit/md/md.ts";
-import { build, roster, state, type Built } from "./site.ts";
+import { build, plates, roster, state, type Built } from "./site.ts";
 
 const out = join(tmpdir(), `site-${process.pid}`);
 
@@ -42,6 +42,14 @@ test("the roster is every app icon by its id, every post icon as blog-<slug> and
   const names = roster().map((one) => one.name);
   expect(new Set(names).size).toBe(names.length);
   expect([...names].sort()).toEqual(want);
+});
+
+test("an app icon is a plate on a clear ground; a post or research figure keeps its ground", () => {
+  const all = roster();
+  const flat = plates(all);
+  expect(flat).toContain("life");
+  expect(flat.some((name) => name.startsWith("blog-"))).toBe(false);
+  expect(flat.length).toBe(all.filter((one) => one.file.endsWith("icon.js") && !one.name.startsWith("blog-")).length);
 });
 
 test("an app row wears its own id, a post blog-<slug>, a hidden app may wear none and a shown one always does", () => {

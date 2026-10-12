@@ -1,41 +1,75 @@
-import { settle } from '../designs/engine.js';
+import { palette } from '../../kit/theme/palette.js';
+import { pick, rgb } from '../../lib/scene.js';
+import { roll, settle } from '../designs/engine.js';
 
+export const SOURCES = [['flat', 'Flat'], ['moire', 'Moire'], ['slice', 'Slice']];
+export const BASES = [[2, '2'], [3, '3']];
 export const NUMBERS = [3, 5, 7, 9];
+export const TILES = [3, 5];
+export const PRESETS = ['heatmap', 'weave', 'hive', 'carpet'];
 export const BLENDS = [['mean', 'Mean'], ['sum', 'Sum'], ['union', 'Union'], ['meet', 'Meet'], ['parity', 'Parity'], ['difference', 'Difference']];
-export const SHOWS = [['both', 'Turntable and wheel'], ['turn', 'Turntable'], ['wheel', 'Wheel'], ['radial', 'Rosette']];
+export const RAMPS = [['heat', 'Heat'], ['fire', 'Fire'], ['tint', 'Tint']];
 export const SIDE = 256;
+export const CUT = 27;
+export const FIELD = 256;
+export const HEX = 384;
+export const LIMIT = 41;
 export const STEPS = 512;
 export const RINGS = 160;
 export const ORDERS = 48;
-export const OUT = 384;
-export const SAMPLES = 2;
+export const OUT = 512;
 export const LEAD = 3;
 export const BEAT = 500;
 export const WHEEL = 1024;
-export const DIM = 2;
+export const RPM = 1800;
+export const COPIES = 36;
 export const NEEDLES = [33, 45, 78, 899, 900];
 const ROTATION = 0;
 const EASE = 0.1;
-const TAU = Math.PI * 2;
 
 let kept = null;
 let rose = null;
 let bull = null;
 
-/* DESIGN */
+/* SOURCE */
 
-export function cap(number) {
+export function cap(number, budget = SIDE) {
   let level = 1;
-  while (number ** (level + 1) <= SIDE) level++;
+  while (number ** (level + 1) <= budget) level++;
   return level;
 }
 
-export function design(math, value, rand) {
-  return settle(math, DIM, value.base, value.code, rand);
+const loose = (code) => !Number.isFinite(Number(String(code).trim()));
+
+export function key(value) {
+  if (value.source === 'moire') return ['moire', value.preset, value.limit].join(':');
+  if (value.source === 'slice') return ['slice', value.sbase, value.scode, value.tile, value.slevel, loose(value.scode) ? value.seed : ''].join(':');
+  return ['flat', value.base, value.code, value.number, value.level, loose(value.code) ? value.seed : ''].join(':');
 }
 
-export function grow(math, value, code) {
-  return math.two.create(code, value.number, Math.min(value.level, cap(value.number)), ROTATION, value.base);
+export function source(math, value, rand) {
+  if (value.source === 'moire') {
+    const preset = math.moire.named(value.preset, value.limit);
+    const field = preset.field(FIELD);
+    const data = Float32Array.from(field.data);
+    field.free();
+    preset.free();
+    return { kind: 'moire', code: value.preset, name: value.preset, side: FIELD, data, fills: null, binary: false };
+  }
+  if (value.source === 'slice') {
+    const code = settle(math, 3, value.sbase, value.scode, rand);
+    const cut = math.six.cut_design(code, value.tile, Math.min(value.slevel, cap(value.tile, CUT)), value.sbase);
+    return { kind: 'slice', code, name: math.name.of(code, 3, value.sbase) ?? '', side: HEX, data: math.six.raster(cut, HEX), fills: math.six.fills(cut), binary: true };
+  }
+  const code = settle(math, 2, value.base, value.code, rand);
+  const cell = math.two.create(code, value.number, Math.min(value.level, cap(value.number)), ROTATION, value.base);
+  return { kind: 'flat', code, name: math.name.of(code, 2, value.base) ?? '', side: cell.shape[0], data: Float32Array.from(cell.types), fills: math.two.fills(cell), binary: true };
+}
+
+export function drawn(math, value, rand) {
+  if (value.source === 'moire') return { preset: pick(rand, PRESETS), limit: 2 * Math.floor(rand() * ((LIMIT + 1) / 2)) + 1 };
+  if (value.source === 'slice') return { scode: roll(math, 3, value.sbase, rand) };
+  return { code: roll(math, 2, value.base, rand) };
 }
 
 /* FACTS */
@@ -66,72 +100,101 @@ export function disc(profile, reach) {
   return lit < 0 ? reach : (lit / (profile.length - 1)) * reach;
 }
 
-const key = (value) => [value.base, value.code, value.number, value.level, value.seed].join(':');
-
-function read(math, value, rand) {
-  const code = design(math, value, rand);
-  const cell = grow(math, value, code);
-  const side = cell.shape[0];
-  const data = Float32Array.from(cell.types);
+export function study(math, value, rand) {
+  const at = key(value);
+  if (kept?.at === at) return kept.plan;
+  const made = source(math, value, rand);
+  const { data, side } = made;
   const profile = math.spin.profile(data, side, STEPS);
   const power = math.spin.harmonics(data, side, RINGS, ORDERS);
   const reach = math.spin.reach(side);
-  return { code, level: Math.min(value.level, cap(value.number)), side, cell, data, profile, power, order: math.spin.turns(power), fills: math.two.fills(cell), mass: math.spin.mass(profile, side), reach, inner: side / 2, disc: disc(profile, reach), peak: peak(profile), share: shares(power), leading: leading(power) };
+  const plan = { ...made, profile, power, reach, top: peak(data) || 1, order: math.spin.turns(power), mass: math.spin.mass(profile, side), disc: disc(profile, reach), peak: peak(profile), share: shares(power), leading: leading(power) };
+  kept = { at, plan };
+  return plan;
 }
 
-export function study(math, value, rand) {
-  const at = key(value);
-  if (kept?.at !== at) kept = { at, plan: read(math, value, rand) };
-  return kept.plan;
-}
-
-export function petals(math, plan, copies) {
-  return plan.order ? math.spin.petals(copies, plan.order) : 0;
-}
+export const title = ({ name, code, kind }) => (kind === 'moire' || !name ? code : `${name} ${code}`);
 
 export function rings(math, plan) {
   if (bull?.plan !== plan) bull = { plan, values: math.spin.wheel(plan.profile, WHEEL), top: plan.peak || 1, side: WHEEL };
   return bull;
 }
 
-export function rosette(math, plan, copies, blend) {
-  if (rose?.plan !== plan || rose.copies !== copies || rose.blend !== blend) {
-    const values = math.spin.radial(plan.data, plan.side, OUT, copies, 1 / copies, math.spin.Blend.named(blend), SAMPLES);
-    rose = { plan, copies, blend, values, top: peak(values) || 1, side: OUT };
+/* STACK */
+
+export const turn = (value) => (Number(value.full) === 1 ? 1 / value.copies : value.step / 360);
+
+export const degrees = (value) => +(turn(value) * 360).toFixed(3);
+
+export function petals(math, plan, value) {
+  if (Number(value.full) !== 1) return 'partial orbit';
+  return plan.order ? math.spin.petals(value.copies, plan.order) : 'none';
+}
+
+export function rosette(math, plan, value) {
+  const at = [value.copies, turn(value), value.blend, value.samples].join(':');
+  if (rose?.plan !== plan || rose.at !== at) {
+    const values = math.spin.radial(plan.data, plan.side, OUT, value.copies, turn(value), math.spin.Blend.named(value.blend), value.samples);
+    rose = { plan, at, values, top: peak(values) || 1, side: OUT };
   }
   return rose;
 }
 
-/* PIXELS */
+/* PAINT */
 
-export function pixels(values, top, [r, g, b]) {
+const contrast = ([r, g, b]) => ((r * 299 + g * 587 + b * 114) / 255000 > 0.5 ? [0, 0, 0] : [255, 255, 255]);
+
+export const edge = ({ paper }) => `rgba(${contrast(rgb(paper)).join(', ')}, 0.2)`;
+
+export function stops(ramp, { paper, accent }) {
+  const ground = rgb(paper);
+  const top = contrast(ground);
+  if (ramp === 'tint') return [ground, rgb(accent)];
+  if (ramp === 'fire') return [ground, rgb(palette.orange), rgb(palette.yellow), top];
+  return [ground, rgb(accent), top];
+}
+
+const along = (list, t) => {
+  const k = t * (list.length - 1);
+  const i = Math.min(list.length - 2, Math.floor(k));
+  const f = k - i;
+  return list[i].map((v, c) => Math.round(v + (list[i + 1][c] - v) * f));
+};
+
+export function paint(values, top, list, levels, invert) {
+  const n = Math.max(2, Math.floor(levels));
+  const lut = Array.from({ length: n }, (_, i) => along(list, Number(invert) === 1 ? 1 - i / (n - 1) : i / (n - 1)));
+  const k = top > 0 ? n / top : 0;
   const out = new Uint8ClampedArray(values.length * 4);
   for (let i = 0; i < values.length; i++) {
-    const v = values[i];
-    if (v <= 0) continue;
-    const at = i * 4;
-    out[at] = r;
-    out[at + 1] = g;
-    out[at + 2] = b;
-    out[at + 3] = Math.round(255 * Math.min(1, v / top));
+    const bin = Math.floor(values[i] * k);
+    const [r, g, b] = lut[bin > 0 ? Math.min(n - 1, bin) : 0];
+    out[i * 4] = r;
+    out[i * 4 + 1] = g;
+    out[i * 4 + 2] = b;
+    out[i * 4 + 3] = 255;
+  }
+  return out;
+}
+
+export function cells(data, [r, g, b], ground) {
+  const out = new Uint8ClampedArray(data.length * 4);
+  for (let i = 0; i < data.length; i++) {
+    out[i * 4] = r;
+    out[i * 4 + 1] = g;
+    out[i * 4 + 2] = b;
+    out[i * 4 + 3] = data[i] > 0 ? 255 : ground;
   }
   return out;
 }
 
 /* TIME */
 
-export function turns(rpm, t) {
-  return (rpm * t) / 60000;
-}
-
-export function angle(rpm, t) {
-  const k = turns(rpm, t);
-  return (k - Math.floor(k)) * TAU;
-}
-
 export function step(rpm, dt) {
   return (rpm * 6 * dt) / 1000;
 }
+
+export const spun = (phase, rpm, dt) => (phase + step(rpm, dt)) % 360;
 
 export function seen(deg, order) {
   if (!order) return 0;
@@ -145,12 +208,4 @@ export function pace(dt, was) {
 
 /* STAGE */
 
-export function layout(w, h, show, pad) {
-  if (show !== 'both') return { [show]: { x: w / 2, y: h / 2, r: Math.max(1, Math.min(w, h) / 2 - pad) } };
-  const wide = w >= h;
-  const long = wide ? w : h;
-  const short = wide ? h : w;
-  const r = Math.max(1, Math.min((long - 3 * pad) / 4, short / 2 - pad));
-  const off = r + pad / 2;
-  return wide ? { turn: { x: w / 2 - off, y: h / 2, r }, wheel: { x: w / 2 + off, y: h / 2, r } } : { turn: { x: w / 2, y: h / 2 - off, r }, wheel: { x: w / 2, y: h / 2 + off, r } };
-}
+export const layout = (w, h, pad) => ({ x: w / 2, y: h / 2, r: Math.max(1, Math.min(w, h) / 2 - pad) });

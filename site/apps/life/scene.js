@@ -1,49 +1,63 @@
 import { tidy } from '../../lib/knobs.js';
-import { board, veil } from '../../lib/scene.js';
-import { BOARD, LINE, MASK, ROWS, STARTS, fate, hash, maskName, maskOf, population, ruleOf, sow, windowsOf } from './engine.js';
+import { board, rng, veil } from '../../lib/scene.js';
+import { BOARD, LIMIT, LINE, ROWS, SPANS, STARTS, destiny, dimOf, fate, hash, lattice, maskName, maskOf, population, ruleOf, sow, told } from './engine.js';
 
-const NUMBERS = [3, 5, 7, 9];
+export const PANE = () => false;
+
+const NUMBERS = [3, 5, 7, 9].map((n) => [n, String(n)]);
 const LEVELS = [1, 2, 3];
-
-const LIFE = (value) => value.mode !== 'wolfram';
-const WOLFRAM = (value) => value.mode === 'wolfram';
-const WRAPPED = (value) => value.mode !== 'chladni';
-const MASKED = (value) => value.mode !== 'wolfram' || value.from === 'design';
-const SOUP = (value) => value.from === 'noise';
+const LINES = ['noise', 'one'];
+export const SOUP = (value) => value.from === 'noise';
 
 export const SPEC = [
-  { key: 'mode', label: 'Mode', kind: 'segment', def: 'life', options: [['life', 'Life'], ['chladni', 'Chladni'], ['wolfram', 'Wolfram']], group: 'Rule' },
-  { key: 'born', label: 'Born', kind: 'text', def: '3', group: 'Rule', when: LIFE },
-  { key: 'stay', label: 'Stay', kind: 'text', def: '23', group: 'Rule', when: LIFE },
-  { key: 'rule', label: 'Rule', kind: 'slider', def: 110, min: 0, max: 255, step: 1, group: 'Rule', when: WOLFRAM },
-  { key: 'code', label: 'Code', kind: 'text', def: '7', group: 'Mask', when: MASKED },
-  { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Mask', when: MASKED },
-  { key: 'level', label: 'Level', kind: 'pick', def: 1, options: (value) => LEVELS.filter((n) => value.number ** n <= MASK).map((n) => [n, String(n)]), group: 'Mask', when: LIFE },
-  { key: 'from', label: 'Start', kind: 'pick', def: 'noise', options: STARTS, group: 'Board' },
-  { key: 'density', label: 'Density', kind: 'slider', def: 0.3, min: 0.05, max: 0.95, step: 0.05, group: 'Board', when: SOUP },
-  { key: 'wrap', label: 'Wrap', kind: 'toggle', def: 1, group: 'Board', when: WRAPPED },
-  { key: 'speed', label: 'Speed', kind: 'slider', def: 12, min: 1, max: 60, step: 1, unit: '/s', group: 'Pace' },
+  { key: 'dim', label: 'Dim', kind: 'segment', def: 2, options: [[1, '1D'], [2, '2D']], group: 'Mask', when: PANE },
+  { key: 'code', label: 'Code', kind: 'text', def: '7', group: 'Mask', when: PANE },
+  { key: 'number', label: 'Side', kind: 'pick', def: 3, options: NUMBERS, group: 'Mask', when: PANE },
+  { key: 'level', label: 'Level', kind: 'pick', def: 1, options: (value) => LEVELS.filter((n) => value.number ** n <= SPANS[dimOf(value)]).map((n) => [n, String(n)]), group: 'Mask', when: PANE },
+  { key: 'born', label: 'Born', kind: 'text', def: '3', group: 'Rule', when: PANE },
+  { key: 'stay', label: 'Stay', kind: 'text', def: '23', group: 'Rule', when: PANE },
+  { key: 'wrap', label: 'Wrap', kind: 'toggle', def: 1, group: 'Rule', when: PANE },
+  { key: 'from', label: 'Start', kind: 'pick', def: 'noise', options: (value) => (dimOf(value) === 1 ? STARTS.filter(([one]) => LINES.includes(one)) : STARTS), group: 'Board', when: PANE },
+  { key: 'density', label: 'Density', kind: 'slider', def: 0.3, min: 0.05, max: 0.95, step: 0.01, group: 'Board', when: PANE },
+  { key: 'speed', label: 'Speed', kind: 'slider', def: 25, min: 1, max: 60, step: 1, unit: '/s', group: 'Board', when: PANE },
 ];
+
+export const PRESETS = [
+  ['Conway', { dim: 2, code: '7', number: 3, level: 1, born: '3', stay: '23' }],
+  ['Cantor-Life', { dim: 1, code: '1', number: 3, level: 3, born: '3', stay: '23' }],
+  ['Menger row', { dim: 1, code: '3', number: 3, level: 2, born: '3', stay: '23' }],
+  ['Nine-cell XOR', { dim: 2, code: '15', number: 3, level: 1, born: '1357', stay: '02468' }],
+  ['Rule 150', { dim: 1, code: '1', number: 3, level: 1, born: '1', stay: '02' }],
+];
+
+export const wears = (value, preset) => Object.entries(preset).every(([key, v]) => String(value[key]) === String(v));
+
+export const slug = (text) => String(text).toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
+
+export const worn = (presets, value) => presets.find(([, one]) => wears(value, one))?.[0] ?? '';
 
 export const PAGE = {
   spec: SPEC,
   gestures: true,
   record: true,
+  about: [
+    "Conway's Life is one rule on the eight cells around a cell: a dead cell with three live neighbours is born, a live cell with two or three stays, and every other cell dies.",
+    'Here the neighbourhood is a design. The carpet at side 3, level 1 is the Moore ring; any other code, side and level is another life. Born and Stay count live mask cells, as digits or as a named sequence.',
+    'Paint cells by hand, then press Play. Run to fate replays the board for up to 512 generations and says whether it dies, freezes, loops, or is still moving.',
+    'In 1D the board is one line of 320 cells, drawn top to bottom with the newest row last. Wrap joins the edges. A side-3 line at level 1 runs elementary rules, as on [Wolfram](/wolfram/); the whole family is in [the automata note](/research/automata/).',
+  ],
+  name: (value) => ['life', slug(worn(PRESETS, value) || `${dimOf(value)}d ${value.code} ${value.number} ${value.level} b${value.born} s${value.stay}`), SOUP(value) ? value.seed : slug(value.from)].join('-'),
   keys: [
-    { key: ['n', 'Enter'], label: 'Step', act: 'step' },
+    { key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Pause' : 'Play'), act: 'play', button: true },
+    { key: 'n', label: 'Step', act: 'step' },
+    { key: 'f', label: 'Run to fate', act: 'fate' },
+    { key: ['0', 'Home'], label: 'Reset', act: 'reset' },
     { key: 'c', label: 'Clear', act: 'clear' },
   ],
-  actions: { step: (scene) => scene.step(), clear: (scene) => scene.clear() },
+  actions: { play: (scene) => scene.toggle(), step: (scene) => scene.step(), fate: (scene) => scene.doom(), reset: (scene) => scene.reset(), clear: (scene) => scene.clear() },
 };
 
-export const PRESETS = [
-  ['Bugs', { born: '0.283-0.375', stay: '0.283-0.483', code: '7', number: 3, level: 3, from: 'noise', density: 0.45 }],
-  ['Conway', { born: '0.375', stay: '0.25-0.375', code: '7', number: 3, level: 1 }],
-];
-
 export const units = () => import('./unit.js');
-
-export const BOARD_KEYS = ['mode', 'from', 'code', 'number', 'level', 'density', 'seed'];
 
 export const HOLD = 3000;
 
@@ -51,48 +65,51 @@ const FIT = 0.96;
 const GROUND = 0.07;
 const OLD = 0.55;
 const OPS = 4e6;
-const BURST = 64;
 const STILL = 24;
 const THUMB = 24;
 const EPS = 1e-6;
-const GAP = 4;
-const SHADES = 8;
-const FFT = 8;
+
+/* PAINT */
+
+export function runs(ctx, types, cols, rows, x, y, cell, high = cell) {
+  const snap = cell >= 1 ? Math.round : (n) => n;
+  ctx.beginPath();
+  for (let r = 0; r < rows; r++) {
+    const top = snap(y + r * high);
+    const tall = snap(y + (r + 1) * high) - top;
+    for (let c = 0; c < cols; c++) {
+      if (!types[r * cols + c]) continue;
+      const from = c;
+      while (c + 1 < cols && types[r * cols + c + 1]) c++;
+      const left = snap(x + from * cell);
+      ctx.rect(left, top, snap(x + (c + 1) * cell) - left, tall);
+    }
+  }
+  ctx.fill();
+}
 
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
   const ctx = canvas.getContext('2d');
   const { life, math } = opts;
-  let was = null;
-  let cached = null;
-  const now = () => {
-    const current = opts.live?.current ?? opts;
-    if (current !== was) {
-      was = current;
-      cached = tidy(SPEC, current);
-    }
-    return cached;
-  };
-  const value = now();
-  const flat = value.mode !== 'wolfram';
-  const chladni = value.mode === 'chladni';
-  const { mask, cells, code } = flat ? maskOf(life, value) : { mask: null, cells: 0, code: 0 };
-  const on = flat ? maskName(math, code) : '';
-  const width = flat ? BOARD : LINE;
-  const grain = chladni ? life.chladni.profile(life.chladni.kernel(mask, BOARD)).peak_ring : 0;
-  let types = sow(value, view.rand, math);
-  let age = Uint8Array.from(types);
-  const ring = flat ? null : new Uint8Array(ROWS * LINE);
-  if (ring) ring.set(types, 0);
-  let gen = 0;
-  let origin = 0;
-  let speed = 0;
-  let seen = [];
-  let word = fate(seen, hash(types), population(types));
-  let key = '';
+  let value = { ...tidy(SPEC, opts), seed: opts.seed };
+  let shape = null;
   let rule = null;
   let name = '';
+  let width = BOARD;
+  let height = BOARD;
+  let ring = null;
+  let types = null;
+  let age = null;
+  let gen = 0;
+  let seen = [];
+  let word = '';
+  let verdict = '';
+  let error = '';
+  let pop = 0;
+  let playing = Boolean(view.lock);
+  let origin = 0;
   let lay = null;
   let skin = null;
   let shown = -1;
@@ -101,74 +118,62 @@ export function make(canvas, view, opts = {}) {
   let brush = 1;
   let hands = false;
   let since = -1;
+  const linear = () => shape.dim === 1;
+  const mould = () => {
+    shape = maskOf(life, value);
+    shape.named = maskName(math, shape.code, shape.dim);
+    shape.label = `${shape.named || `code ${shape.code}`}, side ${shape.number}, level ${shape.level}`;
+    width = linear() ? LINE : BOARD;
+    height = linear() ? 1 : BOARD;
+  };
+  const judge = () => {
+    rule = ruleOf(life, value, shape.cells);
+    name = shape.named ? `${rule.name} on ${shape.named}` : rule.name;
+  };
+  const grid = () => ({ shape: [height, width], types });
+  const begin = (next) => {
+    types = next;
+    age = Uint8Array.from(types);
+    ring = linear() ? new Uint8Array(ROWS * LINE) : null;
+    ring?.set(types, 0);
+    gen = 0;
+    seen = [];
+    pop = population(types);
+    word = fate(seen, hash(types), pop);
+    verdict = '';
+    origin = view.t;
+    since = -1;
+    shown = -1;
+  };
+  const sowed = (rand = rng(value.seed)) => begin(sow(value, rand, math, width, height));
   const dress = () => {
     const { accent } = view.look();
     skin = { ink: accent, dim: veil(accent, GROUND) };
   };
-  const read = () => {
-    const live = now();
-    if (flat) {
-      const at = `${live.born}|${live.stay}`;
-      if (at !== key) {
-        key = at;
-        rule = chladni ? windowsOf(life, live, cells) : ruleOf(life, live, cells);
-        name = on ? `${rule.name} on ${on}` : rule.name;
-      }
-    } else if (live.rule !== rule) {
-      rule = live.rule;
-      const gasket = life.gasket(rule);
-      name = gasket ? `${life.rule_name(rule)} draws ${gasket}` : life.rule_name(rule);
-    }
-    return live;
-  };
-  const tell = () => !gone && opts.onStat?.({ gen, pop: population(types), fate: word, name, counts: flat && !chladni ? [rule.birth, rule.survive] : null, wave: chladni ? life.chladni.profile({ shape: [BOARD, BOARD], types }).wavelength : null });
-  const advance = (live) => {
-    if (chladni) {
-      types = life.chladni.next({ shape: [BOARD, BOARD], types }, mask, rule.birth, rule.survive).types;
-      for (let i = 0; i < types.length; i++) age[i] = types[i] ? Math.min(255, age[i] + 1) : 0;
-    } else if (flat) {
-      types = life.next_grid({ shape: [BOARD, BOARD], types }, rule.birth, rule.survive, mask, live.wrap ? 'Wrap' : 'Constant').types;
-      for (let i = 0; i < types.length; i++) age[i] = types[i] ? Math.min(255, age[i] + 1) : 0;
-    } else {
-      types = life.step(types, rule, Boolean(live.wrap));
-      ring.set(types, ((gen + 1) % ROWS) * LINE);
-    }
+  const tell = () => !gone && opts.onStat?.({ gen, pop, fate: verdict || word, name, counts: [rule.birth, rule.survive], mask: shape.mask, cells: shape.cells, lattice: lattice(shape.lattice), label: shape.label, error });
+  const advance = () => {
+    types = life.next_grid(grid(), rule.birth, rule.survive, shape.mask, value.wrap ? 'Wrap' : 'Constant').types;
+    if (ring) ring.set(types, ((gen + 1) % ROWS) * LINE);
+    else for (let i = 0; i < types.length; i++) age[i] = types[i] ? Math.min(255, age[i] + 1) : 0;
     gen++;
-    word = fate(seen, hash(types), population(types));
+    pop = population(types);
+    word = fate(seen, hash(types), pop);
   };
-  const reseed = (live) => {
-    types = sow(live, view.rand, math);
-    age = Uint8Array.from(types);
-    if (ring) {
-      ring.fill(0);
-      ring.set(types, 0);
-    }
-    gen = 0;
-    seen = [];
-    word = fate(seen, hash(types), population(types));
-    origin = view.t;
-    since = -1;
-    tell();
-    whole();
-  };
-  const settle = (live) => {
+  const settle = () => {
     if (hands || !word) {
       since = -1;
       return;
     }
     if (since < 0) since = view.t;
-    else if (view.t - since >= HOLD) reseed(live);
-  };
-  const budget = () => (chladni ? FFT : flat ? Math.max(1, Math.min(32, Math.floor(OPS / (types.length * Math.max(1, cells))))) : BURST);
-  const layout = () => {
-    if (chladni) {
-      const wide = view.w >= view.h;
-      const span = 2 * BOARD + GAP;
-      const box = board(view, wide ? span : BOARD, wide ? BOARD : span, FIT);
-      const shift = (BOARD + GAP) * box.cell;
-      return { ...box, sx: box.x + (wide ? shift : 0), sy: box.y + (wide ? 0 : shift) };
+    else if (view.t - since >= HOLD) {
+      begin(sow(value, view.rand, math, width, height));
+      tell();
+      whole();
     }
-    if (flat) return board(view, BOARD, BOARD, FIT);
+  };
+  const budget = () => Math.max(1, Math.min(32, Math.floor(OPS / (types.length * Math.max(1, shape.cells)))));
+  const layout = () => {
+    if (!linear()) return board(view, BOARD, BOARD, FIT);
     const cell = Math.max(1, Math.floor((view.w * FIT) / LINE));
     const rows = Math.max(1, Math.min(ROWS, Math.floor((view.h * FIT) / cell)));
     return { x: Math.floor((view.w - LINE * cell) / 2), y: Math.floor((view.h - rows * cell) / 2), w: LINE * cell, h: rows * cell, cell, rows };
@@ -177,36 +182,6 @@ export function make(canvas, view, opts = {}) {
     ctx.fillStyle = skin.dim;
     ctx.fillRect(x, y, w, h);
     ctx.fillStyle = skin.ink;
-  };
-  const circle = (radius, alpha) => {
-    if (radius <= 0) return;
-    const { sx, sy, cell } = lay;
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = skin.ink;
-    ctx.lineWidth = Math.max(1, cell / 2);
-    ctx.beginPath();
-    ctx.arc(sx + (BOARD / 2) * cell, sy + (BOARD / 2) * cell, radius * cell, 0, 2 * Math.PI);
-    ctx.stroke();
-  };
-  const spectrumPaint = () => {
-    const { sx, sy, cell } = lay;
-    const grid = { shape: [BOARD, BOARD], types };
-    const glow = life.chladni.spectrum(grid);
-    ground(sx, sy, BOARD * cell, BOARD * cell);
-    const shades = Array.from({ length: SHADES }, () => []);
-    for (let i = 0; i < glow.length; i++) {
-      const k = Math.min(SHADES - 1, Math.floor(glow[i] * SHADES));
-      if (k > 0) shades[k].push(i);
-    }
-    for (let k = 1; k < SHADES; k++) {
-      ctx.globalAlpha = k / (SHADES - 1);
-      ctx.beginPath();
-      for (const i of shades[k]) ctx.rect(sx + (i % BOARD) * cell, sy + Math.floor(i / BOARD) * cell, cell, cell);
-      ctx.fill();
-    }
-    circle(grain, OLD);
-    circle(life.chladni.profile(grid).peak_ring, 1);
-    ctx.globalAlpha = 1;
   };
   const flatPaint = () => {
     const { x, y, cell } = lay;
@@ -219,17 +194,10 @@ export function make(canvas, view, opts = {}) {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-    if (chladni) spectrumPaint();
   };
   const first = () => Math.max(0, gen - lay.rows + 1);
   const band = (g) => lay.y + (g - first()) * lay.cell;
-  const row = (g) => {
-    const at = (g % ROWS) * LINE;
-    const y = band(g);
-    ctx.beginPath();
-    for (let i = 0; i < LINE; i++) if (ring[at + i]) ctx.rect(lay.x + i * lay.cell, y, lay.cell, lay.cell);
-    ctx.fill();
-  };
+  const row = (g) => runs(ctx, ring.subarray((g % ROWS) * LINE, (g % ROWS) * LINE + LINE), LINE, 1, lay.x, band(g), lay.cell);
   const sheet = () => {
     ctx.clearRect(0, 0, view.w, view.h);
     ground(lay.x, lay.y, lay.w, lay.h);
@@ -255,7 +223,7 @@ export function make(canvas, view, opts = {}) {
   const paint = (full) => {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
-    if (flat) flatPaint();
+    if (!linear()) flatPaint();
     else if (full || shown < 0 || gen < shown) sheet();
     else if (gen === shown) {
       ctx.clearRect(lay.x, band(gen), lay.w, lay.cell);
@@ -277,38 +245,60 @@ export function make(canvas, view, opts = {}) {
     whole();
   };
   const draw = () => {
-    const live = read();
-    if (live.speed !== speed) {
-      speed = live.speed;
-      origin = view.t - (gen * 1000) / speed;
+    if (view.fixed && !playing) toggle();
+    if (playing) {
+      const speed = value.speed;
+      const need = Math.floor(((view.t - origin) * speed) / 1000 + EPS) - gen;
+      if (need > 0) {
+        const n = Math.min(need, budget());
+        for (let i = 0; i < n; i++) advance();
+        if (need > n) origin = view.t - (gen * 1000) / speed;
+        dirty = true;
+        tell();
+      }
     }
-    const target = Math.floor(((view.t - origin) * speed) / 1000 + EPS);
-    const need = target - gen;
-    if (need > 0) {
-      const n = Math.min(need, budget());
-      for (let i = 0; i < n; i++) advance(live);
-      if (need > n) origin = view.t - (gen * 1000) / speed;
-      dirty = true;
-      tell();
-    }
-    settle(live);
+    if (view.lock) settle();
     if (dirty) paint(false);
   };
+  const toggle = () => {
+    playing = !playing;
+    if (playing) {
+      origin = view.t - (gen * 1000) / value.speed;
+      view.wake?.();
+    }
+    tell();
+  };
   const step = () => {
-    advance(read());
-    if (speed) origin -= 1000 / speed;
+    advance();
+    origin -= 1000 / value.speed;
     tell();
     paint(false);
   };
+  const doom = () => {
+    try {
+      verdict = told(destiny(life, grid(), shape.mask, rule, value.wrap, LIMIT));
+      error = '';
+    } catch (thrown) {
+      error = String(thrown?.message ?? thrown);
+    }
+    tell();
+  };
+  const reset = () => {
+    playing = false;
+    sowed();
+    tell();
+    whole();
+  };
   const clear = () => {
-    read();
     hands = true;
     types = new Uint8Array(types.length);
     age = new Uint8Array(types.length);
-    if (ring) ring.fill(0, 0, LINE);
+    ring?.fill(0);
     gen = 0;
     seen = [];
+    pop = 0;
     word = fate(seen, hash(types), 0);
+    verdict = '';
     origin = view.t;
     tell();
     whole();
@@ -316,9 +306,9 @@ export function make(canvas, view, opts = {}) {
   const touch = (u, v, start) => {
     const { x, y, cell } = lay;
     const col = Math.floor((u * view.w - x) / cell);
-    const line = flat ? Math.floor((v * view.h - y) / cell) : 0;
-    if (col < 0 || col >= width || line < 0 || line >= (flat ? BOARD : 1)) return;
-    if (!flat && Math.abs(v * view.h - band(gen) - cell / 2) > Math.max(cell, THUMB * view.dpr)) return;
+    const line = linear() ? 0 : Math.floor((v * view.h - y) / cell);
+    if (col < 0 || col >= width || line < 0 || line >= height) return;
+    if (linear() && Math.abs(v * view.h - band(gen) - cell / 2) > Math.max(cell, THUMB * view.dpr)) return;
     const i = line * width + col;
     hands = true;
     if (start) brush = types[i] ? 0 : 1;
@@ -327,29 +317,37 @@ export function make(canvas, view, opts = {}) {
     age[i] = brush;
     if (ring) ring[(gen % ROWS) * LINE + i] = brush;
     seen = [];
-    word = fate(seen, hash(types), population(types));
+    pop = population(types);
+    word = fate(seen, hash(types), pop);
+    verdict = '';
     tell();
-    paint(false);
+    paint(!linear());
+  };
+  const set = (next) => {
+    const was = value;
+    value = { ...tidy(SPEC, next), seed: next.seed };
+    const moved = (...keys) => keys.some((key) => String(value[key]) !== String(was[key]));
+    if (moved('dim', 'code', 'number', 'level')) mould();
+    if (moved('dim', 'code', 'number', 'level', 'born', 'stay')) judge();
+    if (moved('dim', 'from', 'density', 'seed') || (value.from === 'design' && moved('code', 'number'))) sowed();
+    else if (moved('dim', 'code', 'number', 'level', 'born', 'stay', 'wrap')) verdict = '';
+    if (moved('speed')) origin = view.t - (gen * 1000) / value.speed;
+    tell();
+    whole();
   };
   const stop = () => {
     gone = true;
   };
   dress();
-  speed = read().speed;
-  if (view.still) {
+  mould();
+  judge();
+  sowed(view.rand);
+  if (view.still && view.lock) {
     lay = layout();
-    const live = now();
-    if (chladni && live.from === 'noise') {
-      types = life.chladni.run(mask, rule.birth, rule.survive, BOARD, STILL, live.density, Number(opts.seed) || 0).types;
-      age = Uint8Array.from(types);
-      gen = STILL;
-      word = fate(seen, hash(types), population(types));
-    } else {
-      const n = flat ? Math.min(STILL, budget()) : lay.rows - 1;
-      for (let i = 0; i < n; i++) advance(live);
-    }
+    const n = linear() ? lay.rows - 1 : Math.min(STILL, budget());
+    for (let i = 0; i < n; i++) advance();
   }
   whole();
   tell();
-  return { draw, size: whole, theme, step, clear, touch, stop };
+  return { draw, size: whole, theme, set, toggle, playing: () => playing, step, doom, reset, clear, touch, stop };
 }

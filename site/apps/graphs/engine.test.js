@@ -1,102 +1,75 @@
 import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
 import { rng } from '../../lib/scene.js';
-import { BUDGET, HOLD, SETTLE, TICK, bound, bounds, cap, choose, cube, joined, lay, order, pace, picture, reached, share, steady, study, ticks, turn, worthy } from './engine.js';
+import { BUDGET, FIRST, TICK, bound, bounds, cube, deal, design, giant, graphs, kindOf, lay, pace, picture, quick, study, top, turn, worthy } from './engine.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
-const value = { dim: 2, base: 3, code: '495', number: 3, level: 2, graph: 'core', layout: 'grid' };
+const value = { view: 'flat', base: 3, code: '495', cbase: 2, ccode: '23', number: 3, level: 2, graph: 'core', layout: 'lattice' };
 
-test('the level cap keeps the lattice sites, or the corners of an edge graph, inside the budget of the layout', () => {
-  expect([bound(2, 3, 3, 'core'), bound(2, 3, 3, 'edge'), bound(3, 3, 2, 'tunnel')]).toEqual([729, 784, 729]);
-  expect(cap({ dim: 2, number: 3, graph: '', layout: '' })).toBe(3);
-  expect(cap({ dim: 2, number: 3, graph: 'core', layout: 'grid' })).toBe(4);
-  expect(cap({ dim: 3, number: 3, graph: '', layout: '' })).toBe(2);
-  expect(cap({ dim: 3, number: 3, graph: 'core', layout: 'grid' })).toBe(3);
-  expect(cap({ dim: 3, number: 3, graph: 'edge', layout: 'grid' })).toBe(2);
-  expect(cap({ dim: '3', number: 7, graph: '', layout: 'force' })).toBe(1);
-  expect(bound(2, 3, cap({ dim: 2, number: 3, graph: 'edge', layout: 'force' }), 'edge')).toBeLessThanOrEqual(BUDGET.force);
+test('the level cap reads the design through the count doors and stops at the deepest level whose network fits the layout budget', () => {
+  const caps = [top(math, value), top(math, { ...value, layout: 'force' }), top(math, { ...value, view: 'cube' }), top(math, { ...value, view: 'cube', graph: 'edge' }), top(math, { ...value, view: 'hex' }), top(math, { ...value, code: 'junk' })];
+  expect(caps).toEqual([4, 3, 3, 2, 3, FIRST]);
+  const at = (level) => bound(math, 'flat', 3, '495', 3, level, 'core');
+  expect([at(4), at(5)]).toEqual([4096, 32768]);
+  expect(at(4) <= BUDGET.lattice && at(5) > BUDGET.lattice).toBe(true);
 });
 
-test('a blank graph or layout is rolled from the seed, a named one is kept, and the arrows cycle the graphs', () => {
-  expect(choose({ graph: 'edge', layout: 'force' }, rng(1))).toEqual({ graph: 'edge', layout: 'force' });
-  const rolled = Array.from({ length: 40 }, (_, seed) => choose({ graph: '', layout: '' }, rng(seed)));
-  expect(new Set(rolled.map((one) => one.graph)).size).toBe(3);
-  expect(new Set(rolled.map((one) => one.layout)).size).toBe(2);
-  expect(choose({ graph: '', layout: '' }, rng(5))).toEqual(choose({ graph: '', layout: '' }, rng(5)));
-  expect([turn('core', 1), turn('tunnel', 1), turn('core', -1), turn('', 1)]).toEqual(['edge', 'core', 'tunnel', 'edge']);
+test('a sparse design climbs past the full-lattice cap until its grid of cells would stall the build', () => {
+  expect([bound(math, 'flat', 3, '264', 3, 8, 'edge'), top(math, { ...value, code: '264', graph: 'edge' }), top(math, { ...value, code: '264', graph: 'edge', number: 5 })]).toEqual([1024, 6, 4]);
 });
 
-test('the reveal walks the largest piece first from its node nearest the centre, then the rest by size, and a branch shows once both ends do', () => {
-  const positions = Float64Array.from([0, 0, 1, 0, 2, 0, 3, 0, 5, 5, 0, 1, 0, 2]);
-  const pairs = Uint32Array.from([0, 1, 1, 2, 2, 3, 5, 6]);
-  const laid = order(7, pairs, positions, 2);
-  expect(laid.pieces).toBe(3);
-  expect([...laid.nodes]).toEqual([2, 1, 3, 0, 5, 6, 4]);
-  expect([...laid.rank]).toEqual([3, 1, 0, 2, 6, 4, 5]);
-  expect([...laid.branches]).toEqual([1, 2, 0, 3]);
-  expect([...laid.shown]).toEqual([0, 0, 1, 2, 3, 3, 4, 4]);
+test('the flat space reads code and base, the cube and the hex slice read their own ccode and cbase, and each space offers its own graphs', () => {
+  expect([design(value), design({ ...value, view: 'cube' }), design({ ...value, view: 'hex' })]).toEqual([{ dim: 2, base: 3, code: '495' }, { dim: 3, base: 2, code: '23' }, { dim: 3, base: 2, code: '23' }]);
+  expect([graphs(value).map(([one]) => one), graphs({ view: 'hex' }).map(([one]) => one)]).toEqual([['core', 'edge', 'tunnel'], ['core', 'dual', 'edge']]);
+  expect([kindOf({ view: 'hex', graph: 'tunnel' }), turn({ view: 'hex', graph: 'edge' }, 1), turn(value, -1)]).toEqual(['core', 'core', 'tunnel']);
 });
 
-test('the study reads the network of a design through the unit: its counts, its roles in reveal order and the design\'s own Euler number', () => {
+test('the study reads the network of a flat design: its counts and the design\'s own Euler number', () => {
   const plan = study(math, value, rng(1));
-  expect(plan.facts).toMatchObject({ code: '495', dim: 2, base: 3, number: 3, level: 2, side: 9, graph: 'core', layout: 'grid', nodes: 64, branches: 88, tips: 0, junctions: 44, pieces: 1, length: 88, euler: -8 });
+  expect(plan.facts).toMatchObject({ code: '495', name: 'carpet', space: 'flat', level: 2, top: 4, side: 9, graph: 'core', layout: 'lattice', nodes: 64, branches: 88, tips: 0, junctions: 44, pieces: 1, length: 88, euler: -8 });
   expect(plan.facts.box).toBeCloseTo(1.57, 2);
-  expect([plan.count, plan.positions.length, plan.pairs.length, plan.order.nodes.length, plan.shade.nodes.length, plan.shade.branches.length]).toEqual([64, 128, 176, 64, 64, 88]);
-  expect([...new Set(plan.order.nodes)].length).toBe(64);
-  expect(plan.shade.nodes.filter((s) => s === 3).length).toBe(44);
-  expect(plan.shade.branches.every((s) => s >= 2)).toBe(true);
+  expect([plan.dim, plan.count, plan.positions.length, plan.pairs.length, plan.shade.branches.length]).toEqual([2, 64, 128, 176, 88]);
   plan.net.free();
 });
 
-test('a blank code is rolled from the seed, a cube reads through the three doors, and the same seed gives the same plan', () => {
-  const a = study(math, { ...value, code: '', graph: '', layout: '' }, rng(3));
-  const b = study(math, { ...value, code: '', graph: '', layout: '' }, rng(3));
-  expect([a.facts.code, a.facts.graph, a.facts.layout]).toEqual([b.facts.code, b.facts.graph, b.facts.layout]);
-  expect(a.facts.code).not.toBe('');
-  const cube3 = study(math, { ...value, dim: 3, base: 2, code: '23', graph: 'tunnel' }, rng(1));
-  expect(cube3.facts).toMatchObject({ dim: 3, side: 9, nodes: 329, branches: 600, tips: 48, pieces: 1, euler: -80 });
-  expect(cube3.positions.length).toBe(329 * 3);
-  a.net.free();
-  b.net.free();
-  cube3.net.free();
+test('a cube reads through the three doors and its hex slice through the six doors, triangles at their true aspect', () => {
+  const solid = study(math, { ...value, view: 'cube', graph: 'tunnel' }, rng(1));
+  expect(solid.facts).toMatchObject({ dim: 3, side: 9, nodes: 329, branches: 600, tips: 48, pieces: 1, euler: -80 });
+  expect(solid.positions.length).toBe(329 * 3);
+  const hex = study(math, { ...value, view: 'hex' }, rng(1));
+  expect(hex.facts).toMatchObject({ space: 'hex', code: '23', nodes: 306, branches: 378, euler: -6 });
+  expect([hex.dim, hex.facts.length]).toEqual([2, expect.any(Number)]);
+  expect(hex.facts.length).toBeCloseTo(378 / Math.sqrt(3), 6);
+  const dual = study(math, { ...value, view: 'hex', graph: 'dual' }, rng(1));
+  expect([dual.facts.graph, dual.facts.nodes]).toEqual(['dual', 486]);
+  [solid, hex, dual].forEach((plan) => plan.net.free());
 });
 
-test('a rolled code and graph skip networks that are bare, mostly lone dots or in many pieces, and a named pair is kept as asked', () => {
-  const flat = { ...value, base: 2, level: 3, code: '', graph: '', layout: 'grid' };
-  const rolled = Array.from({ length: 120 }, (_, seed) => {
-    const plan = study(math, flat, rng(seed));
+test('a deal rolls a worthy code, graph, level and layout from the seed, the same seed the same deal', () => {
+  const dealt = Array.from({ length: 40 }, (_, seed) => deal(math, value, rng(seed)));
+  expect(deal(math, value, rng(7))).toEqual(dealt[7]);
+  expect(new Set(dealt.map((one) => one.graph)).size).toBe(3);
+  expect(new Set(dealt.map((one) => one.layout))).toEqual(new Set(['lattice', 'force']));
+  const fine = dealt.map((one) => {
+    const plan = study(math, { ...value, ...one }, rng(1));
+    const good = one.level >= 2 && one.level <= top(math, { ...value, ...one }) && worthy(plan.shade.nodes, giant(math, plan.net));
     plan.net.free();
-    return plan.facts.branches > 0 && worthy(plan.roles, plan.big);
+    return good;
   });
-  expect(rolled.every(Boolean)).toBe(true);
-  const full = study(math, { ...flat, code: '15', graph: 'tunnel' }, rng(1));
-  expect([full.facts.code, full.facts.graph, full.facts.branches]).toEqual(['15', 'tunnel', 0]);
-  full.net.free();
+  expect(fine.every(Boolean)).toBe(true);
+  const cubed = deal(math, { ...value, view: 'cube' }, rng(3));
+  expect(Object.keys(cubed).sort()).toEqual(['ccode', 'graph', 'layout', 'level']);
 });
 
-test('a rolled layout rests on the grid when the network is in pieces, since a force would fling them apart, and a named layout is kept', () => {
-  const dust = { ...value, level: 3, code: '25', graph: 'core', layout: '' };
-  const rolled = study(math, dust, rng(1));
-  const asked = study(math, { ...dust, layout: 'force' }, rng(1));
-  expect([rolled.facts.pieces, rolled.big, rolled.facts.layout, asked.facts.layout]).toEqual([9, 3, 'grid', 'force']);
-  expect([joined(3, 27), joined(24, 27), joined(25, 27)]).toEqual([false, false, true]);
-  rolled.net.free();
-  asked.net.free();
+test('a deal that rolls only the layout rests a network in pieces on the lattice, since a force would fling the pieces apart', () => {
+  const dust = { ...value, level: 3, code: '25' };
+  expect(deal(math, dust, rng(1), { code: false, graph: false, level: false, layout: true })).toEqual({ code: '25', graph: 'core', level: 3, layout: 'lattice' });
 });
 
-test('the reveal share runs over the span, holds, and loops; the ticks follow it and settle; a still shows everything settled', () => {
-  expect([share(0, 8000, false), share(4000, 8000, false), share(8000, 8000, false), share(8000 + HOLD - 1, 8000, false)]).toEqual([0, 0.5, 1, 1]);
-  expect(share(8000 + HOLD + 400, 8000, false)).toBeCloseTo(0.05, 9);
-  expect([share(5, 0, false), share(5, 8000, true)]).toEqual([1, 1]);
-  expect([ticks(0, 0, false), ticks(TICK * 10, 0, false), ticks(1e7, 0, false), ticks(0, 8000, true)]).toEqual([0, 10, SETTLE, SETTLE]);
-  expect(ticks(8000 + HOLD + TICK * 3, 8000, false)).toBe(3);
-  expect([reached(0.5, 100, 2), reached(0.5, 100, 3), reached(1, 7, 2)]).toEqual([25, 13, 7]);
-});
-
-test('a bigger network ticks slower so a frame steps what a phone can, and a still settles only what it can afford at once', () => {
-  expect([pace(100, 2), pace(900, 3), ticks(500, 0, false, pace(900, 3))]).toEqual([TICK, 25, 20]);
-  expect([steady('force', 100, 2, true), steady('force', 400, 2, true), steady('force', 400, 2, false), steady('grid', 400, 2, true)]).toEqual(['force', 'grid', 'force', 'grid']);
+test('a bigger network ticks slower so a frame steps what a phone can, and a still settles at once only what it can afford', () => {
+  expect([pace(64, 2), pace(2000, 2) > pace(1000, 2), pace(2000, 3) > pace(2000, 2)]).toEqual([TICK, true, true]);
+  expect([quick(100, 2), quick(2000, 2)]).toEqual([true, false]);
 });
 
 test('the fit boxes the positions, lays them centred with y down, and normalises a cube into the unit box', () => {

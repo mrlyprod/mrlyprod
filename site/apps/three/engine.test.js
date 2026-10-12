@@ -1,88 +1,64 @@
 import { expect, test } from 'bun:test';
 import * as math from '../../../pkgs/mrlyjs/math.js';
-import { defaults } from '../../lib/knobs.js';
-import { rng } from '../../lib/scene.js';
-import { DIM, SHAPES, cutting, design, grow, rows, staged, study, tag } from './engine.js';
-import { SPEC } from './scene.js';
+import { ink } from '../../../pkgs/mrlyjs/view/index.js';
+import { light } from '../../kit/theme/theme.js';
+import { SHAPES, cap, circle, colorizer, cropped, design, field, grown, odd, plane, reading, region, shell, walls } from './engine.js';
 
 math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
-const value = (over) => ({ ...defaults(SPEC), seed: 1, base: 2, code: '23', ...over });
+const carpet = () => grown(math, '23', 2, 3, 3);
 
-test('grow caps the level at the number, cutting keeps only the keys the view uses, and staged hands the scene nothing else', () => {
-  expect([grow({ number: 3, level: 5 }, { math }), grow({ number: '2', level: '5' }, { math }), grow({ number: 9, level: 0 }, { math })]).toEqual([{ number: 3, level: 3 }, { number: 2, level: 5 }, { number: 3, level: 1 }]);
-  expect(rows('solid').map((row) => row.key)).toEqual(['view']);
-  expect([rows('slice'), rows('diagonal'), rows('hex')].map((list) => list.map((row) => row.key))).toEqual([['view', 'axis', 'at'], ['view', 'at'], ['view']]);
-  expect(cutting({ view: 'slice', axis: '1', at: 0.25 })).toEqual({ view: 'slice', axis: 1, at: 0.25 });
-  expect(cutting({ view: 'bogus', axis: 1, at: 0.25 })).toEqual({ view: 'solid' });
-  const value = { seed: 1, base: 2, code: '23', number: 4, level: 5, view: 'hex', axis: 1, at: 0.3, crop: '', radius: 16, spin: 1, tint: '' };
-  expect(staged(value, { math })).toEqual({ seed: 1, base: 2, code: '23', crop: '', radius: 16, spin: 1, tint: '', number: 4, level: 2, view: 'hex' });
-  expect(staged({ ...value, at: 0.9 }, { math })).toEqual(staged(value, { math }));
+test("the level reaches the demo's side of 128, and 81 under a crop", () => {
+  expect([2, 3, 4, 5].map((n) => cap(math, n))).toEqual([7, 4, 3, 3]);
+  expect([2, 3, 4, 5].map((n) => cap(math, n, 'ball'))).toEqual([6, 4, 3, 2]);
 });
 
-test("the shapes of the spec are the crate's named 3D shapes", () => {
-  expect(SHAPES).toEqual(math.shape.shapes(DIM));
+test('a blank code is the carpet and a given code is kept', () => {
+  expect([design(math, { base: 2, code: '' }), design(math, { base: 2, code: ' 126 ' }), design(math, { base: 3, code: '100' })]).toEqual([{ base: 2, code: '23' }, { base: 2, code: '126' }, { base: 3, code: '100' }]);
 });
 
-test('a blank code rolls one from the seed, never the empty design, and a given code is kept', () => {
-  const rolled = (seed) => design(math, value({ code: '' }), rng(seed)).code;
-  expect(rolled(9)).toBe(rolled(9));
-  expect(new Set(Array.from({ length: 12 }, (_, i) => rolled(i + 1))).size).toBeGreaterThan(1);
-  expect(Array.from({ length: 40 }, (_, i) => rolled(i)).includes('0')).toBe(false);
-  expect(design(math, value({ code: ' 23 ' }), rng(1))).toEqual({ base: 2, code: '23' });
-  expect(design(math, value({ base: 3, code: '100' }), rng(1))).toEqual({ base: 3, code: '100' });
+test("the shapes are the crate's named 3D shapes", () => {
+  expect(SHAPES).toEqual(math.shape.shapes(3));
 });
 
-test('the carpet of 3 at level 3 reads its name, counts and dimension, and a level past the cap steps down', () => {
-  const plan = study(math, value({}), rng(1));
-  expect(plan.facts).toMatchObject({ code: '23', base: 2, number: 3, level: 3, side: 27, name: 'carpet', title: 'bang dim 3, code 23', fills: 8000, voids: 11683, surface: 18048, faces: 33024, euler: -1408, crop: null });
-  expect(plan.facts.dimension).toBeCloseTo(Math.log(20) / Math.log(3), 6);
-  expect(plan.cut).toBeNull();
-  expect(study(math, value({ number: 5, level: 5 }), rng(1)).facts).toMatchObject({ level: 2, side: 25 });
-  expect(study(math, value({ number: 2, level: 5 }), rng(1)).facts).toMatchObject({ level: 5, side: 32 });
-  expect(study(math, value({ base: 3, code: '100', level: 2 }), rng(1)).facts).toMatchObject({ base: 3, side: 9, fills: 9, title: 'bang dim 3, base 3, code 100' });
+test('a crop tallies in, cut and out; inside keeps fewer cells than touching; anti keeps the outside', () => {
+  const at = (over) => cropped(math, carpet(), { crop: 'ball', radius: 60, anti: 0, policy: 'touching', ...over });
+  expect([at({}).in, at({}).cut, at({}).out]).toEqual([2320, 1224, 4456]);
+  expect([math.three.fills(at({ policy: 'inside' }).cell), math.three.fills(at({}).cell)]).toEqual([2320, 3544]);
+  expect([at({ anti: 1 }).in, at({ anti: 1 }).out]).toEqual([4456, 2320]);
+  expect(at({}).after).toBe(Number(math.three.surface(at({}).cell)));
 });
 
-test('the status tag is short: a name or the word code, then the code, led by b3 on base 3', () => {
-  const read = (over) => tag(study(math, value(over), rng(1)).facts);
-  expect([read({}), read({ code: '70' }), read({ base: 3, code: '100', level: 2 })]).toEqual(['carpet 23', 'code 70', 'b3 code 100']);
+test("the exact walls of a box keep the mesh box the shape covers, in the mesh's own units", () => {
+  const planes = walls(region(math, 'box', 30, false));
+  const keeps = (p) => planes.every(({ normal, constant }) => normal[0] * p[0] + normal[1] * p[1] + normal[2] * p[2] + constant >= -1e-9);
+  expect(planes.length).toBe(6);
+  expect([keeps([0.5, 0.5, -0.5]), keeps([0.51, 0, 0]), keeps([0, 0, -0.51])]).toEqual([true, false, false]);
+  expect(walls(region(math, 'ball', 30, false))).toBeNull();
 });
 
-test('a ball crop keeps the touching cells and tallies the filled cells in, cut and out', () => {
-  const plan = study(math, value({ crop: 'ball', radius: 16 }), rng(1));
-  expect(plan.facts.crop).toEqual({ in: 2320, cut: 1224, out: 4456 });
-  expect([plan.facts.fills, plan.facts.surface, plan.cell.shape]).toEqual([2320 + 1224, 8400, [27, 27, 27]]);
-  expect(study(math, value({ crop: 'ball', radius: 32 }), rng(1)).facts.fills).toBe(8000);
-  expect(study(math, value({ crop: 'box', radius: 8 }), rng(1)).facts.fills).toBeLessThan(8000);
+test("the circle count about the corner matches the crate's own sponge reading, clamped to the grid", () => {
+  const count = circle(math, { code: '23', base: 2 }, { number: 3, count: 4, centre: 'corner' });
+  expect([count.side, count.top, count.mass]).toEqual([81, 80, 20]);
+  expect(count.seen.slice(1, 9)).toEqual([1, 4, 13, 28, 47, 65, 95, 137]);
+  expect(reading(count, 2)).toEqual({ at: 2, seen: 4, inside: 1, cut: 6 });
+  expect(reading(count, 500).at).toBe(80);
+  expect(circle(math, { code: '23', base: 2 }, { number: 3, count: 4, centre: 'centre' }).top).toBe(40);
 });
 
-test('a slice fixes one axis at the plane and reads the flat census', () => {
-  const plan = study(math, value({ view: 'slice', axis: 2, at: 0.5 }), rng(1));
-  expect([plan.cut.kind, plan.cut.side, plan.cut.flat.shape]).toEqual(['slice', 27, [27, 27]]);
-  expect(plan.cut.facts).toEqual({ reading: 'z 14 of 27', fills: 64, voids: 665, euler: 64 });
-  expect(study(math, value({ view: 'slice', axis: 0, at: 0 }), rng(1)).cut.facts.reading).toBe('x 1 of 27');
-  expect(study(math, value({ view: 'slice', axis: 1, at: 1 }), rng(1)).cut.facts.reading).toBe('y 27 of 27');
+test('the field stacks the odd scales, its shell keeps the voxels at the threshold, and a plane is clear outside the cube', () => {
+  const made = field(math, { code: '23', base: 2 }, { limit: 7, combine: 'sum', depth: 1, size: 64 });
+  expect([odd(7), made.layers, made.voxels, made.min, made.max]).toEqual([[1, 3, 5, 7], 4, 262144, 1, 4]);
+  const top = shell(math, made, { threshold: 4, crop: '' });
+  expect([top.count, top.faces, math.three.fills(top.cell)]).toEqual([76608, 42408, 76608]);
+  const paint = { colorizer: colorizer(ink(light), 'fire', 16), levels: 16, invert: 0 };
+  const cut = plane(math, made, 'd', 0.5, paint);
+  expect([cut.pixels.shape, cut.frame.normal.map((v) => +v.toFixed(3))]).toEqual([[384, 384], [0.577, 0.577, 0.577]]);
+  expect([cut.pixels.colors[3], cut.pixels.colors[(192 * 384 + 192) * 4 + 3]]).toEqual([0, 255]);
+  expect(plane(math, made, 'd', 0.5, paint)).toBe(cut);
 });
 
-test('a diagonal cut lists the filled cells on x + y + z = height, projected, and only those the crop keeps', () => {
-  const plan = study(math, value({ view: 'diagonal', at: 0.5 }), rng(1));
-  expect([plan.cut.kind, plan.cut.height, plan.cut.points.length]).toEqual(['diagonal', 39, 306]);
-  expect(plan.cut.facts).toEqual({ reading: 'height 39 of 78', cells: 306, support: '0 to 78', least: 1, most: 306, constant: 'no' });
-  const [xtree] = math.name.words(DIM, 2).find(([, name]) => name === 'xtree');
-  const lean = study(math, value({ view: 'diagonal', code: xtree, level: 2, at: 0.3 }), rng(1));
-  expect(lean.cut.facts.cells).toBe(math.three.diagonal_slice(xtree, 3, 2, 2, lean.cut.height).length);
-  const cropped = study(math, value({ view: 'diagonal', at: 0.5, crop: 'ball', radius: 16 }), rng(1));
-  expect([cropped.cut.points.length > 0, cropped.cut.points.length < 306]).toEqual([true, true]);
-  const gasket = study(math, value({ view: 'diagonal', code: '126', number: 2, level: 4, at: 0.4 }), rng(1));
-  expect(gasket.cut.facts).toMatchObject({ least: 81, most: 81, constant: 'yes' });
-  const empty = study(math, value({ view: 'diagonal', code: '0' }), rng(1));
-  expect([empty.cut.points, empty.cut.facts.support, empty.cut.facts.cells]).toEqual([[], 'none', 0]);
-});
-
-test('a hexagon cut reads its triangles, pieces and holes, on an even side too', () => {
-  const plan = study(math, value({ view: 'hex' }), rng(1));
-  expect([plan.cut.kind, plan.cut.hex.cell.shape, plan.cut.codes]).toEqual(['hex', [54, 107], { fill: 1, void: 0 }]);
-  expect(plan.cut.facts).toEqual({ reading: 'hexagon of 27', triangles: 4374, fills: 2250, voids: 2124, pieces: 1, holes: 49, euler: 1 });
-  const even = study(math, value({ view: 'hex', code: '126', number: 2, level: 5 }), rng(1)).cut;
-  expect([even.hex.cell.shape, even.facts]).toEqual([[64, 127], { reading: 'hexagon of 32', triangles: 6144, fills: 1944, voids: 4200, pieces: 691, holes: 960, euler: 1 }]);
+test('a colorizer bins its ramp into the levels, the ground first', () => {
+  const bins = colorizer(ink(light), 'heat', 4).Bins;
+  expect([bins.ramp.length, bins.background, bins.ramp[0]]).toEqual([4, '#ffffff', '#ffffff']);
 });

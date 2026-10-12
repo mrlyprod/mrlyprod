@@ -1,34 +1,30 @@
-import { frame, Grid } from "mrlyjs/view";
+import { plate } from "../../lib/icon.js";
 
 export const units = {};
 
-const CELL = 64;
+const HEIGHTS = [4, 7, 5, 10];
+const SCALE = 10;
+const AXIS = 0.085;
+const GAP = 0.05;
+const SPACE = 0.3;
+const ROUND = 0.2;
 
-const ART = [
-  "1000000000000",
-  "1000000000022",
-  "1000000000022",
-  "1000000000022",
-  "1000022000022",
-  "1000022000022",
-  "1000022022022",
-  "1022022022022",
-  "1022022022022",
-  "1022022022022",
-  "1022022022022",
-  "1111111111111",
-];
-
-export default function draw(pen, ink) {
-  const cols = ART[0].length;
-  const rows = ART.length;
-  const tone = { "1": ink.fg, "2": ink.blue };
-  for (const line of ART) {
-    if (line.length !== cols) throw new Error(`stats: row ${line} is not ${cols} wide`);
-    for (const c of line) if (c !== "0" && !tone[c]) throw new Error(`stats: no tone for ${c}`);
-  }
-  const w = CELL * cols;
-  const h = CELL * rows;
-  const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - h) / 2), w, h), cols, rows, 0);
-  ART.forEach((line, row) => [...line].forEach((c, col) => c !== "0" && cells.fill(pen, col, row, tone[c])));
+export default function draw(pen) {
+  const { box, paint } = plate(pen, "green", 0.18);
+  for (const h of HEIGHTS) if (!Number.isInteger(h) || h < 1 || h > SCALE) throw new Error(`stats: bar ${h} is not 1 to ${SCALE}`);
+  const tallest = HEIGHTS.indexOf(Math.max(...HEIGHTS));
+  const t = box.w * AXIS;
+  const g = box.w * GAP;
+  const left = box.x + t + g;
+  const right = box.x + box.w - t / 2;
+  const floor = box.y + box.h - t / 2;
+  const base = floor - t / 2 - g;
+  const n = HEIGHTS.length;
+  const bar = (right - left) / (n + (n - 1) * SPACE);
+  const unit = (base - box.y) / SCALE;
+  HEIGHTS.forEach((h, i) => {
+    const x = left + i * bar * (1 + SPACE);
+    pen.round_rect(x, base - h * unit, bar, h * unit, bar * ROUND, i === tallest ? paint.light : paint.white);
+  });
+  pen.polyline([[box.x + t / 2, box.y + t / 2], [box.x + t / 2, floor], [right, floor]], t, paint.white);
 }

@@ -1,94 +1,126 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/export.js';
 import { Bar } from '../../lib/frame.jsx';
-import { Group } from '../../lib/knobs.jsx';
+import { maxOf } from '../../lib/knobs.js';
+import { Fold, Knob } from '../../lib/knobs.jsx';
+import { rng } from '../../lib/scene.js';
 import { Scene } from '../../lib/scene.jsx';
 import { next } from '../designs/engine.js';
 import { Pick, read } from '../designs/pick.jsx';
-import { DESIGNED, DIM, VIEWS } from './engine.js';
-import { make } from './scene.js';
+import { COLOURS, DESIGNED, DIM, KINDS, LEVELS, PICTURES, ROUNDS, fits, pictureOf, place, roll, sideOf, study } from './engine.js';
+import { SPEC, file, make, tidied } from './scene.js';
+
+const STEP = 700;
+
+const row = (key) => SPEC.find((one) => one.key === key);
+
+export const KNOBS = { word: 'round', plane: 'level', power: 'power', filter: 'depth' };
+
+const within = (n, low, high) => Math.max(low, Math.min(high, n));
+
+export function shift(value, by, wrap = false) {
+  const key = KNOBS[pictureOf(value)];
+  const spec = row(key);
+  const top = maxOf(spec, value);
+  const to = value[key] + by;
+  return { [key]: wrap ? (to > top ? spec.min : to < spec.min ? top : to) : within(to, spec.min, top) };
+}
+
+export const tapped = (value) => (value.view === 'plane' ? { lift: next(KINDS, value.lift, 1) } : shift(value, 1, true));
+
+export const turned = (value, by) => place(next(PICTURES, pictureOf(value), by));
+
+const among = (list, rand) => list[Math.floor(rand() * list.length)];
+
+const span = (top) => Array.from({ length: top }, (_, i) => i + 1);
+
+export function rerolled(math, value, rand) {
+  const kind = pictureOf(value);
+  if (kind === 'plane') return { lift: among(KINDS.filter((one) => one !== value.lift), rand), level: among(span(LEVELS), rand) };
+  if (kind === 'word') return { round: among(span(ROUNDS).filter((one) => one !== value.round), rand), colour: among(COLOURS, rand)[0] };
+  return { code: roll(math, sideOf(value), read(value).base, rand) };
+}
+
+/* ROWS */
 
 const yes = (on) => (on ? 'yes' : 'no');
 
-const site = ([row, col]) => `row ${row}, col ${col}`;
+const site = (at) => (at ? `row ${at[0]}, col ${at[1]}` : '-');
 
-const CLOSED = { sign: 'the tile repeated', design: 'the tile complement' };
+const sized = (f) => `${f.side} by ${f.side}`;
+
+const design = (f) => (f.name ? `${f.name} ${f.code}` : f.title);
 
 export const ROWS = {
-  plane: [
-    ['Side', (f) => `${f.side} by ${f.side}`],
-    ['Plus', (f) => f.plus],
-    ['Minus', (f) => f.minus],
-    ['Tile', (f) => f.tile],
-    ['Kronecker power', (f) => (f.folds ? 'yes' : `no, ${f.faults} faults`)],
-    ['First fault', (f) => (f.first ? site(f.first) : '-')],
-    ['Same as', (f) => (f.twin ? f.twin.toLowerCase() : '-')],
+  word: (f) => [
+    ['letters', f.letters],
+    ...(f.colour === 'runs'
+      ? [
+          ['runs', f.runs],
+          ['longest run', f.longest],
+          ['runs of one', f.singles],
+          ['runs of two', f.doubles],
+          ['ones', f.ones],
+          ['cube free', f.cube ? 'yes, no 000 and no 111' : 'no, a cube appears'],
+          ['boundaries', f.doubling ? 'the period-doubling word' : 'not the period-doubling word'],
+        ]
+      : [
+          ['plus', f.plus],
+          ['minus', f.minus],
+          ['the two rules', f.agree ? 'agree letter for letter' : 'differ'],
+          ['as a schedule', `${f.zero} at 0, ${f.one} at 1`],
+          ['exponent', `${f.exponent.toFixed(15)}, (1/2) log2 6, proved`],
+          [`rate at ${f.prefix} letters`, f.rate.toFixed(9)],
+          ['periodic control', f.control.toFixed(9)],
+        ]),
   ],
-  word: [
-    ['Letters', (f) => f.letters],
-    ['Plus', (f) => f.plus],
-    ['Minus', (f) => f.minus],
-    ['Runs', (f) => f.runs],
-    ['Longest run', (f) => f.longest],
-    ['Runs of one', (f) => f.singles],
-    ['Runs of two', (f) => f.doubles],
-    ['Cube free', (f) => yes(f.cube)],
-    ['Boundary', (f) => (f.doubling ? 'the doubling word' : 'not the doubling word')],
-    ['Digit rule', (f) => (f.rule ? 'the same word' : 'a different word')],
+  plane: (f) => [
+    ['lift', `${f.kind}, ${f.formula}`],
+    ['side', sized(f)],
+    ['plus', f.plus],
+    ['minus', f.minus],
+    ['tile', f.tile],
+    ['kronecker power', f.twin ? `yes, the ${f.twin.toLowerCase()} grid` : f.folds ? `yes, ${f.name} read plus-minus` : 'no'],
+    ...(f.folds ? [] : [['off its fold', `${f.faults} of ${f.cells} sites, first at ${site(f.first)}`]]),
   ],
-  lift: [
-    ['Tile', (f) => f.tile],
-    ['Side', (f) => `${f.side} by ${f.side}`],
-    ['Filled', (f) => f.filled],
-    ['Plus', (f) => f.plus],
-    ['Agree', (f) => f.agree],
-    ['Differ', (f) => f.differ],
-    ['Thue-Morse', (f) => yes(f.exact)],
+  power: (f) => [
+    ['design', design(f)],
+    ['tile', f.tile],
+    ['side', sized(f)],
+    ['filled', f.filled],
+    ['plus', f.plus],
+    ['agree', `${f.agree} of ${f.cells}`],
+    ['thue-morse grid', yes(f.exact)],
   ],
-  filter: [
-    ['Tile', (f) => f.tile],
-    ['Side', (f) => `${f.side} by ${f.side}`],
-    ['Differ', (f) => f.differ],
-    ['Closed form', (f) => (f.closed ? CLOSED[f.fold] : 'no')],
-    ['Off Thue-Morse', (f) => (f.morse === null ? '-' : `${f.morse} of ${f.cells}${f.half ? ', a coin' : ''}`)],
+  filter: (f) => [
+    ['design', design(f)],
+    ['tile', f.kin ? `${f.tile}, the Thue-Morse tile` : f.tile],
+    ['side', sized(f)],
+    ['lit', f.differ],
+    ['difference', `${f.closed ? 'exactly' : 'not'} ${f.form}`],
+    ['thue-morse grid', yes(f.exact)],
+    ['off thue-morse', f.morse === null ? `nothing to compare: the grid lives at tile side 2, not ${f.number}` : `${f.morse} of ${f.cells} sites, a share of ${f.share.toFixed(4)}${f.half ? ', a coin' : ''}`],
   ],
 };
 
-export function status(f) {
-  if (f.view === 'plane') return `${f.kind.toLowerCase()}, ${f.formula}`;
-  if (f.view === 'word') return `${f.letters} letters, ${f.runs} runs`;
-  const name = f.name ? `${f.name} ${f.code}` : f.title;
-  if (f.view === 'filter') return `${name}, ${f.fold === 'sign' ? 'plus-minus' : 'design'} filter`;
-  return f.exact ? `${name}, the Thue-Morse grid` : name;
+/* PANES */
+
+export function Design({ value, units, facts, onChange }) {
+  if (!units || !DESIGNED.includes(pictureOf(value))) return null;
+  const own = ({ dim, ...patch }) => onChange(patch);
+  const live = [facts ? design(facts) : read(value).code, `side ${sideOf(value)}`].join(' · ');
+  return (
+    <Fold name="Design" live={live}>
+      <Pick value={{ ...read(value), dim: DIM }} onChange={own} math={units.math} dims={[DIM]} />
+      <Knob row={row('number')} value={value.number} values={value} onChange={onChange} />
+    </Fold>
+  );
 }
 
-export function labels(f) {
-  if (f.view === 'lift') return 'design, then its sign power';
-  if (f.view === 'filter') return `level ${f.level} blown up, level ${f.level + 1}, their difference`;
-  return '';
-}
+/* WIDGET */
 
-export const hands = (handle, now, onChange) => ({
-  deeper: (by) => onChange({ level: now.current.level + by }),
-  turn: (by) => onChange({ view: next(VIEWS.map(([key]) => key), now.current.view, by) }),
-  again: () => (now.current.grow ? handle.again() : onChange({ grow: 1 })),
-});
-
-const Fact = ({ name, value }) => (
-  <label>
-    <span>{name}</span>
-    <span className="num">{value}</span>
-  </label>
-);
-
-export function Widget({ value, onChange, onReady, onExport, units: given }) {
+export function useUnits(given) {
   const [loaded, setLoaded] = useState(null);
-  const units = given ?? loaded;
-  const live = useRef(null);
-  const now = useRef(value);
-  now.current = value;
-  const [facts, setFacts] = useState(null);
-  const [sheet, setSheet] = useState(false);
   useEffect(() => {
     if (given) return undefined;
     let on = true;
@@ -97,39 +129,74 @@ export function Widget({ value, onChange, onReady, onExport, units: given }) {
       on = false;
     };
   }, [given]);
+  return given ?? loaded;
+}
+
+export function Widget({ value, onChange, onReady, onExport, onStatus, units: given }) {
+  const units = useUnits(given);
+  const live = useRef(null);
+  const now = useRef(value);
+  now.current = value;
+  const hooks = useRef(onChange);
+  hooks.current = onChange;
+  const seen = useRef(value.seed);
+  const timer = useRef(0);
+  const wrote = useRef(null);
+  const plan = units ? study(units, tidied(value)) : null;
+  const f = plan?.facts;
+  const told = plan ? ROWS[plan.view](f) : [];
+  const sheet = Boolean(plan && fits(plan));
+  const word = value.view === 'word';
+  const play = (on) => {
+    clearInterval(timer.current);
+    timer.current = 0;
+    if (!on) return;
+    wrote.current = now.current.round;
+    timer.current = setInterval(() => {
+      const patch = shift({ ...now.current, view: 'word' }, 1, true);
+      wrote.current = patch.round;
+      hooks.current(patch);
+    }, STEP);
+  };
+  const keep = () => {
+    const picture = live.current?.svg?.();
+    if (picture) text(picture, file(now.current), 'svg');
+  };
+  useEffect(() => onStatus?.(told), [JSON.stringify(told)]);
+  useEffect(() => onExport?.(sheet ? [['SVG', keep]] : []), [sheet]);
+  useEffect(() => () => play(false), []);
+  useEffect(() => {
+    if (!word || (timer.current && value.round !== wrote.current)) play(false);
+  }, [word, value.round]);
+  useEffect(() => {
+    if (value.seed === seen.current || !units) return;
+    seen.current = value.seed;
+    hooks.current(rerolled(units.math, value, rng(value.seed)));
+  }, [value.seed, units]);
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, ...units }), [units]);
   const ready = (handle) => {
     live.current = handle;
-    setFacts(handle?.facts ?? null);
-    setSheet(Boolean(handle?.svg));
-    onReady?.(handle && { ...handle, ...hands(handle, now, onChange) });
+    if (!handle) return onReady?.(null);
+    const hands = {
+      deeper: (by) => hooks.current(shift(now.current, by)),
+      turn: (by) => hooks.current(turned(now.current, by)),
+      toggle: () => play(!timer.current),
+      playing: () => Boolean(timer.current),
+    };
+    onReady?.({ ...handle, ...hands });
   };
-  const design = ({ dim, ...patch }) => onChange(patch);
-  const keep = () => {
-    const picture = live.current?.svg?.();
-    if (picture) text(picture, `morse-${now.current.seed}`, 'svg');
-  };
-  useEffect(() => onExport?.(sheet ? [['SVG', keep]] : []), [sheet]);
-  const designed = DESIGNED.includes(value.view);
-  const f = facts;
+  const tap = () => hooks.current(tapped(now.current));
   return (
     <>
-      {units && <Scene make={scene} value={value} onReady={ready} />}
-      <Bar side="right">
-        <Group name="Design" hidden={!designed}>{units && designed && <Pick value={{ ...read(value), dim: DIM }} onChange={design} math={units.math} dims={[DIM]} />}</Group>
-      </Bar>
-      <Bar side="status">
-        {!units && <span>loading</span>}
-        {f && <span>{status(f)}</span>}
-        {f && labels(f) && <span>{labels(f)}</span>}
-      </Bar>
-      {f && (
-        <Bar side="right">
-          <Group name="Counts">
-            {ROWS[f.view].map(([name, get]) => <Fact key={name} name={name} value={get(f)} />)}
-          </Group>
+      {units && <Scene make={scene} value={value} onReady={ready} onClick={tap} />}
+      {!units && (
+        <Bar side="status">
+          <span>loading</span>
         </Bar>
       )}
+      <Bar side="right">
+        <Design value={value} units={units} facts={f} onChange={onChange} />
+      </Bar>
     </>
   );
 }

@@ -1,4 +1,5 @@
-import { frame, mix } from 'mrlyjs/view';
+import { frame, ink, mix } from 'mrlyjs/view';
+import { dark } from '../kit/theme/theme.js';
 
 const POWER = 5;
 const SPAN = 0.92;
@@ -6,6 +7,7 @@ const SHEEN = 0.18;
 const RIM = 0.22;
 const WHITE = [255, 255, 255, 255];
 const BLACK = [0, 0, 0, 255];
+const HUES = ink(dark);
 
 const plates = new Map();
 
@@ -41,8 +43,8 @@ function pixels(size, hue) {
   return made;
 }
 
-export function plate(pen, ink, hue = 'blue', inset = 0.2) {
-  const tone = ink[hue];
+export function plate(pen, hue = 'blue', inset = 0.2) {
+  const tone = HUES[hue];
   if (!tone) throw new Error(`icon: no hue ${hue}`);
   const size = Math.min(pen.width, pen.height);
   const x = (pen.width - size) / 2;
@@ -50,13 +52,6 @@ export function plate(pen, ink, hue = 'blue', inset = 0.2) {
   pen.image(x, y, size, size, pixels(size, tone));
   const pad = size * inset;
   const box = frame(x + pad, y + pad, size - 2 * pad, size - 2 * pad);
-  const paint = { white: WHITE, light: mix(tone, WHITE, 0.6), deep: mix(tone, BLACK, 0.45), ink: mix(tone, BLACK, 0.75), shadow: [0, 0, 0, 90], tone };
+  const paint = { white: WHITE, light: mix(tone, WHITE, 0.6), deep: mix(tone, BLACK, 0.45), ink: mix(tone, BLACK, 0.75), tone };
   return { box, paint, size };
-}
-
-export function shadow(pen, size, draw) {
-  const lift = size * 0.012;
-  draw([0, 0, 0, 40], lift * 2);
-  draw([0, 0, 0, 60], lift);
-  draw(null, 0);
 }

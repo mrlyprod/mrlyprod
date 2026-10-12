@@ -52,7 +52,8 @@ export function paints(canvas, tint = '') {
   const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
   const paper = read('--art', read('--ground', base.ground ?? palette.white));
   const accent = HUES.includes(tint) ? read(`--${tint}`, palette[tint]) : read('--accent', base.accent ?? palette.blue);
-  return { paper, accent };
+  const ink = read('--fg', base.fg ?? palette.black);
+  return { paper, accent, ink };
 }
 
 /* BOARD */
@@ -72,8 +73,8 @@ const SHORT = 540;
 
 const DEBT = 4;
 
-export function run(canvas, make, opts = {}) {
-  let still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+export function run(canvas, make, opts = {}, how = {}) {
+  let still = Boolean(how.still) || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
   let skin = paints(canvas, opts.tint);
   let gone = false;
   let paused = false;
@@ -84,11 +85,11 @@ export function run(canvas, make, opts = {}) {
   let lent = false;
   let fall = null;
   let owed = 0;
-  const view = { rand: rng(opts.seed), look: () => skin, still, w: 1, h: 1, dpr: 1, t: 0, fixed: false };
+  const view = { rand: rng(opts.seed), look: () => skin, still, lock: Boolean(how.lock), w: 1, h: 1, dpr: 1, t: 0, fixed: false };
   const size = () => {
     const shot = held?.frame;
-    view.fixed = Boolean(shot);
-    const dpr = shot ? Math.min(shot[0], shot[1]) / SHORT : Math.min(globalThis.devicePixelRatio || 1, 2);
+    view.fixed = Boolean(shot) && !held.dpr;
+    const dpr = shot ? (held.dpr ?? Math.min(shot[0], shot[1]) / SHORT) : Math.min(globalThis.devicePixelRatio || 1, 2);
     const w = shot ? shot[0] : Math.max(1, Math.round((canvas.clientWidth || 300) * dpr));
     const h = shot ? shot[1] : Math.max(1, Math.round((canvas.clientHeight || 150) * dpr));
     if (w === view.w && h === view.h && dpr === view.dpr) return false;
@@ -101,6 +102,10 @@ export function run(canvas, make, opts = {}) {
   };
   size();
   const saver = make(canvas, view, opts);
+  if (saver.still) {
+    still = true;
+    view.still = true;
+  }
   const watched = typeof IntersectionObserver === 'function';
   let timer = 0;
   let frame = 0;
@@ -247,7 +252,7 @@ export function run(canvas, make, opts = {}) {
     if (next.seed !== opts.seed) view.rand = rng(next.seed);
     opts = next;
     skin = paints(canvas, opts.tint);
-    saver.set(next);
+    if (saver.set(next) === false) return false;
     if (still || paused) saver.draw();
     return true;
   };

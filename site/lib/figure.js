@@ -70,7 +70,8 @@ export function queue({ near, paint, frame = (fn) => requestAnimationFrame(fn), 
 
 /* INK */
 
-let table = { figures: {}, units: {} };
+let table = { figures: {}, units: {}, plates: [] };
+
 let shade = null;
 
 function look() {
@@ -164,7 +165,7 @@ async function draw(host, one) {
     scratch ??= document.createElement('canvas');
     if (scratch.width !== size[0] || scratch.height !== size[1]) [scratch.width, scratch.height] = size;
     const ctx = scratch.getContext('2d');
-    figure.default(canvas(ctx, size[0], size[1], pen.ink.ground), pen.ink, moment(figure, one));
+    figure.default(canvas(ctx, size[0], size[1], table.plates?.includes(one.name) ? undefined : pen.ink.ground), pen.ink, moment(figure, one));
     const out = node.getContext('2d', { willReadFrequently: one.eager });
     out.imageSmoothingQuality = 'high';
     out.clearRect(0, 0, w, h);

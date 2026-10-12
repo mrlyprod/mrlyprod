@@ -132,7 +132,7 @@ test('a debt over four steps resets and counts the frames lost as late, which af
   expect([heard, late]).toEqual([[[40, 0], [80, 11], [120, 11]], 11]);
 });
 
-test('a fixed frame sets the store, a dpr of its short side over 540 and view.fixed, ignores resizes, and fix(null) returns to the box', () => {
+test('a fixed frame sets the store, a dpr of its short side over 540 and view.fixed, ignores resizes, and fix(null) returns to the box; a frame with its own dpr is a still, not a take', () => {
   stage();
   let resize;
   globalThis.ResizeObserver = class {
@@ -150,10 +150,11 @@ test('a fixed frame sets the store, a dpr of its short side over 540 and view.fi
   resize();
   stop.fix(null);
   stop.fix({ frame: [1280, 720] });
+  stop.fix({ frame: [16, 8], dpr: 2 });
   stop();
   delete globalThis.ResizeObserver;
   unstage();
-  expect(seen).toEqual([[1080, 1920, 2, true, 1080], [8, 4, 1, false, 8], [1280, 720, 720 / 540, true, 1280]]);
+  expect(seen).toEqual([[1080, 1920, 2, true, 1080], [8, 4, 1, false, 8], [1280, 720, 720 / 540, true, 1280], [16, 8, 2, false, 16]]);
 });
 
 test('an every scene draws once at start, then at its interval, and ignores the step', () => {
@@ -203,4 +204,45 @@ test('fix(null) after a take puts a reduced-motion scene back to stillness, draw
   delete globalThis.matchMedia;
   unstage();
   expect([seen, waiting]).toEqual([[[0, true], [40, false], [40, true]], 0]);
+});
+
+test('a still scene draws on make, set, size and theme and never asks for a frame; a page can ask the same through run', () => {
+  const frames = stage();
+  let resize;
+  globalThis.ResizeObserver = class {
+    constructor(fn) {
+      resize = fn;
+    }
+    observe() {}
+    disconnect() {}
+  };
+  const canvas = { clientWidth: 4, clientHeight: 4 };
+  const drawn = [];
+  const stop = run(canvas, () => ({ still: true, draw: () => drawn.push('draw'), set: () => drawn.push('set') }));
+  stop.set({ seed: 2 });
+  canvas.clientWidth = 8;
+  resize();
+  window.dispatchEvent(new Event('theme'));
+  stop();
+  const page = run(canvas, (c, view) => ({ draw: () => drawn.push(`page ${view.still}`) }), {}, { still: true });
+  page();
+  delete globalThis.ResizeObserver;
+  unstage();
+  expect([drawn, frames.length]).toEqual([['draw', 'set', 'draw', 'draw', 'draw', 'page true'], 0]);
+});
+
+test('a scene whose set answers false makes set false, so the page remounts it', () => {
+  stage();
+  const stop = run({ clientWidth: 4, clientHeight: 4 }, () => ({ draw: () => {}, set: (next) => (next.seed === 9 ? false : undefined) }), { seed: 1 });
+  const answers = [stop.set({ seed: 2 }), stop.set({ seed: 9 })];
+  stop();
+  unstage();
+  expect(answers).toEqual([true, false]);
+});
+
+test('look hands the theme foreground as ink beside paper and accent, from --fg or the theme', () => {
+  globalThis.getComputedStyle = () => ({ getPropertyValue: (name) => (name === '--fg' ? '#123456' : '') });
+  const read = paints({}).ink;
+  delete globalThis.getComputedStyle;
+  expect([read, paints({}).ink]).toEqual(['#123456', light.fg]);
 });

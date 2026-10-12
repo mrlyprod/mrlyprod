@@ -74,7 +74,7 @@ export async function lock(canvas, pick = '') {
   const held = scene.units ? await scene.units() : {};
   await held.ready;
   const { ready, ...units } = held;
-  const stop = run(canvas, scene.make, { ...value, ...units });
+  const stop = run(canvas, scene.make, { ...value, ...units }, { lock: true, still: scene.PAGE?.still });
   const { leave, end } = exits(stop.scene);
   const close = () => {
     end();

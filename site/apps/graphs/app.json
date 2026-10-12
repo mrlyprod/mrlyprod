@@ -1,6 +1,6 @@
 {
   "title": "Graphs",
-  "line": "Graphs, a design as a network: join every filled cell to its neighbours, the corners and sides they outline, or the empty cells between them, then count the tips, the junctions and the pieces, add up the length and read the box dimension; drawn on its lattice as the wave of a search reveals it, relaxed by a force layout, or orbited as a cube.",
+  "line": "A design as a network: count its tips and pieces, then let the lattice relax.",
   "menu": "play",
   "saver": true
 }

@@ -1,3 +1,4 @@
 {
-  "/math/": {"to": "/mrlymath/", "since": "2026-10-09"}
+  "/math/": {"to": "/mrlymath/", "since": "2026-10-09"},
+  "/stack/": {"to": "/moire/", "since": "2026-10-12"}
 }

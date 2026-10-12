@@ -38,3 +38,9 @@ test('Thumbs take the full width of their row, so a wrapping flex column cannot 
   const html = renderToStaticMarkup(<Thumbs math={math} dim={2} base={2} codes={['5']} code="5" onPick={() => {}} />);
   expect(html).toContain('<div class="designs" style="width:100%">');
 });
+
+test('Thumbs given a note caption each code with its name and its normal form', () => {
+  const html = renderToStaticMarkup(<Thumbs math={math} dim={2} base={2} codes={['7', '11']} code="7" onPick={() => {}} note={(one) => `f${one}`} tone={() => 'pink'} />);
+  expect([...html.matchAll(/<small>([^<]*)<\/small>/g)].map((found) => found[1])).toEqual(['7 carpet', 'f7', '11', 'f11']);
+  expect(html).toContain('aria-label="carpet 7, f7"');
+});

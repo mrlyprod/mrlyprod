@@ -10,11 +10,17 @@ let pending = null;
 
 let timer = 0;
 
+let path = '';
+
 const write = () => {
+  if (document.documentElement.getAttribute('aria-busy') === 'true') {
+    timer = setTimeout(write, WAIT);
+    return;
+  }
   const values = pending;
   pending = null;
   timer = 0;
-  if (document.documentElement.getAttribute('aria-busy') === 'true') return;
+  if (location.pathname !== path) return;
   const params = new URLSearchParams(location.search);
   for (const [key, value] of Object.entries(values)) {
     if (value === null || value === undefined || value === '' || value === false) params.delete(key);
@@ -25,7 +31,9 @@ const write = () => {
 };
 
 export function stamp(values) {
+  if (path !== location.pathname) pending = null;
   pending = { ...pending, ...values };
+  path = location.pathname;
   if (!timer) timer = setTimeout(write, WAIT);
 }
 

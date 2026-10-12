@@ -1,28 +1,25 @@
-import { pick, rgb, veil } from '../../lib/scene.js';
-import { grid, marks, num as fmt, path, runs, sheet } from '../../lib/svg.js';
+import { palette as hues } from '../../kit/theme/palette.js';
+import { pick, rgb } from '../../lib/scene.js';
+import { grid, num as fmt, runs, sheet } from '../../lib/svg.js';
 
 export const LATTICES = [['square', 'Square'], ['hex', 'Hex']];
-export const MARKS = [['prime', 'Primes'], ['twin', 'Twin primes'], ['squarefree', 'Squarefree'], ['mobius', 'Mobius']];
-export const RINGS = 440;
-export const ROLL = 100;
+export const MARKS = [['prime', 'Primes'], ['twin', 'Twin primes'], ['squarefree', 'Squarefree'], ['mobius', 'Mobius sign']];
+export const LEADS = [[0, 'Off'], [1, '1'], [2, '2'], [3, '3'], [4, '4']];
+export const SIDES = [21, 401];
+export const REACH = 1000000;
 export const LEAD = 4;
-export const SWAY = 6;
-export const RATE = 12.5;
+const ROLL = 100;
+const SWAY = 6;
+const FAVOUR = 0.75;
+const RATE = 12.5;
 export const LEAST = 3000;
-export const MOST = 20000;
-export const HOLD = 5000;
-export const FIT = 0.94;
-export const LABEL = 18;
-const NEAR = { square: 1, hex: 2 };
-const JOINED = { square: 4, hex: 3 };
-export const FAVOUR = 0.75;
-export const UNIT = 10;
-export const FAINT = 0.35;
+export const MOST = 10000;
+const FIT = 0.94;
+const SHOWN = 8;
+const UNIT = 10;
 export const GROUND = 0.12;
-export const HALF = 0.5;
-export const RAIL = 0.6;
-export const WIDTH = 0.3;
-export const OUTLINE = 0.15;
+const JOINED = { square: 4, hex: 3 };
+const BRIGHT = 382;
 export const LIT = 1;
 export const DIM = 2;
 export const HIT = 3;
@@ -43,9 +40,10 @@ export function mix(a, b, t) {
   return `rgb(${p.map((v, i) => Math.round(v + (q[i] - v) * t)).join(', ')})`;
 }
 
+export const ink = (paper) => (rgb(paper).reduce((sum, v) => sum + v, 0) > BRIGHT ? '#000000' : '#ffffff');
+
 export function palette(accent, paper) {
-  const half = mix(accent, paper, HALF);
-  return [null, { color: accent, hollow: false }, { color: veil(accent, FAINT), hollow: false }, { color: half, hollow: false }, { color: half, hollow: true }, { color: veil(accent, GROUND), hollow: false }];
+  return [null, accent, hues.pink, hues.orange, hues.blue, mix(paper, ink(paper), GROUND)];
 }
 
 /* LATTICE */
@@ -75,16 +73,6 @@ export function fitted(lattice, rings, w, h) {
   const side = 2 * rings + 1;
   if (lattice === 'hex') return ROOT3 * FIT * Math.min(w / (ROOT3 * side), h / (3 * rings + 2));
   return (FIT * Math.min(w, h)) / side;
-}
-
-export function reach(num, geo, w, h) {
-  const name = title(geo.lattice);
-  let most = 0;
-  for (const [x, y] of [[0, 0], [w, 0], [0, h], [w, h]]) {
-    const [q, r] = geo.cell(x, y);
-    most = Math.max(most, Number(num.spiral.Lattice.ring_of(name, q, r)));
-  }
-  return Math.min(RINGS, most + 1);
 }
 
 /* WIND */
@@ -127,45 +115,26 @@ export function span(rings) {
 }
 
 export function share(t, length, still) {
-  if (still) return 1;
-  const loop = length + HOLD;
-  const phase = ((t % loop) + loop) % loop;
-  return Math.min(1, phase / length);
+  return still ? 1 : Math.max(0, Math.min(1, t / length));
 }
 
 /* LINE */
 
-export function choose(num, value, rand) {
-  if (!value.roll) return { lattice: value.lattice, a: value.a, b: value.b, c: value.c };
+export function shuffle(num, rand) {
   const lattice = pick(rand, LATTICES)[0];
+  const side = SIDES[0] + 2 * Math.floor(rand() * ((SIDES[1] - SIDES[0]) / 2 + 1));
   const a = rand() < FAVOUR ? JOINED[lattice] : 1 + Math.floor(rand() * LEAD);
   const b = (a % 2) + 2 * (Math.floor(rand() * (2 * SWAY + 1)) - SWAY);
-  return { lattice, a, b, c: num.prime.prime_from(3 + Math.floor(rand() * ROLL)) };
+  return { lattice, side, a, b, c: num.prime.prime_from(3 + Math.floor(rand() * ROLL)) };
 }
 
 export function step(num, c, by, max) {
   if (by > 0) {
-    const next = num.prime.prime_from(c + 1);
+    const next = num.prime.prime_from(Math.max(0, c + 1));
     return next <= max ? next : c;
   }
   const below = num.prime.primes(Math.max(0, c - 1));
   return below.length ? below[below.length - 1] : c;
-}
-
-export function segments(num, lattice, cells) {
-  const name = title(lattice);
-  const ring = num.spiral.Lattice.ring_of;
-  const out = [];
-  let run = [0];
-  for (let i = 1; i < cells.length; i++) {
-    if (Number(ring(name, cells[i][0] - cells[i - 1][0], cells[i][1] - cells[i - 1][1])) <= NEAR[lattice]) run.push(i);
-    else {
-      if (run.length > 1) out.push(run);
-      run = [i];
-    }
-  }
-  if (run.length > 1) out.push(run);
-  return out;
 }
 
 export function formula(a, b, c) {
@@ -179,23 +148,14 @@ export function factors(list) {
 
 /* STUDY */
 
-export function study(num, value, w, h, dpr) {
-  const { lattice, a, b, c } = value;
+export function spiral(num, lattice, side) {
   const name = title(lattice);
-  const L = num.spiral.Lattice;
-  let rings = value.rings;
-  let geo;
-  if (value.fit) geo = lay(num, lattice, fitted(lattice, rings, w, h), w, h);
-  else {
-    geo = lay(num, lattice, value.cell * dpr, w, h);
-    rings = reach(num, geo, w, h);
-  }
-  const side = 2 * rings + 1;
-  const top = L.count(name, side);
+  const top = num.spiral.Lattice.count(name, side);
+  return { lattice, name, side, rings: (side - 1) / 2, top, primes: num.prime.prime_count(top), ...wind(num, name, top) };
+}
+
+export function toned(num, value, top) {
   const marked = num.spiral.marks(title(value.mark), top);
-  const primes = num.prime.prime_count(top);
-  const line = a > 0 ? num.spiral.diagonal(name, side, a, b, c) : null;
-  const next = line && line.streak < line.values.length ? line.values[line.streak] : null;
   const tone = new Uint8Array(top + 1);
   let lit = 0;
   for (let n = 1; n <= top; n++) {
@@ -205,44 +165,54 @@ export function study(num, value, w, h, dpr) {
     } else if (marked[n] === -1) tone[n] = DIM;
     else if (value.faint) tone[n] = SOIL;
   }
-  if (line) line.values.forEach((n, i) => (tone[n] = line.hit[i] ? HIT : MISS));
-  const facts = {
-    lattice,
+  return { tone, lit };
+}
+
+export function quadratic(num, value) {
+  return { line: value.a > 0 ? num.spiral.diagonal(title(value.lattice), value.side, value.a, value.b, value.c) : null };
+}
+
+export function study(num, value, w, h) {
+  const plan = spiral(num, value.lattice, value.side);
+  return { ...plan, geo: lay(num, value.lattice, fitted(value.lattice, plan.rings, w, h), w, h), ...toned(num, value, plan.top), ...quadratic(num, value) };
+}
+
+export function read(num, plan, value) {
+  const { line } = plan;
+  const next = line && line.streak < line.values.length ? line.values[line.streak] : null;
+  return {
+    lattice: plan.lattice,
     mark: value.mark,
-    rings,
-    side,
-    top,
-    primes,
-    lit,
-    density: primes / top,
-    a,
-    b,
-    c,
-    rolled: Boolean(value.roll),
-    line: line && { count: line.values.length, hits: line.hits, share: line.share, streak: line.streak, next: next === null ? null : { n: next, factors: num.prime.pile(next).factors } },
+    rings: plan.rings,
+    side: plan.side,
+    top: plan.top,
+    primes: plan.primes,
+    lit: plan.lit,
+    density: plan.primes / plan.top,
+    a: value.a,
+    b: value.b,
+    c: value.c,
+    line: line && { count: line.values.length, hits: line.hits, share: line.share, streak: line.streak, values: line.values.slice(0, SHOWN), more: line.values.length > SHOWN, next: next === null ? null : { n: next, factors: num.prime.pile(next).factors } },
   };
-  return { lattice, name, rings, side, top, geo, tone, line, runs: line ? segments(num, lattice, line.cells) : [], ...wind(num, name, top), facts };
 }
 
 /* SVG */
 
-export function picture(plan, inside, tones) {
-  const { lattice, tone, xs, ys, top, line, runs: rail } = plan;
+export function picture(plan, tones) {
+  const { lattice, xs, ys, top, line } = plan;
+  const tone = plan.tone.slice();
+  if (line) line.values.forEach((n, i) => (tone[n] = line.hit[i] ? HIT : MISS));
   const hex = lattice === 'hex';
   const s = UNIT / ROOT3;
   const raw = hex ? (q, r) => [ROOT3 * s * (q + r / 2), 1.5 * s * r] : (x, y) => [x * UNIT, -y * UNIT];
-  const shown = [];
   let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
   for (let n = 1; n <= top; n++) {
-    if (!inside(n)) continue;
-    shown.push(n);
     const [x, y] = raw(xs[n], ys[n]);
     x0 = Math.min(x0, x);
     x1 = Math.max(x1, x);
     y0 = Math.min(y0, y);
     y1 = Math.max(y1, y);
   }
-  if (!shown.length) return sheet(UNIT, UNIT, '');
   const half = hex ? s : UNIT / 2;
   const width = x1 - x0 + 2 * half;
   const height = y1 - y0 + 2 * half;
@@ -250,36 +220,24 @@ export function picture(plan, inside, tones) {
     const [px, py] = raw(x, y);
     return [px - x0 + half, py - y0 + half];
   };
-  const edge = UNIT * OUTLINE;
   const cols = Math.round(width / UNIT);
   const rows = Math.round(height / UNIT);
   const index = (n) => {
     const [x, y] = at(xs[n], ys[n]);
     return Math.round((y - UNIT / 2) / UNIT) * cols + Math.round((x - UNIT / 2) / UNIT);
   };
-  const corners = (r) => HEX.map(([cx, cy]) => `${fmt(cx * r)} ${fmt(cy * r)}`).join('L');
-  let body = hex ? `<defs><path id="h" d="M${corners(s)}Z"/><path id="o" d="M${corners(s - edge / 2)}Z"/></defs>` : '';
+  let body = hex ? `<defs><path id="h" d="M${HEX.map(([cx, cy]) => `${fmt(cx * s)} ${fmt(cy * s)}`).join('L')}Z"/></defs>` : '';
   for (const t of ORDER) {
-    const ids = shown.filter((n) => tone[n] === t);
+    const ids = [];
+    for (let n = 1; n <= top; n++) if (tone[n] === t) ids.push(n);
     if (!ids.length) continue;
-    const { color, hollow } = tones[t];
-    const paint = hollow ? `fill="none" stroke="${color}" stroke-width="${fmt(edge)}"` : `fill="${color}"`;
-    const inset = hollow ? edge / 2 : 0;
     const cells = hex
       ? ids.map((n) => {
           const [x, y] = at(xs[n], ys[n]);
-          return `<use href="#${hollow ? 'o' : 'h'}" x="${fmt(x)}" y="${fmt(y)}"/>`;
+          return `<use href="#h" x="${fmt(x)}" y="${fmt(y)}"/>`;
         })
-      : (hollow ? marks(ids.map(index), cols).map(([col, row]) => [row, col, 1]) : runs(grid(rows, cols, ids.map(index)))).map(([row, col, len]) => `<rect x="${fmt(col * UNIT + inset)}" y="${fmt(row * UNIT + inset)}" width="${fmt(len * UNIT - 2 * inset)}" height="${fmt(UNIT - 2 * inset)}"/>`);
-    body += `<g ${paint}${hex ? '' : ' shape-rendering="crispEdges"'}>${cells.join('')}</g>`;
-  }
-  if (line) {
-    const seen = new Set(shown);
-    for (const run of rail) {
-      const kept = run.filter((i) => seen.has(line.values[i]));
-      if (kept.length < 2) continue;
-      body += `<path d="${path(kept.flatMap((i) => at(line.cells[i][0], line.cells[i][1])))}" fill="none" stroke="${tones[LIT].color}" stroke-opacity="${RAIL}" stroke-width="${fmt(UNIT * WIDTH)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    }
+      : runs(grid(rows, cols, ids.map(index))).map(([row, col, len]) => `<rect x="${fmt(col * UNIT)}" y="${fmt(row * UNIT)}" width="${fmt(len * UNIT)}" height="${UNIT}"/>`);
+    body += `<g fill="${tones[t]}"${hex ? '' : ' shape-rendering="crispEdges"'}>${cells.join('')}</g>`;
   }
   return sheet(width, height, body);
 }

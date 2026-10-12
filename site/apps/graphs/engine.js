@@ -1,66 +1,102 @@
 import { num, path, sheet } from '../../lib/svg.js';
-import { settle, title } from '../designs/engine.js';
+import { roll, settle, title } from '../designs/engine.js';
 
 export const NUMBERS = [3, 5, 7];
-export const GRAPHS = ['core', 'edge', 'tunnel'];
-export const KINDS = [['', 'Random'], ['core', 'Core, filled cells'], ['edge', 'Edge, corners and sides'], ['tunnel', 'Tunnel, empty cells']];
-export const LAYOUTS = [['', 'Random'], ['grid', 'Grid'], ['force', 'Force']];
-export const BUDGET = { grid: 20000, force: 1000 };
-export const ROLES = ['Alone', 'Tip', 'Through', 'Junction'];
-export const FADES = [0.72, 0.48, 0.22, 0];
-export const SETTLE = 360;
-export const TICK = 10;
-export const STILL = 24e6;
-export const HOLD = 3000;
-export const PAD = 24;
-const DEEPEST = 8;
+export const SPACES = [['flat', '2D'], ['cube', '3D'], ['hex', '6D']];
+export const NAMES = { core: 'Core, filled cells', edge: 'Edge, corners and sides', tunnel: 'Tunnel, empty cells', dual: 'Dual, fills and voids' };
+export const KINDS = { flat: ['core', 'edge', 'tunnel'], cube: ['core', 'edge', 'tunnel'], hex: ['core', 'dual', 'edge'] };
+export const LAYOUTS = [['lattice', 'Lattice'], ['force', 'Force']];
+export const CAMERAS = [['eye', 'Perspective'], ['iso', 'Isometric']];
+export const BUDGET = { lattice: 20000, force: 2000 };
+export const COOL = 360;
+export const TICK = 3;
+export const DEEPEST = 8;
+export const FIRST = 4;
+export const PAD = 16;
+const SAID = ['Alone', 'Tip', 'Through', 'Junction'];
+const LOAD = 4e-6;
+const SNAP = 200;
+const GRID = 2e6;
 const ROLLS = 32;
 const LEAST = 12;
-const LOAD = 1e-5;
-const DOORS = { core: 'core_graph', edge: 'edge_graph', tunnel: 'tunnel_graph' };
+const LOW = 2;
+const ASPECT = [0.5, Math.sqrt(3) / 4];
 
 const pick = (rand, list) => list[Math.floor(rand() * list.length)];
 
-export const dimOf = (value) => (Number(value.dim) === 3 ? 3 : 2);
+const count = (x) => (x === undefined || x === null ? null : Number(x));
+
+/* SPACE */
+
+export const spaceOf = (value) => (KINDS[value?.view] ? value.view : 'flat');
+
+export const solid = (value) => spaceOf(value) === 'cube';
+
+export const keysOf = (space) => (space === 'flat' ? { base: 'base', code: 'code' } : { base: 'cbase', code: 'ccode' });
+
+export function design(value) {
+  const space = spaceOf(value);
+  const { base, code } = keysOf(space);
+  return { dim: space === 'flat' ? 2 : 3, base: value[base], code: String(value[code] ?? '').trim() };
+}
+
+export const kindOf = (value) => (KINDS[spaceOf(value)].includes(value?.graph) ? value.graph : KINDS[spaceOf(value)][0]);
+
+export const graphs = (value) => KINDS[spaceOf(value)].map((one) => [one, NAMES[one]]);
+
+export function turn(value, by) {
+  const list = KINDS[spaceOf(value)];
+  return list[(list.indexOf(kindOf(value)) + by + list.length) % list.length];
+}
 
 /* ROOM */
 
-export function bound(dim, number, level, graph) {
-  return (number ** level + (graph === 'edge' ? 1 : 0)) ** dim;
+const pinned = (math, dim, base, code) => (code !== '' && Number.isFinite(Number(code)) ? settle(math, dim, base, code) : null);
+
+export function bound(math, space, base, code, number, level, graph) {
+  if (space === 'hex') return Number(graph === 'edge' ? math.counts.six.solid_slice_vertices(number ** level) : math.counts.six.grid_triangles(number, level));
+  const dim = space === 'cube' ? 3 : 2;
+  if (graph === 'tunnel') return Number(math.counts.void(code, number, dim, level, base));
+  return Number(math.counts.fill(code, number, dim, level, base)) * (graph === 'edge' ? 2 ** dim : 1);
 }
 
-export function cap(value) {
+export function top(math, value) {
+  const space = spaceOf(value);
+  const { dim, base, code } = design(value);
+  const settled = pinned(math, dim, base, code);
+  if (settled === null) return FIRST;
   const budget = BUDGET[value.layout] ?? BUDGET.force;
-  const graph = value.graph || 'edge';
-  const dim = dimOf(value);
+  const fits = (level) => {
+    if (value.number ** (level * dim) > GRID) return false;
+    try {
+      return bound(math, space, base, settled, value.number, level, kindOf(value)) <= budget;
+    } catch {
+      return false;
+    }
+  };
   let level = 1;
-  while (level < DEEPEST && bound(dim, value.number, level + 1, graph) <= budget) level++;
+  while (level < DEEPEST && fits(level + 1)) level++;
   return level;
-}
-
-export function choose(value, rand) {
-  const graph = GRAPHS.includes(value.graph) ? value.graph : pick(rand, GRAPHS);
-  const layout = value.layout === 'grid' || value.layout === 'force' ? value.layout : pick(rand, ['grid', 'force']);
-  return { graph, layout };
-}
-
-export function steady(layout, count, dim, still) {
-  return layout === 'force' && still && SETTLE * count * count * dim > STILL ? 'grid' : layout;
-}
-
-export function turn(graph, by) {
-  const at = GRAPHS.indexOf(graph);
-  return GRAPHS[(Math.max(at, 0) + by + GRAPHS.length) % GRAPHS.length];
 }
 
 /* NETWORK */
 
-export function grow(math, dim, base, code, number, level) {
-  return dim === 3 ? math.three.create(code, number, level, base) : math.two.create(code, number, level, 0, base);
+function aspect(math, net) {
+  const data = net.toJSON();
+  net.free();
+  return math.graph.Network.from({ ...data, nodes: data.nodes.map((node) => ({ ...node, position: node.position.map((p, a) => p * ASPECT[a]) })) });
 }
 
-export function extract(math, cell, graph) {
-  return math.graph[DOORS[graph]]({ shape: cell.shape, data: cell.types });
+export function build(math, space, base, code, number, level, graph) {
+  if (space === 'flat') {
+    const cell = math.two.create(code, number, level, 0, base);
+    return { side: cell.shape[0], net: math.graph[`${graph}_graph`]({ shape: cell.shape, data: cell.types }), euler: count(math.two.census(cell).euler) };
+  }
+  const cell = math.three.create(code, number, level, base);
+  if (space === 'cube') return { side: cell.shape[0], net: math.graph[`${graph}_graph`]({ shape: cell.shape, data: cell.types }), euler: count(math.three.census(cell).euler) };
+  const cut = math.six.cut(cell);
+  const net = graph === 'edge' ? math.six.slice_edge_graph(cut, math.six.FILL()) : math.six[`slice_${graph}_graph`](cut);
+  return { side: cell.shape[0], net: aspect(math, net), euler: count(math.six.fills_only(cut).euler) };
 }
 
 export function flatten(net) {
@@ -78,7 +114,7 @@ export function flatten(net) {
 }
 
 export function roles(math, net) {
-  return Uint8Array.from(math.graph.roles(net), (role) => Math.max(0, ROLES.indexOf(role)));
+  return Uint8Array.from(math.graph.roles(net), (role) => Math.max(0, SAID.indexOf(role)));
 }
 
 export function body(role) {
@@ -98,174 +134,77 @@ export function giant(math, net) {
   return size;
 }
 
-export function tally(role) {
-  const out = ROLES.map(() => 0);
-  for (const r of role) out[r]++;
-  return out;
-}
+/* DEAL */
 
-/* REVEAL */
-
-function adjacency(count, pairs) {
-  const start = new Uint32Array(count + 1);
-  for (const i of pairs) start[i + 1]++;
-  for (let i = 0; i < count; i++) start[i + 1] += start[i];
-  const fill = start.slice(0, count);
-  const next = new Uint32Array(pairs.length);
-  for (let j = 0; j < pairs.length; j += 2) {
-    const a = pairs[j];
-    const b = pairs[j + 1];
-    next[fill[a]++] = b;
-    next[fill[b]++] = a;
+export function deal(math, value, rand, ask = { code: true, graph: true, level: true, layout: true }) {
+  const space = spaceOf(value);
+  const { dim, base, code: kept } = design(value);
+  let best = null;
+  for (let go = 0; go < ROLLS; go++) {
+    const code = ask.code ? roll(math, dim, base, rand) : pinned(math, dim, base, kept) ?? roll(math, dim, base, rand);
+    const graph = ask.graph ? pick(rand, KINDS[space]) : kindOf(value);
+    const layout = ask.layout ? pick(rand, ['lattice', 'force']) : value.layout;
+    const asked = { ...value, [keysOf(space).code]: code, graph, layout };
+    const most = top(math, asked);
+    const low = Math.min(LOW, most);
+    const level = ask.level ? low + Math.floor(rand() * (most - low + 1)) : Math.min(value.level, most);
+    const { net } = build(math, space, base, code, value.number, Math.min(level, top(math, { ...asked, layout: 'force' })), graph);
+    const role = roles(math, net);
+    const big = giant(math, net);
+    net.free();
+    const fine = worthy(role, big);
+    if (fine || !best || big > best.big) best = { code, graph, layout, level, big, whole: joined(big, role.length) };
+    if (fine || (!ask.code && !ask.graph && !ask.level)) break;
   }
-  return { start, next };
-}
-
-export function order(count, pairs, positions, dim) {
-  const { start, next } = adjacency(count, pairs);
-  const mid = new Float64Array(dim);
-  for (let i = 0; i < count; i++) for (let a = 0; a < dim; a++) mid[a] += positions[i * dim + a] / count;
-  const far = (i) => {
-    let d = 0;
-    for (let a = 0; a < dim; a++) d += (positions[i * dim + a] - mid[a]) ** 2;
-    return d;
-  };
-  const piece = new Int32Array(count).fill(-1);
-  const queue = new Uint32Array(count);
-  const pieces = [];
-  for (let s = 0; s < count; s++) {
-    if (piece[s] >= 0) continue;
-    const id = pieces.length;
-    let head = 0;
-    let tail = 0;
-    queue[tail++] = s;
-    piece[s] = id;
-    let root = s;
-    while (head < tail) {
-      const u = queue[head++];
-      if (far(u) < far(root)) root = u;
-      for (let e = start[u]; e < start[u + 1]; e++) {
-        const v = next[e];
-        if (piece[v] >= 0) continue;
-        piece[v] = id;
-        queue[tail++] = v;
-      }
-    }
-    pieces.push({ root, size: tail });
-  }
-  pieces.sort((p, q) => q.size - p.size || far(p.root) - far(q.root) || p.root - q.root);
-  const nodes = new Uint32Array(count);
-  const rank = new Uint32Array(count);
-  const seen = new Uint8Array(count);
-  let n = 0;
-  for (const { root } of pieces) {
-    let head = n;
-    nodes[n++] = root;
-    seen[root] = 1;
-    while (head < n) {
-      const u = nodes[head++];
-      rank[u] = head - 1;
-      for (let e = start[u]; e < start[u + 1]; e++) {
-        const v = next[e];
-        if (seen[v]) continue;
-        seen[v] = 1;
-        nodes[n++] = v;
-      }
-    }
-  }
-  const links = pairs.length / 2;
-  const when = new Uint32Array(links);
-  for (let j = 0; j < links; j++) when[j] = Math.max(rank[pairs[2 * j]], rank[pairs[2 * j + 1]]) + 1;
-  const branches = Uint32Array.from({ length: links }, (_, j) => j).sort((p, q) => when[p] - when[q] || p - q);
-  const shown = new Uint32Array(count + 1);
-  for (const j of branches) shown[when[j]]++;
-  for (let k = 1; k <= count; k++) shown[k] += shown[k - 1];
-  return { nodes, rank, branches, shown, pieces: pieces.length };
+  const { code, graph, layout, level, whole } = best;
+  return { [keysOf(space).code]: code, graph, level, layout: ask.layout && !whole ? 'lattice' : layout };
 }
 
 /* STUDY */
 
-const blank = (code) => {
-  const text = String(code ?? '').trim();
-  return text === '' || !Number.isFinite(Number(text));
-};
-
-const rolls = (value) => blank(value.code) || !GRAPHS.includes(value.graph);
-
-export function study(math, value, rand, still = false) {
-  const dim = dimOf(value);
-  const { base, number, level } = value;
-  let best = null;
-  for (let go = 0; go < ROLLS; go++) {
-    const code = settle(math, dim, base, value.code, rand);
-    const chosen = choose(value, rand);
-    const cell = grow(math, dim, base, code, number, level);
-    const net = extract(math, cell, chosen.graph);
-    const role = roles(math, net);
-    const big = giant(math, net);
-    const fine = worthy(role, big);
-    if (fine || !best || big > best.big) {
-      best?.net.free();
-      best = { code, chosen, cell, net, role, big };
-    } else net.free();
-    if (fine || !rolls(value)) break;
-  }
-  const { code, chosen, cell, net, role, big } = best;
+export function study(math, value, rand) {
+  const space = spaceOf(value);
+  const { dim, base, code: asked } = design(value);
+  const code = settle(math, dim, base, asked, rand);
+  const graph = kindOf(value);
+  const most = top(math, { ...value, [keysOf(space).code]: code });
+  const level = Math.max(1, Math.min(value.level, most));
+  const { side, net, euler } = build(math, space, base, code, value.number, level, graph);
   const census = math.graph.census(net);
-  const { count, positions, pairs } = flatten(net);
-  const asked = value.layout === 'grid' || value.layout === 'force';
-  const layout = steady(asked || joined(big, count) ? chosen.layout : 'grid', count, dim, still);
-  const laid = order(count, pairs, positions, dim);
-  const shade = {
-    nodes: Uint8Array.from(laid.nodes, (n) => role[n]),
-    branches: Uint8Array.from(laid.branches, (j) => Math.min(role[pairs[2 * j]], role[pairs[2 * j + 1]])),
-  };
-  const read = dim === 3 ? math.three.census(cell) : math.two.census(cell);
+  const { dim: drawn, count: nodes, positions, pairs } = flatten(net);
+  const role = roles(math, net);
+  const links = pairs.length / 2;
+  const shade = { nodes: role, branches: Uint8Array.from({ length: links }, (_, j) => Math.min(role[pairs[2 * j]], role[pairs[2 * j + 1]])) };
   const facts = {
     code,
     name: math.name.of(code, dim, base) ?? '',
     title: title(math, dim, base, code),
+    space,
     dim,
     base,
-    number,
+    number: value.number,
     level,
-    side: cell.shape[0],
-    graph: chosen.graph,
-    layout,
+    top: most,
+    side,
+    graph,
+    layout: value.layout,
     nodes: census.nodes,
     branches: census.branches,
     tips: census.tips,
     junctions: census.junctions,
-    roles: tally(role),
     pieces: census.components,
     length: census.total_length,
     box: census.fractal_dimension,
-    euler: Number(read.euler),
+    euler,
   };
-  return { dim, count, big, positions, pairs, roles: role, order: laid, shade, net, graph: chosen.graph, layout, facts };
+  return { space, dim: drawn, count: nodes, positions, pairs, shade, net, facts };
 }
 
-/* TIME */
+/* RELAX */
 
-export function share(t, span, still) {
-  if (still || span <= 0) return 1;
-  const loop = span + HOLD;
-  const phase = ((t % loop) + loop) % loop;
-  return Math.min(1, phase / span);
-}
+export const pace = (count, dim) => Math.max(TICK, count * count * dim * LOAD);
 
-export const pace = (count, dim) => Math.max(TICK, Math.ceil(count * count * dim * LOAD));
-
-export function ticks(t, span, still, step = TICK) {
-  if (still) return SETTLE;
-  const loop = span + HOLD;
-  const at = span > 0 ? ((t % loop) + loop) % loop : Math.max(0, t);
-  return Math.min(SETTLE, Math.floor(at / step));
-}
-
-export function reached(part, count, dim) {
-  return Math.round(part ** dim * count);
-}
+export const quick = (count, dim) => COOL * count * count * dim * LOAD <= SNAP;
 
 /* FIT */
 

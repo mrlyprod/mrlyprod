@@ -1,9 +1,12 @@
-export const BOARD = 128;
-export const LINE = 255;
+export const BOARD = 96;
+export const LINE = 320;
 export const ROWS = 1024;
-export const MASK = 27;
-export const CODES = 16;
 export const KEEP = 16;
+export const LIMIT = 512;
+export const SPANS = { 1: 81, 2: 27 };
+
+const CODES = { 1: 4, 2: 16 };
+const FIRST = { 1: 1, 2: 7 };
 
 const SHAPES = {
   glider: [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]],
@@ -12,7 +15,7 @@ const SHAPES = {
   block: [[0, 0], [1, 0], [0, 1], [1, 1]],
 };
 
-export const STARTS = [['noise', 'Noise'], ['design', 'Design'], ['one', 'One'], ['glider', 'Glider'], ['pentomino', 'R-pentomino'], ['blinker', 'Blinker'], ['block', 'Block']];
+export const STARTS = [['noise', 'Soup'], ['design', 'Design'], ['one', 'One cell'], ['glider', 'Glider'], ['pentomino', 'R-pentomino'], ['blinker', 'Blinker'], ['block', 'Block']];
 
 /* COUNTS */
 
@@ -92,11 +95,21 @@ export function windowsOf(life, value, cells) {
   return { birth: birth.window, survive: survive.window, name: `B${birth.name}/S${survive.name}` };
 }
 
+export function counted([lo, hi], cells) {
+  const from = Math.ceil(lo * cells - 1e-9);
+  const to = Math.floor(hi * cells + 1e-9);
+  return !cells || from > to ? 'none' : from === to ? `${from}` : `${from} to ${to}`;
+}
+
 /* MASK */
 
-export function codeOf(text) {
+export const dimOf = (value) => (Number(value?.dim) === 1 ? 1 : 2);
+
+export const codesOf = (dim) => Array.from({ length: CODES[dim] }, (_, i) => String(i));
+
+export function codeOf(text, dim = 2) {
   const n = Number.parseInt(String(text), 10);
-  return Number.isInteger(n) ? Math.min(CODES - 1, Math.max(0, n)) : 7;
+  return Number.isInteger(n) ? Math.min(CODES[dim] - 1, Math.max(0, n)) : FIRST[dim];
 }
 
 export function levelOf(number, level, cap) {
@@ -111,18 +124,24 @@ export function fitLevel(number, cap) {
   return l;
 }
 
-export function maskOf(life, value) {
-  const code = codeOf(value.code);
+export function maskOf(life, value, cap) {
+  const dim = dimOf(value);
+  const code = codeOf(value.code, dim);
   const number = Number(value.number) || 3;
-  const level = levelOf(number, value.level, MASK);
-  const mask = life.design_mask(2, code, number, level);
+  const level = levelOf(number, value.level, cap ?? SPANS[dim]);
+  const made = life.design_mask(dim, code, number, level);
+  const mask = dim === 1 ? { shape: [1, made.shape[0]], data: made.data } : made;
   let cells = 0;
   for (const bit of mask.data) cells += bit;
-  return { code, number, level, mask, cells };
+  return { dim, code, number, level, span: mask.shape[1], mask, cells, lattice: life.lattice_index(made) };
 }
 
-export function maskName(math, code) {
-  return math.name.of(code, 2, 2) ?? '';
+export function maskName(math, code, dim = 2) {
+  return math.name.of(code, dim, 2) ?? '';
+}
+
+export function lattice(index) {
+  return index === 0 ? 'none' : index === 1 ? 'one' : `${index} copies`;
 }
 
 /* SEEDS */
@@ -131,10 +150,7 @@ function place(types, width, design, side, top, left) {
   for (let r = 0; r < side; r++) for (let c = 0; c < side; c++) types[(top + r) * width + left + c] = design[r * side + c];
 }
 
-export function sow(value, rand, math) {
-  const flat = value.mode !== 'wolfram';
-  const width = flat ? BOARD : LINE;
-  const height = flat ? BOARD : 1;
+export function sow(value, rand, math, width, height = 1) {
   const types = new Uint8Array(width * height);
   const from = value.from;
   const shape = SHAPES[from];
@@ -144,15 +160,16 @@ export function sow(value, rand, math) {
     const top = (height >> 1) - 1;
     const mid = Math.max(...shape.map(([, y]) => y)) >> 1;
     for (const [x, y] of shape) {
-      if (flat) types[(top + y) * width + left + x] = 1;
+      if (height > 1) types[(top + y) * width + left + x] = 1;
       else if (y === mid) types[left + x] = 1;
     }
   } else if (from === 'design') {
     const number = Number(value.number) || 3;
-    const side = number ** fitLevel(number, width);
-    const design = math.two.create(codeOf(value.code), number, fitLevel(number, width), 0, 2).types;
+    const level = fitLevel(number, Math.min(width, height > 1 ? height : width));
+    const side = number ** level;
+    const design = math.two.create(codeOf(value.code), number, level, 0, 2).types;
     const left = (width - side) >> 1;
-    if (flat) place(types, width, design, side, left, left);
+    if (height > 1) place(types, width, design, side, (height - side) >> 1, left);
     else types.set(design.subarray((side >> 1) * side, (side >> 1) * side + side), left);
   } else {
     const density = Number(value.density);
@@ -181,4 +198,21 @@ export function fate(seen, h, pop) {
   seen.push(h);
   if (seen.length > KEEP) seen.shift();
   return verdict;
+}
+
+const ENDS = { Dead: 'dies', Alive: 'freezes', Loop: 'loops', Timeout: 'still moving' };
+
+export function destiny(life, cell, mask, rule, wrap, limit = LIMIT) {
+  const config = new life.Config({ shape: mask.shape, types: mask.data }, life.Counts.list(rule.birth), life.Counts.list(rule.survive));
+  config.boundary = wrap ? 'Wrap' : 'Constant';
+  config.max_generations = limit;
+  const run = life.animate(cell, config);
+  const read = { fate: run.fate, count: run.count, loop: run.loop_length };
+  run.free();
+  config.free();
+  return read;
+}
+
+export function told({ fate: end, count, loop }) {
+  return `${ENDS[end] ?? end} after ${count}${loop ? `, period ${loop}` : ''}`;
 }
