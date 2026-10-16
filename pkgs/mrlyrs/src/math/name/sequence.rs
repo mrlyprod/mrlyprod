@@ -132,7 +132,7 @@ mod tests {
             "/sequence?dim=2&code=7&measure=fills&axis=side"
         );
         assert_eq!(
-            carpet().to_mrly().unwrap(),
+            carpet().to_prose().unwrap(),
             "sequence dim 2, code 7, fills, side"
         );
         assert_eq!(

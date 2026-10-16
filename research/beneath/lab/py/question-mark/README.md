@@ -13,13 +13,13 @@
 
 ## RUN
 
-- `uv run python mrlyprod/research/beneath/lab/py/question-mark/question.py carry`, `0.2` seconds.
-- `uv run python mrlyprod/research/beneath/lab/py/question-mark/question.py question`, `1.8` seconds.
-- `uv run python mrlyprod/research/beneath/lab/py/question-mark/question.py table`, `29` seconds, almost all of it the six cofinite rows and their tail controls.
-- `uv run python mrlyprod/research/beneath/lab/py/question-mark/question.py obstruction`, `0.4` seconds.
-- `uv run python mrlyprod/research/beneath/lab/py/question-mark/question.py graph`, `32` seconds, half of it the six cofinite rows of the control.
-- `uv run python mrlyprod/research/beneath/lab/py/question-mark/question.py subleading`, `59` seconds, `20` of them the `E_2` walk to `2^24` and `15` the control's scan.
-- `uv run python mrlyprod/research/beneath/lab/py/question-mark/question.py all`, `122` seconds.
+- `uv run python research/beneath/lab/py/question-mark/question.py carry`, `0.2` seconds.
+- `uv run python research/beneath/lab/py/question-mark/question.py question`, `1.8` seconds.
+- `uv run python research/beneath/lab/py/question-mark/question.py table`, `29` seconds, almost all of it the six cofinite rows and their tail controls.
+- `uv run python research/beneath/lab/py/question-mark/question.py obstruction`, `0.4` seconds.
+- `uv run python research/beneath/lab/py/question-mark/question.py graph`, `32` seconds, half of it the six cofinite rows of the control.
+- `uv run python research/beneath/lab/py/question-mark/question.py subleading`, `59` seconds, `20` of them the `E_2` walk to `2^24` and `15` the control's scan.
+- `uv run python research/beneath/lab/py/question-mark/question.py all`, `122` seconds.
 - `--span 16`, `--depth 12`, `--level 14`, `--modes 40`, `--cut 2000`, `--taylor 4`, `--jmax 24`, `--jlo 12` and `--per 16` are the dials.
 - Prints only, writes nothing, touches the network once, for the A002487 terms, and reads one sibling, `apollonian/lab/py/ford-horocycle/ford_horocycle.py`, for the census walk.
 

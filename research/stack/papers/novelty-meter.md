@@ -131,7 +131,7 @@ Theorem 4.4 is written under the hypothesis and for simple zeros. A multiple zer
 
 ## Reproducibility
 
-One study, `lab/py/smoothed-novelty`, prints every number of Section 6: `uv run python research/stack/lab/py/smoothed-novelty/smoothed_novelty.py` from the repository root, one core, about fifteen seconds, needing numpy and `gp` on the path, taking no arguments, reading and writing no file; its README names the witness of every printed line. The figure is `figures/paper-novelty-meter.ts`, pressed by `bun figures/press.ts paper-novelty-meter` in under a second a theme, with its sieve and `F(2)` in the census writer `figures/census/src/bin/paper-novelty-meter.rs`, and every quantity it draws is asserted by one or the other as listed in Section 6, so a wrong sieve, zero, `zeta` or Mellin transform stops the writer or the press.
+One study, `lab/py/smoothed-novelty`, prints every number of Section 6: `uv run python research/stack/lab/py/smoothed-novelty/smoothed_novelty.py` from the repository root, one core, about fifteen seconds, needing numpy and `gp` on the path, taking no arguments, reading and writing no file; its README names the witness of every printed line. The figure is `figures/paper-novelty-meter.ts`, drawn in the browser in under a second a theme, with its sieve and `F(2)` in the census writer `research/shared/census/src/bin/paper-novelty-meter.rs`, and every quantity it draws is asserted by one or the other as listed in Section 6, so a wrong sieve, zero, `zeta` or Mellin transform stops the writer or the press.
 
 ## References
 

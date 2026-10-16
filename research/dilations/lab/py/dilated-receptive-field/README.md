@@ -9,7 +9,7 @@
 
 ## RUN
 
-- `uv run python research/dilations/lab/py/dilated-receptive-field/drf.py count` from `mrlyprod/`, `1.8` seconds.
+- `uv run python research/dilations/lab/py/dilated-receptive-field/drf.py count` from the repo root, `1.8` seconds.
 - `uv run python research/dilations/lab/py/dilated-receptive-field/drf.py limit`, `8.5` seconds.
 - `uv run python research/dilations/lab/py/dilated-receptive-field/drf.py gradient`, `1.0` seconds.
 - `uv run python research/dilations/lab/py/dilated-receptive-field/drf.py copy`, `4.2` seconds; `copy --scale 0.5`, `112` seconds.

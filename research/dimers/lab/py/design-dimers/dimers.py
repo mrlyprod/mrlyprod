@@ -6,7 +6,8 @@ import time
 from math import ceil, comb, floor, isqrt, log
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join("data", os.path.relpath(HERE))
+REPO = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", ".."))
+DATA_DIR = os.path.join(REPO, "data", os.path.relpath(HERE, REPO))
 
 DENSITY = 0.7
 

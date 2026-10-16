@@ -472,15 +472,15 @@ mod tests {
             "tile_magic=[7,14]_side=[3,5]_turn=[0,2]_invert=true"
         );
         assert_eq!(
-            magic.to_mrly().unwrap(),
+            magic.to_prose().unwrap(),
             "tile magic [7 14], side [3 5], turn [0 2], invert"
         );
         let carpet = Tile::from_json(CARPET).unwrap();
         assert_eq!(carpet.to_url().unwrap(), "/tile?code=7&side=3&level=2");
         assert_eq!(carpet.to_file().unwrap(), "tile_code=7_side=3_level=2");
-        assert_eq!(carpet.to_mrly().unwrap(), "tile code 7, side 3, level 2");
+        assert_eq!(carpet.to_prose().unwrap(), "tile code 7, side 3, level 2");
         assert_eq!(
-            Tile::from_json(SPECIAL).unwrap().to_mrly().unwrap(),
+            Tile::from_json(SPECIAL).unwrap().to_prose().unwrap(),
             "tile special 5, factor 3, side 5, flip"
         );
     }

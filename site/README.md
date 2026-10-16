@@ -92,7 +92,7 @@ request /about/
 
 ## DEV
 
-- `bun run --cwd mrlyprod/site dev`, from `site/`, where `bunfig.toml` hands the plugin to Bun's dev server.
+- `bun run --cwd site dev`, from `site/`, where `bunfig.toml` hands the plugin to Bun's dev server.
 - `scripts/dev.ts` serves 127.0.0.1:3000 (`PORT` overrides) with HMR.
 - A path the edge sends to the shell answers `ui/index.html`, bundled by Bun on request.
 - `/raw/<path>` reads the tree per request; `public/` reads from disk.
@@ -124,9 +124,9 @@ request /about/
 ## SHOTS
 
 - `bun run shots [route ...]` serves `dist/` through the edge rule on port 3335 and drives one headless Chrome on port 9335 with a throwaway profile.
-- It writes full-page pngs at phone and desktop into `data/mrlyprod/site/scripts/shots/latest/`.
+- It writes full-page pngs at phone and desktop into `data/site/scripts/shots/latest/`.
 - The `shots` block in `site.json` names the default routes and sizes; `kit/README.md` has the flags.
-- `bun run film <scene.js> --name <n>` plays one app scene into a contact sheet, or a video with `--video`, under `data/mrlyprod/site/scripts/film/<name>/`.
+- `bun run film <scene.js> --name <n>` plays one app scene into a contact sheet, or a video with `--video`, under `data/site/scripts/film/<name>/`.
 
 ## FONTS AND ICONS
 

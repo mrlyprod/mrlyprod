@@ -8,10 +8,10 @@
 
 ## RUN
 
-- `uv run python mrlyprod/research/apollonian/lab/py/ford-horocycle/ford_horocycle.py crossings`, `0.1` seconds.
-- `uv run python mrlyprod/research/apollonian/lab/py/ford-horocycle/ford_horocycle.py bridge`, `21` seconds, `16` of them the two `k = 10` rows.
-- `uv run python mrlyprod/research/apollonian/lab/py/ford-horocycle/ford_horocycle.py census`, `28` seconds, `19` of them the `m = 2` walk to `2^24`.
-- `uv run python mrlyprod/research/apollonian/lab/py/ford-horocycle/ford_horocycle.py all`, `49` seconds.
+- `uv run python research/apollonian/lab/py/ford-horocycle/ford_horocycle.py crossings`, `0.1` seconds.
+- `uv run python research/apollonian/lab/py/ford-horocycle/ford_horocycle.py bridge`, `21` seconds, `16` of them the two `k = 10` rows.
+- `uv run python research/apollonian/lab/py/ford-horocycle/ford_horocycle.py census`, `28` seconds, `19` of them the `m = 2` walk to `2^24`.
+- `uv run python research/apollonian/lab/py/ford-horocycle/ford_horocycle.py all`, `49` seconds.
 - `--bound 60`, `--kmax 10`, `--nodes 200`, `--jmax2 24`, `--jmax3 18`, `--jcontrol 10` and `--jcheck 9` are the dials.
 - Prints only, writes nothing, touches no network.
 

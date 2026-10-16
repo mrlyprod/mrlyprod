@@ -11,8 +11,8 @@
 
 ## RUN
 
-- `uv run python mrlyprod/research/walks/lab/py/conduction-at-large-side/conduction.py` runs every verb in about 32 s: `cell` 13 s, `dual` 0.5 s, `side` 3 s, `rate` 5 s, `scale` 6 s, `dim3` 5 s.
-- One verb by name: `uv run python mrlyprod/research/walks/lab/py/conduction-at-large-side/conduction.py scale`.
+- `uv run python research/walks/lab/py/conduction-at-large-side/conduction.py` runs every verb in about 32 s: `cell` 13 s, `dual` 0.5 s, `side` 3 s, `rate` 5 s, `scale` 6 s, `dim3` 5 s.
+- One verb by name: `uv run python research/walks/lab/py/conduction-at-large-side/conduction.py scale`.
 - Needs numpy and scipy; prints only, writes nothing.
 
 ## WITNESSES

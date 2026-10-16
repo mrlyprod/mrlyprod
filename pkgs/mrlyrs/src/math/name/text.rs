@@ -254,7 +254,7 @@ pub(crate) fn file_to_json(text: &str, kind: &str) -> Result<String> {
     Ok(json(kind, &fields))
 }
 
-pub(crate) fn mrly(json: &str, bare: &[&str]) -> Result<String> {
+pub(crate) fn prose(json: &str, bare: &[&str]) -> Result<String> {
     let (kind, fields) = kinded(json)?;
     let mut parts = Vec::new();
     for (key, value) in &fields {
@@ -316,11 +316,11 @@ mod tests {
             "bang_dim=2_lattice=hex_base=3_code=39_twist=[0,1,5,0]"
         );
         assert_eq!(
-            mrly(KOCH, &["lattice"]).unwrap(),
+            prose(KOCH, &["lattice"]).unwrap(),
             "bang dim 2, hex, base 3, code 39, twist [0 1 5 0]"
         );
         assert_eq!(
-            mrly(KOCH, &[]).unwrap(),
+            prose(KOCH, &[]).unwrap(),
             "bang dim 2, lattice hex, base 3, code 39, twist [0 1 5 0]"
         );
     }
@@ -358,7 +358,7 @@ mod tests {
         let plain = r#"{"kind":"rule"}"#;
         assert_eq!(url(plain).unwrap(), "/rule");
         assert_eq!(file(plain).unwrap(), "rule");
-        assert_eq!(mrly(plain, &[]).unwrap(), "rule");
+        assert_eq!(prose(plain, &[]).unwrap(), "rule");
         assert_eq!(url_to_json("/rule", "rule", &[]).unwrap(), plain);
         assert_eq!(file_to_json("rule", "rule").unwrap(), plain);
     }
@@ -368,7 +368,7 @@ mod tests {
         for bad in ["{}", r#"{"dim":2}"#, r#"{"kind":3}"#, r#"{"kind":"bang""#] {
             assert!(url(bad).is_err(), "{bad}");
             assert!(file(bad).is_err(), "{bad}");
-            assert!(mrly(bad, &[]).is_err(), "{bad}");
+            assert!(prose(bad, &[]).is_err(), "{bad}");
         }
     }
 }

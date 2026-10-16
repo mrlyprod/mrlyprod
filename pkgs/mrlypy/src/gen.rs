@@ -425,7 +425,7 @@ pub mod core {
         }
     }
 
-    /// The rgba color, its themes and the fifteen-color palette utils/colors.py stamps.
+    /// The rgba color, its themes and the fifteen-color palette.
     pub mod colors {
         use crate::hand::{ok, PyColor, PyPixels, PyRgba, PyRng, PyTensor};
         use pyo3::prelude::*;
@@ -963,7 +963,7 @@ pub mod core {
             let m = PyModule::new(py, "mrlypy.core.colors")?;
             m.setattr(
                 "__doc__",
-                "The rgba color, its themes and the fifteen-color palette utils/colors.py stamps.",
+                "The rgba color, its themes and the fifteen-color palette.",
             )?;
             m.add_class::<Theme>()?;
             m.add_function(wrap_pyfunction!(alpha, &m)?)?;
@@ -3313,9 +3313,9 @@ pub mod gen_ {
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-            #[pyo3(name = "to_mrly", signature = ())]
-            pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_mrly(&self.0);
+            #[pyo3(name = "to_prose", signature = ())]
+            pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_prose(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
@@ -4779,9 +4779,9 @@ pub mod life {
             (out).into_bound_py_any(py)
         }
         /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-        #[pyo3(name = "to_mrly", signature = ())]
-        pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_mrly(&self.0);
+        #[pyo3(name = "to_prose", signature = ())]
+        pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_prose(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
         /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
@@ -11437,9 +11437,10 @@ pub mod math {
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-            #[pyo3(name = "to_mrly", signature = ())]
-            pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_mrly(&self.0);
+            #[pyo3(name = "to_prose", signature = ())]
+            pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out =
+                    <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_prose(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
@@ -11618,10 +11619,10 @@ pub mod math {
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-            #[pyo3(name = "to_mrly", signature = ())]
-            pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            #[pyo3(name = "to_prose", signature = ())]
+            pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out =
-                    <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_mrly(&self.0);
+                    <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_prose(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
@@ -11783,9 +11784,10 @@ pub mod math {
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-            #[pyo3(name = "to_mrly", signature = ())]
-            pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_mrly(&self.0);
+            #[pyo3(name = "to_prose", signature = ())]
+            pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out =
+                    <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_prose(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.

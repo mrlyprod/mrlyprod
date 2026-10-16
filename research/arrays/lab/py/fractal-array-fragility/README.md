@@ -7,7 +7,7 @@
 
 ## RUN
 
-- `uv run python research/arrays/lab/py/fractal-array-fragility/fragility.py exact` from `mrlyprod/`; about 21 seconds.
+- `uv run python research/arrays/lab/py/fractal-array-fragility/fragility.py exact` from the repo root; about 21 seconds.
 - `uv run python research/arrays/lab/py/fractal-array-fragility/fragility.py dial`; about 21 seconds.
 - Standard library and numpy; no argument runs both verbs.
 

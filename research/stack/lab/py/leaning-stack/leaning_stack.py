@@ -458,7 +458,7 @@ def render():
     sheet = np.full((PANEL, 2 * PANEL + 8), 255, dtype=np.uint8)
     sheet[:, :PANEL] = left
     sheet[:, PANEL + 8 :] = right
-    path = "research/stack/lab/py/leaning-stack/leaning-stack.png"
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaning-stack.png")
     Image.fromarray(sheet, mode="L").save(path, optimize=True)
     print("RENDER  leaning-stack.png  N = %d  panels delta = 1/5 and delta = sqrt 2 - 1  peaks %d and %d  %d bytes" % (RENDER_N, peak_left, peak_right, os.path.getsize(path)))
 

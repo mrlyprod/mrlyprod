@@ -7,7 +7,7 @@ import { kind } from "../kit/types.ts";
 import { globals, ready, typed } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");
-if (process.cwd() !== org) throw new Error("dev: run from site/ (bun run --cwd mrlyprod/site dev), where bunfig.toml hands the plugin to Bun");
+if (process.cwd() !== org) throw new Error("dev: run from site/ (bun run --cwd site dev), where bunfig.toml hands the plugin to Bun");
 const made = await ready();
 const files = new Map([...made.assets, ...globals(made)].map((one) => [`/${one.path}`, one]));
 files.set("/boot.js", files.get(made.boot)!);

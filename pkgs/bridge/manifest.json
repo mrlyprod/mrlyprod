@@ -40,7 +40,7 @@
       "path": "core::colors",
       "file": "core/colors.rs",
       "docs": [
-        "The rgba color, its themes and the fifteen-color palette utils/colors.py stamps."
+        "The rgba color, its themes and the fifteen-color palette."
       ],
       "items": 40
     },
@@ -24341,8 +24341,8 @@
       }
     },
     {
-      "path": "gen::name::Tile::to_mrly",
-      "name": "to_mrly",
+      "path": "gen::name::Tile::to_prose",
+      "name": "to_prose",
       "module": "gen::name",
       "defined_at": "math/name/mod.rs:66",
       "docs": [
@@ -25952,8 +25952,8 @@
       }
     },
     {
-      "path": "life::Rule::to_mrly",
-      "name": "to_mrly",
+      "path": "life::Rule::to_prose",
+      "name": "to_prose",
       "module": "life",
       "defined_at": "math/name/mod.rs:66",
       "docs": [
@@ -42862,8 +42862,8 @@
       }
     },
     {
-      "path": "math::name::Bang::to_mrly",
-      "name": "to_mrly",
+      "path": "math::name::Bang::to_prose",
+      "name": "to_prose",
       "module": "math::name",
       "defined_at": "math/name/mod.rs:66",
       "docs": [
@@ -43260,8 +43260,8 @@
       }
     },
     {
-      "path": "math::name::Sequence::to_mrly",
-      "name": "to_mrly",
+      "path": "math::name::Sequence::to_prose",
+      "name": "to_prose",
       "module": "math::name",
       "defined_at": "math/name/mod.rs:66",
       "docs": [
@@ -43619,8 +43619,8 @@
       }
     },
     {
-      "path": "math::name::Word::to_mrly",
-      "name": "to_mrly",
+      "path": "math::name::Word::to_prose",
+      "name": "to_prose",
       "module": "math::name",
       "defined_at": "math/name/mod.rs:66",
       "docs": [

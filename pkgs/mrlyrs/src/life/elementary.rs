@@ -127,7 +127,7 @@ pub fn affine(rule: u8) -> bool {
 ///
 /// Errs when the name will not print as a line of prose.
 pub fn rule_name(rule: u8) -> Result<String> {
-    Bang::new(rule as u128, 3, 2).to_mrly()
+    Bang::new(rule as u128, 3, 2).to_prose()
 }
 
 fn act(rule: u8, element: &(Vec<usize>, Vec<u8>), complement: bool) -> u8 {

@@ -402,7 +402,7 @@ static DOORS: &[Door] = &[
     ("gen.name.Tile.to_file", "(self: gen.name.Tile) -> String", Some(door_gen_name_tile_to_file)),
     ("gen.name.Tile.to_id", "(self: gen.name.Tile) -> String", Some(door_gen_name_tile_to_id)),
     ("gen.name.Tile.to_json", "(self: gen.name.Tile) -> String", Some(door_gen_name_tile_to_json)),
-    ("gen.name.Tile.to_mrly", "(self: gen.name.Tile) -> String", Some(door_gen_name_tile_to_mrly)),
+    ("gen.name.Tile.to_prose", "(self: gen.name.Tile) -> String", Some(door_gen_name_tile_to_prose)),
     ("gen.name.Tile.to_url", "(self: gen.name.Tile) -> String", Some(door_gen_name_tile_to_url)),
     ("gen.random_design", "(rng: Rng(seed)) -> gen.recipe.Design", Some(door_gen_random_design)),
     ("gen.random_rotation", "(design: gen.recipe.Design, rng: Rng(seed)) -> u8", Some(door_gen_random_rotation)),
@@ -442,7 +442,7 @@ static DOORS: &[Door] = &[
     ("life.Rule.to_file", "(self: life.Rule) -> String", Some(door_life_rule_to_file)),
     ("life.Rule.to_id", "(self: life.Rule) -> String", Some(door_life_rule_to_id)),
     ("life.Rule.to_json", "(self: life.Rule) -> String", Some(door_life_rule_to_json)),
-    ("life.Rule.to_mrly", "(self: life.Rule) -> String", Some(door_life_rule_to_mrly)),
+    ("life.Rule.to_prose", "(self: life.Rule) -> String", Some(door_life_rule_to_prose)),
     ("life.Rule.to_url", "(self: life.Rule) -> String", Some(door_life_rule_to_url)),
     ("life.Source.all", "() -> [life.Source; 23]", Some(door_life_source_all)),
     ("life.Source.designs", "() -> [life.Source; 17]", Some(door_life_source_designs)),
@@ -828,7 +828,7 @@ static DOORS: &[Door] = &[
     ("math.name.Bang.to_file", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_file)),
     ("math.name.Bang.to_id", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_id)),
     ("math.name.Bang.to_json", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_json)),
-    ("math.name.Bang.to_mrly", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_mrly)),
+    ("math.name.Bang.to_prose", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_prose)),
     ("math.name.Bang.to_url", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_url)),
     ("math.name.Lattice.default", "() -> math.name.Lattice", Some(door_math_name_lattice_default)),
     ("math.name.Lattice.is_square", "(self: math.name.Lattice) -> bool", Some(door_math_name_lattice_is_square)),
@@ -842,7 +842,7 @@ static DOORS: &[Door] = &[
     ("math.name.Sequence.to_file", "(self: math.name.Sequence) -> String", Some(door_math_name_sequence_to_file)),
     ("math.name.Sequence.to_id", "(self: math.name.Sequence) -> String", Some(door_math_name_sequence_to_id)),
     ("math.name.Sequence.to_json", "(self: math.name.Sequence) -> String", Some(door_math_name_sequence_to_json)),
-    ("math.name.Sequence.to_mrly", "(self: math.name.Sequence) -> String", Some(door_math_name_sequence_to_mrly)),
+    ("math.name.Sequence.to_prose", "(self: math.name.Sequence) -> String", Some(door_math_name_sequence_to_prose)),
     ("math.name.Sequence.to_url", "(self: math.name.Sequence) -> String", Some(door_math_name_sequence_to_url)),
     ("math.name.Word.bases", "(self: math.name.Word) -> [usize]", Some(door_math_name_word_bases)),
     ("math.name.Word.checked", "(self: math.name.Word) -> math.name.Word", Some(door_math_name_word_checked)),
@@ -854,7 +854,7 @@ static DOORS: &[Door] = &[
     ("math.name.Word.to_file", "(self: math.name.Word) -> String", Some(door_math_name_word_to_file)),
     ("math.name.Word.to_id", "(self: math.name.Word) -> String", Some(door_math_name_word_to_id)),
     ("math.name.Word.to_json", "(self: math.name.Word) -> String", Some(door_math_name_word_to_json)),
-    ("math.name.Word.to_mrly", "(self: math.name.Word) -> String", Some(door_math_name_word_to_mrly)),
+    ("math.name.Word.to_prose", "(self: math.name.Word) -> String", Some(door_math_name_word_to_prose)),
     ("math.name.Word.to_url", "(self: math.name.Word) -> String", Some(door_math_name_word_to_url)),
     ("math.name.of", "(code: Code, dim: usize, base: usize) -> String?", Some(door_math_name_of)),
     ("math.name.words", "(dim: usize, base: usize) -> [(String, String)]", Some(door_math_name_words)),
@@ -2855,10 +2855,10 @@ fn door_gen_name_tile_to_json(name: &str, args: &[Value]) -> Done {
     ))
 }
 
-fn door_gen_name_tile_to_mrly(name: &str, args: &[Value]) -> Done {
+fn door_gen_name_tile_to_prose(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::name::Tile = take!(name, 0, &args[0]);
-    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_mrly(&a0) {
+    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_prose(&a0) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -3159,10 +3159,10 @@ fn door_life_rule_to_json(name: &str, args: &[Value]) -> Done {
     ))
 }
 
-fn door_life_rule_to_mrly(name: &str, args: &[Value]) -> Done {
+fn door_life_rule_to_prose(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::life::Rule = take!(name, 0, &args[0]);
-    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_mrly(&a0) {
+    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_prose(&a0) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -6888,10 +6888,10 @@ fn door_math_name_bang_to_json(name: &str, args: &[Value]) -> Done {
     ))
 }
 
-fn door_math_name_bang_to_mrly(name: &str, args: &[Value]) -> Done {
+fn door_math_name_bang_to_prose(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Bang = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_mrly(&a0) {
+    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_prose(&a0) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -7006,10 +7006,10 @@ fn door_math_name_sequence_to_json(name: &str, args: &[Value]) -> Done {
     ))
 }
 
-fn door_math_name_sequence_to_mrly(name: &str, args: &[Value]) -> Done {
+fn door_math_name_sequence_to_prose(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Sequence = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_mrly(&a0) {
+    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_prose(&a0) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -7116,10 +7116,10 @@ fn door_math_name_word_to_json(name: &str, args: &[Value]) -> Done {
     ))
 }
 
-fn door_math_name_word_to_mrly(name: &str, args: &[Value]) -> Done {
+fn door_math_name_word_to_prose(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Word = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_mrly(&a0) {
+    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_prose(&a0) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }

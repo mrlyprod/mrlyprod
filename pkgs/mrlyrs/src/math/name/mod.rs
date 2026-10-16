@@ -22,7 +22,7 @@ pub mod word;
 /// The object holds `kind` first, then the glossary words as keys in a fixed order per kind, with
 /// defaults elided and no whitespace, so equality of things is equality of strings. Every other
 /// form is a function of that string: `to_url` puts the keys in a query string, `to_file` in a
-/// filename, `to_mrly` in a line of prose, and `to_id` hashes it. The law is
+/// filename, `to_prose` in a line of prose, and `to_id` hashes it. The law is
 /// `from_json(to_json(x)) == checked(x)` for every value `x`.
 pub trait Named: Serialize + DeserializeOwned + Sized {
     /// The kind word, the first value of the object.
@@ -63,8 +63,8 @@ pub trait Named: Serialize + DeserializeOwned + Sized {
         Self::from_json(&text::file_to_json(text, Self::KIND)?)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-    fn to_mrly(&self) -> Result<String> {
-        text::mrly(&self.to_json(), Self::BARE)
+    fn to_prose(&self) -> Result<String> {
+        text::prose(&self.to_json(), Self::BARE)
     }
 }
 

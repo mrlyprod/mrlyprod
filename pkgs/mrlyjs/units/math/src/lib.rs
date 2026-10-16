@@ -6279,8 +6279,8 @@ impl name_Bang {
         Ok(value)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-    pub fn to_mrly(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_mrly(&self.inner)
+    pub fn to_prose(&self) -> Result<String, JsValue> {
+        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_prose(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
@@ -6431,9 +6431,9 @@ impl name_Sequence {
         Ok(value)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-    pub fn to_mrly(&self) -> Result<String, JsValue> {
+    pub fn to_prose(&self) -> Result<String, JsValue> {
         let value =
-            <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_mrly(&self.inner)
+            <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_prose(&self.inner)
                 .map_err(hand::throw)?;
         Ok(value)
     }
@@ -6578,8 +6578,8 @@ impl name_Word {
         Ok(value)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
-    pub fn to_mrly(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_mrly(&self.inner)
+    pub fn to_prose(&self) -> Result<String, JsValue> {
+        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_prose(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }

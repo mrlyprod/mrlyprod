@@ -12,7 +12,7 @@
 
 ## RUN
 
-- `uv run python mrlyprod/research/dimers/lab/py/design-dimers/dimers.py` runs every verb; one verb by name, e.g. `... dimers.py count`.
+- `uv run python research/dimers/lab/py/design-dimers/dimers.py` runs every verb; one verb by name, e.g. `... dimers.py count`.
 - Runtimes: `imbalance` 0.1 s, `census` about 5 s, `search` 134 to 160 s, `count` 49 s (the three 4096-cell determinants), `cross` 3 s, `growth` under 1 s with the cache; about 3.5 minutes in all.
 - Needs `gp` on the path; standard library only.
 

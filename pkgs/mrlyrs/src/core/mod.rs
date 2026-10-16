@@ -13,7 +13,7 @@
 
 /// The cell grid: type bytes with optional per-cell colors and tags.
 pub mod cell;
-/// The rgba color, its themes and the fifteen-color palette utils/colors.py stamps.
+/// The rgba color, its themes and the fifteen-color palette.
 pub mod colors;
 /// The one error type, its Result and the json parser over the rented value.
 pub mod error;

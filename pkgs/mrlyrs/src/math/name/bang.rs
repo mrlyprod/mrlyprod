@@ -295,14 +295,14 @@ mod tests {
             "bang_dim=2_lattice=hex_base=3_code=39_twist=[0,1,5,0]"
         );
         assert_eq!(
-            koch.to_mrly().unwrap(),
+            koch.to_prose().unwrap(),
             "bang dim 2, hex, base 3, code 39, twist [0 1 5 0]"
         );
         assert_eq!(Bang::from_url(&koch.to_url().unwrap()).unwrap(), koch);
         assert_eq!(Bang::from_file(&koch.to_file().unwrap()).unwrap(), koch);
         assert_eq!(koch.to_id().len(), 8);
         assert_ne!(koch.to_id(), Bang::new(39, 2, 3).to_id());
-        assert_eq!(Bang::new(7, 2, 2).to_mrly().unwrap(), "bang dim 2, code 7");
+        assert_eq!(Bang::new(7, 2, 2).to_prose().unwrap(), "bang dim 2, code 7");
         assert_eq!(Bang::new(7, 2, 2).to_file().unwrap(), "bang_dim=2_code=7");
     }
     #[test]

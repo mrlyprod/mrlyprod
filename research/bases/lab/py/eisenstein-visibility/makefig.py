@@ -15,7 +15,7 @@ GRAY = (198, 198, 201)
 INK = (0, 0, 0)
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[5]
+ROOT = HERE.parents[4]
 DATA_DIR = ROOT / "data" / HERE.relative_to(ROOT)
 OUT = DATA_DIR / "bases-fig.png"
 

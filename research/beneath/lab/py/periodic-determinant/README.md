@@ -11,10 +11,10 @@
 
 ## RUN
 
-- `uv run python mrlyprod/research/beneath/lab/py/periodic-determinant/determinant.py zero`, `15` seconds.
-- `uv run python mrlyprod/research/beneath/lab/py/periodic-determinant/determinant.py control`, `31` seconds, `{1,2,3}` at periods to `13`.
-- `uv run python mrlyprod/research/beneath/lab/py/periodic-determinant/determinant.py orphans`, `45` seconds, periods to `22` capped by `4 * 10^6` walks.
-- `uv run python mrlyprod/research/beneath/lab/py/periodic-determinant/determinant.py all`, `83` seconds.
+- `uv run python research/beneath/lab/py/periodic-determinant/determinant.py zero`, `15` seconds.
+- `uv run python research/beneath/lab/py/periodic-determinant/determinant.py control`, `31` seconds, `{1,2,3}` at periods to `13`.
+- `uv run python research/beneath/lab/py/periodic-determinant/determinant.py orphans`, `45` seconds, periods to `22` capped by `4 * 10^6` walks.
+- `uv run python research/beneath/lab/py/periodic-determinant/determinant.py all`, `83` seconds.
 - `--period 18` (the `zero` and `control` truncation, `orphans` takes it plus `4`), `--arcs 2000` and `--modes 40` are the dials.
 - Prints only, writes nothing, reads one sibling, `lab/py/question-mark/question.py`, for the orphan graphs and their collocation readings.
 

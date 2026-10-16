@@ -353,7 +353,7 @@ fn main() {
         spectral.iter().chain(&walker).all(|dw| *dw >= 2.0 - 0.01)
     );
     let here = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let root = here.ancestors().nth(6).expect("the root");
+    let root = here.ancestors().nth(5).expect("the root");
     let folder = root
         .join("data")
         .join(here.strip_prefix(root).expect("under the root"));

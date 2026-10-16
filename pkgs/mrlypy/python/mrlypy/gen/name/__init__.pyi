@@ -77,7 +77,7 @@ class Tile:
         """Prints the first eight hex digits of the sha256 of the canonical JSON."""
     def to_json(self) -> str:
         """Prints the canonical JSON object."""
-    def to_mrly(self) -> str:
+    def to_prose(self) -> str:
         """Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back."""
     def to_url(self) -> str:
         """Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back."""

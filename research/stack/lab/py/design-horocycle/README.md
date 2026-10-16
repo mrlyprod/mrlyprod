@@ -10,7 +10,7 @@
 
 ## RUN
 
-`uv run python research/stack/lab/py/design-horocycle/design_horocycle.py` from `mrlyprod/`, verbs `bridge`, `meter`, `all` (default). `bridge` takes 4 seconds and `meter` 28 seconds on one core; `meter` peaks at 3.9 GB resident, measured with `/usr/bin/time -l`.
+`uv run python research/stack/lab/py/design-horocycle/design_horocycle.py` from the repo root, verbs `bridge`, `meter`, `all` (default). `bridge` takes 4 seconds and `meter` 28 seconds on one core; `meter` peaks at 3.9 GB resident, measured with `/usr/bin/time -l`.
 
 ## WITNESSES
 

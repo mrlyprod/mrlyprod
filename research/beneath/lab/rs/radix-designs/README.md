@@ -30,7 +30,7 @@
 cargo run --release --manifest-path research/beneath/lab/rs/radix-designs/Cargo.toml -- koch compare named today census affine
 ```
 
-- Run from `mrlyprod/`. Verbs may be given in any combination and run in order in one process; no argument runs all six.
+- Run from the repo root. Verbs may be given in any combination and run in order in one process; no argument runs all six.
 - `koch`, `compare`, `today` and `census` each run in under `0.01` s, `affine` in `0.08` s and `named` in `0.08` s; the whole study including the build is `1.3` s of wall clock.
 - `cargo test -p mrlyrs radix` pins the residue systems, the Koch levels `1` and `2`, the real-base cell and the fill law inside the crate.
 

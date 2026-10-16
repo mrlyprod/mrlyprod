@@ -212,7 +212,7 @@ impl Design {
     ///
     /// Errors when the design's name does not read back.
     pub fn name(&self) -> Result<String> {
-        crate::math::name::Named::to_mrly(&crate::math::name::Bang::new(
+        crate::math::name::Named::to_prose(&crate::math::name::Bang::new(
             self.i.get(),
             self.dimension,
             2,

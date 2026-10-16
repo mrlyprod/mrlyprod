@@ -104,7 +104,7 @@ export function facts(math, dim, base, code) {
 
 export function title(math, dim, base, code) {
   const bang = new math.name.Bang(code, dim, base);
-  const text = bang.to_mrly();
+  const text = bang.to_prose();
   bang.free();
   return text;
 }

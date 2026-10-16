@@ -121,7 +121,7 @@ mod tests {
             "word_dim=2_magic=[7,14,9]_side=[3,7,5]"
         );
         assert_eq!(
-            word.to_mrly().unwrap(),
+            word.to_prose().unwrap(),
             "word dim 2, magic [7 14 9], side [3 7 5]"
         );
         assert_eq!(Word::from_json(&word.to_json()).unwrap(), word);

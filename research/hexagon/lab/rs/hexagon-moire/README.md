@@ -15,7 +15,7 @@
 
 ## RUN
 
-- `cargo run --release --manifest-path research/hexagon/lab/rs/hexagon-moire/Cargo.toml` from `mrlyprod/`
+- `cargo run --release --manifest-path research/hexagon/lab/rs/hexagon-moire/Cargo.toml` from the repo root
 
 ## WITNESSES
 

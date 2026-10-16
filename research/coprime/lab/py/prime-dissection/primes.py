@@ -11,7 +11,8 @@ import numpy as np
 from mpmath import iv
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join("data", os.path.relpath(HERE))
+REPO = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", ".."))
+DATA_DIR = os.path.join(REPO, "data", os.path.relpath(HERE, REPO))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "..", "mobius", "lab", "py", "mobius-dissection"))
 import dissection as MD
 sys.path.insert(0, os.path.join(HERE, "..", "digit-uniform-bound"))

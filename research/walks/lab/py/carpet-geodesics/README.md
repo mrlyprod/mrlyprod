@@ -10,8 +10,8 @@
 
 ## RUN
 
-- `uv run python mrlyprod/research/walks/lab/py/carpet-geodesics/geodesics.py` runs every verb in about 7 s: `code` 0 s, `corner` 5 s, `level1` 0.3 s, `map` 1.7 s, `bridge` 0.2 s, `hull` 0.1 s.
-- One verb by name: `uv run python mrlyprod/research/walks/lab/py/carpet-geodesics/geodesics.py corner 5,3 11,2` runs the two long cases, 52 s and 31 s.
+- `uv run python research/walks/lab/py/carpet-geodesics/geodesics.py` runs every verb in about 7 s: `code` 0 s, `corner` 5 s, `level1` 0.3 s, `map` 1.7 s, `bridge` 0.2 s, `hull` 0.1 s.
+- One verb by name: `uv run python research/walks/lab/py/carpet-geodesics/geodesics.py corner 5,3 11,2` runs the two long cases, 52 s and 31 s.
 - Needs numpy and scipy; prints only, writes nothing.
 
 ## WITNESSES

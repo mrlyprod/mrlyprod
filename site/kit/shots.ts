@@ -240,8 +240,8 @@ const VALUED = ["--js", "--theme", "--size", "--keys", "--frames"];
 export async function main(root: string, config?: Record<string, unknown>, dist = join(root, "dist")): Promise<void> {
   const conf = config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Record<string, unknown>);
   const { routes, sizes } = block(conf);
-  const desk = resolve(root, "../..");
-  const DATA_DIR = join(desk, "data", relative(desk, root), "scripts");
+  const repo = resolve(import.meta.dir, "../..");
+  const DATA_DIR = join(repo, "data", relative(repo, root), "scripts");
   const args = process.argv.slice(2);
   const flag = (name: string) => (args.includes(name) ? (args[args.indexOf(name) + 1] ?? "") : "");
   const print = args.includes("--print");

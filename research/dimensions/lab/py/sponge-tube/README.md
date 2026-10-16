@@ -8,9 +8,9 @@
 
 ## RUN
 
-- `uv run python mrlyprod/research/dimensions/lab/py/sponge-tube/sponge_tube.py`
+- `uv run python research/dimensions/lab/py/sponge-tube/sponge_tube.py`
 - About 46 to 50 seconds; prints only, writes nothing, asserts the raster brackets and the positive gap.
-- `uv run python mrlyprod/research/dimensions/lab/py/sponge-tube/checks.py` runs the four checks, about 125 seconds in all: `oracle` 4 s, `montecarlo` 82 s, `seeded` 29 s, `recompute` 9 s; append one name for one check. Needs numpy, scipy and mpmath; prints only, writes nothing.
+- `uv run python research/dimensions/lab/py/sponge-tube/checks.py` runs the four checks, about 125 seconds in all: `oracle` 4 s, `montecarlo` 82 s, `seeded` 29 s, `recompute` 9 s; append one name for one check. Needs numpy, scipy and mpmath; prints only, writes nothing.
 
 ## WITNESSES
 

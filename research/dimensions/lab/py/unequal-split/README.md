@@ -7,10 +7,10 @@
 
 ## RUN
 
-- `uv run python mrlyprod/research/dimensions/lab/py/unequal-split/unequal_split.py patch`, about 1 second.
-- `uv run python mrlyprod/research/dimensions/lab/py/unequal-split/unequal_split.py poles`, about 5 seconds.
-- `uv run python mrlyprod/research/dimensions/lab/py/unequal-split/unequal_split.py count`, about 1 second.
-- `uv run python mrlyprod/research/dimensions/lab/py/unequal-split/unequal_split.py ripple`, about 1 second.
+- `uv run python research/dimensions/lab/py/unequal-split/unequal_split.py patch`, about 1 second.
+- `uv run python research/dimensions/lab/py/unequal-split/unequal_split.py poles`, about 5 seconds.
+- `uv run python research/dimensions/lab/py/unequal-split/unequal_split.py count`, about 1 second.
+- `uv run python research/dimensions/lab/py/unequal-split/unequal_split.py ripple`, about 1 second.
 - Every verb prints only and writes nothing; PARI runs through `gp -q`.
 
 ## WITNESSES

@@ -5,7 +5,8 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join("data", os.path.relpath(HERE))
+REPO = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", ".."))
+DATA_DIR = os.path.join(REPO, "data", os.path.relpath(HERE, REPO))
 PAIRS = [(1, 1), (1, 2), (2, 3), (3, 4), (5, 7), (1, 9), (4, 9), (13, 27), (10, 81), (40, 81), (6, 10)]
 DESIGNS = [(3, (0, 1)), (3, (0, 2)), (3, (1, 2)), (4, (0, 1)), (4, (1, 2, 3)), (5, (0, 1)), (10, tuple(range(9))), (10, (0, 1, 2, 3, 4, 5, 6, 7, 9))]
 

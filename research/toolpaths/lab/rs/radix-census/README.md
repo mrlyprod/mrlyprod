@@ -19,7 +19,7 @@
 cargo run --release --manifest-path research/toolpaths/lab/rs/radix-census/Cargo.toml -- census curves junction named
 ```
 
-- Run from `mrlyprod/`. Verbs may be given in any combination and run in order in one process; no argument runs `census`.
+- Run from the repo root. Verbs may be given in any combination and run in order in one process; no argument runs `census`.
 - Measured on all cores, wall clock: `census` `26` s, nearly all of it at base `3`; `curves` `1.6` s; `junction` `15` s; `named` under `0.01` s; all four in one process `43` s.
 
 ## WITNESSES

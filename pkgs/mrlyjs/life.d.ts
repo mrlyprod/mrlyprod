@@ -295,7 +295,7 @@ export class Rule {
     /** Prints the canonical JSON object. */
     to_json(): string;
     /** Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back. */
-    to_mrly(): string;
+    to_prose(): string;
     /** Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back. */
     to_url(): string;
 }

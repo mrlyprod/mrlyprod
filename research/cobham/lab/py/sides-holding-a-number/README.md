@@ -18,14 +18,14 @@
 ## RUN
 
 ```
-uv run python mrlyprod/research/cobham/lab/py/sides-holding-a-number/sides.py period 200
-uv run python mrlyprod/research/cobham/lab/py/sides-holding-a-number/sides.py eisenstein 200
-uv run python mrlyprod/research/cobham/lab/py/sides-holding-a-number/sides.py count 1000000
-uv run python mrlyprod/research/cobham/lab/py/sides-holding-a-number/sides.py second 11
-uv run python mrlyprod/research/cobham/lab/py/sides-holding-a-number/sides.py family
-uv run python mrlyprod/research/cobham/lab/py/sides-holding-a-number/sides.py inter 1e12 A030979.seq
-uv run python mrlyprod/research/cobham/lab/py/sides-holding-a-number/sides.py deep 1000
-uv run python mrlyprod/research/cobham/lab/py/sides-holding-a-number/sides.py weyl 100000 6
+uv run python research/cobham/lab/py/sides-holding-a-number/sides.py period 200
+uv run python research/cobham/lab/py/sides-holding-a-number/sides.py eisenstein 200
+uv run python research/cobham/lab/py/sides-holding-a-number/sides.py count 1000000
+uv run python research/cobham/lab/py/sides-holding-a-number/sides.py second 11
+uv run python research/cobham/lab/py/sides-holding-a-number/sides.py family
+uv run python research/cobham/lab/py/sides-holding-a-number/sides.py inter 1e12 A030979.seq
+uv run python research/cobham/lab/py/sides-holding-a-number/sides.py deep 1000
+uv run python research/cobham/lab/py/sides-holding-a-number/sides.py weyl 100000 6
 ```
 
 ## WITNESSES

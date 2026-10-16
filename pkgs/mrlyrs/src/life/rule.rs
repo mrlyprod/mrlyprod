@@ -184,7 +184,7 @@ mod tests {
         assert_eq!(Rule::from_json(CONWAY).unwrap(), conway);
         assert_eq!(conway.to_url().unwrap(), "/rule?birth=3&survive=2,3");
         assert_eq!(conway.to_file().unwrap(), "rule_birth=[3]_survive=[2,3]");
-        assert_eq!(conway.to_mrly().unwrap(), "rule birth [3], survive [2 3]");
+        assert_eq!(conway.to_prose().unwrap(), "rule birth [3], survive [2 3]");
         assert_eq!(Rule::from_url(&conway.to_url().unwrap()).unwrap(), conway);
         assert_eq!(Rule::from_file(&conway.to_file().unwrap()).unwrap(), conway);
         assert_eq!(conway.to_id().len(), 8);
@@ -194,7 +194,7 @@ mod tests {
             r#"{"kind":"rule","birth":[3],"survive":[2,3],"wrap":true}"#
         );
         assert_eq!(
-            wrapped.to_mrly().unwrap(),
+            wrapped.to_prose().unwrap(),
             "rule birth [3], survive [2 3], wrap"
         );
         assert_ne!(wrapped.to_id(), conway.to_id());
@@ -218,7 +218,7 @@ mod tests {
             "rule_birth=[12,13]_survive=fibonacci_wrap=true"
         );
         assert_eq!(
-            wide.to_mrly().unwrap(),
+            wide.to_prose().unwrap(),
             "rule birth [12 13], survive fibonacci, wrap"
         );
         assert_eq!(Rule::from_url(&wide.to_url().unwrap()).unwrap(), wide);

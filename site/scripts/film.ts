@@ -6,8 +6,8 @@ import SITE from "../site.json";
 import { SIZE, sheet } from "./film/page.js";
 
 const root = resolve(import.meta.dir, "..");
-const desk = resolve(root, "../..");
-const DATA_DIR = join(desk, "data", relative(desk, import.meta.dir));
+const repo = resolve(root, "..");
+const DATA_DIR = join(repo, "data", relative(repo, import.meta.dir));
 const PAGE = join(import.meta.dir, "film", "page.js");
 const FPS = 30;
 const LONGEST = 30;

@@ -36,7 +36,7 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 ## THE NAME IS A JSON OBJECT
 
 - The canonical form of every named thing is one JSON object: `kind` first, then the words above as keys, in a fixed order per kind, defaults elided, no whitespace. Equality of things is equality of strings.
-- Every other form is a view with a function. `to_json()` is canonical; `to_url()`, `to_file()` and `to_mrly()` are cut from it; `to_id()` hashes it. The decodable views have a `from_`.
+- Every other form is a view with a function. `to_json()` is canonical; `to_url()`, `to_file()` and `to_prose()` are cut from it; `to_id()` hashes it. The decodable views have a `from_`.
 - Adding a key never breaks an old name: absent means default.
 - Registries, catalogs, censuses and the ledger are JSONL: one object per line.
 - Rust: one struct per kind under serde, `default` and `skip_serializing_if` for elision, field order as canonical order.
@@ -46,7 +46,7 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 - `from_json(to_json(x)) == checked(x)` for every value `x`.
 - `to_json(from_json(s)) == s` for every canonical string `s`.
 - `from_json` reads any key order, whitespace and spelt default and folds it to the canonical value.
-- Aliases that draw one picture share one name.
+- A name is the recipe, not the picture: spellings of one recipe fold to one name; two recipes that draw one picture keep two names.
 
 ## THE VIEWS
 
@@ -55,12 +55,12 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 | `to_json()` | `{"kind":"bang","dim":2,"lattice":"hex","base":3,"code":39,"twist":[0,1,5,0]}` |
 | `to_url()` | `/bang?dim=2&lattice=hex&base=3&code=39&twist=0,1,5,0` |
 | `to_file()` | `bang_dim=2_lattice=hex_base=3_code=39_twist=[0,1,5,0]` |
-| `to_mrly()` | `bang dim 2, hex, base 3, code 39, twist [0 1 5 0]` |
+| `to_prose()` | `bang dim 2, hex, base 3, code 39, twist [0 1 5 0]` |
 | `to_id()` | the first 8 hex digits of the sha256 of the canonical JSON |
 
 - `to_url()`: the kind is the path, the keys the query string, lists comma-joined, flags `true`. `from_url()` reads it back; a key the kind lists reads a lone value as a one-item list.
 - `to_file()`: the kind, then `key=value` joined by `_`, lists in brackets. The alphabet `[a-z0-9_=,\[\]]` is safe on every OS. `from_file()` cuts at an underscore followed by `key=`, so a word value may carry underscores.
-- `to_mrly()`: the kind, then `key value` pairs joined by commas, lists in brackets with spaces, a true flag as its bare key, a lattice as its bare word. Pages use this form.
+- `to_prose()`: the kind, then `key value` pairs joined by commas, lists in brackets with spaces, a true flag as its bare key, a lattice as its bare word. Pages use this form.
 - `to_id()`: one-way; it identifies but never decodes. A registry line holds the object.
 - A ledger sequence is its own kind, never a dotted design name: `sequence_dim=3_code=23_measure=surface_axis=level`.
 
