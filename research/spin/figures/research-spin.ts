@@ -1,6 +1,6 @@
-import * as core from "mrlyjs/core";
-import * as math from "mrlyjs/math";
-import { field, type Ink, type Pen } from "mrlyjs/view";
+import * as core from "@mrlyprod/mrly/core";
+import * as math from "@mrlyprod/mrly/math";
+import { field, type Ink, type Pen } from "#view";
 
 type Profile = { rings: Float64Array; lo: number; hi: number };
 

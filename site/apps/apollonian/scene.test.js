@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { HOLD, count, hit, layout, roll, study } from './engine.js';
 import { FACE, SPEC, fg, file, make } from './scene.js';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const pen = (log) =>
   new Proxy(

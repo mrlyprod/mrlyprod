@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../../lib/scene.js';
 import { BUDGET, FIRST, TICK, bound, bounds, cube, deal, design, giant, graphs, kindOf, lay, pace, picture, quick, study, top, turn, worthy } from './engine.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = { view: 'flat', base: 3, code: '495', cbase: 2, ccode: '23', number: 3, level: 2, graph: 'core', layout: 'lattice' };
 

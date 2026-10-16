@@ -1,12 +1,10 @@
 import { expect, test } from 'bun:test';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { palette as hues } from '../../kit/theme/palette.js';
 import { defaults, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { DIM, GROUND, HIT, LEAD, LEAST, LIT, MISS, MOST, SIDES, SOIL, factors, fitted, formula, ink, landed, lay, mix, palette, picture, read, share, shuffle, span, step, study, table, wind } from './engine.js';
 import { SPEC } from './scene.js';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = (over) => ({ ...defaults(SPEC), ...over });
 

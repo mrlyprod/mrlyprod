@@ -2,6 +2,10 @@
   "name": "mrlynet",
   "private": true,
   "type": "module",
+  "imports": {
+    "#view": "./lib/view/index.js",
+    "#view/*": "./lib/view/*"
+  },
   "scripts": {
     "wasm": "bash ../scripts/wasm.sh",
     "dev": "bun scripts/dev.ts",

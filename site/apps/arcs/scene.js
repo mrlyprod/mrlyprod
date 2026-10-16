@@ -65,7 +65,7 @@ export function shades(canvas, look, strand) {
 
 export function make(canvas, view, opts = {}) {
   const { math, onTell } = opts;
-  if (!math) throw new Error('arcs: the scene wants mrlyjs/math as opts.math');
+  if (!math) throw new Error('arcs: the scene wants @mrlyprod/mrly/math as opts.math');
   const ctx = canvas.getContext('2d');
   const clean = (next) => tidy(SPEC, next, { math });
   let value = clean(opts);

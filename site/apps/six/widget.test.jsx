@@ -1,14 +1,12 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { Frame } from '../../lib/frame.jsx';
 import { defaults } from '../../lib/knobs.js';
 import { Accordion, Knobs, useAccordion } from '../../lib/knobs.jsx';
 import { studio } from './engine.js';
 import { SPEC } from './scene.js';
 import { Pane, Presets, Widget, label, rows } from './widget.jsx';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const VALUE = { ...defaults(SPEC), seed: 1, base: 2, code: '23' };
 

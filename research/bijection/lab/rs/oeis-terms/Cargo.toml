@@ -3,7 +3,7 @@ name = "oeis-terms"
 edition = "2021"
 
 [dependencies]
-mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+mrly = { path = "../../../../../crates/mrly" }
 num-bigint = "0.4"
 
 [workspace]

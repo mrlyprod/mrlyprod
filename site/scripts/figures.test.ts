@@ -2,7 +2,7 @@ import { afterAll, expect, test } from "bun:test";
 import { rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
-import { mrlyjs, roster } from "./site.ts";
+import { mrly, roster } from "./site.ts";
 
 const repo = resolve(import.meta.dir, "..", "..");
 
@@ -12,7 +12,7 @@ afterAll(() => rmSync(out, { recursive: true, force: true }));
 
 test("every figure of the roster loads: default is a draw function and every unit it names is defined", async () => {
   const list = roster();
-  const built = await Bun.build({ entrypoints: list.map((one) => one.file), root: repo, outdir: out, target: "bun", plugins: [mrlyjs] });
+  const built = await Bun.build({ entrypoints: list.map((one) => one.file), root: repo, outdir: out, target: "bun", plugins: [mrly] });
   expect(built.logs.filter((log) => log.level === "error").map(String)).toEqual([]);
   const bad: string[] = [];
   for (const one of list) {

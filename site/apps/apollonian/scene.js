@@ -58,7 +58,7 @@ export const fg = (paper) => {
 
 export function make(canvas, view, opts = {}) {
   const num = opts.num;
-  if (!num) throw new Error('apollonian: the scene wants mrlyjs/num as opts.num');
+  if (!num) throw new Error('apollonian: the scene wants @mrlyprod/mrly/num as opts.num');
   const ctx = canvas.getContext('2d');
   const whole = !view.lock;
   const tell = opts.onTell;

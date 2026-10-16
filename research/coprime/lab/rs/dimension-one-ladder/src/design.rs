@@ -1,4 +1,4 @@
-use mrlyrs::num::series::APERY;
+use mrly::num::series::APERY;
 use std::f64::consts::PI;
 
 pub struct Design {

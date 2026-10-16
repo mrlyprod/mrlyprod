@@ -1,0 +1,60 @@
+//! The cube pipeline.
+//!
+//! The shared cell pipeline pinned to three dimensions: coded and carpet cubes, their censuses,
+//! their diagonal slices, their exposed quads and their JSON.
+
+/// The fill, void, volume, surface and Euler counts of a cube.
+pub mod census;
+/// The builders of coded, corner, noise and carpet cubes.
+pub mod designs;
+/// The diagonal slices of a cube: their profile, their cells, their projection and their drawing.
+pub mod diagonal;
+/// The exposed quads and wire edges of a cube.
+pub mod faces;
+/// The orientations, merges, masked mosaics, slices and lifts of cubes.
+pub mod geometry;
+/// The text and Wavefront OBJ renderings of a cube.
+pub mod renderer;
+/// The JSON form of a cube.
+pub mod serializer;
+/// The Menger sponge's distance, its tube inside the plus and its Minkowski profile.
+pub mod sponge;
+
+pub use crate::cell::graph::{core_graph, edge_graph, tunnel_graph};
+pub use crate::cell::models::Cell3d;
+pub use crate::cell::paint;
+pub use census::{Census, census, euler, faces, fills, hidden, surface, voids, volume};
+pub use designs::{
+    carpet, create, dust, from_corners, level_set, levels_code, named, net, noise, ones, point,
+    star, void, xline, xtree, yline, ytree, zeros, zline, ztree,
+};
+pub use diagonal::{
+    profile, project, shadow, slice as diagonal_slice, support, svg as diagonal_svg,
+};
+pub use faces::{Quad, Vec3, quads, wires};
+pub use geometry::{
+    extrude, extrude_cube, magic, manhattan_layers, merge, mosaic, orientations, slice, special,
+};
+pub use renderer::{text, to_obj};
+pub use serializer::{from_json, from_strings, to_json, to_strings};
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::round_trip;
+    #[test]
+    fn menger_graphs() {
+        let cell = designs::carpet(3, 1).unwrap();
+        let core = core_graph(&cell).unwrap();
+        assert_eq!(core.nodes.len(), 20);
+        let tunnels = tunnel_graph(&cell).unwrap();
+        assert_eq!(tunnels.nodes.len(), 7);
+    }
+    #[test]
+    fn serde_round_trips() {
+        let cube = designs::carpet(3, 1).unwrap();
+        round_trip(census(&cube).unwrap());
+        round_trip(Vec3::new(1.0, -2.0, 0.5));
+        round_trip(cube);
+    }
+}

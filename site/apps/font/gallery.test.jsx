@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as font from '../../../pkgs/mrlyjs/font.js';
+import * as font from '@mrlyprod/mrly/font';
 import { gallery, study } from './engine.js';
 import { Gallery, Mark } from './gallery.jsx';
-
-font.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/font/mrlyjs_font_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const KINDS = gallery(font);
 

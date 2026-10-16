@@ -1,6 +1,6 @@
-import * as math from "mrlyjs/math";
-import { plot } from "mrlyjs/view";
-import type { Ink, Pen, Point } from "mrlyjs/view";
+import * as math from "@mrlyprod/mrly/math";
+import { plot } from "#view";
+import type { Ink, Pen, Point } from "#view";
 
 export const units = { math };
 

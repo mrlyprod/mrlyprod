@@ -1,10 +1,8 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/knobs.js';
 import { RATIO, bounds, cropped, fit, mesh, reroll, studio, wrap } from './engine.js';
 import { SPEC } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const CARPET = { ...defaults(SPEC), seed: 1, base: 2, code: '23' };
 

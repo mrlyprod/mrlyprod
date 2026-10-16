@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { defaults, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { CAPS, HOLD, OCTAVE, ORDER_CAP, PALE, ROLLED, ROOTS, SIX, STRIDE, clock, count, glyph, hit, layout, nib, reach, roll, said, shade, shadow, stack, step, study } from './engine.js';
 import { SPEC } from './scene.js';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const a = num.apollonian;
 

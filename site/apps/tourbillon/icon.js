@@ -1,5 +1,5 @@
-import * as core from "mrlyjs/core";
-import * as math from "mrlyjs/math";
+import * as core from "@mrlyprod/mrly/core";
+import * as math from "@mrlyprod/mrly/math";
 import { plate } from "../../lib/icon.js";
 
 export const units = { core, math };

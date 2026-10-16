@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { defaults, describe, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { pen, said } from './fake.js';
 import { PAGE, SPEC, make, named } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const ROWS = [
   { key: '2-2-7-fills-level', dim: 2, base: 2, code: '7', label: 'carpet 7', measure: 'fills', axis: 'level', cells: [1, 1, 1, 1, 0, 1, 1, 1, 1], terms: ['8', '64', '512', '4096', '32768'] },

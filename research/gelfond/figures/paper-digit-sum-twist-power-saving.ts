@@ -1,4 +1,4 @@
-import { field, type Ink, type Pen, type Point } from "mrlyjs/view";
+import { field, type Ink, type Pen, type Point } from "#view";
 
 const BASE = 10;
 const DIGITS = [0, 1, 2, 3, 4, 5, 6, 8, 9];

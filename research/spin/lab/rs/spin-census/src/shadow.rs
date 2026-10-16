@@ -1,5 +1,5 @@
 use crate::design::BASE;
-use mrlyrs::math::bang::factory::residue_corners;
+use mrly::math::bang::factory::residue_corners;
 
 pub fn digits() -> Vec<[i64; 3]> {
     residue_corners(3, BASE)

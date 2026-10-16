@@ -1,12 +1,10 @@
 import { expect, test } from 'bun:test';
 import { palette } from '../../kit/theme/palette.js';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { defaults, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { BAND, BANDS, FAINTLY, INERT, PLAIN, RAMIFIED, REACH, SKIP, SPAN, SPLIT, UNITS, clicked, coords, hit, inks, lay, name, parse, picture, product, reached, share, shuffle, study, styleOf, table, tones, turned, verdict, walk } from './engine.js';
 import { SPEC } from './scene.js';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const BUDGET = 160801;
 

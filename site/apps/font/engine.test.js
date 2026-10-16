@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
-import * as font from '../../../pkgs/mrlyjs/font.js';
+import * as font from '@mrlyprod/mrly/font';
 import { rng } from '../../lib/scene.js';
 import { KINDS, LIMIT, SAMPLES, cells, common, facts, flag, gallery, index, pen, plan, sample, shift, slug } from './engine.js';
-
-font.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/font/mrlyjs_font_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const full = (text) => font.raster(text).reduce((n, row) => n + row.reduce((m, bit) => m + bit, 0), 0);
 

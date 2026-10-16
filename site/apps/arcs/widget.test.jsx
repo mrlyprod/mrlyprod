@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { Frame } from '../../lib/frame.jsx';
 import { study } from './engine.js';
 import { Widget, named, rows } from './widget.jsx';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = { seed: 1, base: 2, code: '', level: 5, look: 'all', width: 0, cells: 1, tint: 'orange', strand: 'blue' };
 

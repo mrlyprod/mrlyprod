@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '../../../pkgs/mrlyjs/math.js';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as math from '@mrlyprod/mrly/math';
+import * as num from '@mrlyprod/mrly/num';
 import { Frame } from '../../lib/frame.jsx';
 import { defaults } from '../../lib/knobs.js';
 import { Knobs } from '../../lib/knobs.jsx';
@@ -9,9 +9,6 @@ import { study } from './engine.js';
 import { SPEC, tidied } from './scene.js';
 import { rng } from '../../lib/scene.js';
 import { Design, ROWS, Widget, rerolled, shift, tapped, turned } from './widget.jsx';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const units = { num, math };
 

@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { BANDS, DENSITY, HOLD, LEAST, MOST, RASTER, ROUND, bands, cover, fit, legal, played, rebase, roll, seat, share, span, study } from './engine.js';
 import { SPEC } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = (over) => ({ ...defaults(SPEC), seed: 1, ...over });
 

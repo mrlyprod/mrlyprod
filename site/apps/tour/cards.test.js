@@ -1,11 +1,8 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as math from '@mrlyprod/mrly/math';
+import * as num from '@mrlyprod/mrly/num';
 import { ledger } from '../sequences/engine.js';
 import { CARDS, build, pick, records, shown } from './cards.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const units = { math, num, book: ledger(math) };
 

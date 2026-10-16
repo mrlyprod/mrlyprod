@@ -1,12 +1,10 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { Frame } from '../../lib/frame.jsx';
 import { Accordion, Knobs, useAccordion } from '../../lib/knobs.jsx';
 import { SPEC } from './scene.js';
 import { Needles, Pane, Widget, next, rows } from './widget.jsx';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 function Shared({ children }) {
   return <Accordion.Provider value={useAccordion('', SPEC)}>{children}</Accordion.Provider>;

@@ -1,4 +1,4 @@
-import { ink as inks } from '../../../pkgs/mrlyjs/view/index.js';
+import { ink as inks } from '#view';
 import { palette } from '../../kit/theme/palette.js';
 import { dark, light } from '../../kit/theme/theme.js';
 import { tidy } from '../../lib/knobs.js';
@@ -172,7 +172,7 @@ const same = (a = [], b = []) => a.length === b.length && a.every((one, i) => on
 
 export function make(canvas, view, opts = {}) {
   const { math, three, tell } = opts;
-  if (!math) throw new Error('three: the scene wants mrlyjs/math as opts.math');
+  if (!math) throw new Error('three: the scene wants @mrlyprod/mrly/math as opts.math');
   let value = settle(opts);
   let plan = null;
   let stage = null;

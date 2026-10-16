@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { Frame } from '../../lib/frame.jsx';
 import { rng } from '../../lib/scene.js';
 import { Widget, rolled, rows, wrap } from './widget.jsx';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 test('the widget mounts its stage only once the unit is in hand', () => {
   const page = (unit) => renderToStaticMarkup(<Frame label="Radial"><Widget value={{ seed: 1, copies: 6, full: 1, step: 60 }} onChange={() => {}} unit={unit} /></Frame>);

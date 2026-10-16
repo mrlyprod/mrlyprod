@@ -1,5 +1,5 @@
-import * as math from "mrlyjs/math";
-import { Grid, grid } from "mrlyjs/view";
+import * as math from "@mrlyprod/mrly/math";
+import { Grid, grid } from "#view";
 import { plate } from "../../lib/icon.js";
 
 export const units = { math };

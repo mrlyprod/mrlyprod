@@ -1,4 +1,4 @@
-use mrlyrs::core::error::{value_error, Result};
+use mrly::core::error::{value_error, Result};
 
 /// The cost class of a measure along the level axis.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

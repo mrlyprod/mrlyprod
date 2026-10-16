@@ -159,7 +159,7 @@ export function stage(w, h) {
 
 export function make(canvas, view, opts = {}) {
   const math = opts.math;
-  if (!math) throw new Error('crop: the scene wants mrlyjs/math as opts.math');
+  if (!math) throw new Error('crop: the scene wants @mrlyprod/mrly/math as opts.math');
   const ctx = canvas.getContext('2d');
   const stages = {};
   let now = plan(math, opts, view.rand, stages);

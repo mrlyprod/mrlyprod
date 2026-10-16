@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { CANON, DEEP, MEASURES, SPACES, TABLE, applies, badge, closed, csv, identify, json, keyed, lead, ledger, numbers, parse, picks, plotted, print, search } from './engine.js';
 import RECORDS from './records.json' with { type: 'json' };
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const book = ledger(math);
 

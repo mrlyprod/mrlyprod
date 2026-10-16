@@ -123,11 +123,54 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
-name = "mrlyjs_all"
+name = "mrly"
+version = "0.2.0"
+dependencies = [
+ "mrly-core",
+ "mrly-font",
+ "mrly-life",
+ "mrly-math",
+ "mrly-num",
+ "mrly-tile",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrly-core"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrly-font"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrly-js-all"
+version = "0.2.0"
+dependencies = [
+ "mrly-js-core",
+ "mrly-js-font",
+ "mrly-js-life",
+ "mrly-js-math",
+ "mrly-js-num",
+ "mrly-js-tile",
+]
+
+[[package]]
+name = "mrly-js-core"
 version = "0.2.0"
 dependencies = [
  "js-sys",
- "mrlyrs",
+ "mrly",
+ "mrly-js-hand",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -135,11 +178,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlyjs_core"
+name = "mrly-js-font"
 version = "0.2.0"
 dependencies = [
  "js-sys",
- "mrlyrs",
+ "mrly",
+ "mrly-js-hand",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -147,11 +191,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlyjs_font"
+name = "mrly-js-hand"
 version = "0.2.0"
 dependencies = [
  "js-sys",
- "mrlyrs",
+ "mrly",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -159,11 +203,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlyjs_gen"
+name = "mrly-js-life"
 version = "0.2.0"
 dependencies = [
  "js-sys",
- "mrlyrs",
+ "mrly",
+ "mrly-js-hand",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -171,11 +216,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlyjs_life"
+name = "mrly-js-math"
 version = "0.2.0"
 dependencies = [
  "js-sys",
- "mrlyrs",
+ "mrly",
+ "mrly-js-hand",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -183,11 +229,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlyjs_math"
+name = "mrly-js-num"
 version = "0.2.0"
 dependencies = [
  "js-sys",
- "mrlyrs",
+ "mrly",
+ "mrly-js-hand",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -195,11 +242,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlyjs_num"
+name = "mrly-js-tile"
 version = "0.2.0"
 dependencies = [
  "js-sys",
- "mrlyrs",
+ "mrly",
+ "mrly-js-hand",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -207,10 +255,40 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlypy"
+name = "mrly-life"
 version = "0.2.0"
 dependencies = [
- "mrlyrs",
+ "mrly-core",
+ "mrly-math",
+ "mrly-num",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrly-math"
+version = "0.2.0"
+dependencies = [
+ "mrly-core",
+ "mrly-num",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrly-num"
+version = "0.2.0"
+dependencies = [
+ "mrly-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrly-py"
+version = "0.2.0"
+dependencies = [
+ "mrly",
  "numpy",
  "pyo3",
  "pythonize",
@@ -219,9 +297,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlyrs"
+name = "mrly-tile"
 version = "0.2.0"
 dependencies = [
+ "mrly-core",
+ "mrly-math",
  "serde",
  "serde_json",
 ]

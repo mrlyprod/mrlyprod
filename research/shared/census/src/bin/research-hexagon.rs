@@ -1,7 +1,7 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::json;
-use mrlyrs::gen::recipe::Design;
+use mrly::core::error::Result;
+use mrly::core::json;
+use mrly::tile::recipe::Design;
 
 const NAME: &str = "research-hexagon";
 const MESH: usize = 110;
@@ -16,7 +16,7 @@ struct Rule {
 
 impl Rule {
     fn new(design: Design) -> Result<Rule> {
-        let cube = mrlyrs::math::three::named(design, 2, 1)?;
+        let cube = mrly::math::three::named(design, 2, 1)?;
         let mut corners = [false; 8];
         for (slot, corner) in corners.iter_mut().enumerate() {
             *corner = cube.types().get(&[slot >> 2, (slot >> 1) & 1, slot & 1])? == 1;

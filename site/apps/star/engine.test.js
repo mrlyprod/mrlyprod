@@ -1,8 +1,6 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { CARPET, LEAST, MOST, cutter, deepest, field, law, more, rungs } from './engine.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const nans = (data) => data.reduce((sum, v) => sum + (Number.isNaN(v) ? 1 : 0), 0);
 

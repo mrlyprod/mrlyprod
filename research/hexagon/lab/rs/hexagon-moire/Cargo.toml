@@ -3,7 +3,7 @@ name = "hexagon-moire"
 edition = "2021"
 
 [dependencies]
-mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+mrly = { path = "../../../../../crates/mrly" }
 num-bigint = "0.4"
 num-rational = "0.4"
 

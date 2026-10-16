@@ -1,8 +1,6 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { CUT, IN, OUT, REFINE, SHAPES, census, circle, counted, grid, keep, layers, outline, room, shape } from './engine.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const carpet = grid(math, '7', 3, 3, 2);
 

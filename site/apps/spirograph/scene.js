@@ -137,7 +137,7 @@ const lean = (shape) => shape && Object.fromEntries(Object.entries(shape).filter
 
 export function make(canvas, view, opts = {}) {
   const math = opts.math;
-  if (!math) throw new Error('spirograph: the scene wants mrlyjs/math as opts.math');
+  if (!math) throw new Error('spirograph: the scene wants @mrlyprod/mrly/math as opts.math');
   const tell = typeof opts.tell === 'function' ? opts.tell : null;
   const lock = Boolean(view.lock);
   const rolled = lock && !opts.code;

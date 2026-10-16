@@ -1,8 +1,6 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { TILT, eye, frustum, mesh } from './mesh.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 test('the mesh keeps one quad per exposed face as two triangles wound with the normal, inside the unit box', () => {
   const cell = math.three.create(23, 3, 1, 2);

@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { Frame } from '../../lib/frame.jsx';
 import { study } from './engine.js';
 import { rows, Widget } from './widget.jsx';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = { seed: 1, root: 'strip', cap: 2048, ink: 'size', look: 'wash', labels: 0, tint: '' };
 

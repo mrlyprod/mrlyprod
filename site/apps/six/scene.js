@@ -72,7 +72,7 @@ const css = ([r, g, b, a]) => `rgba(${r}, ${g}, ${b}, ${Math.round((a / 255) * 1
 
 export function make(canvas, view, opts = {}) {
   const math = opts.math;
-  if (!math) throw new Error('six: the scene wants mrlyjs/math as opts.math');
+  if (!math) throw new Error('six: the scene wants @mrlyprod/mrly/math as opts.math');
   const ctx = canvas.getContext('2d');
   const tell = opts.onFacts;
   const study = studio(math);

@@ -1,4 +1,4 @@
-import type { Ink, Pen } from "mrlyjs/view";
+import type { Ink, Pen } from "#view";
 import census from "./research-dilations.json" with { type: "json" };
 
 const LAGS = 31;

@@ -1,10 +1,8 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
-import { ink } from '../../../pkgs/mrlyjs/view/index.js';
+import * as math from '@mrlyprod/mrly/math';
+import { ink } from '#view';
 import { light } from '../../kit/theme/theme.js';
 import { SHAPES, cap, circle, colorizer, cropped, design, field, grown, odd, plane, reading, region, shell, walls } from './engine.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const carpet = () => grown(math, '23', 2, 3, 3);
 

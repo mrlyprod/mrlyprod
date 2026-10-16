@@ -1,8 +1,6 @@
 import { expect, test } from 'bun:test';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { BANDS, FADE, GHOST, HOLD, LISTED, PER, REACH, ROLLS, ZEROS, bands, fold, hop, ladder, passed, phase, picture, plane, reading, roll, snap, study, table } from './engine.js';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const line = new num.zeta.Line();
 

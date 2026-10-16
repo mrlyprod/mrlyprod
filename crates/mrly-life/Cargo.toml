@@ -1,0 +1,16 @@
+[package]
+name = "mrly-life"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+description = "The engine of MrlyMath: a rule over a grid, stepped, recorded, measured and rendered."
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+mrly-core.workspace = true
+mrly-num.workspace = true
+mrly-math.workspace = true

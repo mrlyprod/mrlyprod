@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
-import * as life from '../../../pkgs/mrlyjs/life.js';
+import * as life from '@mrlyprod/mrly/life';
 import { card } from './scene.js';
 import { status } from './widget.jsx';
-
-life.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/life/mrlyjs_life_bg.wasm', import.meta.url)).arrayBuffer() });
 
 test('the card goes to the status as rows, with the gasket row only for a rule that draws one', () => {
   const stat = { rows: 129, cols: 257, live: 1000, how: 'one live cell, padded by 128 and cropped to 257' };

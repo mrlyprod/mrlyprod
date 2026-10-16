@@ -1,12 +1,9 @@
 import { expect, test } from 'bun:test';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import * as crate from '@mrlyprod/mrly/font';
 import { animate, fold, letters, merge } from './font.js';
 import FONT from './font.json' with { type: 'json' };
 
 const WORDMARK = 'MRLYPROD';
-const UNIT = join(import.meta.dir, '..', '..', '..', 'pkgs', 'mrlyjs', 'pkg', 'font');
-const HAS = existsSync(join(UNIT, 'mrlyjs_font.js'));
 
 test('the wordmark writes itself in stroke order, one cell a frame', () => {
   const write = animate(WORDMARK, 1);
@@ -51,10 +48,8 @@ test('any string writes itself and a lone glyph has nothing to merge', () => {
   expect(merge('A', 1).length).toBe(1);
 });
 
-test.skipIf(!HAS)('the kit matches the crate frame for frame', async () => {
-  const wasm = await import(join(UNIT, 'mrlyjs_font.js'));
-  await wasm.default({ module_or_path: await Bun.file(join(UNIT, 'mrlyjs_font_bg.wasm')).arrayBuffer() });
+test('the kit matches the crate frame for frame', () => {
   for (const text of ['MRLYPROD', 'SIERPINSKI', 'mrly.net', '(1)', 'Hi 42', 'A']) {
-    expect(animate(text, 1)).toEqual(JSON.parse(JSON.stringify(wasm.animate(text, 1))));
+    expect(animate(text, 1)).toEqual(JSON.parse(JSON.stringify(crate.animate(text, 1))));
   }
 });

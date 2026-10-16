@@ -1,6 +1,6 @@
 import { tidy } from '../../lib/knobs.js';
 import { TINTS, rgb } from '../../lib/scene.js';
-import { canvas as pen, frame as box, hex, svg as sheet } from '../../../pkgs/mrlyjs/view/index.js';
+import { canvas as pen, frame as box, hex, svg as sheet } from '#view';
 import { design, memo, named, tag as title } from '../three/engine.js';
 
 export const GASKET = '126';
@@ -139,7 +139,7 @@ const drawable = () => typeof Image === 'function' && typeof Blob === 'function'
 
 export function make(canvas, view, opts = {}) {
   const { math, tell } = opts;
-  if (!math) throw new Error('cuts: the scene wants mrlyjs/math as opts.math');
+  if (!math) throw new Error('cuts: the scene wants @mrlyprod/mrly/math as opts.math');
   const ctx = canvas.getContext('2d');
   const codes = { fill: math.six.FILL(), void: math.six.VOID() };
   let value = settle(opts);

@@ -1,5 +1,5 @@
-import * as num from "mrlyjs/num";
-import { mix } from "mrlyjs/view";
+import * as num from "@mrlyprod/mrly/num";
+import { mix } from "#view";
 import { plate } from "../../lib/icon.js";
 
 export const units = { num };

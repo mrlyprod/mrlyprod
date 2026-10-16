@@ -1,13 +1,10 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as math from '@mrlyprod/mrly/math';
+import * as num from '@mrlyprod/mrly/num';
 import { defaults } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { BASES, BUDGET, KOCH, MOST, PRESETS, bands, bits, boxOf, boxed, cap, coded, corners, deepest, dial, every, flat, lattice, lay, picture, preset, reach, rebase, roll, rolled, spell, study, toggle, turn } from './engine.js';
 import { SPEC } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = (over) => ({ ...defaults(SPEC), seed: 1, ...over });
 

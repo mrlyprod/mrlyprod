@@ -1,10 +1,10 @@
 mod derive;
 mod transfer;
 
-use mrlyrs::core::Tensor;
-use mrlyrs::math::bang::factory::create;
-use mrlyrs::math::bang::Code;
-use mrlyrs::math::shape::{census, named, Frac, Shape};
+use mrly::core::Tensor;
+use mrly::math::bang::factory::create;
+use mrly::math::bang::Code;
+use mrly::math::shape::{census, named, Frac, Shape};
 
 // ROOTS
 

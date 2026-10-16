@@ -1,5 +1,5 @@
-import * as num from "mrlyjs/num";
-import type { Ink, Pen } from "mrlyjs/view";
+import * as num from "@mrlyprod/mrly/num";
+import type { Ink, Pen } from "#view";
 
 export const units = { num };
 

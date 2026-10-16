@@ -1,0 +1,13 @@
+core::block generic over the element type; core::image::scale crosses for rgba pixels
+core::error::overflow_error an error constructor, generic over the Ok type
+core::error::shape_error an error constructor, generic over the Ok type
+core::error::value_error an error constructor, generic over the Ok type
+core::rng::choice generic over the item type; crossed by hand on the Rng class
+core::rng::shuffle generic over the item type; crossed by hand on the Rng class
+core::tensor::bytes_mut a mutable borrow into the buffer; put writes one value
+num::fft::fft transforms two mutable slices in place
+num::fft::fft2 transforms two mutable slices in place
+tile::draw::create takes a rotation fn pointer; build::create_2d and create_3d cross
+tile::draw::random_tile takes a rotation fn pointer; build::random_tile_2d and random_tile_3d cross
+tile::recipe::uniform generic over the item type, used on Source and usize
+tile::variation::Variation::paint a core class on a tile class; a wasm unit holds only its own classes, so js leaves the field out and python keeps it

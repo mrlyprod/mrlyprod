@@ -1,8 +1,8 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::json;
-use mrlyrs::num::factor::totients;
-use mrlyrs::num::zeta::{novelty_main, sharp_novelty, smoothed_novelty};
+use mrly::core::error::Result;
+use mrly::core::json;
+use mrly::num::factor::totients;
+use mrly::num::zeta::{novelty_main, sharp_novelty, smoothed_novelty};
 use std::f64::consts::PI;
 
 const NAME: &str = "paper-novelty-meter";

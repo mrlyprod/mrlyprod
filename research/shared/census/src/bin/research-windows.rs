@@ -1,8 +1,8 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::json;
-use mrlyrs::math::bang::factory;
-use mrlyrs::math::bang::Code;
+use mrly::core::error::Result;
+use mrly::core::json;
+use mrly::math::bang::factory;
+use mrly::math::bang::Code;
 use std::collections::BTreeSet;
 
 const NAME: &str = "research-windows";

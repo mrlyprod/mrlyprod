@@ -1,14 +1,11 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as math from '@mrlyprod/mrly/math';
+import * as num from '@mrlyprod/mrly/num';
 import { defaults, optionsOf, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { total } from '../designs/engine.js';
 import { FORMULA, KINDS, PAD, cap, coded, fits, flat, lay, pictureOf, picture, place, print, roll, sideOf, spread, study, tower } from './engine.js';
 import { SPEC, tidied } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const units = { num, math };
 

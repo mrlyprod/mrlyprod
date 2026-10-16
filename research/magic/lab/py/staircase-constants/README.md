@@ -1,7 +1,7 @@
 # staircase-constants
 
 - Computes the fill ratio of every base-2 design along the `row` word of odd sides `3, 5, ..., 2L+1`, against the closed form `R_L = (w/2^dim)^L prod_i Gamma(L+2-r_i)/Gamma(2-r_i) / (Gamma(L+3/2)/Gamma(3/2))^dim` over the roots `r_i` of the fill polynomial `P_F(n) = sum_j a_j n^(dim-j) (n-1)^j`, `a_j` the corners with `j` odd coordinates.
-- Corner `i` is the binary digits of `i`, most significant first, as `mrlyrs::math::bang::factory::code_to_corners` reads a code; the fill depends on the profile `a_j` alone, so 77 profiles cover all 273 nonempty codes at `dim 1, 2, 3`, `3 + 15 + 255`.
+- Corner `i` is the binary digits of `i`, most significant first, as `mrly::math::bang::factory::code_to_corners` reads a code; the fill depends on the profile `a_j` alone, so 77 profiles cover all 273 nonempty codes at `dim 1, 2, 3`, `3 + 15 + 255`.
 - `section_render` counts filled cells of every code at `dim 1..3` on odd sides `3..9` and even sides `2..8`, and the row word by `np.kron` at `L = 2..5`, `2..3`, `2` in `dim 1, 2, 3`, against `P_F` and `w/2^dim`.
 - `section_exact` checks the Gamma identity against the exact integer product at `L = 1, 2, 3, 10, 100, 1000` at 50 digits.
 - `section_asymptotic` sums `log1p` of the exact per-letter excess in float to `L = 10^6` and compares with `drift log L + log C + c1/L`, `drift = dim/2 - mean`, `c1 = dim/8 + drift - var/2`, mean and variance of the odd count over the corners.

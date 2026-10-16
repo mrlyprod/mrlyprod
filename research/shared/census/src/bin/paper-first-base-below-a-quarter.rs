@@ -1,6 +1,6 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::json;
+use mrly::core::error::Result;
+use mrly::core::json;
 use std::f64::consts::PI;
 
 const NAME: &str = "paper-first-base-below-a-quarter";

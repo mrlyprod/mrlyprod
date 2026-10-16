@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../../lib/scene.js';
 import { CUT, FIELD, HEX, LEAD, ORDERS, OUT, PRESETS, SIDE, STEPS, WHEEL, cap, cells, degrees, disc, drawn, key, layout, leading, pace, paint, peak, petals, rings, rosette, seen, shares, source, spun, step, stops, study, title, turn } from './engine.js';
 import { SOURCE } from './scene.js';
 import { read } from './source.jsx';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = (over) => ({ ...read({}), seed: 1, ...over });
 

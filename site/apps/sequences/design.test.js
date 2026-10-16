@@ -1,10 +1,8 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { draw, inks, picture, said, view } from './design.js';
 import { tones } from './paint.js';
 import { pen } from './fake.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const row = (dim, code, measure, axis, base = 2) => ({ key: `${dim}-${base}-${code}-${measure}-${axis}`, dim, base, code, measure, axis });
 

@@ -49,7 +49,7 @@ const TURN = Math.PI * 2;
 
 export function make(canvas, view, opts = {}) {
   const num = opts.num;
-  if (!num) throw new Error('ulam: the scene wants mrlyjs/num as opts.num');
+  if (!num) throw new Error('ulam: the scene wants @mrlyprod/mrly/num as opts.num');
   const ctx = canvas.getContext('2d');
   let value = tidy(SPEC, opts);
   let plan = study(num, value, view.w, view.h);

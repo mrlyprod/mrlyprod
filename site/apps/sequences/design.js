@@ -1,4 +1,4 @@
-import { draw as hexes } from '../../../pkgs/mrlyjs/view/hex.js';
+import { draw as hexes } from '#view/hex.js';
 import { veil } from '../../lib/scene.js';
 import { measureOf, spot } from './engine.js';
 import { mix } from './paint.js';

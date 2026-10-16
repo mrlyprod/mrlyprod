@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../../lib/scene.js';
 import { census, classes, codes, drawn, facts, gallery, grow, next, roll, settle, title, total } from './engine.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 test('a space lists its codes up to the limit and its classes where the unit can walk them', () => {
   expect([total(math, 2, 2), total(math, 3, 2), total(math, 2, 3), total(math, 3, 3)]).toEqual([16, 256, 512, 134217728]);

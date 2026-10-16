@@ -1,5 +1,5 @@
-import * as life from "mrlyjs/life";
-import { Grid } from "mrlyjs/view";
+import * as life from "@mrlyprod/mrly/life";
+import { Grid } from "#view";
 import { plate } from "../../lib/icon.js";
 
 export const units = { life };

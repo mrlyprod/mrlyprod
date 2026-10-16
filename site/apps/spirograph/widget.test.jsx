@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/knobs.js';
 import { Frame } from '../../lib/frame.jsx';
 import { SPEC } from './scene.js';
@@ -10,8 +10,6 @@ test('every spec row has one home in the pane: a fold, or the design picker for 
   const homes = [...FOLDS.flatMap(([, keys]) => keys), 'base', 'code'];
   expect([...homes].sort()).toEqual(SPEC.map((row) => row.key).sort());
 });
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 test('the widget mounts its stage on the units the page loaded', () => {
   const page = (units) => renderToStaticMarkup(<Frame label="Spirograph"><Widget value={{ ...defaults(SPEC), seed: 1 }} onChange={() => {}} units={units} /></Frame>);

@@ -1,0 +1,20 @@
+[package]
+name = "mrly-js-math"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The math wasm unit of @mrlyprod/mrly: the math module of mrly in a browser."
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mrly.workspace = true
+mrly-js-hand.workspace = true
+wasm-bindgen.workspace = true
+serde-wasm-bindgen.workspace = true
+js-sys.workspace = true
+serde.workspace = true
+serde_json.workspace = true

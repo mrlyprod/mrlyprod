@@ -1,0 +1,19 @@
+[package]
+name = "mrly-js-all"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The root wasm of @mrlyprod/mrly: every unit in one instance, so class objects cross between modules."
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+mrly-js-core = { path = "../core" }
+mrly-js-font = { path = "../font" }
+mrly-js-life = { path = "../life" }
+mrly-js-math = { path = "../math" }
+mrly-js-num = { path = "../num" }
+mrly-js-tile = { path = "../tile" }

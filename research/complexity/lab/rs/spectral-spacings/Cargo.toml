@@ -3,7 +3,7 @@ name = "spectral-spacings"
 edition = "2021"
 
 [dependencies]
-mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+mrly = { path = "../../../../../crates/mrly" }
 faer = "0.24"
 
 [workspace]

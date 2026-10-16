@@ -1,5 +1,5 @@
 use crate::design::BASE;
-use mrlyrs::core::Tensor;
+use mrly::core::Tensor;
 
 pub struct Mass {
     pub radii: Vec<f64>,

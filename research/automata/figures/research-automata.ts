@@ -1,5 +1,5 @@
-import * as life from "mrlyjs/life";
-import type { Color, Ink, Pen } from "mrlyjs/view";
+import * as life from "@mrlyprod/mrly/life";
+import type { Color, Ink, Pen } from "#view";
 
 export const units = { life };
 

@@ -1,5 +1,5 @@
-use mrlyrs::num::factor::mobius_sieve;
-use mrlyrs::num::factor::totients;
+use mrly::num::factor::mobius_sieve;
+use mrly::num::factor::totients;
 
 pub struct Design {
     pub name: &'static str,
@@ -339,7 +339,7 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mrlyrs::num::factor::gcd;
+    use mrly::num::factor::gcd;
 
     const FULL: Design = Design {
         name: "full set, the control",

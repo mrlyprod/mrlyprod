@@ -1,13 +1,11 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/knobs.js';
 import { Frame } from '../../lib/frame.jsx';
 import { CARPET, LEAST, MOST, law } from './engine.js';
 import { SPEC } from './scene.js';
 import { Widget, drawn, rows } from './widget.jsx';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = { ...defaults(SPEC), seed: 1 };
 

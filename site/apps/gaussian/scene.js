@@ -56,7 +56,7 @@ const DASH = [4, 3];
 
 export function make(canvas, view, opts = {}) {
   const num = opts.num;
-  if (!num) throw new Error('gaussian: the scene wants mrlyjs/num as opts.num');
+  if (!num) throw new Error('gaussian: the scene wants @mrlyprod/mrly/num as opts.num');
   const ctx = canvas.getContext('2d');
   let value = tidy(SPEC, opts);
   let plan = null;

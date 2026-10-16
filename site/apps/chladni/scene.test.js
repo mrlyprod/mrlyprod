@@ -1,14 +1,11 @@
 import { afterAll, expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as math from '@mrlyprod/mrly/math';
+import * as num from '@mrlyprod/mrly/num';
 import { defaults, maxOf, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { COUNT, HOLD, NUMBERS, POUR, RATE, REST, SIDE, TAP, codes, highest, ladder, lowest, rungOf } from './engine.js';
 import { PAGE, SPEC, fit, make } from './scene.js';
 import { rows } from './widget.jsx';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const pen = (log) =>
   new Proxy(

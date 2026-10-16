@@ -63,7 +63,7 @@ const won = (over, s) => over?.how === 'goal' && over.winner === s;
 
 export function make(canvas, view, opts = {}) {
   const math = opts.math;
-  if (!math) throw new Error('race: the scene wants mrlyjs/math as opts.math');
+  if (!math) throw new Error('race: the scene wants @mrlyprod/mrly/math as opts.math');
   const ctx = canvas.getContext('2d');
   const hands = !view.lock;
   let value = tidy(SPEC, opts);

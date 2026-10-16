@@ -1,6 +1,6 @@
 import { dark, light } from '../../kit/theme/theme.js';
 import { rgb, rng } from '../../lib/scene.js';
-import { ink } from '../../../pkgs/mrlyjs/view/index.js';
+import { ink } from '#view';
 import { settle } from '../designs/engine.js';
 
 export const RAMPS = [['fire', 'Fire'], ['heat', 'Heat'], ['diverge', 'Diverge'], ['tint', 'Tint'], ['ink', 'Ink'], ['bands', 'Bands']];

@@ -1,4 +1,4 @@
-import { frame, type Color, type Frame, type Ink, type Pen } from "mrlyjs/view";
+import { frame, type Color, type Frame, type Ink, type Pen } from "#view";
 import census from "./research-multilayers.json" with { type: "json" };
 
 const LEVELS = 12;

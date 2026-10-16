@@ -1,5 +1,5 @@
-import * as font from "mrlyjs/font";
-import { frame, Grid, mix } from "mrlyjs/view";
+import * as font from "@mrlyprod/mrly/font";
+import { frame, Grid, mix } from "#view";
 import { plate } from "../../lib/icon.js";
 
 export const units = { font };

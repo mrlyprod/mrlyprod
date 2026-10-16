@@ -1,5 +1,5 @@
-import * as math from "mrlyjs/math";
-import type { Ink, Pen, Point } from "mrlyjs/view";
+import * as math from "@mrlyprod/mrly/math";
+import type { Ink, Pen, Point } from "#view";
 import census from "./paper-erdos-125-upper-density.json" with { type: "json" };
 
 const LEVEL = 6;

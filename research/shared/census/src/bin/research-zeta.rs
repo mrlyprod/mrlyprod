@@ -1,8 +1,8 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::{json, Json};
-use mrlyrs::math::design::elements;
-use mrlyrs::num::zeta::{Complex, Line};
+use mrly::core::error::Result;
+use mrly::core::{json, Json};
+use mrly::math::design::elements;
+use mrly::num::zeta::{Complex, Line};
 
 const NAME: &str = "research-zeta";
 const PEEL: u32 = 8;

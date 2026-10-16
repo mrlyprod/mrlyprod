@@ -1,8 +1,6 @@
 import { expect, test } from 'bun:test';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { held, mix, polynomial, recurrence, room, rule } from './engine.js';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const PERIMETER = ['16', '80', '496', '3536', '26992', '212048', '1684720', '13442768'];
 

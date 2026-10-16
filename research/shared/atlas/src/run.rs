@@ -1,11 +1,11 @@
 use super::presets::{Mask, Preset, Rule, Seed};
 use super::readings::{canonical, read, translate_of, Reading};
-use mrlyrs::core::error::{value_error, Result};
-use mrlyrs::core::rng::Rng;
-use mrlyrs::core::tensor::Tensor;
-use mrlyrs::life::{animate, churn, design_mask, lattice_index, Boundary, Config, Fate};
-use mrlyrs::math::bang::Code;
-use mrlyrs::math::two::{create, Cell2d};
+use mrly::core::error::{value_error, Result};
+use mrly::core::rng::Rng;
+use mrly::core::tensor::Tensor;
+use mrly::life::{animate, churn, design_mask, lattice_index, Boundary, Config, Fate};
+use mrly::math::bang::Code;
+use mrly::math::two::{create, Cell2d};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The record of one run.
@@ -150,7 +150,7 @@ fn growth(grids: &[Cell2d]) -> f64 {
 }
 
 /// Returns the median level set of a run's cumulative visit counts as one frame.
-pub fn heat_frame(grids: &[Cell2d]) -> mrlyrs::Result<Cell2d> {
+pub fn heat_frame(grids: &[Cell2d]) -> mrly::Result<Cell2d> {
     let shape = grids[0].types().shape.clone();
     let mut total = vec![0usize; grids[0].types().size()];
     for grid in grids {

@@ -1,4 +1,4 @@
-import { Grid, type Ink, type Pen } from "mrlyjs/view";
+import { Grid, type Ink, type Pen } from "#view";
 
 const B = 4;
 const L = 6;

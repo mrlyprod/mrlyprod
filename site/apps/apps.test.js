@@ -43,7 +43,7 @@ test("a saver scene exports a units thunk exactly when its folder holds a unit.j
     expect([id, /^export const units = \(\) => import\('\.\/unit\.js'\);$/m.test(await Bun.file(at(`./${id}/scene.js`)).text())]).toEqual([id, true]);
     const src = await Bun.file(at(`./${id}/unit.js`)).text();
     const named = [...src.matchAll(/^export \{ ([^}]+) \};$/gm)].flatMap(([, list]) => list.split(',').map((one) => one.trim()));
-    expect([id, named.length > 0, named.every((unit) => src.includes(`* as ${unit} from 'mrlyjs/${unit}'`)), /^export const ready = /m.test(src)]).toEqual([id, true, true, true]);
+    expect([id, named.length > 0, named.every((unit) => src.includes(`* as ${unit} from '@mrlyprod/mrly/${unit}'`)), /^export const ready = /m.test(src)]).toEqual([id, true, true, true]);
   }
 });
 

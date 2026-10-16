@@ -16,7 +16,8 @@ const org = resolve(import.meta.dir, "..");
 const repo = resolve(org, "..");
 const DIST = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(org, "dist");
 const root = (process.env.MRLY_SITE ?? SITE.root).replace(/\/$/, "");
-const MRLYJS = join(repo, "pkgs", "mrlyjs");
+const MRLY = join(repo, "bindings", "js");
+const NPM = "@mrlyprod/mrly";
 const APPS = join(org, "apps");
 const BLOG = join(APPS, "blog");
 const RESEARCH = join(repo, "research");
@@ -24,7 +25,8 @@ const SHELLS = ["app", "prose"].map((name) => join(org, "ui", `${name}.jsx`));
 const LOCK = join(org, "lib", "lock.js");
 const HASHED = /-[0-9a-z]{8}\.[^./]+$/;
 const NAMING = { entry: "[name]-[hash].[ext]", chunk: "lib-[hash].[ext]", asset: "[name]-[hash].[ext]" };
-const EXPORTS = JSON.parse(readFileSync(join(MRLYJS, "package.json"), "utf8")).exports as Record<string, { default?: string }>;
+const EXPORTS = JSON.parse(readFileSync(join(MRLY, "package.json"), "utf8")).exports as Record<string, { default?: string }>;
+const IMPORTS = JSON.parse(readFileSync(join(org, "package.json"), "utf8")).imports as Record<string, string>;
 
 const read = (file: string) => readFileSync(file, "utf8");
 const sha = (data: string | Uint8Array) => createHash("sha256").update(data).digest("hex");
@@ -65,11 +67,11 @@ const scanner = new Bun.Transpiler({ loader: "ts" });
 
 const jsx = new Bun.Transpiler({ loader: "jsx" });
 
-const UNITS = readFileSync(join(repo, "pkgs", "bridge", "units.txt"), "utf8").split(/\s+/).filter(Boolean);
+const UNITS = readdirSync(join(MRLY, "units")).sort();
 
-const UNIT = /mrlyjs[/_]([a-z]+)/g;
+const UNIT = /(?:@mrlyprod\/mrly\/|mrly_js_)([a-z]+)/g;
 
-const unitWasm = (unit: string) => join(org, "pkg", unit, `mrlyjs_${unit}_bg.wasm`);
+const unitWasm = (unit: string) => join(org, "pkg", unit, `mrly_js_${unit}_bg.wasm`);
 
 const folders = (dir: string) => (existsSync(dir) ? readdirSync(dir, { withFileTypes: true }).filter((item) => item.isDirectory() && !item.name.startsWith(".")).map((item) => item.name).sort() : []);
 
@@ -93,12 +95,17 @@ export function roster(): Figure[] {
   return found.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export const mrlyjs: BunPlugin = {
-  name: "mrlyjs",
+export const mrly: BunPlugin = {
+  name: "mrly",
   setup(build) {
-    build.onResolve({ filter: /^mrlyjs\// }, ({ path }) => {
-      const door = EXPORTS[`./${path.slice(7)}`]?.default;
-      return door ? { path: join(MRLYJS, door) } : undefined;
+    build.onResolve({ filter: /^@mrlyprod\/mrly(?:\/|$)/ }, ({ path }) => {
+      const door = EXPORTS[`.${path.slice(NPM.length)}`]?.default;
+      return door ? { path: join(MRLY, door) } : undefined;
+    });
+    build.onResolve({ filter: /^#view(?:\/|$)/ }, ({ path }) => {
+      const rest = path.slice("#view/".length);
+      const to = rest ? IMPORTS["#view/*"]?.replace("*", rest) : IMPORTS["#view"];
+      return to ? { path: join(org, to) } : undefined;
     });
   },
 };
@@ -215,7 +222,7 @@ export function state(): State {
   const code = [...figures.map((one) => one.file), ...walk(APPS).filter((file) => /\.[jt]sx?$/.test(file) && !/\.test\./.test(file))];
   const used = new Set(code.flatMap((file) => [...read(file).matchAll(UNIT)].map((hit) => hit[1]!)));
   const units = UNITS.filter((unit) => used.has(unit)).sort();
-  for (const unit of units) if (!existsSync(unitWasm(unit))) throw new Error(`site: a live figure or app imports mrlyjs/${unit}, and site/pkg/${unit}/ does not hold it; scripts/wasm.sh copies the live units there`);
+  for (const unit of units) if (!existsSync(unitWasm(unit))) throw new Error(`site: a live figure or app imports @mrlyprod/mrly/${unit}, and site/pkg/${unit}/ does not hold it; scripts/wasm.sh copies the live units there`);
   const moves = JSON.parse(read(join(org, "redirects.json"))) as Record<string, { to: string; since: string }>;
   const kept = Object.fromEntries(Object.entries(moves).filter(([, row]) => seen.has(row.to)));
   const site = {
@@ -252,8 +259,8 @@ export function modules(ready: Ready): Record<string, string> {
 export const plugin = (get: () => Ready): BunPlugin => ({
   name: "site",
   setup(build) {
-    mrlyjs.setup(build);
-    build.onResolve({ filter: /(?:^|\/)pkg\/[a-z]+\/mrlyjs_[a-z]+(?:_bg\.wasm|\.js)$/ }, ({ path }) => ({ path: join(org, "pkg", ...path.split("/").slice(-2)) }));
+    mrly.setup(build);
+    build.onResolve({ filter: /(?:^|\/)pkg\/[a-z]+\/mrly_js_[a-z]+(?:_bg\.wasm|\.js)$/ }, ({ path }) => ({ path: join(org, "pkg", ...path.split("/").slice(-2)) }));
     build.onResolve({ filter: /^\// }, ({ path }) => (existsSync(path) ? undefined : { path, external: true }));
     build.onResolve({ filter: /^(site|apps):/ }, ({ path }) => ({ path, namespace: "site" }));
     build.onLoad({ filter: /.*/, namespace: "site" }, ({ path }) => {

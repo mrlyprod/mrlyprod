@@ -1,4 +1,4 @@
-import type { Ink, Pen } from "mrlyjs/view";
+import type { Ink, Pen } from "#view";
 import census from "./paper-slice-recurrence-order.json" with { type: "json" };
 
 export const units = {};

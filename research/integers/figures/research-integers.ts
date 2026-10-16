@@ -1,4 +1,4 @@
-import { Grid, type Ink, type Pen } from "mrlyjs/view";
+import { Grid, type Ink, type Pen } from "#view";
 import census from "./research-integers.json" with { type: "json" };
 
 const WINDOW = 10000;

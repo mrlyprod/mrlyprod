@@ -1,0 +1,24 @@
+[project]
+name = "mrly"
+dynamic = ["version"]
+description = "MrlyMath, the mathematics of designs, bridged into Python."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13"
+dependencies = ["numpy>=2"]
+
+[project.urls]
+Homepage = "https://mrly.net"
+Repository = "https://github.com/mrlyprod/mrlyprod"
+
+[build-system]
+requires = ["maturin>=1.15,<2"]
+build-backend = "maturin"
+
+[tool.maturin]
+module-name = "mrly._mrly"
+python-source = "python"
+exclude = ["**/__pycache__/**"]
+
+[tool.uv]
+cache-keys = [{ file = "pyproject.toml" }, { file = "Cargo.toml" }, { file = "src/**/*.rs" }, { file = "../../Cargo.toml" }, { file = "../../crates/*/src/**/*.rs" }]

@@ -1,0 +1,13 @@
+[package]
+name = "mrly-font"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+description = "The alphabet of MrlyMath: the stroked pixel glyphs, their rasters and their writing animations."
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true

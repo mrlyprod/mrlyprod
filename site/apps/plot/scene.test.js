@@ -1,12 +1,10 @@
 import { expect, test } from 'bun:test';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { defaults, describe, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { pen, said } from '../sequences/fake.js';
 import { rule } from './engine.js';
 import { PAGE, SPEC, filed, lines, make } from './scene.js';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const ROW = { key: '2-2-7-surface-level', dim: 2, base: 2, code: '7', label: 'carpet 7', measure: 'surface', axis: 'level', cells: [1, 1, 1, 1, 0, 1, 1, 1, 1], hit: null, terms: ['16', '80', '496', '3536', '26992', '212048', '1684720', '13442768'] };
 

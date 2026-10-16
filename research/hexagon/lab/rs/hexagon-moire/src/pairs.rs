@@ -1,7 +1,7 @@
 use crate::lattice::{cell, Family, Rule};
 use crate::sums::pairwise;
-use mrlyrs::num::factor::gcd;
-use mrlyrs::num::series::chi4;
+use mrly::num::factor::gcd;
+use mrly::num::series::chi4;
 
 fn marks(first: i64, second: i64, span: i64) -> Vec<i64> {
     let mut out = Vec::new();

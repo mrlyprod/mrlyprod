@@ -1,0 +1,69 @@
+{
+  "name": "@mrlyprod/mrly",
+  "version": "0.2.0",
+  "description": "MrlyProd; or, Marley Productions",
+  "license": "MIT",
+  "homepage": "https://mrly.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrlyprod/mrlyprod",
+    "directory": "bindings/js"
+  },
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./all.d.ts",
+      "default": "./index.js"
+    },
+    "./core": {
+      "types": "./core.d.ts",
+      "default": "./core.js"
+    },
+    "./num": {
+      "types": "./num.d.ts",
+      "default": "./num.js"
+    },
+    "./math": {
+      "types": "./math.d.ts",
+      "default": "./math.js"
+    },
+    "./tile": {
+      "types": "./tile.d.ts",
+      "default": "./tile.js"
+    },
+    "./life": {
+      "types": "./life.d.ts",
+      "default": "./life.js"
+    },
+    "./font": {
+      "types": "./font.d.ts",
+      "default": "./font.js"
+    },
+    "./pkg/*": "./pkg/*"
+  },
+  "files": [
+    "pkg/",
+    "index.js",
+    "core.js",
+    "num.js",
+    "math.js",
+    "tile.js",
+    "life.js",
+    "font.js",
+    "all.js",
+    "core.d.ts",
+    "num.d.ts",
+    "math.d.ts",
+    "tile.d.ts",
+    "life.d.ts",
+    "font.d.ts",
+    "all.d.ts",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "bun test"
+  }
+}

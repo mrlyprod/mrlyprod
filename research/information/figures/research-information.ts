@@ -1,5 +1,5 @@
-import * as math from "mrlyjs/math";
-import { Grid, frame, type Ink, type Pen } from "mrlyjs/view";
+import * as math from "@mrlyprod/mrly/math";
+import { Grid, frame, type Ink, type Pen } from "#view";
 import census from "./research-information.json" with { type: "json" };
 
 export const units = { math };

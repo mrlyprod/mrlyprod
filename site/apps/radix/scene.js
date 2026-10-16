@@ -48,7 +48,7 @@ const LOOK = ['level', 'line', 'cell', 'tint'];
 
 export function make(canvas, view, opts = {}) {
   const { math, num, onFacts } = opts;
-  if (!math || !num) throw new Error('radix: the scene wants mrlyjs/math and mrlyjs/num as opts.math and opts.num');
+  if (!math || !num) throw new Error('radix: the scene wants @mrlyprod/mrly/math and @mrlyprod/mrly/num as opts.math and opts.num');
   const ctx = canvas.getContext('2d');
   let value = tidy(SPEC, opts);
   let plan = study(num, math, value);

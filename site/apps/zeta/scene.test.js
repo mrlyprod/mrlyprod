@@ -1,12 +1,10 @@
 import { expect, test } from 'bun:test';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as num from '@mrlyprod/mrly/num';
 import { defaults, describe, tidy } from '../../lib/knobs.js';
 import { shown } from '../../lib/knobs.jsx';
 import { rng } from '../../lib/scene.js';
 import { BEAT, FLASH, FOLDING, HEAD, HOLD, PAD, REACH, index, plane, snap, study } from './engine.js';
 import { PAGE, SPEC, make } from './scene.js';
-
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const pen = (log) =>
   new Proxy(

@@ -1,4 +1,4 @@
-import { frame, Grid, type Ink, type Pen } from "mrlyjs/view";
+import { frame, Grid, type Ink, type Pen } from "#view";
 import census from "./research-arrays.json" with { type: "json" };
 
 const PX = 20;

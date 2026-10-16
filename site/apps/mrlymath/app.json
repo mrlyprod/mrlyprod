@@ -2,5 +2,5 @@
   "title": "MrlyMath",
   "line": "A design is one string: one JSON object per thing, every other name a view of it.",
   "menu": "read",
-  "source": "pkgs/mrlyrs/NAMES.md"
+  "source": "crates/mrly-math/NAMES.md"
 }

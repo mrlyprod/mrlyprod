@@ -1,10 +1,8 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { Frame } from '../../lib/frame.jsx';
 import { Widget, again, fate, rows } from './widget.jsx';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const value = { seed: 1, a: '127', b: '239', base: 3, number: 3, level: 4, walkers: 300, finish: 20, speed: 720, heat: 0, tint: '' };
 

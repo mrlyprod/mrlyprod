@@ -63,7 +63,7 @@ export function fit(view, side) {
 
 export function make(canvas, view, opts = {}) {
   const { num, math } = opts;
-  if (!num) throw new Error('chladni: the scene wants mrlyjs/num as opts.num');
+  if (!num) throw new Error('chladni: the scene wants @mrlyprod/mrly/num as opts.num');
   const units = { num, math };
   const ctx = canvas.getContext('2d');
   const read = (next) => ({ ...tidy(SPEC, next, units), seed: next.seed >>> 0 });

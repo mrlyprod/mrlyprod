@@ -1,6 +1,6 @@
-use mrlyrs::life::{Boundary, Counts, Source};
-use mrlyrs::math::bang::universe::orbit;
-use mrlyrs::math::bang::Code;
+use mrly::life::{Boundary, Counts, Source};
+use mrly::math::bang::universe::orbit;
+use mrly::math::bang::Code;
 
 /// The Moore neighbourhood's code at side 3 in the plane.
 pub const MOORE: u128 = 7;

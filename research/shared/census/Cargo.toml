@@ -5,7 +5,7 @@ license = "MIT"
 publish = false
 
 [dependencies]
-mrlyrs = { path = "../../../pkgs/mrlyrs" }
+mrly = { path = "../../../crates/mrly" }
 ledger = { path = "../ledger" }
 
 [workspace]

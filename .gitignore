@@ -23,10 +23,10 @@ target/
 site/node_modules/
 site/pkg/
 site/pkg.next/
-pkgs/mrlyjs/pkg/
+bindings/js/pkg/
 
 # PYTHON
 .venv/
 __pycache__/
 .pytest_cache/
-pkgs/mrlypy/python/mrlypy/*.so
+bindings/py/python/mrly/*.so

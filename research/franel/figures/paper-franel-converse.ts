@@ -1,6 +1,6 @@
-import * as num from "mrlyjs/num";
-import * as math from "mrlyjs/math";
-import { frame, plot, type Frame, type Color, type Ink, type Pen, type Point } from "mrlyjs/view";
+import * as num from "@mrlyprod/mrly/num";
+import * as math from "@mrlyprod/mrly/math";
+import { frame, plot, type Frame, type Color, type Ink, type Pen, type Point } from "#view";
 import census from "./paper-franel-converse.json" with { type: "json" };
 
 const BASE = 3;

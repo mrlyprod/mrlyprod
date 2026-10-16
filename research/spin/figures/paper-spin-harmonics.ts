@@ -1,4 +1,4 @@
-import { Grid, type Ink, type Pen, type Point } from "mrlyjs/view";
+import { Grid, type Ink, type Pen, type Point } from "#view";
 import census from "./paper-spin-harmonics.json" with { type: "json" };
 
 const LONG = 4;

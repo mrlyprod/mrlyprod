@@ -1,4 +1,4 @@
-import { frame, ink, mix } from 'mrlyjs/view';
+import { frame, ink, mix } from '#view';
 import { dark } from '../kit/theme/theme.js';
 
 const POWER = 5;

@@ -1,6 +1,6 @@
-import * as core from "mrlyjs/core";
-import * as math from "mrlyjs/math";
-import { frame as box, Grid, type Color, type Frame, type Ink, type Pen } from "mrlyjs/view";
+import * as core from "@mrlyprod/mrly/core";
+import * as math from "@mrlyprod/mrly/math";
+import { frame as box, Grid, type Color, type Frame, type Ink, type Pen } from "#view";
 
 export const units = { core, math };
 

@@ -83,7 +83,7 @@ export function stamp(types, w, h, colours) {
 
 export function make(canvas, view, opts = {}) {
   const { num, math } = opts;
-  if (!num || !math) throw new Error('morse: the scene wants mrlyjs/num and mrlyjs/math as opts.num and opts.math');
+  if (!num || !math) throw new Error('morse: the scene wants @mrlyprod/mrly/num and @mrlyprod/mrly/math as opts.num and opts.math');
   const units = { num, math };
   const ctx = canvas.getContext('2d');
   let value = tidied(opts);

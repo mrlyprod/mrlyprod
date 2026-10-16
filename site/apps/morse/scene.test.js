@@ -1,15 +1,12 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
-import * as num from '../../../pkgs/mrlyjs/num.js';
+import * as math from '@mrlyprod/mrly/math';
+import * as num from '@mrlyprod/mrly/num';
 import { palette } from '../../kit/theme/palette.js';
 import { defaults } from '../../lib/knobs.js';
 import { keymap, labels, live } from '../../lib/scene.jsx';
 import { rgb, rng } from '../../lib/scene.js';
 import { PAD, lay } from './engine.js';
 import { PAGE, SPEC, file, make, stamp } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
-num.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/num/mrlyjs_num_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const pen = (log) =>
   new Proxy(

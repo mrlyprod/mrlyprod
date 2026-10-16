@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { asked, defaults, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { reroll } from './engine.js';
 import { PAGE, SPEC, make, tones } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const pen = (log) =>
   new Proxy(
@@ -93,7 +91,7 @@ test('the svg is the sheet as drawn and the tile svg the interlocking rect of on
 test('the scene tells its facts at make and wants the unit', () => {
   const live = open({ view: 'cut', level: 2, sheet: 'disc', radius: 1 });
   expect(live.told[0]).toMatchObject({ code: '23', name: 'carpet', side: 9, copies: 7, fills: 7 * 306 });
-  expect(() => make({ getContext: () => pen([]) }, live.view, VALUE)).toThrow('six: the scene wants mrlyjs/math as opts.math');
+  expect(() => make({ getContext: () => pen([]) }, live.view, VALUE)).toThrow('six: the scene wants @mrlyprod/mrly/math as opts.math');
 });
 
 test('the level runs to the cap of the side and the copies, and the url keeps the level asked for', () => {

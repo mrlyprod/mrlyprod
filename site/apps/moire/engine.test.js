@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../../lib/scene.js';
 import { CROPS, TOP, bins, climb, colorizer, crop, design, drawn, field, heat, law, matrix, odd, paint, palette, presetOf, presets, stops, study } from './engine.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const LOOK = { paper: '#ffffff', accent: '#008cff' };
 

@@ -1,0 +1,1396 @@
+use mrly_core::error::{Result, overflow_error, value_error};
+use mrly_core::tensor::Tensor;
+use mrly_num::factor::gcd;
+use serde::{Deserialize, Serialize};
+
+// FRACTIONS
+
+/// An exact rational number with a positive, reduced denominator.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Frac {
+    /// The numerator, carrying the sign.
+    pub num: i64,
+    /// The denominator, always positive.
+    pub den: i64,
+}
+
+fn reduce(num: i128, den: i128) -> Result<Frac> {
+    if den == 0 {
+        return value_error("a fraction needs a nonzero denominator.");
+    }
+    let sign = if den < 0 { -1 } else { 1 };
+    let g = (gcd(num.unsigned_abs(), den.unsigned_abs()) as i128).max(1);
+    let (num, den) = (sign * num / g, sign * den / g);
+    match (i64::try_from(num), i64::try_from(den)) {
+        (Ok(num), Ok(den)) => Ok(Frac { num, den }),
+        _ => overflow_error(format!("the fraction {num} over {den} passes i64.")),
+    }
+}
+
+impl Frac {
+    /// Builds the reduced fraction num over den.
+    ///
+    /// # Errors
+    ///
+    /// Errors on a zero denominator.
+    pub fn new(num: i64, den: i64) -> Result<Frac> {
+        reduce(num as i128, den as i128)
+    }
+    /// Wraps an integer as a fraction over one.
+    pub fn whole(num: i64) -> Frac {
+        Frac { num, den: 1 }
+    }
+    /// Returns the exact sum.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the reduced result passes an i64.
+    pub fn plus(self, other: Frac) -> Result<Frac> {
+        reduce(
+            self.num as i128 * other.den as i128 + other.num as i128 * self.den as i128,
+            self.den as i128 * other.den as i128,
+        )
+    }
+    /// Returns the exact difference.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the reduced result passes an i64.
+    pub fn minus(self, other: Frac) -> Result<Frac> {
+        reduce(
+            self.num as i128 * other.den as i128 - other.num as i128 * self.den as i128,
+            self.den as i128 * other.den as i128,
+        )
+    }
+    /// Returns the exact product.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the reduced result passes an i64.
+    pub fn times(self, other: Frac) -> Result<Frac> {
+        reduce(
+            self.num as i128 * other.num as i128,
+            self.den as i128 * other.den as i128,
+        )
+    }
+}
+
+fn lcm(a: i64, b: i64) -> Result<i64> {
+    let g = gcd(a.unsigned_abs() as u128, b.unsigned_abs() as u128) as i128;
+    match i64::try_from(a as i128 / g * b as i128) {
+        Ok(value) => Ok(value),
+        Err(_) => overflow_error(format!("the common multiple of {a} and {b} passes i64.")),
+    }
+}
+
+// SHAPES
+
+/// A closed half-space: the points x with normal dot x at most offset.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Half {
+    /// The integer outward normal.
+    pub normal: Vec<i64>,
+    /// The rational offset the linear form stays under.
+    pub offset: Frac,
+}
+
+/// An exact region of the unit box, scaled onto the lattice by the side.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Shape {
+    /// The closed ball of the given rational center and radius.
+    Ball {
+        /// The rational center, one coordinate per axis.
+        center: Vec<Frac>,
+        /// The rational radius.
+        radius: Frac,
+    },
+    /// The intersection of closed half-spaces.
+    Polytope {
+        /// The bounding walls.
+        walls: Vec<Half>,
+    },
+    /// The complement of the inner shape: In and Out swap, Cut stays.
+    Anti(Box<Shape>),
+    /// The inner shape on the cells wholly inside a box of the unit frame, every other cell Out.
+    Window {
+        /// The shape the window keeps.
+        inner: Box<Shape>,
+        /// The low corner, one coordinate per axis.
+        low: Vec<Frac>,
+        /// The high corner, one coordinate per axis.
+        high: Vec<Frac>,
+    },
+}
+
+/// Where one lattice cell sits relative to a shape.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[repr(u8)]
+pub enum Region {
+    /// The cell lies fully outside the shape.
+    Out = 0,
+    /// The cell crosses the shape's boundary.
+    Cut = 1,
+    /// The cell lies fully inside the shape.
+    In = 2,
+}
+
+impl Region {
+    /// Swaps In and Out, keeping Cut.
+    pub fn flip(self) -> Region {
+        match self {
+            Region::Out => Region::In,
+            Region::Cut => Region::Cut,
+            Region::In => Region::Out,
+        }
+    }
+}
+
+// CLASSIFICATION
+
+fn classify_half(wall: &Half, side: usize, index: &[usize]) -> Region {
+    let bound = wall.offset.num as i128 * side as i128;
+    let den = wall.offset.den as i128;
+    let mut low: i128 = 0;
+    let mut high: i128 = 0;
+    for (axis, &n) in wall.normal.iter().enumerate() {
+        let n = n as i128;
+        let i = index[axis] as i128;
+        if n >= 0 {
+            low += n * i;
+            high += n * (i + 1);
+        } else {
+            low += n * (i + 1);
+            high += n * i;
+        }
+    }
+    if high * den <= bound {
+        Region::In
+    } else if low * den > bound {
+        Region::Out
+    } else {
+        Region::Cut
+    }
+}
+
+fn ball_scale(center: &[Frac], radius: Frac) -> Result<i64> {
+    center.iter().try_fold(radius.den, |l, c| lcm(l, c.den))
+}
+
+fn classify_ball(center: &[Frac], radius: Frac, side: usize, index: &[usize]) -> Result<Region> {
+    let l = ball_scale(center, radius)? as i128;
+    let s = side as i128;
+    let r = radius.num as i128 * (l / radius.den as i128) * s;
+    if r < 0 {
+        return Ok(Region::Out);
+    }
+    let rr = r * r;
+    let mut near: i128 = 0;
+    let mut far: i128 = 0;
+    for (axis, c) in center.iter().enumerate() {
+        let cc = c.num as i128 * (l / c.den as i128) * s;
+        let lo = index[axis] as i128 * l;
+        let hi = lo + l;
+        let dn = cc.clamp(lo, hi) - cc;
+        near += dn * dn;
+        let df = (lo - cc).abs().max((hi - cc).abs());
+        far += df * df;
+    }
+    Ok(if far <= rr {
+        Region::In
+    } else if near > rr {
+        Region::Out
+    } else {
+        Region::Cut
+    })
+}
+
+fn within(low: &[Frac], high: &[Frac], side: usize, index: &[usize]) -> bool {
+    let s = side as i128;
+    low.iter().zip(high).zip(index).all(|((lo, hi), &i)| {
+        let i = i as i128;
+        lo.num as i128 * s <= i * lo.den as i128 && (i + 1) * hi.den as i128 <= hi.num as i128 * s
+    })
+}
+
+/// Places one lattice cell relative to the shape, exactly, with no floats.
+///
+/// The cell at the index occupies the closed box from the index to the index plus one on each axis, and the shape's unit-box coordinates are scaled by the side.
+///
+/// A polytope is judged wall by wall: Out means some wall excludes the cell, In means every wall contains it, and Cut means neither - so a cell that touches each wall's feasible side separately reads Cut even when the wall intersection misses it, a conservative call that never mislabels In or Out.
+///
+/// # Errors
+///
+/// Errors when the shape's exact scale passes an i64.
+pub fn classify(shape: &Shape, side: usize, index: &[usize]) -> Result<Region> {
+    match shape {
+        Shape::Ball { center, radius } => classify_ball(center, *radius, side, index),
+        Shape::Polytope { walls } => {
+            let mut cut = false;
+            for wall in walls {
+                match classify_half(wall, side, index) {
+                    Region::Out => return Ok(Region::Out),
+                    Region::Cut => cut = true,
+                    Region::In => {}
+                }
+            }
+            Ok(if cut { Region::Cut } else { Region::In })
+        }
+        Shape::Anti(inner) => Ok(classify(inner, side, index)?.flip()),
+        Shape::Window { inner, low, high } => match within(low, high, side, index) {
+            true => classify(inner, side, index),
+            false => Ok(Region::Out),
+        },
+    }
+}
+
+/// Classifies every cell of the grid, packing Out, Cut and In as 0, 1 and 2; the first extent sets the lattice side.
+///
+/// # Errors
+///
+/// Errors when the shape's exact scale passes an i64.
+pub fn regions(shape: &Shape, dims: &[usize]) -> Result<Tensor> {
+    let side = dims.first().copied().unwrap_or(0);
+    let rank = dims.len();
+    let mut out = Tensor::new(dims.to_vec());
+    let mut index = vec![0usize; rank];
+    for flat in 0..out.size() {
+        let mut rem = flat;
+        for axis in (0..rank).rev() {
+            index[axis] = rem % dims[axis];
+            rem /= dims[axis];
+        }
+        out.put(flat, i64::from(classify(shape, side, &index)? as u8));
+    }
+    Ok(out)
+}
+
+// CATALOG
+
+/// Lists the named shapes of a dimension.
+pub fn shapes(dimension: usize) -> Vec<String> {
+    let mut out = vec!["ball", "box", "diamond"];
+    if dimension == 2 {
+        out.extend(["triangle", "octagon"]);
+    }
+    if dimension == 3 {
+        out.extend(["octahedron", "tetrahedron", "pyramid"]);
+    }
+    out.into_iter().map(String::from).collect()
+}
+
+fn half(normal: Vec<i64>, offset: Frac) -> Half {
+    Half { normal, offset }
+}
+
+fn axis_normal(dimension: usize, axis: usize, sign: i64) -> Vec<i64> {
+    let mut n = vec![0i64; dimension];
+    n[axis] = sign;
+    n
+}
+
+fn box_shape(dimension: usize, radius: Frac) -> Result<Shape> {
+    let h = Frac::new(1, 2)?;
+    let mut walls = Vec::with_capacity(2 * dimension);
+    for axis in 0..dimension {
+        walls.push(half(axis_normal(dimension, axis, 1), h.plus(radius)?));
+        walls.push(half(axis_normal(dimension, axis, -1), radius.minus(h)?));
+    }
+    Ok(Shape::Polytope { walls })
+}
+
+fn diamond_walls(dimension: usize, radius: Frac) -> Result<Vec<Half>> {
+    (0..1usize << dimension)
+        .map(|bits| {
+            let normal: Vec<i64> = (0..dimension)
+                .map(|axis| if (bits >> axis) & 1 == 1 { -1 } else { 1 })
+                .collect();
+            let toward = Frac::new(normal.iter().sum(), 2)?;
+            Ok(half(normal, toward.plus(radius)?))
+        })
+        .collect()
+}
+
+fn diamond(dimension: usize, radius: Frac) -> Result<Shape> {
+    Ok(Shape::Polytope {
+        walls: diamond_walls(dimension, radius)?,
+    })
+}
+
+fn triangle(radius: Frac) -> Result<Shape> {
+    let h = Frac::new(1, 2)?;
+    let low = radius.minus(Frac::new(3, 2)?)?;
+    Ok(Shape::Polytope {
+        walls: vec![
+            half(vec![1, 0], h.plus(radius)?),
+            half(vec![-1, -2], low),
+            half(vec![-1, 2], h.plus(radius)?),
+        ],
+    })
+}
+
+fn octagon(radius: Frac) -> Result<Shape> {
+    let cut = radius.times(Frac::new(3, 2)?)?;
+    let mut walls = match box_shape(2, radius)? {
+        Shape::Polytope { walls } => walls,
+        _ => unreachable!(),
+    };
+    walls.extend(diamond_walls(2, cut)?);
+    Ok(Shape::Polytope { walls })
+}
+
+fn tetrahedron(radius: Frac) -> Result<Shape> {
+    let normals = [[1, 1, 1], [-1, -1, 1], [-1, 1, -1], [1, -1, -1]];
+    let walls: Result<Vec<Half>> = normals
+        .iter()
+        .map(|n| {
+            let toward = Frac::new(n.iter().sum(), 2)?;
+            Ok(half(n.to_vec(), toward.plus(radius)?))
+        })
+        .collect();
+    Ok(Shape::Polytope { walls: walls? })
+}
+
+fn pyramid(radius: Frac) -> Result<Shape> {
+    let h = Frac::new(1, 2)?;
+    let low = radius.minus(Frac::new(3, 2)?)?;
+    Ok(Shape::Polytope {
+        walls: vec![
+            half(vec![1, 0, 0], h.plus(radius)?),
+            half(vec![-1, -2, 0], low),
+            half(vec![-1, 2, 0], h.plus(radius)?),
+            half(vec![-1, 0, -2], low),
+            half(vec![-1, 0, 2], h.plus(radius)?),
+        ],
+    })
+}
+
+/// Builds a named shape of the dimension, centered at one half on every axis.
+///
+/// Regular hexagons and equilateral triangles have irrational walls in the grid frame, so they are excluded on purpose rather than approximated.
+///
+/// # Errors
+///
+/// Errors for an unknown name, or one whose walls are irrational on the grid.
+pub fn named(name: &str, dimension: usize, radius: Frac) -> Result<Shape> {
+    match (name, dimension) {
+        ("ball", _) => Ok(Shape::Ball {
+            center: vec![Frac::new(1, 2)?; dimension],
+            radius,
+        }),
+        ("box", _) => box_shape(dimension, radius),
+        ("diamond", _) => diamond(dimension, radius),
+        ("triangle", 2) => triangle(radius),
+        ("octagon", 2) => octagon(radius),
+        ("octahedron", 3) => diamond(3, radius),
+        ("tetrahedron", 3) => tetrahedron(radius),
+        ("pyramid", 3) => pyramid(radius),
+        ("hexagon", 2) | ("equilateral", 2) => value_error(
+            "a regular hexagon or equilateral triangle has irrational walls on the grid; no exact crop exists.",
+        ),
+        _ => value_error(format!("unknown shape {name} in dimension {dimension}.")),
+    }
+}
+
+// FITTING
+
+fn moved(shape: &Shape, offsets: &[Frac], short: Frac, unit: Frac) -> Result<Shape> {
+    let at = |c: Frac, o: Frac| -> Result<Frac> { short.times(c)?.plus(o)?.times(unit) };
+    let axes = |n: usize| match n == offsets.len() {
+        true => Ok(()),
+        false => value_error(format!(
+            "a shape of dimension {n} does not fit {} extents.",
+            offsets.len()
+        )),
+    };
+    let corner = |corner: &[Frac]| -> Result<Vec<Frac>> {
+        axes(corner.len())?;
+        corner
+            .iter()
+            .zip(offsets)
+            .map(|(&c, &o)| at(c, o))
+            .collect()
+    };
+    Ok(match shape {
+        Shape::Ball { center, radius } => Shape::Ball {
+            center: corner(center)?,
+            radius: short.times(*radius)?.times(unit)?,
+        },
+        Shape::Polytope { walls } => Shape::Polytope {
+            walls: walls
+                .iter()
+                .map(|wall| {
+                    axes(wall.normal.len())?;
+                    let shift = wall
+                        .normal
+                        .iter()
+                        .zip(offsets)
+                        .try_fold(Frac::whole(0), |sum, (&n, &o)| {
+                            sum.plus(Frac::whole(n).times(o)?)
+                        })?;
+                    Ok(half(wall.normal.clone(), at(wall.offset, shift)?))
+                })
+                .collect::<Result<_>>()?,
+        },
+        Shape::Anti(inner) => Shape::Anti(Box::new(moved(inner, offsets, short, unit)?)),
+        Shape::Window { inner, low, high } => Shape::Window {
+            inner: Box::new(moved(inner, offsets, short, unit)?),
+            low: corner(low)?,
+            high: corner(high)?,
+        },
+    })
+}
+
+/// Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is.
+///
+/// The cube sits half the spare cells in, rounded down, on each long axis.
+///
+/// # Errors
+///
+/// Errors on no extents, a zero extent, a shape of another dimension, or a scale past an i64.
+pub fn fit(shape: &Shape, extents: &[usize]) -> Result<Shape> {
+    let Some(&short) = extents.iter().min() else {
+        return value_error("a fit needs at least one extent.");
+    };
+    if short == 0 {
+        return value_error("a fit needs every extent at least one.");
+    }
+    if extents.iter().all(|&e| e == short) {
+        return Ok(shape.clone());
+    }
+    let whole = |n: usize| match i64::try_from(n) {
+        Ok(n) => Ok(Frac::whole(n)),
+        Err(_) => overflow_error(format!("the extent {n} passes i64.")),
+    };
+    let offsets: Vec<Frac> = extents
+        .iter()
+        .map(|&e| whole((e - short) / 2))
+        .collect::<Result<_>>()?;
+    let short = whole(short)?;
+    let unit = Frac::new(1, whole(extents[0])?.num)?;
+    let window = Shape::Window {
+        inner: Box::new(shape.clone()),
+        low: vec![Frac::whole(0); extents.len()],
+        high: vec![Frac::whole(1); extents.len()],
+    };
+    moved(&window, &offsets, short, unit)
+}
+
+/// Returns the least radius, in den-ths up to one, at which the named shape covers the whole unit box, or none when it does not by one.
+///
+/// # Errors
+///
+/// Errors for an unknown name or a zero den.
+pub fn reach(name: &str, dimension: usize, den: u32) -> Result<Option<u32>> {
+    if den == 0 {
+        return value_error("a reach needs a den of at least one.");
+    }
+    let corner = vec![0usize; dimension];
+    let covers = |k: u32| -> Result<bool> {
+        let shape = named(name, dimension, Frac::new(i64::from(k), i64::from(den))?)?;
+        Ok(classify(&shape, 1, &corner)? == Region::In)
+    };
+    if !covers(den)? {
+        return Ok(None);
+    }
+    let (mut lo, mut hi) = (0, den);
+    while hi - lo > 1 {
+        let mid = lo + (hi - lo) / 2;
+        match covers(mid)? {
+            true => hi = mid,
+            false => lo = mid,
+        }
+    }
+    Ok(Some(hi))
+}
+
+// CROPPING
+
+/// Zeroes every cell of the design outside the shape, keeping Cut cells on request; anti-crop is Shape::Anti.
+///
+/// ```
+/// use mrly_math::shape::{crop, named, Frac};
+/// let solid = mrly_math::atoms::ones_2d(9);
+/// let disc = named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
+/// assert_eq!(crop(&solid, &disc, true).unwrap().sum(), 77);
+/// ```
+///
+/// # Errors
+///
+/// Errors when the shape's exact scale passes an i64.
+pub fn crop(types: &Tensor, shape: &Shape, keep_cut: bool) -> Result<Tensor> {
+    let map = regions(shape, &types.shape)?;
+    let mut out = types.clone();
+    for flat in 0..out.size() {
+        let region = map.at(flat) as u8;
+        let keep = region == Region::In as u8 || (keep_cut && region == Region::Cut as u8);
+        if !keep {
+            out.put(flat, 0);
+        }
+    }
+    Ok(out)
+}
+
+/// The refine output ceiling in cells.
+pub const REFINE_LIMIT: usize = 20_000_000;
+
+/// Replicates each design cell base to the extra per axis and keeps a sub-cell only where its own region passes.
+///
+/// # Errors
+///
+/// Errors below base one, or past the cell ceiling.
+pub fn refine(
+    types: &Tensor,
+    shape: &Shape,
+    base: usize,
+    extra: usize,
+    keep_cut: bool,
+) -> Result<Tensor> {
+    if base < 1 {
+        return value_error("base must be at least 1.");
+    }
+    let exp = match u32::try_from(extra) {
+        Ok(e) => e,
+        Err(_) => return value_error(format!("refine output would exceed {REFINE_LIMIT} cells.")),
+    };
+    let factor = match base.checked_pow(exp) {
+        Some(f) => f,
+        None => return value_error(format!("refine output would exceed {REFINE_LIMIT} cells.")),
+    };
+    let mut cells: usize = 1;
+    let mut dims = Vec::with_capacity(types.shape.len());
+    for &n in &types.shape {
+        let grown = match n.checked_mul(factor) {
+            Some(g) => g,
+            None => {
+                return value_error(format!("refine output would exceed {REFINE_LIMIT} cells."));
+            }
+        };
+        cells = match cells.checked_mul(grown) {
+            Some(c) if c <= REFINE_LIMIT => c,
+            _ => return value_error(format!("refine output would exceed {REFINE_LIMIT} cells.")),
+        };
+        dims.push(grown);
+    }
+    let side = dims.first().copied().unwrap_or(0);
+    let rank = dims.len();
+    let mut out = Tensor::typed(dims.clone(), types.dtype());
+    let mut index = vec![0usize; rank];
+    let mut parent = vec![0usize; rank];
+    for flat in 0..out.size() {
+        let mut rem = flat;
+        for axis in (0..rank).rev() {
+            index[axis] = rem % dims[axis];
+            rem /= dims[axis];
+        }
+        for axis in 0..rank {
+            parent[axis] = index[axis] / factor;
+        }
+        let value = types.at(types.index(&parent));
+        if value == 0 {
+            continue;
+        }
+        let region = classify(shape, side, &index)?;
+        let keep = region == Region::In || (keep_cut && region == Region::Cut);
+        if keep {
+            out.put(flat, value);
+        }
+    }
+    Ok(out)
+}
+
+// CENSUS
+
+/// The per-region tallies of a shape over a design, indexed Out, Cut, In.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ShapeCensus {
+    /// The cell count of each region.
+    pub cells: [usize; 3],
+    /// The filled-cell count of each region.
+    pub filled: [usize; 3],
+}
+
+/// Tallies the design's cells and filled cells per region of the shape.
+///
+/// # Errors
+///
+/// Errors when the shape's exact scale passes an i64.
+pub fn census(shape: &Shape, types: &Tensor) -> Result<ShapeCensus> {
+    let map = regions(shape, &types.shape)?;
+    let mut out = ShapeCensus {
+        cells: [0; 3],
+        filled: [0; 3],
+    };
+    for flat in 0..types.size() {
+        let region = map.at(flat) as usize;
+        out.cells[region] += 1;
+        if types.at(flat) != 0 {
+            out.filled[region] += 1;
+        }
+    }
+    Ok(out)
+}
+
+// RADIAL
+
+/// The tallies of one design against a single integer radius about a centre.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RadialCounts {
+    /// The filled cells whose own centre lies within the radius.
+    pub seen: u64,
+    /// The filled cells lying wholly within the radius.
+    pub inside: u64,
+    /// The filled cells the sphere of the radius crosses.
+    pub cut: u64,
+}
+
+fn root_up(square: u64) -> u64 {
+    if square == 0 {
+        return 0;
+    }
+    let mut root = (square as f64).sqrt() as u64;
+    while root.saturating_mul(root) < square {
+        root += 1;
+    }
+    while root > 0 && (root - 1) * (root - 1) >= square {
+        root -= 1;
+    }
+    root
+}
+
+fn shell(square: u64) -> u64 {
+    root_up(square).div_ceil(2)
+}
+
+/// Counts a design's filled cells against every integer radius about one centre, in exact integer arithmetic.
+///
+/// Cell centres sit at the index plus one half, so every length is doubled and the centre is given in those doubled units: the lattice corner is zero on each axis and the grid centre is the side. Entry r of the result holds the filled cells whose centre lies within radius r, the filled cells whose whole cell lies within it, and the filled cells the sphere of radius r crosses; squared distances are compared as integers and never as floats.
+///
+/// The tallies are prefix sums over one pass of the grid: each cell lands in the smallest radius that sees it, the smallest that swallows it and the smallest that clears it, and the columns are summed afterwards.
+pub fn radial_census(types: &Tensor, centre: &[i64], r_max: u64) -> Vec<RadialCounts> {
+    let rank = types.shape.len();
+    let width = r_max as usize + 1;
+    let mut seen = vec![0u64; width];
+    let mut inside = vec![0u64; width];
+    let mut touch = vec![0u64; width];
+    let mut index = vec![0i64; rank];
+    for flat in 0..types.size() {
+        if types.at(flat) != 0 {
+            let (mut near, mut mid, mut far) = (0u64, 0u64, 0u64);
+            for (axis, coordinate) in index.iter().enumerate() {
+                let gap = (2 * coordinate + 1 - centre[axis]).unsigned_abs();
+                mid += gap * gap;
+                far += (gap + 1) * (gap + 1);
+                near += gap.saturating_sub(1) * gap.saturating_sub(1);
+            }
+            for (column, square) in [(&mut seen, mid), (&mut inside, far), (&mut touch, near)] {
+                let at = shell(square);
+                if at < width as u64 {
+                    column[at as usize] += 1;
+                }
+            }
+        }
+        for axis in (0..rank).rev() {
+            index[axis] += 1;
+            if (index[axis] as usize) < types.shape[axis] {
+                break;
+            }
+            index[axis] = 0;
+        }
+    }
+    for column in [&mut seen, &mut inside, &mut touch] {
+        for r in 1..width {
+            column[r] += column[r - 1];
+        }
+    }
+    (0..width)
+        .map(|r| RadialCounts {
+            seen: seen[r],
+            inside: inside[r],
+            cut: touch[r] - inside[r],
+        })
+        .collect()
+}
+
+// CROSSING SHELL
+
+/// One box of a crossing shell: where it sits, the seat it takes in its parent and whether the design keeps its path.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ShellBox {
+    /// The box's first coordinate in its own level's grid.
+    pub x: u64,
+    /// The box's second coordinate in its own level's grid.
+    pub y: u64,
+    /// The seat the box takes in its parent, row-major over the side, and the side squared at the root.
+    pub seat: usize,
+    /// The parent's place in the level above, and `usize::MAX` at the root or when the level above holds no such box.
+    pub parent: usize,
+    /// Whether every seat from the root down to this box is one the design keeps.
+    pub live: bool,
+}
+
+/// The rooted tree of the boxes one circle crosses, level by level.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Shell {
+    /// The radius in cells.
+    pub radius: u64,
+    /// The side of a box measured in the boxes one level below it.
+    pub number: u64,
+    /// The boxes of level `j`, the crossed cells at `0` and the single root last, each level in the arc's own order.
+    pub levels: Vec<Vec<ShellBox>>,
+    /// The boxes whose parent is missing from the level above, which the crossing identity forbids.
+    pub orphans: usize,
+}
+
+/// Lists the level-`level` boxes the circle of radius `radius` crosses, in the arc's own order.
+///
+/// A box `X` of side `number^level` is crossed when its near corner lies in the closed disc and its far corner outside it, `|X| <= radius / number^level < |X + 1|`, so the level is the whole grid's crossing shell read at that real radius. The columns telescope, the low row of one column being the high row of the next, so the walk is one pass over `floor(radius / number^level) + 1` columns and every comparison is on integers. The order runs along the arc, the first coordinate rising while the second falls, which is why a parent's children are contiguous among its own.
+pub fn crossing_shell(radius: u64, number: u64, level: u32) -> Vec<(u64, u64)> {
+    let scale = match number.checked_pow(level) {
+        Some(scale) if scale <= radius => scale,
+        _ => return vec![(0, 0)],
+    };
+    let square = radius * radius;
+    let top = radius / scale;
+    let high: Vec<u64> = (0..=top + 1)
+        .map(|i| {
+            let reach = scale * i;
+            if reach > radius {
+                0
+            } else {
+                (square - reach * reach).isqrt() / scale
+            }
+        })
+        .collect();
+    let mut out = Vec::with_capacity(2 * top as usize + 1);
+    for i in 0..=top as usize {
+        for y in (high[i + 1]..=high[i]).rev() {
+            out.push((i as u64, y));
+        }
+    }
+    out
+}
+
+/// Builds the whole crossing tree of one radius, pruned by the seats the design keeps.
+///
+/// The depth is the least level whose grid holds the circle inside one box, so the tree is rooted there and its leaves are the `2 * radius + 1` crossed cells. `keep` reads the design's level-one tile row-major, one flag per seat, and a box is live when every seat from the root down to it is kept, so the live leaves are exactly the crossed cells the design fills.
+pub fn crossing_tree(radius: u64, number: u64, keep: &[bool]) -> Shell {
+    let mut depth = 0u32;
+    while number
+        .checked_pow(depth)
+        .is_some_and(|scale| scale <= radius)
+    {
+        depth += 1;
+    }
+    let seats = (number * number) as usize;
+    let mut levels: Vec<Vec<ShellBox>> = (0..=depth)
+        .map(|level| {
+            crossing_shell(radius, number, level)
+                .into_iter()
+                .map(|(x, y)| ShellBox {
+                    x,
+                    y,
+                    seat: seats,
+                    parent: usize::MAX,
+                    live: true,
+                })
+                .collect()
+        })
+        .collect();
+    let mut orphans = 0;
+    for level in (0..depth as usize).rev() {
+        let mut start = 0usize;
+        for k in 0..levels[level].len() {
+            let here = levels[level][k];
+            let (px, py) = (here.x / number, here.y / number);
+            let mut at = start;
+            while at < levels[level + 1].len()
+                && (levels[level + 1][at].x, levels[level + 1][at].y) != (px, py)
+            {
+                at += 1;
+            }
+            if at == levels[level + 1].len() {
+                orphans += 1;
+                levels[level][k].live = false;
+                continue;
+            }
+            start = at;
+            let seat = ((here.x % number) * number + here.y % number) as usize;
+            let live = levels[level + 1][at].live && keep.get(seat).copied().unwrap_or(false);
+            let cell = &mut levels[level][k];
+            cell.seat = seat;
+            cell.parent = at;
+            cell.live = live;
+        }
+    }
+    Shell {
+        radius,
+        number,
+        levels,
+        orphans,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::atoms;
+    use crate::bang::Code;
+    use crate::bang::factory::create;
+
+    struct Lcg(u64);
+
+    impl Lcg {
+        fn next(&mut self) -> u64 {
+            self.0 = self
+                .0
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            self.0 >> 33
+        }
+        fn pick(&mut self, lo: i64, hi: i64) -> i64 {
+            lo + (self.next() % (hi - lo + 1) as u64) as i64
+        }
+    }
+
+    fn corners(index: &[usize]) -> Vec<Vec<i128>> {
+        let d = index.len();
+        (0..1usize << d)
+            .map(|bits| {
+                index
+                    .iter()
+                    .enumerate()
+                    .map(|(k, &i)| (i + ((bits >> k) & 1)) as i128)
+                    .collect()
+            })
+            .collect()
+    }
+
+    fn oracle_half(wall: &Half, side: usize, index: &[usize]) -> Region {
+        let bound = wall.offset.num as i128 * side as i128;
+        let den = wall.offset.den as i128;
+        let mut ins = 0;
+        let all = corners(index);
+        for corner in &all {
+            let value: i128 = wall
+                .normal
+                .iter()
+                .zip(corner)
+                .map(|(&n, &c)| n as i128 * c)
+                .sum();
+            if value * den <= bound {
+                ins += 1;
+            }
+        }
+        if ins == all.len() {
+            Region::In
+        } else if ins == 0 {
+            Region::Out
+        } else {
+            Region::Cut
+        }
+    }
+
+    fn oracle_ball(center: &[Frac], radius: Frac, side: usize, index: &[usize]) -> Region {
+        let l = ball_scale(center, radius).unwrap() as i128;
+        let s = side as i128;
+        let r = radius.num as i128 * (l / radius.den as i128) * s;
+        if r < 0 {
+            return Region::Out;
+        }
+        let scaled: Vec<i128> = center
+            .iter()
+            .map(|c| c.num as i128 * (l / c.den as i128) * s)
+            .collect();
+        let far = corners(index)
+            .iter()
+            .map(|corner| {
+                corner
+                    .iter()
+                    .zip(&scaled)
+                    .map(|(&p, &c)| (p * l - c) * (p * l - c))
+                    .sum::<i128>()
+            })
+            .max()
+            .unwrap();
+        let near: i128 = scaled
+            .iter()
+            .enumerate()
+            .map(|(axis, &c)| {
+                let lo = index[axis] as i128 * l;
+                let d = c.clamp(lo, lo + l) - c;
+                d * d
+            })
+            .sum();
+        if far <= r * r {
+            Region::In
+        } else if near > r * r {
+            Region::Out
+        } else {
+            Region::Cut
+        }
+    }
+
+    fn oracle(shape: &Shape, side: usize, index: &[usize]) -> Region {
+        match shape {
+            Shape::Ball { center, radius } => oracle_ball(center, *radius, side, index),
+            Shape::Polytope { walls } => {
+                let mut cut = false;
+                for wall in walls {
+                    match oracle_half(wall, side, index) {
+                        Region::Out => return Region::Out,
+                        Region::Cut => cut = true,
+                        Region::In => {}
+                    }
+                }
+                if cut { Region::Cut } else { Region::In }
+            }
+            Shape::Anti(inner) => oracle(inner, side, index).flip(),
+            Shape::Window { inner, low, high } => {
+                let inside = index.iter().enumerate().all(|(axis, &i)| {
+                    let (lo, hi) = (low[axis], high[axis]);
+                    (lo.num as i128 * side as i128) <= i as i128 * lo.den as i128
+                        && (i as i128 + 1) * hi.den as i128 <= hi.num as i128 * side as i128
+                });
+                match inside {
+                    true => oracle(inner, side, index),
+                    false => Region::Out,
+                }
+            }
+        }
+    }
+
+    fn random_shape(rng: &mut Lcg, dimension: usize) -> Shape {
+        let core = if rng.pick(0, 1) == 0 {
+            Shape::Ball {
+                center: (0..dimension)
+                    .map(|_| Frac::new(rng.pick(-4, 8), rng.pick(1, 4)).unwrap())
+                    .collect(),
+                radius: Frac::new(rng.pick(0, 6), rng.pick(1, 3)).unwrap(),
+            }
+        } else {
+            Shape::Polytope {
+                walls: (0..rng.pick(1, 4))
+                    .map(|_| Half {
+                        normal: (0..dimension).map(|_| rng.pick(-3, 3)).collect(),
+                        offset: Frac::new(rng.pick(-6, 6), rng.pick(1, 4)).unwrap(),
+                    })
+                    .collect(),
+            }
+        };
+        let wrap = rng.pick(0, 3);
+        let mut corner = |lo: i64, hi: i64| -> Vec<Frac> {
+            (0..dimension)
+                .map(|_| Frac::new(rng.pick(lo, hi), rng.pick(1, 4)).unwrap())
+                .collect()
+        };
+        match wrap {
+            0 => Shape::Anti(Box::new(core)),
+            1 => Shape::Window {
+                inner: Box::new(core),
+                low: corner(-1, 2),
+                high: corner(1, 4),
+            },
+            _ => core,
+        }
+    }
+
+    fn every_index(dims: &[usize]) -> Vec<Vec<usize>> {
+        let size: usize = dims.iter().product();
+        (0..size)
+            .map(|flat| {
+                let mut rem = flat;
+                let mut index = vec![0usize; dims.len()];
+                for axis in (0..dims.len()).rev() {
+                    index[axis] = rem % dims[axis];
+                    rem /= dims[axis];
+                }
+                index
+            })
+            .collect()
+    }
+
+    #[test]
+    fn classify_matches_the_corner_oracle() {
+        let mut rng = Lcg(9);
+        for dimension in 1..=3 {
+            for _ in 0..40 {
+                let shape = random_shape(&mut rng, dimension);
+                let side = rng.pick(1, 8) as usize;
+                for index in every_index(&vec![side; dimension]) {
+                    assert_eq!(
+                        classify(&shape, side, &index).unwrap(),
+                        oracle(&shape, side, &index),
+                        "{shape:?} side {side} at {index:?}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn census_and_crops_partition_the_grid() {
+        let types = create(Code(7), 3, 2, 2, 2).unwrap();
+        let ball = named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
+        let tally = census(&ball, &types).unwrap();
+        assert_eq!(tally.cells.iter().sum::<usize>(), 81);
+        assert_eq!(tally.filled.iter().sum::<usize>(), 64);
+        let kept = crop(&types, &ball, true).unwrap();
+        let anti = crop(&types, &Shape::Anti(Box::new(ball.clone())), false).unwrap();
+        let filled = |t: &Tensor| t.bytes().unwrap().iter().filter(|&&v| v != 0).count();
+        assert_eq!(filled(&kept) + filled(&anti), filled(&types));
+        assert_eq!(kept.get(&[0, 0]).unwrap(), 0);
+        assert!(filled(&kept) > 0);
+    }
+
+    #[test]
+    fn diamond_crop_matches_the_closed_form() {
+        let half = Frac::new(1, 2).unwrap();
+        for m in [1usize, 2, 3, 4, 6] {
+            let ones = Tensor::full(vec![2 * m, 2 * m], 1);
+            let d = named("diamond", 2, half).unwrap();
+            let inside = crop(&ones, &d, false).unwrap();
+            assert_eq!(inside.sum() as usize, 2 * m * (m - 1), "side {}", 2 * m);
+        }
+    }
+
+    #[test]
+    fn sponge_ball_crop_counts() {
+        let sponge = create(Code(23), 3, 3, 2, 1).unwrap();
+        assert_eq!(sponge.sum(), 20);
+        let ball = named("ball", 3, Frac::new(1, 2).unwrap()).unwrap();
+        assert_eq!(crop(&sponge, &ball, true).unwrap().sum(), 20);
+        assert_eq!(crop(&sponge, &ball, false).unwrap().sum(), 0);
+        let tally = census(&ball, &sponge).unwrap();
+        assert_eq!(tally.cells, [0, 26, 1]);
+    }
+
+    #[test]
+    fn refine_of_ones_is_a_crop_at_the_finer_side() {
+        let ball = named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
+        for keep_cut in [false, true] {
+            let refined = refine(&atoms::ones_2d(2), &ball, 2, 2, keep_cut).unwrap();
+            let cropped = crop(&atoms::ones_2d(8), &ball, keep_cut).unwrap();
+            assert_eq!(refined, cropped);
+        }
+    }
+
+    #[test]
+    fn refine_replicates_the_parent_under_a_covering_shape() {
+        let carpet = atoms::carpet_2d(3);
+        let everything = named("ball", 2, Frac::whole(2)).unwrap();
+        let refined = refine(&carpet, &everything, 3, 1, false).unwrap();
+        assert_eq!(refined, carpet.kron(&atoms::ones_2d(3)));
+    }
+
+    #[test]
+    fn refuses_a_zero_denominator_a_wild_radius_and_a_cell_ceiling() {
+        let ball = named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
+        assert!(Frac::new(1, 0).is_err());
+        assert!(Frac::whole(i64::MAX).plus(Frac::whole(i64::MAX)).is_err());
+        assert!(Frac::whole(i64::MIN).minus(Frac::whole(i64::MAX)).is_err());
+        assert!(Frac::whole(i64::MAX).times(Frac::whole(i64::MAX)).is_err());
+        assert!(named("ball", 2, Frac::whole(i64::MAX)).is_ok());
+        assert!(named("box", 2, Frac::whole(i64::MAX)).is_err());
+        assert!(refine(&atoms::ones_2d(10), &ball, 10, 4, false).is_err());
+        assert!(refine(&atoms::ones_3d(3), &ball, 3, 9, false).is_err());
+        assert!(refine(&atoms::ones_2d(3), &ball, 0, 1, false).is_err());
+        let wild = Shape::Ball {
+            center: vec![Frac {
+                num: 1,
+                den: i64::MAX,
+            }],
+            radius: Frac::new(1, 2).unwrap(),
+        };
+        assert!(classify(&wild, 1, &[0]).is_err());
+        assert!(regions(&wild, &[1]).is_err());
+        assert!(crop(&atoms::ones_2d(1), &wild, true).is_err());
+        assert!(census(&wild, &atoms::ones_2d(1)).is_err());
+    }
+
+    #[test]
+    fn named_catalog_covers_its_dimensions() {
+        assert_eq!(
+            shapes(2),
+            vec!["ball", "box", "diamond", "triangle", "octagon"]
+        );
+        assert_eq!(
+            shapes(3),
+            vec![
+                "ball",
+                "box",
+                "diamond",
+                "octahedron",
+                "tetrahedron",
+                "pyramid"
+            ]
+        );
+        let r = Frac::new(1, 2).unwrap();
+        for dimension in 2..=3 {
+            for name in shapes(dimension) {
+                assert!(named(&name, dimension, r).is_ok(), "{name} d{dimension}");
+            }
+        }
+        assert!(named("hexagon", 2, r).is_err());
+        assert!(named("triangle", 3, r).is_err());
+        assert!(named("blob", 2, r).is_err());
+    }
+
+    #[test]
+    fn named_solids_fill_a_sane_share() {
+        let r = Frac::new(1, 2).unwrap();
+        for (dimension, side) in [(2usize, 12usize), (3, 8)] {
+            let ones = Tensor::full(vec![side; dimension], 1);
+            for name in shapes(dimension) {
+                let shape = named(&name, dimension, r).unwrap();
+                let inside = crop(&ones, &shape, false).unwrap().sum();
+                let touched = crop(&ones, &shape, true).unwrap().sum();
+                assert!(inside > 0, "{name} d{dimension} inside");
+                assert!(touched >= inside, "{name} d{dimension} touched");
+                assert!(touched <= ones.sum(), "{name} d{dimension} bounded");
+            }
+        }
+    }
+
+    #[test]
+    fn the_fit_is_the_shape_on_the_centred_short_side_square_and_out_past_it() {
+        let r = Frac::new(1, 2).unwrap();
+        for name in ["ball", "box"] {
+            let shape = named(name, 2, r).unwrap();
+            let square = regions(&shape, &[3, 3]).unwrap();
+            let wide = regions(&fit(&shape, &[3, 8]).unwrap(), &[3, 8]).unwrap();
+            let tall = regions(&fit(&shape, &[8, 3]).unwrap(), &[8, 3]).unwrap();
+            let pasted = |a: usize, b: usize| match (2..5).contains(&b) {
+                true => square.at(a * 3 + b - 2),
+                false => 0,
+            };
+            for a in 0..3 {
+                for b in 0..8 {
+                    assert_eq!(wide.at(a * 8 + b), pasted(a, b), "{name} wide {a} {b}");
+                    assert_eq!(tall.at(b * 3 + a), pasted(a, b), "{name} tall {b} {a}");
+                }
+            }
+            assert_eq!(fit(&shape, &[3, 3]).unwrap(), shape);
+        }
+        assert!(fit(&named("ball", 3, r).unwrap(), &[3, 8]).is_err());
+        assert!(fit(&named("ball", 2, r).unwrap(), &[0, 8]).is_err());
+    }
+
+    #[test]
+    fn a_crop_on_a_sheet_that_is_not_square_keeps_the_shape_centred_on_the_short_side() {
+        let ball = named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
+        let tile = create(Code::from(495u64), 3, 2, 3, 1).unwrap();
+        let wide = tile.tile(&[2, 4]).unwrap();
+        let fitted = fit(&ball, &[6, 12]).unwrap();
+        let kept = crop(&wide, &fitted, false).unwrap();
+        let rows: Vec<Vec<i64>> = (0..6)
+            .map(|y| (0..12).map(|x| kept.at(y * 12 + x)).collect())
+            .collect();
+        assert!(
+            rows.iter()
+                .all(|row| row[..3].iter().chain(&row[9..]).all(|&on| on == 0))
+        );
+        assert!(rows.iter().all(|row| row.iter().eq(row.iter().rev())));
+        assert!(rows.iter().eq(rows.iter().rev()));
+        let cells = census(&fitted, &wide).unwrap().cells[Region::In as usize];
+        assert!(cells > 0 && cells < 36);
+        let tall = crop(
+            &tile.tile(&[4, 2]).unwrap(),
+            &fit(&ball, &[12, 6]).unwrap(),
+            false,
+        )
+        .unwrap();
+        assert!((0..12).all(|y| (0..6).all(|x| tall.at(y * 6 + x) == rows[x][y])));
+    }
+
+    #[test]
+    fn the_reach_is_the_least_radius_past_which_nothing_lies_outside_a_wide_window() {
+        let reaches: Vec<Option<u32>> = shapes(2)
+            .iter()
+            .map(|name| reach(name, 2, 32).unwrap())
+            .collect();
+        assert_eq!(reaches, [Some(23), Some(16), Some(32), None, Some(22)]);
+        let window = Tensor::full(vec![243, 243], 1);
+        let out = |name: &str, radius: u32| {
+            let shape = named(name, 2, Frac::new(i64::from(radius), 32).unwrap()).unwrap();
+            census(&shape, &window).unwrap().cells[Region::Out as usize]
+        };
+        for (name, reach) in shapes(2).iter().zip(reaches) {
+            match reach {
+                Some(r) => assert_eq!((out(name, r), out(name, r - 1) > 0), (0, true), "{name}"),
+                None => assert!(out(name, 32) > 0, "{name}"),
+            }
+        }
+        assert!(reach("blob", 2, 32).is_err());
+        assert!(reach("ball", 2, 0).is_err());
+    }
+
+    #[test]
+    fn frac_reduces_and_computes() {
+        assert_eq!(Frac::new(2, 4).unwrap(), Frac::new(1, 2).unwrap());
+        assert_eq!(Frac::new(1, -2).unwrap(), Frac::new(-1, 2).unwrap());
+        let frac = |n, d| Frac::new(n, d).unwrap();
+        assert_eq!(frac(1, 2).plus(frac(1, 3)).unwrap(), frac(5, 6));
+        assert_eq!(frac(1, 2).minus(frac(1, 2)).unwrap(), Frac::whole(0));
+        assert_eq!(frac(2, 3).times(frac(3, 4)).unwrap(), frac(1, 2));
+    }
+
+    fn corner_seen(code: u128, dimension: usize, level: usize, r_max: u64) -> Vec<u64> {
+        let types = create(Code(code), 3, dimension, 2, level).unwrap();
+        let table = radial_census(&types, &vec![0; dimension], r_max);
+        (1..=r_max as usize).map(|r| table[r].seen).collect()
+    }
+
+    #[test]
+    fn radial_census_counts_the_corner_disc() {
+        assert_eq!(
+            corner_seen(7, 2, 6, 12),
+            [1, 3, 7, 12, 16, 22, 30, 38, 48, 63, 77, 91]
+        );
+        assert_eq!(corner_seen(23, 3, 4, 8), [1, 4, 13, 28, 47, 65, 95, 137]);
+        let carpet = create(Code::from(7u64), 3, 2, 2, 6).unwrap();
+        let table = radial_census(&carpet, &[0, 0], 243);
+        let powers: Vec<u64> = (1..=5).map(|k| table[3usize.pow(k)].seen).collect();
+        assert_eq!(powers, [7, 48, 385, 3080, 24610]);
+        assert_eq!(table[81].seen, 8 * table[27].seen);
+        let cuts: Vec<u64> = [27usize, 81, 243].iter().map(|&r| table[r].cut).collect();
+        assert_eq!(cuts, [42, 114, 306]);
+    }
+
+    #[test]
+    fn the_centre_disc_opens_at_the_first_radius_the_design_reaches() {
+        let carpet = create(Code::from(7u64), 3, 2, 2, 6).unwrap();
+        let hole = radial_census(&carpet, &[729, 729], 364);
+        assert_eq!(hole.len(), 365);
+        assert_eq!((1..hole.len()).find(|&r| hole[r].seen > 0), Some(122));
+        let sponge = create(Code::from(23u64), 3, 3, 2, 4).unwrap();
+        let deep = radial_census(&sponge, &[81, 81, 81], 40);
+        assert_eq!(deep.len(), 41);
+        assert_eq!((1..deep.len()).find(|&r| deep[r].seen > 0), Some(20));
+    }
+
+    #[test]
+    fn radial_census_does_not_depend_on_the_level() {
+        let shallow = create(Code(7), 3, 2, 2, 4).unwrap();
+        let deep = create(Code(7), 3, 2, 2, 5).unwrap();
+        let reach = 80;
+        let near = radial_census(&shallow, &[0, 0], reach);
+        let far = radial_census(&deep, &[0, 0], reach);
+        assert_eq!(near, far);
+        assert!(near[reach as usize].seen > 0);
+    }
+
+    #[test]
+    fn radial_census_matches_the_ball_census() {
+        for (code, dimension, level) in [(7u128, 2usize, 4usize), (23, 3, 3)] {
+            let types = create(Code(code), 3, dimension, 2, level).unwrap();
+            let side = types.shape[0];
+            let table = radial_census(&types, &vec![0; dimension], side as u64 - 1);
+            for r in [1usize, 5, 17, side - 1] {
+                let ball = Shape::Ball {
+                    center: vec![Frac::whole(0); dimension],
+                    radius: Frac::new(r as i64, side as i64).unwrap(),
+                };
+                let tally = census(&ball, &types).unwrap();
+                assert_eq!(tally.filled[2] as u64, table[r].inside, "in r={r}");
+                assert_eq!(tally.filled[1] as u64, table[r].cut, "cut r={r}");
+                assert!(table[r].inside <= table[r].seen);
+                assert!(table[r].seen <= table[r].inside + table[r].cut);
+            }
+        }
+    }
+
+    fn brute_shell(radius: u64, scale: u64) -> Vec<(u64, u64)> {
+        let mut out = Vec::new();
+        let reach = radius / scale + 1;
+        for x in 0..=reach {
+            for y in 0..=reach {
+                let near = (scale * x).pow(2) + (scale * y).pow(2);
+                let far = (scale * (x + 1)).pow(2) + (scale * (y + 1)).pow(2);
+                if near <= radius * radius && radius * radius < far {
+                    out.push((x, y));
+                }
+            }
+        }
+        out.sort_by_key(|&(x, y)| (x, std::cmp::Reverse(y)));
+        out
+    }
+
+    #[test]
+    fn crossing_shell_matches_the_brute_sweep() {
+        for radius in 1..=90u64 {
+            for level in 0..5u32 {
+                let scale = 3u64.pow(level);
+                assert_eq!(
+                    crossing_shell(radius, 3, level),
+                    brute_shell(radius, scale),
+                    "r={radius} j={level}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn crossing_shell_is_two_floor_plus_one() {
+        for radius in 1..=400u64 {
+            for level in 0..8u32 {
+                let want = 2 * (radius / 3u64.pow(level)) + 1;
+                assert_eq!(crossing_shell(radius, 3, level).len() as u64, want);
+                let five = 2 * (radius / 5u64.pow(level.min(5))) + 1;
+                assert_eq!(crossing_shell(radius, 5, level.min(5)).len() as u64, five);
+            }
+        }
+        for radius in [728u64, 729, 1000, 2186, 2187, 6560] {
+            for level in 0..9u32 {
+                let want = 2 * (radius / 3u64.pow(level)) + 1;
+                assert_eq!(crossing_shell(radius, 3, level).len() as u64, want);
+            }
+        }
+    }
+
+    #[test]
+    fn crossing_tree_hangs_every_box_on_a_crossed_parent() {
+        let tile = create(Code(7), 3, 2, 2, 1).unwrap();
+        let keep: Vec<bool> = tile.bytes().unwrap().iter().map(|&b| b != 0).collect();
+        let ones = Tensor::full(vec![243, 243], 1);
+        let whole = radial_census(&ones, &[0, 0], 242);
+        for radius in 1..=120u64 {
+            let tree = crossing_tree(radius, 3, &keep);
+            assert_eq!(tree.orphans, 0, "r={radius}");
+            assert_eq!(tree.levels.last().unwrap().len(), 1);
+            assert_eq!(tree.levels[0].len() as u64, 2 * radius + 1);
+            assert_eq!(whole[radius as usize].cut, 2 * radius + 1, "r={radius}");
+            let mut depth = 0u32;
+            while 3u64.pow(depth) <= radius {
+                depth += 1;
+            }
+            assert_eq!(tree.levels.len() as u32, depth + 1, "r={radius}");
+            for level in 0..tree.levels.len() - 1 {
+                for cell in &tree.levels[level] {
+                    let parent = tree.levels[level + 1][cell.parent];
+                    assert_eq!((parent.x, parent.y), (cell.x / 3, cell.y / 3));
+                    assert_eq!(cell.seat, ((cell.x % 3) * 3 + cell.y % 3) as usize);
+                    assert_eq!(cell.live, parent.live && keep[cell.seat]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_live_leaves_are_the_designs_crossed_cells() {
+        for code in [7u128, 5, 11, 15] {
+            let tile = create(Code(code), 3, 2, 2, 1).unwrap();
+            let keep: Vec<bool> = tile.bytes().unwrap().iter().map(|&b| b != 0).collect();
+            for depth in 1..=4usize {
+                let grid = create(Code(code), 3, 2, 2, depth).unwrap();
+                let side = 3u64.pow(depth as u32);
+                let table = radial_census(&grid, &[0, 0], side - 1);
+                for radius in side / 3..side {
+                    let tree = crossing_tree(radius.max(1), 3, &keep);
+                    assert_eq!(tree.levels.len(), depth + 1, "code={code} r={radius}");
+                    let live = tree.levels[0].iter().filter(|cell| cell.live).count() as u64;
+                    assert_eq!(live, table[radius as usize].cut, "code={code} r={radius}");
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::json;
+use mrly::core::error::Result;
+use mrly::core::json;
 
 const NAME: &str = "research-erdos";
 const BASES: [u64; 3] = [3, 4, 5];

@@ -16,7 +16,7 @@
 - `palette.css` is generated: the fifteen colours and a `--<hue>-link` shade per hue per theme, as CSS variables.
 - `theme/` is the same colours in JS: `palette.js` the fifteen, `theme.js` the `dark` and `light` role maps and `tinted()`.
 - `tinted(roles, { accent, link, theme })` swaps the tint's hue into the blue slot, so every figure follows the tint; in light the slot takes the hue's link shade.
-- `font/` is the pixel font that writes the wordmark: `font.js` lays out, writes and folds a text; `font.json` is the glyph book `mrlyrs::font` generates.
+- `font/` is the pixel font that writes the wordmark: `font.js` lays out, writes and folds a text; `font.json` is the glyph book `mrly::font` generates.
 - `types.ts` is the one extension table: `kind(path)` answers a content type; `push.ts`, `shots.ts` and dev share it.
 - `s3.ts` is the S3 client `push.ts`, `lambda.ts` and `scripts/pkg.ts` share: names and credentials from the environment, no SDK.
 

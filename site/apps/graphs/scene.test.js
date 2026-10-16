@@ -1,13 +1,11 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { palette } from '../../kit/theme/palette.js';
 import { defaults, tidy, unitOf } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { COOL, TICK } from './engine.js';
 import { HOLD, PAGE, SPEC, make, tones } from './scene.js';
 import { ORBIT, START, VIEWS, detail } from './space.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const brief = (arg) => (ArrayBuffer.isView(arg) ? arg.length : typeof arg === 'function' ? 'thing' : typeof arg === 'object' && arg !== null ? Object.keys(arg).join(',') : arg);
 

@@ -1,5 +1,5 @@
-import * as math from "mrlyjs/math";
-import { field, plot, type Ink, type Pen, type Point } from "mrlyjs/view";
+import * as math from "@mrlyprod/mrly/math";
+import { field, plot, type Ink, type Pen, type Point } from "#view";
 import census from "./research-spirograph.json" with { type: "json" };
 
 type Wheel = { bounds: math.spirograph.Disc; shape: math.spirograph.Cover; points: Float32Array };

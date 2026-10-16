@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../../lib/scene.js';
 import { cap, count, design, joins, lay, layers, sheet, tag } from './engine.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const carpet = math.two.create('495', 3, 2, 0, 3);
 

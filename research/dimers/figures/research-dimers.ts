@@ -1,4 +1,4 @@
-import type { Color, Ink, Pen } from "mrlyjs/view";
+import type { Color, Ink, Pen } from "#view";
 import census from "./research-dimers.json" with { type: "json" };
 
 export const units = {};

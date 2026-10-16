@@ -1,9 +1,9 @@
 use crate::fills::cell_index;
 use crate::tables::write_csv;
-use mrlyrs::math::bang::baseq::{distinct_designs, fill_from_corners};
-use mrlyrs::math::bang::factory::code_to_corners;
-use mrlyrs::math::bang::Code;
-use mrlyrs::math::rules::render;
+use mrly::math::bang::baseq::{distinct_designs, fill_from_corners};
+use mrly::math::bang::factory::code_to_corners;
+use mrly::math::bang::Code;
+use mrly::math::rules::render;
 use num_bigint::BigUint;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -34,7 +34,7 @@ const PUBLISHED: [&str; 16] = [
 ];
 
 fn brute(design: Code, number: usize, dimension: usize, level: usize) -> u128 {
-    let filled: Vec<Vec<u8>> = mrlyrs::math::bang::factory::residue_corners(dimension, 2)
+    let filled: Vec<Vec<u8>> = mrly::math::bang::factory::residue_corners(dimension, 2)
         .into_iter()
         .filter(|r| design.get() >> cell_index(r, 2) & 1 == 1)
         .collect();

@@ -1,5 +1,5 @@
-import * as math from "mrlyjs/math";
-import type { Frame, Ink, Pen, Point } from "mrlyjs/view";
+import * as math from "@mrlyprod/mrly/math";
+import type { Frame, Ink, Pen, Point } from "#view";
 
 export const units = { math };
 

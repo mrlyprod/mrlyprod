@@ -10,10 +10,10 @@ Fix a dimension-two design: a mask of filled cells on a `base x base` grid, subs
 ## The object
 
 - Coordinates: `x` is the column and `y` the row, row 0 at the bottom and `y` growing upward, and cell `(x, y)` is the unit square with lower-left corner `(x, y)`. Every cell on this page, of a mask or of a level, is named this way.
-- The tree names a design `bang dim 2, base b, code c`: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of `c` is set, and level `n` is the `n`-fold Kronecker power of the mask, built by `mrlyrs::math::bang::factory::create`.
+- The tree names a design `bang dim 2, base b, code c`: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of `c` is set, and level `n` is the `n`-fold Kronecker power of the mask, built by `mrly::math::bang::factory::create`.
 - A parity design `bang dim 2, code c` drawn at side number `m` fills cell `(x, y)` when bit `2 (y mod 2) + (x mod 2)` of `c` is set, so it is the base-`m` design whose code collects those cells. The carpet is `bang dim 2, code 7` at side number 3, the same picture as `bang dim 2, base 3, code 495`; at base 2 the two names agree.
 - Level 0 is one filled cell. Write `N = side`, and `k` for the number of filled cells of the mask.
-- Every count on this page is printed by `lab/rs/arc-loops`, which counts loops three ways: union-find over the edge midpoints, the mirror graph below, and the block recursion below. The first two share the cells built by `mrlyrs` and one union-find structure; the block recursion shares neither.
+- Every count on this page is printed by `lab/rs/arc-loops`, which counts loops three ways: union-find over the edge midpoints, the mirror graph below, and the block recursion below. The first two share the cells built by `mrly` and one union-find structure; the block recursion shares neither.
 
 ## Strands
 
@@ -133,4 +133,4 @@ Every nonzero sequence is looked up in a local copy of [the OEIS stripped dump](
 ## Generators
 
 - `lab/rs/arc-loops` prints every count on this page; its README lists each verb, its runtime and the lines it witnesses.
-- `mrlyrs::math::bang::factory::create` builds every level the union-find and cycle-rank counts read; the block recursion reads only the mask and computes the void block by its formula.
+- `mrly::math::bang::factory::create` builds every level the union-find and cycle-rank counts read; the block recursion reads only the mask and computes the void block by its formula.

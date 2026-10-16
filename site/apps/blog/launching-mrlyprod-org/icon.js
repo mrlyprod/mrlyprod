@@ -1,4 +1,4 @@
-import { Grid } from "mrlyjs/view";
+import { Grid } from "#view";
 
 export const units = {};
 

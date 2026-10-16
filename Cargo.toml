@@ -1,12 +1,15 @@
 [workspace]
 resolver = "2"
-members = ["pkgs/mrlyrs", "pkgs/bridge", "pkgs/mrlypy", "pkgs/mrlyjs/units/*"]
-default-members = ["pkgs/mrlyrs"]
+members = ["crates/*", "bindings/py", "bindings/js/hand", "bindings/js/units/*"]
+default-members = ["crates/*"]
 
 [workspace.package]
-edition = "2021"
+version = "0.2.0"
+edition = "2024"
 license = "MIT"
 repository = "https://github.com/mrlyprod/mrlyprod"
+homepage = "https://mrly.net"
+rust-version = "1.96"
 
 [profile.release]
 lto = true
@@ -14,4 +17,16 @@ codegen-units = 1
 strip = true
 
 [workspace.dependencies]
-mrlyrs = { path = "pkgs/mrlyrs" }
+mrly = { path = "crates/mrly", version = "=0.2.0" }
+mrly-core = { path = "crates/mrly-core", version = "=0.2.0" }
+mrly-num = { path = "crates/mrly-num", version = "=0.2.0" }
+mrly-math = { path = "crates/mrly-math", version = "=0.2.0" }
+mrly-tile = { path = "crates/mrly-tile", version = "=0.2.0" }
+mrly-life = { path = "crates/mrly-life", version = "=0.2.0" }
+mrly-font = { path = "crates/mrly-font", version = "=0.2.0" }
+mrly-js-hand = { path = "bindings/js/hand" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+js-sys = "0.3"

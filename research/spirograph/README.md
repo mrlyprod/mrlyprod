@@ -18,7 +18,7 @@ The roulette a design draws: the coincidence law that counts its distinct curves
 - [lab/rs/roulette-cover/](lab/rs/roulette-cover/): Measures the shape a roulette walls off inside its own disc, the question the spirograph page asks, and prints only.
 - [lab/rs/roulette-loops/](lab/rs/roulette-loops/): Reads the self crossing count of one trochoid as an exact step function of the pencil's reach `|p|`, past the loop threshold `|p| = 1`, and the crossing count of two trochoids drawn from one wheel.
 - [lab/rs/roulette-nodes/](lab/rs/roulette-nodes/): Counts the nodes of a design's roulette
-- [lab/rs/roulette-reaches/](lab/rs/roulette-reaches/): Finds the reaches at which three or four of a wheel's trochoids run through one point on a circle track, and reads them back off `mrlyrs::math::spirograph::point` and `mrlyrs::math::spirograph::trace`.
+- [lab/rs/roulette-reaches/](lab/rs/roulette-reaches/): Finds the reaches at which three or four of a wheel's trochoids run through one point on a circle track, and reads them back off `mrly::math::spirograph::point` and `mrly::math::spirograph::trace`.
 - [figures/research-spirograph.ts](figures/research-spirograph.ts): research-spirograph
 - [figures/research-spirograph.json](figures/research-spirograph.json): research-spirograph census
 

@@ -1,4 +1,4 @@
-import { frame, plot, type Color, type Frame, type Pen, type Ink, type Point } from "mrlyjs/view";
+import { frame, plot, type Color, type Frame, type Pen, type Ink, type Point } from "#view";
 import census from "./research-weights.json" with { type: "json" };
 
 const SAMPLES = 720;

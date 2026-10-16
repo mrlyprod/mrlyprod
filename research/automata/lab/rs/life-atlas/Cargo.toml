@@ -4,7 +4,7 @@ name = "life-atlas"
 edition = "2021"
 
 [dependencies]
-mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+mrly = { path = "../../../../../crates/mrly" }
 atlas = { path = "../../../../shared/atlas" }
 
 [workspace]

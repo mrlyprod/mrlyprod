@@ -1,4 +1,4 @@
-import type { Ink, Pen, Point } from "mrlyjs/view";
+import type { Ink, Pen, Point } from "#view";
 import census from "./research-toolpaths.json" with { type: "json" };
 
 const STEPS = 2401;

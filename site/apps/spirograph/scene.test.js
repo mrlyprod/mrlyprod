@@ -1,13 +1,11 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { palette } from '../../kit/theme/palette.js';
 import { defaults, describe, tidy } from '../../lib/knobs.js';
 import { keymap, labels } from '../../lib/scene.jsx';
 import { rng } from '../../lib/scene.js';
 import { HOLD, PAD, ROUND, cover, fit, index, roll, span, study } from './engine.js';
 import { PAGE, SPEC, file, make, parked, scrub, status } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const pen = (log) =>
   new Proxy(

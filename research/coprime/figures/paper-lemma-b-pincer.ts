@@ -1,4 +1,4 @@
-import type { Ink, Pen, Point } from "mrlyjs/view";
+import type { Ink, Pen, Point } from "#view";
 
 export const units = {};
 

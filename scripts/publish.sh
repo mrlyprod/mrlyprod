@@ -7,9 +7,9 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 cd "$HERE/.."
 
 USAGE="usage: publish.sh <rs|py|js> [--dry]"
-MANIFEST=pkgs/mrlypy/Cargo.toml
+MANIFEST=bindings/py/Cargo.toml
 WHEELS=target/wheels
-VERSION="$(sed -n 's/^version = "\(.*\)"$/\1/p' pkgs/mrlyrs/Cargo.toml | head -1)"
+VERSION="$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -1)"
 TAG="v$VERSION"
 
 target=""
@@ -62,25 +62,25 @@ tagged() {
 
 release() {
   if ! git rev-parse -q --verify "refs/tags/$TAG" > /dev/null; then
-    git tag -a "$TAG" -m "mrlyrs, mrlypy and mrlyjs $VERSION"
+    git tag -a "$TAG" -m "mrly $VERSION"
   fi
   git push origin "$TAG"
 }
 
 tests() {
-  cargo test -p mrlyrs -p bridge
-  uv run --no-project --with pytest --with ./pkgs/mrlypy pytest pkgs/mrlypy
-  bun --cwd pkgs/mrlyjs test
+  cargo test
+  uv run --no-project --with pytest --with ./bindings/py pytest bindings/py
+  bun --cwd bindings/js test
 }
 
 # RS
 
 rs() {
   if [ -n "$dry" ]; then
-    step "cargo publish --dry-run" cargo publish -p mrlyrs --dry-run
+    step "cargo publish --dry-run" cargo publish --workspace --dry-run
     return 0
   fi
-  step "cargo publish" cargo publish -p mrlyrs
+  step "cargo publish" cargo publish --workspace
 }
 
 # PY
@@ -104,7 +104,7 @@ py() {
 
 # JS
 
-bun_publish() { (cd pkgs/mrlyjs && bun publish "$@"); }
+bun_publish() { (cd bindings/js && bun publish "$@"); }
 
 js() {
   step "wasm" scripts/wasm.sh

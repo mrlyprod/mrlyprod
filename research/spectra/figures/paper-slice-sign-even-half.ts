@@ -1,4 +1,4 @@
-import type { Ink, Pen, Point } from "mrlyjs/view";
+import type { Ink, Pen, Point } from "#view";
 import census from "./paper-slice-sign-even-half.json" with { type: "json" };
 
 const DIMS = 20;

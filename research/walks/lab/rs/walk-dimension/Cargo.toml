@@ -3,7 +3,7 @@ name = "walk-dimension"
 edition = "2021"
 
 [dependencies]
-mrlyrs = { path = "../../../../../pkgs/mrlyrs" }
+mrly = { path = "../../../../../crates/mrly" }
 faer = "0.24"
 png = "0.17"
 

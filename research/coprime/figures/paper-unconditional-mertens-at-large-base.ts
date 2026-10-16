@@ -1,6 +1,6 @@
-import * as num from "mrlyjs/num";
-import * as math from "mrlyjs/math";
-import type { Color, Ink, Pen, Point } from "mrlyjs/view";
+import * as num from "@mrlyprod/mrly/num";
+import * as math from "@mrlyprod/mrly/math";
+import type { Color, Ink, Pen, Point } from "#view";
 
 export const units = { num, math };
 

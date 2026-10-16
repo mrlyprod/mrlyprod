@@ -1,11 +1,9 @@
 import { expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/knobs.js';
 import { rgb, rng } from '../../lib/scene.js';
 import { WHEEL } from './engine.js';
 import { PAGE, SOURCE, SPEC, make } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const brief = (arg) => (arg && typeof arg === 'object' ? 'layer' : arg);
 

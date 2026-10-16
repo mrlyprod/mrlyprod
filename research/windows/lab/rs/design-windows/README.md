@@ -10,7 +10,7 @@
 ## VERBS
 
 - `count <base> <top> [code]`: one line per orbit, `fill`, the size of `L_2`, the level it settles at, `periodic@k` at the first `k` with `p(k) <= k^2/2` or `above`, the counts `p 1..top`, the exact quadratic when one holds from `k <= 3` to `top`; the carpet's and the gasket's formula checks; the class tallies and the number of distinct sequences.
-- `scan <base> <level> <top> [code]`: renders each orbit's code with `mrlyrs::math::bang::factory::create`, asserts it equals the study's own `sigma^level(1)` and that code `7` at base 2 drawn at side 3 is base-3 code `495`, counts distinct `k x k` blocks of the render by their rows, and prints the gaps against `count`.
+- `scan <base> <level> <top> [code]`: renders each orbit's code with `mrly::math::bang::factory::create`, asserts it equals the study's own `sigma^level(1)` and that code `7` at base 2 drawn at side 3 is base-3 code `495`, counts distinct `k x k` blocks of the render by their rows, and prints the gaps against `count`.
 - `kind <base>`: `sft empty`, `sft full`, `sft boundary`, or `not-sft` with a witness of fast growth of `L_j(X_2)`: `blocks` (two blocks of side at most 2 freely arranged), `lines` (a branching window rule on pictures constant along an axis or a diagonal), `xor` (`L_2` is the eight blocks with one corner the sum of its neighbours); then `recognised m` for the least `m <= 3` at which every occurrence of `R_m` in a picture `sigma^m(B)`, `B` in `L_2`, is at one of the four aligned offsets, else `unrecognised`; it is run only off the empty, full and boundary codes.
 - `pairs <base> <code>`: `L_2` as rows `ab/cd`.
 

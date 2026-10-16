@@ -1,7 +1,7 @@
-use mrlyrs::core::tensor::Tensor;
-use mrlyrs::math::bang::factory::create;
-use mrlyrs::math::bang::Code;
-use mrlyrs::math::shape::{census, crop, named, Frac, Shape};
+use mrly::core::tensor::Tensor;
+use mrly::math::bang::factory::create;
+use mrly::math::bang::Code;
+use mrly::math::shape::{census, crop, named, Frac, Shape};
 
 // DESIGNS
 

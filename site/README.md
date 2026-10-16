@@ -34,7 +34,7 @@ request /about/
 - `scripts/site.ts` collects the rows from `apps/*/app.json`, home first, then by id: `{ route, kind, title, source, date, lead, figure, hidden, meta }`.
 - `kind` is `app` (an `index.jsx`) or `prose` (a markdown source); `meta` holds `id`, `menu`, `saver`, `deep`, and `prose` (`page`, `post` or `source`).
 - `source` is the repo path served at `/raw/<source>` for a prose row, null otherwise; no row carries a body.
-- `/mrlymath/` renders `pkgs/mrlyrs/NAMES.md`, so the page and the crate never disagree.
+- `/mrlymath/` renders `crates/mrly-math/NAMES.md`, so the page and the crate never disagree.
 - `/menu/` is Play, Read and Tools from each app's `menu`, alphabetical, hidden apps off, then the Root and Elsewhere folders of the `tree` in `site.json`; Home is the wordmark.
 - `/research/` is the `research` app, a deep route like `/git/`: a grid of topic cards from `research.json`, and `/research/<slug>/` opens that topic's README in a dialog over the grid, its figures as a gallery; an unknown slug shows the missing state.
 - `research.json` is built from `../research/*/README.md` (a folder with a front matter `title`; `shared/` never): `{ topics: [{ slug, title, figure, figures }] }`, `figure` the README's, `figures` every figure of `<topic>/figures/`.
@@ -51,12 +51,12 @@ request /about/
 - `size`: `[width, height]`, default `[1024, 1024]`; a non-square size keeps its aspect in the host.
 - `still`: the `t` a still figure draws, default 0.
 - `loop` in seconds, with `frames`: an animated figure only; none in the live set.
-- `units`: the `mrlyjs` wasm units it imports, e.g. `{ math }`; the caller initialises them before the first draw.
+- `units`: the `@mrlyprod/mrly` wasm units it imports, e.g. `{ math }`; the caller initialises them before the first draw.
 - `ink` is `ink(tinted(dark | light, ...))` from `kit/theme`: the tint's hue sits in the blue slot.
 - An app icon is a plate drawn with `lib/icon.js` on a clear ground: the build lists every `apps/<id>/icon.js` as a plate; a research or blog figure keeps the ink ground.
 - A figure is a pure function of its inputs: no file, DOM, Date or Math.random.
 - A figure asserts its facts and throws when one breaks; heavy facts are memoised at module level; pixels are never cached.
-- The pen and the kit live in `../pkgs/mrlyjs/view`: `canvas` in the browser, `raster` in Bun and the tests.
+- The pen and the kit live in `lib/view`, imported as `#view`: `canvas` in the browser, `raster` in Bun and the tests.
 - A lone image line `![caption](name)` in a page, a post or a research note is a live figure; the build and the check stop on an unknown name.
 - `scripts/figures.test.ts` loads every figure: `default` a function, every `units` value defined.
 - `bun run time [name ...]` draws each figure in a fresh worker with the raster pen, cold then warm, dark and light; gate 150 ms warm, 500 ms cold on the icons, `about` excluded; a research figure over it is a named warning, judged with its topic; exit 1 when an icon is over or a figure throws.
@@ -81,11 +81,11 @@ request /about/
 - `site:apps`: id to app chunk, `own` (the apps whose index.jsx exports `render`), plus `lock`, the desk and its lock screen.
 - `site:css`: the `git` and `mrly` sheet urls.
 - `apps:scenes`: the saver scenes, the desk first, then by title.
-- `mrlyjs/<door>` resolves through the exports of `pkgs/mrlyjs/package.json` (the `mrlyjs` plugin, also used by the figure test and `time`); `pkg/<unit>/mrlyjs_<unit>*` resolves to `site/pkg/`.
+- `@mrlyprod/mrly/<door>` resolves through the exports of `bindings/js/package.json` and `#view` through the `imports` of `site/package.json` (the `mrly` plugin, also used by the figure test and `time`, maps both for research figures outside `site/`); `pkg/<unit>/mrly_js_<unit>*` resolves to `site/pkg/`.
 
 ## WASM
 
-- `bun run wasm` runs `../scripts/wasm.sh`: it builds every unit of `pkgs/bridge/units.txt` and copies the units the roster and `apps/` import into `pkg/<unit>/`.
+- `bun run wasm` runs `../scripts/wasm.sh`: it builds every unit under `../bindings/js/units/` and copies the units the roster and `apps/` import into `pkg/<unit>/`.
 - Live units today: core, font, life, math, num.
 - `pkg.lock` pins the copy in S3 the builder Lambda pulls through `scripts/pkg.ts`; the deploy uploads `pkg/` and re-pins it.
 - The build stops when a live unit is missing from `pkg/`.

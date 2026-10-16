@@ -1,7 +1,7 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::json;
-use mrlyrs::num::gauss::{classes, Ring};
+use mrly::core::error::Result;
+use mrly::core::json;
+use mrly::num::gauss::{classes, Ring};
 use std::collections::HashSet;
 
 const NAME: &str = "research-stack";

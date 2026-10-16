@@ -1,8 +1,8 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::json;
-use mrlyrs::math::bang::Code;
-use mrlyrs::math::two::designs;
+use mrly::core::error::Result;
+use mrly::core::json;
+use mrly::math::bang::Code;
+use mrly::math::two::designs;
 
 const NAME: &str = "research-information";
 const CODE: u128 = 495;

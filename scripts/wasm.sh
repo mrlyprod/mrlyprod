@@ -9,25 +9,25 @@ cd "$HERE/.."
 font=$(mktemp)
 trap 'rm -f "$font"' EXIT
 
-units=$(cat pkgs/bridge/units.txt)
-used=$(grep -hoE 'mrlyjs[/_][a-z]+' $(bun -e 'for (const one of (await import("./site/scripts/site.ts")).roster()) console.log(one.file)') $(find site/apps -name '*.js' -o -name '*.jsx' -o -name '*.ts' | grep -v '\.test\.') | cut -c8- | sort -u)
+units=$(ls bindings/js/units)
+used=$(grep -hoE '(@mrlyprod/mrly/|mrly_js_)[a-z]+' $(bun -e 'for (const one of (await import("./site/scripts/site.ts")).roster()) console.log(one.file)') $(find site/apps -name '*.js' -o -name '*.jsx' -o -name '*.ts' | grep -v '\.test\.') | sed -E 's/^(@mrlyprod\/mrly\/|mrly_js_)//' | sort -u)
 live=$(for unit in $units; do if grep -qx "$unit" <<< "$used"; then echo "$unit"; fi; done)
 built=target/wasm32-unknown-unknown/release
 
-cargo build --release --target wasm32-unknown-unknown --lib $(printf -- '-p mrlyjs_%s ' $units)
+cargo build --release --target wasm32-unknown-unknown --lib $(printf -- '-p mrly-js-%s ' $units)
 
-rm -rf pkgs/mrlyjs/pkg site/pkg
+rm -rf bindings/js/pkg site/pkg
 for unit in $units; do
-  wasm-bindgen "$built/mrlyjs_$unit.wasm" --target web --out-dir "pkgs/mrlyjs/pkg/$unit"
+  wasm-bindgen "$built/mrly_js_$unit.wasm" --target web --out-dir "bindings/js/pkg/$unit"
 done
 for unit in $live; do
   mkdir -p "site/pkg/$unit"
-  cp "pkgs/mrlyjs/pkg/$unit/mrlyjs_$unit.js" "pkgs/mrlyjs/pkg/$unit/mrlyjs_${unit}_bg.wasm" "site/pkg/$unit/"
+  cp "bindings/js/pkg/$unit/mrly_js_$unit.js" "bindings/js/pkg/$unit/mrly_js_${unit}_bg.wasm" "site/pkg/$unit/"
 done
-cargo run -q -p mrlyrs --example book > "$font"
+cargo run -q -p mrly --example book > "$font"
 install -m 644 "$font" site/kit/font/font.json
 
 echo "unit bytes"
 for unit in $units; do
-  printf '%s %s\n' "$unit" "$(wc -c < "pkgs/mrlyjs/pkg/$unit/mrlyjs_${unit}_bg.wasm" | tr -d ' ')"
+  printf '%s %s\n' "$unit" "$(wc -c < "bindings/js/pkg/$unit/mrly_js_${unit}_bg.wasm" | tr -d ' ')"
 done

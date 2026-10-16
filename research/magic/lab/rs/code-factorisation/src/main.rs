@@ -10,7 +10,7 @@ use census::{
 };
 use collide::{collisions, partners, residue_tile, self_power};
 use counts::{line_brute, reducible_at, tile_total};
-use mrlyrs::math::bang::Code;
+use mrly::math::bang::Code;
 use num_bigint::BigUint;
 use std::collections::{BTreeMap, BTreeSet};
 use tile::{
@@ -53,7 +53,7 @@ fn alphabet() {
     for (base, total) in [(2usize, 15u128), (3usize, 511u128)] {
         for code in 1..=total {
             let truth =
-                mrlyrs::math::bang::factory::create(Code::from(code), base, 2, base, 1).unwrap();
+                mrly::math::bang::factory::create(Code::from(code), base, 2, base, 1).unwrap();
             let mine = mask_tile(code as u64, base);
             for r in 0..base {
                 for c in 0..base {
@@ -69,10 +69,10 @@ fn alphabet() {
     }
     let mut products = 0usize;
     for a in 1u128..16 {
-        let left = mrlyrs::math::bang::factory::create(Code::from(a), 2, 2, 2, 1).unwrap();
+        let left = mrly::math::bang::factory::create(Code::from(a), 2, 2, 2, 1).unwrap();
         let mine_left = mask_tile(a as u64, 2);
         for b in 1u128..512 {
-            let right = mrlyrs::math::bang::factory::create(Code::from(b), 3, 2, 3, 1).unwrap();
+            let right = mrly::math::bang::factory::create(Code::from(b), 3, 2, 3, 1).unwrap();
             let truth = left.kron(&right);
             let mine = kron(&mine_left, &mask_tile(b as u64, 3));
             for r in 0..6 {
@@ -87,7 +87,7 @@ fn alphabet() {
             products += 1;
         }
     }
-    println!("{letters} letters and all {products} shape-(2,3) products agree cell for cell with mrlyrs::math::bang::factory::create and mrlyrs::core::Tensor::kron");
+    println!("{letters} letters and all {products} shape-(2,3) products agree cell for cell with mrly::math::bang::factory::create and mrly::core::Tensor::kron");
     println!();
 }
 

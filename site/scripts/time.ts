@@ -1,14 +1,14 @@
 import { readFileSync, rmSync } from "node:fs";
 import { cpus, tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
-import { ink, raster, type Ink, type Pen } from "../../pkgs/mrlyjs/view/index.js";
+import { ink, raster, type Ink, type Pen } from "../lib/view/index.js";
 import { dark, light } from "../kit/theme/theme.js";
-import { mrlyjs, roster } from "./site.ts";
+import { mrly, roster } from "./site.ts";
 
 /* RECIPE */
 
 const REPO = resolve(import.meta.dir, "..", "..");
-const MRLYJS = join(REPO, "pkgs", "mrlyjs");
+const MRLY = join(REPO, "bindings", "js");
 const OUT = join(tmpdir(), "mrly-time");
 const SIZE = [1024, 1024];
 const WARM = 3;
@@ -28,7 +28,7 @@ async function draw({ file, theme }: Job): Promise<Done> {
   try {
     const figure: Figure = await import(file);
     const units = Object.entries(figure.units ?? {});
-    for (const [unit, door] of units) door.initSync({ module: readFileSync(join(MRLYJS, "pkg", unit, `mrlyjs_${unit}_bg.wasm`)) });
+    for (const [unit, door] of units) door.initSync({ module: readFileSync(join(MRLY, "pkg", unit, `mrly_js_${unit}_bg.wasm`)) });
     const [width, height] = figure.size ?? SIZE;
     const tint = ink(THEMES[theme]);
     const once = () => {
@@ -72,7 +72,7 @@ async function main() {
   const wanted = process.argv.slice(2);
   const list = roster().filter((one) => !wanted.length || wanted.includes(one.name));
   rmSync(OUT, { recursive: true, force: true });
-  const built = await Bun.build({ entrypoints: list.map((one) => one.file), root: REPO, outdir: OUT, target: "bun", plugins: [mrlyjs] });
+  const built = await Bun.build({ entrypoints: list.map((one) => one.file), root: REPO, outdir: OUT, target: "bun", plugins: [mrly] });
   if (!built.success) throw new Error(`time: the figures failed to bundle\n${built.logs.join("\n")}`);
   const rows = [];
   for (const { name, file } of list) {

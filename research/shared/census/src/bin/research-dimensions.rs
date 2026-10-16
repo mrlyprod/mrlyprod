@@ -1,6 +1,6 @@
 use census::save;
-use mrlyrs::core::error::Result;
-use mrlyrs::core::json;
+use mrly::core::error::Result;
+use mrly::core::json;
 
 const NAME: &str = "research-dimensions";
 const RE_LO: f64 = -1.0;

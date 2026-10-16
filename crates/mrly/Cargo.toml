@@ -1,0 +1,27 @@
+[package]
+name = "mrly"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "MrlyMath, the mathematics of designs: the substrate, the integers, the designs in space, the life engine and the pixel alphabet in one crate."
+homepage.workspace = true
+readme = "README.md"
+rust-version.workspace = true
+keywords = ["mathematics", "fractal", "cellular-automata", "generative"]
+categories = ["mathematics", "science", "multimedia::images"]
+include = ["src/**", "README.md"]
+
+[[bin]]
+name = "mrly"
+path = "src/bin/mrly.rs"
+
+[dependencies]
+mrly-core.workspace = true
+mrly-num.workspace = true
+mrly-math.workspace = true
+mrly-tile.workspace = true
+mrly-life.workspace = true
+mrly-font.workspace = true
+serde.workspace = true
+serde_json.workspace = true

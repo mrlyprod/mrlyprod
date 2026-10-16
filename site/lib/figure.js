@@ -1,4 +1,4 @@
-import { canvas, ink } from '../../pkgs/mrlyjs/view/index.js';
+import { canvas, ink } from '#view';
 import { dark, light, tinted } from '../kit/theme/theme.js';
 
 export const TILE = 512;

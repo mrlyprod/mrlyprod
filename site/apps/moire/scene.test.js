@@ -1,11 +1,9 @@
 import { afterAll, expect, test } from 'bun:test';
-import * as math from '../../../pkgs/mrlyjs/math.js';
+import * as math from '@mrlyprod/mrly/math';
 import { asked, defaults, describe, places, tidy } from '../../lib/knobs.js';
 import { rng } from '../../lib/scene.js';
 import { BEAT, TOP, colorizer, field, odd, paint, study } from './engine.js';
 import { DESIGN, PAGE, SPEC, cellAt, cells, make } from './scene.js';
-
-math.initSync({ module: await Bun.file(new URL('../../../pkgs/mrlyjs/pkg/math/mrlyjs_math_bg.wasm', import.meta.url)).arrayBuffer() });
 
 const pen = (log) =>
   new Proxy(

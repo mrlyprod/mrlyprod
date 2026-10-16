@@ -3,7 +3,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SOURCE="$HERE/../pkgs/mrlyrs/Cargo.toml"
+SOURCE="$HERE/../Cargo.toml"
 USAGE="usage: bump.sh <patch|minor|major|X.Y.Z>"
 
 [ $# -eq 1 ] || { echo "$USAGE" >&2; exit 1; }
@@ -19,4 +19,4 @@ esac
 text="$(awk -v new="$new" '!done && /^version = "/ { print "version = \"" new "\""; done = 1; next } { print }' "$SOURCE")"
 printf '%s\n' "$text" > "$SOURCE"
 "$HERE/bridge.sh" > /dev/null
-echo "mrlyrs, mrlypy and mrlyjs $old -> $new"
+echo "mrly $old -> $new"

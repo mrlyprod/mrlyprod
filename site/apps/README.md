@@ -8,7 +8,7 @@
 - `app.json`, `icon.js` (the menu figure, a plate by `../lib/icon.js`) and one page: `index.jsx`, `page.md` or a `source`.
 - A scene app adds `scene.js` (`SPEC`, `PAGE`, `make`; no React, no DOM beyond its canvas), `widget.jsx` (the React around it) and `index.jsx`.
 - `index.jsx` is one line, `export const { mount, unmount } = page(Widget, defaults, PAGE)`; `defaults` holds `seed` and any url key outside the spec.
-- `unit.js` loads the wasm, one block per `mrlyjs/<unit>`, and exports the units and `ready`; no scene, engine or widget imports a unit, a figure names its own, and a test calls `initSync` itself.
+- `unit.js` loads the wasm, one block per `@mrlyprod/mrly/<unit>`, and exports the units and `ready`; no scene, engine or widget imports a unit, a figure names its own, and a test calls `initSync` itself.
 - A family shares its first app's code by relative path: life (wolfram), two (crop), three (slices, cuts), moire (tourbillon, star), spin (radial), sequences (plot, tour).
 - `designs/pick.jsx` is the shared design picker (`Pick`, `Picker`, `Thumbs`).
 - A `deep: true` app (`git`, `research`) owns every path under its route and is no scene page.
@@ -80,7 +80,7 @@
 - One view at a time: several pictures of one thing are a `view` segment, never side by side.
 - Charts only in chart-first or explainer apps (`sequences`, `plot`, `tour`), or as a view of its own when the chart is the app's whole point; no chart, profile, spectrum, trace or strip beside a picture.
 - Readouts are numbers in `onStatus` and Info.
-- Rust is the only maths: every number comes through an `mrlyjs` door; a missing door is a door gap, left out, never typed in JS.
+- Rust is the only maths: every number comes through an `@mrlyprod/mrly` door; a missing door is a door gap, left out, never typed in JS.
 - A saver is what a good app turns out to be: never built as one, `saver: true` only when it is pretty with no hands at a random seed; one that needs a hand is an instrument.
 - On the page the picture waits for a hand; loops, reseeds and holds run only under `view.lock`.
 - Live: a slider moves the picture as it moves, a tap does something.
@@ -117,7 +117,7 @@
 - `missing`: hidden: the 404 page, "Nothing here".
 - `moire`: one design stacked over its odd scales, and its r-matrix as a second view.
 - `morse`: the Thue-Morse word in four views: the word, its lifts, a design's sign power and filter.
-- `mrlymath`: prose from `pkgs/mrlyrs/NAMES.md`: a design as one string.
+- `mrlymath`: prose from `crates/mrly-math/NAMES.md`: a design as one string.
 - `planets`: one world lit per pixel: oceans, clouds, city lights, air, rings and moons.
 - `plot`: one design sequence drawn large with its rule, and a second one to mix in.
 - `polygons`: the desk: a mosaic of tilings coloured by a drifting field and swept by waves.

@@ -39,7 +39,7 @@ export const PAGE = {
   about: [
     'A design is dots. Join every filled cell to its neighbours and you have a network: tips, junctions and pieces to count, a length to add up, a box dimension to read. Tips are yellow, paths blue, junctions pink and lone nodes dim; a tint turns them into fades of one ink.',
     'The core graph joins neighbouring filled cells at their centres, the edge graph is the corners and sides those cells outline, and the tunnel graph joins the empty cells. 2D is a flat design, 3D a cube to turn, 6D its hex slice, the hexagon a cube leaves when cut across its diagonal. There the core joins filled triangles across shared sides, the dual takes fills and voids together, and the edge graph is their sides.',
-    'Every node, branch, role and count comes from mrlyjs, and the Euler number is the design\'s own, read off its cells. The level stops where the closed-form size says a build would stall.',
+    'Every node, branch, role and count comes from @mrlyprod/mrly, and the Euler number is the design\'s own, read off its cells. The level stops where the closed-form size says a build would stall.',
     'The force layout is Fruchterman and Reingold\'s: every pair repels, every branch pulls, and a cooling cap on each move settles the lattice, while the seed jitters the start so a symmetric one can fold. Energy is the mean net force per node; heat is the cap on the next move.',
   ],
   keys: [
@@ -369,7 +369,7 @@ function solid3(canvas, view, mover, three) {
 
 export function make(canvas, view, opts = {}) {
   const { math, three } = opts;
-  if (!math) throw new Error('graphs: the scene wants mrlyjs/math as opts.math');
+  if (!math) throw new Error('graphs: the scene wants @mrlyprod/mrly/math as opts.math');
   let value = shape(math, { ...opts, rand: view.rand }, view.lock);
   let plan = study(math, value, view.rand);
   let mover = relax(math, plan, value, view);

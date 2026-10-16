@@ -20,7 +20,7 @@ Complex dimensions: every design in the lattice class, the carpet proved not Min
 - [lab/py/complex-dimensions/](lab/py/complex-dimensions/): The complex dimensions of the four one-base designs, base 3 `{0,2}`, base 5 `{0,2,4}`, base 15 `{0,4,10,14}` and base 15 `{0,2,4,10,12,14}`
 - [lab/py/sponge-tube/](lab/py/sponge-tube/): The Menger sponge through Kombrink, Pearse and Winter 2016, Corollary 3.2, with the open unit cube as the feasible open set
 - [lab/py/unequal-split/](lab/py/unequal-split/): The patch
-- [lab/rs/sponge-window/](lab/rs/sponge-window/): Falsifies the tube of the Menger sponge's plus past `1/6` and the corner volume `Deep` at every radius, as written in dimensions, subsection "The tube past `1/6`, and `Deep` in closed form", against the crate's exact distance `mrlyrs::math::three::sponge::distance`.
+- [lab/rs/sponge-window/](lab/rs/sponge-window/): Falsifies the tube of the Menger sponge's plus past `1/6` and the corner volume `Deep` at every radius, as written in dimensions, subsection "The tube past `1/6`, and `Deep` in closed form", against the crate's exact distance `mrly::math::three::sponge::distance`.
 - [figures/paper-sponge-measurability.ts](figures/paper-sponge-measurability.ts): paper-sponge-measurability
 - [figures/research-dimensions.ts](figures/research-dimensions.ts): research-dimensions
 - [figures/research-dimensions.json](figures/research-dimensions.json): research-dimensions census

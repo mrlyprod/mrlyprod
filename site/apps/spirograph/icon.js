@@ -1,4 +1,4 @@
-import * as math from "mrlyjs/math";
+import * as math from "@mrlyprod/mrly/math";
 import { plate } from "../../lib/icon.js";
 
 export const units = { math };

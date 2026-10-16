@@ -3,10 +3,10 @@ use atlas::{
     block_split, census, factors, fate_table, first_negative_lobe, mask_tensor, mini, pack, Census,
     Reading, Run,
 };
-use mrlyrs::core::tensor::Tensor;
-use mrlyrs::life::{animate, mask_offsets, moore, Boundary, Config, Fate};
-use mrlyrs::math::bang::Code;
-use mrlyrs::math::two::{carpet, create, Cell2d};
+use mrly::core::tensor::Tensor;
+use mrly::life::{animate, mask_offsets, moore, Boundary, Config, Fate};
+use mrly::math::bang::Code;
+use mrly::math::two::{carpet, create, Cell2d};
 use std::collections::{BTreeMap, BTreeSet};
 
 const CAP: usize = 5000;

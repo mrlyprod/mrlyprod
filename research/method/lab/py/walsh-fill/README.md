@@ -1,7 +1,7 @@
 # walsh-fill
 
 - Computes the Walsh coefficients `hat f(S) = 2^-dim sum_(c in F) (-1)^(|S cap c|)` of every base-2 design at `dim 1..4` by one Hadamard product, and their level sums `W_j = sum_(|S| = j) hat f(S)`, kept as the integers `2^dim W_j`.
-- Corner `i` is the binary digits of `i`, most significant first, as `mrlyrs::math::bang::factory::code_to_corners` reads a code.
+- Corner `i` is the binary digits of `i`, most significant first, as `mrly::math::bang::factory::code_to_corners` reads a code.
 - `section_expansion` counts filled cells on literal grids, every nonempty code at `dim 1..3` and 2000 seeded codes at `dim 4`, sides `1..9`, plus a literal corner histogram against all 65536 codes at `dim 4`, and checks `2^dim fill(N) = sum_j 2^dim W_j N^(dim-j)` at odd `N` and `w N^dim` at even `N`.
 - `section_profile` checks `2^dim W_j = sum_w a_w K_j(w)`, `K_j` the Krawtchouk polynomial, on every code at `dim 1..4`, and `K^2 = 2^dim I`.
 - `section_mirror` checks `fill_F(-N) = (-1)^dim fill_F'(N)` on every code at `dim 1..4`, tests `fill_F(-N) = +- void_F(N)` against the profile criterion `a_j + a_(dim-j) = C(dim, j)`, the count formula and the self-dual designs.

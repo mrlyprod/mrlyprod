@@ -1,4 +1,4 @@
-import { frame, Grid } from "mrlyjs/view";
+import { frame, Grid } from "#view";
 import { plate } from "../../lib/icon.js";
 
 export const units = {};
