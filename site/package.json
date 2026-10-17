@@ -3,16 +3,16 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#view": "./lib/view/index.js",
-    "#view/*": "./lib/view/*"
+    "#view": "./src/lib/view/index.js",
+    "#view/*": "./src/lib/view/*"
   },
   "scripts": {
     "wasm": "bash ../scripts/wasm.sh",
     "dev": "bun scripts/dev.ts",
-    "build": "bun scripts/site.ts",
-    "push": "bun scripts/push.ts",
-    "check": "bun check.ts",
-    "test": "bun test ./kit ./scripts ./ui ./check ./apps ./lib",
+    "build": "bun scripts/build.ts",
+    "push": "bun infra/push.ts",
+    "check": "bun scripts/check.ts",
+    "test": "bun test",
     "shots": "bun scripts/shots.ts",
     "film": "bun scripts/film.ts",
     "time": "bun scripts/time.ts",

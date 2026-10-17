@@ -5,7 +5,6 @@
   "prefix": "mrly-",
   "tint": "indigo",
   "menu": "/menu/",
-  "cart": "/cart/",
   "desk": "polygons",
   "company": "MrlyProd, Inc.",
   "tagline": "The mathematics of designs on the corners of a cube, and the instruments that measure them.",
@@ -33,7 +32,7 @@
   ],
   "contact": "help@mrly.net",
   "shots": {
-    "routes": ["/", "/about/", "/blog/launching-mrlyprod-org/", "/menu/", "/research/", "/git/site/kit/push.ts"],
+    "routes": ["/", "/about/", "/blog/launching-mrlyprod-org/", "/menu/", "/research/", "/git/site/infra/push.ts"],
     "sizes": { "phone": [390, 844, true], "desktop": [1440, 900, false] }
   },
   "push": {
@@ -45,11 +44,11 @@
   "git": { "root": "..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
   "llms": {
     "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, with Rust crates doing the arithmetic and the browser only painting. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
-    "legend": "Links are page sources in markdown: /raw/site/apps/x/page.md is /x/, /raw/site/apps/blog/x/index.md is /blog/x/, /raw/crates/mrly-math/NAMES.md is /mrlymath/; a link outside /raw/ is the page."
+    "legend": "Links are page sources in markdown: /raw/site/src/pages/x/index.md is /x/, /raw/site/src/pages/blog/x/index.md is /blog/x/, /raw/crates/mrly-math/NAMES.md is /mrlymath/; a link outside /raw/ is the page."
   },
   "fonts": {
-    "out": "ui/fonts",
-    "keep": "ui/fonts/keep.css",
+    "out": "src/styles/fonts",
+    "keep": "src/styles/fonts/keep.css",
     "faces": [
       { "family": "Noto Sans", "file": "sans", "axes": "wght@400..700", "weight": "400 700", "licence": "notosans" },
       { "family": "Noto Serif", "file": "serif", "axes": "wght@400..700", "weight": "400 700", "licence": "notoserif" },
@@ -58,7 +57,7 @@
       { "family": "Noto Color Emoji", "file": "emoji", "weight": "400", "licence": "notocoloremoji" }
     ]
   },
-  "icons": { "names": "icons.json", "out": "lib/icons.js" },
+  "icons": { "names": ["casino", "close", "download", "expand_more", "fullscreen_exit", "graphic_eq", "info", "left_panel_open", "link", "more_horiz", "music_note", "tune", "volume_up"], "out": "src/lib/icons.gen.js" },
   "manifest": {
     "name": "MrlyProd",
     "short_name": "MrlyProd",

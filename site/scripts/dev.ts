@@ -1,10 +1,10 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import shell from "../ui/index.html";
-import { decide } from "../kit/edge.ts";
-import { decode } from "../kit/git/view.ts";
-import { kind } from "../kit/types.ts";
-import { globals, ready, typed } from "./site.ts";
+import shell from "../src/shell/index.html";
+import { decide } from "../infra/edge.ts";
+import { decode } from "../src/lib/git/view.ts";
+import { kind } from "../infra/mime.ts";
+import { globals, ready, typed, withTint } from "./build.ts";
 
 const org = resolve(import.meta.dir, "..");
 if (process.cwd() !== org) throw new Error("dev: run from site/ (bun run --cwd site dev), where bunfig.toml hands the plugin to Bun");
@@ -24,7 +24,7 @@ const server = Bun.serve({
     const step = decide(decode(url.pathname));
     if (step.redirect) return Response.redirect(`${step.redirect}${url.search}`, 301);
     const path = step.uri!;
-    if (path === "/index.html" || path === "/404.html") return reply((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${org}/`, "/"), "text/html; charset=utf-8");
+    if (path === "/index.html" || path === "/404.html") return reply(withTint((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${org}/`, "/")), "text/html; charset=utf-8");
     const raw = path.startsWith("/raw/");
     const disk = raw ? join(org, "..", path.slice(5)) : join(org, "public", path);
     const found = !path.includes("..") && existsSync(disk) && statSync(disk).isFile() ? readFileSync(disk) : null;

@@ -1,0 +1,205 @@
+import { tidy } from '../../lib/app/spec.js';
+import { rgb } from '../../lib/color.js';
+import { BEAT, NEEDLES, RPM, cells, edge, key, layout, pace, paint, rings, seen, spun, step, stops, study } from '../../lib/spin/engine.js';
+import { LOOK, PAD, SOURCE, TAU, place, rim, sheet, tag } from '../../lib/spin/scene.js';
+import { wasm } from '../../lib/units/index.js';
+
+export const VIEWS = [['table', 'Turntable'], ['wheel', 'Wheel']];
+
+export const spinning = (value) => value?.view !== 'wheel';
+
+const ramped = (value) => !spinning(value) || value.source === 'moire';
+
+export const SPEC = [
+  { key: 'view', label: 'View', kind: 'segment', def: 'table', options: VIEWS },
+  { key: 'rpm', label: 'Speed', kind: 'slider', def: 33, min: 0, max: RPM, step: 1, unit: 'rpm', when: spinning },
+  { key: 'glow', label: 'Afterglow', kind: 'slider', def: 1, min: 1, max: 120, step: 1, when: spinning },
+  ...LOOK.map((row) => (row.key === 'tint' ? row : { ...row, when: ramped })),
+];
+
+const SPEED = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: 10, ArrowDown: -10 };
+
+const ABOUT = [
+  'A design on a turntable, drawn once a screen frame. The screen strobes it: at 60 Hz the carpet freezes at 900 rpm, a quarter turn a frame, and just off that speed it drifts slowly backwards.',
+  'Afterglow blends each new frame into the old ones, the way the eye does.',
+  'The Wheel view spins the design infinitely fast: every pixel becomes the mean of the design on its own circle. It is exact: each circle is cut at the grid lines it crosses, and the rings carry the mass of the design.',
+  'A plane wave averaged over a turn is the Bessel function J0, so the wheel is the Hankel transform of the radially averaged spectrum. The identities are in [the spin topic](/research/spin/) of Research.',
+];
+
+export const name = (value) => `spin-${tag(value)}-${value.view}`;
+
+export const PAGE = {
+  spec: SPEC,
+  record: true,
+  about: ABOUT,
+  name,
+  keys: [
+    { key: 'Enter', label: (value, handle) => (handle?.playing?.() === false ? 'Spin' : 'Stop'), act: 'spin', button: true, when: spinning },
+    { key: Object.keys(SPEED), label: 'Speed', act: 'speed', when: spinning },
+    { key: NEEDLES.map((_, i) => String(i + 1)), label: 'Needle', act: 'needle', does: `${NEEDLES.join(', ')} rpm`, when: spinning },
+  ],
+  actions: {
+    spin: (scene) => scene.toggle?.(),
+    speed: (scene, e) => scene.speed?.(SPEED[e.key]),
+    needle: (scene, e) => scene.needle?.(NEEDLES[Number(e.key) - 1]),
+  },
+};
+
+export const units = wasm('math');
+
+const GROUND = 36;
+
+const LOOKS = ['ramp', 'levels', 'invert', 'tint'];
+
+export const read = (value) => ({ ...tidy(SOURCE, value), ...tidy(SPEC, value) });
+
+/* SCENE */
+
+function blank(canvas, view) {
+  const ctx = canvas.getContext('2d');
+  const draw = () => {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, view.w, view.h);
+  };
+  return { draw };
+}
+
+export const facts = (plan) => ({ kind: plan.kind, code: plan.code, name: plan.name, side: plan.side, fills: plan.fills, mass: plan.mass, disc: plan.disc, peak: plan.peak, reach: plan.reach, order: plan.order });
+
+export function make(canvas, view, opts = {}) {
+  const math = opts.math;
+  if (!math) return blank(canvas, view);
+  const ctx = canvas.getContext('2d');
+  let given = opts;
+  let value = read(given);
+  let plan = null;
+  let look = view.look();
+  let line = edge(look);
+  let disc = null;
+  let stamp = null;
+  let table = null;
+  let wheel = null;
+  let fresh = true;
+  let dirty = true;
+  let phase = 0;
+  let last = view.t;
+  let beat = view.t;
+  let ema = 0;
+  let told = false;
+  let stopped = false;
+  const marked = () => key({ ...value, seed: given.seed >>> 0 });
+  const learn = () => {
+    plan = study(math, { ...value, seed: given.seed >>> 0 }, view.rand);
+    given.onFacts?.(facts(plan));
+  };
+  const coat = () => {
+    const bull = rings(math, plan);
+    wheel = sheet(paint(bull.values, bull.top, stops(value.ramp, look), value.levels, value.invert), bull.side);
+  };
+  const press = () => {
+    const { side, data } = plan;
+    const raw = sheet(plan.binary ? cells(data, rgb(look.accent), GROUND) : paint(data, plan.top, stops(value.ramp, look), value.levels, value.invert), side);
+    const unit = Math.max(1, Math.ceil((disc.r * Math.SQRT2) / side));
+    stamp = new OffscreenCanvas(unit * side, unit * side);
+    const pen = stamp.getContext('2d');
+    pen.imageSmoothingEnabled = false;
+    pen.drawImage(raw, 0, 0, unit * side, unit * side);
+    const d = Math.ceil(disc.r * 2);
+    table = new OffscreenCanvas(d, d);
+  };
+  const spin = (dt) => {
+    if (!stamp) press();
+    const { x, y, r } = disc;
+    const d = table.width;
+    const pen = table.getContext('2d');
+    pen.setTransform(1, 0, 0, 1, 0, 0);
+    if (value.glow === 1 || view.still || dt < 0) pen.clearRect(0, 0, d, d);
+    else {
+      pen.globalAlpha = 1 / value.glow;
+      pen.fillStyle = look.paper;
+      pen.beginPath();
+      pen.arc(d / 2, d / 2, d / 2, 0, TAU);
+      pen.fill();
+      pen.globalAlpha = 1;
+    }
+    pen.translate(d / 2, d / 2);
+    pen.rotate((phase * Math.PI) / 180);
+    const span = r * Math.SQRT2;
+    pen.drawImage(stamp, -span / 2, -span / 2, span, span);
+    ctx.drawImage(table, x - d / 2, y - d / 2);
+    rim(ctx, disc, line, view.dpr);
+  };
+  const tell = (dt) => {
+    if (view.still || stopped || !value.rpm || !spinning(value)) {
+      if (told) given.onPace?.(null);
+      told = false;
+      return;
+    }
+    if (dt <= 0) return;
+    ema = pace(dt, ema);
+    if (view.t - beat < BEAT) return;
+    beat = view.t;
+    told = true;
+    const deg = step(value.rpm, ema);
+    given.onPace?.({ hz: 1000 / ema, deg, seen: seen(deg, plan.order) });
+  };
+  const still = () => {
+    if (!dirty) return;
+    dirty = false;
+    if (!wheel) coat();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, view.w, view.h);
+    place(ctx, wheel, disc, line, view.dpr);
+  };
+  const draw = () => {
+    if (fresh) {
+      look = view.look();
+      line = edge(look);
+      wheel = null;
+      disc = null;
+      fresh = false;
+    }
+    if (!disc) {
+      disc = layout(view.w, view.h, PAD * view.dpr);
+      stamp = null;
+    }
+    const dt = view.t - last;
+    last = view.t;
+    if (!spinning(value)) {
+      tell(dt);
+      still();
+      return;
+    }
+    if (dt > 0 && !view.still && !stopped) phase = spun(phase, value.rpm, dt);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, view.w, view.h);
+    spin(dt);
+    tell(dt);
+  };
+  const set = (next) => {
+    const was = value;
+    const at = marked();
+    given = { ...given, ...next };
+    value = read(given);
+    if (marked() !== at) {
+      learn();
+      fresh = true;
+    }
+    if (LOOKS.some((name) => was[name] !== value[name])) fresh = true;
+    if (was.rpm !== value.rpm) beat = view.t;
+    dirty = true;
+  };
+  const theme = () => {
+    fresh = true;
+    dirty = true;
+  };
+  const size = () => {
+    disc = null;
+    dirty = true;
+  };
+  const toggle = () => {
+    stopped = !stopped;
+  };
+  learn();
+  return { draw, size, theme, set, toggle, playing: () => !stopped };
+}

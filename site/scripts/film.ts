@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
-import { main } from "../kit/shots.ts";
-import { palette } from "../kit/theme/palette.js";
+import { main } from "./shots.ts";
+import { palette } from "../src/lib/theme/palette.gen.js";
 import SITE from "../site.json";
 import { SIZE, sheet } from "./film/page.js";
 

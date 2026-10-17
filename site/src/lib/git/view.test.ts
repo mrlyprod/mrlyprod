@@ -1,0 +1,200 @@
+import { expect, test } from "bun:test";
+import { seti } from "./seti/seti.ts";
+import { paint } from "./code.ts";
+import { block, decode, dirRoute, draw, fileRoute, href, lang, link, rawPath, type Tools, type Wood } from "./view.ts";
+import { render as md } from "../md/md.ts";
+
+const shiki = await import("@shikijs/core").then(
+  () => true,
+  () => false,
+);
+
+/* RULES */
+
+test("a file routes to its own path, with or without an extension", () => {
+  expect(fileRoute("crates/a/src/lib.rs")).toBe("/git/crates/a/src/lib.rs");
+  expect(fileRoute("LICENSE")).toBe("/git/LICENSE");
+  expect(rawPath("LICENSE")).toBe("raw/LICENSE");
+  expect(rawPath("x/y.png")).toBe("raw/x/y.png");
+});
+
+test("a directory route ends in a slash", () => {
+  expect(dirRoute("")).toBe("/git/");
+  expect(dirRoute("crates/a")).toBe("/git/crates/a/");
+});
+
+test("an href percent-encodes a path and html-escapes the rest", () => {
+  expect(href(fileRoute("notes/a b#c&d.md"))).toBe("/git/notes/a%20b%23c&amp;d.md");
+  expect(href(dirRoute("notes/a b"))).toBe("/git/notes/a%20b/");
+});
+
+test("a language comes from the extension", () => {
+  expect(lang("src/a.rs")).toBe("rust");
+  expect(lang("LICENSE")).toBe("text");
+});
+
+test("a file named after an object's own machinery is plain text with a plain icon", () => {
+  expect(lang("x.constructor")).toBe("text");
+  expect(seti("x.constructor")).toBe("si");
+  expect(seti("constructor")).toBe("si");
+});
+
+test("a path that is not valid percent-encoding is kept as written", () => {
+  expect(decode("a%20b")).toBe("a b");
+  expect(decode("100%")).toBe("100%");
+  expect(decode("%E0%A4%A")).toBe("%E0%A4%A");
+});
+
+test("a repo-relative link lands in the viewer, an image or a pdf on its raw bytes, a script url nowhere", () => {
+  expect(link("crates/a", "src/lib.rs")).toBe("/git/crates/a/src/lib.rs");
+  expect(link("crates/a", "../b/README.md#top")).toBe("/git/crates/b/README.md#top");
+  expect(link("docs", "shot.png")).toBe("/raw/docs/shot.png");
+  expect(link("docs", "paper.pdf")).toBe("/raw/docs/paper.pdf");
+  expect(link("docs", "https://mrly.net")).toBe("https://mrly.net");
+  expect(link("docs", "java\tscript:alert(1)")).toBe("#");
+});
+
+/* COLLECT */
+
+/* VIEW */
+
+const wood: Wood = {
+  base: "/git/",
+  name: "demo",
+  slug: "acme/demo",
+  branch: "main",
+  c: [
+    { n: "docs", k: "d", c: [{ n: "paper.pdf", k: "f", s: 900 }, { n: "shot.png", k: "f", i: "image", s: 2048 }] },
+    { n: "big.rs", k: "f", i: "rust", s: 2 << 20 },
+    { n: "blob.bin", k: "f", s: 4 },
+    { n: "Makefile", k: "f", s: 9 },
+    { n: "README.md", k: "f", i: "markdown", s: 30 },
+  ],
+};
+
+const held: Record<string, string | Uint8Array> = {
+  "/raw/README.md": "# demo\n\nSee [the shot](docs/shot.png) and [make](Makefile).\n",
+  "/raw/Makefile": "all:\n\techo\n",
+  "/raw/blob.bin": Uint8Array.from([0, 1, 2, 3]),
+};
+
+const asked: string[] = [];
+
+const tools: Tools = {
+  load: async (url) => {
+    asked.push(url);
+    const hit = held[url];
+    return hit === undefined ? null : typeof hit === "string" ? new TextEncoder().encode(hit) : hit;
+  },
+  md: (text, to) => text.replace(/\]\(([^)]+)\)/g, (_, url: string) => `](${to(url)})`),
+};
+
+test("a listing draws its folders and files with their sizes at once, and its README above them when it has loaded", async () => {
+  const view = draw(wood, "");
+  expect(view).toMatchObject({ path: "", name: "demo", found: true });
+  expect(view.html).toContain('<p class="lead">1 directory and 4 files in demo.</p>');
+  expect(view.html).toContain('<li class="dir"><span class="ico" aria-hidden="true"></span><a href="/git/docs/">docs/</a><span class="n">2 items</span></li>');
+  expect(view.html).toContain('<a href="/git/Makefile">Makefile</a><span class="n">9 B</span>');
+  expect(view.html).toContain('<a href="https://github.com/acme/demo/tree/main">GitHub</a>');
+  expect(view.html).not.toContain("readme");
+  const full = (await view.more!(tools))!;
+  expect(full.html.indexOf('<div class="prose readme">')).toBeLessThan(full.html.indexOf('<ul class="files">'));
+  expect(full.html).toContain("[the shot](/raw/docs/shot.png) and [make](/git/Makefile)");
+});
+
+test("a code file shows its bar first, then its numbered lines, and hands its text over for painting", async () => {
+  const view = draw(wood, "Makefile");
+  expect(view.html).toContain('<a href="/raw/Makefile">Raw</a> · <a href="https://github.com/acme/demo/blob/main/Makefile">GitHub</a>');
+  expect(view.html).not.toContain('class="code');
+  const full = (await view.more!(tools))!;
+  expect(full.html).toContain('<p class="lead">9 B · text · 2 lines</p>');
+  expect(full.html).toContain('<span class="line" id="L2"><a class="n" href="#L2">2</a><span class="t">\techo</span></span>');
+  expect(full.code).toEqual({ text: "all:\n\techo\n", lang: "text" });
+});
+
+test("a markdown file is rendered by the site's pipeline with its links resolved in the viewer", async () => {
+  const full = (await draw(wood, "README.md").more!(tools))!;
+  expect(full.html).toContain('<div class="prose readme"># demo');
+  expect(full.html).toContain("(/raw/docs/shot.png)");
+  expect(full.code).toBeUndefined();
+});
+
+test("with the tree, a README link to a missing path is plain text and a folder gets its route with or without a slash", () => {
+  const to = (url: string) => link("", url, wood);
+  expect(["docs", "docs/", "gone.rs", "docs/gone/"].map(to)).toEqual(["/git/docs/", "/git/docs/", null, null]);
+  expect(md("[gone](gone.rs) and [docs](docs)", { link: to })).toBe('<p>gone and <a href="/git/docs/">docs</a></p>');
+});
+
+test("with the tree, a reference link whose definition is a missing path is plain text too", () => {
+  const to = (url: string) => link("", url, wood);
+  expect(md("[gone][g] and [docs][d]\n\n[g]: gone.rs\n[d]: docs", { link: to })).toBe('<p>gone and <a href="/git/docs/">docs</a></p>');
+});
+
+test("with the tree, a README link to a file with a space in its name is found through its percent-encoding", () => {
+  expect(link("", "a%20b.md", { ...wood, c: [...wood.c, { n: "a b.md", k: "f" }] })).toBe("/git/a%20b.md");
+});
+
+test("a file whose bytes do not load says so and offers the raw link", async () => {
+  const full = (await draw({ ...wood, c: [{ n: "gone.rs", k: "f", s: 5 }] }, "gone.rs").more!(tools))!;
+  expect(full.html).toContain('gone.rs did not load. <a href="/raw/gone.rs">Open the raw file</a>');
+});
+
+test("an image and a pdf are shown from their bytes' url and fetch nothing", () => {
+  asked.length = 0;
+  const shot = draw(wood, "docs/shot.png");
+  expect(shot.html).toContain('<figure class="shot"><img src="/raw/docs/shot.png" alt="shot.png"></figure>');
+  expect(shot.more).toBeUndefined();
+  const paper = draw(wood, "docs/paper.pdf");
+  expect(paper.html).toContain('<embed class="doc" src="/raw/docs/paper.pdf" type="application/pdf">');
+  expect(paper.more).toBeUndefined();
+  expect(asked).toEqual([]);
+});
+
+test("a file over 1 MB is a raw link only", () => {
+  const view = draw(wood, "big.rs");
+  expect(view.html).toContain('<a href="/raw/big.rs">Download big.rs</a> · 2.0 MB');
+  expect(view.more).toBeUndefined();
+});
+
+test("a binary is a download link once its bytes say so", async () => {
+  const full = (await draw(wood, "blob.bin").more!(tools))!;
+  expect(full.html).toContain('<a href="/raw/blob.bin">Download blob.bin</a> · 4 B');
+  expect(full.html).toContain('<p class="lead">4 B · bin</p>');
+});
+
+test("a folder asked for without its slash is its listing, and an unknown path is a not-found view", () => {
+  expect(draw(wood, "docs")).toMatchObject({ path: "docs/", name: "docs", found: true });
+  const lost = draw(wood, "nope/<x>.rs");
+  expect(lost).toMatchObject({ name: "Not found", found: false });
+  expect(lost.html).toContain("No nope/&lt;x&gt;.rs in demo.");
+  expect(lost.more).toBeUndefined();
+});
+
+/* CODE */
+
+test("a code block numbers its lines and a huge one stays plain", () => {
+  const one = block("let a = 1;\nlet b = 2;\n", "typescript");
+  expect(one).toContain('<span class="line" id="L2"><a class="n" href="#L2">2</a>');
+  expect(one).not.toContain("L3");
+  expect(one).toContain('<div class="code d2"');
+  expect(block("x\n".repeat(120000), "text")).toContain('<div class="code plain"');
+});
+
+test("the gutter class counts the digits of the last line", () => {
+  expect(block("x\n".repeat(400), "text")).toContain('<div class="code d3"');
+});
+
+/* PAINT */
+
+test.skipIf(!shiki)("a rust snippet paints one string per line", async () => {
+  const out = await paint("fn main() {\n    let a = 1;\n}\n", "rust");
+  expect(out).not.toBeNull();
+  expect(out!.length).toBe(3);
+  expect(out![1]).toContain('<span class="tk-keyword">let</span>');
+  expect(out!.join("")).not.toContain("style=");
+});
+
+test("an unknown extension paints nothing", async () => {
+  expect(await paint("hello\n", lang("notes.bin"))).toBeNull();
+  expect(await paint("hello\n", "text")).toBeNull();
+});

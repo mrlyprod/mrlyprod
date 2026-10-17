@@ -21,8 +21,8 @@ target/
 
 # NODE AND WASM
 site/node_modules/
-site/pkg/
-site/pkg.next/
+site/wasm/
+site/wasm.next/
 bindings/js/pkg/
 
 # PYTHON

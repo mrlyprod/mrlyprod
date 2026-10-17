@@ -1,5 +1,6 @@
 [serve.static]
-plugins = ["./scripts/site.ts"]
+plugins = ["./scripts/build.ts"]
 
 [test]
 preload = ["./test/preload.ts"]
+pathIgnorePatterns = ["dist/**"]

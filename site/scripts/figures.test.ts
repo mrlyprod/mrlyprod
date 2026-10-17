@@ -2,7 +2,7 @@ import { afterAll, expect, test } from "bun:test";
 import { rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
-import { mrly, roster } from "./site.ts";
+import { mrly, roster } from "./build.ts";
 
 const repo = resolve(import.meta.dir, "..", "..");
 

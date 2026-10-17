@@ -1,4 +1,4 @@
-import { lambda } from "../site/kit/lambda.ts";
+import { lambda } from "../site/infra/builder.ts";
 
 /* WHERE */
 
@@ -11,8 +11,8 @@ const net = lambda({
   folder: "site",
   sources: ["push", "schedule", "automator", "manual"],
   prepare: async (site, run) => {
-    const out = await run([process.execPath, "scripts/pkg.ts"], site);
-    return `pkg ${(out.trim().split(/\s+/)[0] ?? "").slice(0, 12)}`;
+    const out = await run([process.execPath, "infra/wasm.ts"], site);
+    return `wasm ${(out.trim().split(/\s+/)[0] ?? "").slice(0, 12)}`;
   },
 });
 

@@ -1,5 +1,6 @@
-import { rng, run } from '../../lib/scene.js';
-import { record } from '../../lib/space/record.js';
+import { run } from '../../src/lib/app/run.js';
+import { rng } from '../../src/lib/rand.js';
+import { record } from '../../src/lib/app/record.js';
 
 export const SIZE = [1280, 720];
 
