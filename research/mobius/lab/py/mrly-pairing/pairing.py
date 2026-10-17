@@ -472,8 +472,8 @@ def box():
                                     "..", "..", "..", "..", "zeta", "lab", "py", "design-zeta"))
     import design_zeta
     print("WINDING BOXES FOR THE ZEROS OF zeta_F, argument principle on lab/py/design-zeta")
-    print("winding 1 on a rectangle certifies exactly one zero inside it, so Re rho is")
-    print("pinned to the box edges; winding 0 certifies no zero there")
+    print("winding 1 on a rectangle resolves one zero inside it, sampled and not certified,")
+    print("pinning Re rho to the box edges; winding 0 resolves no zero there")
     for q, F, x0, x1, y0, y1, want in BOXES:
         d = design_zeta.Design(q, tuple(digs(q, F)))
         f = design_zeta.Cache(d)

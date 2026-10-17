@@ -20,6 +20,7 @@ The Mobius meter across digit designs: exact transfer between scaled columns, th
 - [claims/moments-of-the-digit-transform.md](claims/moments-of-the-digit-transform.md): The moments of the digit transform
 - [papers/first-base-below-a-quarter.md](papers/first-base-below-a-quarter.md): The First Base Below a Quarter
 - [papers/half-interval-mobius.md](papers/half-interval-mobius.md): An Unconditional Mertens Bound on the Half Interval
+- [papers/sparse-mertens-under-grh.md](papers/sparse-mertens-under-grh.md): A Power Saving for Mobius Sums on Missing-Digit Integers, under GRH
 - [refs.md](refs.md): the references this topic cites
 - [lab/py/design-meter/](lab/py/design-meter/): Reads the oscillation spectrum of the digit-design Mobius meter `M_F(x) = sum of mu(n)` over `n in S_F`, `n <= x`, with `F` the kept digits, normalised by `x^(alpha/2)` with `alpha = log_base fill`, and asks which frequencies it carries.
 - [lab/py/digit-progressions/](lab/py/digit-progressions/): The numbers of the digit progressions on mobius
@@ -46,3 +47,4 @@ The Mobius meter across digit designs: exact transfer between scaled columns, th
 - Weighting the frequency grid by denominator: it buys no exponent, since the `l^1` mass of the digit transform sits at the top denominator; the Refuted row in [claims/digit-restricted-mobius-meter.md](claims/digit-restricted-mobius-meter.md).
 - The pair route at base 10: certified `beta > 1/4` at all ten one-missing-digit sets kills both branches of the criterion (The pair route, "Base 10 is refuted at every excluded digit").
 - The pair route below `fill = base^(3/4)`: the Parseval floor `m_t >= 1 - alpha` shuts the gate (The pair route).
+- A certificate of any shape `Sigma_i <= C lambda^i` at `L = base/3`: the spectral radius of `T_L` reads `alpha_1 = 0.207` at base `1000003` (`0.273` at `10007`, falling), so nothing of that shape clears `1/5` below about `2 * 10^6`; a reading on a 401-point grid, not a theorem (digit-progressions, verb `headroom`).

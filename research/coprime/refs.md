@@ -4,11 +4,17 @@
 
 | ref | title | url |
 |---|---|---|
+| A000045 | Fibonacci numbers: F(n) = F(n-1) + F(n-2) with F(0) = 0 and F(1) = 1 - the independent sets of a path, and the factors of the distance-free count `D_k(w)` of [the pincer paper](papers/lemma-b-pincer.md), `F(20) = 6765` and `F(14) = 377` | https://oeis.org/A000045 |
 | A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables | https://oeis.org/A000616 |
+| A000930 | Narayana's cows sequence: a(0) = a(1) = a(2) = 1; thereafter a(n) = a(n-1) + a(n-3); offset 0, first terms `1, 1, 1, 2, 3, 4, 6, 9, 13, 19, 28, 41` - the exact ray mass `M_n(1, 12) = A000930(n) - 1` on the supergolden ray of [coprime](notes/coprime.md) | https://oeis.org/A000930 |
+| A001622 | Decimal expansion of golden ratio phi (or tau) = (1 + sqrt(5))/2 - the growth bound of every ray automaton of the gasket in [the pincer paper](papers/lemma-b-pincer.md) | https://oeis.org/A001622 |
+| A065473 | Decimal expansion of the strongly carefree constant: Product_{p prime} (1 - (3*p-2)/(p^3)); offset 0, data read in the stripped dump to the digits `0.286747428434478734107892712789` - `C_3`, the pairwise coprimality limit of the cube `[0, 3^level)^3` and `400/351` of the sponge's, in [the density paper](papers/coprime-density-above-dimension-one.md) | https://oeis.org/A065473 |
+| A085851 | Decimal expansion of hard hexagon entropy constant | https://oeis.org/A085851 |
+| A092526 | Decimal expansion of (2/3)*cos((1/3)*arccos(29/2)) + 1/3, the real root of x^3 - x^2 - 1 - the supergolden ratio `1.4655712318768`, the largest mass rate off the shifts in the height-243 census of [the pincer paper](papers/lemma-b-pincer.md) | https://oeis.org/A092526 |
 | A129824 | a(n) = Product_{k=0..n} (1 + binomial(n,k)) | https://oeis.org/A129824 |
 | A299916 | Name is `a(n) = A299914(2n+1)` only, offset 0, from Sahin and Tan's divisibility paper; the six-pointed-star hole count is a comment, not the definition. Holes of the `n`-th size, not tiles: this tree's slice census is `A299916(n+1)` | https://oeis.org/A299916 |
 | A396934 | Number of pairs (i,j) with 0 <= i,j < 2^n, i AND j = 0, and gcd(i,j) = 1 - this tree's own submission | https://oeis.org/A396934 |
-| A000930 | Narayana's cows sequence: a(0) = a(1) = a(2) = 1; thereafter a(n) = a(n-1) + a(n-3); offset 0, first terms `1, 1, 1, 2, 3, 4, 6, 9, 13, 19, 28, 41` - the exact ray mass `M_n(1, 12) = A000930(n) - 1` on the supergolden ray of [coprime](notes/coprime.md) | https://oeis.org/A000930 |
+| A399364 | Number of triples (i,j,k) with 0 <= i,j,k < 3^n such that no two of i, j, k have digit 1 in the same base-3 position, and gcd(i,j,k) = 1 - the Menger sponge's visible count `12, 270, 5916, 123504, 2538447, 51497040` from level 1, this tree's own submission | https://oeis.org/A399364 |
 
 ## PAPERS AND BOOKS
 
@@ -43,3 +49,5 @@
 | OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |
 | OEIS A000930 | Narayana's cows sequence | https://oeis.org/A000930 |
 | Ramanujan's sum | Ramanujan's sum, Wikipedia: the divisor form c_q(n) = sum over d dividing gcd(q,n) of mu(q/d) d, published by Kluyver in 1906, the sums named after Ramanujan's 1918 paper; the article cites Hardy and Wright Theorems 65 and 66 for the root-of-unity facts and NOT Theorem 272, so the Theorem 272 number often quoted for Ramanujan's sum is unconfirmed and must not be printed; read at source | https://en.wikipedia.org/wiki/Ramanujan%27s_sum |
+| Apery's theorem | Apery's theorem, Wikipedia, read at source: `zeta(3)` is irrational, proved by Roger Apery, announced in a June 1978 talk and published as Irrationalite de zeta(2) et zeta(3), Asterisque 61 (1979), 11-13; the Asterisque text on numdam is a scan this tree did not read - the input at `dim = 3` of the C-finite corollary of [the density paper](papers/coprime-density-above-dimension-one.md) | https://en.wikipedia.org/wiki/Ap%C3%A9ry%27s_theorem |
+| Lindemann-Weierstrass theorem | Lindemann-Weierstrass theorem, Wikipedia, read at source: Lindemann proved in 1882 that `e^a` is transcendental for every nonzero algebraic `a`, so `Pi` is transcendental since `e^(Pi i) = -1`, citing Ueber die Zahl Pi, Math. Ann. 20 (1882), 213-225 - the input at even `dim` of the C-finite corollary of [the density paper](papers/coprime-density-above-dimension-one.md) | https://en.wikipedia.org/wiki/Lindemann%E2%80%93Weierstrass_theorem |

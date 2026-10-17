@@ -1,3 +1,4 @@
+mod alphabets;
 mod cocycle;
 mod growth;
 mod order;
@@ -424,5 +425,6 @@ fn main() {
     adjudication(&rep);
     cocycle::study(&rep);
     unsolved::study(&rep);
+    alphabets::study();
     controls();
 }

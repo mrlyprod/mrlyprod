@@ -60,8 +60,14 @@
 
 ```
 uv run python research/cuts/lab/py/base3-transient-exhaustion/transient.py --selftest --lo 6 --hi 120
+uv run python research/cuts/lab/py/base3-transient-exhaustion/transient.py --window 38 130
+uv run python research/cuts/lab/py/base3-transient-exhaustion/transient.py --values 40 85 91
 ```
+
+- `--window LO HI` prints at every even `D` in the range `K*`, `level_0`, the envelope `E` of the non-leader mass at depth `K_1 = floor(K*) + 2` from the four certified constants `0.7528157, 0.7052518, 0.2266816, 0.8900159` of the shelf proof, `A = ln((D+2)/(D-2))`, the half-width `w = (-ln(1 - E) + T)/A` with the tail allowance `T = (1.9(D-1) + 7/(D-2)) 9^(-level_0)`, and the distance from `K*` to the nearest odd integer; under a second.
+- `--values D LO HI` prints `V(level)` at one `D` for `LO <= level <= HI`, sign, leading digits and digit count, by the folded row sweep.
 
 ## WITNESSES
 
 - the claims line: `level* = level_0` on 58 of 58 rows at even `D = 6..120`, the towers at `D = 38, 42, 44`, `level* = 811` at `D = 120`, and the `K_min` split 36/22.
+- the paper's Fact 8.3 and the window claims line: `--window 38 130` finds an odd integer inside the window at `D = 40` only; `--values 40 85 91` prints `V(87) < 0 < V(89)`.

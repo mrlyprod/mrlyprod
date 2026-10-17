@@ -19,8 +19,8 @@
 
 ## THE BOX
 
-- The rightmost zero of each design is certified by a winding box on `zeta_F` itself, half-width `5e-5` in `Re s` and in `Im s`, the argument principle on the same engine as [mrly-pairing](../../../../mobius/lab/py/mrly-pairing/README.md) verb `box`.
-- A winding of `1` certifies exactly one zero inside the rectangle, so `Re rho` is pinned to the box edges and the transport bound is the LEFT edge, truncated down.
+- The rightmost zero of each design is boxed, resolved and not certified, by a winding box on `zeta_F` itself, half-width `5e-5` in `Re s` and in `Im s`, the argument principle on the same engine as [mrly-pairing](../../../../mobius/lab/py/mrly-pairing/README.md) verb `box`.
+- A winding of `1` resolves exactly one zero inside the rectangle, sampled and not certified, since nothing bounds the derivative between samples, so `Re rho` is pinned to the box edges and the transport bound is the LEFT edge, truncated down.
 - A zero right of `alpha` may be a tooth of the level-zero comb and so sit near a pole of `zeta_F`, so every box prints its distance to the nearest pole of the lattice `s_(i,j) = alpha - i + 2 pi i j/log q`. That distance is positive by construction, since the lattice lies on `Re s <= alpha` and the box lies right of `alpha`; what the column carries is how far, against the box's own half-width.
 - The printed contour minimum is a minimum over the SAMPLED points of the contour and not over the contour, so it reads as evidence beside the winding and not as a certificate of its own.
 
@@ -33,16 +33,17 @@
 
 - The base 2, 3 and 4 full digit sets are the controls: there `zeta_F = zeta`, no zero lies right of `alpha = 1`, and the census must return zero.
 - At a full set the boxes around the cofactor only teeth `s_(0,j)`, `j >= 1`, separate the two functions: `Z` winds `1` there and `zeta_F` winds `0`, which is the transfer exception seen directly.
-- The two certified boxes of [mrly-pairing](../../../../mobius/lab/py/mrly-pairing/README.md) are re-run at their own edges, with the control rectangle.
+- The two boxes, resolved not certified, of [mrly-pairing](../../../../mobius/lab/py/mrly-pairing/README.md) are re-run at their own edges, with the control rectangle.
 
 ## THE HYPOTHESES
 
 - `nu_F` is the Dirichlet inverse of `1_(S_F)` and exists only when `1 in S_F`, that is when `1 in F`. A design missing the digit `1` carries its zeros and carries no transport bound; the table says so rather than quoting the exponent.
-- Every bound is `theta(nu_F) >= x_0` with `x_0` the certified left edge of a winding-`1` box, truncated down; nothing is read off a polished root or a small residual.
+- Every bound is `theta(nu_F) >= x_0` with `x_0` the left edge of a winding-`1` box, resolved not certified, truncated down; nothing is read off a polished root or a small residual.
 
 ## RUN
 
-- `uv run python research/zeta/lab/py/transport-census/transport_census.py census 40 locus` - the per design table: `sigma_1`, the strip, the winding, the zeros right of `alpha`, the certified box on the rightmost and the bound it proves.
+- `uv run python research/zeta/lab/py/transport-census/transport_census.py census 40 locus` - the per design table: `sigma_1`, the strip, the winding, the zeros right of `alpha`, the box on the rightmost, resolved not certified, and the bound it gives.
+- `uv run python research/zeta/lab/py/transport-census/transport_census.py root 40 locus` - the crossing: the root of `a_min^sigma zeta_F(sigma) = 2` bisected against the ladder bound and rounded up, beside the grid edge `sigma_1` and `a_min^sigma zeta_F` at it; about four seconds.
 - `uv run python research/zeta/lab/py/transport-census/transport_census.py law 40 locus` - the same, followed by the columns in `k/q` order and in `alpha` order, the equal-key ties, the designs with `Re rho > 1`, the corollary line per design, the full set null boxes and the reproduction of the landed boxes.
 - The second argument is the height, the third a family: `locus` the twenty of the locus sweep, `rungs` the two of the family sweep, `b20` and `b50` the two high rungs, `ctl` the three full digit sets, `all` the twenty-two. Prints only, writes nothing.
 - `census 40 locus` runs in about eleven minutes, `census 40 rungs` in three and `census 40 b20` in six; base 50 is censused to height `4` in two and a half. Peak resident memory is under `0.2` GB throughout.
@@ -59,7 +60,8 @@
 - four designs have `Re rho > 1`, so their `nu_F` outruns the count of integers below `x`: base 10 missing two, base 10 missing `9`, base 20 missing one and base 50 missing one, rightmost `1.001514387650`, `1.001589275290`, `1.002685494780` and `1.000061474950` at `alpha = 0.9030900, 0.9542425, 0.9828779, 0.9948357`, the first three below `Im s = 40` and the last below `Im s = 4`, so only the SIGN of `Re rho - 1` is read and never its size; the `k/q` reading dies on base 5 `{0,1,2,3}`, the same `k/q = 0.8` as base 10 missing two, whose rightmost is `0.989748105861`, below `1`; base 20 and base 50 missing one digit are two further rungs the base 10 pair does not fix, and both land above `1`
 - the least rightmost real part at each `alpha` reads `0.4485242462`, `0.4415055372`, `0.5853043873`, `0.7207876015`, `0.9126562295`, `0.9897481059`, `1.0015143877`, `1.0015892753`, `1.0026854948`, `1.0000614750` up the ladder `alpha = 0, 0.4307, 0.5, 0.6309, 0.7925, 0.8614, 0.9031, 0.9542, 0.9829, 0.9948`, rising at every step but the first and the last, and the last is where the census height drops from `40` to `4`; ten rungs, one design each above `alpha = 0.86` against six at `alpha = 0.5`, and no fit taken
 - the cofactor only teeth separate the two functions directly: around `s_(0,1)` at `1 + 9.06472028365 i`, `1 + 5.71920173476 i` and `1 + 4.53236014183 i` the winding of `Z` is `1` and the winding of `zeta_F` is `-9.42e-32`, `-6.28e-32` and `0`, with `min abs(Z)` about `5e-5` and `min abs(zeta_F)` `1.351`, `0.8747` and `0.7295`
-- the two certified boxes of [mrly-pairing](../../../../mobius/lab/py/mrly-pairing/README.md) reproduce at their own edges, winding `1` and `1` with contour minima `8.298e-4` and `6.865e-4`, and the control rectangle returns winding `0` with contour minimum `1.543e-2`
+- the root of `zeta_F(sigma) = 2` reads `1.1790285003` at base 3 `{0,1}` and `1.69933660058` at base 10 missing `9`, below their grid edges `alpha + 0.55` and `alpha + 0.75`, where `zeta_F` reads `1.995208619` and `1.991335591`, and the three full sets read `1.728647239`, the root of `zeta(s) = 2`
+- the two boxes, resolved not certified, of [mrly-pairing](../../../../mobius/lab/py/mrly-pairing/README.md) reproduce at their own edges, winding `1` and `1` with contour minima `8.298e-4` and `6.865e-4`, and the control rectangle returns winding `0` with contour minimum `1.543e-2`
 
 ## SOURCES
 

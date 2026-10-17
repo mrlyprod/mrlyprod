@@ -230,12 +230,32 @@ def nu_h(a, t):
     h = sum(a(r + t) * W(r + t) for r in range(1, 7)) + sum(a(r + 1 - t) * W(r + 1 - t) for r in range(6))
     return nu, h
 
-def lip_h(la, amax):
-    tot = 0.0
-    for lo in [r for r in range(1, 7)] + [r + 0.5 for r in range(6)]:
-        hi = lo + 0.5
-        tot += la * max(abs(W(lo)), abs(W(hi))) + amax * (1 / lo ** 2 + 1 / (6 * lo))
-    return tot
+NUM = {"": ((1, 1, 3), (-1, 0, 1), (1, 2, 3), (-1, 1, 2)), "1": ((1, 1, 6), (-1, 0, 1))}
+
+def w_iv(z):
+    return 1 / z - iv.log(z) / 6
+
+def a_iv(terms, z):
+    re, im = iv.mpf(0), iv.mpf(0)
+    for c, n, d in terms:
+        x = 2 * iv.pi * n * z / d
+        re += c * iv.cos(x)
+        im += c * iv.sin(x)
+    s = re ** 2 + im ** 2
+    return iv.sqrt(iv.mpf([max(s.a, 0), s.b]))
+
+def lip_sums():
+    iv.prec = 120
+    S, D = iv.mpf(0), iv.mpf(0)
+    for m in range(1, 13):
+        lo, hi = abs(w_iv(iv.mpf(m) / 2)), abs(w_iv(iv.mpf(m + 1) / 2))
+        S += iv.mpf([max(lo.a, hi.a), max(lo.b, hi.b)])
+        D += iv.mpf(4) / m ** 2 + iv.mpf(1) / (3 * m)
+    return S, D
+
+def lip_iv(la, amax):
+    S, D = lip_sums()
+    return la * S + amax * D
 
 def up(x, d=6):
     return math.ceil(x * 10 ** d) / 10 ** d
@@ -245,13 +265,46 @@ def constants(verbose=True):
     t = np.linspace(0, 0.5, N + 1)
     h = 0.5 / N
     out = {}
-    for name, a, la, amax in (("", AF, 3 * math.pi, 4.0), ("1", A1, math.pi / 3, 2.0)):
+    for name, a, la, amax in (("", AF, 3 * iv.pi, 4), ("1", A1, iv.pi / 3, 2)):
         nu, H = nu_h(a, t)
-        out["nu" + name] = up(nu.max() + la * h / 2 + 1e-12)
-        out["H" + name] = up(H.max() + lip_h(la, amax) * h / 2 + 1e-12)
+        lh = float(lip_iv(la, amax).b)
+        out["nu" + name] = up(nu.max() + float(la.b) * h / 2 + 1e-12)
+        out["H" + name] = up(H.max() + lh * h / 2 + 1e-12)
         if verbose:
-            print(f"nu{name}: grid max {nu.max():.9f} at t = {t[nu.argmax()]:.6f}, bound {out['nu' + name]}; H{name}: grid max {H.max():.9f} at t = {t[H.argmax()]:.6f}, Lipschitz {lip_h(la, amax):.2f}, bound {out['H' + name]}; nu{name}(0) = {nu[0]:.9f}")
+            print(f"nu{name}: grid max {nu.max():.9f} at t = {t[nu.argmax()]:.6f}, bound {out['nu' + name]}; H{name}: grid max {H.max():.9f} at t = {t[H.argmax()]:.6f}, Lipschitz <= {up(lh, 3)}, bound {out['H' + name]}; nu{name}(0) = {nu[0]:.9f}")
     return out
+
+def cover(f, lip, bound):
+    cells, deep, todo = 0, 1, [(0, 1)]
+    while todo:
+        k, d = todo.pop()
+        assert d < 60
+        if (f(iv.mpf(2 * k + 1) / 2 ** (d + 1)) + lip / 2 ** (d + 1)).b <= bound.a:
+            cells, deep = cells + 1, max(deep, d)
+        else:
+            todo += [(2 * k, d + 1), (2 * k + 1, d + 1)]
+    return cells, deep + 1
+
+def certify(K):
+    S, D = lip_sums()
+    Sc = iv.mpf(191944) / 45045 + iv.log(iv.mpf(858) / 7) / 6
+    Dq = sum(Fraction(4, m * m) + Fraction(1, 3 * m) for m in range(1, 13))
+    Di = iv.mpf(Dq.numerator) / Dq.denominator
+    assert S.a <= Sc.b and Sc.a <= S.b and D.a <= Di.b and Di.a <= D.b and Dq == Fraction(280246811, 38419920)
+    w4, w92 = w_iv(iv.mpf(4)), w_iv(iv.mpf(9) / 2)
+    assert w4.a > 0 > w92.b and -w92.b > w4.b
+    LH, LH1 = 3 * iv.pi * S + 4 * D, iv.pi / 3 * S + 2 * D
+    print(f"Lipschitz: w(4) = {dn(w4.a, 5)}.. > 0 > w(9/2) = -{dn(-w92.b, 5)}.., S = 191944/45045 + log(858/7)/6 = {dn(S.a, 8)}.., S' = {Dq} = {dn(D.a, 8)}..; L_H = 3 pi S + 4 S' = {dn(LH.a, 7)}.. <= {up(float(LH.b), 3)}, L_H1 = (pi/3) S + 2 S' = {dn(LH1.a, 7)}.. <= {up(float(LH1.b), 3)}")
+    assert ((iv.sqrt(6) + iv.sqrt(2)) / 3).b <= iv.mpf(str(K["nu1"])).a
+    for name, la, amax in (("", 3 * iv.pi, 4), ("1", iv.pi / 3, 2)):
+        a = lambda z, terms=NUM[name]: a_iv(terms, z)
+        nu = lambda t, a=a: sum((a(r + t) for r in range(6)), iv.mpf(0)) / 6
+        H = lambda t, a=a: sum((a(r + t) * w_iv(r + t) for r in range(1, 7)), iv.mpf(0)) + sum((a(r + 1 - t) * w_iv(r + 1 - t) for r in range(6)), iv.mpf(0))
+        jobs = ((("H" + name, H, lip_iv(la, amax)),) if name else (("nu", nu, la), ("H", H, lip_iv(la, amax))))
+        for key, f, lip in jobs:
+            cells, deep = cover(f, lip, iv.mpf(str(K[key])))
+            print(f"{key} <= {K[key]} on [0, 1/2]: Lipschitz <= {up(float(lip.b), 3)}, interval cover closes in {cells} dyadic cells, finest half-width 2^-{deep}")
+    print(f"nu1 <= {K['nu1']} on [0, 1/2]: closed form, peak (sqrt 6 + sqrt 2)/3 at t = 1/2")
 
 # CERTIFICATE
 
@@ -348,6 +401,7 @@ def wall_bar(e, K, lo, hi, primes):
 def wall():
     t0 = time.time()
     K = constants()
+    certify(K)
     c, al = c_inf_iv(K)
     print(f"tail: lambda/fill <= (2 nu/pi) log p + c_inf at every prime p >= 13, 2 nu/pi <= {up(float(al.b), 7)}, c_inf <= {up(float(c.b), 6)}")
     primes = primes_upto(16000000)

@@ -12,6 +12,7 @@ The design's own zeta function: an explicit zero-free half plane and the census 
 - [notes/zeta.md](notes/zeta.md): The zeta function of a digit design
 - [claims/digit-designs-and-the-euler-product.md](claims/digit-designs-and-the-euler-product.md): Digit designs and the Euler product
 - [claims/zeros-of-the-design-zeta.md](claims/zeros-of-the-design-zeta.md): The zeros of the design zeta
+- [papers/design-dirichlet-inverse.md](papers/design-dirichlet-inverse.md): The Dirichlet Inverse of a Digit Design and the Transport of Zeros
 - [refs.md](refs.md): the references this topic cites
 - [lab/py/design-zeta/](lab/py/design-zeta/): The Dirichlet series of a digit design, `zeta_F(s) = sum_(n in S_F) n^(-s)` over the base-`base` integers whose digits all lie in a digit set `F`, continued to the whole plane and read for its zeros.
 - [lab/py/mrly-euler/](lab/py/mrly-euler/): The multiplicative structure of a digit design `S_F` over the digit set `F`
@@ -27,7 +28,7 @@ The design's own zeta function: an explicit zero-free half plane and the census 
 ## Lost
 
 - A functional equation for `zeta_F`, or Weil's theorem carried to it: the Hurwitz reflection moves the kernel and never relates `zeta_F(s)` to `zeta_F(1 - s)`, and the evaluation `P -> P(base)` is no bridge (THE WALL AND THE PRODUCTS; [claims/digit-designs-and-the-euler-product.md](claims/digit-designs-and-the-euler-product.md)).
-- An Euler product on a proper design, or the conjecture on the design's own Mobius `nu_F`: the indicator of `S_F` is multiplicative only at the full digit set, and a certified zero right of the abscissa refutes every square-root bound for `nu_F`, so the conjecture lives on `mu` restricted to `S_F` ([claims/digit-designs-and-the-euler-product.md](claims/digit-designs-and-the-euler-product.md)).
+- An Euler product on a proper design, or the conjecture on the design's own Mobius `nu_F`: the indicator of `S_F` is multiplicative only at the full digit set, and a boxed zero right of the abscissa, resolved not certified, refutes every square-root bound for `nu_F`, so the conjecture lives on `mu` restricted to `S_F` ([claims/digit-designs-and-the-euler-product.md](claims/digit-designs-and-the-euler-product.md)).
 - Gluing `zeta_F M_F = 1 + D_F`: the abscissa of `D_F` is exactly `alpha`, so the glue gains nothing (THE IDENTITY).
 - The per-denominator split of the position pairing: its `l^1` mass sits at the top level, the large sieve does not rescue it on the major arcs, and the exact second moment prices the whole grid at `(alpha + 1)/2` (THE WALL AND THE PRODUCTS).
 - Laws for the second family of zeros: no curve, no symmetry axis, no counting law in `alpha` or the fill, and the rightmost zero's gain is no function of `alpha` and `fill/base` (THE ZEROS; the Refuted rows in [claims/zeros-of-the-design-zeta.md](claims/zeros-of-the-design-zeta.md)).

@@ -6,7 +6,7 @@ import sys
 import time
 from math import comb
 
-from mpmath import mp, mpf, cos, log, pi, floor, nint
+from mpmath import mp, mpf, cos, exp, log, pi, floor, nint
 
 # DIGIT POLYNOMIAL
 
@@ -167,6 +167,43 @@ def l_zero(D, guard):
     L0 = int(floor(ks))
     return (L0 if L0 % 2 else L0 - 1), ks, near
 
+# WINDOW
+
+def envelope(D, K):
+    e = 4 * (K - 1) * (mpf("0.7528157") ** (D - 1) + mpf("0.7052518") ** (D - 1)) + 2 * mpf("0.2266816") ** (D - 1)
+    return e * exp(2 * (K + 1) * mpf("0.8900159") ** (D - 1))
+
+def window(lo, hi):
+    inside = []
+    print("  D  K*              L0  E           A          w           dist(K*, odd)  inside")
+    for D in range(lo, hi + 1, 2):
+        ks = k_star(D)
+        L0 = int(floor(ks))
+        L0 = L0 if L0 % 2 else L0 - 1
+        A = log(mpf(D + 2) / (D - 2))
+        E = envelope(D, int(floor(ks)) + 2)
+        tail = (mpf("1.9") * (D - 1) + mpf(7) / (D - 2)) * mpf(9) ** (-L0)
+        w = (-log(1 - E) + tail) / A
+        dist = min(abs(ks - L0), abs(ks - L0 - 2))
+        hit = dist <= w
+        if hit:
+            inside.append(D)
+        print("%3d  %-14s %4d  %-10s  %-9s  %-10s  %-13s  %s" % (D, mp.nstr(ks, 10), L0, mp.nstr(E, 4), mp.nstr(A, 5), mp.nstr(w, 4), mp.nstr(dist, 4), "YES" if hit else "no"))
+    print("even D in %d..%d with an odd integer inside the window: %s" % (lo, hi, inside or "none"))
+
+def values(D, lo, hi):
+    assert_nonnegative(D)
+    assert_window_closed(D)
+    assert_palindrome(D)
+    cols = folded_columns(D)
+    r = functional(D)
+    n = len(r)
+    for k in range(1, hi + 1):
+        r = [sum(w * r[cp] for cp, w in cols[c]) for c in range(n)]
+        if k >= lo:
+            v = r[0]
+            print("D=%d  V(%d) = %s%s... (%d digits)" % (D, k, "-" if v < 0 else "+", str(abs(v))[:12], len(str(abs(v)))))
+
 # SELF TEST
 
 def selftest():
@@ -230,8 +267,16 @@ def main():
     ap.add_argument("--out", default="")
     ap.add_argument("--budget", type=float, default=0.0)
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--window", nargs=2, type=int)
+    ap.add_argument("--values", nargs=3, type=int)
     a = ap.parse_args()
     mp.dps = 60
+    if a.window:
+        window(*a.window)
+        return 0
+    if a.values:
+        values(*a.values)
+        return 0
     if a.selftest:
         selftest()
     rows = run(a.lo, a.hi, a.cap_slope, a.out, a.budget)

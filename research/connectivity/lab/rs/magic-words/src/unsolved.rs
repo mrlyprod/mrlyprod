@@ -188,7 +188,7 @@ fn phi_weight(code: u8) -> (i64, i64) {
     }
 }
 
-fn exponent_weights(a: u8, b: u8) -> ((i64, i64), (i64, i64)) {
+pub fn exponent_weights(a: u8, b: u8) -> ((i64, i64), (i64, i64)) {
     let (ca, cb) = (class_of(a), class_of(b));
     let light = (0i64, 0i64);
     let two = (1i64, 0i64);

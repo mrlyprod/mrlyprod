@@ -23,6 +23,8 @@ The coprimality spine: exact base-local factors on every design, the census behi
 - [claims/ratio-set-power-saving.md](claims/ratio-set-power-saving.md): The ratio-set power saving
 - [claims/repunit-layer.md](claims/repunit-layer.md): The repunit layer
 - [claims/second-moment-of-the-rays.md](claims/second-moment-of-the-rays.md): The second moment of the rays
+- [papers/coprime-density-above-dimension-one.md](papers/coprime-density-above-dimension-one.md): Coprimality Density Above Dimension One
+- [papers/lemma-b-pincer.md](papers/lemma-b-pincer.md): The Pincer at Dimension One
 - [papers/unconditional-mertens-at-large-base.md](papers/unconditional-mertens-at-large-base.md): An Unconditional Mertens Bound at Large Base
 - [refs.md](refs.md): the references this topic cites
 - [lab/py/band-return-times/](lab/py/band-return-times/): The band automaton of a direction `(z1, z2)` with `z1 + z2 = w` and `3 | z1`
@@ -56,3 +58,4 @@ The coprimality spine: exact base-local factors on every design, the census behi
 - The floor `min_s Sigma_1(s) = 2` on the Gaussian one-digit sets: false at 135 orbits; the Refuted row in [claims/gaussian-primes-on-a-design.md](claims/gaussian-primes-on-a-design.md).
 - Mitsui's bound as the minor-arc lemma over `Z[i]`: it saves a power of the logarithm, not the power the gate asks (Gaussian primes on a design).
 - Separating a smoothed square through the characters: its cost grows like a curved boundary, so that route stops at the gate `1/6`, a reading of one route stated as a Conjecture, while a polar box grows only logarithmically (Gaussian primes on a design).
+- A block missed by every off-shift ray, as the uniform route to strictness in Conjecture N: none at any `k`, since the ray `(1, 3^k (1 + 3^t))` realises every distance-`k`-free block of length at most `2t - k`, Proved; witness `(1, 738)` for `11001100010` and `(1, 19692)` for the length-22 join, both missed by all 57 off-shift rays of the height-243 box (The window at dimension one; the Proved row in [claims/gasket-rays-and-the-window.md](claims/gasket-rays-and-the-window.md)).

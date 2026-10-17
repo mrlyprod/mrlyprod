@@ -20,6 +20,7 @@
 - The Thue-Morse value is printed with its certificate. Counts along a gasket-and-domino word are astronomical, so the study works with `log2 comp` factored through the largest term of the sum, which is exact to the last printed digit; every rate is a labelled float, every saturation extremum small enough to name is an exact rational, and the certificate is asserted at every length from 4 to `2^14` on all 16 pairs and both letter readings.
 - The invariant cone is printed in exact rationals and checked against the raw matrices step by step, together with the three reasons it does not give the rate: the wrong direction of the orbit, the observation functional sitting on the boundary of the dual cone, and the matrix-norm exponent along `3^inf` being a different number from the component exponent.
 - The boundary frequency is printed twice, once over `(3, 6)` where a diagonal letter carries it and once over `(3, 7)` where no diagonal letter exists, and the second sweep prints a whole block of lengths so the accumulation set is visible as an interval rather than as two sampled points.
+- The every-alphabet section takes the exponent past two letters. It prints the six contact-free codes and the split of the 455 three-letter alphabets by how many they hold, re-derives the exponent law alphabet by alphabet with its ledger on three letters and on all 32767 non-empty sets of codes, checks that the law reproduces the two-letter weights, and draws every word of length 3 to 7 over the 84 alphabets without a contact-free letter and of length 3 to 6 over the other 371 that carries all three letters, so each word is counted once, against the frame product of the six class maps, the run read-off, the cut at every contact-free place and the run floor. The drawing packs a row into one 128-bit integer and counts pieces by union-find over row runs, and it is checked against the cell renderer on every such word of length at most 5. The rate is then read in log arithmetic along three ternary words at `L = 2^14` on all 455 alphabets, a labelled float against the law at the prefix frequencies.
 - Every geometric figure is cross-checked against `mrly::math::bang::magic` cell for cell on all 225 words of length 2 and all 3375 of length 3, so two independently written renderers stand behind every count.
 - Block reduction gets the same treatment: a periodic word rendered flat by the study is compared cell for cell with `Tensor::fractal` of its one-period composite, on six cases at periods 2 and 3 and lengths to 6.
 - Structural laws are asserted, not the headline counts: the study exits nonzero if a product law, a closed form, the matching bound, the representation or the factory cross-check fails.
@@ -27,7 +28,7 @@
 ## RUN
 
 - `cargo run --release --manifest-path research/connectivity/lab/rs/magic-words/Cargo.toml`
-- About two seconds; prints only, writes nothing, and holds one `1024 x 1024` raster at a time.
+- About five seconds; prints only, writes nothing, and holds one `1024 x 1024` raster at a time.
 
 ## WITNESSES
 
@@ -53,6 +54,7 @@
 - connectivity.md the cone: the chart `(1/3,1/3) (2/3,0) (5/9,1/3) (14/27,4/9) (41/54,0) (95/108,0) (203/324,1/3)`, the gasket-domino-gasket vertex images with `b + c` at most `17/18`, 0 of 8190 entrywise-positive products, and `max |entry(M_3^L)| = 2^(L+2) - 2`.
 - connectivity.md the boundary over `(3, 7)`: `0.502367981` at `L = 2048` through `0.500219405` at `L = 32768`, and the block `4097 <= L <= 8192` sweeping `1.00123` down to `0.50073`.
 - connectivity.md the by-products: `(6^k + 4)/5` reading 2, 8, 44, 260, 1556, 9332, the largest count `1094` at `L = 8`, and the tripling word's range `[0.4792, 1.4379]`.
+- connectivity.md every alphabet: contact-free codes 1, 2, 4, 6, 8, 9; the 455 three-letter alphabets split 84, 216, 135, 20 by contact-free letters; saturation on 443 of 455 and 32724 of 32767, `Phi` exact on 30 of 455; 213192 and 271572 drawn words with 755664 cut places, zero mismatches; readings within `2.869e-4` of the law at `L = 2^14`.
 - research/claims/ the transfer-state row: `kappa = 2^(L-1)` on `(15^(L-1), 3)` at `L = 1..10` with maxima 1, 2, 4, 8 over all words of length 1 to 4.
 - research/claims/ the block-reduction row: six periodic cases at periods 2 and 3 and lengths to 6, matching cell for cell.
 - `mrly::math::bang::magic`, `mrly::math::bang::MagicLayer` and `mrly::core::Tensor::fractal`, the crate paths both renderers are checked against.

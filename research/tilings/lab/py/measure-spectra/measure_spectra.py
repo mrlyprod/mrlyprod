@@ -565,7 +565,370 @@ def converse(cells=((5, 42), (7, 26), (11, 20), (13, 20)), chunk=200000):
     covering_cells()
     print("time %.1f s" % (time.time() - t0))
 
-VERBS = {"census": census, "four": four, "spectra": spectra, "hunt": hunt, "pq": pq, "converse": converse}
+# SEVEN DIGITS
+
+def smooth_orders(b):
+    ms = [1]
+    for q, _ in factor(b):
+        ms = [x * q ** i for x in ms for i in range(40) if x * q ** i <= 8 * b]
+    return sorted(m for m in set(ms) if m > 1 and phi(m) <= b - 1)
+
+@lru_cache(maxsize=None)
+def asymmetric_patterns(m):
+    out = set()
+    for y in range(m):
+        for I in itertools.combinations(range(5), 3):
+            pts = [(y + i * m // 5) % m for i in I] + [(y + i * m // 5 + s * m // 6) % m for i in range(5) if i not in I for s in (1, -1)]
+            assert len(set(pts)) == 7
+            out.add(tuple(sorted(pts)))
+    return out
+
+def is_fibre(pts, m, p):
+    return len(set(pts)) == p and len({x % (m // p) for x in pts}) == 1
+
+def shape(F, m):
+    r = sorted(f % m for f in F)
+    if m % 30 == 0 and tuple(r) in asymmetric_patterns(m):
+        return "c"
+    if m % 2:
+        return ""
+    idx = range(7)
+    if m % 5 == 0:
+        for i, j in itertools.combinations(idx, 2):
+            if (r[i] - r[j]) % m == m // 2 and is_fibre([r[t] for t in idx if t not in (i, j)], m, 5):
+                return "a"
+    if m % 3 == 0:
+        for tri in itertools.combinations(idx, 3):
+            if is_fibre([r[t] for t in tri], m, 3):
+                rest = [r[t] for t in idx if t not in tri]
+                for k in (1, 2, 3):
+                    u, w = [t for t in (1, 2, 3) if t != k]
+                    if (rest[0] - rest[k]) % m == m // 2 and (rest[u] - rest[w]) % m == m // 2:
+                        return "b"
+    return ""
+
+def relevant(A, b, ms, chunk=200000):
+    Z = defaultdict(set)
+    for m in ms:
+        E = np.exp(2j * np.pi * np.arange(b) / m)
+        R = reducer(m)
+        for s in range(0, A.shape[0], chunk):
+            block = A[s:s + chunk]
+            cand = np.nonzero(np.abs(E[block].sum(axis=1)) < 1e-6)[0]
+            if len(cand):
+                cnt = np.zeros((len(cand), m), dtype=np.int64)
+                np.add.at(cnt, (np.arange(len(cand))[:, None], block[cand] % m), 1)
+                for i in cand[~(cnt @ R).any(axis=1)]:
+                    Z[s + int(i)].add(m)
+    return Z
+
+def minimal_relations(m=30, k=7, chunk=200000):
+    R = reducer(m)
+    combos = np.array(list(itertools.combinations_with_replacement(range(m), k - 1)), dtype=np.int64)
+    A = np.hstack([np.zeros((len(combos), 1), dtype=np.int64), combos])
+    found = []
+    for s in range(0, len(A), chunk):
+        block = A[s:s + chunk]
+        cnt = np.zeros((len(block), m), dtype=np.int64)
+        np.add.at(cnt, (np.arange(len(block))[:, None], block), 1)
+        found.extend(map(tuple, block[~(cnt @ R).any(axis=1)].tolist()))
+    def vanishes(keys, sub):
+        v = np.zeros(m, dtype=np.int64)
+        v[list(keys)] = sub
+        return not (v @ R).any()
+    def minimal(t):
+        counts = {}
+        for r in t:
+            counts[r] = counts.get(r, 0) + 1
+        keys = sorted(counts)
+        return not any(0 < sum(sub) < k and vanishes(keys, sub) for sub in itertools.product(*[range(counts[r] + 1) for r in keys]))
+    mins = [t for t in found if minimal(t)]
+    canon = lambda t: min(tuple(sorted((x + s) % m for x in t)) for s in range(m))
+    return len(A), len(found), mins, sorted({canon(t) for t in mins})
+
+def built_sets(b, ms):
+    rows, per = [], {}
+    for m in ms:
+        if m % 30:
+            continue
+        n = 0
+        for pat in asymmetric_patterns(m):
+            if 0 not in pat or max(pat) >= b:
+                continue
+            choices = [np.arange(r, b, m) for r in pat if r != 0]
+            grid = np.array(np.meshgrid(*choices, indexing="ij")).reshape(6, -1).T
+            rows.append(np.hstack([np.zeros((grid.shape[0], 1), dtype=np.int64), grid]))
+            n += grid.shape[0]
+        per[m] = n
+    return np.unique(np.sort(np.vstack(rows), axis=1), axis=0), per
+
+def seven_tally(A, Z, b, shapes, tally, examples):
+    e2 = vq(b, 2)
+    tally["sets"] += A.shape[0]
+    for key in ("not", "no order", "v2 values 0", "rho_2 0"):
+        tally[key] += A.shape[0] - len(Z)
+    for i, orders in Z.items():
+        F = tuple(int(x) for x in A[i])
+        tiles = 7 in orders and b % 7 == 0
+        tally["tile" if tiles else "not"] += 1
+        if tiles:
+            continue
+        odd = any(m % 2 for m in orders)
+        v2 = {vq(m, 2) for m in orders if m % 2 == 0}
+        rho = len({v % e2 for v in v2}) if e2 else 0
+        tally["odd order"] += odd
+        tally["v2 values %d" % len(v2)] += 1
+        tally["rho_2 %d" % rho] += 1
+        if odd or rho >= 3:
+            tally["witness"] += covering(orders, b) >= 7
+        if shapes or len(v2) >= 2:
+            for m in orders:
+                if len(factor(m)) > 1:
+                    tally["shape %s%s" % (shape(F, m) or "none", "" if shapes else " at two exponents")] += 1
+        if len(v2) >= 2 and len(examples) < 2:
+            examples.append((F, [(m, shape(F, m)) for m in sorted(orders)]))
+
+def fmt(tally):
+    return ", ".join("%s %d" % kv for kv in sorted(tally.items()))
+
+def full_census(b, shapes):
+    t1 = time.time()
+    ms = smooth_orders(b)
+    tally, examples = defaultdict(int), []
+    for f1 in range(1, b - 5):
+        n = math.comb(b - 1 - f1, 5)
+        A = np.fromiter(itertools.chain.from_iterable(itertools.combinations(range(f1 + 1, b), 5)), dtype=np.int64, count=5 * n).reshape(n, 5)
+        A = np.hstack([np.zeros((n, 1), dtype=np.int64), np.full((n, 1), f1, dtype=np.int64), A])
+        A = A[np.gcd.reduce(A, axis=1) == 1]
+        seven_tally(A, relevant(A, b, ms), b, shapes, tally, examples)
+    print("base %d, every 7-set with 0 and gcd 1 in {0..%d}: orders tested %s; %s; examples with two 2-adic exponents %s (%.1f s)" % (b, b - 1, ms, fmt(tally), examples, time.time() - t1), flush=True)
+
+def built_census(b):
+    t1 = time.time()
+    ms = smooth_orders(b)
+    A, per = built_sets(b, ms)
+    g = np.gcd.reduce(A, axis=1) == 1
+    tally, examples = defaultdict(int), []
+    seven_tally(A[g], relevant(A[g], b, ms), b, b <= 120, tally, examples)
+    print("base %d, every 7-set with 0 in {0..%d} built from the asymmetric splittings: lifts per order %s, %d distinct sets, %d with gcd 1, orders tested %s; %s; examples with two 2-adic exponents %s (%.1f s)" % (b, b - 1, dict(sorted(per.items())), len(A), int(g.sum()), ms, fmt(tally), examples, time.time() - t1), flush=True)
+
+def seven(full=(30, 60), built=(30, 60, 90, 120, 210)):
+    t0 = time.time()
+    n, nv, mins, orbits = minimal_relations(30)
+    print("weight 7 multisets mod 30 containing 0: %d candidates, %d vanish, %d minimal, orbits up to rotation %s, distinct residues %s, every orbit of shape (c) %s (%.1f s)" % (n, nv, len(mins), orbits, [len(set(o)) for o in orbits], all(o in asymmetric_patterns(30) for o in orbits), time.time() - t0), flush=True)
+    F, b = (1, 8, 15, 22, 29, 36, 43), 49
+    Z = zero_set(F)
+    print("%s base %d, without 0: Z(F) %s, every level tiles %s, F mod 49 in one class mod 7 %s" % (F, b, sorted(Z), every_level(Z, 7, b)[0], len({f % 7 for f in F}) == 1), flush=True)
+    for b in full:
+        full_census(b, b <= 30)
+    for b in built:
+        built_census(b)
+    print("time %.1f s" % (time.time() - t0))
+
+# ELEVEN AND THIRTEEN DIGITS
+
+def fibre_patterns(m, p, limit=None):
+    primes = [q for q, _ in factor(m)]
+    fibres = {q: [f for f in (tuple((x + k * (m // q)) % m for k in range(q)) for x in range(m // q)) if limit is None or max(f) < limit] for q in primes}
+    def comps(i, left):
+        if i == len(primes):
+            return [()] if left == 0 else []
+        return [(n,) + rest for n in range(left // primes[i] + 1) for rest in comps(i + 1, left - n * primes[i])]
+    out = set()
+    for comp in comps(0, p):
+        for choice in itertools.product(*[itertools.combinations_with_replacement(fibres[q], n) for q, n in zip(primes, comp)]):
+            pts = tuple(sorted(x for group in choice for f in group for x in f))
+            if pts[0] == 0:
+                out.add(pts)
+    return sorted(out)
+
+def lift_sets(pattern, b, m):
+    counts = defaultdict(int)
+    for r in pattern:
+        counts[r] += 1
+    rows = np.zeros((1, 0), dtype=np.int64)
+    for r, c in sorted(counts.items()):
+        pool = list(range(r, b, m))
+        if r == 0:
+            pool, c = pool[1:], c - 1
+        if c > len(pool):
+            return None
+        if c == 0:
+            continue
+        part = np.array(list(itertools.combinations(pool, c)), dtype=np.int64).reshape(-1, c)
+        rows = np.hstack([np.repeat(rows, len(part), axis=0), np.tile(part, (len(rows), 1))])
+    return np.hstack([np.zeros((len(rows), 1), dtype=np.int64), rows])
+
+def order_masks(A, b, ms, chunk=200000):
+    masks = np.zeros(A.shape[0], dtype=np.int64)
+    for i, m in enumerate(ms):
+        E = np.exp(2j * np.pi * np.arange(b) / m)
+        R = reducer(m)
+        for s in range(0, A.shape[0], chunk):
+            block = A[s:s + chunk]
+            cand = np.nonzero(np.abs(E[block].sum(axis=1)) < 1e-6)[0]
+            if len(cand):
+                cnt = np.zeros((len(cand), m), dtype=np.int64)
+                np.add.at(cnt, (np.arange(len(cand))[:, None], block[cand] % m), 1)
+                masks[s + cand[~(cnt @ R).any(axis=1)]] |= 1 << i
+    return masks
+
+def prime_stats(Z, b, p):
+    e2, e3 = vq(b, 2), vq(b, 3)
+    rho2 = len({vq(m, 2) % e2 for m in Z if m % 2 == 0}) if e2 else 0
+    rho3 = len({vq(m, 3) % e3 for m in Z if m % 3 == 0}) if e3 else 0
+    return p in Z and b % p == 0, rho2, rho3, covering(Z, b)
+
+def prime_tally(A, b, p, ms, tally, examples, witnesses, full):
+    tally["sets"] += A.shape[0]
+    if not full:
+        free = [m for m in ms if m % 3]
+        keep = order_masks(A, b, free) != 0
+        tally["no order prime to 3"] += int((~keep).sum())
+        A = A[keep]
+    masks = order_masks(A, b, ms)
+    for mask, count in zip(*np.unique(masks, return_counts=True)):
+        Z = {m for i, m in enumerate(ms) if mask >> i & 1}
+        tiles, rho2, rho3, bound = prime_stats(Z, b, p)
+        F = tuple(int(x) for x in A[np.nonzero(masks == mask)[0][0]])
+        tally["tile" if tiles else "not"] += count
+        if tiles:
+            continue
+        tally["orders %d" % len(Z)] += count
+        tally["odd order"] += count * any(m % 2 for m in Z)
+        tally["order prime to 3"] += count * any(m % 3 for m in Z)
+        tally["order prime to 5"] += count * any(m % 5 for m in Z)
+        tally["rho_2 %d" % rho2] += count
+        tally["rho_3 %d" % rho3] += count
+        tally["bound %d" % bound] += count
+        if bound >= p:
+            tally["witness"] += count
+            key = tuple(sorted(Z))
+            if key not in witnesses:
+                witnesses[key] = [0, F, bound, residue_clique(Z, b, p), t1_condition(Z, b, p)]
+            witnesses[key][0] += count
+        if len(Z) >= 3 and len(examples) < 2:
+            examples.append((F, sorted(Z), bound))
+
+def witness_report(witnesses, p):
+    if not witnesses:
+        return "no set with covering bound %d or more" % p
+    rows = sorted(witnesses.items(), key=lambda kv: (-kv[1][2], kv[0]))
+    worst = max(w[3] for w in witnesses.values())
+    return "sets with covering bound %d or more: %d in %d order sets %s, residue clique bounds at most %d%s, T1 condition on %d; first by bound %s" % (p, sum(w[0] for w in witnesses.values()), len(witnesses), [(k, int(w[0]), w[2]) for k, w in rows], worst, " so none spectral" if worst < p else " UNDECIDED AT L = 1", sum(1 for w in witnesses.values() if w[4]), [(k, tuple(sorted(w[1])), w[2], w[3]) for k, w in rows[:3]])
+
+def full_prime(b, p):
+    t1 = time.time()
+    ms = smooth_orders(b)
+    n = math.comb(b - 1, p - 1)
+    A = np.fromiter(itertools.chain.from_iterable(itertools.combinations(range(1, b), p - 1)), dtype=np.int64, count=(p - 1) * n).reshape(n, p - 1)
+    A = np.hstack([np.zeros((n, 1), dtype=np.int64), A])
+    A = A[np.gcd.reduce(A, axis=1) == 1]
+    tally, examples, witnesses = defaultdict(int), [], {}
+    prime_tally(A, b, p, ms, tally, examples, witnesses, True)
+    print("size %d base %d, every %d-set with 0 and gcd 1 in {0..%d}, %d of %d: orders tested %s; %s; examples with three orders %s; %s (%.1f s)" % (p, b, p, b - 1, A.shape[0], n, ms, fmt(tally), examples, witness_report(witnesses, p), time.time() - t1), flush=True)
+
+def lift_multisets(pattern, M, s):
+    counts = defaultdict(int)
+    for r in pattern:
+        counts[r] += 1
+    rows = np.zeros((1, 0), dtype=np.int64)
+    for r, c in sorted(counts.items()):
+        pool = list(range(r, M, s))
+        if r == 0:
+            c -= 1
+        if c == 0:
+            continue
+        part = np.array(list(itertools.combinations_with_replacement(pool, c)), dtype=np.int64).reshape(-1, c)
+        rows = np.hstack([np.repeat(rows, len(part), axis=0), np.tile(part, (len(rows), 1))])
+    return np.hstack([np.zeros((len(rows), 1), dtype=np.int64), rows])
+
+def vanishes_rows(A, m):
+    cnt = np.zeros((A.shape[0], m), dtype=np.int64)
+    np.add.at(cnt, (np.arange(A.shape[0])[:, None], A % m), 1)
+    return ~(cnt @ reducer(m)).any(axis=1)
+
+def joint_sets(b, p, mo, me):
+    M = mo * me // math.gcd(mo, me)
+    g = math.gcd(mo, me)
+    s, other = (mo, me) if M // mo <= M // me else (me, mo)
+    shadows = {tuple(sorted(x % g for x in pat)) for pat in fibre_patterns(other, p, b if other >= b else None)}
+    blocks = []
+    for pat in fibre_patterns(s, p, b if s >= b else None):
+        if tuple(sorted(x % g for x in pat)) not in shadows:
+            continue
+        if M >= b:
+            A = lift_sets(pat, b, s)
+            if A is not None and A.shape[0]:
+                blocks.append(A[vanishes_rows(A, other)])
+            continue
+        W = lift_multisets(pat, M, s)
+        for w in W[vanishes_rows(W, other)]:
+            A = lift_sets(tuple(int(x) for x in w), b, M)
+            if A is not None and A.shape[0]:
+                blocks.append(A)
+    return np.vstack(blocks) if blocks else np.zeros((0, p), dtype=np.int64)
+
+def built_prime(b, p, odd):
+    t1 = time.time()
+    ms = smooth_orders(b)
+    free = [m for m in ms if m % 3 and len(factor(m)) > 1]
+    direct = [m for m in odd if -(-b // m) <= 4]
+    tally, examples, witnesses, per = defaultdict(int), [], {}, {}
+    for m in direct:
+        per[m] = 0
+        smaller = [x for x in direct if x < m]
+        for pat in fibre_patterns(m, p):
+            A = lift_sets(pat, b, m)
+            if A is None:
+                continue
+            A = A[np.gcd.reduce(A, axis=1) == 1]
+            if smaller and A.shape[0]:
+                A = A[order_masks(A, b, smaller) == 0]
+            per[m] += A.shape[0]
+            if A.shape[0]:
+                prime_tally(A, b, p, ms, tally, examples, witnesses, False)
+    for mo in odd:
+        if mo in direct:
+            continue
+        for me in free:
+            A = joint_sets(b, p, mo, me)
+            A = A[np.gcd.reduce(A, axis=1) == 1]
+            drop = direct + [x for x in free if x < me]
+            if drop and A.shape[0]:
+                A = A[order_masks(A, b, drop) == 0]
+            per[(mo, me)] = A.shape[0]
+            if A.shape[0]:
+                prime_tally(A, b, p, ms, tally, examples, witnesses, True)
+    fibre_odd = [m for m in ms if m % 2 and len(factor(m)) > 1]
+    box = "every %d-set with 0 and gcd 1 in {0..%d} whose residues vanish mod an order in %s%s" % (p, b - 1, direct, " or mod %d and mod an order prime to 3 in %s" % (odd[0], free) if len(direct) < len(odd) else "")
+    print("size %d base %d, %s, by least such order %s: orders tested %s; odd orders with two primes %s, %s; %s; examples with three orders %s; %s (%.1f s)" % (p, b, box, dict(per), ms, fibre_odd, "box complete for the covering bound" if set(fibre_odd) <= set(odd) else "box misses %s" % [m for m in fibre_odd if m not in odd], fmt(tally), examples, witness_report(witnesses, p), time.time() - t1), flush=True)
+
+def pairs(p):
+    return [(q, r) for q, r in itertools.combinations((2, 3, 5, 7, 11), 2) if any(u * q + v * r == p for u in range(1, p) for v in range(1, p))]
+
+def pair_bound(b, p):
+    S = [q for q, _ in factor(b)]
+    need = [pr for pr in pairs(p) if pr[0] in S and pr[1] in S]
+    best = math.inf
+    for r in range(len(S) + 1):
+        for Q in itertools.combinations(S, r):
+            if all(q in Q or rr in Q for q, rr in need):
+                best = min(best, math.prod(q ** vq(b, q) for q in Q))
+    return best
+
+def prime(cells=((11, 24, None), (13, 24, None), (11, 60, (15, 45, 75)), (11, 120, (15, 45, 75, 135)), (13, 120, (15, 45, 75, 135))), bmax=500):
+    t0 = time.time()
+    for p in (11, 13):
+        print("size %d: pairs %s; bases up to %d where every set of primes meeting the pairs inside the base has product at least %d: %s" % (p, pairs(p), bmax, p, [b for b in range(2, bmax + 1) if pair_bound(b, p) >= p]), flush=True)
+    for p, b, odd in cells:
+        if odd is None:
+            full_prime(b, p)
+        else:
+            built_prime(b, p, odd)
+    print("time %.1f s" % (time.time() - t0))
+
+VERBS = {"census": census, "four": four, "spectra": spectra, "hunt": hunt, "pq": pq, "converse": converse, "seven": seven, "prime": prime}
 
 if __name__ == "__main__":
     for v in sys.argv[1:] or list(VERBS):

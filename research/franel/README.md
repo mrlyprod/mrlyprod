@@ -16,6 +16,7 @@ Franel's identity on the Farey fractions whose denominators lie in a digit desig
 - [lab/py/design-averages/](lab/py/design-averages/): Averages `abs(M_S(x))^2`, `M_S(x) = sum_(n <= x, n in S) mu(n)`, over the three flat families of the Franel note's section The average over designs
 - [lab/py/restricted-franel/](lab/py/restricted-franel/): Franel's identity on a digit design
 - [lab/py/shifted-sums/](lab/py/shifted-sums/): Walks the shifted sums `T_s = sum_{w in B_s} mu(6w + 1)` of the Franel note's repunit section, `B_s` the `2^s` integers below `3^s` whose base 3 digits lie in `{0,1}`, to `s = 26`.
+- [lab/rs/design-recursion/](lab/rs/design-recursion/): The design meter `M_F` at base 3 `{0,1}` to `3^27` beside `A`, its sum over the elements coprime to `3`, with the recursion `M_F(x) = A(x) - A(x/3)` of the Franel note's section The recursion in the base asserted at every rung.
 - [figures/paper-franel-converse.ts](figures/paper-franel-converse.ts): paper-franel-converse
 - [figures/paper-franel-converse.json](figures/paper-franel-converse.json): paper-franel-converse census
 - [figures/research-franel.ts](figures/research-franel.ts): research-franel

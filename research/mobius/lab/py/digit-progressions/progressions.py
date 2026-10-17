@@ -451,6 +451,171 @@ def meter():
         print(f"  {name}, kappa_P = {kp:.6f}: {A[-1]} {M[-1]} {np.max(np.abs(M[sel]) / A[sel]):.4f} {np.max(np.abs(M[sel]) / np.sqrt(A[sel])):.3f}, primes {th:.1f} against {main:.1f}, ratio {th / main:.4f}; {n_top} primes of length {top}, abs(1 - ratio) sqrt of that {abs(1 - th / main) * math.sqrt(n_top):.2f}")
     print(f"meter in {time.time() - t0:.1f}s")
 
+# HEADROOM
+
+RHOS = (Fraction(1, 2), Fraction(3, 4), Fraction(19, 20))
+PRIMES = (10007, 100003, 1000003)
+N0 = 1000
+
+def a_env(N):
+    return 2 / math.pi + 0.4 * math.pi / (N * N)
+
+def fourier_cert(L, N, K0=20000):
+    om = big_lam(L, N) - 2 * L
+    k = np.arange(1, K0 + 1, dtype=np.int64)
+    m = (k * L) % N
+    with np.errstate(divide="ignore"):
+        osc = np.where(m == 0, np.inf, 2 / (math.sin(math.pi / N) * np.sin(np.pi * m / N)))
+    S = float(np.sum(np.minimum(om, osc) / (4.0 * k * k - 1))) + om / (2 * (2 * K0 + 1))
+    return 2 * L + (2 / math.pi) * om + (4 / math.pi) * S
+
+def pieces(c, rho1, n):
+    return [(c + (rho1 - c) * j / n, c + (rho1 - c) * (j + 1) / n) for j in range(n)]
+
+def envelope(a, b, K0=60):
+    iv.prec = 120
+    coef_k = 2 / iv.pi + (4 / iv.pi) / (2 * (2 * K0 + 1))
+    coef_a = iv.mpf(0)
+    for k in range(1, K0 + 1):
+        w = 1 / iv.mpf(4 * k * k - 1)
+        if math.ceil(k * a) <= math.floor(k * b):
+            coef_k += (4 / iv.pi) * w
+        else:
+            sa = abs(iv.sin(iv.pi * iv.mpf(k * a.numerator) / a.denominator))
+            sb = abs(iv.sin(iv.pi * iv.mpf(k * b.numerator) / b.denominator))
+            coef_a += (4 / iv.pi) * w / iv.mpf(min(sa.a, sb.a))
+    return coef_k, coef_a
+
+def k_env(N):
+    return (2 / iv.pi) * (iv.log(N / 2) + iv.euler + 1 / N) + (1 - 2 / iv.pi) * (N * N + 1) / (2 * N * N)
+
+def wall_fourier(c, rho1, n):
+    iv.prec = 120
+    envs = [(a, envelope(a, b)) for a, b in pieces(c, rho1, n)]
+    coefs = [float(ck.b) / float(a) for a, (ck, ca) in envs] + [1 / float(rho1)]
+    m = max(N0, mono_from(5, 1 / max(coefs)))
+    a_hi = a_env(N0)
+    def gaps(N):
+        M = iv.mpf(N)
+        kk = k_env(M)
+        g = [M ** (iv.mpf(1) / 5) - 2 - (ck * kk + ca * a_hi) / iv.mpf(a.numerator) * a.denominator for a, (ck, ca) in envs]
+        g.append(M ** (iv.mpf(1) / 5) - 2 - kk / iv.mpf(rho1.numerator) * rho1.denominator)
+        return g
+    ok = lambda N: all(g.a > 0 for g in gaps(N))
+    W = bisect(ok, m, 10 ** 12, 1)
+    assert ok(W) and min(g.b for g in gaps(W - 1)) < 0
+    return W, m
+
+def abel_piece(N, L, ts, K0):
+    r = np.arange(1, N - 1, dtype=np.float64)
+    worst = 0.0
+    for t in ts:
+        th = (t + r) / N
+        w = 1 / np.sin(np.pi * th)
+        for k in range(1, K0 + 1):
+            m = (k * L) % N
+            if m == 0:
+                continue
+            C = abs(np.sum(np.cos(2 * np.pi * k * L * th) * w))
+            worst = max(worst, C * math.sin(math.pi * m / N) * math.sin(math.pi / N) / 2)
+    return worst
+
+def read_wall(r, c):
+    f = lambda N: r * (2 + float(k_env(iv.mpf(N)).b) / c) < N ** 0.2
+    return bisect(f, 10 ** 3, 10 ** 9, 1)
+
+def transfer_matrix(L, N, M):
+    ts = np.linspace(0.0, 0.5, M)
+    h = 0.5 / (M - 1)
+    A = np.zeros((M, M))
+    r = np.arange(N, dtype=np.float64)
+    for j, t in enumerate(ts):
+        u = (t + r) / N
+        den = np.sin(np.pi * u)
+        num = np.abs(np.sin(np.pi * L * u))
+        with np.errstate(divide="ignore", invalid="ignore"):
+            w = np.where(den > 1e-300, num / np.where(den > 1e-300, den, 1), L)
+        x = np.minimum(u, 1 - u) / h
+        i0 = np.minimum(np.floor(x).astype(np.int64), M - 2)
+        f = x - i0
+        A[j] = np.bincount(i0, weights=w * (1 - f), minlength=M) + np.bincount(i0 + 1, weights=w * f, minlength=M)
+    return A
+
+def perron(A):
+    vals, vecs = np.linalg.eig(A)
+    i = np.argmax(vals.real)
+    v = np.abs(vecs[:, i].real)
+    return float(vals[i].real), v / v[0]
+
+def spectral():
+    print("THE SPECTRAL RADIUS: T_L on a 401-point grid of t in [0, 1/2], linear interpolation, (T phi)(t) = sum_r |D_L((t+r)/N)| phi((t+r)/N); rho(T_L) is the floor of every certificate T phi <= lambda phi")
+    print("  c, N, L, rho/L, Lambda/L, rho/Lambda, max G/Lambda, alpha_1 = log_N(rho/L), the eigenvector's phi(1/2)/phi(0) - 1, the implied wall from rho/Lambda, and rho/L on 201 points where run")
+    for c in (Fraction(1, 3), Fraction(1, 2), Fraction(3, 4), Fraction(9, 10)):
+        for N in PRIMES:
+            L = round(c * N)
+            lam = big_lam(L, N)
+            A = transfer_matrix(L, N, 401)
+            rho, v = perron(A)
+            G = A.sum(1).max()
+            coarse = f"{perron(transfer_matrix(L, N, 201))[0] / L:.4f}" if N < 10 ** 6 else "-"
+            assert rho <= G * (1 + 1e-9)
+            print(f"    {c} {N} {L} {rho / L:.4f} {lam / L:.4f} {rho / lam:.6f} {G / lam:.6f} {math.log(rho / L) / math.log(N):.6f} {v[-1] - 1:.4f} {read_wall(rho / lam, float(c))} {coarse}")
+        if c == Fraction(1, 2):
+            print(f"    the half interval's sharp certificate reads lambda/L = {(lam_odd(10007) + 1) / 5004:.4f} at base 10007, L = 5004, against rho/L above")
+
+def headroom():
+    t0 = time.time()
+    spectral()
+    print("THE PROOF'S ONE PIECE: |sum_(r=1)^(N-2) cos(2 pi k L (t+r)/N) csc(pi (t+r)/N)| against 2 csc(pi/N)/|sin(pi k L/N)|, k = 1..300, 41 shifts")
+    worst = 0.0
+    for N, L in ((101, 51), (101, 76), (101, 100), (1003, 502), (1003, 753), (1003, 953)):
+        worst = max(worst, abel_piece(N, L, np.linspace(0.0, 0.5, 41), 300))
+    assert worst < 1
+    print(f"  six cells, largest sum over its bound <= {fup(worst)}")
+    print("THE FOURIER CERTIFICATE AGAINST THE ONE-STEP READING: max over 201 shifts of G_L(t) against lambda_F(L, base), every length 2..base-1 of every base 3..80")
+    ts = np.linspace(0.0, 0.5, 201)
+    worst, below = 0.0, 0
+    for N in range(3, 81):
+        for L in range(2, N):
+            lf = fourier_cert(L, N, 2000)
+            q = gsum(L, N, ts).max() / lf
+            assert q < 1
+            worst = max(worst, q)
+            below += lf < big_lam(L, N)
+    print(f"  largest reading/lambda_F <= {fup(worst)}; lambda_F below Lambda in {below} of the {sum(N - 2 for N in range(3, 81))} cells")
+    print("THE HEADROOM: max over 401 shifts t in [0, 1/2] of G_L(t) = sum_r |D_L((t + r)/N)|, L = rho N rounded, N prime; against Lambda(L, N) and against the Fourier certificate lambda_F(L, N)")
+    print("  rho, N, L, t at the max, G/L, Lambda/L, lambda_F/L, G/Lambda, G/lambda_F, lambda_F/Lambda")
+    ts = np.linspace(0.0, 0.5, 401)
+    for rho in RHOS:
+        q = rho.denominator
+        print(f"  rho = {rho}: the leading constant of the resonance at q = {q} is 1/(q sin(pi/(2q))) = {1 / (q * math.sin(math.pi / (2 * q))):.6f}, against 2/pi = {2 / math.pi:.6f}")
+        for N in PRIMES:
+            L = round(rho * N)
+            g = gsum(L, N, ts)
+            G, t = g.max(), ts[g.argmax()]
+            lam, lf = big_lam(L, N), fourier_cert(L, N)
+            assert G < lf < 2 * lam
+            print(f"    {rho} {N} {L} {t:.4f} {G / L:.4f} {lam / L:.4f} {lf / L:.4f} {fup(G / lam)} {fup(G / lf)} {fup(lf / lam)}")
+    print("THE WALLS OF THE FOURIER CERTIFICATE: B_F(c), the least base from which every L >= c base clears 1/5 through min(Lambda, lambda_F), the envelope on [c, rho_1] in pieces and Lambda alone above rho_1")
+    for c in (Fraction(1, 2), Fraction(3, 4), Fraction(9, 10)):
+        best = None
+        for j in range(1, int(100 * (1 - c))):
+            rho1 = c + Fraction(j, 100)
+            W, m = wall_fourier(c, rho1, 8)
+            if best is None or W < best[0]:
+                best = (W, m, rho1)
+        W, m, rho1 = best
+        print(f"  c = {c}: B_F(c) = {W}, rho_1 = {rho1}, 8 pieces, certified at {W}, failing at {W - 1}, gaps increasing from {m}")
+    W1, *_ = wall_unif(Fraction(1, 1))
+    g = gsum(W1 - 1, W1, np.array([0.5]))[0]
+    print(f"  the floor of every envelope whose top piece is Lambda alone: 2 + K(base) < base^(1/5) first at {W1}; there the reading at L = base - 1, t = 1/2 is {g / big_lam(W1 - 1, W1):.4f} of Lambda")
+    for N in (11003, 12007):
+        g = gsum(N - 1, N, np.linspace(0.0, 0.5, 401)).max()
+        print(f"  the one-step reading itself at L = base - 1: base {N}, max G/L = {g / (N - 1):.4f} against base^(1/5) = {N ** 0.2:.4f}")
+    for r, name in ((0.688172, "the census ratio at rho = 1/2, base 1000003"), (1 / math.sqrt(2), "the limit constant 1/sqrt 2")):
+        print(f"  read, not proved: with G <= {r:.6f} Lambda at every L >= base/2, {name}, the wall would be {read_wall(r, 0.5)}")
+    print(f"headroom in {time.time() - t0:.1f}s")
+
 if __name__ == "__main__":
     verb = sys.argv[1] if len(sys.argv) > 1 else "wall"
-    {"wall": wall, "census": census, "check": check, "lost": lost, "meter": meter}[verb]()
+    {"wall": wall, "census": census, "check": check, "lost": lost, "meter": meter, "headroom": headroom}[verb]()

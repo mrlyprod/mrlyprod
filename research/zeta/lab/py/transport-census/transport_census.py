@@ -259,6 +259,34 @@ def law(which=None, ymax=YMAX):
 
 VERBS["law"] = law
 
+# THE CROSSING
+
+def root(which=None, ymax=YMAX):
+    line("THE CROSSING: the root of a_min^sigma zeta_F(sigma) = 2, bisected against the ladder bound, beside the grid edge sigma_1")
+    for q, F in which or LOCUS:
+        d = build(q, F)
+        amin = min(a for a in d.F if a != 0)
+        s1, v1, e1 = edge(d)
+        lo, hi = s1 - mp.mpf("0.05"), s1
+        v, e = d.zeta(lo)
+        assert mp.power(amin, lo) * (v - e) > 2, (q, F, lo)
+        while hi - lo > mp.mpf(10) ** -12:
+            mid = (lo + hi) / 2
+            v, e = d.zeta(mid)
+            g = mp.power(amin, mid)
+            if g * (v - e) > 2:
+                lo = mid
+            elif g * (v + e) < 2:
+                hi = mid
+            else:
+                break
+        up = mp.ceil(hi * 10 ** 5) / 10 ** 5
+        line(" ", zl.tag(q, F), "alpha", mp.nstr(d.alpha, 10), "a_min", amin,
+             "grid sigma_1", mp.nstr(s1, 12), "a_min^s zeta_F there", mp.nstr(mp.power(amin, s1) * v1, 10),
+             "bound", mp.nstr(e1, 3), "root in", mp.nstr(lo, 12), mp.nstr(hi, 12), "rounded up", mp.nstr(up, 7))
+
+VERBS["root"] = root
+
 def main():
     argv = sys.argv[1:]
     verb = argv[0] if argv else "census"

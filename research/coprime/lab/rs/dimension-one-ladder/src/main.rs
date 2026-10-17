@@ -1,5 +1,7 @@
+mod blocks;
 mod census;
 mod design;
+mod radii;
 mod terms;
 
 use design::Design;
@@ -67,6 +69,30 @@ fn main() {
         Some("terms") => {
             let design = Design::named(&args[1]).expect("carpet, menger or vicsek");
             run_terms(design, args[2].parse().expect("top level"), threads);
+        }
+        Some("radii") => {
+            radii::report(args[1].parse().expect("height"), threads);
+        }
+        Some("blocks") => match args.len() {
+            3 => blocks::census(
+                args[1].parse().expect("height"),
+                args[2].parse().expect("length"),
+                None,
+            ),
+            5 if args[3] == "probe" => blocks::census(
+                args[1].parse().expect("height"),
+                args[2].parse().expect("length"),
+                Some(args[4].bytes().map(|b| b - b'0').collect()),
+            ),
+            n => blocks::single(
+                args[1].parse().expect("a"),
+                args[2].parse().expect("b"),
+                args[3].parse().expect("length"),
+                (n == 6 && args[4] == "probe").then(|| args[5].bytes().map(|b| b - b'0').collect()),
+            ),
+        },
+        Some("ray") => {
+            radii::single(args[1].parse().expect("a"), args[2].parse().expect("b"));
         }
         Some("census") => {
             for level in args[1..].iter().map(|a| a.parse().expect("level")) {
