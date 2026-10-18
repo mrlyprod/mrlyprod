@@ -39,4 +39,4 @@
 - `theme/` is the palette in JS: `palette.gen.js` the fifteen colours (generated outside this repo, as `../styles/palette.gen.css` is), `theme.js` the `dark` and `light` role maps and `tinted()`, `hues.js` the twelve tint hues (the palette less black, white and gray), `tint.js` `tintCss`, the shell's tint rules.
 - `tinted(roles, { accent, link, theme })` swaps the tint's hue into the blue slot, so every figure follows the tint; in light the slot takes the hue's link shade.
 - `font/` is the pixel font that writes the wordmark: `font.js` lays out, writes and folds a text; `font.gen.json` is the glyph book `mrly::font` generates.
-- `md/`, `git/`, `theme/` and `font/` import only each other and never `../shell/`; their old copy in `carlomitchener/site/kit/` is frozen, a UI reference that is never written.
+- `md/`, `git/`, `theme/` and `font/` import only each other and never `../shell/`.
