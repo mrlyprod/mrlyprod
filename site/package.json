@@ -8,7 +8,7 @@
   },
   "scripts": {
     "wasm": "bash ../scripts/wasm.sh",
-    "dev": "bun scripts/dev.ts",
+    "dev": "bun install && bun scripts/dev.ts",
     "build": "bun scripts/build.ts",
     "push": "bun infra/push.ts",
     "check": "bun scripts/check.ts",
