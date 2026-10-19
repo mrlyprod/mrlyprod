@@ -1,13 +1,13 @@
 ---
 title: Structure against noise
-lead: Self-similar designs raced against matched random cell sets on components and boundary; along a Kronecker word over any alphabet of the fifteen base-2 codes in which every letter has a positive frequency, the component exponent is a function of those frequencies.
+lead: Self-similar designs raced against matched random cell sets on components and boundary.
 figure: research-connectivity
 slug: connectivity
 ---
 
 # Structure against noise
 
-Self-similar designs raced against matched random cell sets on components and boundary; along a Kronecker word over any alphabet of the fifteen base-2 codes in which every letter has a positive frequency, the component exponent is a function of those frequencies.
+Self-similar designs raced against matched random cell sets on components and boundary.
 
 - [notes/connectivity.md](notes/connectivity.md): Structure against noise
 - [claims/acoustic-barrier.md](claims/acoustic-barrier.md): Acoustic barrier

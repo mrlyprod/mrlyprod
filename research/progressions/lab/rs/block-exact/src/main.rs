@@ -32,7 +32,7 @@ fn bits(mask: Mask, out: &mut [u8; 128]) -> usize {
 }
 
 fn peelable_1d(m: usize, set: usize) -> bool {
-    let inv2 = (m + 1) / 2;
+    let inv2 = m.div_ceil(2);
     let mut live = set;
     while live != 0 {
         let mut mids = 0usize;
@@ -54,11 +54,11 @@ fn peelable_1d(m: usize, set: usize) -> bool {
 impl Grid {
     fn new(m: usize) -> Grid {
         assert!(
-            m % 2 == 1 && m >= 3 && (2..m).all(|d| m % d != 0),
+            m % 2 == 1 && m >= 3 && (2..m).all(|d| !m.is_multiple_of(d)),
             "m must be an odd prime"
         );
         let n = m * m;
-        let inv2 = (m + 1) / 2;
+        let inv2 = m.div_ceil(2);
         let at = |a: usize, b: usize| (a % m) * m + (b % m);
         let coord = |i: usize| (i / m, i % m);
         let mut mid = vec![0u8; n * n];
@@ -92,15 +92,15 @@ impl Grid {
             for q in 0..m {
                 for r in 0..m {
                     for s in 0..m {
-                        if (p * s + m * m - q * r) % m == 0 {
+                        if (p * s + m * m - q * r).is_multiple_of(m) {
                             continue;
                         }
-                        for d in 1..n {
+                        for (d, row) in mats.iter_mut().enumerate().skip(1) {
                             let (da, db) = coord(d);
                             if (p * da + q * db) % m == 0 && (r * da + s * db) % m == 1 {
                                 for v in 0..n {
                                     let (a, b) = coord(v);
-                                    mats[d].push(at(p * a + q * b, r * a + s * b) as u8);
+                                    row.push(at(p * a + q * b, r * a + s * b) as u8);
                                 }
                             }
                         }
@@ -108,8 +108,8 @@ impl Grid {
                 }
             }
         }
-        for d in 1..n {
-            assert_eq!(mats[d].len(), (n - m) * n);
+        for row in mats.iter().skip(1) {
+            assert_eq!(row.len(), (n - m) * n);
         }
         let mut class_pts = vec![0u8; (m + 1) * m * m];
         let dirs: Vec<(usize, usize)> = std::iter::once((0, 1))
@@ -175,8 +175,8 @@ impl Grid {
             let mut mids: Mask = 0;
             for i in 0..k {
                 let row = pts[i] as usize * self.n;
-                for j in i + 1..k {
-                    mids |= 1 << self.mid[row + pts[j] as usize];
+                for &pj in &pts[i + 1..k] {
+                    mids |= 1 << self.mid[row + pj as usize];
                 }
             }
             if live & !mids == 0 {
@@ -197,8 +197,8 @@ impl Grid {
             let mut mids: Mask = 0;
             for i in 0..k {
                 let row = pts[i] as usize * self.n;
-                for j in i + 1..k {
-                    mids |= 1 << self.mid[row + pts[j] as usize];
+                for &pj in &pts[i + 1..k] {
+                    mids |= 1 << self.mid[row + pj as usize];
                 }
             }
             let rem = live & !mids;
@@ -230,16 +230,16 @@ impl Grid {
         let per = n - m;
         for i in 0..k {
             let a = pts[i] as usize;
-            for j in 0..k {
+            for (j, &b) in pts[..k].iter().enumerate() {
                 if i == j {
                     continue;
                 }
-                let b = pts[j] as usize;
+                let b = b as usize;
                 let pair = a * n + b;
                 let lp = &self.line_pts[pair * m..(pair + 1) * m];
                 let mut f = 0usize;
-                for c in 0..m {
-                    f |= (((t >> lp[c]) & 1) as usize) << c;
+                for (c, &p) in lp.iter().enumerate() {
+                    f |= (((t >> p) & 1) as usize) << c;
                 }
                 if f != t_line {
                     let diff = f ^ t_line;
@@ -339,6 +339,11 @@ struct Stats {
     origin: u128,
 }
 
+struct Frontier {
+    depth: usize,
+    items: Vec<(Mask, usize, u64, Vec<u8>)>,
+}
+
 struct Run<'a> {
     grid: &'a Grid,
     target: usize,
@@ -420,17 +425,16 @@ impl<'a> Run<'a> {
         size: usize,
         aut: u64,
         cands: &[u8],
-        depth: usize,
         st: &mut Stats,
-        out: &mut Vec<(Mask, usize, u64, Vec<u8>)>,
+        fr: &mut Frontier,
     ) {
-        if size == depth {
-            out.push((s, size, aut, cands.to_vec()));
+        if size == fr.depth {
+            fr.items.push((s, size, aut, cands.to_vec()));
             return;
         }
         self.visit(s, size, aut, st);
         self.children(s, size, cands, |t, sz, au, newc| {
-            self.frontier(t, sz, au, &newc, depth, st, out);
+            self.frontier(t, sz, au, &newc, st, fr);
         });
     }
 }
@@ -475,16 +479,18 @@ fn search(grid: &Grid, target: usize, census: bool, seconds: Option<f64>) -> (St
     let cands: Vec<u8> = (2..n as u8)
         .filter(|&c| grid.peelable(3 | (1 << c)))
         .collect();
-    let mut depth = 3;
-    let mut items = Vec::new();
+    let mut fr = Frontier {
+        depth: 3,
+        items: Vec::new(),
+    };
     loop {
         let mut probe = Stats {
             hist: vec![0; n + 1],
             ..Default::default()
         };
-        items.clear();
-        run.frontier(3, 2, root_aut, &cands, depth, &mut probe, &mut items);
-        if items.len() >= 64 * THREADS || items.is_empty() || depth >= 8 {
+        fr.items.clear();
+        run.frontier(3, 2, root_aut, &cands, &mut probe, &mut fr);
+        if fr.items.len() >= 64 * THREADS || fr.items.is_empty() || fr.depth >= 8 {
             st = Stats {
                 hist: vec![0; n + 1],
                 ..Default::default()
@@ -496,8 +502,9 @@ fn search(grid: &Grid, target: usize, census: bool, seconds: Option<f64>) -> (St
             merge(&mut st, probe);
             break;
         }
-        depth += 1;
+        fr.depth += 1;
     }
+    let items = fr.items;
     let next = AtomicUsize::new(0);
     let parts: Vec<Stats> = std::thread::scope(|sc| {
         let handles: Vec<_> = (0..THREADS)
@@ -557,6 +564,427 @@ fn gcd(a: usize, b: usize) -> usize {
         a
     } else {
         gcd(b, a % b)
+    }
+}
+
+// THE CLIMB
+
+struct Cube {
+    d: usize,
+    n: usize,
+    coords: Vec<u8>,
+    sum: Vec<u16>,
+    half_off: Vec<u32>,
+    half: Vec<u16>,
+}
+
+impl Cube {
+    fn new(m: usize, d: usize) -> Cube {
+        let n = m.pow(d as u32);
+        assert!(m >= 2 && d >= 1 && n <= 1 << 16, "m^d must fit in 16 bits");
+        let mut coords = vec![0u8; n * d];
+        for v in 0..n {
+            let mut r = v;
+            for i in (0..d).rev() {
+                coords[v * d + i] = (r % m) as u8;
+                r /= m;
+            }
+        }
+        let place: Vec<usize> = (0..d).map(|i| m.pow((d - 1 - i) as u32)).collect();
+        let add = |x: usize, z: usize, k: usize| {
+            (0..d)
+                .map(|i| {
+                    (k * coords[x * d + i] as usize + coords[z * d + i] as usize) % m * place[i]
+                })
+                .sum::<usize>()
+        };
+        let mut sum = vec![0u16; n * n];
+        for x in 0..n {
+            for z in 0..n {
+                sum[x * n + z] = add(x, z, 1) as u16;
+            }
+        }
+        let mut buckets: Vec<Vec<u16>> = vec![Vec::new(); n];
+        for y in 0..n {
+            buckets[add(y, y, 1)].push(y as u16);
+        }
+        let mut half_off = vec![0u32];
+        let mut half = Vec::new();
+        for b in &buckets {
+            half.extend_from_slice(b);
+            half_off.push(half.len() as u32);
+        }
+        Cube {
+            d,
+            n,
+            coords,
+            sum,
+            half_off,
+            half,
+        }
+    }
+
+    fn mids(&self, x: usize, z: usize) -> &[u16] {
+        let v = self.sum[x * self.n + z] as usize;
+        &self.half[self.half_off[v] as usize..self.half_off[v + 1] as usize]
+    }
+
+    fn rounds(&self, set: &[usize]) -> Result<Vec<u32>, Vec<usize>> {
+        let k = set.len();
+        let mut pos = vec![usize::MAX; self.n];
+        for (i, &v) in set.iter().enumerate() {
+            pos[v] = i;
+        }
+        let mut cnt = vec![0u32; k];
+        for a in 0..k {
+            for b in a + 1..k {
+                for &w in self.mids(set[a], set[b]) {
+                    if pos[w as usize] != usize::MAX {
+                        cnt[pos[w as usize]] += 1;
+                    }
+                }
+            }
+        }
+        let mut live = vec![true; k];
+        let mut round = vec![u32::MAX; k];
+        let mut left = k;
+        let mut r = 0;
+        while left > 0 {
+            let out: Vec<usize> = (0..k).filter(|&i| live[i] && cnt[i] == 0).collect();
+            if out.is_empty() {
+                return Err((0..k).filter(|&i| live[i]).collect());
+            }
+            for &i in &out {
+                round[i] = r;
+            }
+            for &i in &out {
+                live[i] = false;
+                left -= 1;
+                for j in 0..k {
+                    if live[j] {
+                        for &w in self.mids(set[i], set[j]) {
+                            if pos[w as usize] != usize::MAX {
+                                cnt[pos[w as usize]] -= 1;
+                            }
+                        }
+                    }
+                }
+            }
+            r += 1;
+        }
+        Ok(round)
+    }
+
+    fn point(&self, v: usize) -> String {
+        let c: Vec<String> = (0..self.d)
+            .map(|i| self.coords[v * self.d + i].to_string())
+            .collect();
+        format!("({})", c.join(","))
+    }
+}
+
+struct Climber<'a> {
+    cube: &'a Cube,
+    ins: Vec<bool>,
+    cov: Vec<u32>,
+    set: Vec<usize>,
+    stamp: Vec<u32>,
+    tick: u32,
+    seed: u64,
+}
+
+impl<'a> Climber<'a> {
+    fn new(cube: &'a Cube, seed: u64) -> Climber<'a> {
+        let n = cube.n;
+        Climber {
+            cube,
+            ins: vec![false; n],
+            cov: vec![0; n],
+            set: Vec::new(),
+            stamp: vec![0; n],
+            tick: 0,
+            seed: seed.wrapping_mul(0x9e3779b97f4a7c15) | 1,
+        }
+    }
+
+    fn rand(&mut self) -> u64 {
+        self.seed ^= self.seed << 13;
+        self.seed ^= self.seed >> 7;
+        self.seed ^= self.seed << 17;
+        self.seed
+    }
+
+    fn reset(&mut self, set: &[usize]) {
+        self.ins.iter_mut().for_each(|b| *b = false);
+        self.cov.iter_mut().for_each(|c| *c = 0);
+        self.set.clear();
+        for &p in set {
+            self.insert(p);
+        }
+    }
+
+    fn insert(&mut self, p: usize) {
+        for i in 0..self.set.len() {
+            for &w in self.cube.mids(p, self.set[i]) {
+                self.cov[w as usize] += 1;
+            }
+        }
+        self.ins[p] = true;
+        self.set.push(p);
+    }
+
+    fn remove(&mut self, i: usize) {
+        let p = self.set.swap_remove(i);
+        self.ins[p] = false;
+        for j in 0..self.set.len() {
+            for &w in self.cube.mids(p, self.set[j]) {
+                self.cov[w as usize] -= 1;
+            }
+        }
+    }
+
+    fn score(&mut self, p: usize) -> u32 {
+        self.tick += 1;
+        let mut c = 0;
+        for i in 0..self.set.len() {
+            for &w in self.cube.mids(p, self.set[i]) {
+                let w = w as usize;
+                if !self.ins[w] && self.cov[w] == 0 && w != p && self.stamp[w] != self.tick {
+                    self.stamp[w] = self.tick;
+                    c += 1;
+                }
+            }
+        }
+        c
+    }
+
+    fn free_extend(&mut self, temp: f64) {
+        loop {
+            let mut best = None;
+            let mut key = f64::INFINITY;
+            for p in 0..self.cube.n {
+                if !self.ins[p] && self.cov[p] == 0 {
+                    let k = self.score(p) as f64
+                        + temp * (self.rand() >> 11) as f64 / (1u64 << 53) as f64;
+                    if k < key {
+                        key = k;
+                        best = Some(p);
+                    }
+                }
+            }
+            match best {
+                Some(p) => self.insert(p),
+                None => return,
+            }
+        }
+    }
+
+    fn deep_extend(&mut self, temp: f64, tries: usize) {
+        loop {
+            let mut cands: Vec<usize> = (0..self.cube.n).filter(|&p| !self.ins[p]).collect();
+            for i in (1..cands.len()).rev() {
+                let j = (self.rand() % (i as u64 + 1)) as usize;
+                cands.swap(i, j);
+            }
+            let mut added = false;
+            for &p in cands.iter().take(tries) {
+                let mut trial = self.set.clone();
+                trial.push(p);
+                if self.cube.rounds(&trial).is_ok() {
+                    self.insert(p);
+                    self.free_extend(temp);
+                    added = true;
+                    break;
+                }
+            }
+            if !added {
+                return;
+            }
+        }
+    }
+
+    fn kick(&mut self, temp: f64, tries: usize, big: bool) {
+        let out = if big {
+            4 + (self.rand() % 9) as usize
+        } else {
+            1 + (self.rand() % 3) as usize
+        };
+        if !big && self.rand().is_multiple_of(2) {
+            let cands: Vec<usize> = (0..self.cube.n).filter(|&p| !self.ins[p]).collect();
+            if !cands.is_empty() {
+                let p = cands[(self.rand() % cands.len() as u64) as usize];
+                self.insert(p);
+                loop {
+                    match self.cube.rounds(&self.set) {
+                        Ok(_) => break,
+                        Err(core) => {
+                            let core: Vec<usize> =
+                                core.into_iter().filter(|&i| self.set[i] != p).collect();
+                            let i = if core.is_empty() {
+                                self.set.iter().position(|&v| v == p).unwrap()
+                            } else {
+                                core[(self.rand() % core.len() as u64) as usize]
+                            };
+                            self.remove(i);
+                        }
+                    }
+                }
+            }
+        } else {
+            for _ in 0..out.min(self.set.len()) {
+                let i = (self.rand() % self.set.len() as u64) as usize;
+                self.remove(i);
+            }
+        }
+        self.free_extend(temp);
+        self.deep_extend(temp, tries);
+    }
+}
+
+fn climb_thread(
+    cube: &Cube,
+    seed: u64,
+    deadline: Instant,
+    stale_cap: usize,
+    tries: usize,
+) -> (Vec<usize>, u64) {
+    let mut c = Climber::new(cube, seed);
+    let mut best: Vec<usize> = Vec::new();
+    let mut moves = 0u64;
+    let mut round = 0u64;
+    while Instant::now() < deadline {
+        let temp = 0.5 + (c.rand() % 4) as f64;
+        if round.is_multiple_of(8) || best.is_empty() {
+            c.reset(&[]);
+            c.free_extend(temp);
+            c.deep_extend(temp, tries);
+        } else {
+            c.reset(&best);
+            c.kick(temp, tries, true);
+        }
+        round += 1;
+        let mut cur = c.set.clone();
+        let mut stale = 0;
+        while stale < stale_cap && Instant::now() < deadline {
+            c.reset(&cur);
+            c.kick(temp, tries, false);
+            moves += 1;
+            if c.set.len() > cur.len() {
+                stale = 0;
+            } else {
+                stale += 1;
+            }
+            if c.set.len() >= cur.len() {
+                cur = c.set.clone();
+            }
+            if cur.len() > best.len() {
+                best = cur.clone();
+            }
+        }
+        if cur.len() > best.len() {
+            best = cur.clone();
+        }
+    }
+    (best, moves)
+}
+
+fn lift_check(cube: &Cube, set: &[usize], g: &[u128]) -> (usize, usize, usize) {
+    let k = set.len();
+    let mut pos = vec![usize::MAX; cube.n];
+    for (i, &v) in set.iter().enumerate() {
+        pos[v] = i;
+    }
+    let mut slices: std::collections::BTreeMap<u128, Vec<(usize, usize)>> = Default::default();
+    for a in 0..k {
+        for b in 0..k {
+            slices.entry(g[a] + g[b]).or_default().push((a, b));
+        }
+    }
+    let mut largest = 0;
+    let mut found = 0;
+    for (&s, pts) in &slices {
+        largest = largest.max(pts.len());
+        for i in 0..pts.len() {
+            for j in i + 1..pts.len() {
+                let (xa, xb) = (set[pts[i].0], set[pts[i].1]);
+                let (za, zb) = (set[pts[j].0], set[pts[j].1]);
+                for &ya in cube.mids(xa, za) {
+                    let pa = pos[ya as usize];
+                    if pa == usize::MAX {
+                        continue;
+                    }
+                    for &yb in cube.mids(xb, zb) {
+                        let pb = pos[yb as usize];
+                        if pb != usize::MAX && g[pa] + g[pb] == s {
+                            found += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    (slices.len(), largest, found)
+}
+
+fn climb(m: usize, d: usize, seconds: f64, seed: u64) {
+    let t0 = Instant::now();
+    let cube = Cube::new(m, d);
+    let n = cube.n;
+    let deadline = t0 + std::time::Duration::from_secs_f64(seconds);
+    let tries = if n <= 400 { n } else { 48 };
+    let results: Vec<(Vec<usize>, u64)> = std::thread::scope(|sc| {
+        let hs: Vec<_> = (0..THREADS as u64)
+            .map(|t| {
+                let cube = &cube;
+                sc.spawn(move || climb_thread(cube, seed * 1000 + t, deadline, 40, tries))
+            })
+            .collect();
+        hs.into_iter().map(|h| h.join().unwrap()).collect()
+    });
+    let sizes: Vec<String> = results.iter().map(|(s, _)| s.len().to_string()).collect();
+    let moves: u64 = results.iter().map(|(_, k)| k).sum();
+    let mut best = results
+        .into_iter()
+        .map(|(s, _)| s)
+        .max_by_key(|s| s.len())
+        .unwrap();
+    best.sort();
+    let level = cube.rounds(&best).expect("the best set peels");
+    let r = level.iter().max().map_or(0, |&l| l + 1);
+    let g: Vec<u128> = level.iter().map(|&l| 3u128.pow(r - 1 - l)).collect();
+    let pos: std::collections::HashMap<usize, usize> =
+        best.iter().enumerate().map(|(i, &v)| (v, i)).collect();
+    let mut triples = 0u64;
+    for a in 0..best.len() {
+        for b in a + 1..best.len() {
+            for &w in cube.mids(best[a], best[b]) {
+                if let Some(&c) = pos.get(&(w as usize)) {
+                    triples += 1;
+                    assert!(g[a] + g[b] > 2 * g[c], "certificate fails");
+                }
+            }
+        }
+    }
+    let k = best.len();
+    let base = m / 2 + 1;
+    println!(
+        "m = {m}, d = {d}: best peelable set {k} of {n} points, constant card^(1/d) = {:.4} against the digit base {base}; per-thread bests {}, {moves} kicks, {THREADS} threads, {:.1} s, seed {seed}",
+        (k as f64).powf(1.0 / d as f64),
+        sizes.join(" "),
+        t0.elapsed().as_secs_f64()
+    );
+    println!("  peel rounds {r}, certificate g = 3^({} - round) checked on all {triples} triples x + z = 2y with x != z inside the set", r.saturating_sub(1));
+    let pts: Vec<String> = best.iter().map(|&v| cube.point(v)).collect();
+    println!("  points {}", pts.join(" "));
+    let rs: Vec<String> = level.iter().map(|l| l.to_string()).collect();
+    println!("  rounds {}", rs.join(" "));
+    if k * k <= 250000 {
+        let (slices, largest, found) = lift_check(&cube, &best, &g);
+        assert_eq!(found, 0, "a lifted slice holds a progression");
+        println!(
+            "  lift to Z_{m}^{}: {slices} slices of T^2 by the sum of g, the largest {largest} points, every slice progression-free by brute force over pairs",
+            2 * d
+        );
     }
 }
 
@@ -663,6 +1091,55 @@ fn optimum(m: usize, target: Option<usize>, seconds: Option<f64>) {
     }
 }
 
+fn witness(m: usize, seconds: Option<f64>) {
+    let grid = Grid::new(m);
+    let mut target = greedy(&grid, 200);
+    loop {
+        let (st, stopped) = search(&grid, target, false, seconds);
+        assert!(!stopped, "no value at m = {m}");
+        let Some(top) = (0..=grid.n).rev().find(|&k| st.hist[k] > 0) else {
+            target -= 1;
+            continue;
+        };
+        let maxes: Vec<Mask> = st
+            .found
+            .iter()
+            .map(|&(s, _)| s)
+            .filter(|s| s.count_ones() as usize == top)
+            .collect();
+        assert_eq!(
+            maxes.len() as u64,
+            st.hist[top],
+            "maximisers beyond the keep"
+        );
+        let mask = maxes.into_iter().min().unwrap();
+        let level = grid.rounds(mask).expect("maximiser peels");
+        let rounds = *level.iter().filter(|&&l| l != 255).max().unwrap() as u32 + 1;
+        let g: Vec<u64> = level
+            .iter()
+            .map(|&l| {
+                if l == 255 {
+                    0
+                } else {
+                    3u64.pow(rounds - 1 - l as u32)
+                }
+            })
+            .collect();
+        assert!(grid.triples_hold(mask, &g));
+        let mut pts = [0u8; 128];
+        let k = bits(mask, &mut pts);
+        let coords: Vec<String> = pts[..k]
+            .iter()
+            .map(|&v| format!("[{},{}]", v as usize / m, v as usize % m))
+            .collect();
+        println!(
+            "{{\"m\":{m},\"rounds\":{rounds},\"points\":[{}]}}",
+            coords.join(",")
+        );
+        return;
+    }
+}
+
 fn census(m: usize, seconds: Option<f64>) {
     let t0 = Instant::now();
     let grid = Grid::new(m);
@@ -687,6 +1164,8 @@ fn main() {
     let mut ms = Vec::new();
     let mut target = None;
     let mut seconds = None;
+    let mut dim = 2;
+    let mut seed = 1;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -696,6 +1175,14 @@ fn main() {
             }
             "--seconds" => {
                 seconds = Some(args[i + 1].parse().unwrap());
+                i += 1;
+            }
+            "--dim" => {
+                dim = args[i + 1].parse().unwrap();
+                i += 1;
+            }
+            "--seed" => {
+                seed = args[i + 1].parse().unwrap();
                 i += 1;
             }
             v => ms.push(v.parse::<usize>().unwrap()),
@@ -709,6 +1196,8 @@ fn main() {
         match verb {
             "optimum" => optimum(m, target, seconds),
             "census" => census(m, seconds),
+            "witness" => witness(m, seconds),
+            "climb" => climb(m, dim, seconds.unwrap_or(30.0), seed),
             other => panic!("unknown verb {other}"),
         }
     }
@@ -784,7 +1273,7 @@ mod tests {
         for m in [3, 5, 7, 11] {
             let grid = Grid::new(m);
             let full = (1usize << m) - 1;
-            assert_eq!(grid.maxpeel[full] as usize, (m + 1) / 2);
+            assert_eq!(grid.maxpeel[full] as usize, m.div_ceil(2));
         }
     }
 
@@ -821,6 +1310,45 @@ mod tests {
             let k = bits(s, &mut pts);
             let half: Mask = pts[..k / 2].iter().fold(0, |a, &v| a | 1 << v);
             assert!(k <= half.count_ones() as usize + grid.line_bound(half, s));
+        }
+    }
+
+    #[test]
+    fn cube_peel_agrees_with_brute_force() {
+        for (m, d) in [(4, 2), (5, 2), (6, 2), (7, 2), (3, 3), (4, 3)] {
+            let cube = Cube::new(m, d);
+            let n = cube.n;
+            let at = |v: usize, i: usize| cube.coords[v * d + i] as usize;
+            let mid = |x: usize, y: usize, z: usize| {
+                (0..d).all(|i| (at(x, i) + at(z, i) + 2 * m - 2 * at(y, i)) % m == 0)
+            };
+            for k in [4, 7, 10] {
+                for s in random_sets(n, k.min(n - 1), 200) {
+                    let set: Vec<usize> = (0..n).filter(|&v| s >> v & 1 == 1).collect();
+                    let mut live = set.clone();
+                    let brute = loop {
+                        if live.is_empty() {
+                            break true;
+                        }
+                        let free = live.iter().position(|&y| {
+                            !live
+                                .iter()
+                                .any(|&x| live.iter().any(|&z| x < z && mid(x, y, z)))
+                        });
+                        match free {
+                            Some(i) => {
+                                live.remove(i);
+                            }
+                            None => break false,
+                        }
+                    };
+                    assert_eq!(
+                        cube.rounds(&set).is_ok(),
+                        brute,
+                        "m = {m}, d = {d}, set {set:?}"
+                    );
+                }
+            }
         }
     }
 }

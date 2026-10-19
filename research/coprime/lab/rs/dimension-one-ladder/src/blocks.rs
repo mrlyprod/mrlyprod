@@ -11,7 +11,7 @@ pub struct Coded {
 }
 
 pub fn coded(a: u64, b: u64) -> Coded {
-    let (a, b) = if a % 3 == 0 { (b, a) } else { (a, b) };
+    let (a, b) = if a.is_multiple_of(3) { (b, a) } else { (a, b) };
     let live = live(a, b);
     let letters = live
         .edges

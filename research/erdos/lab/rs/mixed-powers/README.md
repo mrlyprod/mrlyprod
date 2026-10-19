@@ -5,6 +5,7 @@
 - The census enumerates the base sets in `[3, R]` minimal for `sigma > 1` and `gcd = 1`, every other such set containing one, and certifies each at `k = 1, 2, ...` until a cell passes the bit cap.
 - The wide certificate keeps only `P_n` meet `[0, W]` as bits and the holes of `P_n` in `(W, S_n/2]` as a sorted list capped at `2^25`, exact for `S_n < 2^63`, by the update rule proved on the note, so a level closes on `W` bits where the full array needs `S_n`; at the close it sorts every non-sum by its route, below the least term, window or pair. A capped cell returns `Cap` either because the list passes `2^25` or because the candidates of one step past `S_n` do, without saying which.
 - The route verb reads, per minimal base set, the least `sum(M_1(D) below N)/N` over terms `N` in `[10^E, 10^30]`, truncated to six places, the quantity that bounds two-part partitions below `sigma = 2`.
+- The 3-adic verbs hold Erdos problem 406 in the relaxation of Lagarias and Abram and Lagarias: `C(1, M_1, ..., M_r)` is the set of 3-adic integers `lambda` with every digit of `lambda` and of each `M_i lambda` in `{0, 1}`, read by the carry automaton whose state is the vector of carries of the `M_i lambda`; the dimension is `log_3` of the largest spectral radius over its reachable strongly connected components, bracketed by the least and largest ratio of a power iterate, and the prefix test decides `C = {0}` from the `M_i mod 3^D`, the powers `2^m` reduced modulo `3^D`, so the exponents matter only modulo `2 3^(D - 1)`, with `D <= 79`, exact in `u128`.
 
 ## VERBS
 
@@ -28,7 +29,15 @@
 - `probe N TOP THREADS`: the same search at one largest element. Runtime `36` s at `probe 7 380 8`.
 - `band LO HI W THREADS`: the least largest element in `[LO, HI]` of an admissible 7-set whose six largest elements lie within `W` of it, exhaustive inside that band. Runtime `2.8` s at `band 419 475 70 8`, which finds `{302, 409, 447, 459, 465, 466, 474}`, and `114` s at `band 419 473 100 8`, which finds none.
 - `offsets LO HI`: the offset families `{0, 1, 3, 8, 22, 60}`, `{0, 2, 6, 9, 23, 61}`, `{0, 2, 5, 7, 21, 60}` below a largest element plus one free offset. Runtime `1.3` s.
+- `sweep N LO HI THREADS`: the least largest element in `[LO, HI]` of an admissible `N`-set, `N <= 7`, exhaustive: the difference set `D(H)` of the chosen elements as one signed bit array, the last two elements word-parallel, pruned by `g_3(r)`, the variance bound and the concentration cut of the note, which a binary search applies at every node owing `r >= 3` elements; prints per top the nodes by depth, the cut tests and the time. Runtime `342` s at `sweep 7 169 473 8`, which finds none, against `36` s for `probe 7 380 8` alone.
+- `tally N LO HI THREADS PLAIN`: every admissible `N`-set with largest element in `[LO, HI]` through the cut search, each checked from the definition and against the cut on all its prefixes; with `PLAIN = 1` also through the search without the cut, comparing the lists. Runtime `0.3` s at `tally 6 168 176 8 1`, `12.4` s at `tally 7 474 474 8 0`.
 - `route R E`: the least ratio per minimal base set in `[3, R]` over terms in `[10^E, 10^30]`. Runtime under `0.01` s.
+- `tight K BITS HOLES`: `{3, 4, 7}`, where `sigma = 1`, at `k = 1..K` through the wide certificate at `W = 2^BITS` with a list of `2^HOLES` middle holes, default `25`: at each step with `T <= a_(n+1)` it sets `L = C_k + 2T - 1` and `B = max(8, ceil(ln(3L)/(ln 4 - 1/5)) + 1)`, checks the step on every term up to `4^B`, and past `4^B` leaves the step to Ellison's bound on `abs(2^x - 3^y)`, the tight certificate of the note; prints `F`, the count of positive non-sums up to `F`, the index and term of the close, `S_n`, `L`, `B`, the terms checked, the least slack, the margin `(B + 1)(ln 4 - 1/5) - ln(3L)` and the steps tried, or the term where the cap stops. Runtime `0.4` s at `tight 4 31`, `12` s and `4.9` GB at `tight 5 34 26`, which caps; `10.2` s at `tight 4 20`.
+- `cantor E1,E2,... CAP`: the set `C(1, 2^E1, 2^E2, ...)` through its carry automaton, at most `4` exponents below `126`: the ternary digits of each multiplier, the states, the cyclic components and those with more edges than nodes, the radius bracket, the dimension, two first-return cycles at a state of the largest component with a prefix reaching it, checked by running the carries directly, the dimension of the Cantor set they generate, and the admissible prefixes of length `1..28`. Runtime under `0.01` s at `cantor 8` and `cantor 2,8`.
+- `carry M1,M2,... CAP`: the same for integer multipliers. Runtime under `0.01` s at `carry 94`.
+- `tuples R TOP THREADS CAP`: every `R`-subset of the even exponents in `[2, TOP]` through the automaton, capped at `CAP` states: the positive ones with radius and dimension, the countable nonzero ones, the count of sets equal to `{0}`, the capped ones, the most states. Runtime `128.8` s at `tuples 1 40 8 16777216`, which caps at `40`, `16.2` s at `tuples 2 40 8 16777216`, under `0.1` s at `tuples 3 124 8 16777216`.
+- `deaths R TOP D THREADS`: every `R`-subset of the even exponents in `[2, TOP]` through the prefix test modulo `3^D`: the count with `C = {0}`, the sets that pass at length `D`, the deepest death and the histogram of death lengths. Runtime `19.1` s at `deaths 3 3000 79 8`, `0.7` s at `deaths 3 1000 79 8`, under `0.01` s at `deaths 2 40 79 8`.
+- `classes R D THREADS`: every ordered `R`-tuple of exponent classes modulo `2 3^(D - 1)` through the prefix test at length `D`: the count that dies, the count that survives against the first-moment bound `2^((R + 1)(D - 1))`, and the lower density of `R`-tuples with `C = {0}`, truncated. Runtime `10.0` s at `classes 3 7 8`, `0.42` s at `classes 3 6 8`, `0.22` s at `classes 2 8 8`.
 
 ## RUN
 
@@ -66,9 +75,34 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- ternary 6 200 8
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- band 419 475 70 8
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- band 419 473 100 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- sweep 7 169 473 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tally 7 474 474 8 0
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tally 6 168 176 8 1
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tally 7 169 348 8 1
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tally 7 349 445 8 1
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tally 7 446 458 8 1
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tally 7 459 467 8 1
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tally 7 468 473 8 1
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tally 7 474 474 8 1
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tight 4 31
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tight 4 20
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tight 5 34 26
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- set 3,4,7 2 20000000
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- split 3,4,7 3 166025260 64
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- split 3,4,7 4 14961204826 64
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- cantor 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- cantor 2,8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- cantor 2,18
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tuples 1 40 8 16777216
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tuples 2 40 8 16777216
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tuples 3 124 8 16777216
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- deaths 2 40 79 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- deaths 3 3000 79 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- classes 3 7 8
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- classes 2 8 8
 ```
 
-- `cargo test --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml`, `11` tests, under `1` s after the build.
+- `cargo test --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml`, `17` tests, under `1` s after the build.
 
 ## READS
 
@@ -80,6 +114,12 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 - `V` up to `2^27`: `37` terms, `7` windows at `n = 5, 10, ..., 35`, none chained, all holding a non-sum, least width `0.255` of the term; `33` chain values, all non-sums.
 - The jump law holds on every step of the `173` cells `jumps` reaches at `W = 2^31`; `T_n/a_(n+1)` after the last base enters peaks at `1.9430` and passes `1.1727` in every certified cell with `k >= 2`; all `28` capped cells sit in one open run of rises.
 - Route ratios over `[10^12, 10^30]` for the `30` minimal base sets in `[3, 10]`: between `1.105953` and `1.537469`.
+- `F({3, 4, 7}, k)` at `k = 1..4` by the tight certificate: `581, 3982888, 166025260, 14961204826`, with `37, 5207, 391070, 23496512` positive non-sums up to `F`, `B = 8, 16, 19, 23`; `k = 5` caps at `W = 2^34` with `2^26` holes at term `40`.
+- `g_3(n) = 1, 3, 8, 22, 60, 168, 474` at `n = 1..7` for Erdos problem 817; `474` has one extremal set and `168` two.
+- `C(1, 2^a, 2^b, 2^c) = {0}` for all `561375500` triples of even exponents up to `3000`, every prefix test dead by length `50`, deepest at `(2, 8, 332)`; up to `124` every triple automaton has at most `35` states.
+- Pairs of even exponents up to `40`: `177` empty, `3` countable, `10` of positive dimension, the largest `0.228391` at `(2, 8)`.
+- `dim C(1, 2^8) = 0.306871`, radius `1.400924990`; `dim C(1, 2^m)` in `[0.259662, 0.262985]` at `m = 16..38`.
+- Classes of triples dead by length `D`: `0.691358, 0.818777, 0.894353, 0.937762, 0.963267` at `D = 3..7`.
 
 ## WITNESSES
 
@@ -104,4 +144,15 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 - `ternary 6 200 8`: `g_3(n)` for Erdos problem 817 at `n = 1..6`.
 - `band 419 475 70 8` and the crate test on the set: `g_3(7) <= 474`.
 - `band 419 473 100 8`: no set beating `474` with its six largest elements within `100` of the top.
-- The certificate, exactness, monotone, wide certificate, two-part, window, two-route, one-inequality, surplus-does-not-heal, chain, birth, jump and route-of-`F` rows are proofs on `research/erdos/notes/erdos.md`.
+- `sweep 7 169 473 8`: `g_3(7) = 474`.
+- `tally 7 LO HI 8 1` over `[169, 348]`, `[349, 445]`, `[446, 458]`, `[459, 467]`, `[468, 473]`, `[474, 474]`: the search without the cut agrees, about `27` minutes in all.
+- `tally 7 474 474 8 0` and `tally 6 168 176 8 1`: the extremal sets at `n = 6, 7`, and the cut removing none of the sets it was tried on, with the crate tests on the cut.
+- `tight 4 31`, `tight 4 20`, `set 3,4,7 1 2000000`, `set 3,4,7 2 20000000`, the `split` runs at `3,4,7` and the crate test on the sigma-one set: `{3, 4, 7}` cofinite at `k = 1..4` and its largest non-sums.
+- The certificate, exactness, monotone, wide certificate, two-part, window, two-route, one-inequality, surplus-does-not-heal, chain, birth, jump, route-of-`F`, sigma-one deficit, tight certificate and sigma-one exactness rows are proofs on `research/erdos/notes/erdos.md`.
+- The concentration-cut row is a proof on `research/erdos/notes/erdos.md`.
+- `deaths 3 3000 79 8`, `tuples 3 124 8 16777216` and the crate test on the two deciders: no four exponents within a span of `3000` for a nonzero 3-adic `lambda`.
+- `tuples 2 40 8 16777216`, `deaths 2 40 79 8` and `cantor 2,18`: the pairs up to `40`.
+- `cantor 8` and the crate test on the prefix counts: the Table 5.2 entry at `2^8`.
+- `classes 3 3 8` to `classes 3 7 8` and the crate test on the first moment: the class densities.
+- `tuples 1 40 8 16777216`: the Conjecture row on `dim C(1, 2^m)`.
+- The prefix-test and almost-every-set-is-empty rows are proofs on `research/erdos/notes/erdos.md`.

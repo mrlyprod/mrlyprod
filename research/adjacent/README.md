@@ -11,6 +11,8 @@ The integers with no two equal adjacent base-`b` digits keep exactly `(b-1)^L` o
 
 - [notes/adjacent.md](notes/adjacent.md): Mobius and primes with no two equal adjacent digits
 - [claims/adjacent-digits.md](claims/adjacent-digits.md): Adjacent digits
+- [papers/digit-automaton-primes.md](papers/digit-automaton-primes.md): Mobius and Primes on Sets Read by a Digit Automaton
 - [refs.md](refs.md): the references this topic cites
 - [lab/py/adjacent-digits/](lab/py/adjacent-digits/): The numbers of adjacent
+- [figures/paper-digit-automaton-primes.ts](figures/paper-digit-automaton-primes.ts): paper-digit-automaton-primes
 - [figures/research-adjacent.ts](figures/research-adjacent.ts): research-adjacent

@@ -817,11 +817,91 @@ def brute_cmd(args):
         print(f"m = {m}: every peelable set containing the origin enumerated by depth-first search with hereditary pruning, {count[0]} sets, largest {len(best)} of {n}, alpha = {len(best) / n:.5f}, witness {sorted(best)}")
         stamp(f"m = {m} brute")
 
+# PROGRESSION-FREE
+
+def r3_cmd(args):
+    for m in args.m:
+        grid = Grid(m, args.k)
+        n = grid.n
+        rows = np.repeat(np.arange(len(grid.X)), 3)
+        cols = np.stack([grid.X, grid.Y, grid.Z], axis=1).ravel()
+        A = coo_matrix((np.ones(len(rows)), (rows, cols)), shape=(len(grid.X), n)).tocsr()
+        res = milp(-np.ones(n), constraints=[LinearConstraint(A, -np.inf, 2)], integrality=np.ones(n), bounds=Bounds(0, 1), options={"time_limit": args.cap})
+        mask = res.x > 0.5
+        assert not np.any(mask[grid.X] & mask[grid.Y] & mask[grid.Z])
+        size = int(mask.sum())
+        closed = res.status == 0
+        tail = "" if closed else f", <= {int(np.floor(-res.mip_dual_bound + 1e-6))}"
+        print(f"m = {m} k = {args.k}: r_3(Z_{m}^{args.k}) {'=' if closed else '>='} {size}{tail}, {len(grid.X)} triples, the set checked progression-free, constant {size ** (1 / args.k):.4f}")
+
+def eps_def34(a, b):
+    half = Fraction(1, 2)
+    s = a + b
+    if a < half and b >= half and Fraction(7, 12) <= s <= Fraction(4, 3):
+        return True
+    if a < half and b < half and s > Fraction(5, 6):
+        return True
+    return a >= half and b < half and Fraction(7, 12) <= s < Fraction(5, 6) and 2 * a + b < Fraction(3, 2)
+
+def region_mask(grid, region, c, n, i, j):
+    m = grid.m
+    scale = 12 * n * m * c
+    a = 12 * c * (n * grid.coords[:, 0] + i)
+    b = 12 * c * (n * grid.coords[:, 1] + j)
+    s = a + b
+    half, one = scale // 2, scale
+    if region == "EPS":
+        a_lo = a < half
+        b_lo = b < half
+        t1 = a_lo & ~b_lo & (12 * s >= 7 * scale) & (3 * s <= 4 * scale)
+        t1b = a_lo & b_lo & (6 * s > 5 * scale)
+        t2 = ~a_lo & b_lo & (12 * s >= 7 * scale) & (6 * s < 5 * scale) & (2 * (2 * a + b) < 3 * scale)
+        return t1 | t1b | t2
+    e = 12 * n
+    r1 = (a >= half) & (3 * s > 2 * one) & (6 * s <= 7 * one)
+    r2 = (a >= half) & (b < half) & (6 * s >= 7 * one + 6 * e) & (12 * s <= 17 * one)
+    r3 = (a < half) & (b >= half) & (6 * s >= 7 * one + 6 * e) & (12 * s <= 17 * one) & (2 * (2 * a + b) >= 3 * one + 2 * e)
+    return r1 | r2 | r3
+
+def raster_cmd(args):
+    n = args.grid
+    print(f"RASTER: the published blocks counted on the grid, k = 2, EHPS form: EHPS Definition 4.1 at eps = 1/(4m), 1/(16m), 1/(64m) and EPS Definition 3.4, at the {n} x {n} shifts (i, j)/({n} m), i, j < {n}, first maximiser in that order")
+    for m in args.m:
+        grid = Grid(m, 2)
+        found = []
+        for region, c in (("EHPS", 4), ("EHPS", 16), ("EHPS", 64), ("EPS", 1)):
+            top = None
+            for i in range(n):
+                for j in range(n):
+                    cnt = int(region_mask(grid, region, c, n, i, j).sum())
+                    if top is None or cnt > top[0]:
+                        top = (cnt, i, j)
+            found.append((top[0], region, c, top[1], top[2]))
+        cnt, region, c, i, j = max(found, key=lambda f: f[0])
+        mask = region_mask(grid, region, c, n, i, j)
+        shift = (Fraction(i, n * m), Fraction(j, n * m))
+        if region == "EPS":
+            oracle = np.array([eps_def34(Fraction(int(x), m) + shift[0], Fraction(int(y), m) + shift[1]) for x, y in grid.coords])
+        else:
+            oracle = rasterise(grid, Fraction(1, c * m), shift)[0]
+        assert (oracle == mask).all()
+        assert grid.peelable(mask, "class")
+        g = grid.certificate(mask, "class")
+        assert g is not None
+        rounds = grid.rounds(mask, "class")[1]
+        bound = -(-7 * m * m // 24)
+        assert cnt >= bound
+        root = math.floor(math.sqrt(cnt) * 1e4) / 1e4
+        ehps = max(f[0] for f in found if f[1] == "EHPS")
+        eps = max(f[0] for f in found if f[1] == "EPS")
+        which = "EPS Definition 3.4" if region == "EPS" else f"EHPS Definition 4.1, eps = 1/({c} m)"
+        print(f"  m = {m}: {cnt} points, {which}, shift ({i}, {j})/({n} m), ceil(7 m^2/24) = {bound}, excess {cnt - bound}; best EHPS {ehps}, best EPS {eps}; peelable, {rounds} peel rounds, certificate g <= {max(g.values())} checked on every triple, sqrt(card T) = {root:.4f}..")
+
 # MAIN
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("verb", choices=["controls", "exact", "search", "refine", "stable", "lift", "brute"])
+    ap.add_argument("verb", choices=["controls", "exact", "search", "refine", "stable", "lift", "brute", "r3", "raster"])
     ap.add_argument("--k", type=int, default=2)
     ap.add_argument("--lo", type=int, default=2)
     ap.add_argument("--hi", type=int, default=8)
@@ -838,8 +918,9 @@ def main():
     ap.add_argument("--repair", type=float, default=0.0)
     ap.add_argument("--test", type=int, nargs="+", default=[4, 6])
     ap.add_argument("--n", type=int, nargs="+", default=[4, 6])
+    ap.add_argument("--grid", type=int, default=12)
     args = ap.parse_args()
-    {"controls": controls, "exact": exact_cmd, "search": search_cmd, "refine": refine_cmd, "stable": stable_cmd, "lift": lift_cmd, "brute": brute_cmd}[args.verb](args)
+    {"controls": controls, "exact": exact_cmd, "search": search_cmd, "refine": refine_cmd, "stable": stable_cmd, "lift": lift_cmd, "brute": brute_cmd, "r3": r3_cmd, "raster": raster_cmd}[args.verb](args)
     stamp("done")
 
 if __name__ == "__main__":

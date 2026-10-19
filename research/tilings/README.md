@@ -15,6 +15,7 @@ Which levels of a dimension-one design tile the integers: a closed condition on 
 - [refs.md](refs.md): the references this topic cites
 - [lab/py/level-tiles/](lab/py/level-tiles/): Decides, for a base `b` and a digit set `F`, which levels `A_n = F + b F + ...
 - [lab/py/measure-spectra/](lab/py/measure-spectra/): Decides, for a base `b` and a digit set `F` whose every level tiles, which route makes the limit measure `mu_{b,F}` spectral
+- [figures/paper-covering-bound-witness.ts](figures/paper-covering-bound-witness.ts): paper-covering-bound-witness
 - [figures/paper-spectral-tiling-levels.ts](figures/paper-spectral-tiling-levels.ts): paper-spectral-tiling-levels
 - [figures/research-tilings.ts](figures/research-tilings.ts): research-tilings
 - [figures/research-tilings.json](figures/research-tilings.json): research-tilings census

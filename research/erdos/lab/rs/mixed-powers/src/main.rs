@@ -1,5 +1,6 @@
+use std::collections::HashMap;
 use std::env;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
 
@@ -1600,6 +1601,758 @@ fn ternary(nmax: usize, hi: usize, threads: usize) {
     }
 }
 
+// TIGHT
+
+struct Wide {
+    w: usize,
+    limit: usize,
+    b: Bits,
+    sparse: Vec<u128>,
+    s: u128,
+    seen: usize,
+    top: Option<usize>,
+}
+
+impl Wide {
+    fn new(bits: u32, holes: u32) -> Wide {
+        let w = 1usize << bits;
+        Wide {
+            w,
+            limit: 1usize << holes,
+            b: Bits::new(w + 64),
+            sparse: vec![],
+            s: 0,
+            seen: 0,
+            top: None,
+        }
+    }
+
+    fn push(&mut self, x: u128) -> Option<u128> {
+        let w = self.w;
+        let wu = w as u128;
+        let limit = self.limit;
+        let s = self.s;
+        let snew = s + x;
+        if snew >> 63 != 0 {
+            return None;
+        }
+        if snew / 2 > wu {
+            let half = snew / 2;
+            if x > s && half > s.max(wu) && half - s.max(wu) > limit as u128 {
+                return None;
+            }
+            let b = &self.b;
+            let sparse = &self.sparse;
+            let mem = |z: i128| -> bool {
+                if z < 0 || z as u128 > s {
+                    return false;
+                }
+                let z = z as u128;
+                if z <= wu {
+                    b.get(z as usize)
+                } else if z >= s - wu {
+                    b.get((s - z) as usize)
+                } else if 2 * z <= s {
+                    sparse.binary_search(&z).is_err()
+                } else {
+                    sparse.binary_search(&(s - z)).is_err()
+                }
+            };
+            let mut next: Vec<u128> = vec![];
+            let mut keep = |z: u128| -> bool {
+                if z > wu && z <= half && !mem(z as i128 - x as i128) {
+                    next.push(z);
+                }
+                next.len() > limit
+            };
+            let mut spill = false;
+            for &g in sparse {
+                spill |= keep(g) || keep(s - g);
+            }
+            if s > wu {
+                let d = s as i128 - x as i128;
+                let glo = if d > 0 { ((d + 1) / 2) as usize } else { 0 };
+                let ghi = w.min((s - wu - 1) as usize);
+                spill |= b.each_zero(glo, ghi, |g| keep(s - g as u128));
+            }
+            if x > s {
+                for z in s.max(wu) + 1..=half {
+                    spill |= keep(z);
+                }
+            }
+            if spill {
+                return None;
+            }
+            next.sort();
+            next.dedup();
+            self.sparse = next;
+        }
+        if x <= wu {
+            self.b.fold(x as usize, w.min(snew as usize));
+        }
+        self.s = snew;
+        let h = w.min((snew / 2) as usize);
+        let fresh = if h >= self.seen {
+            self.b.hole_in(self.seen, h)
+        } else {
+            None
+        };
+        let b = &self.b;
+        self.top = fresh.or_else(|| self.top.and_then(|t| b.hole_in(0, t)));
+        self.seen = self.seen.max(h + 1);
+        Some(match self.sparse.last() {
+            Some(&z) => z + 1,
+            None => self.top.map_or(0, |z| z as u128 + 1),
+        })
+    }
+
+    fn gaps(&self, t: u128) -> usize {
+        let mut count = 0;
+        self.b.each_zero(0, self.w.min((t - 1) as usize), |_| {
+            count += 1;
+            false
+        });
+        count + self.sparse.len()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Tight {
+    f: u128,
+    gaps: usize,
+    n: usize,
+    last: u128,
+    sum: u128,
+    l: u128,
+    big: u32,
+    checked: usize,
+    slack: i128,
+    margin: f64,
+    tries: usize,
+}
+
+fn ellison(l: u128) -> (u32, f64) {
+    let rate = 4f64.ln() - 0.2;
+    let need = ((3 * l) as f64).ln();
+    let big = 8u32.max((need / rate).ceil() as u32 + 1);
+    (big, (big + 1) as f64 * rate - need)
+}
+
+fn tight_cell(k: u32, bits: u32, holes: u32) -> Result<Tight, (usize, u128, usize)> {
+    let c = (3 * 3u128.pow(k) + 2 * 4u128.pow(k) + 7u128.pow(k)) / 6;
+    let a = elements(&[3, 4, 7], k, far());
+    let mut wide = Wide::new(bits, holes);
+    let mut tries = 0;
+    for n in 0..a.len() - 1 {
+        let Some(t) = wide.push(a[n]) else {
+            return Err((n, wide.s, wide.sparse.len()));
+        };
+        if t == 0 || t > a[n + 1] {
+            continue;
+        }
+        tries += 1;
+        let l = c + 2 * t - 1;
+        let (big, margin) = ellison(l);
+        let h = 4u128.pow(big);
+        assert!(h < far());
+        let mut sm = wide.s;
+        let mut slack = i128::MAX;
+        let mut checked = 0;
+        let mut holds = true;
+        for &x in &a[n + 1..] {
+            if x > h {
+                break;
+            }
+            let room = sm as i128 + 1 - 2 * t as i128 - x as i128;
+            if room < 0 {
+                holds = false;
+                break;
+            }
+            slack = slack.min(room);
+            checked += 1;
+            sm += x;
+        }
+        if holds {
+            return Ok(Tight {
+                f: t - 1,
+                gaps: wide.gaps(t),
+                n: n + 1,
+                last: a[n],
+                sum: wide.s,
+                l,
+                big,
+                checked,
+                slack,
+                margin,
+                tries,
+            });
+        }
+    }
+    Err((a.len(), wide.s, wide.sparse.len()))
+}
+
+fn tight(kmax: u32, bits: u32, holes: u32) {
+    let clock = Instant::now();
+    for k in 1..=kmax {
+        let t = Instant::now();
+        let c = (3 * 3u128.pow(k) + 2 * 4u128.pow(k) + 7u128.pow(k)) / 6;
+        match tight_cell(k, bits, holes) {
+            Ok(r) => {
+                println!(
+                    "{{3,4,7}} k {} C_k {} F {} gaps {} n {} last {} S_n {} L {} B {} 4^B {} terms checked {} least slack {} Ellison margin {:.3} tries {} {:.2}s",
+                    k,
+                    c,
+                    r.f,
+                    r.gaps,
+                    r.n,
+                    r.last,
+                    r.sum,
+                    r.l,
+                    r.big,
+                    4u128.pow(r.big),
+                    r.checked,
+                    r.slack,
+                    r.margin,
+                    r.tries,
+                    t.elapsed().as_secs_f64()
+                );
+            }
+            Err((n, s, len)) => {
+                println!(
+                    "{{3,4,7}} k {} cap W = 2^{}, 2^{} holes: folding term {} with S_n {} and {} middle holes {:.2}s",
+                    k,
+                    bits,
+                    holes,
+                    n + 1,
+                    s,
+                    len,
+                    t.elapsed().as_secs_f64()
+                );
+                break;
+            }
+        }
+    }
+    println!("{:.1} s", clock.elapsed().as_secs_f64());
+}
+
+// SWEEP
+
+fn word(w: &[u64], bit: usize) -> u64 {
+    let q = bit >> 6;
+    let r = bit & 63;
+    if r == 0 {
+        w[q]
+    } else {
+        (w[q] >> r) | (w[q + 1] << (64 - r))
+    }
+}
+
+fn bit(w: &[u64], i: usize) -> bool {
+    (w[i >> 6] >> (i & 63)) & 1 == 1
+}
+
+fn owed_span(r: usize, m: usize) -> usize {
+    if r == 0 {
+        0
+    } else {
+        2 * (r * (m - 1) - r * (r - 1) / 2)
+    }
+}
+
+fn owed_sq(j: usize, a: usize) -> u128 {
+    (1..=j).map(|i| ((a - i) as u128).pow(2)).sum()
+}
+
+fn root_ceil(v: u128) -> usize {
+    let mut s = (v as f64).sqrt() as u128;
+    while s * s < v {
+        s += 1;
+    }
+    while s > 0 && (s - 1) * (s - 1) >= v {
+        s -= 1;
+    }
+    s as usize
+}
+
+fn evens(x: u64) -> u64 {
+    let mut x = x & 0x5555_5555_5555_5555;
+    x = (x | (x >> 1)) & 0x3333_3333_3333_3333;
+    x = (x | (x >> 2)) & 0x0f0f_0f0f_0f0f_0f0f;
+    x = (x | (x >> 4)) & 0x00ff_00ff_00ff_00ff;
+    x = (x | (x >> 8)) & 0x0000_ffff_0000_ffff;
+    (x | (x >> 16)) & 0x0000_0000_ffff_ffff
+}
+
+fn widen(src: &[u64], dst: &mut [u64], off: usize, a: usize, b: usize) {
+    for i in (off - b) >> 6..=(off + b) >> 6 {
+        let g = i << 6;
+        dst[i] = src[i]
+            | word(src, g - a)
+            | word(src, g + a)
+            | word(src, g - 2 * a)
+            | word(src, g + 2 * a);
+    }
+}
+
+fn kernel(t: f64, h: f64) -> f64 {
+    let u = t / h;
+    h * (((-u * u / 30.0 + 2.0 / 3.0) * u - 4.0 / 3.0) * u * u + 16.0 / 15.0)
+}
+
+fn fejer(known: &[usize], r: usize, top: usize, atoms: f64) -> bool {
+    let pi = std::f64::consts::PI;
+    let two_h = 2.0 * pi / (3.0 * top as f64);
+    let h = two_h / 2.0;
+    let k = known.len();
+    let all = k + r;
+    let mut b = [0f64; 16];
+    for (i, &a) in known.iter().enumerate() {
+        b[i] = a as f64;
+    }
+    for j in 0..r {
+        b[k + j] = (top - j) as f64;
+    }
+    let total: f64 = b[..all].iter().sum();
+    let grid = ((((2.0 * two_h * total).ceil() as usize).max(64) + 1) / 2) * 2;
+    let step = two_h / grid as f64;
+    let (mut rc, mut rs, mut c, mut s) = ([0f64; 16], [0f64; 16], [1f64; 16], [0f64; 16]);
+    let (mut pc, mut ps) = ([1f64; 16], [0f64; 16]);
+    for i in 0..all {
+        rc[i] = (step * b[i]).cos();
+        rs[i] = (step * b[i]).sin();
+    }
+    let (mut simpson, mut tail) = (0.0, 0.0);
+    for q in 0..=grid {
+        let t = step * q as f64;
+        if q > 0 {
+            if q % 256 == 0 {
+                for i in 0..all {
+                    c[i] = (t * b[i]).cos();
+                    s[i] = (t * b[i]).sin();
+                }
+            } else {
+                for i in 0..all {
+                    let (x, y) = (c[i], s[i]);
+                    c[i] = x * rc[i] - y * rs[i];
+                    s[i] = x * rs[i] + y * rc[i];
+                }
+            }
+        }
+        let mut kp = 1.0;
+        let mut neg = false;
+        let mut sup = 1.0;
+        for i in 0..k {
+            let f = (1.0 + 2.0 * c[i]) / 3.0;
+            kp *= f;
+            if q > 0 {
+                let fp = (1.0 + 2.0 * pc[i]) / 3.0;
+                neg |= f < 1e-12 || fp < 1e-12;
+                sup *= if s[i] * ps[i] > 0.0 {
+                    f.abs().max(fp.abs())
+                } else {
+                    1.0
+                };
+            }
+        }
+        let mut um = 1.0;
+        for i in k..all {
+            um *= (1.0 + 2.0 * c[i]) / 3.0;
+        }
+        let w = if q == 0 || q == grid {
+            1.0
+        } else if q % 2 == 1 {
+            4.0
+        } else {
+            2.0
+        };
+        simpson += w * kernel(t, h) * kp * um;
+        if neg {
+            tail += step * kernel(t - step, h) * sup * (1.0 - um);
+        }
+        pc[..k].copy_from_slice(&c[..k]);
+        ps[..k].copy_from_slice(&s[..k]);
+    }
+    simpson *= step / 3.0;
+    let d4 = h * 1.07 * total.powi(4)
+        + 4.0 * total.powi(3)
+        + 6.0 * 2.67 / h * total.powi(2)
+        + 16.0 / (h * h) * total
+        + 8.0 / (h * h * h);
+    let err = two_h * step.powi(4) * d4 / 180.0;
+    2.0 * (simpson - err) - 2.0 * tail > 2.0 * pi * kernel(0.0, h) / atoms * (1.0 + 1e-9) + 1e-18
+}
+
+const MIRROR: usize = 4096;
+
+struct Sweep<'a> {
+    n: usize,
+    floor: &'a [usize],
+    need: u128,
+    atoms: f64,
+    off: usize,
+    bufs: Vec<Vec<u64>>,
+    even: Vec<u64>,
+    odd: Vec<u64>,
+    single: Vec<u64>,
+    chosen: Vec<usize>,
+    nodes: [u64; 8],
+    tests: u64,
+    cut: bool,
+    counting: bool,
+    sets: Vec<Vec<usize>>,
+    found: Option<Vec<usize>>,
+    collect: usize,
+    out: Vec<Vec<usize>>,
+    stop: &'a AtomicBool,
+}
+
+impl<'a> Sweep<'a> {
+    fn new(
+        n: usize,
+        floor: &'a [usize],
+        top: usize,
+        cut: bool,
+        counting: bool,
+        stop: &'a AtomicBool,
+    ) -> Sweep<'a> {
+        let off = (owed_span(n - 1, top).max(2 * top) + 256) & !63;
+        let words = (2 * off + 6 * top + 512) / 64;
+        Sweep {
+            n,
+            floor,
+            need: (9u128.pow(n as u32) - 1) / 8,
+            atoms: 3f64.powi(n as i32),
+            off,
+            bufs: vec![vec![0u64; words]; n + 1],
+            even: vec![0u64; words],
+            odd: vec![0u64; words],
+            single: vec![0u64; (MIRROR + 3 * top) / 64 + 4],
+            chosen: vec![],
+            nodes: [0; 8],
+            tests: 0,
+            cut,
+            counting,
+            sets: vec![],
+            found: None,
+            collect: 0,
+            out: vec![],
+            stop,
+        }
+    }
+
+    fn root(&mut self, prefix: &[usize]) -> u128 {
+        let off = self.off;
+        let top = prefix[0];
+        let d = &mut self.bufs[0];
+        d.iter_mut().for_each(|w| *w = 0);
+        for x in [off - 2 * top, off - top, off, off + top, off + 2 * top] {
+            d[x >> 6] |= 1 << (x & 63);
+        }
+        self.chosen = vec![top];
+        let mut sq = (top as u128).pow(2);
+        for (i, &a) in prefix.iter().enumerate().skip(1) {
+            let (lo, hi) = self.bufs.split_at_mut(i);
+            widen(&lo[i - 1], &mut hi[0], off, a, owed_span(self.n - i - 1, a));
+            self.chosen.push(a);
+            sq += (a as u128).pow(2);
+        }
+        sq
+    }
+
+    fn done(&self) -> bool {
+        self.found.is_some() || self.stop.load(Ordering::Relaxed)
+    }
+
+    fn lift(&mut self, r: usize, lo: usize, m: usize) -> usize {
+        if !self.cut || r < 3 || lo >= m {
+            return lo;
+        }
+        let (mut l, mut h) = (lo - 1, m);
+        while h - l > 1 {
+            let mid = (l + h + 1) / 2;
+            self.tests += 1;
+            if fejer(&self.chosen, r, mid, self.atoms) {
+                l = mid;
+            } else {
+                h = mid;
+            }
+        }
+        l + 1
+    }
+
+    fn dfs(&mut self, depth: usize, r: usize, sq: u128) {
+        self.nodes[depth] += 1;
+        if self.done() {
+            return;
+        }
+        if self.collect > 0 && self.chosen.len() == self.collect {
+            self.out.push(self.chosen.clone());
+            return;
+        }
+        if r == 2 && self.collect == 0 {
+            self.pairs(depth, sq);
+            return;
+        }
+        let m = *self.chosen.last().unwrap();
+        let off = self.off;
+        let mut lo = self.floor[r].max(r);
+        while lo < m && sq + (lo as u128).pow(2) + owed_sq(r - 1, lo) < self.need {
+            lo += 1;
+        }
+        lo = self.lift(r, lo, m);
+        for a in (lo..m).rev() {
+            if bit(&self.bufs[depth], off + a) || bit(&self.bufs[depth], off + 2 * a) {
+                continue;
+            }
+            if r == 1 {
+                let mut set = self.chosen.clone();
+                set.push(a);
+                if self.counting {
+                    self.sets.push(set);
+                    continue;
+                }
+                self.found = Some(set);
+                return;
+            }
+            {
+                let (lo_, hi_) = self.bufs.split_at_mut(depth + 1);
+                widen(&lo_[depth], &mut hi_[0], off, a, owed_span(r - 1, a));
+            }
+            self.chosen.push(a);
+            self.dfs(depth + 1, r - 1, sq + (a as u128).pow(2));
+            self.chosen.pop();
+            if self.done() {
+                return;
+            }
+        }
+    }
+
+    fn pairs(&mut self, depth: usize, sq: u128) {
+        let m = *self.chosen.last().unwrap();
+        let off = self.off;
+        let h = off / 2;
+        let b = owed_span(2, m);
+        {
+            let d = &self.bufs[depth];
+            for j in (off - b) >> 7..=((off + b) >> 7) + 1 {
+                self.even[j] = evens(d[2 * j]) | (evens(d[2 * j + 1]) << 32);
+                self.odd[j] = evens(d[2 * j] >> 1) | (evens(d[2 * j + 1] >> 1) << 32);
+            }
+            for j in (MIRROR - m) >> 6..=(MIRROR + 2 * m) / 64 + 1 {
+                self.single[j] =
+                    !(word(d, off + 64 * j - MIRROR) | word(&self.even, h + 64 * j - MIRROR));
+            }
+        }
+        let mut lo = self.floor[2].max(2);
+        while lo < m && sq + (lo as u128).pow(2) + ((lo - 1) as u128).pow(2) < self.need {
+            lo += 1;
+        }
+        let d = &self.bufs[depth];
+        let (e, o, u) = (&self.even, &self.odd, &self.single);
+        for x in (lo..m).rev() {
+            if !bit(u, MIRROR + x) {
+                continue;
+            }
+            self.nodes[depth + 1] += 1;
+            let base = sq + (x as u128).pow(2);
+            let ylo = if base >= self.need {
+                1
+            } else {
+                root_ceil(self.need - base).max(1)
+            };
+            let half = if x % 2 == 0 { e } else { o };
+            let (sp, sm) = if x % 2 == 0 {
+                (x / 2, x / 2)
+            } else {
+                ((x - 1) / 2, (x + 1) / 2)
+            };
+            for chunk in ylo >> 6..=(x - 1) >> 6 {
+                let y0 = chunk << 6;
+                let bad = !(u[(MIRROR >> 6) + chunk]
+                    & word(u, MIRROR + y0 - x)
+                    & word(u, MIRROR + y0 + x))
+                    | word(d, off + y0 + 2 * x)
+                    | word(d, off + y0 - 2 * x)
+                    | word(half, h + y0 + sp)
+                    | word(half, h + y0 - sm);
+                let from = ylo.max(y0) - y0;
+                let to = (x - 1).min(y0 + 63) - y0;
+                let mut good = !bad & (!0u64 >> (63 - to)) & (!0u64 << from);
+                while good != 0 {
+                    let y = y0 + good.trailing_zeros() as usize;
+                    good &= good - 1;
+                    let mut set = self.chosen.clone();
+                    set.push(x);
+                    set.push(y);
+                    if self.counting {
+                        self.sets.push(set);
+                        continue;
+                    }
+                    self.found = Some(set);
+                    return;
+                }
+            }
+        }
+    }
+}
+
+struct Tally {
+    found: Option<Vec<usize>>,
+    sets: Vec<Vec<usize>>,
+    nodes: [u64; 8],
+    tests: u64,
+    tasks: usize,
+}
+
+fn sweep_top(
+    n: usize,
+    top: usize,
+    floor: &[usize],
+    threads: usize,
+    cut: bool,
+    counting: bool,
+) -> Tally {
+    let stop = AtomicBool::new(false);
+    let t = if n >= 5 {
+        3
+    } else if n == 4 {
+        2
+    } else {
+        1
+    };
+    let tasks: Vec<Vec<usize>> = if t == 1 {
+        vec![vec![top]]
+    } else {
+        let mut s = Sweep::new(n, floor, top, cut, counting, &stop);
+        let sq = s.root(&[top]);
+        s.collect = t;
+        s.dfs(0, n - 1, sq);
+        s.out
+    };
+    let next = AtomicUsize::new(0);
+    let out = Mutex::new(Tally {
+        found: None,
+        sets: vec![],
+        nodes: [0; 8],
+        tests: 0,
+        tasks: tasks.len(),
+    });
+    std::thread::scope(|scope| {
+        for _ in 0..threads {
+            scope.spawn(|| {
+                let mut s = Sweep::new(n, floor, top, cut, counting, &stop);
+                loop {
+                    let i = next.fetch_add(1, Ordering::SeqCst);
+                    if i >= tasks.len() || stop.load(Ordering::Relaxed) {
+                        break;
+                    }
+                    let sq = s.root(&tasks[i]);
+                    s.dfs(tasks[i].len() - 1, n - tasks[i].len(), sq);
+                    if s.found.is_some() {
+                        stop.store(true, Ordering::Relaxed);
+                        let mut o = out.lock().unwrap();
+                        if o.found.is_none() {
+                            o.found = s.found.take();
+                        }
+                    }
+                }
+                let mut o = out.lock().unwrap();
+                for k in 0..8 {
+                    o.nodes[k] += s.nodes[k];
+                }
+                o.tests += s.tests;
+                o.sets.append(&mut s.sets);
+            });
+        }
+    });
+    let mut t = out.into_inner().unwrap();
+    for set in t.sets.iter_mut() {
+        set.reverse();
+    }
+    t.sets.sort();
+    if let Some(set) = t.found.as_mut() {
+        set.reverse();
+    }
+    t
+}
+
+fn sweep(n: usize, lo: usize, hi: usize, threads: usize) {
+    assert!((2..=7).contains(&n) && lo > [0, 1, 3, 8, 22, 60, 168][n - 1]);
+    let floor = [0usize, 1, 3, 8, 22, 60, 168];
+    let clock = Instant::now();
+    for top in lo..=hi {
+        let t0 = Instant::now();
+        let t = sweep_top(n, top, &floor, threads, true, false);
+        println!(
+            "top {}: {}, {} tasks, nodes {:?}, {} cut tests, {:.2} s, {:.1} s in all",
+            top,
+            t.found
+                .as_ref()
+                .map_or("none".to_string(), |s| format!("{:?}", s)),
+            t.tasks,
+            &t.nodes[..n],
+            t.tests,
+            t0.elapsed().as_secs_f64(),
+            clock.elapsed().as_secs_f64()
+        );
+        if let Some(set) = t.found {
+            assert!(admissible(&set));
+            println!(
+                "sweep: least top in [{}, {}] of an admissible {}-set is {}, witness {:?}",
+                lo, hi, n, top, set
+            );
+            return;
+        }
+    }
+    println!(
+        "sweep: no admissible {}-set with top in [{}, {}], {:.1} s",
+        n,
+        lo,
+        hi,
+        clock.elapsed().as_secs_f64()
+    );
+}
+
+fn spared(set: &[usize], atoms: f64) -> bool {
+    let mut down = set.to_vec();
+    down.reverse();
+    let n = down.len();
+    (1..n - 1).all(|k| (down[k]..down[k - 1]).all(|a| !fejer(&down[..k], n - k, a, atoms)))
+}
+
+fn tally(n: usize, lo: usize, hi: usize, threads: usize, plain: bool) {
+    assert!((2..=7).contains(&n));
+    let floor = [0usize, 1, 3, 8, 22, 60, 168];
+    let atoms = 3f64.powi(n as i32);
+    let (mut total, mut fired, mut differ) = (0usize, 0usize, 0usize);
+    let clock = Instant::now();
+    for top in lo..=hi {
+        let t = sweep_top(n, top, &floor, threads, true, true);
+        for set in &t.sets {
+            assert!(admissible(set));
+            if !spared(set, atoms) {
+                fired += 1;
+            }
+        }
+        total += t.sets.len();
+        let line = if plain {
+            let p = sweep_top(n, top, &floor, threads, false, true);
+            if p.sets != t.sets {
+                differ += 1;
+            }
+            format!("{} with the cut, {} without", t.sets.len(), p.sets.len())
+        } else {
+            format!("{} with the cut", t.sets.len())
+        };
+        let shown: Vec<&Vec<usize>> = t.sets.iter().take(4).collect();
+        println!("n {} top {}: {}; {:?}", n, top, line, shown);
+    }
+    println!(
+        "tally: {} admissible {}-sets with top in [{}, {}], cut fired on a prefix of {}, lists differ at {} tops, {:.1} s",
+        total, n, lo, hi, fired, differ, clock.elapsed().as_secs_f64()
+    );
+}
+
 // ROUTE
 
 fn route(r: u64, lo: u128) {
@@ -1623,6 +2376,661 @@ fn route(r: u64, lo: u128) {
             best.1
         );
     }
+}
+
+// CANTOR
+
+const DEAD: u32 = u32::MAX;
+
+struct Carries {
+    next: Vec<[u32; 2]>,
+    capped: bool,
+}
+
+fn carries(mults: &[u128], cap: usize) -> Carries {
+    let r = mults.len();
+    assert!(r <= 4 && mults.iter().all(|&m| m < 1 << 126));
+    let mut index: HashMap<[u128; 4], u32> = HashMap::new();
+    let mut states: Vec<[u128; 4]> = vec![[0; 4]];
+    index.insert([0; 4], 0);
+    let mut next = vec![];
+    while next.len() < states.len() {
+        if states.len() > cap {
+            return Carries { next, capped: true };
+        }
+        let at = states[next.len()];
+        let mut out = [DEAD; 2];
+        for (d, slot) in out.iter_mut().enumerate() {
+            let mut to = [0u128; 4];
+            let mut ok = true;
+            for i in 0..r {
+                let t = at[i] + mults[i] * d as u128;
+                if t % 3 == 2 {
+                    ok = false;
+                    break;
+                }
+                to[i] = t / 3;
+            }
+            if ok {
+                let fresh = states.len() as u32;
+                let id = *index.entry(to).or_insert(fresh);
+                if id == fresh {
+                    states.push(to);
+                }
+                *slot = id;
+            }
+        }
+        next.push(out);
+    }
+    Carries {
+        next,
+        capped: false,
+    }
+}
+
+fn components(next: &[[u32; 2]]) -> (Vec<u32>, usize) {
+    let n = next.len();
+    let mut index = vec![u32::MAX; n];
+    let mut low = vec![0u32; n];
+    let mut on = vec![false; n];
+    let mut comp = vec![u32::MAX; n];
+    let mut stack: Vec<u32> = vec![];
+    let mut call: Vec<(u32, u8)> = vec![];
+    let mut counter = 0u32;
+    let mut comps = 0usize;
+    for root in 0..n {
+        if index[root] != u32::MAX {
+            continue;
+        }
+        index[root] = counter;
+        low[root] = counter;
+        counter += 1;
+        stack.push(root as u32);
+        on[root] = true;
+        call.push((root as u32, 0));
+        while let Some(top) = call.last_mut() {
+            let v = top.0 as usize;
+            if top.1 < 2 {
+                let w = next[v][top.1 as usize];
+                top.1 += 1;
+                if w == DEAD {
+                    continue;
+                }
+                let w = w as usize;
+                if index[w] == u32::MAX {
+                    index[w] = counter;
+                    low[w] = counter;
+                    counter += 1;
+                    stack.push(w as u32);
+                    on[w] = true;
+                    call.push((w as u32, 0));
+                } else if on[w] {
+                    low[v] = low[v].min(index[w]);
+                }
+            } else {
+                call.pop();
+                if let Some(parent) = call.last() {
+                    let p = parent.0 as usize;
+                    low[p] = low[p].min(low[v]);
+                }
+                if low[v] == index[v] {
+                    loop {
+                        let w = stack.pop().unwrap() as usize;
+                        on[w] = false;
+                        comp[w] = comps as u32;
+                        if w == v {
+                            break;
+                        }
+                    }
+                    comps += 1;
+                }
+            }
+        }
+    }
+    (comp, comps)
+}
+
+fn radius(next: &[[u32; 2]], comp: &[u32], members: &[u32]) -> (f64, f64) {
+    let c = comp[members[0] as usize];
+    let pos: HashMap<u32, usize> = members.iter().enumerate().map(|(i, &v)| (v, i)).collect();
+    let succ: Vec<Vec<usize>> = members
+        .iter()
+        .map(|&v| {
+            next[v as usize]
+                .iter()
+                .filter(|&&w| w != DEAD && comp[w as usize] == c)
+                .map(|w| pos[w])
+                .collect()
+        })
+        .collect();
+    let mut v = vec![1.0f64; members.len()];
+    let (mut lo, mut hi) = (0.0f64, f64::MAX);
+    for _ in 0..100000 {
+        let w: Vec<f64> = (0..v.len())
+            .map(|i| v[i] + succ[i].iter().map(|&j| v[j]).sum::<f64>())
+            .collect();
+        lo = f64::MAX;
+        hi = 0.0;
+        for i in 0..v.len() {
+            lo = lo.min(w[i] / v[i]);
+            hi = hi.max(w[i] / v[i]);
+        }
+        let top = w.iter().cloned().fold(0.0, f64::max);
+        v = w.iter().map(|x| x / top).collect();
+        if hi - lo < 1e-13 {
+            break;
+        }
+    }
+    (lo - 1.0, hi - 1.0)
+}
+
+struct Shape {
+    states: usize,
+    capped: bool,
+    loops: usize,
+    rich: usize,
+    lo: f64,
+    hi: f64,
+    size: usize,
+    hub: Option<u32>,
+    next: Vec<[u32; 2]>,
+    comp: Vec<u32>,
+}
+
+fn shape(mults: &[u128], cap: usize) -> Shape {
+    let Carries { next, capped } = carries(mults, cap);
+    let mut out = Shape {
+        states: next.len(),
+        capped,
+        loops: 0,
+        rich: 0,
+        lo: 1.0,
+        hi: 1.0,
+        size: 0,
+        hub: None,
+        next: vec![],
+        comp: vec![],
+    };
+    if capped {
+        return out;
+    }
+    let (comp, comps) = components(&next);
+    let mut nodes = vec![0usize; comps];
+    let mut edges = vec![0usize; comps];
+    let mut members: Vec<Vec<u32>> = vec![vec![]; comps];
+    for (v, out) in next.iter().enumerate() {
+        let c = comp[v] as usize;
+        nodes[c] += 1;
+        members[c].push(v as u32);
+        edges[c] += out
+            .iter()
+            .filter(|&&w| w != DEAD && comp[w as usize] as usize == c)
+            .count();
+    }
+    for c in 0..comps {
+        if edges[c] == 0 {
+            continue;
+        }
+        out.loops += 1;
+        if edges[c] > nodes[c] {
+            out.rich += 1;
+            let (lo, hi) = radius(&next, &comp, &members[c]);
+            if lo > out.lo || out.hub.is_none() {
+                out.lo = lo;
+                out.hi = hi;
+                out.size = nodes[c];
+                out.hub = members[c].iter().copied().find(|&v| {
+                    next[v as usize]
+                        .iter()
+                        .all(|&w| w != DEAD && comp[w as usize] as usize == c)
+                });
+            }
+        }
+    }
+    out.next = next;
+    out.comp = comp;
+    out
+}
+
+fn walk(next: &[[u32; 2]], comp: Option<&[u32]>, from: u32, to: u32) -> Vec<u8> {
+    let mut parent: HashMap<u32, (u32, u8)> = HashMap::new();
+    let mut queue = std::collections::VecDeque::from([from]);
+    parent.insert(from, (DEAD, 0));
+    while let Some(v) = queue.pop_front() {
+        if v == to {
+            break;
+        }
+        for d in 0..2u8 {
+            let w = next[v as usize][d as usize];
+            if w == DEAD || parent.contains_key(&w) {
+                continue;
+            }
+            if let Some(c) = comp {
+                if c[w as usize] != c[from as usize] {
+                    continue;
+                }
+            }
+            parent.insert(w, (v, d));
+            queue.push_back(w);
+        }
+    }
+    let mut word = vec![];
+    let mut at = to;
+    while at != from {
+        let (p, d) = parent[&at];
+        word.push(d);
+        at = p;
+    }
+    word.reverse();
+    word
+}
+
+fn hub_cycles(s: &Shape) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)> {
+    let hub = s.hub?;
+    let prefix = walk(&s.next, None, 0, hub);
+    let cycle = |d: u8| {
+        let mut w = vec![d];
+        w.extend(walk(
+            &s.next,
+            Some(&s.comp),
+            s.next[hub as usize][d as usize],
+            hub,
+        ));
+        w
+    };
+    Some((prefix, cycle(0), cycle(1)))
+}
+
+fn run(m: u128, start: u128, word: &[u8]) -> Option<u128> {
+    let mut n = start;
+    for &d in word {
+        let t = n + m * d as u128;
+        if t % 3 == 2 {
+            return None;
+        }
+        n = t / 3;
+    }
+    Some(n)
+}
+
+fn closes(mults: &[u128], prefix: &[u8], cycles: &[&[u8]]) -> bool {
+    mults.iter().all(|&m| match run(m, 0, prefix) {
+        Some(hub) => cycles.iter().all(|c| run(m, hub, c) == Some(hub)),
+        None => false,
+    })
+}
+
+fn moran(p: usize, q: usize) -> f64 {
+    let (mut lo, mut hi) = (0.0f64, 1.0f64);
+    for _ in 0..200 {
+        let s = (lo + hi) / 2.0;
+        if 3f64.powf(-(p as f64) * s) + 3f64.powf(-(q as f64) * s) > 1.0 {
+            lo = s;
+        } else {
+            hi = s;
+        }
+    }
+    lo
+}
+
+fn digits(w: &[u8]) -> String {
+    w.iter().map(|d| char::from(b'0' + d)).collect()
+}
+
+fn ternary_of(mut m: u128) -> String {
+    let mut s = vec![];
+    while m > 0 {
+        s.push(char::from(b'0' + (m % 3) as u8));
+        m /= 3;
+    }
+    s.iter().rev().collect()
+}
+
+fn paths(next: &[[u32; 2]], len: usize) -> Vec<u128> {
+    let mut at = vec![0u128; next.len()];
+    at[0] = 1;
+    let mut out = vec![];
+    for _ in 0..len {
+        let mut to = vec![0u128; next.len()];
+        for (v, &c) in at.iter().enumerate() {
+            if c > 0 {
+                for &w in &next[v] {
+                    if w != DEAD {
+                        to[w as usize] += c;
+                    }
+                }
+            }
+        }
+        out.push(to.iter().sum());
+        at = to;
+    }
+    out
+}
+
+fn cantor(exps: &[u32], cap: usize) {
+    let mults: Vec<u128> = exps.iter().map(|&e| 1u128 << e).collect();
+    let name = exps
+        .iter()
+        .map(|e| format!("2^{}", e))
+        .collect::<Vec<_>>()
+        .join(", ");
+    carry_set(&mults, &name, cap)
+}
+
+fn carry_set(mults: &[u128], name: &str, cap: usize) {
+    let t = Instant::now();
+    let s = shape(mults, cap);
+    for &m in mults {
+        println!("{} = ({})_3", m, ternary_of(m));
+    }
+    if s.capped {
+        println!(
+            "C(1, {}): capped at {} states, {:.2}s",
+            name,
+            cap,
+            t.elapsed().as_secs_f64()
+        );
+        return;
+    }
+    println!(
+        "C(1, {}): {} states, {} cyclic components, {} with more edges than nodes, radius in [{:.9}, {:.9}], dim {:.6}, component size {}, {:.2}s",
+        name,
+        s.states,
+        s.loops,
+        s.rich,
+        s.lo,
+        s.hi,
+        s.lo.max(1.0).ln() / 3f64.ln(),
+        s.size,
+        t.elapsed().as_secs_f64()
+    );
+    if let Some((prefix, u, v)) = hub_cycles(&s) {
+        println!(
+            "witness: prefix {} then any word in cycles {} and {}, low digit first; direct carries close: {}; dim >= {:.6}",
+            digits(&prefix),
+            digits(&u),
+            digits(&v),
+            closes(mults, &prefix, &[&u, &v]),
+            moran(u.len(), v.len())
+        );
+    }
+    let counts = paths(&s.next, 28);
+    println!("allowed prefixes of length 1..28: {:?}", counts);
+}
+
+fn subsets_of(pool: &[u32], r: usize) -> Vec<Vec<u32>> {
+    if r == 0 {
+        return vec![vec![]];
+    }
+    let mut out = vec![];
+    for (i, &x) in pool.iter().enumerate() {
+        for mut rest in subsets_of(&pool[i + 1..], r - 1) {
+            rest.insert(0, x);
+            out.push(rest);
+        }
+    }
+    out
+}
+
+type Reading = (Vec<u32>, usize, bool, usize, f64, f64, usize);
+
+fn tuples(r: usize, top: u32, threads: usize, cap: usize) {
+    let clock = Instant::now();
+    let pool: Vec<u32> = (1..=top / 2).map(|j| 2 * j).collect();
+    let jobs = subsets_of(&pool, r);
+    let next = AtomicUsize::new(0);
+    let rows: Mutex<Vec<Reading>> = Mutex::new(vec![]);
+    std::thread::scope(|scope| {
+        for _ in 0..threads {
+            scope.spawn(|| loop {
+                let i = next.fetch_add(1, Ordering::SeqCst);
+                if i >= jobs.len() {
+                    break;
+                }
+                let mults: Vec<u128> = jobs[i].iter().map(|&e| 1u128 << e).collect();
+                let s = shape(&mults, cap);
+                rows.lock().unwrap().push((
+                    jobs[i].clone(),
+                    s.states,
+                    s.capped,
+                    s.rich,
+                    s.lo,
+                    s.hi,
+                    s.loops,
+                ));
+            });
+        }
+    });
+    let mut rows = rows.into_inner().unwrap();
+    rows.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut most = (0usize, vec![]);
+    let (mut zero, mut capped, mut origin) = (0usize, 0usize, 0usize);
+    for (e, states, cap_hit, rich, lo, hi, loops) in &rows {
+        if *states > most.0 {
+            most = (*states, e.clone());
+        }
+        if *cap_hit {
+            capped += 1;
+            println!("capped {:?}", e);
+        } else if *rich > 0 {
+            println!(
+                "positive {:?}: {} states, radius in [{:.9}, {:.9}], dim {:.6}",
+                e,
+                states,
+                lo,
+                hi,
+                lo.ln() / 3f64.ln()
+            );
+        } else {
+            zero += 1;
+            if *loops == 1 {
+                origin += 1;
+            } else {
+                println!("countable {:?}: {} states, {} cycles", e, states, loops);
+            }
+        }
+    }
+    println!(
+        "{} sets C(1, 2^m_1, ..., 2^m_{}) with even 2 <= m_1 < ... <= {}: {} of dimension zero, {} of them equal to {{0}}, {} positive, {} capped at {} states; most states {} at {:?}; {:.2}s",
+        rows.len(),
+        r,
+        top,
+        zero,
+        origin,
+        rows.len() - zero - capped,
+        capped,
+        cap,
+        most.0,
+        most.1,
+        clock.elapsed().as_secs_f64()
+    );
+}
+
+fn death(units: &[u128], dmax: u32) -> Option<u32> {
+    let mut first = vec![];
+    for &u in units {
+        if u % 3 == 2 {
+            return Some(1);
+        }
+        first.push(u / 3);
+    }
+    let mut stack = vec![(first, 1u32)];
+    let mut deepest = 1;
+    while let Some((carry, len)) = stack.pop() {
+        deepest = deepest.max(len);
+        if len == dmax {
+            return None;
+        }
+        for d in 0..2u128 {
+            let mut to = Vec::with_capacity(units.len());
+            let mut ok = true;
+            for (n, u) in carry.iter().zip(units) {
+                let t = n + u * d;
+                if t % 3 == 2 {
+                    ok = false;
+                    break;
+                }
+                to.push(t / 3);
+            }
+            if ok {
+                stack.push((to, len + 1));
+            }
+        }
+    }
+    Some(deepest + 1)
+}
+
+fn residue_power(e: u32, modulus: u128) -> u128 {
+    let mut x = 1u128 % modulus;
+    for _ in 0..e {
+        x = 2 * x % modulus;
+    }
+    x
+}
+
+struct Deaths {
+    sets: usize,
+    hist: Vec<usize>,
+    open: Vec<Vec<u32>>,
+    worst: (u32, Vec<u32>),
+}
+
+fn deaths(r: usize, top: u32, dmax: u32, threads: usize) {
+    let clock = Instant::now();
+    assert!(dmax <= 79 && r >= 1);
+    let modulus = 3u128.pow(dmax);
+    let pool: Vec<u32> = (1..=top / 2).map(|j| 2 * j).collect();
+    let units: Vec<u128> = (0..=top).map(|e| residue_power(e, modulus)).collect();
+    let next = AtomicUsize::new(0);
+    let total: Mutex<Deaths> = Mutex::new(Deaths {
+        sets: 0,
+        hist: vec![0; dmax as usize + 2],
+        open: vec![],
+        worst: (0, vec![]),
+    });
+    std::thread::scope(|scope| {
+        for _ in 0..threads {
+            scope.spawn(|| loop {
+                let i = next.fetch_add(1, Ordering::SeqCst);
+                if i >= pool.len() {
+                    break;
+                }
+                let mut mine = Deaths {
+                    sets: 0,
+                    hist: vec![0; dmax as usize + 2],
+                    open: vec![],
+                    worst: (0, vec![]),
+                };
+                for mut rest in subsets_of(&pool[i + 1..], r - 1) {
+                    rest.insert(0, pool[i]);
+                    let us: Vec<u128> = rest.iter().map(|&e| units[e as usize]).collect();
+                    mine.sets += 1;
+                    match death(&us, dmax) {
+                        Some(d) => {
+                            mine.hist[d as usize] += 1;
+                            if d > mine.worst.0 {
+                                mine.worst = (d, rest);
+                            }
+                        }
+                        None => mine.open.push(rest),
+                    }
+                }
+                let mut all = total.lock().unwrap();
+                all.sets += mine.sets;
+                for (x, y) in all.hist.iter_mut().zip(&mine.hist) {
+                    *x += y;
+                }
+                all.open.extend(mine.open);
+                if mine.worst.0 > all.worst.0
+                    || (mine.worst.0 == all.worst.0 && mine.worst.1 < all.worst.1)
+                {
+                    all.worst = mine.worst;
+                }
+            });
+        }
+    });
+    let mut all = total.into_inner().unwrap();
+    all.open.sort();
+    for e in all.open.iter().take(40) {
+        println!("survives to length {}: {:?}", dmax, e);
+    }
+    let shown: Vec<String> = all
+        .hist
+        .iter()
+        .enumerate()
+        .filter(|x| *x.1 > 0)
+        .map(|(d, c)| format!("{}:{}", d, c))
+        .collect();
+    println!(
+        "{} sets of {} even exponents in [2, {}]: {} with every admissible prefix of lowest digit 1 dead by length {}, so C = {{0}}, {} surviving; deepest death {} at {:?}; death lengths {}; {:.2}s",
+        all.sets,
+        r,
+        top,
+        all.sets - all.open.len(),
+        dmax,
+        all.open.len(),
+        all.worst.0,
+        all.worst.1,
+        shown.join(" "),
+        clock.elapsed().as_secs_f64()
+    );
+}
+
+fn dead_classes(r: usize, d: u32, threads: usize) -> (usize, usize) {
+    let modulus = 3u128.pow(d);
+    let period = 3usize.pow(d - 1);
+    let mut units = vec![1u128; period];
+    for i in 1..period {
+        units[i] = units[i - 1] * 4 % modulus;
+    }
+    let next = AtomicUsize::new(0);
+    let dead = AtomicUsize::new(0);
+    std::thread::scope(|scope| {
+        for _ in 0..threads {
+            scope.spawn(|| {
+                let mut local = 0usize;
+                loop {
+                    let i = next.fetch_add(1, Ordering::SeqCst);
+                    if i >= period {
+                        break;
+                    }
+                    let mut idx = vec![0usize; r];
+                    idx[0] = i;
+                    for k in 0..period.pow(r as u32 - 1) {
+                        let mut rest = k;
+                        for slot in idx.iter_mut().skip(1) {
+                            *slot = rest % period;
+                            rest /= period;
+                        }
+                        let us: Vec<u128> = idx.iter().map(|&j| units[j]).collect();
+                        if death(&us, d).is_some() {
+                            local += 1;
+                        }
+                    }
+                }
+                dead.fetch_add(local, Ordering::SeqCst);
+            });
+        }
+    });
+    (dead.into_inner(), period.pow(r as u32))
+}
+
+fn classes(r: usize, d: u32, threads: usize) {
+    let clock = Instant::now();
+    let (dead, all) = dead_classes(r, d, threads);
+    println!(
+        "{} of the {} ordered {}-tuples of exponent classes mod 2 3^{} die by length {}, {} survive against the first-moment bound 2^{}: lower density {:.6} of {}-tuples of even exponents with C = {{0}}, truncated; {:.2}s",
+        dead,
+        all,
+        r,
+        d - 1,
+        d,
+        all - dead,
+        (r as u32 + 1) * (d - 1),
+        (dead as f64 / all as f64 * 1e6).floor() / 1e6,
+        r,
+        clock.elapsed().as_secs_f64()
+    );
 }
 
 fn main() {
@@ -1668,8 +3076,22 @@ fn main() {
         "probe" => probe(num(2, 7) as usize, num(3, 420) as usize, num(4, 8) as usize),
         "offsets" => offsets(num(2, 420) as usize, num(3, 504) as usize),
         "band" => band(num(2, 419) as usize, num(3, 504) as usize, num(4, 70) as usize, num(5, 8) as usize),
+        "sweep" => sweep(num(2, 7) as usize, num(3, 169) as usize, num(4, 473) as usize, num(5, 8) as usize),
+        "tally" => tally(num(2, 6) as usize, num(3, 168) as usize, num(4, 176) as usize, num(5, 8) as usize, num(6, 1) == 1),
         "route" => route(num(2, 10), 10u128.pow(num(3, 12) as u32)),
-        _ => println!("verbs census R K BITS THREADS, deep R K BITS THREADS, jumps R K BITS THREADS, trace D K BITS, windowed BITS, cell D K BITS, wcell D K BITS, chainless BITS, forced BITS, wcontrol BITS, split D K X COUNT, set D K B, windows D K E F, graham T P Q BITS, refute BITS, ternary N HI THREADS, probe N TOP THREADS, band LO HI W THREADS, offsets LO HI, control, route R E"),
+        "tight" => tight(num(2, 4) as u32, num(3, 31) as u32, num(4, 25) as u32),
+        "cantor" => {
+            let exps: Vec<u32> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
+            cantor(&exps, num(3, 1 << 24) as usize)
+        }
+        "carry" => {
+            let mults: Vec<u128> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
+            carry_set(&mults, &args[2], num(3, 1 << 24) as usize)
+        }
+        "deaths" => deaths(num(2, 3) as usize, num(3, 400) as u32, num(4, 79) as u32, num(5, 8) as usize),
+        "classes" => classes(num(2, 3) as usize, num(3, 5) as u32, num(4, 8) as usize),
+        "tuples" => tuples(num(2, 2) as usize, num(3, 40) as u32, num(4, 8) as usize, num(5, 1 << 24) as usize),
+        _ => println!("verbs census R K BITS THREADS, deep R K BITS THREADS, jumps R K BITS THREADS, trace D K BITS, windowed BITS, cell D K BITS, wcell D K BITS, chainless BITS, forced BITS, wcontrol BITS, split D K X COUNT, set D K B, windows D K E F, graham T P Q BITS, refute BITS, ternary N HI THREADS, probe N TOP THREADS, band LO HI W THREADS, offsets LO HI, sweep N LO HI THREADS, tally N LO HI THREADS PLAIN, control, route R E, tight K BITS HOLES, cantor E1,E2,... CAP, carry M1,M2,... CAP, tuples R TOP THREADS CAP, deaths R TOP D THREADS, classes R D THREADS"),
     }
 }
 
@@ -1759,6 +3181,31 @@ mod tests {
     }
 
     #[test]
+    fn the_cut_spares_every_prefix_of_the_extremal_sets() {
+        for set in [
+            vec![19, 52, 57, 59, 60],
+            vec![38, 52, 57, 59, 60],
+            vec![107, 145, 159, 162, 164, 168],
+            vec![107, 145, 159, 162, 166, 168],
+            vec![302, 409, 447, 459, 465, 466, 474],
+        ] {
+            assert!(admissible(&set));
+            assert!(spared(&set, 3f64.powi(set.len() as i32)));
+        }
+    }
+
+    #[test]
+    fn the_cut_keeps_every_set_the_plain_search_finds() {
+        let floor = [0usize, 1, 3, 8, 22, 60, 168];
+        for top in 168..=172 {
+            let cut = sweep_top(6, top, &floor, 2, true, true).sets;
+            assert_eq!(cut, sweep_top(6, top, &floor, 2, false, true).sets);
+        }
+        assert_eq!(sweep_top(6, 168, &floor, 2, true, true).sets.len(), 2);
+        assert!(sweep_top(6, 167, &floor, 2, true, false).found.is_none());
+    }
+
+    #[test]
     fn the_wide_certificate_matches_the_full_one_past_its_window() {
         let mut truncated = 0;
         for (bases, k) in [
@@ -1833,8 +3280,72 @@ mod tests {
     }
 
     #[test]
+    fn the_unit_set_certifies_through_the_power_gap() {
+        for k in [1, 2] {
+            let r = tight_cell(k, 20, 25).unwrap();
+            let f = r.f as usize;
+            let sums = knapsack(&[3, 4, 7], k, 4 * f);
+            assert!(!sums[f] && sums[f + 1..].iter().all(|&x| x));
+            assert_eq!((1..=f).filter(|&x| !sums[x]).count(), r.gaps);
+            assert!(r.margin > 0.0 && r.big >= 8);
+        }
+        assert_eq!(tight_cell(1, 16, 25).unwrap().f, 581);
+    }
+
+    #[test]
     fn a_set_below_the_threshold_never_certifies() {
         assert_eq!(certify(&[3, 4], 1, 1 << 22), Verdict::Cap);
         assert_eq!(certify(&[3, 6, 9, 12, 15, 21], 1, 1 << 22), Verdict::Cap);
+    }
+
+    #[test]
+    fn the_carry_automaton_counts_prefixes_by_multiplication() {
+        for mults in [vec![256u128], vec![4, 256], vec![1 << 12, 1 << 36, 1 << 38]] {
+            let s = shape(&mults, 1 << 20);
+            let mut level = vec![0u128];
+            let mut direct = vec![];
+            for n in 0..28u32 {
+                let p = 3u128.pow(n);
+                let mut next = vec![];
+                for &x in &level {
+                    for y in [x, x + p] {
+                        if mults.iter().all(|&m| (m * y / p) % 3 != 2) {
+                            next.push(y);
+                        }
+                    }
+                }
+                direct.push(next.len() as u128);
+                level = next;
+            }
+            assert_eq!(paths(&s.next, 28), direct);
+        }
+        let s = shape(&[4, 256], 1 << 20);
+        let root = s.lo;
+        assert!((root.powi(6) - root.powi(5) - 1.0).abs() < 1e-9 && s.hi - s.lo < 1e-9);
+    }
+
+    #[test]
+    fn the_prefix_test_agrees_with_the_automaton() {
+        for r in [2, 3] {
+            for e in subsets_of(&[2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24], r) {
+                let mults: Vec<u128> = e.iter().map(|&x| 1u128 << x).collect();
+                let s = shape(&mults, 1 << 22);
+                assert_eq!(
+                    death(&mults, 79).is_some(),
+                    s.loops == 1 && s.rich == 0,
+                    "{:?}",
+                    e
+                );
+            }
+        }
+        assert_eq!(death(&[4, 256, 1 << 72], 79), Some(23));
+    }
+
+    #[test]
+    fn the_surviving_classes_obey_the_first_moment() {
+        for (r, d) in [(2, 4), (2, 5), (3, 3), (3, 4)] {
+            let (dead, all) = dead_classes(r, d, 4);
+            assert!(all - dead <= 1 << ((r as u32 + 1) * (d - 1)));
+        }
     }
 }

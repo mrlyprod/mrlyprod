@@ -33,7 +33,6 @@
 | ref | title | url |
 |---|---|---|
 | Perron-Frobenius theorem | Wikipedia: the Collatz-Wielandt formula, the min-max over positive vectors behind the even-half certificates of the `slice-sign-even-half` shelf paper | https://en.wikipedia.org/wiki/Perron%E2%80%93Frobenius_theorem |
-| OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |
 
 ## DATASETS
 

@@ -1,13 +1,13 @@
 ---
 title: Design masks
-lead: A design as an attention mask, two ways: laid over the query-key square, nineteen masks from every family mrly draws are no better than their random twins at equal density; laid along the offsets, a digit design reaches every lag in two hops exactly when its digit sumset covers the digits, base-3 digits `{0, 1}` do it with sixteen offsets where the strided family needs seventeen, an integer program finds a sparser set than both, and on tiny Shakespeare at 600 steps the strided mask beats the designs by `0.04` nats while every window beats dense, the loss tracking the smallest offset a mask leaves out.
+lead: A Toeplitz attention mask whose offsets form a digit design reaches every offset in two hops exactly when its digit sumset covers the digits; the sparsest ties the strided mask in density and loses to it on tiny Shakespeare, which reads the nearest offsets.
 figure: research-masks
 slug: masks
 ---
 
 # Design masks
 
-A design as an attention mask, two ways: laid over the query-key square, nineteen masks from every family mrly draws are no better than their random twins at equal density; laid along the offsets, a digit design reaches every lag in two hops exactly when its digit sumset covers the digits, base-3 digits `{0, 1}` do it with sixteen offsets where the strided family needs seventeen, an integer program finds a sparser set than both, and on tiny Shakespeare at 600 steps the strided mask beats the designs by `0.04` nats while every window beats dense, the loss tracking the smallest offset a mask leaves out.
+A Toeplitz attention mask whose offsets form a digit design reaches every offset in two hops exactly when its digit sumset covers the digits; the sparsest ties the strided mask in density and loses to it on tiny Shakespeare, which reads the nearest offsets.
 
 - [notes/masks.md](notes/masks.md): Design masks
 - [claims/design-masks.md](claims/design-masks.md): Design masks

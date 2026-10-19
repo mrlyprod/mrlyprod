@@ -1,13 +1,13 @@
 ---
 title: Complex dimensions
-lead: Complex dimensions: every design in the lattice class, the carpet proved not Minkowski measurable with its explicit profile, and the arithmetic pole at `s_0 + 2 pi i/log 3` certified genuine.
+lead: Complex dimensions: every design in the lattice class, the carpet not Minkowski measurable by earlier theorems (Deniz et al., Lapidus, Pearse and Winter) with an explicit profile added here, the sponge's non-measurability found in none of the sources read, and the arithmetic pole at `s_0 + 2 pi i/log 3` certified genuine.
 figure: research-dimensions
 slug: dimensions
 ---
 
 # Complex dimensions
 
-Complex dimensions: every design in the lattice class, the carpet proved not Minkowski measurable with its explicit profile, and the arithmetic pole at `s_0 + 2 pi i/log 3` certified genuine.
+Complex dimensions: every design in the lattice class, the carpet not Minkowski measurable by earlier theorems (Deniz et al., Lapidus, Pearse and Winter) with an explicit profile added here, the sponge's non-measurability found in none of the sources read, and the arithmetic pole at `s_0 + 2 pi i/log 3` certified genuine.
 
 - [notes/dimensions.md](notes/dimensions.md): Complex dimensions
 - [claims/arithmetic-pole.md](claims/arithmetic-pole.md): The arithmetic pole

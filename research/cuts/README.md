@@ -23,6 +23,7 @@ The six-gasket theorem: a diagonal cut through one parity solid is Sierpinski al
 - [lab/py/even-block-valuations/](lab/py/even-block-valuations/): Prints `det M_even` exactly and its `v_p` for the base-3 middle-digit diagonal slice at every `dim = 2..40`, and tests the route "Lemma H by one prime": a prime `p` with `v_p(det M_even) = 0` at every `dim`.
 - [lab/py/pascal-shear/](lab/py/pascal-shear/): The level-`level` cell set of the 2D design with code `7`, tile `[[1, 1], [1, 0]]`, is `{(i, j) in [0, 2^level)^2 
 - [lab/py/slice-ladder-controls/](lab/py/slice-ladder-controls/): Checks the anti-diagonal profile identity `P_{A (x) B}(t) = P_A(t^side_B) P_B(t)` on every base-2 word of length 2 and 3, counting mismatches.
+- [figures/paper-slice-sign-law.ts](figures/paper-slice-sign-law.ts): paper-slice-sign-law
 - [figures/research-cuts.ts](figures/research-cuts.ts): research-cuts
 
 ## Lost

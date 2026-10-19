@@ -143,7 +143,7 @@ pub fn first_returns(live: &Live) -> Option<Vec<u128>> {
     let mut f = vec![0u128; longest + 1];
     let mut cur = vec![0u128; n];
     cur[0] = 1;
-    for m in 1..=longest {
+    for slot in f.iter_mut().skip(1) {
         let mut next = vec![0u128; n];
         for (i, out) in live.edges.iter().enumerate() {
             if cur[i] == 0 {
@@ -153,7 +153,7 @@ pub fn first_returns(live: &Live) -> Option<Vec<u128>> {
                 next[j] = next[j].checked_add(cur[i])?;
             }
         }
-        f[m] = next[0];
+        *slot = next[0];
         next[0] = 0;
         cur = next;
     }
@@ -234,7 +234,7 @@ fn is_prime(n: u64) -> bool {
         return false;
     }
     for &q in &[2u64, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37] {
-        if n % q == 0 {
+        if n.is_multiple_of(q) {
             return n == q;
         }
     }
@@ -302,12 +302,12 @@ pub fn charpoly_mod(live: &Live, p: u64) -> Vec<u64> {
             }
             let u = mulmod(h[i][m - 1], tinv, p);
             let row_m = h[m].clone();
-            for j in 0..n {
-                h[i][j] = sub(h[i][j], mulmod(u, row_m[j], p), p);
+            for (cell, &r) in h[i].iter_mut().zip(&row_m) {
+                *cell = sub(*cell, mulmod(u, r, p), p);
             }
-            for j in 0..n {
-                let add = mulmod(u, h[j][i], p);
-                h[j][m] = (h[j][m] + add) % p;
+            for row in h.iter_mut() {
+                let add = mulmod(u, row[i], p);
+                row[m] = (row[m] + add) % p;
             }
         }
     }
@@ -411,7 +411,7 @@ pub fn charpoly_exact(live: &Live, ps: &[u64]) -> Option<Vec<i128>> {
 
 pub fn v3(mut x: u64) -> u32 {
     let mut k = 0;
-    while x > 0 && x % 3 == 0 {
+    while x > 0 && x.is_multiple_of(3) {
         x /= 3;
         k += 1;
     }
