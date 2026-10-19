@@ -1,12 +1,14 @@
 import { useReducer } from 'react';
 import { AppIcon } from '../../shell/appicon.jsx';
+import { app, KNOWN, PAD, redock } from '../../shell/catalog.js';
 import { desk } from '../../shell/desk.js';
+import { docked } from '../../shell/launch.js';
 import { KEY, magnify, root, screen, write } from '../../shell/prefs.js';
 import { kept, WIDGETS } from '../../shell/widgets.jsx';
-import { Action, Nav, Pane as Page, Section, Switch, Tiles } from './ui.jsx';
+import { Action, Nav, Note, Pane as Page, Section, Select, Switch, Tiles } from './ui.jsx';
 import { usePref } from './use.js';
 
-export const FIND = ['Wallpaper', 'Desktop picture', 'Random', 'Widgets', 'Dock', 'Magnify', 'Reset dock', 'Launchpad', 'Window width', 'Reset window width'];
+export const FIND = ['Wallpaper', 'Desktop picture', 'Random', 'Widgets', 'Dock', 'Dock apps', 'Add to Dock', 'Remove from Dock', 'Magnify', 'Reset dock', 'Launchpad', 'Window width', 'Reset window width'];
 
 /* MARK */
 
@@ -80,6 +82,27 @@ function Widgets() {
 
 /* DOCK */
 
+const title = (id) => app(id)?.title ?? id;
+
+function Apps() {
+  const groups = docked(PAD.dock, usePref(KEY.dock), KNOWN);
+  const ids = groups.flat();
+  const spare = [...KNOWN].filter((id) => !ids.includes(id)).sort((a, b) => title(a).localeCompare(title(b)));
+  const drop = (id) => redock(groups.map((one) => one.filter((each) => each !== id)));
+  const add = (id) => id && redock(groups.length ? groups.map((one, g) => (g ? one : [...one, id])) : [[id]]);
+  return (
+    <Section title="Dock apps" foot="An added app joins the end of the first group. Drag apps in the dock to reorder them.">
+      {ids.map((id) => (
+        <Action key={id} label={title(id)} onClick={() => drop(id)}>
+          Remove
+        </Action>
+      ))}
+      {!ids.length && <Note>The dock holds only the Launchpad.</Note>}
+      {spare.length > 0 && <Select label="Add to Dock" value="" options={[['', 'Choose an app'], ...spare.map((id) => [id, title(id)])]} onChange={add} />}
+    </Section>
+  );
+}
+
 function Dock() {
   const on = usePref(KEY.magnify) === '1';
   return (
@@ -125,6 +148,7 @@ export default function Pane({ site }) {
       <Picture site={site} />
       <Widgets />
       <Dock />
+      <Apps />
       <Windows />
     </Page>
   );

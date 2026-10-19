@@ -46,9 +46,14 @@ export const PRESETS = [
 
 export const preset = (value) => PRESETS.find((one) => one.set.effect === value.effect && SHAPE.every((key) => one.set[key] === value[key]))?.id ?? '';
 
-export function lasts(name) {
-  const span = EFFECTS[name].span(1);
+export function lasts(name, length = 1) {
+  const span = EFFECTS[name].span(length);
   return span < 0.1 ? `${Math.round(span * 1000)} ms` : `${span.toFixed(1)} s`;
+}
+
+export function facts(value) {
+  const kept = PRESETS.find((one) => one.id === preset(value));
+  return [['effect', named(value.effect)], ['length', lasts(value.effect, value.length)], ['preset', kept ? kept.name : 'own']];
 }
 
 const TAIL = 1.5;

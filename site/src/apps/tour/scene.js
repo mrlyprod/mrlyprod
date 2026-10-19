@@ -64,7 +64,9 @@ function ink(kind, t) {
 function rows(ctx, box, one, t) {
   const n = one.rows.length;
   const cols = Math.max(1, ...one.rows.map((row) => row.sheets.length));
-  const name = Math.round(t.px * 9);
+  ctx.font = font(t, 0.95);
+  const name = Math.round(Math.min(box.w * 0.4, Math.max(t.px * 9, ...one.rows.map((row) => ctx.measureText(row.name).width + t.px))));
+  ctx.font = font(t);
   const cell = Math.min((box.h - (n - 1) * t.px * 0.5) / n, (box.w - name) / cols);
   one.rows.forEach((row, i) => {
     const y = box.y + i * (cell + t.px * 0.5);

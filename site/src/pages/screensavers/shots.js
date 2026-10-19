@@ -1,8 +1,8 @@
 import { lock } from '../../shell/lock.js';
 import { calm } from '../../shell/prefs.js';
+import { load, STILL } from '../../shell/savers.js';
 
-const PLAY = 1000;
-const STILL = 250;
+const QUICK = 250;
 const TYPE = 'image/webp';
 const QUALITY = 0.85;
 
@@ -26,8 +26,9 @@ async function shoot(id, box, job) {
   let stop = null;
   try {
     stop = await lock(canvas, id);
+    const shown = await load(id);
     if (job.gone) return null;
-    await nap(stop.scene?.still || calm() ? STILL : PLAY, job);
+    await nap(stop.scene?.still || calm() ? QUICK : (shown?.still ?? STILL), job);
     if (job.gone) return null;
     stop.pause?.();
     return { url: canvas.toDataURL(TYPE, QUALITY), as: stop.as };

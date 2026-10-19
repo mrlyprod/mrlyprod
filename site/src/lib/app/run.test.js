@@ -155,6 +155,16 @@ test('an every scene draws once at start, then at its interval, and ignores the 
   expect([ticks[0][1], seen]).toEqual([50, [0, 50, 100]]);
 });
 
+test("the site's Reduce motion stills a scene without the OS's", () => {
+  const frames = stage();
+  globalThis.document.documentElement = { dataset: { motion: 'reduce' } };
+  const seen = [];
+  const stop = run({ clientWidth: 4, clientHeight: 4 }, (canvas, view) => ({ draw: () => seen.push(view.still) }));
+  stop();
+  unstage();
+  expect([frames.length, seen]).toEqual([0, [true]]);
+});
+
 test('a take with a step wakes a reduced-motion scene, which then draws one step a frame', () => {
   const frames = stage();
   globalThis.matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });

@@ -84,7 +84,7 @@ export const SAVERS = [
   {
     id: 'moire',
     title: 'Moire disc',
-    pick: (rand) => ({ source: 'moire', preset: pick(rand, PRESETS), limit: odd(rand, 9, LIMIT), ramp: pick(rand, ['heat', 'tint']), levels: pick(rand, [12, 24, 64]), rpm: 4 }),
+    pick: (rand) => ({ source: 'moire', preset: pick(rand, PRESETS), limit: odd(rand, 9, LIMIT), ramp: 'tint', levels: pick(rand, [12, 24, 64]), rpm: 4 }),
   },
 ];
 

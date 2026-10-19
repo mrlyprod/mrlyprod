@@ -320,7 +320,7 @@ export function start() {
       else core.forget(one);
     }
     fresh.clear();
-    const list = sourced().map((canvas) => ({ canvas, rect: canvas.getBoundingClientRect(), reach: reached(canvas) }));
+    const list = sourced().map((canvas) => ({ canvas, rect: canvas.getBoundingClientRect(), reach: reached(canvas) })).sort((a, b) => Boolean(a.reach) - Boolean(b.reach));
     const key = [view.w, view.h, dpr, ground, ...list.map(({ rect, reach }) => [rect.left, rect.top, rect.width, rect.height, reach?.left, reach?.top, reach?.width, reach?.height])].join();
     if (changed || key !== composed) core.compose(view, dpr, list, ground);
     composed = key;

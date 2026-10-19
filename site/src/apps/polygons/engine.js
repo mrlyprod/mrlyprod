@@ -115,6 +115,8 @@ export const PALETTES = {
   lime: ['yellow', 'green', 'mint'],
   night: ['indigo', 'purple', 'pink'],
   tint: ['tint1', 'tint2', 'tint3', 'accent'],
+  soft: ['tint1', 'tint2'],
+  deep: ['tint2', 'tint3', 'accent'],
   mono: ['ink1', 'ink2', 'ink3', 'ink4'],
 };
 

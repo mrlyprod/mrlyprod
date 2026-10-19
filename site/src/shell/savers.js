@@ -3,6 +3,10 @@ import { site } from 'site:routes';
 import { rng } from '../lib/rand.js';
 import { offs } from './prefs.js';
 
+const LONGEST = 10000;
+
+export const STILL = 1000;
+
 /* REGISTRY */
 
 export const all = () => site.savers ?? [];
@@ -26,7 +30,13 @@ export async function load(id) {
   const scene = await scenes[entry.app]();
   const local = entry.id.slice(entry.app.length + 1);
   const saver = scene.SAVERS?.find((one) => one.id === local) ?? { id: local, title: entry.title, pick: () => ({}) };
-  return { entry, scene, saver };
+  return { entry, scene, saver, still: still(entry, saver) };
+}
+
+function still(entry, saver) {
+  const ms = saver.still ?? STILL;
+  if (!Number.isInteger(ms) || ms < 1 || ms > LONGEST) throw new Error(`savers: ${entry.id} sets still to ${ms}; it is a whole number of ms from 1 to ${LONGEST}`);
+  return ms;
 }
 
 /* VALUE */

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Bar } from './frame.jsx';
-import { Icon } from './controls.jsx';
+import { Icon, useRoom } from './controls.jsx';
 
 /* QUEUE */
 
@@ -82,6 +82,31 @@ function move(e) {
   items[next]?.focus();
 }
 
+export function Chips({ label, chips, chip, onChip }) {
+  const [at, narrow] = useRoom(chips.map(([v, text]) => `${v}:${text}`).join('\n'), true);
+  if (narrow) {
+    return (
+      <label ref={at} className="chips">
+        <select value={String(chip)} aria-label={label} onChange={(e) => onChip?.(chips.find(([v]) => String(v) === e.target.value)?.[0] ?? e.target.value)}>
+          {chips.map(([v, text]) => <option key={v} value={v}>{text}</option>)}
+        </select>
+        <span className="drop">
+          <Icon name="expand_more" />
+        </span>
+      </label>
+    );
+  }
+  return (
+    <div ref={at} className="chips" role="radiogroup" aria-label={label}>
+      {chips.map(([v, text]) => (
+        <button type="button" key={v} role="radio" aria-checked={String(v) === String(chip)} className={String(v) === String(chip) ? 'on' : undefined} onClick={() => onChip?.(v)}>
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function Library({ name = 'Library', find, onFind, onGo, hint = 'Search', label = `Search ${name}`, at, chips, chip, onChip, children }) {
   const go = (e) => {
     if (e.key === 'Enter' && onGo) {
@@ -100,15 +125,7 @@ export function Library({ name = 'Library', find, onFind, onGo, hint = 'Search',
             <input ref={at} type="search" value={find ?? ''} placeholder={hint} aria-label={label} onChange={(e) => onFind(e.target.value)} onKeyDown={go} />
           </label>
         )}
-        {chips?.length > 0 && (
-          <div className="chips" role="radiogroup" aria-label={`${name} filter`}>
-            {chips.map(([v, text]) => (
-              <button type="button" key={v} role="radio" aria-checked={String(v) === String(chip)} className={String(v) === String(chip) ? 'on' : undefined} onClick={() => onChip?.(v)}>
-                {text}
-              </button>
-            ))}
-          </div>
-        )}
+        {chips?.length > 0 && <Chips label={`${name} filter`} chips={chips} chip={chip} onChip={onChip} />}
         {children}
       </div>
     </Bar>

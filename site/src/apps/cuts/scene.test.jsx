@@ -38,9 +38,9 @@ test('the gasket cube meets 3^level cells at every height of its support, and op
 
 test('the readings name the height, its count and its offset in binary, and count the points drawn', () => {
   const plan = study(math, value({ height: 50 }));
-  expect(plan.rows.slice(0, 4)).toEqual([['Name', 'code 126'], ['Height', '50'], ['This slice', '243'], ['Offset in binary', '10011']]);
-  expect([row(plan.rows, 'Non-empty'), row(plan.rows, 'Points drawn'), row(study(math, value({ both: 1 })).rows, 'Points drawn')]).toEqual(['32 of 32', '243', '486']);
-  expect([row(study(math, value({ view: 'section' })).rows, 'Points drawn'), study(math, value({ code: '0' })).rows.at(-1)]).toEqual(['-', ['Support', 'none']]);
+  expect(plan.rows.slice(0, 4)).toEqual([['name', 'code 126'], ['height', '50'], ['this slice', '243'], ['offset in binary', '10011']]);
+  expect([row(plan.rows, 'non-empty'), row(plan.rows, 'points drawn'), row(study(math, value({ both: 1 })).rows, 'points drawn')]).toEqual(['32 of 32', '243', '486']);
+  expect([row(study(math, value({ view: 'section' })).rows, 'points drawn'), study(math, value({ code: '0' })).rows.at(-1)]).toEqual(['-', ['support', 'none']]);
 });
 
 test('points reach level 9 and the section level 6', () => {

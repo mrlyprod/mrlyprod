@@ -52,8 +52,8 @@ export const PAGE = {
 };
 
 export const SAVERS = [
-  { id: 'pens', title: 'Pens writing', pick: (rand) => ({ view: 'pens', speed: 0.5, hold: 30 + Math.floor(rand() * 41), flags: pick(rand, [0, 1]) }) },
-  { id: 'words', title: 'Words folding', pick: (rand) => ({ view: 'text', speed: 0.75, hold: 30 + Math.floor(rand() * 31), pad: pick(rand, [1, 2, 3]) }) },
+  { id: 'pens', title: 'Pens writing', still: 3000, pick: (rand) => ({ view: 'pens', speed: 0.5, hold: 30 + Math.floor(rand() * 41), flags: pick(rand, [0, 1]) }) },
+  { id: 'words', title: 'Words folding', still: 4500, pick: (rand) => ({ view: 'text', speed: 0.75, hold: 30 + Math.floor(rand() * 31), pad: pick(rand, [1, 2, 3]) }) },
 ];
 
 export const units = wasm('font');

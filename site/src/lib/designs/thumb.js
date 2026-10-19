@@ -20,15 +20,14 @@ export function hue(tint, degree) {
 
 /* PAINT */
 
-export function flat(ctx, cell, x, y, side, fill) {
-  const [rows, cols] = cell.shape;
-  const px = side / cols;
+export function flat(ctx, cell, x, y, side, fill, tall = side / cell.shape[1]) {
+  const px = side / cell.shape[1];
   ctx.fillStyle = fill;
   ctx.beginPath();
   for (const [row, col, len] of runs(cell)) {
     const left = Math.round(x + col * px);
-    const top = Math.round(y + row * px);
-    ctx.rect(left, top, Math.round(x + (col + len) * px) - left, Math.round(y + (row + 1) * px) - top);
+    const top = Math.round(y + row * tall);
+    ctx.rect(left, top, Math.round(x + (col + len) * px) - left, Math.round(y + (row + 1) * tall) - top);
   }
   ctx.fill();
 }
@@ -53,6 +52,7 @@ export function thumb(ctx, math, dim, base, code, side, { accent, paper }, level
   const cell = grow(math, dim, base, code, level);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, side, side);
+  if (dim === 1) return flat(ctx, cell, 0, side / 3, side, accent, side / 3);
   if (dim === 2) return flat(ctx, cell, 0, 0, side, accent);
   const n = cell.shape[0];
   const [w, h] = extent(n, PHI);

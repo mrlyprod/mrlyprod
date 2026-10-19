@@ -2,8 +2,9 @@ import { expect, test } from 'bun:test';
 import { asked, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { spanOf } from '../../lib/fractal/view.js';
+import { unit } from '../../lib/fractal/shader.js';
 import { gl } from '../../../test/fake.js';
-import { SPEC, go, make } from './scene.js';
+import { SAVERS, SPEC, go, make } from './scene.js';
 import { PLACES } from './places.js';
 
 const canvas = (fake) => ({ width: 1, height: 1, getContext: (kind) => (kind === 'webgl2' ? fake : null) });
@@ -40,6 +41,16 @@ test('under the lock the knobs map: palette empty to classic and seeded to the s
   const looks = ['', 'seeded'].map((palette) => ['uGround', 'uRamp'].map((name) => name in drawn({ palette }).one.uniforms));
   const pens = [0, 1].map((path) => drawn({ path }).fake.draws().filter((one) => one.vs.includes('aShape')).length);
   expect([looks, pens, drawn({ speed: 2 }, 2000).span]).toEqual([[[true, false], [false, true]], [0, 1], drawn({ speed: 1 }, 4000).span]);
+});
+
+test('every saver, on any roll, draws in the site tint: its ground is the paper and its colour the accent', () => {
+  const inks = SAVERS.flatMap((saver) => [1, 2, 3].map((seed) => {
+    const fake = gl();
+    make(canvas(fake), LOCK, { seed, ...saver.pick(rng(seed)) }).draw();
+    const [one] = paints(fake);
+    return [one.uniforms.uGround, one.uniforms.uAccent];
+  }));
+  expect(new Set(inks.map((one) => JSON.stringify(one)))).toEqual(new Set([JSON.stringify([unit('#102030'), unit('#ff8000')])]));
 });
 
 test('the page opens still on the whole set, holds it as time runs, and asks to rest after every still frame', () => {

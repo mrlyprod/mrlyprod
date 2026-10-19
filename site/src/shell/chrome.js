@@ -1,12 +1,11 @@
 import { handle } from '../lib/handle.js';
-import { KEY, PREFIX, face, glass, icons, magnify, read, root, screen, shade, theme, tint, turn, write } from './prefs.js';
+import { KEY, PREFIX, face, glass, icons, magnify, read, root, screen, shade, stamp, subscribe, theme, tint, turn, write } from './prefs.js';
 import { desk, greeting, knock, listen, mark, route, visit } from './desk.js';
 import { track, type } from './catalog.js';
 import { expand, turns } from './tree.js';
 import { menus } from './menus.js';
 
-const DOCK = '(min-width: 74rem)';
-const SIDES = ['left', 'right'];
+const EDGES = ['left', 'right'];
 
 /* SCROLL */
 
@@ -43,9 +42,10 @@ function land() {
 
 /* DRAWERS */
 
-const DOCKED = 960;
-
-const docked = () => root().dataset.window === 'wide' && (document.querySelector('.window')?.getBoundingClientRect().width ?? 0) >= DOCKED;
+const docked = () => {
+  const pane = document.querySelector('.panes > .pane');
+  return Boolean(pane) && getComputedStyle(pane).position === 'static';
+};
 const isOpen = (side) => root().dataset[side] === 'open';
 
 function set(side, open) {
@@ -54,7 +54,18 @@ function set(side, open) {
 }
 
 function stow() {
-  for (const side of SIDES) set(side, false);
+  set('right', false);
+}
+
+function watch() {
+  const box = document.querySelector('.window');
+  if (!box || typeof ResizeObserver !== 'function') return;
+  let was = docked();
+  new ResizeObserver(() => {
+    const now = docked();
+    if (now !== was) stow();
+    was = now;
+  }).observe(box);
 }
 
 function sync() {
@@ -64,17 +75,15 @@ function sync() {
 function toggle(side) {
   const open = !isOpen(side);
   set(side, open);
-  if (!open) return;
-  set(side === 'left' ? 'right' : 'left', false);
-  document.getElementById(side)?.querySelector('a, button, input, select, textarea')?.focus();
+  if (open) document.getElementById(side)?.querySelector('a, button, input, select, textarea')?.focus();
 }
 
 function shut() {
   if (docked()) return false;
-  const open = SIDES.filter(isOpen);
-  for (const side of open) set(side, false);
-  if (open.length) document.querySelector(`[data-pane="${open[0]}"]`)?.focus();
-  return open.length > 0;
+  if (!isOpen('right')) return false;
+  set('right', false);
+  document.querySelector('[data-pane="right"]')?.focus();
+  return true;
 }
 
 /* CART */
@@ -145,7 +154,7 @@ function tick() {
     date.dateTime = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
   }
   if (clock) {
-    clock.textContent = now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    clock.textContent = stamp(now, read(KEY.hours));
     clock.dateTime = `${two(now.getHours())}:${two(now.getMinutes())}`;
   }
   clearTimeout(ticking);
@@ -164,7 +173,7 @@ function edges() {
   const room = () => innerWidth - 2 * (Number.parseFloat(getComputedStyle(root()).fontSize) || 16) * 0.75;
   const get = () => box.getBoundingClientRect().width;
   const put = (px) => root().style.setProperty(kind()[0], `${Math.round(px)}px`);
-  for (const side of SIDES) {
+  for (const side of EDGES) {
     const grip = document.createElement('div');
     grip.className = 'edge';
     grip.dataset.side = side;
@@ -288,8 +297,9 @@ function boot() {
   menus();
   stow();
   tick();
+  subscribe((key) => (key === null || key === KEY.hours) && tick());
   edges();
-  matchMedia(DOCK).addEventListener('change', stow);
+  watch();
   document.addEventListener('click', (e) => {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
@@ -300,18 +310,6 @@ function boot() {
     const zoomer = target.closest('.window > .title .zoom');
     if (zoomer) return zoom(zoomer);
     if (target.closest('.scrim') || target.closest('.pane a[href]')) shut();
-  });
-  document.addEventListener('change', (e) => {
-    const pick = e.target instanceof Element ? e.target : null;
-    if (!pick) return;
-    if (pick.matches('[data-font-pick]')) return face(pick.value);
-    if (pick.matches('[data-tint-pick]')) return tint(pick.value);
-    if (pick.matches('[data-glass-pick]')) return glass(pick.value);
-    if (pick.matches('[data-magnify-pick]')) return magnify(pick.checked);
-    if (pick.matches('[data-saver-pick]')) {
-      screen(pick.value);
-      return desk();
-    }
   });
   document.addEventListener('toggle', expand, true);
   document.addEventListener('keydown', (e) => {

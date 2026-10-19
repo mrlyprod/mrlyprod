@@ -3,7 +3,7 @@ import { TINTS } from '../../lib/color.js';
 import { BEAT, COMBINES, CROPS, DEEPEST, GRAIN, RAMPS, SIZES, TOP, climb, colorizer, crop, css, field, heat, law, matrix, odd, paint, palette, study } from '../../lib/moire/engine.js';
 import { fit, shell } from '../../lib/moire/sheet.js';
 
-const VIEWS = [['field', 'Field'], ['matrix', 'R-matrix']];
+const VIEWS = [['field', 'Field'], ['matrix', 'R\u2011matrix']];
 
 const stacks = (value) => value.view !== 'matrix';
 

@@ -9,22 +9,22 @@ const CODES = { 1: 4, 2: 16 };
 const FIRST = { 1: 1, 2: 7 };
 
 const ART = {
-  glider: ['Glider', ['.#.', '..#', '###']],
-  lwss: ['LWSS', ['.#..#', '#....', '#...#', '####.']],
+  glider: ['Glider', ['.#.', '..#', '###'], 32],
+  lwss: ['LWSS', ['.#..#', '#....', '#...#', '####.'], 32],
   pentomino: ['R-pentomino', ['.##', '##.', '.#.']],
   acorn: ['Acorn', ['.#.....', '...#...', '##..###']],
   diehard: ['Diehard', ['......#.', '##......', '.#...###']],
   gun: ['Gosper gun', ['........................#...........', '......................#.#...........', '............##......##............##', '...........#...#....##............##', '##........#.....#...##..............', '##........#...#.##....#.#...........', '..........#.....#.......#...........', '...........#...#....................', '............##......................']],
-  blinker: ['Blinker', ['###']],
-  toad: ['Toad', ['.###', '###.']],
-  beacon: ['Beacon', ['##..', '##..', '..##', '..##']],
-  pulsar: ['Pulsar', ['..###...###..', '.............', '#....#.#....#', '#....#.#....#', '#....#.#....#', '..###...###..', '.............', '..###...###..', '#....#.#....#', '#....#.#....#', '#....#.#....#', '.............', '..###...###..']],
-  block: ['Block', ['##', '##']],
-  beehive: ['Beehive', ['.##.', '#..#', '.##.']],
+  blinker: ['Blinker', ['###'], 16],
+  toad: ['Toad', ['.###', '###.'], 16],
+  beacon: ['Beacon', ['##..', '##..', '..##', '..##'], 16],
+  pulsar: ['Pulsar', ['..###...###..', '.............', '#....#.#....#', '#....#.#....#', '#....#.#....#', '..###...###..', '.............', '..###...###..', '#....#.#....#', '#....#.#....#', '#....#.#....#', '.............', '..###...###..'], 32],
+  block: ['Block', ['##', '##'], 16],
+  beehive: ['Beehive', ['.##.', '#..#', '.##.'], 16],
 };
 
 export const PATTERNS = Object.fromEntries(
-  Object.entries(ART).map(([id, [name, rows]]) => [id, { name, w: rows[0].length, h: rows.length, cells: rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === '#' ? [[x, y]] : []))) }]),
+  Object.entries(ART).map(([id, [name, rows, board = BOARD]]) => [id, { name, w: rows[0].length, h: rows.length, board, cells: rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === '#' ? [[x, y]] : []))) }]),
 );
 
 export const SEEDS = [['noise', 'Soup'], ['one', 'One cell'], ['design', 'Design']];
@@ -140,6 +140,8 @@ function place(types, width, design, side, top, left) {
 }
 
 export const startOf = (value) => (Number(value?.dim) === 1 && !LINES.includes(value.from) ? 'noise' : value?.from);
+
+export const sideOf = (value) => PATTERNS[startOf(value)]?.board ?? BOARD;
 
 export function sow(value, rand, math, width, height = 1) {
   const types = new Uint8Array(width * height);

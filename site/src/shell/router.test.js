@@ -8,10 +8,11 @@ const ROWS = [
   { route: '/', kind: 'app', title: 'mrly', source: null, lead: 'home', meta: { id: 'home' } },
   { route: '/about/', kind: 'prose', title: 'About', source: 'site/README.md', lead: 'who', meta: { id: 'about' } },
   { route: '/git/', kind: 'app', title: 'Code', source: null, lead: 'code', meta: { id: 'git', deep: true } },
+  { route: '/life/', kind: 'app', title: 'Life', source: null, lead: 'cells', meta: { id: 'life', scene: true } },
   { route: '/404.html', kind: 'app', title: 'Nothing here', source: null, lead: '', meta: { id: 'missing' } },
 ];
 
-const KEPT = ['document', 'window', 'location', 'history', 'matchMedia', 'sessionStorage', 'requestAnimationFrame', 'scrollTo', 'scrollY', 'fetch', 'addEventListener', 'Element', 'HTMLAnchorElement'];
+const KEPT = ['document', 'window', 'location', 'history', 'matchMedia', 'sessionStorage', 'requestAnimationFrame', 'scrollTo', 'scrollY', 'fetch', 'addEventListener', 'Element', 'HTMLAnchorElement', 'MutationObserver'];
 
 const kept = Object.fromEntries(KEPT.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
 
@@ -76,10 +77,6 @@ class Node extends Element {
     this.parent = null;
   }
 
-  before(kid) {
-    this.parent?.append(kid);
-  }
-
   after(kid) {
     this.parent?.append(kid);
   }
@@ -99,14 +96,14 @@ class Node extends Element {
 
 const el = (tag) => new Node(tag);
 
-const heard = { click: [], wire: [], gone: [] };
+const heard = { click: [], wire: [], gone: [], unmounts: 0, form: null };
 const body = el('body');
 const main = el('main');
 const head = el('head');
 const describe = Object.assign(el('meta'), { name: 'description' });
 head.append(describe);
-body.append(el('aside'), main, el('aside'));
-const panes = { main, left: body.kids[0], right: body.kids[2] };
+body.append(main, el('aside'));
+const panes = { main, right: body.kids[1] };
 const texts = { '/raw/site/README.md': '# About' };
 const breaks = new Set();
 const store = new Map();
@@ -117,7 +114,7 @@ Object.assign(globalThis, {
   Element,
   HTMLAnchorElement,
   document: { documentElement: el('html'), head, body, createElement: el, getElementById: (id) => panes[id] ?? null, querySelector: () => null, addEventListener: (type, fn) => type === 'click' && heard.click.push(fn) },
-  window: { dispatchEvent: (event) => event.type === 'wire' && heard.wire.push(event.detail.route) },
+  window: { dispatchEvent: (event) => event.type === 'wire' && heard.wire.push(event.detail.route), addEventListener: () => {} },
   history: { state: null, pushState: (state, title, href) => (at = new URL(href, at)), replaceState: (state, title, href) => href && (at = new URL(href, at)) },
   matchMedia: () => ({ matches: true }),
   sessionStorage: { getItem: (key) => store.get(key) ?? null, setItem: (key, value) => store.set(key, value), removeItem: (key) => store.delete(key) },
@@ -125,6 +122,13 @@ Object.assign(globalThis, {
   scrollTo: () => {},
   scrollY: 0,
   addEventListener: () => {},
+  MutationObserver: class {
+    constructor(fn) {
+      heard.form = fn;
+    }
+
+    observe() {}
+  },
   fetch: async (url) => ({ ok: url in texts, status: url in texts ? 200 : 404, text: async () => texts[url] }),
 });
 
@@ -135,15 +139,17 @@ const shell = () => ({
     layout: {},
     render: (one, site, host, { text }) => {
       if (breaks.has(row.route)) throw new Error('no chunk');
-      Object.assign(host, { row: one, text });
+      Object.assign(host, { row: one, text, form: document.documentElement.dataset.form });
     },
-    unmount: () => {},
+    unmount: () => heard.unmounts++,
   }),
 });
 
+const app = () => ({ ...shell(), gated: (row) => Boolean(row.meta.scene) });
+
 mock.module('site:css', () => ({ css: {} }));
 mock.module('site:routes', () => ({ rows: ROWS, site: SITE }));
-mock.module('./app.jsx', shell);
+mock.module('./app.jsx', app);
 mock.module('./prose.jsx', shell);
 
 const { go } = await import('./router.js');
@@ -202,4 +208,19 @@ test('a page that fails to load reloads once, then shows the error page', async 
   breaks.clear();
   quiet.mockRestore();
   expect([heard.gone, shown().className, shown().innerHTML.includes('did not load')]).toEqual([[`${ROOT}/about/`], 'lede', true]);
+});
+
+test('a gated app redraws when the form turns, and any other page stays', async () => {
+  const { dataset } = document.documentElement;
+  dataset.form = 'desk';
+  await visit('/about/');
+  dataset.form = 'phone';
+  await heard.form();
+  const about = shown().form;
+  await visit('/life/');
+  const before = heard.unmounts;
+  dataset.form = 'desk';
+  await heard.form();
+  delete dataset.form;
+  expect([about, shown().row.route, shown().form, heard.unmounts - before, location.pathname]).toEqual(['desk', '/life/', 'desk', 1, '/life/']);
 });

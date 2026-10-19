@@ -8,63 +8,16 @@ async function md(text, link) {
   return render(front(text).body, { math, link });
 }
 
-/* CHROME */
+const paint = () => import('../../lib/git/code.ts').then((one) => one.paint);
 
-const opener = () => document.querySelector('[data-pane="right"]');
+/* VIEWER */
 
-function bar(nav) {
-  const pane = document.getElementById('right');
-  const button = opener();
-  if (button) button.hidden = !nav;
-  if (!nav) document.documentElement.dataset.right = 'shut';
-  if (!pane) return;
-  pane.hidden = !nav;
-  pane.replaceChildren(...(nav ? [nav] : []));
-  if (nav) window.dispatchEvent(new Event('wire'));
-}
-
-function contents(mount) {
-  const heads = [...mount.querySelectorAll('.readme h2[id], .readme h3[id]')];
-  const few = Number(opener()?.dataset.few) || Infinity;
-  if (heads.length < few) return bar(null);
-  const nav = document.createElement('nav');
-  nav.className = 'contents';
-  nav.setAttribute('aria-label', 'Contents');
-  const fold = document.createElement('details');
-  fold.open = true;
-  const title = document.createElement('summary');
-  title.textContent = 'Contents';
-  const list = document.createElement('ol');
-  for (const head of heads) {
-    const item = document.createElement('li');
-    item.className = head.tagName.toLowerCase();
-    const a = document.createElement('a');
-    a.href = `#${head.id}`;
-    a.textContent = head.textContent;
-    item.append(a);
-    list.append(item);
-  }
-  fold.append(title, list);
-  nav.append(fold);
-  bar(nav);
-}
-
-/* ISLAND */
+export const view = (host, after) => start({ tree: '/git.json', mount: host, md, paint, after });
 
 const live = new Map();
 
 export function mount(host) {
-  if (live.has(host)) return;
-  live.set(
-    host,
-    start({
-      tree: '/git.json',
-      mount: host,
-      md,
-      paint: () => import('../../lib/git/code.ts').then((one) => one.paint),
-      after: () => contents(host),
-    }),
-  );
+  if (!live.has(host)) live.set(host, view(host));
 }
 
 export function unmount(host) {

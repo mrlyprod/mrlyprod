@@ -1,6 +1,6 @@
 import { palette } from '../../lib/theme/palette.gen.js';
 import { tidy } from '../../lib/app/spec.js';
-import { TINTS, veil } from '../../lib/color.js';
+import { TINTS, blend, veil } from '../../lib/color.js';
 import { pick } from '../../lib/rand.js';
 import { BEAD, BEAT, CURVE, DASH, DOT, FADE, FILL, FLASH, FOLDING, GHOST, HEAD, HOLD, LINE, LOOKS, PAD, PER, PIP, REACH, RING, STAIR, STEP, TRAIL, UPTO, VIEWS, ZEROS, along, bands, fold, hop, index, ladder, passed, phase, picture, plane, reading, snap, study, table } from './engine.js';
 import { wasm } from '../../lib/units/index.js';
@@ -44,7 +44,7 @@ const between = (rand, lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
 
 export const SAVERS = [
   { id: 'walk', title: 'Critical line', pick: (rand) => ({ view: 'walk', t: between(rand, 10, 120), speed: 2, look: pick(rand, LOOKS)[0], trail: between(rand, 6, 16) }) },
-  { id: 'stairs', title: 'Prime staircase', pick: (rand) => ({ view: 'stairs', zeros: between(rand, 30, 100), x: between(rand, 50, 300) }) },
+  { id: 'waves', title: 'Prime waves', pick: (rand) => ({ view: 'stairs', zeros: between(rand, 12, 40), x: between(rand, 30, 150) }) },
 ];
 
 export const units = wasm('num');
@@ -58,13 +58,32 @@ const SMALL = 8;
 const ZERO = 3;
 const KNOT = 2.5;
 export const SLOW = 3;
+export const DRIFT = 0.04;
+export const DAWN = 0.5;
+const STRIDE = 1;
+export const SPREAD = 200;
+export const CYCLE = 8;
+const TONE = 0.5;
 
 /* INKS */
 
-export function inked(canvas, accent) {
+export function inked(canvas, accent, ink = null) {
   const css = typeof getComputedStyle === 'function' && canvas ? getComputedStyle(canvas) : null;
   const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
-  return { accent, zero: read('--yellow', palette.yellow), head: read('--orange', palette.orange), guess: read('--pink', palette.pink) };
+  const guess = read('--pink', palette.pink);
+  if (ink) return { accent, zero: accent, head: blend(accent, ink, TONE), guess };
+  return { accent, zero: read('--yellow', palette.yellow), head: read('--orange', palette.orange), guess };
+}
+
+/* WAVE */
+
+export function hum(gammas, k, u) {
+  let sum = 0;
+  for (let j = 0; j < gammas.length && j < k; j++) {
+    const g = gammas[j];
+    sum += (Math.min(1, k - j) * (0.5 * Math.cos(g * u) + g * Math.sin(g * u))) / (0.25 + g * g);
+  }
+  return -2 * sum;
 }
 
 /* THUMB */
@@ -138,7 +157,8 @@ export function make(canvas, view, opts = {}) {
   const auto = () => view.lock || view.fixed;
   const pace = view.lock ? SLOW : 1;
   const paint = () => {
-    inks = inked(canvas, view.look().accent);
+    const { accent, ink } = view.look();
+    inks = inked(canvas, accent, view.lock ? ink : null);
   };
   const busy = () => (walks(value) ? walking : folding !== null);
   const word = () => (!walks(value) ? 'Fold' : walking ? 'Pause' : head >= REACH ? 'Replay' : 'Play');
@@ -187,7 +207,7 @@ export function make(canvas, view, opts = {}) {
     const length = (k + 1) * Math.min(BEAT, FOLDING / (k + 1));
     if (auto()) {
       const { at, veil: fade } = phase((view.t - folding) / pace, length, view.still);
-      return { k: Math.min(k, Math.floor(at * (k + 1))), fade };
+      return { k: Math.min(k, Math.floor(at * (k + 1))), fade, at };
     }
     const at = (view.t - folding) / length;
     if (at < 1) return { k: Math.min(k, Math.floor(at * (k + 1))), fade: 1 };
@@ -275,6 +295,28 @@ export function make(canvas, view, opts = {}) {
     line(ctx, edge, inks.zero, STAIR * dpr);
     ctx.restore();
   };
+  const waves = (r) => {
+    const dpr = view.dpr;
+    const { at = 1, fade } = folded();
+    const span = Math.min(Math.log(value.x) - DAWN, r.w / (dpr * SPREAD));
+    const from = DAWN + (view.still ? 0 : (DRIFT * view.t) / 1000);
+    const n = Math.max(2, Math.ceil(r.w / (STRIDE * dpr)));
+    const k = Math.min(at * value.zeros, passed(plan.zeros, (TAU * n) / (CYCLE * span)));
+    const mid = r.y + r.h / 2;
+    const ky = Math.max(0, r.h / 2 - PAD * dpr);
+    ctx.strokeStyle = veil(inks.accent, fade);
+    ctx.lineWidth = STAIR * dpr;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const s = i / n;
+      const y = mid - hum(plan.zeros, k, from + s * span) * ky;
+      if (i) ctx.lineTo(r.x + s * r.w, y);
+      else ctx.moveTo(r.x, y);
+    }
+    ctx.stroke();
+  };
   const draw = () => {
     advance();
     const fade = rest === null ? 1 : Math.max(0, Math.min(1, (HOLD - (view.t - rest)) / FADE));
@@ -282,6 +324,7 @@ export function make(canvas, view, opts = {}) {
     ctx.clearRect(0, 0, view.w, view.h);
     const stage = { x: 0, y: 0, w: view.w, h: view.h };
     if (walks(value)) walker(stage, fade);
+    else if (view.lock) waves(stage);
     else stairs(stage);
     tell();
   };

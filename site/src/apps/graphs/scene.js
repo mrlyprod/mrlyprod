@@ -15,10 +15,10 @@ const most = (value, units) => (units?.math ? top(units.math, value) : DEEPEST);
 
 export const SPEC = [
   { key: 'dim', label: 'Dim', kind: 'segment', def: 2, options: DIMS, when: NEVER },
-  { key: 'view', label: 'View', kind: 'segment', def: 'cube', options: VIEWS, when: (value) => Number(value.dim) === 3 },
-  { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]) },
+  { key: 'view', label: 'View', kind: 'segment', def: 'cube', options: VIEWS, group: 'Design', when: (value) => Number(value.dim) === 3 },
+  { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Design' },
   { key: 'graph', label: 'Graph', kind: 'pick', def: 'core', options: graphs, when: NEVER },
-  { key: 'level', label: 'Level', kind: 'slider', def: 2, min: 1, max: most, unit: (value, units) => `of ${most(value, units)}`, step: 1 },
+  { key: 'level', label: 'Level', kind: 'slider', def: 2, min: 1, max: most, unit: (value, units) => `of ${most(value, units)}`, step: 1, group: 'Design' },
   { key: 'base', label: 'Base', kind: 'segment', def: 3, options: BASES, when: NEVER },
   { key: 'code', label: 'Code', kind: 'text', def: '', when: NEVER },
   { key: 'layout', label: 'Layout', kind: 'segment', def: 'lattice', options: LAYOUTS, group: 'Layout' },

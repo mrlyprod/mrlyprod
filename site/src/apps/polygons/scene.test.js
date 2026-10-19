@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { rng } from '../../lib/rand.js';
 import { BAND, CROSS, FIRST, SHAPES } from './engine.js';
-import { fit, make } from './scene.js';
+import { SAVERS, fit, make } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -65,4 +65,8 @@ test('the desk keeps twenty cells across its long side and the app holds one cou
   expect([fit(1440, 900, true), fit(900, 1440, true)]).toEqual([72, 72]);
   const count = (w, h) => Math.round((w * h) / fit(w, h, false) ** 2);
   expect([count(832, 760), count(2560, 1440), count(390, 844)]).toEqual([600, 600, 600]);
+});
+
+test('each saver paints its own palette in the site tint', () => {
+  expect(SAVERS.map((one) => [one.id, one.pick(rng(1)).palette, one.pick(rng(1)).tint])).toEqual([['cubes', 'soft', ''], ['honeycomb', 'tint', ''], ['facets', 'deep', '']]);
 });

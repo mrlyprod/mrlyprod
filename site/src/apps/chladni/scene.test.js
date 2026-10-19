@@ -453,8 +453,8 @@ test('k past a small design reads its last figure, and the echo of the tidied k 
   expect(live.sheet()).toEqual(rested);
 });
 
-test('the design slot is the code of a base 2 plane design, and its row hides in the pane while the url keeps it', () => {
-  expect(PAGE.design).toEqual({ dim: 2, base: 2, code: 'code' });
+test('the design slot is the code of a base 2 plane design shown on a carpet alone, and its row hides in the pane while the url keeps it', () => {
+  expect([PAGE.design.dim, PAGE.design.base, PAGE.design.code, PAGE.design.when({ view: 'plate' }), PAGE.design.when({ view: 'carpet' })]).toEqual([2, 2, 'code', false, true]);
   const row = SPEC.find((one) => one.key === 'code');
   expect([row.when({ view: 'carpet' }), tidy(SPEC, { ...VALUE, view: 'carpet', code: '10' }, UNITS).code]).toEqual([false, '10']);
 });

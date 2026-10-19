@@ -70,7 +70,10 @@ export function visited(list, entry) {
   return [entry, ...(Array.isArray(list) ? list : []).filter((one) => one?.id && one.id !== entry.id)].slice(0, KEPT);
 }
 
-export const recents = (text, known) => (parse(text) ?? []).filter((one) => typeof one?.id === 'string' && known.has(one.id) && typeof one.url === 'string' && one.url.startsWith('/'));
+export function recents(text, known) {
+  const list = parse(text);
+  return (Array.isArray(list) ? list : []).filter((one) => typeof one?.id === 'string' && known.has(one.id) && typeof one.url === 'string' && one.url.startsWith('/'));
+}
 
 export function gist(url) {
   const params = new URLSearchParams(url.split('?')[1] ?? '');
@@ -116,7 +119,7 @@ export function rank(query, items, cap = Infinity) {
 
 /* DAY */
 
-export const today = (now = new Date()) => `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
+export const today = (now = new Date()) => `${now.getUTCFullYear()}-${two(now.getUTCMonth() + 1)}-${two(now.getUTCDate())}`;
 
 export function daily(day, n) {
   let h = 0x811c9dc5;

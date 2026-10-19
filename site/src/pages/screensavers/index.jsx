@@ -13,6 +13,7 @@ import { shooter, shots } from './shots.js';
 const ROOT = '/screensavers/';
 const WAIT = 250;
 const SHOWN = 1500;
+const POSTER = { position: 'absolute', top: '50%', left: '50%', width: '36%', aspectRatio: '1', translate: '-50% -50%' };
 
 /* PATHS */
 
@@ -70,7 +71,7 @@ function Card({ one, off, hot, point, icon }) {
     <li>
       <a className="card" href={link(one.id)} data-id={one.id} onPointerEnter={(e) => e.pointerType !== 'touch' && enter()} onPointerLeave={leave} onFocus={enter} onBlur={leave}>
         <span className="thumb">
-          {shot?.url && <img src={shot.url} alt="" />}
+          {shot?.url ? <img src={shot.url} alt="" /> : <span style={POSTER}><AppIcon id={one.app} /></span>}
           {hot && <Live id={one.id} />}
         </span>
         <span className="who">

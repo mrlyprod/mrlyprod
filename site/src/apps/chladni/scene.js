@@ -41,7 +41,7 @@ export const named = (value) => (carpet(value) ? `chladni-${value.code}-${value.
 export const units = wasm('num', 'math');
 
 export const PAGE = {
-  design: { dim: 2, base: 2, code: 'code' },
+  design: { dim: 2, base: 2, code: 'code', when: carpet },
   spec: SPEC,
   units,
   record: true,

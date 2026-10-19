@@ -478,7 +478,7 @@ export function make(canvas, view, opts = {}) {
       const way = route(math, { code: r.rolled.code, n: N }, seed);
       return { way, door: entry(way) };
     });
-  const inner = (r) => build(r, 'march', () => march(gl, view, { code: r.rolled.code, n: N }, { math, look: value.look, toFrame: path(r)?.way.toFrame }));
+  const inner = (r) => build(r, 'march', () => march(gl, view, { code: r.rolled.code, n: N }, { math, look: value.look, quality: view.lock && tier(view) !== 'phone' ? 'low' : '', toFrame: path(r)?.way.toFrame }));
   const next = (loop, start, held = false) => {
     drop(run);
     prev = run;
@@ -543,7 +543,7 @@ export function make(canvas, view, opts = {}) {
     const accent = view.look().accent;
     if (accent !== r.accent) {
       r.accent = accent;
-      r.tone = tone('', r.rolled.paint, accent);
+      r.tone = tone(view.lock ? 'accent' : '', r.rolled.paint, accent);
     }
     return r.tone;
   };

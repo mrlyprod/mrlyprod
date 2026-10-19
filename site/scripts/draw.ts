@@ -145,19 +145,21 @@ export async function* draw({ names, all, kinds, themes, size, out }: Ask) {
 
 /* ARGS */
 
-function parse(argv: string[]): Ask {
+export function parse(argv: string[]): Ask {
   const flag = (name: string) => (argv.includes(name) ? (argv[argv.indexOf(name) + 1] ?? "") : null);
   const names = argv.filter((one, i) => !one.startsWith("--") && !VALUED.includes(argv[i - 1] ?? ""));
   const all = argv.includes("--all");
   const theme = flag("--theme") ?? "dark";
   const size = flag("--size");
+  const out = flag("--out");
   const odd = argv.find((one) => one.startsWith("--") && !FLAGS.includes(one));
   if (odd) throw new Error(`draw: ${odd} is no flag; ${USAGE}`);
   if (all === names.length > 0) throw new Error(`draw: name figures or pass --all; ${USAGE}`);
   if (!THEMES.includes(theme as Theme)) throw new Error(`draw: --theme takes dark or light, not ${theme}`);
   if (size !== null && !(Number.isInteger(Number(size)) && Number(size) > 0)) throw new Error(`draw: --size takes a whole number of pixels, not ${size}`);
+  if (out !== null && (!out || out.startsWith("--"))) throw new Error(`draw: --out takes a folder, not ${out || "nothing"}`);
   const kinds = KINDS.filter((kind) => argv.includes(`--${kind}`));
-  return { names, all, kinds: kinds.length ? kinds : ["svg"], themes: [theme as Theme], size: size === null ? null : Number(size), out: resolve(flag("--out") ?? join(DATA_DIR, "draw")) };
+  return { names, all, kinds: kinds.length ? kinds : ["svg"], themes: [theme as Theme], size: size === null ? null : Number(size), out: resolve(out ?? join(DATA_DIR, "draw")) };
 }
 
 /* MAIN */

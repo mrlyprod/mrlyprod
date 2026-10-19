@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { text } from '../../../test/dom.js';
-import { Btn, Export, Fold, Icon, Menu, Pick, Toggle } from './controls.jsx';
+import { doc, find, mount, text } from '../../../test/dom.js';
+import { Btn, Export, Fold, Icon, Menu, Pick, Row, Segment, Toggle } from './controls.jsx';
 
 test('a Toggle writes 1 when switched on and 0 when switched off', () => {
   const wrote = [];
@@ -45,4 +45,38 @@ test('a Menu is a button and a popover listing its rows in order, a row with an 
   const html = renderToStaticMarkup(<Menu className="icon more" aria-label="More" rows={[['Copy link', () => {}, 'link'], ['Zen', () => {}]]}>x</Menu>);
   expect(html).toMatch(/<button type="button" class="icon more" popoverTarget="(menu[^"]+)"[^>]*aria-label="More">x<\/button><div id="\1" popover="auto" class="pop"/);
   expect([...html.matchAll(/<button type="button">(<svg[^]*?<\/svg>)?([^<]+)<\/button>/g)].map((found) => [found[2], Boolean(found[1])])).toEqual([['Copy link', true], ['Zen', false]]);
+});
+
+test('a Segment wider than its row is a select with the same label and change path until the row grows to fit it, swapping back in the same frame', async () => {
+  const make = doc.createElement;
+  const wrote = [];
+  let room = 200;
+  let grow;
+  doc.createElement = (tag) => {
+    const el = make(tag);
+    return Object.assign(el, tag === 'select' ? { options: [] } : {}, { classList: { contains: (one) => el.getAttribute('class') === one }, getBoundingClientRect: () => ({ width: el.style.width === 'max-content' ? 300 : room }) });
+  };
+  globalThis.ResizeObserver = class {
+    constructor(fn) {
+      grow = fn;
+    }
+    observe() {}
+    disconnect() {}
+  };
+  try {
+    await mount(async (draw, host) => {
+      await draw(<Row><Segment label="View" value={2} options={[[1, 'Flat'], [2, 'Solid'], [3, 'Both']]} onChange={(v) => wrote.push(v)} /></Row>);
+      const select = find(host, (at) => at.tagName === 'SELECT');
+      Object.entries(select).find(([key]) => key.startsWith('__reactProps'))[1].onChange({ target: { value: '3' } });
+      const label = text(select.parentNode.childNodes[0]);
+      room = 300;
+      globalThis.IS_REACT_ACT_ENVIRONMENT = false;
+      grow();
+      globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+      expect([label, wrote, Boolean(find(host, (at) => at.getAttribute?.('role') === 'radiogroup'))]).toEqual(['View', [3], true]);
+    });
+  } finally {
+    doc.createElement = make;
+    delete globalThis.ResizeObserver;
+  }
 });

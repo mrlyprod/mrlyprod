@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { rng } from '../../lib/rand.js';
 import { gl } from '../../../test/fake.js';
-import { PAGE, make } from './scene.js';
+import { PAGE, SAVERS, make } from './scene.js';
 
 const open = (opts = {}, { paper = '#000000', accent = '#008cff', webgl = true, bad = null } = {}) => {
   const fake = gl({ bad });
@@ -78,8 +78,20 @@ test('stop fires every onDone still waiting and lets the context go', () => {
   expect([done, live.fake.log.some(([key]) => key === 'loseContext')]).toEqual([2, true]);
 });
 
+test('the page cruises with no hands while every saver jumps on its own', () => {
+  const left = (opts) => {
+    const live = open(opts);
+    for (let t = 0; t <= 31000; t += 500) {
+      play(live, [t]);
+      if (live.scene.phase() !== 'cruise') return true;
+    }
+    return false;
+  };
+  expect([left({}), ...SAVERS.map((saver) => left(saver.pick(rng(7))))]).toEqual([false, ...SAVERS.map(() => true)]);
+});
+
 test('Enter jumps from cruise and exits once under way', () => {
-  const live = open({ hyper: 'no' });
+  const live = open();
   const jump = () => PAGE.actions.jump(live.scene);
   play(live, [0]);
   jump();

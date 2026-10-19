@@ -41,3 +41,9 @@ test('a reroll draws another class from the seed, the same one for the same seed
   expect([draws.every((one) => list.includes(one) && one !== '23'), new Set(draws).size > 4, drawn(math, 3, 2, list, '23', 9)]).toEqual([true, true, draws[9]]);
   expect(drawn(math, 3, 3, null, '1', 5)).toBe(roll(math, 3, 3, rng(5)));
 });
+
+test('a line design grows along one axis as a one-row strip, and its classes and facts read in its own space', () => {
+  const strip = grow(math, 1, 2, '1', 2);
+  expect([strip.shape, Array.from(strip.types), grow(math, 1, 3, '5', 1).shape]).toEqual([[1, 9], [1, 0, 1, 0, 0, 0, 1, 0, 1], [1, 3]]);
+  expect([classes(math, 1, 2).map((one) => one.code), facts(math, 1, 2, '2'), facts(math, 1, 3, '4')]).toEqual([['0', '1', '3'], { rep: '1', orbit: 2, anf: 'x', degree: 1 }, { rep: '1', orbit: 3, anf: '', degree: -1 }]);
+});

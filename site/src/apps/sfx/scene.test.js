@@ -3,7 +3,7 @@ import { defaults } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { audio } from '../../../test/fake.js';
 import { tidy } from '../../lib/app/spec.js';
-import { NAMES, PRESETS, SHAPE, SPEC, analyse, band, lasts, make, preset, seconds } from './scene.js';
+import { NAMES, PRESETS, SHAPE, SPEC, analyse, band, facts, lasts, make, preset, seconds } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -78,4 +78,8 @@ test('every preset is a sound the knobs keep, a value finds its preset, and an e
   const kept = PRESETS.map((one) => NAMES.includes(one.set.effect) && ['effect', ...SHAPE].every((key) => tidy(SPEC, one.set)[key] === one.set[key]));
   expect([kept.every(Boolean), new Set(PRESETS.map((one) => one.id)).size]).toEqual([true, PRESETS.length]);
   expect([preset({ ...defaults(SPEC), ...PRESETS[2].set }), preset({ ...defaults(SPEC), ...PRESETS[2].set, pitch: 0 }), lasts('tick'), lasts('hit'), lasts('jump')]).toEqual([PRESETS[2].id, '', '20 ms', '0.8 s', '2.6 s']);
+});
+
+test('the status names the effect, its length at the knob and its preset', () => {
+  expect([facts({ ...defaults(SPEC), ...PRESETS[2].set }), facts({ ...defaults(SPEC), effect: 'tick', length: 2 })[1]]).toEqual([[['effect', 'Hit'], ['length', lasts('hit', 2)], ['preset', 'Boom']], ['length', lasts('tick', 2)]]);
 });

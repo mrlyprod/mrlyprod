@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { seti } from "./seti/seti.ts";
 import { paint } from "./code.ts";
-import { block, decode, dirRoute, draw, fileRoute, href, lang, link, rawPath, type Tools, type Wood } from "./view.ts";
+import { away, block, decode, dirRoute, draw, fileRoute, href, lang, link, rawPath, type Tools, type Wood } from "./view.ts";
 import { render as md } from "../md/md.ts";
 
 const shiki = await import("@shikijs/core").then(
@@ -43,6 +43,14 @@ test("a path that is not valid percent-encoding is kept as written", () => {
   expect(decode("a%20b")).toBe("a b");
   expect(decode("100%")).toBe("100%");
   expect(decode("%E0%A4%A")).toBe("%E0%A4%A");
+});
+
+test("a file opens its raw bytes and its GitHub blob, a folder only its tree, a lost path nothing", () => {
+  const git = { slug: "acme/demo", branch: "main" };
+  expect(away(git, { path: "a b/c#1.ts", found: true })).toEqual({ raw: "/raw/a%20b/c%231.ts", hub: "https://github.com/acme/demo/blob/main/a%20b/c%231.ts" });
+  expect(away(git, { path: "src/", found: true })).toEqual({ raw: "", hub: "https://github.com/acme/demo/tree/main/src" });
+  expect(away(git, { path: "", found: true })).toEqual({ raw: "", hub: "https://github.com/acme/demo/tree/main" });
+  expect(away(git, { path: "gone", found: false })).toEqual({ raw: "", hub: "" });
 });
 
 test("a repo-relative link lands in the viewer, an image or a pdf on its raw bytes, a script url nowhere", () => {

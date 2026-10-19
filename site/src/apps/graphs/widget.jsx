@@ -24,19 +24,19 @@ export const note = (f, camera = 'eye') => `${f.graph} graph, level ${f.level}, 
 
 export function rows(f, r, camera) {
   const out = [
-    ['Design', `${f.name || 'bang'} ${f.code}`],
-    ['Network', note(f, camera)],
-    ['Nodes', f.nodes],
-    ['Branches', f.branches],
-    ['Tips', f.tips],
-    ['Junctions', f.junctions],
-    ['Pieces', f.pieces],
-    ['Length', f.length.toFixed(2)],
-    ['Box dimension', f.box.toFixed(3)],
-    ['Euler', f.euler ?? 'none'],
+    ['design', `${f.name || 'bang'} ${f.code}`],
+    ['network', note(f, camera)],
+    ['nodes', f.nodes],
+    ['branches', f.branches],
+    ['tips', f.tips],
+    ['junctions', f.junctions],
+    ['pieces', f.pieces],
+    ['length', f.length.toFixed(2)],
+    ['box dimension', f.box.toFixed(3)],
+    ['euler', f.euler ?? 'none'],
   ];
   if (!r) return out;
-  return [...out, ['Ticks', r.ticks], ...(r.ticks ? [['Energy', sci(r.energy)], ['Moved', sci(r.moved)]] : []), ['Heat', sci(r.heat)]];
+  return [...out, ['ticks', r.ticks], ...(r.ticks ? [['energy', sci(r.energy)], ['moved', sci(r.moved)]] : []), ['heat', sci(r.heat)]];
 }
 
 export function etch(ctx, seen, w, h, dpr) {

@@ -2,33 +2,50 @@
 
 .appicons { position: absolute; width: 0; height: 0; overflow: hidden; }
 .appicon { display: block; width: 100%; height: 100%; overflow: visible; }
-.appicon .ink { filter: url(#appicon-lift); }
-.appicon .rim { fill: none; stroke: url(#appicon-rim); stroke-width: 25; pointer-events: none; }
+.appicon .lift { filter: url(#appicon-lift); opacity: .09; }
+.appicon :is(.glow, .rim, .shade) { fill: none; pointer-events: none; }
+.appicon .glow { stroke: url(#appicon-glow); stroke-width: 64; mix-blend-mode: plus-lighter; }
+.appicon .rim { stroke: url(#appicon-rim); stroke-width: 20; mix-blend-mode: plus-lighter; }
+.appicon .shade { stroke: url(#appicon-shade); stroke-width: 20; opacity: .185; }
 
 /* DARK */
 
 [data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) .back { fill: url(#appicon-dark); }
 [data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) :is(.back.d, .ink .d) { fill: var(--d); }
-[data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) .ink .w { fill: var(--key); }
+[data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) .ink .w { fill: var(--w); }
 [data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) .ink .ds { stroke: var(--ds); }
-:is([data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) .rim { stroke: url(#appicon-rim-dark); }
+[data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) .shade { opacity: 1; }
 
 /* MONO */
 
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) .glow { stroke: url(#appicon-glow-clear); }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) .rim { stroke: url(#appicon-rim-clear); }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) .shade { stroke: url(#appicon-shade-clear); opacity: .19; }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon)) :is(.glow, .rim) { mix-blend-mode: normal; }
 [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon) .back { fill: url(#appicon-tint-dark); }
 [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon) .ink { filter: url(#appicon-accent); }
+[data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon) .lift { opacity: .015; }
+[data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon) .glow { stroke: url(#appicon-glow-tint); opacity: .9214; }
+[data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon) .rim { stroke: url(#appicon-rim-tint); opacity: .498; }
+[data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon) .shade { opacity: .43; }
 [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon) .back { fill: url(#appicon-tint-light); }
-:is([data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon)) .ink { filter: url(#appicon-white); }
+[data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon) .ink { filter: url(#appicon-white-tint); }
+[data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon) .lift { opacity: .06; }
+[data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon) .glow { opacity: .4283; }
+[data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon) .rim { opacity: .4333; }
 [data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon) .back { fill: url(#appicon-clear-light); }
-[data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon) .rim { stroke: url(#appicon-rim-clear-light); }
+[data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon) .ink { filter: url(#appicon-white); }
+[data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon) .lift { opacity: .045; }
 [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .back { fill: url(#appicon-clear-dark); }
 [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .ink { filter: url(#appicon-white-soft); }
-[data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .rim { stroke: url(#appicon-rim-clear-dark); }
+[data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .lift { opacity: .15; }
+[data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) :is(.glow, .rim) { opacity: .4792; }
+[data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .shade { opacity: .68; }
 :is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) [data-mono="hide"] { display: none; }
 :is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="full"], [data-mono="full"] *):not([fill="none"]) { fill: #fff; }
 :is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="full"], [data-mono="full"] *)[stroke]:not([stroke="none"]) { stroke: #fff; }
-:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="dim"], [data-mono="dim"] *):not([fill="none"]) { fill: #6e6e6e; }
-:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="dim"], [data-mono="dim"] *)[stroke]:not([stroke="none"]) { stroke: #6e6e6e; }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="dim"], [data-mono="dim"] *):not([fill="none"]) { fill: #a1a1a1; }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="dim"], [data-mono="dim"] *)[stroke]:not([stroke="none"]) { stroke: #a1a1a1; }
 
 /* GLASS */
 

@@ -1,7 +1,15 @@
 import { expect, test } from 'bun:test';
+import { useEffect, useRef } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { source } from '../glass/feed.js';
 import { classed, find, mount, text } from '../../../test/dom.js';
-import { Bar, calm, Frame, floats, pushed, slot } from './frame.jsx';
+import { Bar, calm, fit, Frame, floats, pushed, slot } from './frame.jsx';
+
+function Fed() {
+  const at = useRef(null);
+  useEffect(() => source(at.current), []);
+  return <canvas ref={at} />;
+}
 
 test('on the server a frame is its stage alone: a filled Bar claims its side only after layout', () => {
   expect(renderToStaticMarkup(<Frame label="Sky"><canvas /><Bar side="right"><input /></Bar><Bar side="status">seed 7</Bar></Frame>)).toBe('<section class="frame" aria-label="Sky" style="--left:280px;--right:280px"><div class="canvas"><canvas></canvas></div></section>');
@@ -35,6 +43,11 @@ test('open panes push the canvas by the wider one on both sides, and the panes f
   expect([floats(1000, 320), floats(1000, 330)]).toEqual([false, true]);
 });
 
+test('the status pill drops whole facts from the end, and lets its hints go from the end only when its first fact would not fit', () => {
+  const rights = [40, 90, 150, 200];
+  expect([fit(rights, 200), fit(rights, 160), fit(rights, 100), fit(rights, 10, 1), fit(rights, 60, 2, [500, 560, 620], 680), fit(rights, 20, 2, [500, 560, 620], 680), fit([], 10)]).toEqual([[4, 0], [3, 0], [2, 0], [1, 0], [2, 2], [2, 1], [0, 0]]);
+});
+
 test('the tail bar lands after every right bar, whatever mounts first, and opens the right pane on its own', async () => {
   const pane = await mount(async (draw, host) => {
     const at = () => find(host, classed('right'));
@@ -44,4 +57,22 @@ test('the tail bar lands after every right bar, whatever mounts first, and opens
     return [alone, text(at())];
   });
   expect(pane).toEqual(['seed', 'lookseed']);
+});
+
+test('a frame with no canvas fed to the glass frosts its panes and pills, and a fed one keeps them lenses', async () => {
+  const looks = await mount(async (draw, host) => {
+    const look = () => ['right', 'actions', 'status'].map((name) => {
+      const at = find(host, classed(name));
+      return [at.attributes.class, at.attributes['data-lens'] ?? null];
+    });
+    const bars = [<Bar key="right" side="right">look</Bar>, <Bar key="actions" side="actions">go</Bar>, <Bar key="status" side="status">seed</Bar>];
+    await draw(<Frame label="Read">{bars}</Frame>);
+    const read = look();
+    await draw(<Frame label="Sky"><Fed />{bars}</Frame>);
+    return [read, look()];
+  });
+  expect(looks).toEqual([
+    [['pane right frost', null], ['actions frost', null], ['status frost', null]],
+    [['pane right', 'panel'], ['actions', 'pill'], ['status', 'pill']],
+  ]);
 });

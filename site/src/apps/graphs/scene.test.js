@@ -82,7 +82,7 @@ test('the view picks the cube or its hex slice for a 3D design alone, the graph 
   const row = (key) => SPEC.find((one) => one.key === key);
   expect([row('view').when({ dim: 2 }), row('view').when({ dim: 3 }), row('graph').when({}), SPEC[0].key]).toEqual([false, true, false, 'dim']);
   expect([unitOf(level, HOME, { math }), unitOf(level, { ...HOME, ...CUBE, graph: 'edge' }, { math })]).toEqual(['of 4', 'of 2']);
-  expect(SPEC.filter((one) => !one.group && !one.when).map((one) => one.key)).toEqual(['number', 'level']);
+  expect(SPEC.filter((one) => one.group === 'Design').map((one) => one.key)).toEqual(['view', 'number', 'level']);
 });
 
 test('an export is named by the design shown, its view and its graph, the empty code the carpet', () => {

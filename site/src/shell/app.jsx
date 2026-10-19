@@ -1,13 +1,28 @@
+import { useState } from 'react';
 import { apps, own } from 'site:apps';
 import { escape } from '../lib/md/text.ts';
+import { AppIcon } from './appicon.jsx';
+import { Figure, hide, show } from './parts.jsx';
 
 const APP = { wide: true, bare: true, sheet: 'mrly', window: 'app' };
 
 const PAGE = { ...APP, window: 'wide' };
 
+const DEV = new Set(['figures', 'kit', 'screensavers']);
+
+const FAR = 'Link copied. Open it on a computer.';
+
+const COPIED = 'Link copied.';
+
 const live = new WeakMap();
 
 const chunk = (id) => (apps[id] ? apps[id]() : Promise.reject(new Error(`app: no chunk for ${id}`)));
+
+const phone = () => globalThis.document?.documentElement.dataset.form === 'phone';
+
+export const gated = (row) => Boolean(row.meta.scene) || DEV.has(row.meta.id);
+
+/* STILL */
 
 const still = {
   render(row, site, host) {
@@ -28,6 +43,41 @@ const still = {
   },
 };
 
+/* GATE */
+
+export function Gate({ row }) {
+  const [said, say] = useState('');
+  const copy = (done) => () => {
+    const url = location.href;
+    const fail = () => say(`Copy this link: ${url}`);
+    if (!navigator.clipboard) return fail();
+    navigator.clipboard.writeText(url).then(() => say(done), fail);
+  };
+  return (
+    <div className="gate">
+      <AppIcon id={row.meta.id} />
+      <h1>{row.title}</h1>
+      {row.lead && <p className="lead">{row.lead}</p>}
+      {row.figure && <Figure className="opener" name={row.figure} label={row.title} />}
+      <p className="need">Needs a bigger screen</p>
+      <p className="buttons">
+        <button type="button" className="primary" onClick={copy(FAR)}>Open on a computer</button>
+        <button type="button" onClick={copy(COPIED)}>Copy link</button>
+      </p>
+      <p className="said" role="status">{said}</p>
+    </div>
+  );
+}
+
+const gate = {
+  layout: { bare: true, window: 'page' },
+  render(row, site, host) {
+    show(host, <Gate row={row} />);
+  },
+  unmount: hide,
+};
+
 export function page(row) {
+  if (gated(row) && phone()) return gate;
   return own.has(row.meta.id) ? chunk(row.meta.id) : { ...still, layout: row.meta.scene ? APP : PAGE };
 }

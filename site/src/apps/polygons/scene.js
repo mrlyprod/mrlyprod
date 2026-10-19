@@ -1,6 +1,5 @@
 import { tidy } from '../../lib/app/spec.js';
 import { HUES, TINTS } from '../../lib/color.js';
-import { pick } from '../../lib/rand.js';
 import { BAND, CROSS, FIRST, PALETTES, SHAPES, WAVES, art, glow, live, paint, peak, ripple, spread, tiles, wave } from './engine.js';
 import { css, inks as dyes, shade, trace } from './swatch.js';
 
@@ -41,14 +40,10 @@ export const PAGE = {
   record: true,
 };
 
-const CALM = ['sea', 'ice', 'meadow', 'dusk', 'night', 'tint'];
-
-const VIVID = ['rainbow', 'sun', 'sea', 'dusk', 'leaf', 'clay', 'ice', 'lime'];
-
 export const SAVERS = [
-  { id: 'cubes', title: 'Cubes', pick: (rand) => ({ shape: 'cube', palette: pick(rand, CALM), wave: 'diagonal', every: 30, noise: 0.6, spark: 0 }) },
-  { id: 'honeycomb', title: 'Honeycomb', pick: () => ({ shape: 'hex', palette: '', wave: 'ripple', every: 20, noise: 0.8, spark: 0.02, outline: 1, line: 4 }) },
-  { id: 'facets', title: 'Facets', pick: (rand) => ({ shape: 'triangle', palette: pick(rand, VIVID), wave: 'sweep', every: 24, noise: 1.2, spark: 0.03 }) },
+  { id: 'cubes', title: 'Cubes', pick: () => ({ shape: 'cube', palette: 'soft', tint: '', wave: 'diagonal', every: 30, noise: 0.5, spark: 0 }) },
+  { id: 'honeycomb', title: 'Honeycomb', pick: () => ({ shape: 'hex', palette: 'tint', tint: '', wave: 'ripple', every: 20, noise: 0.8, spark: 0.02, outline: 1, line: 4 }) },
+  { id: 'facets', title: 'Facets', pick: () => ({ shape: 'triangle', palette: 'deep', tint: '', wave: 'sweep', every: 12, noise: 1.6, spark: 0.08 }) },
 ];
 
 export const SETS = { shape: SHAPES, palette: ['', ...Object.keys(PALETTES)] };

@@ -42,7 +42,7 @@
 ## PAGE
 
 - `PAGE` in `scene.js` holds the `page()` options: `defaults`, `spec` (`SPEC`), `units` (the `wasm()` thunk), `keys`, `actions` (an `act` to `(handle, event)`), `gestures`, `record`, `about`, `still`, `name`, `design`.
-- `design` is the slot of an app that takes a design: `{ dim, base, code, dims, bases, spaces }`, a string naming the url key, a number fixing it, `spaces` the `[dim, base]` pairs when not every pair works, `holds(design, value)` keeps only the designs that work with the other knobs, `when(value)` hides the chip, `blank` names an empty code that means something else than the home design (`Random`); the chip in the actions pill picks through it, and a url with no code opens on the current design (`../lib/designs/store.js`).
+- `design` is the slot of an app that takes a design: `{ dim, base, code, dims, bases, spaces }`, a string naming the url key, a number fixing it, `dims` may include 1 (a line design grown as a one-row strip), `spaces` the `[dim, base]` pairs when not every pair works, `holds(design, value)` keeps only the designs that work with the other knobs, `when(value)` hides the chip, `blank` names an empty code that means something else than the home design (`Random`); the chip in the actions pill picks through it, and a url with no code opens on the current design (`../lib/designs/store.js`).
 - `gestures: true` hands touch to the canvas; `record: true` adds the Video exports, `v` and Stop.
 - `about`: plain paragraphs at the top of Info; `[text](/route/)` is a link.
 - `name(value, units)` names the PNG, WebP and video exports; the default is `<id>-<seed>`.
@@ -85,7 +85,7 @@
 - Readouts are numbers in `onStatus` and Info.
 - A design and its numbers come through an `@mrlyprod/mrly` door; a missing door is a door gap, left out, never typed in JS.
 - Two exceptions are drawn in JS: the deep zoom of fractals (`lib/fractal/`) and the flight paths of zoom and voyage (`lib/space/`), which take their cells and classes from the math door.
-- A saver is what a good app turns out to be: never built as one; an app exports `SAVERS` (`{ id, title, pick(rand) }`, 1 to 3) only when it is pretty with no hands at a random seed; one that needs a hand is an instrument.
+- A saver is what a good app turns out to be: never built as one; an app exports `SAVERS` (`{ id, title, pick(rand), still }`, 1 to 3; `still` is optional, the ms `/screensavers/` plays it before its capture, a whole number from 1 to 10000, default 1000) only when it is pretty with no hands at a random seed; one that needs a hand is an instrument.
 - On the page the picture waits for a hand; loops, reseeds and holds run only under `view.lock`.
 - Live: a slider moves the picture as it moves, a tap does something.
 - An app opens on its canonical picture (the carpet, the glider), never a random one; Reroll rolls.

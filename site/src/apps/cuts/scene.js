@@ -97,18 +97,18 @@ export function study(math, value) {
   const counts = list.map((h) => cut.counts[h] ?? 0);
   const drawn = value.view === 'section' ? '-' : String(counts.reduce((a, b) => a + b, 0));
   const facts = cut.empty
-    ? [['Name', title(named(math, code, base), code, base)], ['Side', cut.side], ['Support', 'none']]
+    ? [['name', title(named(math, code, base), code, base)], ['side', cut.side], ['support', 'none']]
     : [
-        ['Name', title(named(math, code, base), code, base)],
-        ['Height', list.join(' and ')],
-        ['This slice', counts.join(' and ')],
-        ['Offset in binary', list.map((h) => (h - cut.low).toString(2)).join(' and ')],
-        ['Side', cut.side],
-        ['Support', `[${cut.low}, ${cut.high}]`],
-        ['Non-empty', `${cut.nonempty} of ${cut.heights}`],
-        ['Min', cut.least],
-        ['Max', cut.most],
-        ['Points drawn', drawn],
+        ['name', title(named(math, code, base), code, base)],
+        ['height', list.join(' and ')],
+        ['this slice', counts.join(' and ')],
+        ['offset in binary', list.map((h) => (h - cut.low).toString(2)).join(' and ')],
+        ['side', cut.side],
+        ['support', `[${cut.low}, ${cut.high}]`],
+        ['non-empty', `${cut.nonempty} of ${cut.heights}`],
+        ['min', cut.least],
+        ['max', cut.most],
+        ['points drawn', drawn],
       ];
   const art = cut.empty ? null : value.view === 'section' ? { mesh: section(math, code, base, level) } : { svg: points(math, code, base, level, list) };
   return { code, base, level, cut, heights: list, rows: facts, art, view: value.view };

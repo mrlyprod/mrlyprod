@@ -2,7 +2,7 @@ import FONT from '../../lib/font/font.gen.json' with { type: 'json' };
 import { palette } from '../../lib/theme/palette.gen.js';
 import { tidy } from '../../lib/app/spec.js';
 import { board } from '../../lib/app/run.js';
-import { HUES, TINTS, veil } from '../../lib/color.js';
+import { blend, bright, HUES, TINTS, veil } from '../../lib/color.js';
 import { pick, rng } from '../../lib/rand.js';
 
 export const SPEC = [
@@ -17,13 +17,15 @@ export const PAGE = { spec: SPEC };
 
 export const SAVERS = [
   { id: 'rain', title: 'Glyph rain', pick: (rand) => ({ set: pick(rand, ['lds', 'ld', 'd', 'l']), color: 'tint', tick: 100, cell: 14 + 2 * Math.floor(rand() * 5) }) },
-  { id: 'rainbow', title: 'Rainbow rain', pick: (rand) => ({ set: pick(rand, ['lds', 'ds', 's']), color: 'rainbow', tick: 100, cell: 22 + 2 * Math.floor(rand() * 6) }) },
+  { id: 'heavy', title: 'Heavy rain', pick: (rand) => ({ set: pick(rand, ['lds', 'ds', 's']), color: 'tint', tick: 100, cell: 22 + 2 * Math.floor(rand() * 6) }) },
 ];
 
 const SETS = { l: /^[A-Z]$/, d: /^[0-9]$/, s: /^[^\sA-Za-z0-9]$/u };
 const FACE = 'MrlyFont';
 const FADE = 0.05;
 const SIDE = 5;
+const WASH = 0.12;
+const DEEP = 0.3;
 
 const square = (char) => FONT[char].rows.length === SIDE && FONT[char].rows.every((row) => row.length === SIDE);
 
@@ -49,8 +51,12 @@ export function make(canvas, view, opts) {
   let grid = board(view, 1, 1);
   let cols = 0;
   let rows = 0;
+  const look = () => {
+    const { paper, accent } = view.look();
+    return bright(paper) ? { paper: blend(paper, accent, WASH), accent: blend(accent, palette.black, DEEP) } : { paper, accent };
+  };
   const wash = () => {
-    ctx.fillStyle = view.look().paper;
+    ctx.fillStyle = look().paper;
     ctx.fillRect(0, 0, view.w, view.h);
   };
   const size = () => {
@@ -69,7 +75,7 @@ export function make(canvas, view, opts) {
     wash();
   };
   const field = () => {
-    const { accent } = view.look();
+    const { accent } = look();
     const again = rng(salt);
     wash();
     for (let i = 0; i < cols; i++) {
@@ -83,7 +89,7 @@ export function make(canvas, view, opts) {
   };
   const draw = () => {
     if (view.still) return field();
-    const { paper, accent } = view.look();
+    const { paper, accent } = look();
     ctx.fillStyle = veil(paper, FADE);
     ctx.fillRect(0, 0, view.w, view.h);
     for (let i = 0; i < cols; i++) {

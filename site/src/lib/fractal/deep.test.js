@@ -29,6 +29,13 @@ test('the classic palette paints the ground and the accent straight to the canva
   expect([one.uniforms.uGround, one.uniforms.uAccent, one.uniforms.uTime, 'uRamp' in one.uniforms]).toEqual([[16 / 255, 32 / 255, 48 / 255], [1, 128 / 255, 0], 1, false]);
 });
 
+test('on a light paper the classic palette tints the ground and paints the set a deep accent', () => {
+  const fake = gl();
+  deep(fake, { ...VIEW, look: () => ({ paper: '#ffffff', accent: '#ff8000' }) }, { palette: 'classic' }).draw();
+  const { uGround, uInside } = paints(fake)[0].uniforms;
+  expect([uGround, uInside].map((one) => one.map((v) => Math.round(v * 255)))).toEqual([[255, 232, 209], [115, 58, 0]]);
+});
+
 test('the view turns 1/2048 rad a frame the way the seed picks, in every palette', () => {
   const angle = (palette, seed) => {
     const fake = gl();

@@ -32,20 +32,20 @@ const open = (over = {}) => {
 
 test("the page opens on the carpet's middle hexagon of side 3, its closed form and its exact split between carpet and net", () => {
   const plan = study(math, value({}));
-  expect(plan.rows.slice(0, 9)).toEqual([['Name', 'carpet 23'], ['Side', 3], ['Triangles', 54], ['Closed form', '54'], ['Filled', 42], ['Empty', 12], ['Pieces', 1], ['Holes', 1], ['Largest piece', 42]]);
-  expect(plan.rows.slice(-5)).toEqual([['Carpet', 42], ['Net', 12], ['Together', 54], ['Hexagon', 54], ['Partition', 'exact']]);
+  expect(plan.rows.slice(0, 9)).toEqual([['name', 'carpet 23'], ['side', 3], ['triangles', 54], ['closed form', '54'], ['filled', 42], ['empty', 12], ['pieces', 1], ['holes', 1], ['largest piece', 42]]);
+  expect(plan.rows.slice(-5)).toEqual([['carpet', 42], ['net', 12], ['together', 54], ['hexagon', 54], ['partition', 'exact']]);
 });
 
 test('the side runs the odd sides to 31: the carpet falls into pieces at odd k and closes round holes at even k', () => {
   const at = (k) => study(math, value({ k })).rows;
-  expect(row(at(TOP), 'Side')).toBe(31);
-  expect([3, 4, 5, 6].map((k) => [k, row(at(k), 'Pieces'), row(at(k), 'Holes')])).toEqual([[3, 7, 0], [4, 1, 7], [5, 19, 0], [6, 1, 19]]);
+  expect(row(at(TOP), 'side')).toBe(31);
+  expect([3, 4, 5, 6].map((k) => [k, row(at(k), 'pieces'), row(at(k), 'holes')])).toEqual([[3, 7, 0], [4, 1, 7], [5, 19, 0], [6, 1, 19]]);
 });
 
 test('a fractal tile grows its own level, capped by the tile, and drops the partition past level 1', () => {
   const plan = study(math, value({ tile: 3, level: 9 }));
-  expect([row(plan.rows, 'Side'), row(plan.rows, 'Closed form'), row(plan.rows, 'Partition')]).toEqual([81, '39366', undefined]);
-  expect(study(math, value({ tile: 5, level: 9 })).rows[1]).toEqual(['Side', 25]);
+  expect([row(plan.rows, 'side'), row(plan.rows, 'closed form'), row(plan.rows, 'partition')]).toEqual([81, '39366', undefined]);
+  expect(study(math, value({ tile: 5, level: 9 })).rows[1]).toEqual(['side', 25]);
 });
 
 test('the scene is still: it paints the hexagon alone, one fill a triangle, and repaints the same canvas at once on a set', () => {
@@ -55,7 +55,7 @@ test('the scene is still: it paints the hexagon alone, one fill a triangle, and 
   expect([live.count('fillRect'), live.count('fillText'), live.count('fill')]).toEqual([0, 0, 54]);
   live.log.length = 0;
   expect(live.scene.set(value({ k: 4 }))).toBe(true);
-  expect([live.count('clearRect'), row(live.told.at(-1).rows, 'Holes')]).toEqual([1, 7]);
+  expect([live.count('clearRect'), row(live.told.at(-1).rows, 'holes')]).toEqual([1, 7]);
 });
 
 test('the picture takes the whole stage at any aspect, a phone included', () => {

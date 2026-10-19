@@ -7,4 +7,5 @@
 .plate h1 { margin: var(--s5) 0 0; }
 .plate .by { color: var(--dim); font: var(--t3)/var(--lh3) var(--mono); margin: var(--s2) 0 0; }
 .plate .by + .by { margin-top: 0; }
-.plate .by:last-child { margin-bottom: var(--s6); }
+.plate .by + .lead { margin-top: var(--s3); }
+.plate > :last-child { margin-bottom: var(--s6); }

@@ -35,10 +35,10 @@ const without = (map, key) => Object.fromEntries(Object.entries(map).filter(([on
 
 function Rename({ name, onDone, className }) {
   const done = useRef(false);
-  const end = (value) => {
+  const end = (value, keyed) => {
     if (done.current) return;
     done.current = true;
-    onDone(value);
+    onDone(value, keyed);
   };
   return (
     <input
@@ -47,22 +47,54 @@ function Rename({ name, onDone, className }) {
       aria-label={`Rename ${name}`}
       autoFocus
       onFocus={(e) => e.target.select()}
-      onBlur={(e) => end(e.target.value)}
+      onBlur={(e) => end(e.target.value, false)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') end(e.currentTarget.value);
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          end(e.currentTarget.value, true);
+        }
         if (e.key === 'Escape') {
           e.preventDefault();
           e.stopPropagation();
-          end(name);
+          end(name, true);
         }
       }}
     />
   );
 }
 
+/* ACTIONS */
+
+const MENU = (e) => e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey);
+
+function Actions({ at, label, rows, onClose }) {
+  const box = useRef(null);
+  useEffect(() => {
+    const pop = box.current;
+    pop?.showPopover?.();
+    if (pop?.offsetWidth) {
+      pop.style.setProperty('--x', `${Math.max(8, Math.min(at.x, innerWidth - pop.offsetWidth - 8))}px`);
+      pop.style.setProperty('--y', `${Math.max(8, Math.min(at.y, innerHeight - pop.offsetHeight - 8))}px`);
+    }
+    pop?.querySelector('button')?.focus();
+    const gone = (e) => e.newState === 'closed' && onClose();
+    pop?.addEventListener('toggle', gone);
+    return () => pop?.removeEventListener('toggle', gone);
+  }, [at]);
+  return (
+    <div ref={box} className="pop menu" popover="auto" data-lens="menu" aria-label={label} style={{ '--x': `${at.x}px`, '--y': `${at.y}px` }} onContextMenu={(e) => e.preventDefault()}>
+      {rows.map(([text, fn]) => (
+        <button type="button" key={text} onClick={() => (box.current?.hidePopover?.(), fn())}>
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* SHELF */
 
-function Shelf({ slot, name, kind, ids, draft, scroller, naming, hooks }) {
+function Shelf({ slot, name, kind, ids, draft, scroller, hooks }) {
   const list = useRef(null);
   useEffect(
     () =>
@@ -80,11 +112,22 @@ function Shelf({ slot, name, kind, ids, draft, scroller, naming, hooks }) {
   const held = draft && draft.index !== null ? draft.id : null;
   const head = `shelf-${slot || 'recent'}`.replace(/\W+/g, '-');
   return (
-    <section className="shelf" aria-labelledby={head}>
-      {naming ? <Rename className="name" name={name} onDone={(to) => hooks.current.rename(name, to)} /> : <h2 id={head} onDoubleClick={kind === 'launchpad' ? () => hooks.current.name(name) : undefined}>{name}</h2>}
+    <section className="shelf" aria-labelledby={head} data-slot={slot}>
+      <h2 id={head} onDoubleClick={kind === 'launchpad' ? () => hooks.current.name(name) : undefined}>
+        {name}
+      </h2>
       <ul className="apps" ref={list}>
         {shown.map((id) => (
-          <li key={id} data-id={id} data-held={id === held ? '' : undefined}>
+          <li
+            key={id}
+            data-id={id}
+            data-held={id === held ? '' : undefined}
+            onKeyDown={(e) => {
+              if (!MENU(e)) return;
+              e.preventDefault();
+              hooks.current.menu(slot, id, e.currentTarget);
+            }}
+          >
             <Tile id={id} />
           </li>
         ))}
@@ -106,21 +149,28 @@ function Shelf({ slot, name, kind, ids, draft, scroller, naming, hooks }) {
 
 function Chips({ names, chip, naming, hooks }) {
   const box = useRef(null);
+  const back = useRef('');
   const [draft, setDraft] = useState(null);
   useEffect(
     () =>
       sortable(box.current, {
         kind: 'sections',
-        axis: 'x',
+        axis: 'grid',
         takes: (from) => (from === 'sections' ? 'move' : ''),
         preview: (next) => flushSync(() => setDraft(next)),
-        commit: (next) => {
-          flushSync(() => setDraft(null));
-          if (next) hooks.current.order(next);
-        },
+        commit: (next) =>
+          flushSync(() => {
+            setDraft(null);
+            if (next) hooks.current.order(next);
+          }),
       }),
     [],
   );
+  useEffect(() => {
+    if (!back.current || naming) return;
+    [...box.current.children].find((one) => one.dataset.id === back.current)?.focus({ preventScroll: true });
+    back.current = '';
+  });
   return (
     <nav className="chips" aria-label="Sections">
       <button type="button" className="pill" aria-pressed={chip === ''} onClick={() => hooks.current.chip('')}>
@@ -129,9 +179,31 @@ function Chips({ names, chip, naming, hooks }) {
       <div className="names" ref={box}>
         {placed(names, draft).map((name) =>
           naming === name ? (
-            <Rename key={name} className="pill" name={name} onDone={(to) => hooks.current.rename(name, to)} />
+            <Rename
+              key={name}
+              className="pill"
+              name={name}
+              onDone={(to, keyed) => {
+                const now = hooks.current.rename(name, to);
+                if (keyed) back.current = now;
+              }}
+            />
           ) : (
-            <button type="button" key={name} className="pill" data-id={name} data-held={draft?.id === name && draft.index !== null ? '' : undefined} aria-pressed={chip === name} onClick={() => hooks.current.chip(chip === name ? '' : name)} onDoubleClick={() => hooks.current.name(name)}>
+            <button
+              type="button"
+              key={name}
+              className="pill"
+              data-id={name}
+              data-held={draft?.id === name && draft.index !== null ? '' : undefined}
+              aria-pressed={chip === name}
+              onClick={() => hooks.current.chip(chip === name ? '' : name)}
+              onDoubleClick={() => hooks.current.name(name)}
+              onKeyDown={(e) => {
+                if (e.key !== 'F2') return;
+                e.preventDefault();
+                hooks.current.name(name);
+              }}
+            >
               {name}
             </button>
           ),
@@ -204,7 +276,10 @@ export function Launchpad() {
   const [said, setSaid] = useState(null);
   const [found, setFound] = useState([]);
   const [seen, setSeen] = useState(recent);
+  const [menu, setMenu] = useState(null);
   const live = useRef(shelves);
+  const clock = useRef(0);
+  const toast = useRef(null);
   const root = useRef(null);
   const body = useRef(null);
   const field = useRef(null);
@@ -212,15 +287,20 @@ export function Launchpad() {
   const searching = query.trim() !== '';
 
   const keep = (next) => {
-    live.current = next;
     shelve(next);
+    live.current = next;
     setShelves(next);
   };
   const tell = (words, undo) => {
+    const fade = () => {
+      if (toast.current?.contains(document.activeElement)) clock.current = setTimeout(fade, SAID);
+      else setSaid(null);
+    };
     setSaid({ words, undo });
-    clearTimeout(tell.timer);
-    tell.timer = setTimeout(() => setSaid(null), SAID);
+    clearTimeout(clock.current);
+    clock.current = setTimeout(fade, SAID);
   };
+  const named = (id) => app(id)?.title ?? id;
 
   hooks.current = {
     preview: (slot, next) => flushSync(() => setDrafts((was) => ({ ...was, [slot]: next }))),
@@ -233,14 +313,28 @@ export function Launchpad() {
       const by = new Map(live.current.map((one) => [one.name, one]));
       keep(placed(live.current.map((one) => one.name), next).map((name) => by.get(name)));
     },
+    move: (from, id, to) => {
+      const end = live.current.find((one) => one.name === to)?.apps.length ?? 0;
+      hooks.current.commit(from, { id, index: null });
+      hooks.current.commit(to, { id, index: end });
+      if (chip) flushSync(() => setChip(to));
+      const shelf = [...root.current.querySelectorAll('.shelf')].find((one) => one.dataset.slot === to);
+      shelf?.querySelector(`li[data-id="${CSS.escape(id)}"] a`)?.focus({ preventScroll: true });
+      tell(`Moved ${named(id)} to ${to}.`);
+    },
+    menu: (slot, id, el) => {
+      const box = el.getBoundingClientRect();
+      setMenu({ slot, id, at: { x: box.left, y: box.bottom } });
+    },
     chip: setChip,
     name: setNaming,
     rename: (from, to) => {
       const next = renamed(live.current, from, to);
       setNaming('');
-      if (next === live.current) return;
+      if (next === live.current) return from;
       keep(next);
       if (chip === from) setChip(to.trim());
+      return to.trim();
     },
     drop: (name) => {
       keep(live.current.filter((one) => one.name !== name));
@@ -249,6 +343,7 @@ export function Launchpad() {
     add: () => {
       const name = spare(live.current);
       keep([...live.current, { name, apps: [] }]);
+      setQuery('');
       setChip('');
       setNaming(name);
     },
@@ -265,10 +360,25 @@ export function Launchpad() {
     unshelve();
     setChip('');
     tell('Layout reset.', () => {
+      clearTimeout(clock.current);
       keep(was.shelves);
       redock(was.dock);
       setSaid(null);
     });
+  };
+  const actions = (slot, id) => {
+    const groups = dock();
+    const docked = groups.some((ids) => ids.includes(id));
+    const add = () => {
+      redock(groups.length ? groups.map((ids, g) => (g === groups.length - 1 ? [...ids, id] : ids)) : [[id]]);
+      tell(`Added ${named(id)} to the Dock.`);
+    };
+    const remove = () => {
+      redock(groups.map((ids) => ids.filter((one) => one !== id)));
+      tell(`Removed ${named(id)} from the Dock.`);
+    };
+    const moves = slot === SEEN ? [] : live.current.filter((one) => one.name !== slot).map((one) => [`Move to ${one.name}`, () => hooks.current.move(slot, id, one.name)]);
+    return [docked ? ['Remove from Dock', remove] : ['Add to Dock', add], ...moves];
   };
 
   const groups = useMemo(
@@ -325,7 +435,7 @@ export function Launchpad() {
       removeEventListener('shelves', reload);
       document.removeEventListener('click', press, true);
       document.removeEventListener('keydown', key);
-      clearTimeout(tell.timer);
+      clearTimeout(clock.current);
     };
   }, []);
 
@@ -396,6 +506,7 @@ export function Launchpad() {
             aria-label="More"
             rows={[
               ['New Section', () => hooks.current.add()],
+              ...(chip && !searching ? [['Rename Section', () => hooks.current.name(chip)]] : []),
               ['Export JSON', save, 'download'],
               ['Reset Layout', reset],
             ]}
@@ -403,6 +514,23 @@ export function Launchpad() {
             <Icon name="more_horiz" />
           </Menu>
         </header>
+        {said && (
+          <p className="said" role="status" ref={toast}>
+            {said.words}
+            {said.undo && (
+              <button
+                type="button"
+                className="link"
+                onClick={() => {
+                  if (toast.current?.contains(document.activeElement)) root.current?.querySelector('.more')?.focus({ preventScroll: true });
+                  said.undo();
+                }}
+              >
+                Undo
+              </button>
+            )}
+          </p>
+        )}
         {!searching && <Chips names={shelves.map((one) => one.name)} chip={chip} naming={naming} hooks={hooks} />}
         <div className="body" ref={body}>
           {searching ? (
@@ -413,21 +541,12 @@ export function Launchpad() {
               {shelves
                 .filter((one) => !chip || one.name === chip)
                 .map((one) => (
-                  <Shelf key={one.name} slot={one.name} name={one.name} kind="launchpad" ids={one.apps} draft={drafts[one.name]} scroller={body} naming={naming === one.name && chip !== ''} hooks={hooks} />
+                  <Shelf key={one.name} slot={one.name} name={one.name} kind="launchpad" ids={one.apps} draft={drafts[one.name]} scroller={body} hooks={hooks} />
                 ))}
             </>
           )}
         </div>
-        {said && (
-          <p className="said" role="status">
-            {said.words}
-            {said.undo && (
-              <button type="button" className="link" onClick={said.undo}>
-                Undo
-              </button>
-            )}
-          </p>
-        )}
+        {menu && <Actions at={menu.at} label={named(menu.id)} rows={actions(menu.slot, menu.id)} onClose={() => setMenu(null)} />}
       </section>
     </div>
   );

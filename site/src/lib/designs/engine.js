@@ -98,14 +98,15 @@ export function classes(math, dim, base) {
 }
 
 export function facts(math, dim, base, code) {
-  if (base === 2) {
+  if (base === 2 && dim > 1) {
     const design = universe(math, dim).design(code);
     const read = { rep: design.class_rep, orbit: design.orbit_size, anf: design.anf(), degree: design.degree() };
     design.free();
     return read;
   }
   const maps = group(math, dim, base);
-  return { rep: math.bang.baseq.canonical(maps, code), orbit: math.bang.baseq.orbit(maps, code).length, anf: '', degree: -1 };
+  const two = base === 2;
+  return { rep: math.bang.baseq.canonical(maps, code), orbit: math.bang.baseq.orbit(maps, code).length, anf: two ? math.bang.universe.anf_string(code, dim) : '', degree: two ? math.bang.universe.degree(code, dim) : -1 };
 }
 
 export function title(math, dim, base, code) {
@@ -118,6 +119,10 @@ export function title(math, dim, base, code) {
 /* GROWTH */
 
 export function grow(math, dim, base, code, level) {
+  if (dim === 1) {
+    const { shape, data } = math.bang.factory.create(code, SIDE, 1, base, level);
+    return { shape: [1, shape[0]], types: data };
+  }
   return dim === 2 ? math.two.create(code, SIDE, level, ROTATION, base) : math.three.create(code, SIDE, level, base);
 }
 

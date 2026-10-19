@@ -21,7 +21,7 @@
     d.dataset.desk = '';
     d.dataset.window = 'none';
   }
-  const forms = ['(pointer: coarse) and (max-width: 56rem)', '(max-width: 40rem)'].map((one) => matchMedia(one));
+  const forms = ['(pointer: coarse) and (max-width: 44rem)', '(max-width: 40rem)'].map((one) => matchMedia(one));
   const form = () => {
     d.dataset.form = forms.some((one) => one.matches) ? 'phone' : 'desk';
   };

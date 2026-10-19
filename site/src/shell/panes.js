@@ -1,5 +1,5 @@
 export const PANES = [
-  { id: 'appearance', title: 'Appearance', art: '.###. ##..# ##..# ##..# .###.', hue: 'purple', more: 'theme dark light mode font text size tint accent colour color icon icons style tinted' },
+  { id: 'appearance', title: 'Appearance', art: '.###. ##..# ##..# ##..# .###.', hue: 'purple', more: 'theme dark light mode font text size tint accent colour color icon icons style tinted clock time hours 12-hour 24-hour' },
   { id: 'glass', title: 'Glass', art: '..#.. .###. #.### ##### .###.', hue: 'cyan', more: 'liquid clear tinted frosted transparency blur' },
   { id: 'desktop', title: 'Desktop & Dock', art: '##### #...# ##### ..#.. .###.', hue: 'indigo', more: 'desktop picture wallpaper dock magnify widgets launchpad window width' },
   { id: 'screensaver', title: 'Screen Saver', art: '.##.. #.... #.... #...# .###.', hue: 'pink', more: 'screensaver saver idle lock clock shuffle preview' },

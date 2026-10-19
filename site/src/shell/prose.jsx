@@ -22,13 +22,14 @@ function Page({ row, site, data, html, slug }) {
   );
 }
 
-function Post({ row, site, html, slug }) {
+export function Post({ row, site, html, slug }) {
   return (
     <>
       <Figure className="opener" name={row.figure} label={row.title} />
       <div className="plate">
         <h1 id={slug}>{row.title}</h1>
         <p className="by">{row.date} · {site.title}</p>
+        {row.lead && <p className="lead">{row.lead}</p>}
       </div>
       <div dangerouslySetInnerHTML={{ __html: html }} />
     </>

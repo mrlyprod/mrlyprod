@@ -1,5 +1,5 @@
 {
   "title": "Code",
-  "line": "The source of mrlyprod: every tracked file, browsable, with its raw bytes under /raw/.",
+  "line": "The source of mrlyprod: every tracked file in a tree, its raw bytes under /raw/.",
   "deep": true
 }

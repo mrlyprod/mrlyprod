@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Btn, Icon, Segment } from '../app/controls.jsx';
 import { cap, facts, gallery, home, total } from './engine.js';
-import { Thumb, useTheme, watch } from './pick.jsx';
+import { Thumb, useTheme } from './pick.jsx';
 import { allows, bases, dims, fits, read, same, useDesigns } from './store.js';
 
 export const SHOWS = [['classes', 'Classes'], ['named', 'Named'], ['all', 'All']];
 
-const CHUNK = 240;
 const CAP = 120;
 const SMALL = 56;
 const LARGE = 96;
 const BIG = 320;
 const DEEP = 4;
+const OVER = 2;
+const SEEN = { contentVisibility: 'visible' };
 
 /* WORDS */
 
@@ -87,13 +88,24 @@ function arrows(e) {
   cells[to].focus();
 }
 
+/* WINDOW */
+
+export function span(top, height, pitch, rows) {
+  const first = Math.min(rows, Math.max(0, Math.floor(top / pitch) - OVER));
+  return [first, Math.min(rows, Math.max(first, Math.ceil((top + height) / pitch) + OVER))];
+}
+
+export const reach = (row, pitch, gap, top, height, room = 0) => Math.min(0, row * pitch - room - top) || Math.max(0, (row + 1) * pitch - gap + room - top - height);
+
+const UNSEEN = { cols: 0, pitch: 0, gap: 0, first: 0, last: 0 };
+
 /* CELLS */
 
-function Cell({ math, design, on, px, tick, onPick, onLook }) {
+function Cell({ math, design, at, on, px, tick, onPick, onLook }) {
   const label = named(math, design);
   const look = onLook && (() => onLook(design));
   return (
-    <button type="button" className={on ? 'on' : undefined} aria-pressed={on} aria-label={label} title={`${label}, ${design.dim}D base ${design.base}`} onClick={() => onPick(design)} onFocus={look} onPointerEnter={look}>
+    <button type="button" className={on ? 'on' : undefined} data-at={at} style={at === undefined ? undefined : SEEN} aria-pressed={on} aria-label={label} title={`${label}, ${design.dim}D base ${design.base}`} onClick={() => onPick(design)} onFocus={look} onPointerEnter={look}>
       <Thumb math={math} dim={design.dim} base={design.base} code={design.code} px={px} tick={tick} />
       <small>{called(math, design) || design.code}</small>
     </button>
@@ -108,6 +120,105 @@ function Grid({ label, designs, now, ...rest }) {
   );
 }
 
+function Window({ label, designs, now, lead, ...rest }) {
+  const grid = useRef(null);
+  const held = useRef(-1);
+  const goal = useRef(-1);
+  const update = useRef(null);
+  const [win, setWin] = useState(UNSEEN);
+  const count = designs.length;
+  const view = () => {
+    const box = grid.current;
+    const list = box?.closest('.list');
+    return box && list ? { box, list, top: list.getBoundingClientRect().top - box.getBoundingClientRect().top, height: list.clientHeight, head: box.getBoundingClientRect().top - (box.closest('.shelf') ?? box).getBoundingClientRect().top, room: parseFloat(getComputedStyle(list).paddingBottom) || 0 } : null;
+  };
+  update.current = () => {
+    const at = view();
+    if (!at) return;
+    const cell = at.box.querySelector(':scope > button');
+    const gap = parseFloat(getComputedStyle(at.box).rowGap) || 0;
+    const cols = cell ? across(at.box) : win.cols;
+    const pitch = cell ? cell.getBoundingClientRect().height + gap : win.pitch;
+    if (!cols || pitch <= 0) return;
+    const [first, last] = span(at.top, at.height, pitch, Math.ceil(count / cols));
+    setWin((was) => (was.cols === cols && was.pitch === pitch && was.gap === gap && was.first === first && was.last === last ? was : { cols, pitch, gap, first, last }));
+  };
+  useLayoutEffect(() => {
+    held.current = -1;
+    goal.current = -1;
+    update.current();
+  }, [designs]);
+  useEffect(() => {
+    const box = grid.current;
+    const list = box?.closest('.list');
+    if (!list) return undefined;
+    const again = () => update.current();
+    list.addEventListener('scroll', again, { passive: true });
+    const sizes = typeof ResizeObserver === 'function' ? new ResizeObserver(again) : null;
+    sizes?.observe(list);
+    sizes?.observe(box);
+    return () => {
+      list.removeEventListener('scroll', again);
+      sizes?.disconnect();
+    };
+  }, []);
+  const near = (where, to) => {
+    if (!where || !win.cols) return;
+    const row = Math.floor(to / win.cols);
+    const by = reach(row, win.pitch, win.gap, where.top, where.height, where.room);
+    where.list.scrollTop += row === 0 && by < 0 ? -where.top - where.head : by;
+  };
+  useLayoutEffect(() => {
+    const box = grid.current;
+    if (!box) return;
+    const cell = goal.current >= 0 && box.querySelector(`:scope > [data-at="${goal.current}"]`);
+    if (cell) {
+      near(view(), goal.current);
+      goal.current = -1;
+      cell.focus({ preventScroll: true });
+      return;
+    }
+    const active = document.activeElement;
+    if (held.current >= 0 && (!active || active === document.body || active.tagName === 'DIALOG')) box.focus({ preventScroll: true });
+  });
+  const go = (to) => {
+    const where = view();
+    if (!where) return false;
+    near(where, to);
+    update.current();
+    const cell = where.box.querySelector(`:scope > [data-at="${to}"]`);
+    if (cell) cell.focus({ preventScroll: true });
+    else goal.current = to;
+    return true;
+  };
+  lead.current = () => count > 0 && go(0);
+  const keys = (e) => {
+    const at = e.target === grid.current ? held.current : Number(e.target.dataset?.at ?? -1);
+    const to = win.cols && at >= 0 ? step(at, e.key, win.cols, count) : -1;
+    if (to < 0 || !go(to)) return;
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const seen = (e) => {
+    const at = Number(e.target.dataset?.at);
+    if (Number.isInteger(at)) held.current = at;
+  };
+  const left = (e) => {
+    if (e.relatedTarget && !grid.current?.contains(e.relatedTarget)) held.current = -1;
+  };
+  const rows = win.cols ? Math.ceil(count / win.cols) : 0;
+  const last = Math.min(win.last, rows);
+  const first = Math.min(win.first, last);
+  const from = win.cols ? first * win.cols : 0;
+  const to = win.cols ? Math.min(count, last * win.cols) : Math.min(count, CAP);
+  const pad = win.cols ? { paddingTop: first * win.pitch, paddingBottom: (rows - last) * win.pitch } : undefined;
+  return (
+    <div className="designs" role="group" aria-label={label} ref={grid} tabIndex={-1} style={pad} onKeyDown={keys} onFocus={seen} onBlur={left}>
+      {designs.slice(from, to).map((one, i) => <Cell key={`${one.dim}:${one.base}:${one.code}`} design={one} at={from + i} on={same(one, now)} {...rest} />)}
+    </div>
+  );
+}
+
 function Shelf({ name, count, children }) {
   return (
     <section className="shelf" aria-label={name}>
@@ -118,12 +229,6 @@ function Shelf({ name, count, children }) {
       {children}
     </section>
   );
-}
-
-function More({ left, onMore }) {
-  const at = useRef(null);
-  useEffect(() => watch(at.current, onMore), [onMore]);
-  return <button type="button" className="more" ref={at} onClick={onMore}>{`${left.toLocaleString()} more`}</button>;
 }
 
 /* PREVIEW */
@@ -160,17 +265,15 @@ export function Browser({ slot, value, math, onPick, compact }) {
   const [space, setSpace] = useState({ where, dim: now.dim, base: now.base, show: '' });
   if (space.where !== where) setSpace({ ...space, where, dim: now.dim, base: now.base });
   const [query, setQuery] = useState('');
-  const [grown, setGrown] = useState({ of: null, count: CHUNK });
   const hold = useRef(null);
   const list = useRef(null);
+  const lead = useRef(null);
   const { dim, base } = space;
   const options = useMemo(() => (math ? shows(math, dim, base) : []), [math, dim, base]);
   const show = options.some(([one]) => one === space.show) ? space.show : options[0]?.[0];
   const holds = (one) => !slot.holds || slot.holds(one, value);
   const every = useMemo(() => (math ? (gallery(math, dim, base, show) ?? []).map((code) => ({ dim, base, code })).filter(holds) : []), [math, dim, base, show, slot.holds ? JSON.stringify(value) : '']);
   const found = useMemo(() => (math ? search(math, { dim, base }, every, query) : []), [math, dim, base, every, query]);
-  const count = compact ? CAP : grown.of === found ? grown.count : CHUNK;
-  const more = useCallback(() => setGrown({ of: found, count: count + CHUNK }), [found, count]);
   const look = useCallback((one) => hold.current?.(one), []);
   if (!math) return <div className="browser"><p className="none">Loading designs</p></div>;
   const shelf = (designs) => designs.filter((one) => fits(slot, one) && holds(one) && valid(math, one) && matches(math, one, query));
@@ -189,10 +292,14 @@ export function Browser({ slot, value, math, onPick, compact }) {
     if (first) onPick(first);
   };
   const down = (e) => {
-    const at = e.key === 'ArrowDown' && list.current?.querySelector('.designs > button');
-    if (!at) return;
+    if (e.key !== 'ArrowDown' || !list.current) return;
+    const at = list.current.querySelector('.designs > button:not([data-at])');
+    if (at) at.focus();
+    else {
+      list.current.scrollTop = 0;
+      if (!lead.current?.()) return;
+    }
     e.preventDefault();
-    at.focus();
   };
   return (
     <div className={compact ? 'browser compact' : 'browser'}>
@@ -219,8 +326,8 @@ export function Browser({ slot, value, math, onPick, compact }) {
               {options.length > 1 && <Segment label="Show" value={show} options={options} onChange={(v) => move({ show: v })} />}
             </div>
           )}
-          {found.length > 0 ? <Grid label={`${dim}D base ${base}`} designs={found.slice(0, count)} {...cell} /> : <p className="none">No design matches</p>}
-          {found.length > count && (compact ? <p className="none">{`${(found.length - count).toLocaleString()} more in Browse all`}</p> : <More left={found.length - count} onMore={more} />)}
+          {found.length === 0 ? <p className="none">No design matches</p> : compact ? <Grid label={`${dim}D base ${base}`} designs={found.slice(0, CAP)} {...cell} /> : <Window label={`${dim}D base ${base}`} designs={found} lead={lead} {...cell} />}
+          {compact && found.length > CAP && <p className="none">{`${(found.length - CAP).toLocaleString()} more in Browse all`}</p>}
         </Shelf>
       </div>
       {!compact && <Preview math={math} now={now} hold={hold} tick={tick} onPick={onPick} />}

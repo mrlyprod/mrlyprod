@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import { HUES, tints } from '../../lib/theme/hues.js';
 import { AppIcon } from '../../shell/appicon.jsx';
-import { face, icons, KEY, look, read, root, text, theme, tint } from '../../shell/prefs.js';
+import { face, hours, icons, KEY, look, read, root, text, theme, tint } from '../../shell/prefs.js';
 import { Note, Pane as Page, Section, Segment, Select, Swatches, Tiles } from './ui.jsx';
 import { usePref } from './use.js';
 
-export const FIND = ['Appearance', 'Auto', 'Light', 'Dark', 'Theme', 'Dark mode', 'Light mode', 'Accent colour', 'Accent color', 'Tint', 'Colour', 'Color', 'Font', 'Typeface', 'Text size', 'Icon & widget style', 'Icons', 'Clear', 'Tinted', 'Icons go dark'];
+export const FIND = ['Appearance', 'Auto', 'Light', 'Dark', 'Theme', 'Dark mode', 'Light mode', 'Accent colour', 'Accent color', 'Tint', 'Colour', 'Color', 'Font', 'Typeface', 'Text size', 'Icon & widget style', 'Icons', 'Clear', 'Tinted', 'Icons go dark', 'Clock', 'Time format', '12-hour', '24-hour'];
 
 /* DARK */
 
@@ -76,6 +76,10 @@ const Icons = ({ value }) => (
 
 const styles = (always, night) => STYLES.map(([value, name]) => ({ value, text: name, art: <Icons value={look(value, always, night)} /> }));
 
+/* CLOCK */
+
+const CYCLES = [['', 'Auto'], ['12', '12-hour'], ['24', '24-hour']];
+
 /* PANE */
 
 export default function Pane({ site }) {
@@ -85,6 +89,7 @@ export default function Pane({ site }) {
   const size = usePref(KEY.text);
   const style = usePref(KEY.icons);
   const always = usePref(KEY.always) === '1';
+  const cycle = usePref(KEY.hours);
   const night = useDark();
   return (
     <Page title="Appearance">
@@ -102,6 +107,9 @@ export default function Pane({ site }) {
       <Section title="Icon & widget style" foot="Auto turns Dark, Clear and Tinted icons dark in dark mode. Always keeps them dark.">
         <Tiles label="Icon & widget style" value={style} options={styles(always, night)} onChange={(next) => icons(next, always)} />
         <Segment label="Icons go dark" value={always ? 'always' : ''} options={WHEN} onChange={(next) => icons(read(KEY.icons), next === 'always')} disabled={!style} />
+      </Section>
+      <Section title="Clock" foot="Auto follows your browser's language and region.">
+        <Segment label="Time format" value={cycle} options={CYCLES} onChange={hours} />
       </Section>
     </Page>
   );

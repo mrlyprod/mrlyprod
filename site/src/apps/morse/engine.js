@@ -219,7 +219,8 @@ const SURVEYS = {
 /* LAYOUT */
 
 export function lay(w, h, side, cell, pad) {
-  const size = cell > 0 ? cell * side : Math.max(1, Math.floor(Math.min(w, h) - 2 * pad));
+  const most = Math.max(1, Math.floor(Math.min(w, h) - 2 * pad));
+  const size = cell > 0 ? cell * side : most >= side ? Math.floor(most / side) * side : most;
   return { x: Math.round((w - size) / 2), y: Math.round((h - size) / 2), size };
 }
 

@@ -30,12 +30,12 @@ export function parse(click) {
 }
 
 export const WINDOWS = [
-  { id: 'gaussian', name: 'Gaussian snowflake', note: 'four arms', set: { ring: 'gaussian', limit: 40, look: 'fate', click: '' } },
-  { id: 'eisenstein', name: 'Eisenstein snowflake', note: 'six arms', set: { ring: 'eisenstein', limit: 40, look: 'fate', click: '' } },
-  { id: 'gaussian-norm', name: 'Gaussian norms', note: 'rings of norm', set: { ring: 'gaussian', limit: 40, look: 'norm', click: '' } },
-  { id: 'eisenstein-norm', name: 'Eisenstein norms', note: 'rings of norm', set: { ring: 'eisenstein', limit: 40, look: 'norm', click: '' } },
-  { id: 'gaussian-close', name: 'Gaussian close-up', note: 'reach 12', set: { ring: 'gaussian', limit: 12, look: 'fate', click: '' } },
-  { id: 'eisenstein-close', name: 'Eisenstein close-up', note: 'reach 12', set: { ring: 'eisenstein', limit: 12, look: 'fate', click: '' } },
+  { id: 'gaussian', name: 'Gaussian', note: 'snowflake', set: { ring: 'gaussian', limit: 40, look: 'fate', click: '' } },
+  { id: 'eisenstein', name: 'Eisenstein', note: 'snowflake', set: { ring: 'eisenstein', limit: 40, look: 'fate', click: '' } },
+  { id: 'gaussian-norm', name: 'Gaussian', note: 'norms', set: { ring: 'gaussian', limit: 40, look: 'norm', click: '' } },
+  { id: 'eisenstein-norm', name: 'Eisenstein', note: 'norms', set: { ring: 'eisenstein', limit: 40, look: 'norm', click: '' } },
+  { id: 'gaussian-close', name: 'Gaussian', note: 'close-up', set: { ring: 'gaussian', limit: 12, look: 'fate', click: '' } },
+  { id: 'eisenstein-close', name: 'Eisenstein', note: 'close-up', set: { ring: 'eisenstein', limit: 12, look: 'fate', click: '' } },
 ];
 
 export const POINTS = [

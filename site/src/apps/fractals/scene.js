@@ -15,7 +15,6 @@ const TELL = 250;
 const SLOW = 0.5;
 const ROOM = 8;
 const SIDE = 0.25;
-const TONES = ['', 'accent'];
 const BUILT = ['kind', 'palette', 'speed', 'path', 'depth', 'seed'];
 const RABBIT = PLACES.find((one) => one.id === 'rabbit').c;
 const four = (v) => v.toFixed(4);
@@ -69,12 +68,12 @@ export const PAGE = {
 
 const FAMOUS = PLACES.filter((one) => one.kind === 'mandelbrot' && one.zoom > 0 && one.zoom <= DEPTHS.shallow - ROOM);
 
-const slow = (rand) => ({ depth: 'shallow', speed: SLOW, palette: pick(rand, TONES) });
+const slow = { depth: 'shallow', speed: SLOW, palette: '', tint: '' };
 
 export const SAVERS = [
-  { id: 'dive', title: 'Mandelbrot dive', pick: (rand) => ({ kind: 'mandelbrot', ...slow(rand) }) },
-  { id: 'places', title: 'Famous places', pick: (rand) => ({ ...go(pick(rand, FAMOUS)), ...slow(rand) }) },
-  { id: 'julia', title: 'Julia dive', pick: (rand) => ({ kind: 'julia', ...slow(rand) }) },
+  { id: 'dive', title: 'Mandelbrot dive', pick: () => ({ kind: 'mandelbrot', ...slow }) },
+  { id: 'places', title: 'Famous places', pick: (rand) => ({ ...go(pick(rand, FAMOUS)), ...slow }) },
+  { id: 'julia', title: 'Julia dive', pick: () => ({ kind: 'julia', ...slow }) },
 ];
 
 const LOCK = {

@@ -101,7 +101,21 @@ export function appicon(id, text) {
   const defs = new Map(svg.kids.filter((kid) => kid.name === 'defs').flatMap((kid) => kid.kids).map((kid) => [get(kid, 'id'), kid]));
   const key = get(body[0], 'data-key') ?? keyOf(get(body[0], 'fill'), defs);
   if (!key) throw fail(id, 'has a back whose fill gives no key colour; set data-key on the back');
-  const dress = (node) => {
+  const named = new Map();
+  const find = (node) => {
+    if (get(node, 'id')) named.set(get(node, 'id'), node);
+    node.kids.forEach(find);
+  };
+  find(svg);
+  const box = [Infinity, -Infinity];
+  const turns = [];
+  const slot = (m) => {
+    if (plain(m)) return `appicon-${id}-w`;
+    const at = turns.findIndex((n) => same(n, m));
+    if (at < 0) turns.push(m);
+    return `appicon-${id}-w${at < 0 ? turns.length : at + 1}`;
+  };
+  const dress = (node, ctm, white, scope) => {
     const attrs = [];
     const style = [];
     const classes = [];
@@ -119,15 +133,32 @@ export function appicon(id, text) {
         classes.push('ds');
       } else attrs.push([k, value]);
     }
-    if (!classes.length && WHITE.test(get(node, 'fill') ?? '')) classes.push('w');
+    const own = get(node, 'fill');
+    const here = ctm && get(node, 'transform') ? times(ctm, transform(get(node, 'transform'))) : ctm;
+    const paint = Boolean(ctm) && !classes.length && (own ? WHITE.test(own) : white);
+    let space = here;
+    if (paint) {
+      reach(node, here, named, box);
+      const inside = node.name === 'use' ? inner(node, named) : IDENTITY;
+      if (!inside) throw fail(id, `turns the shapes of its white <use href="${get(node, 'href') ?? get(node, 'xlink:href')}"> different ways; the Dark fade needs one space per <use>`);
+      space = times(here, inside);
+    }
+    const w = paint && (own || !same(space, scope));
+    if (w) {
+      classes.push('w');
+      if (!same(space, scope)) style.push(`--w:url(#${slot(space)})`);
+    }
     if (classes.length) attrs.unshift(['class', classes.join(' ')]);
     if (style.length) attrs.push(['style', style.join(';')]);
-    return { ...node, attrs, kids: node.kids.map(dress) };
+    return { ...node, attrs, kids: node.kids.map((kid) => dress(kid, here, paint, w ? space : scope)) };
   };
-  const [back, ...ink] = body.map(dress);
+  const bare = (node) => ({ ...node, attrs: node.attrs.filter(([k]) => !['id', 'class', 'style'].includes(k)), kids: node.kids.map(bare) });
+  const [back, ...ink] = body.map((node, at) => dress(node, at ? IDENTITY : null, false, IDENTITY));
+  const glyph = ink.map(write).join('');
+  const whites = box[0] < box[1] ? [IDENTITY, ...turns].map((m, at) => `<linearGradient id="appicon-${id}-w${at || ''}" gradientUnits="userSpaceOnUse" x1="0" y1="${round(box[0])}" x2="0" y2="${round(box[1])}"${at ? ` gradientTransform="matrix(${invert(m).map(round).join(' ')})"` : ''}>${stops([[0, `color-mix(in oklab, ${key} 35%, #212121)`], [1, key]])}</linearGradient>`) : [];
   return {
-    defs: [...defs.values()].map(dress).map(write).join(''),
-    art: `${write(back)}<g class="ink" mask="url(#appicon-fade)" style="--key:${key}">${ink.map(write).join('')}</g>`,
+    defs: [...[...defs.values()].map((node) => write(dress(node, null, false, IDENTITY))), ...whites].join(''),
+    art: `${write(back)}<g class="lift">${ink.map(bare).map(write).join('')}</g><g class="ink" mask="url(#appicon-fade)"${whites.length ? ` style="--w:url(#appicon-${id}-w)"` : ''}><g style="isolation:isolate">${glyph}</g></g>`,
   };
 }
 
@@ -139,36 +170,244 @@ function keyOf(fill, defs) {
   return get(stops.at(-1), 'stop-color') ?? null;
 }
 
+/* BOX */
+
+const IDENTITY = [1, 0, 0, 1, 0, 0];
+
+const round = (x) => Math.round(x * 1e4) / 1e4 || 0;
+
+const same = (a, b) => a.every((x, at) => Math.abs(x - b[at]) < 1e-9);
+
+const plain = (m) => same(m, IDENTITY);
+
+const times = (a, b) => [a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1], a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3], a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5]];
+
+function invert([a, b, c, d, e, f]) {
+  const det = a * d - b * c;
+  return [d / det, -b / det, -c / det, a / det, (c * f - d * e) / det, (b * e - a * f) / det];
+}
+
+const numbers = (text) => (text ?? '').match(/[-+]?(?:\d*\.\d+|\d+\.?)(?:e[-+]?\d+)?/gi)?.map(Number) ?? [];
+
+function transform(text) {
+  let m = IDENTITY;
+  for (const [, name, args] of text.matchAll(/(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)/g)) {
+    const n = numbers(args);
+    const rad = ((n[0] ?? 0) * Math.PI) / 180;
+    const step = {
+      matrix: () => n.slice(0, 6),
+      translate: () => [1, 0, 0, 1, n[0], n[1] ?? 0],
+      scale: () => [n[0], 0, 0, n[1] ?? n[0], 0, 0],
+      rotate: () => times(times([1, 0, 0, 1, n[1] ?? 0, n[2] ?? 0], [Math.cos(rad), Math.sin(rad), -Math.sin(rad), Math.cos(rad), 0, 0]), [1, 0, 0, 1, -(n[1] ?? 0), -(n[2] ?? 0)]),
+      skewX: () => [1, 0, Math.tan(rad), 1, 0, 0],
+      skewY: () => [1, Math.tan(rad), 0, 1, 0, 0],
+    }[name]();
+    m = times(m, step);
+  }
+  return m;
+}
+
+const STEPS = 48;
+
+const ring = (cx, cy, rx, ry) => Array.from({ length: STEPS }, (_, k) => [cx + rx * Math.cos((2 * Math.PI * k) / STEPS), cy + ry * Math.sin((2 * Math.PI * k) / STEPS)]);
+
+function arc([x1, y1], rx, ry, phi, large, sweep, [x2, y2]) {
+  rx = Math.abs(rx);
+  ry = Math.abs(ry);
+  if (!rx || !ry) return [[x2, y2]];
+  const cos = Math.cos((phi * Math.PI) / 180);
+  const sin = Math.sin((phi * Math.PI) / 180);
+  const dx = (x1 - x2) / 2;
+  const dy = (y1 - y2) / 2;
+  const xp = cos * dx + sin * dy;
+  const yp = -sin * dx + cos * dy;
+  const grow = Math.sqrt(Math.max(1, (xp * xp) / (rx * rx) + (yp * yp) / (ry * ry)));
+  rx *= grow;
+  ry *= grow;
+  const num = rx * rx * ry * ry - rx * rx * yp * yp - ry * ry * xp * xp;
+  const co = (large === sweep ? -1 : 1) * Math.sqrt(Math.max(0, num / (rx * rx * yp * yp + ry * ry * xp * xp)));
+  const cxp = (co * rx * yp) / ry;
+  const cyp = (-co * ry * xp) / rx;
+  const cx = cos * cxp - sin * cyp + (x1 + x2) / 2;
+  const cy = sin * cxp + cos * cyp + (y1 + y2) / 2;
+  const angle = (ux, uy, vx, vy) => Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy);
+  const t1 = angle(1, 0, (xp - cxp) / rx, (yp - cyp) / ry);
+  let dt = angle((xp - cxp) / rx, (yp - cyp) / ry, (-xp - cxp) / rx, (-yp - cyp) / ry);
+  if (!sweep && dt > 0) dt -= 2 * Math.PI;
+  if (sweep && dt < 0) dt += 2 * Math.PI;
+  return Array.from({ length: STEPS + 1 }, (_, k) => {
+    const t = t1 + (dt * k) / STEPS;
+    return [cx + rx * Math.cos(t) * cos - ry * Math.sin(t) * sin, cy + rx * Math.cos(t) * sin + ry * Math.sin(t) * cos];
+  });
+}
+
+const bezier = (points) => Array.from({ length: STEPS + 1 }, (_, k) => {
+  const t = k / STEPS;
+  let row = points;
+  while (row.length > 1) row = row.slice(1).map(([x, y], at) => [row[at][0] + (x - row[at][0]) * t, row[at][1] + (y - row[at][1]) * t]);
+  return row[0];
+});
+
+function trace(d) {
+  const tokens = d.match(/[a-df-z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:e[-+]?\d+)?/gi) ?? [];
+  const out = [];
+  let at = 0;
+  let cmd = '';
+  let pen = [0, 0];
+  let start = [0, 0];
+  let last = null;
+  const num = () => Number(tokens[at++]);
+  const flag = () => {
+    const token = tokens[at];
+    if (token.length > 1 && /^[01]/.test(token)) {
+      tokens[at] = token.slice(1);
+      return Number(token[0]);
+    }
+    at++;
+    return Number(token);
+  };
+  const point = (rel) => {
+    const x = num();
+    const y = num();
+    return rel ? [pen[0] + x, pen[1] + y] : [x, y];
+  };
+  while (at < tokens.length) {
+    if (/[a-z]/i.test(tokens[at])) cmd = tokens[at++];
+    const rel = cmd === cmd.toLowerCase();
+    const up = cmd.toUpperCase();
+    let next = pen;
+    let control = null;
+    if (up === 'M') {
+      next = point(rel);
+      start = next;
+      out.push(next);
+      cmd = rel ? 'l' : 'L';
+    } else if (up === 'L') out.push((next = point(rel)));
+    else if (up === 'H') out.push((next = [(rel ? pen[0] : 0) + num(), pen[1]]));
+    else if (up === 'V') out.push((next = [pen[0], (rel ? pen[1] : 0) + num()]));
+    else if (up === 'Z') {
+      next = start;
+      if (!/[a-z]/i.test(tokens[at] ?? 'z')) break;
+    } else if (up === 'C' || up === 'S') {
+      const first = up === 'C' ? point(rel) : last?.cubic ? [2 * pen[0] - last.cubic[0], 2 * pen[1] - last.cubic[1]] : pen;
+      control = point(rel);
+      next = point(rel);
+      out.push(...bezier([pen, first, control, next]));
+      control = { cubic: control };
+    } else if (up === 'Q' || up === 'T') {
+      const mid = up === 'Q' ? point(rel) : last?.quad ? [2 * pen[0] - last.quad[0], 2 * pen[1] - last.quad[1]] : pen;
+      next = point(rel);
+      out.push(...bezier([pen, mid, next]));
+      control = { quad: mid };
+    } else if (up === 'A') {
+      const rx = num();
+      const ry = num();
+      const phi = num();
+      const large = flag();
+      const sweep = flag();
+      next = point(rel);
+      out.push(...arc(pen, rx, ry, phi, large, sweep, next));
+    } else break;
+    last = control;
+    pen = next;
+  }
+  return out;
+}
+
+function shape(node) {
+  const n = (key) => Number(get(node, key) ?? 0);
+  if (node.name === 'path') return trace(get(node, 'd') ?? '');
+  if (node.name === 'rect') return [[n('x'), n('y')], [n('x') + n('width'), n('y') + n('height')], [n('x'), n('y') + n('height')], [n('x') + n('width'), n('y')]];
+  if (node.name === 'circle') return ring(n('cx'), n('cy'), n('r'), n('r'));
+  if (node.name === 'ellipse') return ring(n('cx'), n('cy'), n('rx'), n('ry'));
+  if (node.name === 'line') return [[n('x1'), n('y1')], [n('x2'), n('y2')]];
+  if (node.name === 'polyline' || node.name === 'polygon') return numbers(get(node, 'points')).flatMap((x, at, all) => (at % 2 ? [] : [[x, all[at + 1]]]));
+  return [];
+}
+
+function reach(node, ctm, named, box, depth = 0) {
+  for (const [x, y] of shape(node)) {
+    const top = ctm[1] * x + ctm[3] * y + ctm[5];
+    if (!Number.isFinite(top)) continue;
+    box[0] = Math.min(box[0], top);
+    box[1] = Math.max(box[1], top);
+  }
+  const link = get(node, 'href') ?? get(node, 'xlink:href');
+  if (node.name === 'use' && link && depth < 8) {
+    const target = named.get(link.slice(1));
+    const at = times(ctm, [1, 0, 0, 1, Number(get(node, 'x') ?? 0), Number(get(node, 'y') ?? 0)]);
+    if (target) reach(target, get(target, 'transform') ? times(at, transform(get(target, 'transform'))) : at, named, box, depth + 1);
+  }
+  if (depth) for (const kid of node.kids) reach(kid, get(kid, 'transform') ? times(ctm, transform(get(kid, 'transform'))) : ctm, named, box, depth);
+}
+
+function inner(node, named, depth = 0) {
+  if (node.name === 'use') {
+    const target = named.get((get(node, 'href') ?? get(node, 'xlink:href') ?? '').slice(1));
+    const at = [1, 0, 0, 1, Number(get(node, 'x') ?? 0), Number(get(node, 'y') ?? 0)];
+    if (!target || get(target, 'fill') || depth >= 8) return at;
+    const m = outer(target, named, depth + 1);
+    return m && times(at, m);
+  }
+  const spaces = node.kids.filter((kid) => !get(kid, 'fill')).map((kid) => outer(kid, named, depth));
+  if (spaces.some((m) => !m || !same(m, spaces[0]))) return null;
+  return spaces[0] ?? IDENTITY;
+}
+
+function outer(node, named, depth) {
+  const m = inner(node, named, depth);
+  return m && get(node, 'transform') ? times(transform(get(node, 'transform')), m) : m;
+}
+
 /* MARKUP */
 
-export const markup = (art) => `<svg class="appicon" viewBox="0 0 ${SIDE} ${SIDE}" aria-hidden="true" focusable="false"><g clip-path="url(#appicon-clip)">${art}<path class="rim" d="${SHAPE}"/></g></svg>`;
+export const markup = (art) => `<svg class="appicon" viewBox="0 0 ${SIDE} ${SIDE}" aria-hidden="true" focusable="false"><g clip-path="url(#appicon-clip)">${art}<path class="glow" d="${SHAPE}"/><path class="rim" d="${SHAPE}"/><path class="shade" d="${SHAPE}"/></g></svg>`;
 
-const stops = (list) => list.map(([at, color, alpha = 1]) => `<stop offset="${at}" stop-color="${color}"${alpha === 1 ? '' : ` stop-opacity="${alpha}"`}/>`).join('');
+const tone = (color) => (color.includes('var(') ? ` style="stop-color:${color}"` : ` stop-color="${color}"`);
+
+const stops = (list) => list.map(([at, color, alpha = 1]) => `<stop offset="${at}"${tone(color)}${alpha === 1 ? '' : ` stop-opacity="${round(alpha)}"`}/>`).join('');
 
 const down = (id, list) => `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops(list)}</linearGradient>`;
 
-const rim = (id, top, low, side) => down(id, [[0, '#fff', top], [0.035, '#fff', 0], [0.09, '#000', side], [0.91, '#000', side], [0.965, '#fff', 0], [1, '#fff', low]]);
+const mirror = (list) => [...list, ...list.filter(([at]) => at < 0.5).reverse().map(([at, y]) => [round(1 - at), y])];
 
-const LIFT = '<feGaussianBlur in="A" stdDeviation="22"/><feOffset dy="34" result="b"/><feFlood flood-color="#000" flood-opacity=".09"/><feComposite in2="b" operator="in" result="s"/>';
+const light = (id, list, over, color = '#fff') => down(id, list.map(([at, y]) => [at, color, y / over]));
 
-const mono = (id, flood) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="-64" y="-64" width="${SIDE + 128}" height="${SIDE + 128}" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .2126 .7152 .0722 0 0" result="l"/><feComponentTransfer in="l" result="g"><feFuncA type="gamma" amplitude="1" exponent=".55" offset="0"/></feComponentTransfer><feComposite in="g" in2="SourceAlpha" operator="in" result="A"/><feFlood ${flood} result="c"/><feComposite in="c" in2="A" operator="in" result="ink"/>${LIFT}<feMerge><feMergeNode in="s"/><feMergeNode in="ink"/></feMerge></filter>`;
+const RIM = [[0, 26], [0.03, 40], [0.07, 27], [0.14, 19], [0.25, 5], [0.33, 0], [0.72, 0], [0.9, 16], [0.93, 21], [0.965, 31], [0.98, 31], [1, 24]];
+
+const GLOW = [[0, 130], [0.004, 70], [0.008, 30], [0.012, 18], [0.025, 6], [0.1, 7], [0.14, 0], [0.86, 0], [0.9, 4], [0.965, 4], [0.975, 5], [0.988, 12], [0.992, 22], [0.996, 49], [1, 81]];
+
+const RIM_CLEAR = mirror([[0, 28], [0.035, 39], [0.07, 32], [0.19, 19], [0.33, 5], [0.42, 0]]);
+
+const GLOW_CLEAR = mirror([[0, 46], [0.004, 40], [0.008, 30], [0.012, 23], [0.025, 13], [0.035, 8], [0.07, 1.5], [0.1, 0]]);
+
+const TINT_GLOW = 'oklch(from var(--accent) calc(l * 1.49 - .245) calc(c * .85) h)';
+
+const LIFT = `<filter id="appicon-lift" filterUnits="userSpaceOnUse" x="-64" y="-64" width="${SIDE + 128}" height="${SIDE + 128}" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceAlpha" stdDeviation="22"/><feOffset dy="34" result="b"/><feComposite in="b" in2="SourceAlpha" operator="out"/></filter>`;
+
+const mono = (id, amplitude, flood) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="${SIDE}" height="${SIDE}" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${[0.2126, 0.7152, 0.0722].map((k) => round(k * amplitude)).join(' ')} 0 0" result="l"/><feComposite in="l" in2="SourceAlpha" operator="in" result="a"/><feFlood ${flood}/><feComposite in2="a" operator="in"/></filter>`;
 
 export const SPRITE = [
   `<clipPath id="appicon-clip"><path d="${SHAPE}"/></clipPath>`,
   `<clipPath id="appicon-shape" clipPathUnits="objectBoundingBox"><path d="${BOX}"/></clipPath>`,
   `<mask id="appicon-fade" maskUnits="userSpaceOnUse" x="0" y="0" width="${SIDE}" height="${SIDE}" maskContentUnits="objectBoundingBox"><rect x="-.1" y="0" width="1.2" height="1.25" fill="url(#appicon-fall)"/></mask>`,
   down('appicon-fall', [[0, '#fff'], [0.2, '#fff', 0.96], [0.4, '#fff', 0.85], [0.6, '#fff', 0.68], [0.8, '#fff', 0.5], [1, '#fff', 0.5]]),
-  rim('appicon-rim', 0.45, 0.25, 0.08),
-  rim('appicon-rim-dark', 0.6, 0.35, 0.5),
-  rim('appicon-rim-clear-light', 0.56, 0.4, 0.09),
-  rim('appicon-rim-clear-dark', 0.27, 0.2, 0.3),
+  light('appicon-rim', RIM, 255),
+  light('appicon-glow', GLOW, 255),
+  light('appicon-shade', [[0.25, 0], [0.5, 11], [0.75, 0]], 24, '#000'),
+  light('appicon-rim-clear', RIM_CLEAR, 127),
+  light('appicon-glow-clear', GLOW_CLEAR, 127),
+  light('appicon-shade-clear', [[0.38, 0], [0.5, 4.3], [0.62, 0]], 24, '#000'),
+  light('appicon-rim-tint', RIM_CLEAR, 127, TINT_GLOW),
+  light('appicon-glow-tint', GLOW_CLEAR, 127, TINT_GLOW),
   down('appicon-dark', [[0, '#212121'], [1, '#0d0d0d']]),
-  `<linearGradient id="appicon-tint-dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb, var(--accent) 15%, #19191a)"/><stop offset="1" stop-color="#19191a"/></linearGradient>`,
-  `<linearGradient id="appicon-tint-light" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:color-mix(in oklab, var(--accent) 63%, #666)"/><stop offset="1" style="stop-color:color-mix(in oklab, var(--accent) 63%, #666)"/></linearGradient>`,
+  down('appicon-tint-dark', [[0, 'color-mix(in srgb, var(--accent) 15%, #19191a)'], [1, '#19191a']]),
+  down('appicon-tint-light', [[0, 'color-mix(in oklab, var(--accent) 63%, #666)'], [1, 'color-mix(in oklab, var(--accent) 63%, #666)']]),
   down('appicon-clear-light', [[0, '#fff', 0.14], [1, '#fff', 0.04]]),
   down('appicon-clear-dark', [[0, '#000', 0.5], [1, '#000', 0.66]]),
-  `<filter id="appicon-lift" filterUnits="userSpaceOnUse" x="-64" y="-64" width="${SIDE + 128}" height="${SIDE + 128}" color-interpolation-filters="sRGB"><feComposite in="SourceAlpha" in2="SourceAlpha" operator="over" result="A"/>${LIFT}<feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`,
-  mono('appicon-white', 'flood-color="#fff"'),
-  mono('appicon-white-soft', 'flood-color="#f2f2f2" flood-opacity=".95"'),
-  mono('appicon-accent', 'style="flood-color:var(--accent)"'),
+  LIFT,
+  mono('appicon-white', 1, 'flood-color="#fff"'),
+  mono('appicon-white-tint', 0.96, 'flood-color="#fff"'),
+  mono('appicon-white-soft', 0.94, 'flood-color="#fff"'),
+  mono('appicon-accent', 1, 'style="flood-color:var(--accent)"'),
 ].join('');

@@ -45,7 +45,9 @@ export const dirRoute = (dir: string) => (dir ? `/git/${dir}/` : "/git/");
 
 export const rawPath = (path: string) => `raw/${path}`;
 
-export const href = (url: string) => escape(encodeURI(url).replace(/#/g, "%23").replace(/\?/g, "%3F"));
+const uri = (url: string) => encodeURI(url).replace(/#/g, "%23").replace(/\?/g, "%3F");
+
+export const href = (url: string) => escape(uri(url));
 
 /* LANGS */
 
@@ -148,8 +150,15 @@ export function link(dir: string, url: string, wood?: Wood): string | null {
   return fileRoute(path) + tail;
 }
 
-const github = (wood: Wood, path: string, dir: boolean) =>
+export const github = (wood: Pick<Wood, "slug" | "branch">, path: string, dir: boolean) =>
   wood.slug ? `https://github.com/${wood.slug}/${dir ? "tree" : "blob"}/${wood.branch}${path ? `/${path}` : ""}` : "";
+
+export function away(wood: Pick<Wood, "slug" | "branch">, view: Pick<View, "path" | "found">): { raw: string; hub: string } {
+  if (!view.found) return { raw: "", hub: "" };
+  const dir = view.path === "" || view.path.endsWith("/");
+  const path = view.path.replace(/\/$/, "");
+  return { raw: dir ? "" : uri(`/${rawPath(path)}`), hub: uri(github(wood, path, dir)) };
+}
 
 function bar(wood: Wood, path: string, dir: boolean, tools: string[]): string {
   const parts = path ? path.split("/") : [];

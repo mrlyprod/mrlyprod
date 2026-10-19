@@ -1,7 +1,7 @@
 /* STORAGE */
 
 export const PREFIX = (typeof document !== 'undefined' && document.documentElement.dataset.prefix) || 'mrly-';
-export const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, tint: `${PREFIX}tint`, glass: `${PREFIX}glass`, saver: `${PREFIX}saver`, cart: `${PREFIX}cart`, welcome: `${PREFIX}welcome`, page: `${PREFIX}page`, wide: `${PREFIX}wide`, launchpad: `${PREFIX}launchpad`, recent: `${PREFIX}recent`, dock: `${PREFIX}dock`, widgets: `${PREFIX}widgets`, magnify: `${PREFIX}magnify`, icons: `${PREFIX}icons`, always: `${PREFIX}icons-always`, off: `${PREFIX}savers-off`, idle: `${PREFIX}idle`, clock: `${PREFIX}clock`, text: `${PREFIX}text`, motion: `${PREFIX}motion`, clear: `${PREFIX}clear`, contrast: `${PREFIX}contrast`, targets: `${PREFIX}targets` };
+export const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, tint: `${PREFIX}tint`, glass: `${PREFIX}glass`, saver: `${PREFIX}saver`, cart: `${PREFIX}cart`, welcome: `${PREFIX}welcome`, page: `${PREFIX}page`, wide: `${PREFIX}wide`, launchpad: `${PREFIX}launchpad`, recent: `${PREFIX}recent`, dock: `${PREFIX}dock`, widgets: `${PREFIX}widgets`, magnify: `${PREFIX}magnify`, icons: `${PREFIX}icons`, always: `${PREFIX}icons-always`, off: `${PREFIX}savers-off`, idle: `${PREFIX}idle`, clock: `${PREFIX}clock`, hours: `${PREFIX}hours`, text: `${PREFIX}text`, motion: `${PREFIX}motion`, clear: `${PREFIX}clear`, contrast: `${PREFIX}contrast`, targets: `${PREFIX}targets` };
 
 export const read = (key) => {
   try {
@@ -12,7 +12,6 @@ export const read = (key) => {
 };
 
 const fans = new Set();
-let heard = false;
 
 function tell(key) {
   for (const fn of [...fans]) {
@@ -35,10 +34,6 @@ export const write = (key, value) => {
 
 export function subscribe(fn) {
   fans.add(fn);
-  if (!heard && typeof window !== 'undefined') {
-    heard = true;
-    window.addEventListener('storage', (e) => tell(e.key));
-  }
   return () => {
     fans.delete(fn);
   };
@@ -73,7 +68,6 @@ export function tint(next) {
   if (next) root().dataset.tint = next;
   else delete root().dataset.tint;
   write(KEY.tint, next);
-  for (const pick of document.querySelectorAll('[data-tint-pick]')) pick.value = next || '';
   repaint();
 }
 
@@ -91,7 +85,6 @@ export function glass(next) {
   if (want) root().dataset.glass = want;
   else delete root().dataset.glass;
   write(KEY.glass, next);
-  for (const pick of document.querySelectorAll('[data-glass-pick]')) pick.value = next || '';
 }
 
 export function clear(on) {
@@ -130,7 +123,6 @@ export function magnify(on) {
   if (on) root().dataset.magnify = '';
   else delete root().dataset.magnify;
   write(KEY.magnify, on ? '1' : '');
-  for (const pick of document.querySelectorAll('[data-magnify-pick]')) pick.checked = Boolean(on);
 }
 
 /* FONT */
@@ -139,7 +131,6 @@ export function face(next) {
   if (next) root().dataset.font = next;
   else delete root().dataset.font;
   write(KEY.font, next);
-  for (const pick of document.querySelectorAll('[data-font-pick]')) pick.value = next || '';
 }
 
 /* ACCESSIBILITY */
@@ -161,14 +152,7 @@ export const calm = () => (typeof document !== 'undefined' && root().dataset.mot
 
 /* SAVER */
 
-export function screen(next) {
-  write(KEY.saver, next);
-  const head = next.split('?')[0];
-  for (const pick of document.querySelectorAll('[data-saver-pick]')) {
-    const known = [...pick.options].some((one) => one.value === head);
-    pick.value = known ? head : head ? 'random' : ([...pick.options].find((one) => one.defaultSelected)?.value ?? 'random');
-  }
-}
+export const screen = (next) => write(KEY.saver, next);
 
 export function offs() {
   try {
@@ -191,9 +175,69 @@ export function minutes() {
   return Number(next) > 0 ? Number(next) : 5;
 }
 
+/* CLOCK */
+
+const CYCLES = { 12: 'h12', 24: 'h23' };
+
+export const hours = (next) => write(KEY.hours, next);
+
+export function stamp(now, mode, bare) {
+  const cycle = CYCLES[mode];
+  return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', ...(cycle && { hourCycle: cycle }) })
+    .formatToParts(now)
+    .filter((part) => !bare || part.type !== 'dayPeriod')
+    .map((part) => part.value)
+    .join('')
+    .trim();
+}
+
+/* REPLAY */
+
+function width(name, prop) {
+  const px = Number(read(KEY[name]));
+  if (px > 0) root().style.setProperty(prop, `${px}px`);
+  else root().style.removeProperty(prop);
+}
+
+const REPLAY = {
+  theme: () => theme(read(KEY.theme)),
+  tint: () => tint(read(KEY.tint)),
+  font: () => face(read(KEY.font)),
+  glass: () => glass(read(KEY.glass)),
+  clear: () => glass(read(KEY.glass)),
+  icons: shade,
+  always: shade,
+  magnify: () => magnify(read(KEY.magnify) === '1'),
+  text: () => flag('text', read(KEY.text)),
+  motion: () => flag('motion', read(KEY.motion)),
+  contrast: () => flag('contrast', read(KEY.contrast)),
+  targets: () => flag('targets', read(KEY.targets)),
+  saver: () => screen(read(KEY.saver)),
+  page: () => width('page', '--win'),
+  wide: () => width('wide', '--wide'),
+};
+
+export function replay(key) {
+  for (const [name, fn] of Object.entries(REPLAY)) {
+    if (key !== null && key !== KEY[name]) continue;
+    try {
+      fn();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    replay(e.key);
+    tell(e.key);
+  });
+}
+
 /* SETTINGS */
 
-export const SETTINGS = 'theme tint font text glass icons always magnify saver off idle clock motion clear contrast targets dock widgets launchpad page wide'.split(' ');
+export const SETTINGS = 'theme tint font text glass icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad page wide'.split(' ');
 
 export const pack = () => Object.fromEntries(SETTINGS.map((name) => [name, read(KEY[name])]).filter(([, value]) => value));
 

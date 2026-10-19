@@ -194,7 +194,7 @@ function rules(ctx, box, tones, sc) {
     ctx.fillText(text, box.x - px * 0.5, y + px * 0.35);
   }
   ctx.textAlign = 'left';
-  ctx.fillText(sc.log ? 'log scale' : 'linear scale', box.x - px * 3.4, box.y - px * 0.6);
+  ctx.fillText(sc.log ? 'log scale' : 'linear scale', box.x - px * 3.4, box.y - px * 1.05);
 }
 
 function band(ctx, box, slot, at, tones) {
@@ -244,7 +244,7 @@ function pins(ctx, box, rows, shades, tones, opts) {
       if ((room || (j === opts.at && i === 0)) && g >= 1) {
         ctx.textAlign = 'center';
         ctx.fillStyle = accent;
-        ctx.fillText(label(t), x, Math.max(box.y + px, y - head - px * 0.5));
+        ctx.fillText(label(t), x, Math.max(box.y - px * 0.9, y - head - px * 0.5));
         ctx.fillStyle = shades[i];
       }
     });
@@ -317,7 +317,7 @@ function ratioPlot(ctx, box, rows, shades, tones, opts) {
     ctx.fillText(whole ? String(v) : v.toFixed(2), box.x - px * 0.5, y + px * 0.35);
   }
   ctx.textAlign = 'left';
-  ctx.fillText('each term over the one before', box.x - px * 3.4, box.y - px * 0.6);
+  ctx.fillText('each term over the one before', box.x - px * 3.4, box.y - px * 1.05);
   index(ctx, box, rows, tones, n + 1);
   series.forEach((one, i) => {
     const shown = Math.ceil(opts.shown(i)) - 1;

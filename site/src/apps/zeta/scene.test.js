@@ -3,8 +3,8 @@ import * as num from '@mrlyprod/mrly/num';
 import { defaults, describe, tidy } from '../../lib/app/spec.js';
 import { shown } from '../../lib/app/knobs.jsx';
 import { rng } from '../../lib/rand.js';
-import { BEAT, FLASH, FOLDING, HEAD, HOLD, PAD, REACH, index, plane, snap, study } from './engine.js';
-import { PAGE, SLOW, SPEC, inked, make, sketch } from './scene.js';
+import { BEAT, FADE, FLASH, FOLDING, HEAD, HOLD, PAD, REACH, index, plane, snap, study } from './engine.js';
+import { CYCLE, DAWN, DRIFT, PAGE, SLOW, SPEC, SPREAD, hum, inked, make, sketch } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -24,7 +24,7 @@ const open = (value = {}, { still = false, w = 800, h = 600, lock = false } = {}
   const log = [];
   const told = [];
   const woke = [];
-  const view = { rand: rng(1), look: () => ({ paper: '#000000', accent: '#008cff' }), still, lock, w, h, dpr: DPR, t: 0, fixed: false };
+  const view = { rand: rng(1), look: () => ({ paper: '#000000', accent: '#008cff', ink: '#ffffff' }), still, lock, w, h, dpr: DPR, t: 0, fixed: false };
   view.wake = () => {
     view.still = false;
     woke.push('wake');
@@ -138,9 +138,17 @@ test('the lock walks by itself, holds at the end, fades and starts again from ze
   expect(dot(lock.at(1000))).toEqual(spot(34));
   const end = 1000 + ((REACH - 34) / 4) * 1000;
   expect(dot(lock.at(end))).toEqual(spot(REACH));
-  expect(lock.at(end + HOLD - 300)).toContainEqual(['fillStyle', 'rgba(255, 143, 44, 0.5)']);
+  expect(lock.at(end + HOLD - 300)).toContainEqual(['fillStyle', 'rgba(128, 198, 255, 0.5)']);
   lock.at(end + HOLD);
   expect(dot(lock.at(end + HOLD + 1000))).toEqual(spot(4));
+});
+
+test('the lock draws the origin ring in the tint and the head a step toward the ink, while the page keeps yellow and orange', () => {
+  const inks = (log) => log.filter(([name]) => name === 'strokeStyle' || name === 'fillStyle').slice(-2).map(([, v]) => v);
+  const page = open().at(0);
+  const lock = open({}, { lock: true }).at(0);
+  expect(inks(page)).toEqual(['rgba(255, 209, 0, 1)', 'rgba(255, 143, 44, 1)']);
+  expect(inks(lock)).toEqual(['rgba(0, 140, 255, 1)', 'rgba(128, 198, 255, 1)']);
 });
 
 test('a take walks the page by itself like the lock', () => {
@@ -205,14 +213,45 @@ test('the t slider reads with two decimals', () => {
   expect([shown(row, 30), shown(row, 34.45)]).toEqual(['30.00', '34.45']);
 });
 
-test('the lock folds the stairs over and over, SLOW times slower, the formula leaving the no-zero guess and coming back to it', () => {
+test('the wave is the explicit formula less x over the root of x, its last zero folding in by its fraction', () => {
+  const x = 37.5;
+  const u = Math.log(x);
+  const less = (k) => (num.zeta.psi_formula(x, plan.zeros.subarray(0, k)) - x + Math.log(2 * Math.PI) + 0.5 * Math.log(1 - 1 / (x * x))) / Math.sqrt(x);
+  expect(hum(plan.zeros, 0, u)).toBeCloseTo(0, 12);
+  expect(hum(plan.zeros, 10, u)).toBeCloseTo(less(10), 9);
+  expect(hum(plan.zeros, 9.5, u)).toBeCloseTo((less(9) + less(10)) / 2, 9);
+});
+
+test('the lock draws the stairs as one wave in the tint, flat at the start, folding its zeros in SLOW times slower, then holding, fading and starting flat again', () => {
   const lock = open({ view: 'stairs', zeros: 10 }, { lock: true });
   const length = 11 * BEAT * SLOW;
-  const same = (t) => {
-    const [guess, formula] = strokes(lock.at(t));
-    return formula.every((v, i) => v === guess[i]);
+  const restart = length + HOLD * SLOW;
+  const wave = (t) => {
+    const log = lock.at(t);
+    const lines = strokes(log);
+    const inks = log.filter(([name]) => name === 'strokeStyle').map(([, v]) => v);
+    expect([lines.length, inks.length]).toEqual([1, 1]);
+    return { ys: lines[0].filter((_, i) => i % 2), ink: inks[0] };
   };
-  expect([same(0), same(length), same(length + HOLD * SLOW + 10)]).toEqual([true, false, true]);
+  const first = (k, t) => 300 - hum(plan.zeros, k, DAWN + (DRIFT * t) / 1000) * (300 - PAD * DPR);
+  expect(wave(0)).toMatchObject({ ink: 'rgba(0, 140, 255, 1)' });
+  expect(new Set(wave(0).ys)).toEqual(new Set([300]));
+  expect(wave(length / 2).ys[0]).toBeCloseTo(first(5, length / 2), 9);
+  const full = wave(length);
+  expect([full.ys[0], full.ink]).toEqual([expect.closeTo(first(10, length), 9), 'rgba(0, 140, 255, 1)']);
+  expect(wave(restart - (FADE * SLOW) / 2).ink).toBe('rgba(0, 140, 255, 0.5)');
+  const again = wave(restart);
+  expect([new Set(again.ys), again.ink]).toEqual([new Set([300]), 'rgba(0, 140, 255, 1)']);
+});
+
+test('a narrow stage shows less of log x so the top zero keeps CYCLE points a turn, while a wide one shows all of it', () => {
+  const ys = (w) => strokes(open({ view: 'stairs', zeros: 40, x: 150 }, { lock: true, still: true, w, h: 1688 }).at(0))[0].filter((_, i) => i % 2);
+  const y = (u) => 844 - hum(plan.zeros, 40, u) * (844 - PAD * DPR);
+  const span = 390 / SPREAD;
+  const phone = ys(780);
+  expect(phone.at(-1)).toBeCloseTo(y(DAWN + span), 9);
+  expect(((phone.length - 1) * 2 * Math.PI) / (plan.zeros[39] * span)).toBeGreaterThanOrEqual(CYCLE);
+  expect(ys(2880).at(-1)).toBeCloseTo(y(Math.log(150)), 9);
 });
 
 test('the stage carries no words: neither view writes a label or a number on the picture', () => {

@@ -40,7 +40,7 @@ test('the pane holds Relax or Pause beside Reset on a force layout and the three
 });
 
 test('the pane reads the always-open rows, the layout with relax and reset on a force layout, the camera with its poses on a cube, and the look', () => {
-  expect([placed({}), placed({ layout: 'force', ...CUBE })]).toEqual([['', 'Layout', 'Look'], ['', 'Layout', 'Relax', 'Camera', 'Pose', 'Look']]);
+  expect([placed({}), placed({ layout: 'force', ...CUBE })]).toEqual([['Design', 'Layout', 'Look'], ['Design', 'Layout', 'Relax', 'Camera', 'Pose', 'Look']]);
   expect(renderToStaticMarkup(<Shared><Knobs spec={SPEC} value={value} onChange={() => {}} /></Shared>)).not.toContain('Graph');
 });
 
@@ -66,8 +66,8 @@ test('a glimpse thumb is one stroke of the branches and one fill of the dots, fi
 
 test('the status names the design and the network, its counts to the demo\'s places, and the relax readouts on a force layout', () => {
   const facts = { name: 'carpet', code: '495', space: 'flat', graph: 'core', level: 2, layout: 'lattice', nodes: 64, branches: 88, tips: 0, junctions: 44, pieces: 1, length: 88, box: 1.5700439, euler: null };
-  expect(rows(facts, null)).toEqual([['Design', 'carpet 495'], ['Network', 'core graph, level 2, lattice'], ['Nodes', 64], ['Branches', 88], ['Tips', 0], ['Junctions', 44], ['Pieces', 1], ['Length', '88.00'], ['Box dimension', '1.570'], ['Euler', 'none']]);
-  expect(rows(facts, { ticks: 0, energy: 0, moved: 0, heat: 2.7 }).slice(10)).toEqual([['Ticks', 0], ['Heat', '2.70e+0']]);
-  expect(rows(facts, { ticks: 40, energy: 0.5, moved: 0.01, heat: 0.2 }).slice(10).map(([name]) => name)).toEqual(['Ticks', 'Energy', 'Moved', 'Heat']);
+  expect(rows(facts, null)).toEqual([['design', 'carpet 495'], ['network', 'core graph, level 2, lattice'], ['nodes', 64], ['branches', 88], ['tips', 0], ['junctions', 44], ['pieces', 1], ['length', '88.00'], ['box dimension', '1.570'], ['euler', 'none']]);
+  expect(rows(facts, { ticks: 0, energy: 0, moved: 0, heat: 2.7 }).slice(10)).toEqual([['ticks', 0], ['heat', '2.70e+0']]);
+  expect(rows(facts, { ticks: 40, energy: 0.5, moved: 0.01, heat: 0.2 }).slice(10).map(([name]) => name)).toEqual(['ticks', 'energy', 'moved', 'heat']);
   expect([note({ ...facts, name: '', space: 'cube' }, 'iso'), note({ ...facts, space: 'cube' })]).toEqual(['core graph, level 2, lattice, isometric', 'core graph, level 2, lattice, perspective']);
 });

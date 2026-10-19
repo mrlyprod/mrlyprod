@@ -133,9 +133,10 @@ test('the study is kept across a seed or a cell change, and made afresh for anot
   expect(plan({ level: 4 })).not.toBe(was);
 });
 
-test('a grid fills the short side of the stage at any aspect, centred, or is pinned to a cell size', () => {
+test('a grid fills the short side of the stage in whole cells at any aspect, centred, or is pinned to a cell size', () => {
   expect(lay(800, 600, 8, 0, 16)).toEqual({ x: 116, y: 16, size: 568 });
-  expect(lay(390, 844, 64, 0, 16)).toEqual({ x: 16, y: 243, size: 358 });
+  expect(lay(390, 844, 64, 0, 16)).toEqual({ x: 35, y: 262, size: 320 });
+  expect(lay(40, 40, 64, 0, 4)).toEqual({ x: 4, y: 4, size: 32 });
   expect(lay(800, 600, 8, 4, 16)).toEqual({ x: 384, y: 284, size: 32 });
 });
 

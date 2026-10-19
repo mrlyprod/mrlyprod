@@ -13,6 +13,8 @@ export function rgb(value) {
   return parts ? parts.slice(0, 3).map(Number) : [0, 0, 0];
 }
 
+export const bright = (color) => rgb(color).reduce((a, b) => a + b, 0) > 384;
+
 export function veil(color, alpha) {
   const [r, g, b] = rgb(color);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;

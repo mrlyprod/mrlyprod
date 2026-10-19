@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { arrange, daily, docked, exported, gist, KEPT, rank, renamed, siblings, spare, visited } from './launch.js';
+import { arrange, daily, docked, exported, gist, KEPT, rank, recents, renamed, siblings, spare, today, visited } from './launch.js';
 
 const BASE = [
   { name: 'Designs', apps: ['arcs', 'three'] },
@@ -49,7 +49,20 @@ test('recent apps come newest first, each once, at most the kept count', () => {
   expect(gist('/designs/?seed=4&dim=2&code=7')).toBe('dim 2 · code 7');
 });
 
+test('a stored recent list that is not an array reads as empty', () => {
+  const known = new Set(['arcs']);
+  expect([recents('{}', known), recents('7', known), recents(JSON.stringify([{ id: 'arcs', url: '/arcs/' }]), known)]).toEqual([[], [], [{ id: 'arcs', url: '/arcs/' }]]);
+});
+
 test('the design of the day is one index per date, the same for everyone', () => {
+  const zone = process.env.TZ;
+  process.env.TZ = 'Pacific/Kiritimati';
+  try {
+    expect([today(new Date('2026-10-19T23:30:00-07:00')), today(new Date('2026-10-20T08:30:00+14:00')), today(new Date('2026-10-19T12:00:00Z'))]).toEqual(['2026-10-20', '2026-10-19', '2026-10-19']);
+  } finally {
+    if (zone === undefined) delete process.env.TZ;
+    else process.env.TZ = zone;
+  }
   expect(daily('2026-10-19', 50)).toBe(daily('2026-10-19', 50));
   expect(new Set(Array.from({ length: 30 }, (_, d) => daily(`2026-11-${String(d + 1).padStart(2, '0')}`, 50))).size).toBeGreaterThan(15);
 });

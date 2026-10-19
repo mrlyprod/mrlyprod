@@ -2,7 +2,7 @@ import { tidy } from '../../lib/app/spec.js';
 import { board } from '../../lib/app/run.js';
 import { veil } from '../../lib/color.js';
 import { pick, rng } from '../../lib/rand.js';
-import { BOARD, LIMIT, LINE, LINES, ROWS, SPANS, STARTS, destiny, dimOf, fate, hash, lattice, maskName, maskOf, population, ruleOf, sow, told } from '../../lib/life/engine.js';
+import { BOARD, LIMIT, LINE, LINES, ROWS, SPANS, STARTS, destiny, dimOf, fate, hash, lattice, maskName, maskOf, population, ruleOf, sideOf, sow, told } from '../../lib/life/engine.js';
 import { PANE, SOUP, runs } from '../../lib/life/scene.js';
 import { wasm } from '../../lib/units/index.js';
 
@@ -53,7 +53,7 @@ export const worn = (presets, value) => presets.find(([, one]) => wears(value, o
 
 export const PAGE = {
   spec: SPEC,
-  design: { dim: 'dim', base: 2, code: 'code', dims: [2] },
+  design: { dim: 'dim', base: 2, code: 'code', dims: [1, 2] },
   gestures: true,
   record: true,
   about: [
@@ -137,8 +137,10 @@ export function make(canvas, view, opts = {}) {
     shape = maskOf(life, value);
     shape.named = maskName(math, shape.code, shape.dim);
     shape.label = `${shape.named || `code ${shape.code}`}, side ${shape.number}, level ${shape.level}`;
-    width = linear() ? LINE : BOARD;
-    height = linear() ? 1 : BOARD;
+  };
+  const measure = () => {
+    width = linear() ? LINE : view.lock ? BOARD : sideOf(value);
+    height = linear() ? 1 : width;
   };
   const judge = () => {
     rule = ruleOf(life, value, shape.cells);
@@ -187,7 +189,7 @@ export function make(canvas, view, opts = {}) {
   };
   const budget = () => Math.max(1, Math.min(32, Math.floor(OPS / (types.length * Math.max(1, shape.cells)))));
   const layout = () => {
-    if (!linear()) return board(view, BOARD, BOARD, FIT);
+    if (!linear()) return board(view, width, height, FIT);
     const cell = Math.max(1, Math.floor((view.w * FIT) / LINE));
     const rows = Math.max(1, Math.min(ROWS, Math.floor((view.h * FIT) / cell)));
     return { x: Math.floor((view.w - LINE * cell) / 2), y: Math.floor((view.h - rows * cell) / 2), w: LINE * cell, h: rows * cell, cell, rows };
@@ -198,9 +200,9 @@ export function make(canvas, view, opts = {}) {
     ctx.fillStyle = skin.ink;
   };
   const flatPaint = () => {
-    const { x, y, cell } = lay;
+    const { x, y, w, h, cell } = lay;
     ctx.clearRect(0, 0, view.w, view.h);
-    ground(x, y, BOARD * cell, BOARD * cell);
+    ground(x, y, w, h);
     for (const [lit, alpha] of [[(a) => a === 1, 1], [(a) => a > 1, OLD]]) {
       ctx.globalAlpha = alpha;
       ctx.beginPath();
@@ -342,6 +344,7 @@ export function make(canvas, view, opts = {}) {
     value = read(next);
     const moved = (...keys) => keys.some((key) => String(value[key]) !== String(was[key]));
     if (moved('dim', 'code', 'number', 'level')) mould();
+    if (moved('dim', 'from')) measure();
     if (moved('dim', 'code', 'number', 'level', 'born', 'stay')) judge();
     if (moved('dim', 'from', 'density', 'seed') || (value.from === 'design' && moved('code', 'number'))) sowed();
     else if (moved('dim', 'code', 'number', 'level', 'born', 'stay', 'wrap')) verdict = '';
@@ -354,6 +357,7 @@ export function make(canvas, view, opts = {}) {
   };
   dress();
   mould();
+  measure();
   judge();
   sowed(view.rand);
   if (view.still && view.lock) {

@@ -40,7 +40,7 @@ async function wood(url: string): Promise<Wood | null> {
 
 const tail = () => (document.title.includes(" · ") ? document.title.slice(document.title.lastIndexOf(" · ")) : "");
 
-const roller = () => document.getElementById("main");
+const roller = () => document.querySelector<HTMLElement>(".frame > .canvas > .page") ?? document.getElementById("main");
 
 const roll = (top: number) => roller()?.scrollTo({ top, behavior: "instant" });
 
@@ -74,7 +74,7 @@ function mark(base: string, path: string, mine: number) {
       parts.shift();
     }
     const hit = [...document.querySelectorAll<HTMLAnchorElement>(".tree a[href]")].find((a) => decode(a.pathname) === here);
-    const pane = hit?.closest<HTMLElement>(".pane");
+    const pane = hit?.closest<HTMLElement>(".body, .pane");
     if (hit && pane) {
       hit.setAttribute("aria-current", "page");
       const top = hit.getBoundingClientRect().top - pane.getBoundingClientRect().top;

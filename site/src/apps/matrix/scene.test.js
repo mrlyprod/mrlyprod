@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import FONT from '../../lib/font/font.gen.json' with { type: 'json' };
 import { rng } from '../../lib/rand.js';
-import { fell, glyphs, make } from './scene.js';
+import { SAVERS, fell, glyphs, make } from './scene.js';
 
 function stage(still) {
   const marks = [];
@@ -60,4 +60,10 @@ test('under reduced motion the still is the full field, the same on every draw',
   marks.length = 0;
   scene.draw();
   expect(marks).toEqual(first);
+});
+
+test('every matrix saver draws in the site tint', () => {
+  for (const saver of SAVERS) {
+    for (let seed = 0; seed < 20; seed++) expect([saver.id, saver.pick(rng(seed)).color]).toEqual([saver.id, 'tint']);
+  }
 });

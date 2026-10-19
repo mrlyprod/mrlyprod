@@ -79,6 +79,15 @@ test('a jump past the budget of steps a frame rebases, so play never chases a lo
   expect(run.last().gen - landed).toBeLessThanOrEqual(60);
 });
 
+test('a small pattern opens on a small board so it reads, and a roomy start and the saver keep the full board', () => {
+  const cell = (run) => run.log.find(([verb]) => verb === 'rect')[3];
+  const run = open({});
+  const glider = cell(run);
+  run.log.length = 0;
+  run.set({ from: 'gun' });
+  expect([glider, cell(open({ from: 'blinker' })), cell(run), cell(open({ from: 'blinker' }, { lock: true }))]).toEqual([14, 28, 4, 4]);
+});
+
 test('the saver opens the default start as a soup, and keeps a start that was chosen', () => {
   expect([open({}).last().pop, open({}, { lock: true }).last().pop > 100, open({ from: 'pentomino' }, { lock: true }).last().pop]).toEqual([5, true, 5]);
 });
@@ -94,7 +103,7 @@ test('a speed change mid-play keeps the generation count continuous', () => {
 });
 
 test('painting a blinker on a cleared board and stepping turns it, and the live fate reads loop 2', () => {
-  const run = open({});
+  const run = open({ from: 'pentomino' });
   run.scene.clear();
   expect(run.last()).toMatchObject({ gen: 0, pop: 0, fate: 'dead' });
   run.scene.touch(u(47), v(48), true);

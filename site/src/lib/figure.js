@@ -9,6 +9,7 @@ export const SIZE = [1024, 1024];
 const MARGIN = '100% 0px';
 const STILL = '(prefers-reduced-motion: reduce)';
 const DARK = '(prefers-color-scheme: dark)';
+const calm = () => document.documentElement.dataset.motion === 'reduce' || matchMedia(STILL).matches;
 
 /* SIZE */
 
@@ -133,7 +134,7 @@ function account(one, next) {
 
 function moment(figure, one) {
   const frames = figure.frames ?? 0;
-  if (!figure.loop || !frames || matchMedia(STILL).matches) return figure.still ?? 0;
+  if (!figure.loop || !frames || calm()) return figure.still ?? 0;
   one.step = one.step === undefined ? Math.round((figure.still ?? 0) * frames) % frames : (one.step + 1) % frames;
   return one.step / frames;
 }
@@ -176,7 +177,7 @@ async function draw(host, one) {
     one.key = pen.key;
     host.dataset.ms = (performance.now() - start).toFixed(1);
     host.dispatchEvent(new CustomEvent('drawn', { detail: Number(host.dataset.ms), bubbles: true }));
-    if (figure.loop && figure.frames && !matchMedia(STILL).matches) {
+    if (figure.loop && figure.frames && !calm()) {
       one.loop = true;
       clearTimeout(one.timer);
       one.timer = setTimeout(() => one.seen && !document.hidden && line.add(host), (figure.loop * 1000) / figure.frames);

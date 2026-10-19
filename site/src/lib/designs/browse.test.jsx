@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
 import { gallery } from './engine.js';
 import { choose, star } from './store.js';
-import { Browser, named, search, shows, step } from './browse.jsx';
+import { Browser, named, reach, search, shows, span, step } from './browse.jsx';
 
 const FREE = { dim: 'dim', base: 'base', code: 'code' };
 
@@ -38,6 +38,14 @@ test('arrows walk a grid of ten in rows of four and stop at its edges', () => {
   expect([step(7, 'ArrowDown', 4, 10), step(1, 'ArrowUp', 4, 10), step(9, 'ArrowRight', 4, 10)]).toEqual([7, 1, 9]);
 });
 
+test('a window of 820 rows at 100px a row draws the rows in sight and two more each side, never past either end', () => {
+  expect([span(0, 450, 100, 820), span(1050, 450, 100, 820), span(81500, 450, 100, 820), span(-300, 450, 100, 820), span(0, 450, 100, 3)]).toEqual([[0, 7], [8, 17], [813, 820], [0, 4], [0, 3]]);
+});
+
+test('a row out of sight scrolls just into view with room to spare, up to its top or down to its bottom less the gap', () => {
+  expect([reach(3, 100, 4, 1000, 450), reach(10, 100, 4, 1000, 450), reach(14, 100, 4, 1000, 450), reach(15, 100, 4, 1000, 450), reach(3, 100, 4, 1000, 450, 12), reach(11, 100, 4, 1000, 450, 12), reach(15, 100, 4, 1000, 450, 12)]).toEqual([-700, 0, 46, 146, -712, 0, 158]);
+});
+
 test('the browser offers a segment only for what the slot leaves free, lists the classes of the space and previews the current design', () => {
   const html = (slot, value) => renderToStaticMarkup(<Browser slot={slot} value={value} math={math} onPick={() => {}} />);
   const free = html(FREE, { dim: 2, base: 2, code: '7' });
@@ -47,11 +55,11 @@ test('the browser offers a segment only for what the slot leaves free, lists the
   expect([...free.matchAll(/<dd>([^<]*)<\/dd>/g)].map((one) => one[1])).toEqual(['7', '2D, base 2', '7', '4', '1+xy']);
 });
 
-test('a long list shows 120 in the compact browser with a pointer to Browse all, and grows from 240 in the full one', () => {
+test('a long list shows 120 in the compact browser with a pointer to Browse all, and the full one opens on its first 120 with no More button', () => {
   const html = (compact) => renderToStaticMarkup(<Browser compact={compact} slot={{ dim: 2, base: 'base', code: 'code', bases: [2, 3, 4] }} value={{ base: 4, code: '24415' }} math={math} onPick={() => {}} />);
   const [small, full] = [html(true), html(false)];
   expect([cells(small).length, small.includes('685 more in Browse all'), small.includes('class="view"')]).toEqual([120, true, false]);
-  expect([cells(full).length, full.includes('<button type="button" class="more">565 more</button>')]).toEqual([240, true]);
+  expect([cells(full).length, full.includes('class="more"'), full.includes('data-at="119"')]).toEqual([120, false, true]);
 });
 
 test('favorites and recent designs show only those that fit the slot', () => {

@@ -44,7 +44,7 @@ request /about/
 - `icon.js` is the route's figure, named by the id; a hidden route may omit it, a shown one may not.
 - `icon.svg` is the route's app icon: viewBox `0 0 1024 1024`, an optional `<defs>` first, the plate as the first shape with `class="back"`, then the glyph; no text, images, style or class; `data-dark`, `data-dark-stroke`, `data-mono` (`full`, `dim`, `hide`) and `data-key` steer the Dark, Clear and Tinted looks. The build checks each with `src/lib/appicon.js` and serves them all in `site:icons`.
 - `scene.js` and `widget.jsx`: every app has them; `src/apps/README.md` has the app contract.
-- Savers: a scene declares them as `export const SAVERS = [{ id, title, pick }]`, 1 to 3; `id` a slug once in the app, `title` at most 32 characters, `pick(rand)` a plain patch of `SPEC` or `PAGE.defaults` keys, never `seed`. A saver's id is `<app>/<id>`; the shell's live in `src/shell/tiles.js` as `mrly`.
+- Savers: a scene declares them as `export const SAVERS = [{ id, title, pick }]`, 1 to 3; `id` a slug once in the app, `title` at most 32 characters, `pick(rand)` a plain patch of `SPEC` or `PAGE.defaults` keys, never `seed`, `still` an optional capture time in ms (1 to 10000, default 1000) for the Screensavers grid. A saver's id is `<app>/<id>`; the shell's live in `src/shell/tiles.js` as `mrly`.
 - `saver: true` in `app.json` is the bridge: with no `SAVERS`, the app is one saver, `<app>/<app>`, named after it; the flag beside `SAVERS` stops the build.
 - Blog posts: `src/pages/blog/<slug>/index.md` is `/blog/<slug>/` (front matter `title`, `date` YYYY-MM-DD, `lead`), with its `icon.js`, the figure `blog-<slug>`.
 - `site.json` `desk` names the desktop saver: an app (its first saver) or a full saver id.

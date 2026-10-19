@@ -19,7 +19,7 @@ const PULSE = 90;
 const PEEK = 6;
 const SIDE = 3;
 const PER = 50;
-const HINT = '8, 21, 40 or carpet or A000567 or 23';
+const HINT = '8, 21, 40 · carpet · A000567 · 23';
 const MODES = [['one', 'One'], ['many', 'Compare']];
 
 const roll = (seed, n) => Math.floor(rng(seed >>> 0)() * n);

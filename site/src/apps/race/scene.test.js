@@ -3,7 +3,7 @@ import * as math from '@mrlyprod/mrly/math';
 import { defaults, describe, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { HOLD, ceiling, fills, pair, plan, roots, series } from './engine.js';
-import { LABELS, MATCHUPS, PAGE, SPEC, make } from './scene.js';
+import { LABELS, MATCHUPS, PAGE, SAVERS, SPEC, make } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -365,4 +365,15 @@ test('the design chip owns the left code and the base, so the pane hides them an
 test('every matchup is a fair pair: one mass, and both rooms reach past the opening finish', () => {
   const value = { base: 3, number: 3, level: 4, finish: 20 };
   for (const [a, b] of MATCHUPS) expect([a, fills(math, value, a) === fills(math, value, b), ceiling(math, value, a) >= value.finish, ceiling(math, value, b) >= value.finish]).toEqual([a, true, true, true]);
+});
+
+test('every saver draws its walkers in the site tint and its opposite', () => {
+  for (const saver of SAVERS) {
+    const value = saver.pick(rng(1));
+    const lock = open(value, { lock: true });
+    lock.at(0);
+    const shades = (sheet) => new Set(Array.from({ length: pixels(sheet).length / 4 }, (_, i) => rgba(sheet, i).join()));
+    const [a, b] = lock.sheets.map(shades);
+    expect(['tint' in value, a.has('0,140,255,255'), b.has('255,115,0,255')]).toEqual([false, true, true]);
+  }
 });

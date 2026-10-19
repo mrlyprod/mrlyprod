@@ -40,6 +40,7 @@ export function unshelve() {
 export const recent = () => recents(read(KEY.recent), KNOWN);
 
 let open = '';
+let at = '';
 
 function note() {
   write(KEY.recent, JSON.stringify(visited(recent(), { id: open, url: location.pathname + location.search, at: Date.now() })));
@@ -48,11 +49,13 @@ function note() {
 
 export function track() {
   addEventListener('wire', (e) => {
+    if (!e.detail) return;
     const one = rows.find((row) => row.route === e.detail?.route);
     open = one && KNOWN.has(one.meta?.id) ? one.meta.id : '';
+    at = open ? one.route : '';
     if (open) note();
   });
-  addEventListener('stamp', () => open && note());
+  addEventListener('stamp', () => open && location.pathname.startsWith(at) && note());
 }
 
 /* NOTES */
@@ -61,7 +64,7 @@ let topics = null;
 
 export const notes = () =>
   (topics ??= fetch('/research.json')
-    .then((reply) => (reply.ok ? reply.json() : { topics: [] }))
+    .then((reply) => (reply.ok ? reply.json() : Promise.reject(new Error(`research: /research.json answered ${reply.status}`))))
     .then((data) => (data.topics ?? []).map((one) => ({ ...one, more: one.lead ?? '', href: `/research/${encodeURIComponent(one.slug)}/` })))
     .catch(() => {
       topics = null;

@@ -84,24 +84,24 @@ export function study(math, value) {
   const one = cut(math, code, base, number, level);
   const { tally } = one;
   const facts = [
-    ['Name', title(named(math, code, base), code, base)],
-    ['Side', one.side],
-    ['Triangles', tally.triangles],
-    ['Closed form', String(math.counts.six.solid_slice_triangles(one.side))],
-    ['Filled', tally.fills],
-    ['Empty', tally.voids],
-    ['Pieces', one.pieces],
-    ['Holes', one.holes],
-    ['Largest piece', one.giant],
-    ['Boundary', tally.boundary_edges],
-    ['Edges', tally.edges],
-    ['Interior', tally.interior_edges],
-    ['Vertices', tally.vertices],
-    ['Euler', String(tally.euler)],
+    ['name', title(named(math, code, base), code, base)],
+    ['side', one.side],
+    ['triangles', tally.triangles],
+    ['closed form', String(math.counts.six.solid_slice_triangles(one.side))],
+    ['filled', tally.fills],
+    ['empty', tally.voids],
+    ['pieces', one.pieces],
+    ['holes', one.holes],
+    ['largest piece', one.giant],
+    ['boundary', tally.boundary_edges],
+    ['edges', tally.edges],
+    ['interior', tally.interior_edges],
+    ['vertices', tally.vertices],
+    ['euler', String(tally.euler)],
   ];
   if (level === 1) {
     const split = partition(math, number);
-    facts.push(['Carpet', split.carpet], ['Net', split.net], ['Together', split.together], ['Hexagon', split.hexagon], ['Partition', split.exact ? 'exact' : 'broken']);
+    facts.push(['carpet', split.carpet], ['net', split.net], ['together', split.together], ['hexagon', split.hexagon], ['partition', split.exact ? 'exact' : 'broken']);
   }
   return { mesh: one.mesh, side: one.side, rows: facts };
 }

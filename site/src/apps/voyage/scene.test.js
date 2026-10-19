@@ -5,6 +5,7 @@ import { codes, route } from '../../lib/space/bang.js';
 import { project } from '../../lib/gl/camera.js';
 import { gl } from '../../../test/fake.js';
 import { dot, len, sub } from '../../lib/gl/vec.js';
+import { ramp } from '../../lib/space/march.js';
 import { PAGE, SPEC, approach, come, entry, inside, leave, make, quiet, roll, shine } from './scene.js';
 import { arrange, clock } from './score.js';
 
@@ -12,11 +13,11 @@ const L = 60000;
 const RANDOM = { from: '', to: '', ship: '' };
 const VIEW = { w: 1280, h: 720 };
 
-const open = (opts = {}, { still = false, webgl = true } = {}) => {
+const open = (opts = {}, { still = false, webgl = true, lock = false, w = 1280, h = 720, dpr = 1 } = {}) => {
   const fake = gl();
   const pen = [];
-  const canvas = { width: 1280, height: 720, getContext: (kind) => (kind === 'webgl2' ? (webgl ? fake : null) : { fillRect: (...args) => pen.push(args) }) };
-  const view = { rand: rng(3), look: () => ({ paper: '#000000', accent: '#008cff' }), still, fixed: false, w: 1280, h: 720, dpr: 1, t: 0 };
+  const canvas = { width: w, height: h, getContext: (kind) => (kind === 'webgl2' ? (webgl ? fake : null) : { fillRect: (...args) => pen.push(args) }) };
+  const view = { rand: rng(3), look: () => ({ paper: '#000000', accent: '#008cff' }), still, lock, fixed: false, w, h, dpr, t: 0 };
   return { fake, pen, view, scene: make(canvas, view, { seed: 3, math, ...opts }) };
 };
 
@@ -165,6 +166,29 @@ test('one march draws the ship from outside before, through and after the jump w
   const [held, first] = [seen[2], seen[3]];
   const turned = Math.max(...[...held.uRot].map((v, i) => Math.abs(v - first.uRot[i])));
   expect([seen.map((one) => one.uHull), len(sub(held.uPos, first.uPos)) < 0.06, turned < 0.01, live.fake.draws().some((one) => one.fs.includes('uStretch'))]).toEqual([[1, 1, 1, 1, 1, 0, 1], true, true, false]);
+});
+
+test('under the lock the ship is marched at the low budget: 96 steps, 2 taps, depth 8, no shadow, at most 0.5 Mpx, and a phone keeps its 0.35 Mpx', () => {
+  const marched = (lock, size = {}) => {
+    const live = open({}, { lock, ...size });
+    play(live, [20000]);
+    const one = live.fake.draws().find((draw) => draw.fs.includes('probe('));
+    const area = one.viewport[2] * one.viewport[3];
+    return [one.fs.match(/#define STEPS (\d+)/)[1], one.uniforms.uTaps, one.uniforms.uDepth, one.uniforms.uShadow, area <= 0.5e6, area <= 0.35e6];
+  };
+  const phone = { w: 1170, h: 2532, dpr: 3 };
+  expect([marched(false), marched(true), marched(true, phone)]).toEqual([['200', 8, 12, 1, false, false], ['96', 2, 8, 0, true, false], ['96', 2, 8, 0, true, true]]);
+});
+
+test('under the lock the ship wears the site tint, and the page keeps its seeded paint', () => {
+  const hull = (lock) => {
+    const live = open({}, { lock });
+    play(live, [3000]);
+    const one = live.fake.draws().find((draw) => draw.fs.includes('uHull'));
+    return [...one.uniforms.uRamp].map((v) => v.toFixed(4)).join();
+  };
+  const tint = ramp('accent', 0, '#008cff').flat().map((v) => v.toFixed(4)).join();
+  expect([hull(true) === tint, hull(false) === tint]).toEqual([true, false]);
 });
 
 test('the nose heat glows under the ship, so the sponge covers it and it shows round the hull and through holes, and the plume over it', () => {

@@ -1,11 +1,10 @@
 import { css } from 'site:css';
 import { rows, site } from 'site:routes';
 import { drawn, figures } from './figures.js';
+import { calm } from './prefs.js';
 import { deeps, match, named, sort, walled } from './route.js';
 
 const FRESH = 30000;
-const STILL = '(prefers-reduced-motion: reduce)';
-const SIDES = ['left', 'right'];
 const ONCE = `${site.prefix}reload`;
 const SHELLS = { app: () => import('./app.jsx'), prose: () => import('./prose.jsx') };
 
@@ -15,14 +14,13 @@ const html = document.documentElement;
 const main = document.getElementById('main');
 const pane = () => document.querySelector('.window');
 const bar = () => document.querySelector('.window > .title');
-const panes = { left: document.getElementById('left'), right: document.getElementById('right') };
+const drawer = document.getElementById('right');
 const DEEP = deeps(rows);
 const place = (at) => walled(at.pathname, DEEP) || at.pathname;
 const key = (at) => walled(at.pathname, DEEP) || at.pathname + at.search;
 const state = () => (history.state && typeof history.state === 'object' ? history.state : {});
 const frame = () => new Promise((done) => requestAnimationFrame(done));
 const roll = (top) => main.scrollTo({ top, behavior: 'instant' });
-const still = () => matchMedia(STILL).matches;
 let here = key(location);
 let shown = place(location);
 let turn = 0;
@@ -67,15 +65,16 @@ function wear(name) {
 /* RENDER */
 
 async function prepare(row, url) {
+  const form = html.dataset.form;
   const [kind, text] = await Promise.all([page(row), source(row)]);
   const layout = kind.layout ?? {};
   const sheet = wear(layout.sheet);
   const host = document.createElement(layout.bare ? 'div' : 'article');
   if (!layout.bare) host.className = 'prose';
-  const side = { left: document.createElement('div'), right: document.createElement('div') };
-  await kind.render(row, site, host, { text, rows, url, ...side });
+  const side = document.createElement('div');
+  await kind.render(row, site, host, { text, rows, url, right: side });
   await sheet?.ready;
-  return { row, layout, kind, host, sheet, side };
+  return { row, layout, kind, host, sheet, side, form };
 }
 
 /* HEAD */
@@ -123,18 +122,14 @@ function dress(next) {
   const app = document.querySelector('.trio .app');
   if (app) app.textContent = shape === 'app' ? row.title : '';
   main.className = layout.wide ? 'wide' : '';
-  const late = layout.right === 'late';
-  const fill = { left: Boolean(layout.left), right: late || side.right.childNodes.length > 0 };
-  for (const name of SIDES) {
-    const pane = panes[name];
-    pane.replaceChildren(...(side[name].childNodes.length ? [side[name]] : []));
-    pane.hidden = name === 'right' && late;
-    if (fill[name] && !pane.isConnected) (name === 'left' ? main.before(pane) : main.after(pane));
-    if (!fill[name]) pane.remove();
-    const button = document.querySelector(`.title .actions [data-pane="${name}"]`);
-    if (button) button.hidden = !fill[name] || (name === 'right' && late);
-    html.dataset[name] = 'shut';
-  }
+  const fill = side.childNodes.length > 0;
+  drawer.replaceChildren(...(fill ? [side] : []));
+  drawer.hidden = false;
+  if (fill && !drawer.isConnected) main.after(drawer);
+  if (!fill) drawer.remove();
+  const button = document.querySelector('.title .actions [data-pane="right"]');
+  if (button) button.hidden = !fill;
+  html.dataset.right = 'shut';
   for (const { link } of sheets.values()) link.media = link === next.sheet?.link ? '' : 'not all';
 }
 
@@ -209,8 +204,8 @@ function fail(url, error) {
 
 /* GO */
 
-function morph(run, calm) {
-  if (calm || !document.startViewTransition) return run();
+function morph(run, still) {
+  if (still || !document.startViewTransition) return run();
   const made = document.startViewTransition(run);
   made.ready.catch(() => {});
   made.finished.catch(() => {});
@@ -226,7 +221,7 @@ function moved(url) {
   return next;
 }
 
-export async function go(asked, how = 'push', y = 0, calm = still()) {
+export async function go(asked, how = 'push', y = 0, still = calm()) {
   const url = moved(asked);
   const mode = url !== asked && how === 'boot' ? 'replace' : how;
   const mine = ++turn;
@@ -235,7 +230,7 @@ export async function go(asked, how = 'push', y = 0, calm = still()) {
   try {
     const next = await prepare(row, url);
     if (mine !== turn) return next.kind.unmount(next.host);
-    await morph(() => swap(next, url, mode, y), calm || mode === 'boot');
+    await morph(() => swap(next, url, mode, y), still || mode === 'boot');
     try {
       sessionStorage.removeItem(ONCE);
     } catch {}
@@ -248,7 +243,18 @@ export async function go(asked, how = 'push', y = 0, calm = still()) {
   } catch (error) {
     if (mine === turn) fail(url, error);
   }
-  if (mine === turn) html.removeAttribute('aria-busy');
+  if (mine !== turn) return;
+  html.removeAttribute('aria-busy');
+  await reform();
+}
+
+/* FORM */
+
+async function reform() {
+  const row = current?.row;
+  if (row?.kind !== 'app' || current.form === html.dataset.form || html.getAttribute('aria-busy') === 'true') return;
+  const one = await SHELLS.app().catch(() => null);
+  if (one?.gated(row) && current?.row === row && current.form !== html.dataset.form) await go(new URL(location.href), 'replace', Math.round(main.scrollTop));
 }
 
 /* EVENTS */
@@ -279,7 +285,7 @@ function hint(event) {
 
 function pop(event) {
   const y = typeof state().y === 'number' ? state().y : null;
-  if (key(location) !== here) return go(new URL(location.href), 'pop', y ?? 0, event.hasUAVisualTransition || still());
+  if (key(location) !== here) return go(new URL(location.href), 'pop', y ?? 0, event.hasUAVisualTransition || calm());
   turn++;
   html.removeAttribute('aria-busy');
   if (walled(location.pathname, DEEP)) return;
@@ -302,7 +308,7 @@ function note() {
 /* BOOT */
 
 function boot() {
-  for (const name of SIDES) panes[name].remove();
+  drawer.remove();
   document.addEventListener('click', click);
   for (const type of ['pointerenter', 'focus', 'pointerdown']) document.addEventListener(type, hint, true);
   addEventListener('popstate', pop);
@@ -310,6 +316,7 @@ function boot() {
   main.addEventListener('scrollend', note);
   addEventListener('pagehide', note);
   addEventListener('pageshow', back);
+  new MutationObserver(reform).observe(html, { attributeFilter: ['data-form'] });
   document.addEventListener('visibilitychange', () => document.hidden && note());
   go(new URL(location.href), 'boot');
 }

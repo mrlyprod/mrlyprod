@@ -8,7 +8,7 @@ import { paints } from '../../lib/color.js';
 import { useTheme } from '../../lib/designs/pick.jsx';
 import { fixed } from '../../lib/moire/parts.jsx';
 import { stamp } from '../../lib/moire/sheet.js';
-import { EYES, KINDS, SCHEDULES, eyeOf, label, place, settle, shown, swatch, trim } from './engine.js';
+import { EYES, KINDS, NUDGE, SCHEDULES, eyeOf, label, place, settle, shown, swatch, trim } from './engine.js';
 import { make } from './scene.js';
 import { useLatest, useReroll, useStatus, useUnit } from '../../lib/app/hooks.js';
 
@@ -93,8 +93,8 @@ export function Widget({ value, onChange, onReady, onStatus, unit }) {
         <Fold name="Spin" live={`${place(shownNow, 2)} deg · ${sched}`}>
           <Slider label="Increment" value={Number(shownNow.toFixed(2))} min={0} max={360} step={0.5} unit="deg" onChange={(v) => onChange({ increment: settle(v) })} />
           <Text label="Degrees" inputMode="decimal" value={trim(shownNow)} commit onChange={write} />
-          <Btn disabled={!math} onClick={() => nudge(-1)}>- 0.05</Btn>
-          <Btn disabled={!math} onClick={() => nudge(1)}>+ 0.05</Btn>
+          <Btn disabled={!math} onClick={() => nudge(-1)}>{`Nudge down ${NUDGE} deg`}</Btn>
+          <Btn disabled={!math} onClick={() => nudge(1)}>{`Nudge up ${NUDGE} deg`}</Btn>
         </Fold>
       </Bar>
     </>

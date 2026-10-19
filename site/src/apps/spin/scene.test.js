@@ -5,7 +5,7 @@ import { rgb } from '../../lib/color.js';
 import { rng } from '../../lib/rand.js';
 import { WHEEL } from '../../lib/spin/engine.js';
 import { PAD, SOURCE } from '../../lib/spin/scene.js';
-import { PAGE, SPEC, make, units } from './scene.js';
+import { PAGE, SAVERS, SPEC, make, units } from './scene.js';
 
 const brief = (arg) => (arg && typeof arg === 'object' ? 'layer' : arg);
 
@@ -209,4 +209,10 @@ test('the page takes a design of either dimension and the empty code opens the c
 
 test('without the unit the scene is blank and throws nothing', () => {
   expect(open({}, { unit: null }).at(0).main).toEqual([['setTransform', 1, 0, 0, 1, 0, 0], ['clearRect', 0, 0, 800, 600]]);
+});
+
+test('no saver picks its own tint or a non-tint ramp', () => {
+  const picks = [1, 2, 3, 4, 5].flatMap((seed) => SAVERS.map((one) => one.pick(rng(seed))));
+  expect(picks.every((value) => !value.tint)).toBe(true);
+  expect(picks.filter((value) => value.source === 'moire').map((value) => value.ramp)).toEqual([1, 2, 3, 4, 5].map(() => 'tint'));
 });

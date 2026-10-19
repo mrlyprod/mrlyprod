@@ -19,8 +19,10 @@ const SHORT = 540;
 
 const DEBT = 4;
 
+const calm = () => (typeof document !== 'undefined' && document.documentElement?.dataset?.motion === 'reduce') || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
 export function run(canvas, make, opts = {}, how = {}) {
-  let still = Boolean(how.still) || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  let still = Boolean(how.still) || calm();
   let skin = paints(canvas, opts.tint);
   let gone = false;
   let paused = false;

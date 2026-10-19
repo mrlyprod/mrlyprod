@@ -5,9 +5,9 @@ import { Btn, Icon } from '../../lib/app/controls.jsx';
 import { Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
 import { bus, engine, render } from '../../lib/audio/audio.js';
-import { NAMES, PRESETS, lasts, make, named, preset, score, seconds } from './scene.js';
+import { NAMES, PRESETS, facts, lasts, make, named, preset, score, seconds } from './scene.js';
 
-export function Widget({ value, onChange, onReady, onExport }) {
+export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   const line = useMemo(bus, []);
   const box = useRef(null);
   const heard = useRef(0);
@@ -69,6 +69,7 @@ export function Widget({ value, onChange, onReady, onExport }) {
   };
   useEffect(() => onExport?.([['WAV', save]]), []);
   const kept = preset(value);
+  useEffect(() => onStatus?.(facts(value)), [value.effect, value.length, kept]);
   return (
     <>
       <Scene make={scene} value={value} onReady={ready} />

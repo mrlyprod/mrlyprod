@@ -1,4 +1,4 @@
-import { KEY, calm, minutes, read, root, subscribe } from './prefs.js';
+import { KEY, calm, minutes, read, root, stamp, subscribe } from './prefs.js';
 
 /* WAKE */
 
@@ -61,14 +61,6 @@ export function watch() {
 
 const two = (n) => String(n).padStart(2, '0');
 
-const hours = (now) =>
-  new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' })
-    .formatToParts(now)
-    .filter((part) => part.type !== 'dayPeriod')
-    .map((part) => part.value)
-    .join('')
-    .trim();
-
 function dial() {
   const node = document.createElement('div');
   node.className = 'clock';
@@ -77,14 +69,22 @@ function dial() {
   node.append(date, time);
   let tick = 0;
   const paint = () => {
+    clearTimeout(tick);
     const now = new Date();
     date.textContent = now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
-    time.textContent = hours(now);
+    time.textContent = stamp(now, read(KEY.hours), true);
     time.dateTime = `${two(now.getHours())}:${two(now.getMinutes())}`;
     tick = setTimeout(paint, MINUTE - (now.getSeconds() * 1000 + now.getMilliseconds()) + 50);
   };
   paint();
-  return { node, stop: () => clearTimeout(tick) };
+  const deaf = subscribe((key) => (key === null || key === KEY.hours) && paint());
+  return {
+    node,
+    stop: () => {
+      clearTimeout(tick);
+      deaf();
+    },
+  };
 }
 
 /* SAVER */

@@ -11,7 +11,7 @@ export const SPEC = [
   { key: 'stars', label: 'Density', kind: 'slider', def: 1, min: 0.25, max: 3, step: 0.25, group: 'Sky' },
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Sky' },
   { key: 'look', label: 'Look', kind: 'segment', def: 'cloud', options: [['cloud', 'Cloud'], ['classic', 'Classic']], group: 'Sky' },
-  { key: 'hyper', label: 'Hyperspace', kind: 'segment', def: 'mix', options: [['no', 'No'], ['yes', 'Yes'], ['mix', 'Mix']], group: 'Saver' },
+  { key: 'hyper', label: 'Hyperspace', kind: 'segment', def: 'no', options: [['no', 'No'], ['yes', 'Yes'], ['mix', 'Mix']], group: 'Saver' },
 ];
 
 export const PAGE = {

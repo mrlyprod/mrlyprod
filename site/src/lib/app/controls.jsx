@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { save } from './export.js';
 import { ICONS, VIEWBOX } from '../icons.gen.js';
 
@@ -87,9 +88,9 @@ export function Fold({ name, open, onToggle, live, after, children, ...rest }) {
   );
 }
 
-export function Pick({ label, value, onChange, options, ...rest }) {
+export function Pick({ label, value, onChange, options, ref, ...rest }) {
   return (
-    <label>
+    <label ref={ref}>
       <span>{label}</span>
       <select value={value} onChange={onChange && ((e) => onChange(e.target.value))} {...rest}>
         {options.map(pair).map(([v, text]) => <option key={v} value={v}>{text}</option>)}
@@ -133,13 +134,43 @@ export function Toggle({ label, value, onChange, ...rest }) {
   );
 }
 
+const natural = (el) => {
+  const was = el.style.width;
+  el.style.width = 'max-content';
+  const need = el.getBoundingClientRect().width;
+  el.style.width = was;
+  return need;
+};
+
+export function useRoom(key, anywhere = false) {
+  const at = useRef(null);
+  const need = useRef({ key, width: 0 });
+  const [narrow, setNarrow] = useState(false);
+  useLayoutEffect(() => {
+    const el = at.current;
+    if (!el || (!anywhere && !el.parentNode?.classList?.contains('row')) || typeof ResizeObserver !== 'function') return undefined;
+    const check = () => {
+      if (!narrow) need.current = { key, width: natural(el) };
+      setNarrow(need.current.key === key && need.current.width > el.getBoundingClientRect().width);
+    };
+    check();
+    const eye = new ResizeObserver(() => flushSync(check));
+    eye.observe(el);
+    return () => eye.disconnect();
+  }, [narrow, key]);
+  return [at, narrow];
+}
+
 export function Segment({ label, value, onChange, options, ...rest }) {
   const name = useId();
+  const pairs = options.map(pair);
+  const [at, narrow] = useRoom([label, ...pairs.map(([v, text]) => `${v}:${text}`)].join('\n'));
+  if (narrow) return <Pick ref={at} label={label} value={value} options={pairs} onChange={(picked) => onChange(pairs.find(([v]) => String(v) === picked)?.[0] ?? picked)} {...rest} />;
   return (
-    <div className="segment" role="radiogroup" aria-label={label} {...rest}>
+    <div ref={at} className="segment" role="radiogroup" aria-label={label} {...rest}>
       <span>{label}</span>
       <span className="options">
-        {options.map(pair).map(([v, text]) => (
+        {pairs.map(([v, text]) => (
           <label key={v}>
             <input type="radio" name={name} value={v} checked={String(v) === String(value)} onChange={() => onChange(v)} />
             {text}

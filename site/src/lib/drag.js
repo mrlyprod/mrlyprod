@@ -36,10 +36,12 @@ let now = null;
 let busy = false;
 let voice = null;
 
-const calm = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const calm = () => document.documentElement.dataset.motion === 'reduce' || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
 const items = (one) => [...one.el.children].filter((kid) => kid.dataset?.id);
 const inside = (r, x, y, pad = 0) => r.width > 0 && r.height > 0 && x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad;
 const shift = (ms) => dispatchEvent(new CustomEvent('shift', { detail: ms }));
+const spill = (box) => ({ x: box.scrollWidth > box.clientWidth, y: box.scrollHeight > box.clientHeight });
+const pace = (at, lo, hi) => (at < lo + EDGE ? -SPEED : at > hi - EDGE ? SPEED : 0);
 
 function say(text) {
   if (!voice?.isConnected) {
@@ -119,8 +121,11 @@ function target(x, y) {
   let near = null;
   for (const one of lists) {
     if (!one.el.isConnected || !one.takes(now.from.kind)) continue;
-    const clip = one.scroller?.getBoundingClientRect();
-    if (clip && !inside(clip, x, y)) continue;
+    if (one.scroller) {
+      const clip = one.scroller.getBoundingClientRect();
+      const over = spill(one.scroller);
+      if ((over.x && (x < clip.left || x > clip.right)) || (over.y && (y < clip.top || y > clip.bottom))) continue;
+    }
     const r = one.el.getBoundingClientRect();
     if (inside(r, x, y)) return one;
     if (!near && inside(r, x, y, PAD)) near = one;
@@ -169,10 +174,14 @@ function roll() {
   if (box) {
     const r = box.getBoundingClientRect();
     const { px: x, py: y } = now;
-    const by = !inside(r, x, y) ? 0 : y < r.top + EDGE ? -SPEED : y > r.bottom - EDGE ? SPEED : 0;
-    const was = box.scrollTop;
-    if (by) box.scrollTop += by;
-    if (box.scrollTop !== was) {
+    const over = spill(box);
+    const on = inside(r, x, y);
+    const dx = on && over.x ? pace(x, r.left, r.right) : 0;
+    const dy = on && over.y ? pace(y, r.top, r.bottom) : 0;
+    const was = [box.scrollLeft, box.scrollTop];
+    if (dx) box.scrollLeft += dx;
+    if (dy) box.scrollTop += dy;
+    if (box.scrollLeft !== was[0] || box.scrollTop !== was[1]) {
       now.rects = new Map();
       follow();
     }
@@ -191,7 +200,6 @@ function lift() {
   now.px ??= now.x;
   now.py ??= now.y;
   document.documentElement.classList.add('dragging');
-  if (now.touch) addEventListener('touchmove', pin, { passive: false, capture: true });
   addEventListener('scroll', rescan, true);
   follow();
   now.frame = requestAnimationFrame(roll);
@@ -203,7 +211,7 @@ function move(e) {
   now.py = e.clientY;
   if (!now.lifted) {
     const far = Math.hypot(e.clientX - now.x, e.clientY - now.y);
-    if (now.touch) return far > DRIFT ? quit() : undefined;
+    if (now.hold) return far > DRIFT ? quit() : undefined;
     if (far < LIFT) return;
     lift();
     return;
@@ -214,7 +222,7 @@ function move(e) {
 }
 
 function pin(e) {
-  if (e.cancelable) e.preventDefault();
+  if (now?.lifted && e.cancelable) e.preventDefault();
 }
 
 function rescan() {
@@ -242,8 +250,8 @@ function end() {
   removeEventListener('pointercancel', cancel, true);
   removeEventListener('keydown', escape, true);
   removeEventListener('contextmenu', hush, true);
-  removeEventListener('touchmove', pin, { capture: true });
   removeEventListener('scroll', rescan, true);
+  now.touch.removeEventListener('touchmove', pin);
   document.documentElement.classList.remove('dragging');
   const session = now;
   now = null;
@@ -281,8 +289,8 @@ function up(e) {
   finish(end(), false);
 }
 
-function cancel() {
-  if (!now) return;
+function cancel(e) {
+  if (!now || (e?.pointerId !== undefined && e.pointerId !== now.pointer)) return;
   if (!now.lifted) return quit();
   finish(end(), true);
 }
@@ -291,6 +299,21 @@ function escape(e) {
   if (e.key !== 'Escape' || !now?.lifted) return;
   e.preventDefault();
   e.stopPropagation();
+  const id = now.pointer;
+  const off = () => {
+    removeEventListener('pointerup', hit, true);
+    removeEventListener('pointercancel', drop, true);
+  };
+  const hit = (e) => {
+    if (e.pointerId !== id) return;
+    off();
+    swallow();
+  };
+  const drop = (e) => {
+    if (e.pointerId === id) off();
+  };
+  addEventListener('pointerup', hit, true);
+  addEventListener('pointercancel', drop, true);
   cancel();
 }
 
@@ -300,8 +323,9 @@ function grab(one, e) {
   if (!item || item.parentElement !== one.el || one.fixed) return;
   const control = e.target.closest('button, input, select, textarea, [contenteditable="true"]');
   if (control && control !== item && item.contains(control)) return;
-  now = { from: one, item, id: item.dataset.id, x: e.clientX, y: e.clientY, pointer: e.pointerId, touch: e.pointerType === 'touch', lifted: false, drafts: new Map(), touched: new Set(), rects: new Map() };
-  if (now.touch) now.timer = setTimeout(lift, HOLD);
+  now = { from: one, item, touch: e.target, id: item.dataset.id, x: e.clientX, y: e.clientY, pointer: e.pointerId, hold: e.pointerType !== 'mouse', lifted: false, drafts: new Map(), touched: new Set(), rects: new Map() };
+  if (now.hold) now.timer = setTimeout(lift, HOLD);
+  e.target.addEventListener('touchmove', pin, { passive: false });
   addEventListener('pointermove', move, true);
   addEventListener('pointerup', up, true);
   addEventListener('pointercancel', cancel, true);
@@ -316,10 +340,10 @@ function nudge(one, e) {
   const by = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[e.key];
   const item = e.target instanceof Element ? e.target.closest('[data-id]') : null;
   if (!by || !item || item.parentElement !== one.el || !one.takes(one.kind)) return;
+  e.preventDefault();
   const list = items(one);
   const to = list.indexOf(item) + by;
   if (to < 0 || to >= list.length) return;
-  e.preventDefault();
   const id = item.dataset.id;
   const focus = document.activeElement;
   const before = snapshot();
@@ -341,14 +365,19 @@ export function sortable(el, spec) {
   el.addEventListener('pointerdown', down);
   el.addEventListener('keydown', key);
   el.addEventListener('dragstart', native);
+  el.addEventListener('touchmove', pin, { passive: false });
   return () => {
     lists.delete(one);
     el.removeEventListener('pointerdown', down);
     el.removeEventListener('keydown', key);
     el.removeEventListener('dragstart', native);
+    el.removeEventListener('touchmove', pin);
     if (now?.from === one) {
       const session = end();
       session.ghost?.remove();
+      queueMicrotask(() => {
+        for (const other of session.touched) if (other !== one && lists.has(other)) other.commit?.(null);
+      });
     } else now?.touched.delete(one);
   };
 }

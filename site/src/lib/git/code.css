@@ -37,7 +37,7 @@
 /* CODE */
 
 .code { margin-top: var(--s5); border: var(--hair); border-radius: var(--r-panel); background: var(--panel); overflow: hidden; }
-.code pre { margin: 0; padding: var(--s4) 0; overflow-x: auto; background: none; border: 0; }
+.code pre { margin: 0; padding: var(--s4) 0; overflow-x: auto; background: none; border: 0; color: inherit; white-space: pre; }
 .code code { font: 13px/1.7 var(--mono); }
 .code.plain pre { padding: var(--s4); }
 .code .line { display: block; }

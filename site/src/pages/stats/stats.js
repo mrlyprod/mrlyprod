@@ -1,95 +1,233 @@
-const PATH = '/stats/stats.json';
+import { veil } from '../../lib/color.js';
+
+export const PATH = '/stats/stats.json';
 const EVERY = 60 * 1000;
+const HOUR = 3600;
+const TICK = 6;
+const STEPS = [1, 2, 5, 10];
 
 /* FORMAT */
 
-function ago(seconds) {
+export function ago(at, now = Date.now() / 1000) {
+  const seconds = typeof at === 'string' ? Date.parse(at) / 1000 : at;
   if (!seconds) return 'never';
-  const gap = Math.max(0, Math.floor(Date.now() / 1000 - seconds));
+  const gap = Math.max(0, Math.floor(now - seconds));
   if (gap < 90) return `${gap} s ago`;
   if (gap < 5400) return `${Math.round(gap / 60)} min ago`;
   if (gap < 172800) return `${(gap / 3600).toFixed(1)} h ago`;
   return `${Math.round(gap / 86400)} d ago`;
 }
 
-const size = (n) => (n == null ? '' : n < 1e6 ? `${(n / 1e3).toFixed(0)} kB` : n < 1e9 ? `${(n / 1e6).toFixed(1)} MB` : `${(n / 1e9).toFixed(2)} GB`);
+export const size = (n) => (n == null ? '' : n < 1e6 ? `${(n / 1e3).toFixed(0)} kB` : n < 1e9 ? `${(n / 1e6).toFixed(1)} MB` : `${(n / 1e9).toFixed(2)} GB`);
+
+export const count = (n) => Math.round(n ?? 0).toLocaleString('en-US');
+
+const plural = (n, word) => `${count(n)} ${word}${Math.round(n) === 1 ? '' : 's'}`;
 
 const head = (label) => label.charAt(0).toUpperCase() + label.slice(1);
 
-/* DRAW */
+const clock = (at) => {
+  const d = new Date(at * 1000);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
 
-function table(rows) {
-  const wrap = document.createElement('div');
-  wrap.className = 'table';
-  const out = document.createElement('table');
-  const body = document.createElement('tbody');
-  for (const [name, value] of rows) {
-    const line = document.createElement('tr');
-    const key = document.createElement('th');
-    key.textContent = name;
-    const cell = document.createElement('td');
-    cell.textContent = value;
-    line.append(key, cell);
-    body.append(line);
-  }
-  out.append(body);
-  wrap.append(out);
-  return wrap;
-}
+/* MODEL */
 
-function note(where, text) {
-  const line = document.createElement('p');
-  line.className = 'fine';
-  line.textContent = text;
-  where.replaceChildren(line);
-}
+export const errors = (data) =>
+  Object.entries(data?.errors ?? {})
+    .flatMap(([name, list]) => list.map((one) => ({ name, ...one })))
+    .sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')));
 
-function counts(bucket) {
-  const rows = [];
-  for (const [key, value] of Object.entries(bucket)) {
-    if (key.endsWith('_bytes')) continue;
-    if (key.endsWith('_objects')) {
-      const label = key.slice(0, -8);
-      rows.push([head(label), `${value} files (${size(bucket[`${label}_bytes`])})`]);
-      continue;
-    }
-    rows.push([head(key), String(value)]);
-  }
-  return rows;
-}
-
-function rows(data) {
-  const cdn = data.cdn ?? {};
+export function views(data) {
+  const lambdas = Object.entries(data?.lambdas ?? {}).map(([name, one]) => ({ id: name, label: name, head: plural(one.invocations, 'invocation') }));
+  const cdn = data?.cdn?.requests;
+  const site = data?.bucket?.site_objects;
   return [
-    ['Stats', `${ago(data.at)}, last ${data.hours} h`],
-    ['CDN', cdn.requests == null ? 'no distribution' : `${cdn.requests} requests, ${size(cdn.bytes)}, ${cdn.error_4xx}% 4xx, ${cdn.error_5xx}% 5xx`],
-    ...counts(data.bucket ?? {}),
+    { id: 'cdn', label: 'CDN', head: cdn == null ? undefined : plural(cdn, 'request') },
+    ...lambdas,
+    { id: 'bucket', label: 'Bucket', head: site == null ? undefined : plural(site, 'object') },
+    { id: 'errors', label: 'Errors', head: data ? plural(errors(data).length, 'error') : undefined },
   ];
 }
 
-const runs = (data) =>
-  Object.entries(data.lambdas ?? {}).map(([name, one]) => [name, `${one.invocations} runs, ${one.errors} errors, ${one.throttles} throttles, ${Math.round(one.duration_ms)} ms avg`]);
+const NONE = { kind: 'note', text: 'No data yet.' };
 
-const lines = (data) =>
-  Object.entries(data.errors ?? {}).flatMap(([name, list]) => list.map((one) => `${one.at ?? 'sometime'} ${one.level} ${name} ${one.message}`));
+const line = (label, hourly, key) => (hourly?.length ? { kind: 'line', label, points: hourly.map((one) => ({ at: one.at, value: one[key] })) } : NONE);
 
-function draw(cloud, board, data) {
-  if (!data) {
-    note(cloud, 'No data yet.');
-    note(board, 'No data yet.');
-    return;
+export function series(data, view) {
+  if (!data) return NONE;
+  if (view === 'cdn') return line('Requests per hour', data.cdn?.hourly, 'requests');
+  if (view === 'bucket') {
+    const bars = Object.entries(data.bucket ?? {})
+      .filter(([key]) => !key.endsWith('_bytes'))
+      .map(([key, value]) => ({ label: head(key.replace(/_objects$/, '')), value }))
+      .sort((a, b) => b.value - a.value);
+    return bars.length ? { kind: 'bars', label: 'Objects by kind', bars } : NONE;
   }
-  cloud.replaceChildren(table(rows(data)), table(runs(data)));
-  const found = lines(data);
-  if (!found.length) {
-    note(board, 'None in the window.');
-    return;
+  if (view === 'errors') {
+    const n = errors(data).length;
+    return { kind: 'note', text: n ? `${plural(n, 'error')} in the window` : 'No errors in the window' };
   }
-  const block = document.createElement('pre');
-  const text = document.createElement('code');
-  text.textContent = found.join('\n');
-  block.append(text);
-  board.replaceChildren(block);
+  return line('Invocations per hour', data.lambdas?.[view]?.hourly, 'invocations');
+}
+
+export function facts(data, view) {
+  if (!data) return [];
+  if (view === 'cdn') {
+    const cdn = data.cdn;
+    if (cdn?.requests == null) return ['no distribution'];
+    return [plural(cdn.requests, 'request'), size(cdn.bytes), `${cdn.error_4xx.toFixed(1)}% 4xx`, `${cdn.error_5xx.toFixed(1)}% 5xx`];
+  }
+  if (view === 'bucket') return [`site ${size(data.bucket?.site_bytes)}`];
+  if (view === 'errors') return [plural(errors(data).length, 'error')];
+  const one = data.lambdas?.[view];
+  if (!one) return [];
+  return [plural(one.invocations, 'invocation'), plural(one.errors, 'error'), plural(one.throttles, 'throttle'), `${Math.round(one.duration_ms)} ms avg`];
+}
+
+/* DRAW */
+
+export function scale(max) {
+  const raw = Math.max(1, max) / 3;
+  const ten = 10 ** Math.floor(Math.log10(raw));
+  const step = Math.max(1, ten * STEPS.find((one) => one * ten >= raw));
+  const n = Math.min(3, Math.max(2, Math.ceil(max / step)));
+  return { step, top: n * step, n };
+}
+
+export function ticks(from, to) {
+  const out = [];
+  const d = new Date(from * 1000);
+  d.setMinutes(0, 0, 0);
+  for (let t = d.getTime() / 1000; t <= to; t += HOUR) {
+    if (t >= from && new Date(t * 1000).getHours() % TICK === 0) out.push(t);
+  }
+  return out;
+}
+
+const type = (ctx, look, dpr, px, color, align = 'left', base = 'alphabetic', weight = '') => {
+  ctx.font = `${weight}${px * dpr}px ${look.font}`;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = base;
+};
+
+function note(ctx, w, h, dpr, text, look) {
+  type(ctx, look, dpr, 16, look.dim, 'center', 'middle');
+  ctx.fillText(text, w / 2, h / 2);
+}
+
+function chart(ctx, w, h, dpr, model, look, hover) {
+  const { points } = model;
+  const pad = 24 * dpr;
+  const { step, top, n } = scale(Math.max(...points.map((one) => one.value)));
+  type(ctx, look, dpr, 12, look.dim, 'right', 'middle');
+  const gutter = Math.max(...Array.from({ length: n + 1 }, (_, i) => ctx.measureText(count(i * step)).width));
+  const l = pad + gutter + 8 * dpr;
+  const r = w - pad;
+  const t = pad + 32 * dpr;
+  const b = h - pad - 20 * dpr;
+  const from = points[0].at;
+  const to = points.at(-1).at;
+  const x = (at) => (to === from ? (l + r) / 2 : l + ((at - from) / (to - from)) * (r - l));
+  const y = (v) => b - (v / top) * (b - t);
+  for (let i = 0; i <= n; i++) {
+    ctx.fillStyle = look.line;
+    ctx.fillRect(l, Math.round(y(i * step)), r - l, dpr);
+    type(ctx, look, dpr, 12, look.dim, 'right', 'middle');
+    ctx.fillText(count(i * step), l - 8 * dpr, y(i * step));
+  }
+  type(ctx, look, dpr, 12, look.dim, 'center', 'top');
+  for (const at of ticks(from, to)) ctx.fillText(clock(at), x(at), b + 8 * dpr);
+  type(ctx, look, dpr, 12, look.dim, 'left', 'alphabetic');
+  ctx.fillText(model.label, l, pad + 12 * dpr);
+  ctx.beginPath();
+  ctx.moveTo(x(from), b);
+  for (const one of points) ctx.lineTo(x(one.at), y(one.value));
+  ctx.lineTo(x(to), b);
+  ctx.closePath();
+  ctx.fillStyle = veil(look.accent, 0.16);
+  ctx.fill();
+  ctx.beginPath();
+  points.forEach((one, i) => (i ? ctx.lineTo(x(one.at), y(one.value)) : ctx.moveTo(x(one.at), y(one.value))));
+  ctx.strokeStyle = look.accent;
+  ctx.lineWidth = 2 * dpr;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  const peak = points.reduce((best, one) => (one.value > best.value ? one : best));
+  type(ctx, look, dpr, 12, look.ink, 'center', 'bottom', '600 ');
+  const half = ctx.measureText(count(peak.value)).width / 2;
+  ctx.fillText(count(peak.value), Math.min(r - half, Math.max(l + half, x(peak.at))), y(peak.value) - 8 * dpr);
+  if (hover == null || hover < l - pad || hover > r + pad) return;
+  const near = points.reduce((best, one) => (Math.abs(x(one.at) - hover) < Math.abs(x(best.at) - hover) ? one : best));
+  const px = x(near.at);
+  const py = y(near.value);
+  ctx.fillStyle = look.dim;
+  ctx.fillRect(Math.round(px), t, dpr, b - t);
+  ctx.beginPath();
+  ctx.arc(px, py, 4 * dpr, 0, 2 * Math.PI);
+  ctx.fillStyle = look.accent;
+  ctx.fill();
+  ctx.strokeStyle = look.paper;
+  ctx.lineWidth = 2 * dpr;
+  ctx.stroke();
+  type(ctx, look, dpr, 12, look.ink, 'left', 'top', '600 ');
+  const lines = [clock(near.at), count(near.value)];
+  const tw = Math.max(...lines.map((one) => ctx.measureText(one).width)) + 16 * dpr;
+  const th = 44 * dpr;
+  const tx = px + 12 * dpr + tw > w ? px - 12 * dpr - tw : px + 12 * dpr;
+  const ty = Math.max(0, Math.min(h - th, py - th / 2));
+  ctx.beginPath();
+  ctx.roundRect(tx, ty, tw, th, 6 * dpr);
+  ctx.fillStyle = look.paper;
+  ctx.fill();
+  ctx.strokeStyle = look.line;
+  ctx.lineWidth = dpr;
+  ctx.stroke();
+  type(ctx, look, dpr, 12, look.dim, 'left', 'top');
+  ctx.fillText(lines[0], tx + 8 * dpr, ty + 6 * dpr);
+  type(ctx, look, dpr, 12, look.ink, 'left', 'top', '600 ');
+  ctx.fillText(lines[1], tx + 8 * dpr, ty + 24 * dpr);
+}
+
+function bars(ctx, w, h, dpr, model, look) {
+  const pad = 24 * dpr;
+  const gap = 2 * dpr;
+  type(ctx, look, dpr, 12, look.dim, 'right', 'middle');
+  const gutter = Math.max(...model.bars.map((one) => ctx.measureText(one.label).width));
+  const tail = Math.max(...model.bars.map((one) => ctx.measureText(count(one.value)).width));
+  const l = pad + gutter + 12 * dpr;
+  const track = w - pad - tail - 8 * dpr - l;
+  const t = pad + 32 * dpr;
+  const room = h - pad - t;
+  const n = model.bars.length;
+  const thick = Math.max(dpr, Math.min(28 * dpr, (room - gap * (n - 1)) / n));
+  const top = t + (room - (thick * n + gap * (n - 1))) / 2;
+  const max = Math.max(1, ...model.bars.map((one) => one.value));
+  type(ctx, look, dpr, 12, look.dim, 'left', 'alphabetic');
+  ctx.fillText(model.label, pad, pad + 12 * dpr);
+  model.bars.forEach((one, i) => {
+    const y = top + i * (thick + gap);
+    const long = Math.max(dpr, (one.value / max) * track);
+    ctx.beginPath();
+    ctx.roundRect(l, y, long, thick, [0, 4 * dpr, 4 * dpr, 0]);
+    ctx.fillStyle = look.accent;
+    ctx.fill();
+    type(ctx, look, dpr, 12, look.dim, 'right', 'middle');
+    ctx.fillText(one.label, l - 12 * dpr, y + thick / 2);
+    type(ctx, look, dpr, 12, look.ink, 'left', 'middle');
+    ctx.fillText(count(one.value), l + long + 8 * dpr, y + thick / 2);
+  });
+}
+
+export function draw(ctx, w, h, dpr, model, look, hover = null) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = look.paper;
+  ctx.fillRect(0, 0, w, h);
+  if (model.kind === 'line') chart(ctx, w, h, dpr, model, look, hover);
+  else if (model.kind === 'bars') bars(ctx, w, h, dpr, model, look);
+  else note(ctx, w, h, dpr, model.text, look);
 }
 
 /* POLL */
@@ -103,19 +241,12 @@ async function grab() {
   }
 }
 
-/* ISLAND */
-
-const live = new Map();
-
-export function mount(host) {
-  const cloud = host.querySelector('[data-stats="cloud"]');
-  const board = host.querySelector('[data-stats="errors"]');
-  if (live.has(host) || !cloud || !board) return;
+export function poll(take) {
   let timer = 0;
   let on = true;
   const refresh = async () => {
     const data = await grab();
-    if (on) draw(cloud, board, data);
+    if (on) take(data);
   };
   const run = () => {
     clearInterval(timer);
@@ -125,14 +256,9 @@ export function mount(host) {
   };
   document.addEventListener('visibilitychange', run);
   run();
-  live.set(host, () => {
+  return () => {
     on = false;
     clearInterval(timer);
     document.removeEventListener('visibilitychange', run);
-  });
-}
-
-export function unmount(host) {
-  live.get(host)?.();
-  live.delete(host);
+  };
 }

@@ -1,4 +1,4 @@
-import { rgb } from '../color.js';
+import { blend, bright, rgb } from '../color.js';
 import { rng } from '../rand.js';
 import { ESCAPE, MIX, SHARP } from './consts.js';
 
@@ -8,6 +8,8 @@ const LIN = 1 / 128;
 const PHASE = 3;
 const STRIDE = 0.15;
 const SHIFT = 2;
+const WASH = 0.18;
+const DEEP = 0.55;
 
 /* PROGRAMS */
 
@@ -88,6 +90,7 @@ uniform float uDrift;
 uniform float uPx;
 uniform float uFall;
 `}${classic ? `uniform vec3 uGround;
+uniform vec3 uInside;
 uniform vec3 uAccent;
 uniform float uTime;
 ` : ''}out vec4 o;
@@ -140,7 +143,7 @@ ${probe ? `  int q = gone ? int(clamp(sl * 8.0, 0.0, 65535.0)) : 0;
   per = min(per, 32767);
   o = vec4(float(q >> 8), float(q & 255), float((gone ? 0 : 128) + (per >> 8)), float(per & 255)) / 255.0;
 ` : classic ? `  if (!gone) {
-    o = vec4(uGround * uAlpha, uAlpha);
+    o = vec4(uInside * uAlpha, uAlpha);
     return;
   }
   float k = 0.5 + 0.5 * cos(${PHASE.toFixed(1)} + ${STRIDE.toFixed(2)} * (sl + ${SHIFT.toFixed(1)}) + uTime);
@@ -179,7 +182,7 @@ const RAMPS = {
 export const unit = (hex) => rgb(hex).map((v) => v / 255);
 
 export function tones(name, seed) {
-  if (name === 'classic') return (accent, paper) => ({ uGround: unit(paper), uAccent: unit(accent) });
+  if (name === 'classic') return (accent, paper) => (bright(paper) ? { uGround: unit(blend(paper, accent, WASH)), uInside: unit(blend(accent, '#000000', DEEP)), uAccent: unit(accent) } : { uGround: unit(paper), uInside: unit(paper), uAccent: unit(accent) });
   if (RAMPS[name]) return () => ({ uRamp: true, uS: RAMPS[name].flatMap(unit) });
   if (name === 'accent') {
     return (accent) => {

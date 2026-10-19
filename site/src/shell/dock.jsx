@@ -5,6 +5,7 @@ import { app, dock, redock } from './catalog.js';
 import { calm, KEY, subscribe } from './prefs.js';
 import { AppIcon } from './appicon.jsx';
 import { show } from './parts.jsx';
+import { route } from './desk.js';
 import { BIG, lens } from './lens.js';
 import { Tile } from './tile.jsx';
 
@@ -24,6 +25,7 @@ function Group({ g, ids, draft, foreign, here, hooks }) {
         kind: 'dock',
         axis: 'x',
         out: true,
+        scroller: list.current.closest('.dock'),
         takes,
         name: (id) => app(id)?.title ?? id,
         preview: (next) => hooks.current.preview(g, next),
@@ -79,7 +81,7 @@ function Dock() {
     let last = 0;
     let frame = 0;
     let moved = false;
-    const wire = (e) => setHere(e.detail?.route ?? '');
+    const wire = (e) => e.detail?.route && setHere(e.detail.route);
     const fresh = () => {
       live.current = dock();
       setGroups(live.current);
@@ -146,7 +148,7 @@ function Dock() {
     const sub = subscribe((key) => (!key || key === KEY.dock) && fresh());
     box.addEventListener('pointermove', move);
     box.addEventListener('pointerleave', leave);
-    setHere(location.pathname);
+    setHere(route);
     return () => {
       removeEventListener('wire', wire);
       removeEventListener('dock', fresh);
