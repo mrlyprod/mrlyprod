@@ -26,9 +26,9 @@
 
 ## WITNESSES
 
-- coprime.md THE WINDOW AT DIMENSION ONE: the occupied-ray exponents `[0.5416, 0.5798]` at `c = 1/2` and `[0.6109, 0.6345]` at `c = 0.5533`, and the non-fibre totals `3151656, 9491964, 28545340` at `level 14, 15, 16`.
-- coprime.md THE WINDOW AT DIMENSION ONE: Conjecture O trivial below one half, and the first-moment inequality checked at `level 10, 12, 14` with `beta = 0.45, 0.5, 0.6`, worst ratio `0.1517`.
-- coprime.md THE WINDOW AT DIMENSION ONE: `F/A` at `alpha = 0.5533` reading `5.41 .. 5.92` over `level 10..18`, `log_3 F / level` falling `0.7645 -> 0.7201`, and the fixed-height split `A(level, 3^5) = 384 .. 474` against `F(level, 3^5) = 2728 .. 51694`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the digit-congruence bound and its seed, `sigma_k` from `0.046063` at `k = 13` to `0.034259` at `k = 18`, `M_2(k)/4^k` over `k = 13..16`, and the caps `c <= 0.2618596`, `alpha <= 0.575328`.
-- coprime.md THE WINDOW AT DIMENSION ONE: `theta` inside `[1.1041, 1.1467]` at `alpha = 0.5533` and `[1.0833, 1.1596]` at `alpha = 1/2`, against the `1.8073` O asks.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the occupied-ray exponents `[0.5416, 0.5798]` at `c = 1/2` and `[0.6109, 0.6345]` at `c = 0.5533`, and the non-fibre totals `3151656, 9491964, 28545340` at `level 14, 15, 16`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: Conjecture O trivial below one half, and the first-moment inequality checked at `level 10, 12, 14` with `beta = 0.45, 0.5, 0.6`, worst ratio `0.1517`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: `F/A` at `alpha = 0.5533` reading `5.41 .. 5.92` over `level 10..18`, `log_3 F / level` falling `0.7645 -> 0.7201`, and the fixed-height split `A(level, 3^5) = 384 .. 474` against `F(level, 3^5) = 2728 .. 51694`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the digit-congruence bound and its seed, `sigma_k` from `0.046063` at `k = 13` to `0.034259` at `k = 18`, `M_2(k)/4^k` over `k = 13..16`, and the caps `c <= 0.2618596`, `alpha <= 0.575328`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: `theta` inside `[1.1041, 1.1467]` at `alpha = 0.5533` and `[1.0833, 1.1596]` at `alpha = 1/2`, against the `1.8073` O asks.
 - research/claims/ the `R_k` modulus-indexing and offset row, carried identically by `lab/py/ratio-set-saving`.

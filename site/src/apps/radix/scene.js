@@ -1,6 +1,6 @@
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS } from '../../lib/color.js';
-import { DRAWN, GAP, KEEP, KOCH, LETTERS, PAD, RINGS, SMALL, THIN, bases, cap, corners, lattice, lay, pair, picture, reach, spell, study, twisted } from './engine.js';
+import { DRAWN, GAP, KEEP, KOCH, LETTERS, PAD, RINGS, SMALL, THIN, bases, cap, corners, count, glance, lattice, lay, pair, picture, reach, spell, study, twisted } from './engine.js';
 
 const OWN = () => false;
 
@@ -27,10 +27,10 @@ export const PAGE = {
     'The code names the classes held, so it names the design only when every digit is canonical. Tap the picture to go a level deeper; Reroll draws new digits and twists on the same base. [Gaussian](/gaussian/) walks the same two rings, and [Two](/two/) is what the untwisted whole-number base does.',
   ],
   keys: [
-    { key: 'Enter', label: 'Drop the twists', act: 'flat', button: true, when: twisted },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
+    { key: 'Enter', label: 'Drop the twists', act: 'flat', button: true, menu: 'Edit', when: twisted },
+    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level', menu: 'View' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Preset', act: 'preset' },
-    { key: 'a', label: 'Every residue', act: 'every' },
+    { key: 'a', label: 'Every residue', act: 'every', menu: 'Edit' },
   ],
   actions: {
     flat: (scene) => scene.flat?.(),
@@ -43,6 +43,77 @@ export const PAGE = {
 const CHUNK = 8192;
 const DESIGN = ['ring', 'base', 'd', 't'];
 const LOOK = ['level', 'line', 'cell', 'tint'];
+
+/* SPLAT */
+
+export function splat(pen, plan, box, at, line, accent, dpr) {
+  const { sides, norm, angle, sign } = plan;
+  const pts = plan.levels[at - 1];
+  const n = pts.length / 2;
+  const { spacing, radius } = lattice(norm, sides, at);
+  const [m11, m12, m21, m22] = box.quarter ? [0, -box.k, box.k, 0] : [box.k, 0, 0, box.k];
+  const { cx, cy, ox, oy } = box;
+  const x = (i) => ox + m11 * (pts[2 * i] - cx) + m12 * (pts[2 * i + 1] - cy);
+  const y = (i) => oy + m21 * (pts[2 * i] - cx) + m22 * (pts[2 * i + 1] - cy);
+  if (line) {
+    pen.strokeStyle = accent;
+    pen.lineWidth = Math.min(2 * dpr, Math.max(0.6 * dpr, spacing * box.k * THIN));
+    pen.lineJoin = 'round';
+    pen.lineCap = 'round';
+    pen.beginPath();
+    pen.moveTo(x(0), y(0));
+    for (let i = 1; i < n; i++) pen.lineTo(x(i), y(i));
+    pen.stroke();
+    return;
+  }
+  pen.fillStyle = accent;
+  pen.beginPath();
+  let open = 0;
+  const flush = () => {
+    pen.fill();
+    pen.beginPath();
+    open = 0;
+  };
+  if (2 * radius * box.k < SMALL * dpr) {
+    const s = Math.max(spacing * reach(sides, angle, at) * box.k, dpr);
+    for (let i = 0; i < n; i++) {
+      pen.rect(x(i) - s / 2, y(i) - s / 2, s, s);
+      if (++open >= CHUNK) flush();
+    }
+  } else {
+    const ring = corners(sides, angle, at, radius * box.k * (1 - GAP));
+    for (let j = 0; j < sides; j++) {
+      const vx = ring[2 * j];
+      const vy = ring[2 * j + 1] * sign;
+      ring[2 * j] = box.quarter ? -vy : vx;
+      ring[2 * j + 1] = box.quarter ? vx : vy;
+    }
+    for (let i = 0; i < n; i++) {
+      const px = x(i);
+      const py = y(i);
+      pen.moveTo(px + ring[0], py + ring[1]);
+      for (let j = 1; j < sides; j++) pen.lineTo(px + ring[2 * j], py + ring[2 * j + 1]);
+      pen.closePath();
+      if (++open >= CHUNK) flush();
+    }
+  }
+  pen.fill();
+}
+
+/* SKETCH */
+
+const EDGE = 0.08;
+
+export function sketch(pen, units, patch, side, dpr, accent) {
+  const { num, math } = units;
+  const line = Boolean(patch.line);
+  const plan = study(num, math, patch, glance(count(patch.d), patch.level));
+  const box = lay(line ? plan.bounds : plan.stage, side, side, side * EDGE);
+  pen.setTransform(1, 0, 0, 1, 0, 0);
+  pen.clearRect(0, 0, side, side);
+  splat(pen, plan, box, plan.cap, line, accent, dpr);
+  plan.radix.free();
+}
 
 /* SCENE */
 
@@ -72,60 +143,10 @@ export function make(canvas, view, opts = {}) {
   const page = () => spare.pop() ?? new OffscreenCanvas(view.w, view.h);
   const lays = (sheet, at) => {
     const pen = sheet.getContext('2d');
-    const { sides, norm, angle, sign } = plan;
-    const pts = plan.levels[at - 1];
-    const n = pts.length / 2;
-    const { spacing, radius } = lattice(norm, sides, at);
-    const [m11, m12, m21, m22] = box.quarter ? [0, -box.k, box.k, 0] : [box.k, 0, 0, box.k];
-    const { cx, cy, ox, oy } = box;
-    const x = (i) => ox + m11 * (pts[2 * i] - cx) + m12 * (pts[2 * i + 1] - cy);
-    const y = (i) => oy + m21 * (pts[2 * i] - cx) + m22 * (pts[2 * i + 1] - cy);
     pen.setTransform(1, 0, 0, 1, 0, 0);
     pen.globalAlpha = 1;
     pen.clearRect(0, 0, view.w, view.h);
-    if (value.line) {
-      pen.strokeStyle = accent;
-      pen.lineWidth = Math.min(2 * view.dpr, Math.max(0.6 * view.dpr, spacing * box.k * THIN));
-      pen.lineJoin = 'round';
-      pen.lineCap = 'round';
-      pen.beginPath();
-      pen.moveTo(x(0), y(0));
-      for (let i = 1; i < n; i++) pen.lineTo(x(i), y(i));
-      pen.stroke();
-      return;
-    }
-    pen.fillStyle = accent;
-    pen.beginPath();
-    let open = 0;
-    const flush = () => {
-      pen.fill();
-      pen.beginPath();
-      open = 0;
-    };
-    if (2 * radius * box.k < SMALL * view.dpr) {
-      const s = Math.max(spacing * reach(sides, angle, at) * box.k, view.dpr);
-      for (let i = 0; i < n; i++) {
-        pen.rect(x(i) - s / 2, y(i) - s / 2, s, s);
-        if (++open >= CHUNK) flush();
-      }
-    } else {
-      const ring = corners(sides, angle, at, radius * box.k * (1 - GAP));
-      for (let j = 0; j < sides; j++) {
-        const vx = ring[2 * j];
-        const vy = ring[2 * j + 1] * sign;
-        ring[2 * j] = box.quarter ? -vy : vx;
-        ring[2 * j + 1] = box.quarter ? vx : vy;
-      }
-      for (let i = 0; i < n; i++) {
-        const px = x(i);
-        const py = y(i);
-        pen.moveTo(px + ring[0], py + ring[1]);
-        for (let j = 1; j < sides; j++) pen.lineTo(px + ring[2 * j], py + ring[2 * j + 1]);
-        pen.closePath();
-        if (++open >= CHUNK) flush();
-      }
-    }
-    pen.fill();
+    splat(pen, plan, box, at, Boolean(value.line), accent, view.dpr);
   };
   const want = (at) => {
     if (held.has(at)) {

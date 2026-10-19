@@ -93,7 +93,6 @@
 |---|---|---|
 | Kummer's theorem | Wikipedia: the 2-adic valuation of C(i+j,i) counts base-2 carries, so C(i+j,i) is odd iff i AND j = 0 | https://en.wikipedia.org/wiki/Kummer%27s_theorem |
 | Burnside's lemma | Wikipedia: the orbit-counting average the bijection and base-q census pages run on | https://en.wikipedia.org/wiki/Burnside%27s_lemma |
-| OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |
 
 ## DATASETS
 

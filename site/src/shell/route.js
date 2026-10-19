@@ -1,5 +1,3 @@
-import { crumbs } from './crumbs.js';
-
 /* MATCH */
 
 export const deeps = (rows) => rows.filter((row) => row.meta?.deep).map((row) => row.route);
@@ -28,8 +26,3 @@ export function sort(to, from, deep) {
 /* HEAD */
 
 export const named = (row, site) => (row.title === site.title ? row.title : `${row.title} · ${site.title}`);
-
-export function trail(row, path) {
-  if (row.meta?.id === 'missing') return [{ name: 'not found', href: path }];
-  return crumbs(row.meta?.deep ? path : row.route);
-}

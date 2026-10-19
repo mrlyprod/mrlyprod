@@ -25,3 +25,16 @@ export function shell(canvas, view) {
   };
   return { ctx, put, clear, blit };
 }
+
+export function stamp(ctx, { colors }, size) {
+  const image = new ImageData(new Uint8ClampedArray(colors.buffer, colors.byteOffset, colors.length), size, size);
+  const side = ctx.canvas.width;
+  if (side === size) {
+    ctx.putImageData(image, 0, 0);
+    return;
+  }
+  const tile = new OffscreenCanvas(size, size);
+  tile.getContext('2d').putImageData(image, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(tile, 0, 0, side, side);
+}

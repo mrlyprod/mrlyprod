@@ -2,13 +2,14 @@ import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
 import * as num from '@mrlyprod/mrly/num';
+import { all, mount, text } from '../../../test/dom.js';
 import { Frame } from '../../lib/app/frame.jsx';
 import { defaults } from '../../lib/app/spec.js';
 import { Accordion } from '../../lib/app/controls.jsx';
 import { Knobs, useAccordion } from '../../lib/app/knobs.jsx';
 import { PRESETS, dial, preset, study } from './engine.js';
 import { SPEC } from './scene.js';
-import { Chips, Pane, Widget, deeper, degrees, next, rows } from './widget.jsx';
+import { Chips, Designs, Pane, Widget, deeper, degrees, next, rows } from './widget.jsx';
 
 const value = { ...defaults(SPEC), seed: 1 };
 
@@ -37,12 +38,13 @@ test('a chip a class, the held ones pressed and labelled by their own digit, the
 const pane = (over) => {
   const one = { ...value, ...over };
   const moves = { flat: () => {}, every: () => {} };
-  return flat(renderToStaticMarkup(<Shared><Pane value={one} units={{ math, num }} dialed={dial(num, math, one)} facts={study(num, math, one).facts(one.level)} name="" label="Custom" onChange={() => {}} change={() => {}} moves={moves} /><Knobs spec={SPEC} value={one} onChange={() => {}} /></Shared>));
+  return flat(renderToStaticMarkup(<Shared><Pane value={one} units={{ math, num }} dialed={dial(num, math, one)} facts={study(num, math, one).facts(one.level)} label="Custom" onChange={() => {}} change={() => {}} moves={moves} /><Knobs spec={SPEC} value={one} onChange={() => {}} /></Shared>));
 };
 
-test('the pane reads the design, the twists and the base, the box only on base 3 of the square lattice, then the look, with a twist pick a held digit', () => {
+test('the pane reads the design, the twists and the code, then the look, with a twist pick a held digit and no list the library holds', () => {
   const koch = pane();
-  expect([order(koch), order(pane(preset(num, math, 'carpet')))]).toEqual([['Design', 'Twists', 'Base', 'Look'], ['Design', 'Twists', 'Base', 'Box', 'Look']]);
+  expect([order(koch), order(pane(preset(num, math, 'carpet')))]).toEqual([['Design', 'Twists', 'Code', 'Look'], ['Design', 'Twists', 'Code', 'Look']]);
+  for (const gone of ['<span>Preset</span>', '<span>Ring</span>', '<span>Base</span>', '<span>Named</span>']) expect(koch).not.toContain(gone);
   expect(koch.match(/<span>Twist on [^<]+<\/span>/g)).toEqual(['<span>Twist on 0</span>', '<span>Twist on 1</span>', '<span>Twist on 2 + w</span>', '<span>Twist on 2</span>']);
   expect(koch).toContain('<span>Level 1 to 8</span>');
 });
@@ -70,4 +72,20 @@ test('a twist reads as its turn in degrees', () => {
 test('the Cell knob reads Fit at 0 and its pixels above it', () => {
   const cell = (n) => flat(renderToStaticMarkup(<Knobs spec={SPEC} value={{ ...value, cell: n }} onChange={() => {}} />)).match(/<span>Cell<\/span><span class="num">([^<]+)<\/span>/)[1];
   expect([cell(0), cell(8)]).toEqual(['Fit', '8 px']);
+});
+
+test('the library holds the presets, the bases of each lattice and the boxes, and marks the preset, the base and the box on show', async () => {
+  const presets = PRESETS.map(([id]) => [id, preset(num, math, id)]);
+  const marked = async (over) => mount(async (draw, host) => {
+    const one = { ...value, ...over };
+    await draw(<Frame label="Radix"><Designs value={one} units={{ math, num }} dialed={dial(num, math, one)} presets={presets} name={presets.find(([, patch]) => ['ring', 'base', 'd', 't'].every((key) => String(one[key]) === String(patch[key])))?.[0] ?? ''} change={() => {}} /></Frame>);
+    const shelves = all(host, (at) => at.tagName === 'SECTION' && 'aria-label' in (at.attributes ?? {}) && at.attributes.class === 'shelf');
+    const items = all(host, (at) => 'data-item' in (at.attributes ?? {}));
+    return [shelves.map((at) => at.attributes['aria-label']), items.length, items.filter((at) => at.attributes['aria-current'] === 'true').map(text)];
+  });
+  const [shelves, count, on] = await marked({});
+  expect(shelves).toEqual(['Presets', 'Z[i], square', 'Z[w], hexagonal', 'Named boxes', 'Other boxes']);
+  expect(count).toBe(PRESETS.length + 8 + 10 + 18);
+  expect(on).toEqual(['Koch curve', '3norm 9']);
+  expect((await marked(preset(num, math, 'carpet')))[2]).toEqual(['Carpet', '3norm 9', 'carpet495']);
 });

@@ -77,7 +77,7 @@ test('the page opens still on the void stacked to the top scale and draws it onc
 });
 
 test('the default runs from the ground to the tint, so a dark page gets a dark field and a light page a paper one', () => {
-  const made = field(math, study(math, start, rng(1)), 64);
+  const made = field(math, study(math, start), 64);
   const green = (paper) => {
     const tones = paint(math, made, colorizer(start.ramp, start.levels, { paper, accent: '#008cff' }), start.levels, start.invert).colors.filter((_, i) => i % 4 === 1);
     return [Math.min(...tones), Math.max(...tones)];
@@ -87,7 +87,7 @@ test('the default runs from the ground to the tint, so a dark page gets a dark f
 });
 
 test('the default lights every layer on both diagonals, so the X is the top of the field', () => {
-  const made = field(math, study(math, start, rng(1)), 64);
+  const made = field(math, study(math, start), 64);
   const cross = Array.from({ length: 64 }, (_, k) => [made.data[k * 65], made.data[k * 63 + 63]]).flat();
   expect([made.field.max(), Math.min(...cross)]).toEqual([21, 21]);
   made.field.free();
@@ -164,18 +164,19 @@ test('the page keeps its defaults as they are', () => {
 
 test('each view shows only the knobs that move its picture', () => {
   const shown = (view) => describe(SPEC, { ...start, view, crop: 'ball' }).flatMap((group) => group.rows.map((row) => row.key));
-  expect(shown('field')).toEqual(['view', 'limit', 'combine', 'size', 'ramp', 'levels', 'invert', 'tint', 'crop', 'radius', 'anti']);
+  expect(shown('field')).toEqual(['view', 'limit', 'level', 'combine', 'size', 'ramp', 'levels', 'invert', 'tint', 'crop', 'radius', 'anti']);
   expect(shown('matrix')).toEqual(['view', 'limit', 'scale', 'mate', 'tint']);
 });
 
-test('the primary is the Enter row, and its label follows the scene playing', () => {
+test('the primary is the Enter row in the Edit menu, its label follows the scene playing, and the design slot is the base and code', () => {
   const [row] = PAGE.keys;
-  expect([row.button, row.label(start, { playing: () => false }), row.label(start, { playing: () => true }), row.label(start, null)]).toEqual([true, 'Play', 'Stop', 'Play']);
+  expect(PAGE.design).toEqual({ dim: 2, base: 'base', code: 'code' });
+  expect([row.menu, row.button, row.label(start, { playing: () => false }), row.label(start, { playing: () => true }), row.label(start, null)]).toEqual(['Edit', true, 'Play', 'Stop', 'Play']);
 });
 
-test('the view is the first row of the stack, the stack leads the pane, and the design fold sits right behind it', () => {
+test('the view is the first row of the stack, and the stack leads the pane', () => {
   expect(SPEC[0]).toMatchObject({ key: 'view', group: 'Stack' });
-  expect(describe(SPEC, start)[0].rows.map((row) => row.key)).toEqual(['view', 'limit', 'combine', 'size']);
+  expect(describe(SPEC, start)[0].rows.map((row) => row.key)).toEqual(['view', 'limit', 'level', 'combine', 'size']);
   const pane = places(SPEC);
   expect([pane.lead, pane.of('Stack'), pane.at('Stack'), pane.of('R-matrix')]).toEqual(['Stack', 0, 1, 3]);
 });

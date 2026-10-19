@@ -2,9 +2,11 @@ import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
 import { defaults, describe, tidy } from '../../lib/app/spec.js';
-import { SPEC } from './scene.js';
+import { all, mount, text } from '../../../test/dom.js';
+import { Frame } from '../../lib/app/frame.jsx';
+import { SHEETS, SPEC } from './scene.js';
 import { Folds } from '../../lib/two/parts.jsx';
-import { panes, rows } from './widget.jsx';
+import { Sheets, panes, rows } from './widget.jsx';
 
 const value = { ...defaults(SPEC), seed: 1, base: 3, code: '495' };
 
@@ -12,12 +14,12 @@ const shown = (over) => ({ ...value, ...over, ...tidy(SPEC, { ...value, ...over 
 
 const pane = (over) => renderToStaticMarkup(<Folds groups={panes(shown(over), () => {}, math)} />);
 
-test('the widget folds hold the design with its side and level, then the sheet with its presets, and the look is a spec group', () => {
+test('the widget folds hold the side and level, then the across and down, with no picker, and the look is a spec group', () => {
   const html = pane({});
-  const order = ['<h3>Design</h3>', 'aria-label="Base"', '>Side<', '>Level<', '<h3>Sheet</h3>', '>Across<', '>5 by 5</button>', '>3 by 9</button>'].map((one) => html.indexOf(one));
+  const order = ['<h3>Design</h3>', '>Side<', '>Level<', '<h3>Sheet</h3>', '>Across<', '>Down<'].map((one) => html.indexOf(one));
   expect(order.every((at) => at >= 0)).toBe(true);
   expect(order).toEqual([...order].sort((a, b) => a - b));
-  expect(html).toContain('class="on"');
+  for (const gone of ['aria-label="Base"', '>Named<', '>Code<', 'aria-label="Presets"']) expect(html).not.toContain(gone);
   expect(describe(SPEC, value).map((group) => group.name)).toEqual(['Look']);
 });
 
@@ -34,7 +36,16 @@ test('the readouts lead with the design, the copies, what the sheet exposes and 
   expect(Object.fromEntries(read).dimension).toBe('1.8900');
 });
 
-test('a blank or junk code labels the design fold with the code the seed settles on', () => {
-  for (const code of ['', 'abc', '-3', '1.5']) expect(pane({ code })).toContain('<h3>Design</h3>');
-  expect(panes(shown({ code: '1.5' }), () => {}, math)[0].live).toBe('1 · side 3 · level 2');
+test('the design fold names the design, a blank or junk code the carpet', () => {
+  const live = (code) => panes(shown({ code }), () => {}, math)[0].live;
+  expect([live(''), live('abc'), live('1.5')]).toEqual(['carpet · side 3 · level 2', 'carpet · side 3 · level 2', '1 · side 3 · level 2']);
+});
+
+test('the sheets shelf lists every named sheet and marks the one on show', async () => {
+  const items = await mount(async (draw, host) => {
+    await draw(<Frame label="Two"><Sheets value={shown({})} onChange={() => {}} unit={math} /></Frame>);
+    return all(host, (at) => 'data-item' in (at.attributes ?? {}));
+  });
+  expect(items).toHaveLength(SHEETS.length);
+  expect(items.filter((at) => at.attributes['aria-current'] === 'true').map(text)).toEqual(['Block5 by 5']);
 });

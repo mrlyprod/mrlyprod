@@ -3,7 +3,7 @@ import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { SPEC, make, name } from './scene.js';
-import { LOOKS, ORBIT, angle } from './stage.js';
+import { LOOKS, ORBIT, angle, room, span, stand } from './stage.js';
 
 const brief = (arg) => (ArrayBuffer.isView(arg) ? arg.length : typeof arg === 'function' ? 'thing' : Array.isArray(arg) ? arg.length : typeof arg === 'object' && arg !== null ? Object.keys(arg).join(',') : arg);
 
@@ -124,6 +124,20 @@ test('spin orbits the camera from t and turning it off holds the pose it reached
   live.scene.turn(0, 0);
   expect([after, live.log.find(([key]) => key.endsWith('Camera.position.set'))]).toEqual([held, held]);
   expect(angle(1, ORBIT / 4, 1)).toBeCloseTo(1 + Math.PI / 2, 9);
+});
+
+test('the cube fills the canvas inside its edge at any aspect, and the camera backs off to keep it', () => {
+  const tan = Math.tan((19 * Math.PI) / 180);
+  const spread = (w, h, dpr) => {
+    const free = room(w, h, dpr);
+    const seen = [(Math.tan(Math.asin(Math.sqrt(3) / stand(free))) / tan) * (h / 2), (Math.sqrt(3) / span(free)) * (h / 2)];
+    return seen.map((reach) => Math.max(reach / (h / 2), reach / (w / 2)));
+  };
+  for (const [w, h, dpr] of [[1600, 900, 1], [900, 900, 1], [390, 844, 1], [2000, 500, 1], [1170, 2532, 3]]) {
+    for (const fill of spread(w, h, dpr)) expect([fill <= 1, fill > 0.8]).toEqual([true, true]);
+  }
+  const [, x, y, z] = open().pose(0);
+  expect(Math.hypot(x, y, z)).toBeCloseTo(stand(room(800, 600, 2)), 9);
 });
 
 test('a drag turns, a fling coasts to a stop, the wheel zooms and a look snaps to the corner', () => {

@@ -8,14 +8,30 @@ export const SPANS = { 1: 81, 2: 27 };
 const CODES = { 1: 4, 2: 16 };
 const FIRST = { 1: 1, 2: 7 };
 
-const SHAPES = {
-  glider: [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]],
-  pentomino: [[1, 0], [2, 0], [0, 1], [1, 1], [1, 2]],
-  blinker: [[0, 0], [1, 0], [2, 0]],
-  block: [[0, 0], [1, 0], [0, 1], [1, 1]],
+const ART = {
+  glider: ['Glider', ['.#.', '..#', '###']],
+  lwss: ['LWSS', ['.#..#', '#....', '#...#', '####.']],
+  pentomino: ['R-pentomino', ['.##', '##.', '.#.']],
+  acorn: ['Acorn', ['.#.....', '...#...', '##..###']],
+  diehard: ['Diehard', ['......#.', '##......', '.#...###']],
+  gun: ['Gosper gun', ['........................#...........', '......................#.#...........', '............##......##............##', '...........#...#....##............##', '##........#.....#...##..............', '##........#...#.##....#.#...........', '..........#.....#.......#...........', '...........#...#....................', '............##......................']],
+  blinker: ['Blinker', ['###']],
+  toad: ['Toad', ['.###', '###.']],
+  beacon: ['Beacon', ['##..', '##..', '..##', '..##']],
+  pulsar: ['Pulsar', ['..###...###..', '.............', '#....#.#....#', '#....#.#....#', '#....#.#....#', '..###...###..', '.............', '..###...###..', '#....#.#....#', '#....#.#....#', '#....#.#....#', '.............', '..###...###..']],
+  block: ['Block', ['##', '##']],
+  beehive: ['Beehive', ['.##.', '#..#', '.##.']],
 };
 
-export const STARTS = [['noise', 'Soup'], ['design', 'Design'], ['one', 'One cell'], ['glider', 'Glider'], ['pentomino', 'R-pentomino'], ['blinker', 'Blinker'], ['block', 'Block']];
+export const PATTERNS = Object.fromEntries(
+  Object.entries(ART).map(([id, [name, rows]]) => [id, { name, w: rows[0].length, h: rows.length, cells: rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === '#' ? [[x, y]] : []))) }]),
+);
+
+export const SEEDS = [['noise', 'Soup'], ['one', 'One cell'], ['design', 'Design']];
+
+export const STARTS = [...SEEDS, ...Object.entries(PATTERNS).map(([id, { name }]) => [id, name])];
+
+export const LINES = ['noise', 'one'];
 
 /* COUNTS */
 
@@ -123,19 +139,17 @@ function place(types, width, design, side, top, left) {
   for (let r = 0; r < side; r++) for (let c = 0; c < side; c++) types[(top + r) * width + left + c] = design[r * side + c];
 }
 
+export const startOf = (value) => (Number(value?.dim) === 1 && !LINES.includes(value.from) ? 'noise' : value?.from);
+
 export function sow(value, rand, math, width, height = 1) {
   const types = new Uint8Array(width * height);
-  const from = value.from;
-  const shape = SHAPES[from];
+  const from = height === 1 && PATTERNS[value.from] ? 'noise' : value.from;
+  const pattern = PATTERNS[from];
   if (from === 'one') types[(height >> 1) * width + (width >> 1)] = 1;
-  else if (shape) {
-    const left = (width >> 1) - 1;
-    const top = (height >> 1) - 1;
-    const mid = Math.max(...shape.map(([, y]) => y)) >> 1;
-    for (const [x, y] of shape) {
-      if (height > 1) types[(top + y) * width + left + x] = 1;
-      else if (y === mid) types[left + x] = 1;
-    }
+  else if (pattern) {
+    const left = (width - pattern.w + 1) >> 1;
+    const top = (height - pattern.h + 1) >> 1;
+    for (const [x, y] of pattern.cells) types[(top + y) * width + left + x] = 1;
   } else if (from === 'design') {
     const number = Number(value.number) || 3;
     const level = fitLevel(number, Math.min(width, height > 1 ? height : width));

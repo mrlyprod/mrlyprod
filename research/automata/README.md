@@ -3,6 +3,7 @@ title: The automata
 lead: An elementary cellular automaton is a three-dimensional design read as a rule and Life a nine-dimensional one: what the identity buys, and what it cannot.
 figure: research-automata
 slug: automata
+date: 2026-09-02
 ---
 
 # The automata
@@ -10,6 +11,7 @@ slug: automata
 An elementary cellular automaton is a three-dimensional design read as a rule and Life a nine-dimensional one: what the identity buys, and what it cannot.
 
 - [notes/automata.md](notes/automata.md): The automata
+- [notes/life-and-the-atlas.md](notes/life-and-the-atlas.md): Life, the siblings and the atlas
 - [claims/atlas.md](claims/atlas.md): Atlas
 - [claims/automata.md](claims/automata.md): Automata
 - [claims/waves.md](claims/waves.md): Waves

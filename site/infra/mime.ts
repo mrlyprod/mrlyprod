@@ -10,7 +10,6 @@ const TYPES = new Map(
     css: "text/css; charset=utf-8",
     json: "application/json",
     map: "application/json",
-    webmanifest: "application/manifest+json",
     xml: "application/xml",
     txt: TEXT,
     md: "text/markdown; charset=utf-8",

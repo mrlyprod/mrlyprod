@@ -16,7 +16,7 @@
 
 ## WITNESSES
 
-- zeta.md, THE CLOSURE PROBLEM, the formula row: the eleven pairs agree to `1e-57` at 40 digits, `norm(rho_1)^2 = log 2 pi - gamma`, and the four residual quadratures agree with `1 - b^T G^(-1) b` to every printed digit.
-- zeta.md, THE CLOSURE PROBLEM, the table row: `0.024015, 0.015314, 0.010949, 0.008254, 0.006738` on the full set, `0.116043, 0.106008, 0.104951, 0.104689, 0.104610` on the design, rounded up, the condition numbers, `d_N^2 log N` falling through `0.046191`.
-- zeta.md, THE CLOSURE PROBLEM, the floor rows: `delta_3 = 0.070873`, `delta_40 = 0.098689`, `delta_100 = 0.101926` against `d_2187^2 = 0.104579`, the full set at `1e-75`, and the seven designs at `K = 40`.
-- zeta.md, THE CLOSURE PROBLEM, the constant: `0.0461922` from 649 zeros against `0.0461914`.
+- meter-and-closure.md, THE CLOSURE PROBLEM, the formula row: the eleven pairs agree to `1e-57` at 40 digits, `norm(rho_1)^2 = log 2 pi - gamma`, and the four residual quadratures agree with `1 - b^T G^(-1) b` to every printed digit.
+- meter-and-closure.md, THE CLOSURE PROBLEM, the table row: `0.024015, 0.015314, 0.010949, 0.008254, 0.006738` on the full set, `0.116043, 0.106008, 0.104951, 0.104689, 0.104610` on the design, rounded up, the condition numbers, `d_N^2 log N` falling through `0.046191`.
+- meter-and-closure.md, THE CLOSURE PROBLEM, the floor rows: `delta_3 = 0.070873`, `delta_40 = 0.098689`, `delta_100 = 0.101926` against `d_2187^2 = 0.104579`, the full set at `1e-75`, and the seven designs at `K = 40`.
+- meter-and-closure.md, THE CLOSURE PROBLEM, the constant: `0.0461922` from 649 zeros against `0.0461914`.

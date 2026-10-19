@@ -1,14 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Bar, Frame } from './frame.jsx';
+import { Bar, Frame, SIDES, usePanes } from './frame.jsx';
 import { island } from './island.jsx';
 import { Hints, Info, Keys, flip, useKeys } from './keys.jsx';
-import { asked, defaults as knobs, tidy } from './spec.js';
-import { Accordion, Btn, Export, Fold, Icon, Menu } from './controls.jsx';
+import { asked, defaults as knobs, optionsOf, tidy, viewing } from './spec.js';
+import { Accordion, Btn, Export, Fold, Icon, pair } from './controls.jsx';
 import { Knob, Knobs, useAccordion } from './knobs.jsx';
 import { share, useQuery } from './query.js';
 import { run } from './run.js';
 import { record as capture } from './record.js';
-import { useUnits } from './hooks.js';
+import { Rolls, rolls, useUnits } from './hooks.js';
+import { fresh, patch as diff, record as remember, redo, undo } from './history.js';
+import { menus, publish } from './menus.js';
+import { choose, current, fits, keys as owned, place, read } from '../designs/store.js';
+import { Chip } from '../designs/chip.jsx';
+import { source } from '../glass/feed.js';
 
 const Stage = createContext(null);
 
@@ -23,6 +28,8 @@ export function Scene({ make, value, onReady, ...rest }) {
   const key = JSON.stringify(value);
   useEffect(() => {
     const canvas = at.current;
+    const frame = typeof canvas.closest === 'function' ? canvas.closest('.frame') : null;
+    const drop = frame ? source(canvas, () => frame.getBoundingClientRect()) : null;
     const stop = run(canvas, make, value, { still: stage?.still });
     live.current = stop;
     made.current = key;
@@ -31,6 +38,7 @@ export function Scene({ make, value, onReady, ...rest }) {
       ready.current?.(null);
       live.current = null;
       stop();
+      drop?.();
     };
   }, [make, n]);
   useEffect(() => {
@@ -47,7 +55,7 @@ const PLAY = { ...PAUSE, label: (value, handle) => (handle?.playing?.() === fals
 
 const WATCH = 250;
 
-const SHOWN = 4;
+const SHOWN = 3;
 
 const RECORD = { key: 'v', label: 'Record', act: 'record' };
 
@@ -88,8 +96,14 @@ export function values(defaults, spec) {
   return spec ? { ...defaults, ...knobs(spec) } : defaults;
 }
 
-function seeded(keys) {
-  const params = new URLSearchParams(location.search);
+export function carried(params, slot, one) {
+  if (!slot || slot.blank || String(params.get(slot.code) ?? '').trim() || !fits(slot, one)) return params;
+  for (const [key, v] of Object.entries(place(slot, one))) params.set(key, v);
+  return params;
+}
+
+function seeded(keys, slot) {
+  const params = carried(new URLSearchParams(location.search), slot, slot ? current() : null);
   for (const key of [...params.keys()]) if (!keys.includes(key)) params.delete(key);
   if (!params.has('seed')) params.set('seed', roll());
   history.replaceState(history.state, '', `${location.pathname}?${params}${location.hash}`);
@@ -126,12 +140,24 @@ export const live = (map, value) => map.filter((row) => !row.when || row.when(va
 
 export const menu = (record, begin, more = []) => [...(record ? RATIOS.map((at) => [`Video ${at}`, () => begin(at)]) : []), ...more];
 
-function App({ Widget, defaults, spec, units, keys, actions, gestures, record, about = [], id, title, calm = false, name, saver = false }) {
+const TEXT = 'input[type=text], input[type=number], input[type=search], input:not([type]), textarea, [contenteditable]:not([contenteditable=false])';
+
+const typing = (e) => typeof e.target?.closest === 'function' && Boolean(e.target.closest(TEXT));
+
+export function undoing(e) {
+  if (!(e.metaKey || e.ctrlKey) || e.altKey || typing(e)) return 0;
+  const key = e.key.toLowerCase();
+  if (key === 'z') return e.shiftKey ? 1 : -1;
+  return key === 'y' && !e.shiftKey ? 1 : 0;
+}
+
+export const knobbed = (spec, kept = []) => Object.fromEntries((spec ?? []).filter((row) => !kept.includes(row.key)).map((row) => [row.key, row.def]));
+
+function App({ Widget, defaults, spec, units, keys, actions, gestures, record, about = [], id, title, calm = false, name, design }) {
   const [raw, set] = useQuery(defaults);
   const value = spec ? { ...raw, ...tidy(spec, raw, units) } : raw;
   const url = spec ? { ...value, ...asked(spec, raw, units) } : value;
   const scene = useRef(null);
-  const [kept, keep] = useState('');
   const [paused, setPaused] = useState(false);
   const take = useRef(null);
   const ratio = useRef(RATIOS[0]);
@@ -145,9 +171,23 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   const [fixed, setFixed] = useState(false);
   const [mode, setMode] = useState({ still: calm, own: false });
   const [, setSign] = useState('');
+  const stack = useRef(fresh());
+  const [, setDepth] = useState(0);
+  const touched = useRef(false);
+  const told = useMemo(rolls, []);
+  const panes = usePanes();
   const folds = useAccordion(id, spec);
   const stage = useMemo(() => ({ still: calm }), [calm]);
   const status = useCallback((next) => setRows((was) => (same(was, next ?? []) ? was : (next ?? []))), []);
+  useEffect(() => {
+    const on = () => (touched.current = true);
+    addEventListener('pointerdown', on, true);
+    addEventListener('keydown', on, true);
+    return () => {
+      removeEventListener('pointerdown', on, true);
+      removeEventListener('keydown', on, true);
+    };
+  }, []);
   useEffect(() => {
     quiet(zen);
     if (!zen) return undefined;
@@ -164,13 +204,33 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   }, [zen]);
   const write = (next) => {
     const patch = changed(next, raw);
-    if (Object.keys(patch).length) set(patch);
+    if (!Object.keys(patch).length) return;
+    if (touched.current) {
+      stack.current = remember(stack.current, raw, Date.now());
+      setDepth((n) => n + 1);
+    }
+    set(patch);
   };
   const onChange = (patch) => {
     const next = { ...value, ...patch };
     write(spec ? { ...next, ...tidy(spec, next, units), ...asked(spec, { ...raw, ...patch }, units) } : next);
   };
+  const travel = (by) => {
+    const moved = (by < 0 ? undo : redo)(stack.current, raw);
+    if (!moved) return;
+    stack.current = moved.stack;
+    setDepth((n) => n + 1);
+    set(diff(raw, moved.to));
+  };
   useEffect(() => write(url), []);
+  const slotted = design ? read(design, url) : null;
+  const picked = slotted ? JSON.stringify(slotted) : '';
+  const met = useRef(picked);
+  useEffect(() => {
+    if (met.current === picked) return;
+    met.current = picked;
+    if (slotted && touched.current && fits(design, slotted)) choose(slotted);
+  }, [picked]);
   const ready = useCallback((handle) => {
     take.current?.stop();
     scene.current = handle;
@@ -180,8 +240,8 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   }, []);
   const all = useMemo(() => (record ? [...keys, RECORD] : keys), [keys, record]);
   const on = live(all, value);
-  const told = about.length > 0 || rows.length > 0;
-  const map = useMemo(() => keymap(on, tail(told), mode), [all, on.map((row) => all.indexOf(row)).join(), told, mode]);
+  const known = about.length > 0 || rows.length > 0;
+  const map = useMemo(() => keymap(on, tail(known), mode), [all, on.map((row) => all.indexOf(row)).join(), known, mode]);
   const shown = labels(map, value, scene.current);
   const signed = useRef(null);
   signed.current = () => [mode.own ? scene.current?.playing?.() : '', ...labels(map, value, scene.current).map((row) => row.label)].join('|');
@@ -227,18 +287,19 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
     const timer = setInterval(tick, 250);
     return () => clearInterval(timer);
   }, [taking]);
-  const base = { pause, reroll: () => onChange({ seed: roll() }), zen: () => setZen((was) => !was), record: () => (take.current ? cut() : begin(ratio.current)), ...Object.fromEntries(Object.entries(actions).map(([act, fn]) => [act, (e) => scene.current && fn(scene.current, e)])) };
+  const reroll = () => {
+    const seed = roll();
+    onChange({ seed });
+    told.tell(seed);
+  };
+  const reset = () => onChange(knobbed(spec, design ? owned(design) : []));
+  const base = { pause, reroll, zen: () => setZen((was) => !was), record: () => (take.current ? cut() : begin(ratio.current)), ...Object.fromEntries(Object.entries(actions).map(([act, fn]) => [act, (e) => scene.current && fn(scene.current, e)])) };
   const acts = Object.fromEntries(Object.entries(base).map(([act, fn]) => [act, (e) => {
     fn(e);
     sync();
   }]));
   useKeys(map, acts);
   const primary = shown.find((row) => row.button && acts[row.act]);
-  const pick = `${id}${share(value)}`;
-  const screen = () => {
-    window.dispatchEvent(new CustomEvent('saver', { detail: pick }));
-    keep(pick);
-  };
   const copy = () => {
     navigator.clipboard?.writeText(`${location.origin}${location.pathname}${share(url)}`).then(() => {
       clearTimeout(hush.current);
@@ -246,77 +307,109 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
       hush.current = setTimeout(() => setCopied(false), COPIED);
     }, () => {});
   };
-  const extras = [...(saver ? [[kept === pick ? 'Screensaver set' : 'Set as screensaver', screen]] : []), ['Copy link', copy, 'link'], ['Keys', () => flip('dialog.keys')], ['Zen', acts.zen]];
-  const view = spec ? live(spec.filter((row) => row.key === 'view'), value)[0] : undefined;
+  const view = spec ? live(spec.filter(viewing), value)[0] : undefined;
+  const files = menu(record, begin, more);
+  const sides = Object.fromEntries(Object.keys(SIDES).filter(panes.has).map((side) => [side, panes.open[side]]));
+  const model = menus({ exports: files.map(([text]) => text), undo: stack.current.past.length > 0, redo: stack.current.future.length > 0, reset: Boolean(spec), view: view ? { value: value[view.key], options: optionsOf(view, value, units).map(pair) } : null, panes: sides, keys: labels(on, value, scene.current), told: known });
+  const run = useRef(null);
+  run.current = (act) => {
+    if (act.startsWith('export:')) return files[Number(act.slice(7))]?.[1]();
+    if (act.startsWith('pane:')) return panes.flip(act.slice(5));
+    if (act.startsWith('view:')) return onChange({ [view.key]: optionsOf(view, value, units).map(pair).map(([one]) => one).find((one) => String(one) === act.slice(5)) });
+    const [name, key] = act.split('@');
+    const fn = { export: () => flip('dialog.export'), copy, undo: () => travel(-1), redo: () => travel(1), reset, keys: () => flip('dialog.keys'), info: () => flip('dialog.info'), ...acts }[name];
+    const row = map.find((one) => one.act === name);
+    fn?.({ key: key ?? (row ? [].concat(row.key)[0] : ''), preventDefault: () => {} });
+  };
+  const sign = JSON.stringify(model);
+  useEffect(() => publish({ title, menus: model, run: (act) => run.current(act) }), [sign]);
+  useEffect(() => () => publish(null), []);
+  useEffect(() => {
+    const press = (e) => {
+      const by = undoing(e);
+      if (!by || document.querySelector('dialog[open]')) return;
+      e.preventDefault();
+      run.current(by < 0 ? 'undo' : 'redo');
+    };
+    addEventListener('keydown', press);
+    return () => removeEventListener('keydown', press);
+  }, []);
   return (
-    <Accordion.Provider value={folds}>
-      <Stage.Provider value={stage}>
-        <Frame label={title} gestures={gestures}>
-          <Widget value={value} onChange={onChange} onReady={ready} onExport={setMore} onStatus={status} units={units} />
-          <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
-            <Icon name="fullscreen_exit" />
-          </Btn>
-          {spec && (
-            <Bar side="right">
-              <Knobs spec={spec} value={value} units={units} onChange={onChange} />
-            </Bar>
-          )}
-          {spec && (
-            <Bar side="tail">
-              <Fold name="Seed" live={String(value.seed)} open={folds.has('Seed')} onToggle={(on) => folds.flip('Seed', on)}>
-                <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
-              </Fold>
-            </Bar>
-          )}
-          <Bar side="status">
-            {told && (
-              <Btn className="icon info" aria-label="Info" onClick={() => flip('dialog.info')}>
-                <Icon name="info" />
-              </Btn>
-            )}
-            <span>seed {value.seed}</span>
-            {!mode.still && resting(scene.current, mode.own, paused) && <span>paused</span>}
-            {taking && <span>{rec}</span>}
-            {copied && <span>link copied</span>}
-            {rows.slice(0, SHOWN).map(([label, v]) => <span key={label} className="out">{label} {v}</span>)}
-          </Bar>
-          <Bar side="hints">
-            <Hints map={shown} />
-          </Bar>
-          <Bar side="actions">
-            {view && (
-              <div className="views">
-                <Knob row={view} value={value.view} values={value} units={units} onChange={onChange} />
-              </div>
-            )}
-            {taking && (
-              <Btn primary onClick={cut}>
-                Stop
-              </Btn>
-            )}
-            {primary && (
-              <Btn primary onClick={acts[primary.act]}>
-                {primary.label}
-              </Btn>
-            )}
-            <Btn className="reroll" onClick={acts.reroll}>
-              <Icon name="casino" />
-              Reroll
+    <Rolls.Provider value={told}>
+      <Accordion.Provider value={folds}>
+        <Stage.Provider value={stage}>
+          <Frame label={title} gestures={gestures} panes={panes}>
+            <Widget value={value} onChange={onChange} onReady={ready} onExport={setMore} onStatus={status} units={units} />
+            <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
+              <Icon name="fullscreen_exit" />
             </Btn>
-            <Btn className="export" onClick={() => flip('dialog.export')}>
-              <Icon name="download" />
-              Export
-            </Btn>
-            <Menu className="icon more" aria-label="More" rows={extras}>
-              <Icon name="more_horiz" />
-            </Menu>
-          </Bar>
-          <Keys map={shown} />
-          {told && <Info about={about} rows={rows} />}
-          <Export canvas={() => scene.current?.canvas ?? document.querySelector('.frame canvas')} name={file} draw={() => scene.current?.draw?.()} fix={fixed && !taking ? (next) => scene.current?.fix?.(next) : undefined} more={menu(record, begin, more)} />
-        </Frame>
-      </Stage.Provider>
-    </Accordion.Provider>
+            {spec && (
+              <Bar side="right">
+                <Knobs spec={spec} value={value} units={units} onChange={onChange} />
+              </Bar>
+            )}
+            {spec && (
+              <Bar side="tail">
+                <Fold name="Seed" live={String(value.seed)} open={folds.has('Seed')} onToggle={(on) => folds.flip('Seed', on)}>
+                  <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
+                </Fold>
+              </Bar>
+            )}
+            <Bar side="status">
+              {known && (
+                <Btn className="icon info" aria-label="Info" onClick={() => flip('dialog.info')}>
+                  <Icon name="info" />
+                </Btn>
+              )}
+              <span>seed {value.seed}</span>
+              {!mode.still && resting(scene.current, mode.own, paused) && <span>paused</span>}
+              {taking && <span>{rec}</span>}
+              {copied && <span>link copied</span>}
+              {rows.slice(0, SHOWN).map(([label, v]) => <span key={label} className="out">{label} {v}</span>)}
+            </Bar>
+            <Bar side="hints">
+              <Hints map={shown} />
+              <Btn className="icon keys" aria-label="Keys" onClick={() => flip('dialog.keys')}>
+                <Icon name="keyboard" />
+              </Btn>
+            </Bar>
+            <Bar side="actions">
+              {design && (!design.when || design.when(value)) && <Chip slot={design} value={url} onChange={onChange} math={units?.math} />}
+              {view && (
+                <div className="views">
+                  <Knob row={view} value={value[view.key]} values={value} units={units} onChange={onChange} />
+                </div>
+              )}
+              {taking && (
+                <Btn primary onClick={cut}>
+                  Stop
+                </Btn>
+              )}
+              {primary && (
+                <Btn primary onClick={acts[primary.act]}>
+                  {primary.label}
+                </Btn>
+              )}
+              <Btn className="reroll" onClick={acts.reroll}>
+                <Icon name="casino" />
+                Reroll
+              </Btn>
+              <Btn className="export" onClick={() => flip('dialog.export')}>
+                <Icon name="download" />
+                Export
+              </Btn>
+              <Btn className="share" onClick={copy}>
+                <Icon name="ios_share" />
+                Share
+              </Btn>
+            </Bar>
+            <Keys map={shown} />
+            {known && <Info about={about} rows={rows} />}
+            <Export canvas={() => scene.current?.canvas ?? document.querySelector('.frame canvas')} name={file} draw={() => scene.current?.draw?.()} fix={fixed && !taking ? (next) => scene.current?.fix?.(next) : undefined} more={files} />
+          </Frame>
+        </Stage.Provider>
+      </Accordion.Provider>
+    </Rolls.Provider>
   );
 }
 
@@ -329,15 +422,13 @@ export function Held({ units, still, ...rest }) {
   return on ? <App {...rest} units={held ?? undefined} /> : null;
 }
 
-export const saves = (context, id) => Boolean(context?.site?.savers?.some((one) => one.id === id));
-
-export function page(Widget, defaults, { spec, units, keys = [], actions = {}, gestures = false, record = false, about = [], still: calm = false, name } = {}) {
+export function page(Widget, defaults, { spec, units, keys = [], actions = {}, gestures = false, record = false, about = [], still: calm = false, name, design } = {}) {
   const start = values(defaults, spec);
-  return island((host, context) => {
+  return island((host) => {
     const still = host.nextElementSibling;
     const title = still?.querySelector('h1')?.textContent ?? '';
     const id = host.dataset.app;
-    seeded(Object.keys(start));
-    return { node: <Held units={units} still={still} Widget={Widget} defaults={start} spec={spec} keys={keys} actions={actions} gestures={gestures} record={record} about={about} id={id} title={title} calm={calm} name={name} saver={saves(context, id)} />, close: () => still && host.after(still) };
+    seeded(Object.keys(start), design);
+    return { node: <Held units={units} still={still} Widget={Widget} defaults={start} spec={spec} keys={keys} actions={actions} gestures={gestures} record={record} about={about} id={id} title={title} calm={calm} name={name} design={design} />, close: () => still && host.after(still) };
   });
 }

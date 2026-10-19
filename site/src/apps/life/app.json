@@ -1,6 +1,4 @@
 {
   "title": "Life",
-  "line": "Conway's Life on any design mask: paint, play, step, and run it to its fate.",
-  "menu": "play",
-  "saver": true
+  "line": "Conway's Life on any design mask: paint, play, step, and run it to its fate."
 }

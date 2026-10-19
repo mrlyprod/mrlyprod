@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
-import { defaults } from '../../lib/app/spec.js';
+import { defaults, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { BANDS, DENSITY, HOLD, LEAST, MOST, RASTER, ROUND, bands, cover, fit, legal, played, rebase, roll, seat, share, span, study } from './engine.js';
+import { BANDS, DENSITY, GLANCE, HOLD, LEAST, MOST, RASTER, ROUND, TRACKS, bands, cover, fit, glance, legal, played, resolve, roll, seat, share, span, study } from './engine.js';
 import { SPEC } from './scene.js';
 
 const value = (over) => ({ ...defaults(SPEC), seed: 1, ...over });
@@ -15,12 +15,6 @@ test('a rolled code is a plane design with three fills or more in base 3 and thr
   expect(three.every((code) => Number(code) < 512 && ones(code) >= 3)).toBe(true);
   expect(two.every((code) => Number(code) < 16 && ones(code) >= 3)).toBe(true);
   expect(roll(math, 3, rng(9))).toBe(roll(math, 3, rng(9)));
-});
-
-test('a code crosses a base change by its name, is kept when it reads in the new base, and is rolled when it does not', () => {
-  expect([rebase(math, '495', 3, 2, 3, rng(1)), rebase(math, '7', 2, 3, 3, rng(1))]).toEqual(['7', '495']);
-  expect(rebase(math, '13', 2, 3, 3, rng(1))).toBe('13');
-  expect(rebase(math, '200', 3, 2, 3, rng(1))).toBe(roll(math, 2, rng(1)));
 });
 
 test('the level is held to what the side allows', () => {
@@ -116,4 +110,18 @@ test('the fit centres the frame on the stage inside the padding', () => {
   expect(box.k).toBe(20);
   expect([box.ox, box.oy]).toEqual([200, 150]);
   expect([box.ox + 7 * box.k, box.oy - 7 * box.k]).toEqual([340, 10]);
+});
+
+test('an empty code is the home design of its base; a code kept is read as it stands', () => {
+  expect([resolve(math, { base: 3, code: '' }), resolve(math, { base: 2, code: ' ' }), resolve(math, { base: 3, code: '13' })]).toEqual(['495', '7', '13']);
+});
+
+test('every library track is legal as it stands, and a glance draws a curve for each pencil of the wheel at the thumb density', () => {
+  for (const [, patch] of TRACKS) {
+    const v = tidy(SPEC, { ...value({}), ...patch }, { math });
+    expect(Object.keys(patch).map((key) => v[key])).toEqual(Object.values(patch));
+    const one = glance(math, value({}), '495', patch);
+    expect([one.count, one.trace.length, one.samples >= 2 && one.samples <= GLANCE * 8 + 1]).toEqual([8, 8 * one.samples * 2, true]);
+  }
+  expect(new Set(TRACKS.map(([name]) => name)).size).toBe(TRACKS.length);
 });

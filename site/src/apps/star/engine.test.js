@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
-import { CARPET, LEAST, MOST, cutter, deepest, field, law, more, rungs } from './engine.js';
+import { CARPET, DEEP, LEAST, MOST, STACKS, cutter, deepest, field, law, more, rungs, swatch } from './engine.js';
 
 const nans = (data) => data.reduce((sum, v) => sum + (Number.isNaN(v) ? 1 : 0), 0);
 
@@ -57,4 +57,12 @@ test('a wider band leaves the law, walks the width law, and L = 2 mod 4 refuses 
   const read = law(math, star, 30, 2);
   expect([read.exact < 30, read.ribbon[1].exact, read.slope, read.branch, read.target]).toEqual([true, false, null, '2 mod 4', -1 / 6]);
   star.free();
+});
+
+test('the library stacks are even L inside the slider, none twice, and a swatch paints one to a square of the asked side', () => {
+  const all = [...STACKS.flatMap(([, list]) => list), ...DEEP];
+  expect([new Set(all).size === all.length, all.every((n) => n % 2 === 0 && n >= LEAST && n <= MOST)]).toEqual([true, true]);
+  const cuts = cutter(math);
+  const out = swatch(math, cuts, { ramp: 'fire', levels: 8, invert: 0 }, 8, 32, { paper: '#ffffff', accent: '#008cff' });
+  expect([out.shape, out.colors.length, cuts.count()]).toEqual([[32, 32], 32 * 32 * 4, 8]);
 });

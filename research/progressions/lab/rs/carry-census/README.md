@@ -1,6 +1,6 @@
 # carry-census
 
-- The numbers of [progressions](../../../notes/progressions.md): the carry criterion for three-term progressions in a digit design, brute force as its control, and the census of the largest progression-free design per base to `40`.
+- The numbers of [progressions](../../../notes/carry-criterion-census.md): the carry criterion for three-term progressions in a digit design, brute force as its control, and the census of the largest progression-free design per base to `40`.
 - A digit set is a `u64` mask over the digits `0..b-1`; its signed set `S = F + F - 2F` is never built, only the six memberships `1, -1, b, -b, b + 1, -b - 1` are read off the `u128` mask of `F + F`.
 - No dependency: one file, `std` only.
 

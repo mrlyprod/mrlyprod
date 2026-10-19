@@ -11,8 +11,8 @@ test("the level reaches the demo's side of 128, and 81 under a crop", () => {
   expect([2, 3, 4, 5].map((n) => cap(math, n, 'ball'))).toEqual([6, 4, 3, 2]);
 });
 
-test('a blank code is the carpet and a given code is kept', () => {
-  expect([design(math, { base: 2, code: '' }), design(math, { base: 2, code: ' 126 ' }), design(math, { base: 3, code: '100' })]).toEqual([{ base: 2, code: '23' }, { base: 2, code: '126' }, { base: 3, code: '100' }]);
+test("a blank code is the base's carpet and a given code is kept", () => {
+  expect([design(math, { base: 2, code: '' }), design(math, { base: 3, code: '' }), design(math, { base: 2, code: ' 126 ' }), design(math, { base: 3, code: '100' })]).toEqual([{ base: 2, code: '23' }, { base: 3, code: '129928175' }, { base: 2, code: '126' }, { base: 3, code: '100' }]);
 });
 
 test("the shapes are the crate's named 3D shapes", () => {

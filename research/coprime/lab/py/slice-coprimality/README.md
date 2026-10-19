@@ -19,11 +19,11 @@
 
 ## WITNESSES
 
-- `coprime.md:266,268` - zero Mobius mismatches at every height over the four design-base pairs, worst hidden count on a prime slice 3, peel exact at `base 3, 5`, no net point with `3 | gcd` on all `7^7` points.
-- `coprime.md:270` - `0.040902` against `1/25`, `0.020446` against `1/49`, `p = 11, 13` still converging.
-- `coprime.md:271` - `0.2850378 = 9121792/32002048`, walk formula and count equal on the integer.
-- `coprime.md:272` - tree dichotomy, zero visible on even heights and zero even gcds on odd, 1.49 million points each side.
-- `coprime.md:274,275` - `0.89216, 0.89776` against `0.57143, 0.61067, 0.65218`; `R_7 = 1093`; `base 5` reading `0.345, 0.492, 0.560`; independence product `0.64780, 0.89764, 0.55741` against measured `0.65218, 0.89776, 0.56006`.
-- `coprime.md:276,277` - `6, 42, 306, 2250, 16578, 122202, 900882`, the peel `3, 27, 207, 1539, 11367, 83835, 618111`, both on the `(9, -12)` recurrence to `level 14`, ratio `0.093070331` against `(sqrt(33) - 5)/8 = 0.0930703308`.
+- `visibility-parity-and-slices.md:99,101` - zero Mobius mismatches at every height over the four design-base pairs, worst hidden count on a prime slice 3, peel exact at `base 3, 5`, no net point with `3 | gcd` on all `7^7` points.
+- `visibility-parity-and-slices.md:103` - `0.040902` against `1/25`, `0.020446` against `1/49`, `p = 11, 13` still converging.
+- `visibility-parity-and-slices.md:104` - `0.2850378 = 9121792/32002048`, walk formula and count equal on the integer.
+- `visibility-parity-and-slices.md:105` - tree dichotomy, zero visible on even heights and zero even gcds on odd, 1.49 million points each side.
+- `visibility-parity-and-slices.md:107,108` - `0.89216, 0.89776` against `0.57143, 0.61067, 0.65218`; `R_7 = 1093`; `base 5` reading `0.345, 0.492, 0.560`; independence product `0.64780, 0.89764, 0.55741` against measured `0.65218, 0.89776, 0.56006`.
+- `visibility-parity-and-slices.md:109,110` - `6, 42, 306, 2250, 16578, 122202, 900882`, the peel `3, 27, 207, 1539, 11367, 83835, 618111`, both on the `(9, -12)` recurrence to `level 14`, ratio `0.093070331` against `(sqrt(33) - 5)/8 = 0.0930703308`.
 - the claims line - the same numbers, plus `2^1092 = 1 mod 1093^2` and the tree dichotomy carried to `level 7`.
 - `slices.md:415` - the pointer: `1/p^2` on the slice against `1/p^3` in the solid.

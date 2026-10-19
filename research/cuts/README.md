@@ -3,6 +3,7 @@ title: Cuts
 lead: The six-gasket theorem: a diagonal cut through one parity solid is Sierpinski all the way down.
 figure: research-cuts
 slug: cuts
+date: 2026-08-28
 ---
 
 # Cuts

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6466"/><stop offset="0.7" stop-color="#ff3d40"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M820.1 480.6L874.6 384.2L724.7 349.1Z" fill="#fff4f2" data-dark="#ff3d40"/>
+  <path d="M615.6 786.3L765.5 821.4L765.5 699.2Z" fill="#ffc9ca" data-dark="#b3272a" data-mono="dim"/>
+  <path d="M874.6 628.7L874.6 384.2L820.1 480.6L765.5 699.2L765.5 821.4Z" fill="#ff9ea0" data-dark="#7c1719" data-mono="dim"/>
+  <path d="M765.5 699.2L820.1 480.6L724.7 349.1L574.8 436.3L520.2 654.9L615.6 786.3ZM678.6 640.5L636.3 703.3L627.6 631.3L577.2 621.8L619.1 558.5L611 486.2L661.6 495L704 432.2L712.6 504.2L763.1 513.7L721.1 577L729.3 649.2Z" fill="#ffffff" fill-rule="evenodd" data-dark="#ffd6d6"/>
+  <path d="M258.5 202.6L149.4 395.3L449.2 465.5L503.8 369.1L408.4 237.7Z" fill="#fff4f2" data-dark="#ff3d40"/>
+  <path d="M149.4 639.8L299.3 674.9L449.2 587.7L449.2 465.5L149.4 395.3Z" fill="#ffc9ca" data-dark="#b3272a" data-mono="dim"/>
+  <path d="M503.8 369.1L449.2 465.5L449.2 587.7Z" fill="#ff9ea0" data-dark="#7c1719" data-mono="dim"/>
+</svg>

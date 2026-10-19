@@ -9,6 +9,8 @@ export const LETTERS = { gaussian: 'i', eisenstein: 'ω' };
 export const FATES = ['composite', 'split', 'inert', 'ramified', 'unit', 'zero'];
 export const REACH = { gaussian: 200, eisenstein: 231 };
 export const SPAN = [20, 120];
+export const PEEK = 20;
+export const THUMB = 14;
 export const BANDS = 12;
 export const GROW = 8000;
 export const PAD = 16;
@@ -25,6 +27,38 @@ export const coords = (a, b) => `${a},${b}`;
 export function parse(click) {
   const found = /^\s*(-?\d+)\s*,\s*(-?\d+)\s*$/.exec(String(click ?? ''));
   return found ? [Number(found[1]), Number(found[2])] : null;
+}
+
+export const WINDOWS = [
+  { id: 'gaussian', name: 'Gaussian snowflake', note: 'four arms', set: { ring: 'gaussian', limit: 40, look: 'fate', click: '' } },
+  { id: 'eisenstein', name: 'Eisenstein snowflake', note: 'six arms', set: { ring: 'eisenstein', limit: 40, look: 'fate', click: '' } },
+  { id: 'gaussian-norm', name: 'Gaussian norms', note: 'rings of norm', set: { ring: 'gaussian', limit: 40, look: 'norm', click: '' } },
+  { id: 'eisenstein-norm', name: 'Eisenstein norms', note: 'rings of norm', set: { ring: 'eisenstein', limit: 40, look: 'norm', click: '' } },
+  { id: 'gaussian-close', name: 'Gaussian close-up', note: 'reach 12', set: { ring: 'gaussian', limit: 12, look: 'fate', click: '' } },
+  { id: 'eisenstein-close', name: 'Eisenstein close-up', note: 'reach 12', set: { ring: 'eisenstein', limit: 12, look: 'fate', click: '' } },
+];
+
+export const POINTS = [
+  { ring: 'gaussian', a: 1, b: 1, norm: 2, fate: 3 },
+  { ring: 'gaussian', a: 3, b: 0, norm: 9, fate: 2 },
+  { ring: 'gaussian', a: 2, b: 1, norm: 5, fate: 1 },
+  { ring: 'gaussian', a: 2, b: 3, norm: 13, fate: 1 },
+  { ring: 'gaussian', a: 4, b: 1, norm: 17, fate: 1 },
+  { ring: 'eisenstein', a: 1, b: -1, norm: 3, fate: 3 },
+  { ring: 'eisenstein', a: 2, b: 0, norm: 4, fate: 2 },
+  { ring: 'eisenstein', a: 3, b: 1, norm: 7, fate: 1 },
+  { ring: 'eisenstein', a: 4, b: 1, norm: 13, fate: 1 },
+];
+
+const ENDS = ['', 'splits', 'stays prime', 'ramifies'];
+
+export function shelves(value) {
+  const windows = WINDOWS.map(({ id, name: label, note, set }) => ({ id, label, sub: note, set, on: value.ring === set.ring && value.limit === set.limit && value.look === set.look }));
+  const points = POINTS.map(({ ring, a, b, norm, fate }) => {
+    const click = coords(a, b);
+    return { id: `${ring}-${click}`, label: name(ring, a, b), sub: `${fate === 2 ? Math.sqrt(norm) : norm} ${ENDS[fate]}`, set: { ring, limit: PEEK, click }, on: value.ring === ring && value.click === click };
+  });
+  return [['Windows', windows], ['Primes', points]];
 }
 
 export function shuffle(rand) {

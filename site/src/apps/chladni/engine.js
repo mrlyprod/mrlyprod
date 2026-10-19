@@ -101,6 +101,26 @@ export const lowest = (value, units) => (units?.math ? (holding(units.math, valu
 
 export const highest = (value, units) => (units?.math ? (holding(units.math, value).at(-1) ?? 1) : LEVELS);
 
+/* SHELVES */
+
+const SHOWN = 25;
+
+export function carpets(math) {
+  return NUMBERS.flatMap((number) =>
+    CODES.flatMap((code) => {
+      const levels = holding(math, { code, number });
+      const level = levels.find((one) => number ** one >= SHOWN) ?? levels.at(-1);
+      return level ? [{ number, code, level, name: named(math, code) }] : [];
+    }),
+  );
+}
+
+export const cell = (math, one) => math.two.create(one.code, one.number, one.level, 0, 2);
+
+export function hits(one, query) {
+  return (query.match(/\d+/g) ?? []).every((word) => Number(word) === one.n || Number(word) === one.m);
+}
+
 /* RASTER */
 
 const kOf = (value) => Math.max(1, Math.min(value.k, known(value) || value.k));
@@ -216,3 +236,5 @@ export function paint(shape, inks) {
   for (let i = 0; i < shape.data.length; i++) bytes.set(ramp(inks, shape.data[i]), 4 * i);
   return bytes;
 }
+
+export const swatch = (num, one, inks, side) => paint({ side, data: num.chladni.plate(one.n, one.m, one.n === one.m ? 1 : one.sign, side) }, inks);

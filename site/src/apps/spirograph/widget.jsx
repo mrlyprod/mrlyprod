@@ -3,11 +3,14 @@ import { text } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
 import { Fold } from '../../lib/app/controls.jsx';
 import { Knob, gist } from '../../lib/app/knobs.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { rng } from '../../lib/rand.js';
 import { Scene } from '../../lib/app/page.jsx';
-import { Pick, read } from '../../lib/designs/pick.jsx';
-import { rebase, roll } from './engine.js';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { TRACKS, fit, glance, resolve, roll } from './engine.js';
 import { SPEC, file, make, parked, scrub, status } from './scene.js';
+import { useReroll } from '../../lib/app/hooks.js';
 
 export const FOLDS = [
   ['Track', ['kind', 'sides', 'ring', 'wheel', 'laps']],
@@ -17,26 +20,58 @@ export const FOLDS = [
 
 const SLOP = 6;
 
-const SEEDS = 4294967296;
+const LINE = 1;
 
 const rowOf = (key) => SPEC.find((row) => row.key === key);
 
 export const shown = (keys, value) => keys.map(rowOf).filter((row) => !row.need || row.need(value));
 
-export const called = (value, facts) => (facts?.name && facts.code === value.code ? `${facts.name} ${value.code}` : `code ${value.code}`);
+export const lit = (value, patch) => Object.keys(patch).filter((key) => rowOf(key).need?.(patch) ?? true).every((key) => value[key] === patch[key]);
 
-export function Pane({ value, at, math, facts, onChange, onDesign }) {
+export const sub = ({ kind, ring, wheel, sides }) => (kind === 'in' || kind === 'out' ? `R/r = ${ring}/${wheel}` : kind === 'line' ? 'on a line' : `${sides} sides`);
+
+export function etch(ctx, { count, samples, trace, frame }, w, h, dpr) {
+  const box = fit(frame, w, h, 4 * dpr);
+  ctx.strokeStyle = paints(ctx.canvas).accent;
+  ctx.lineWidth = LINE * dpr;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  for (let k = 0; k < count; k++) {
+    for (let i = 0; i < samples; i++) {
+      const j = (k * samples + i) * 2;
+      const x = box.ox + trace[j] * box.k;
+      const y = box.oy - trace[j + 1] * box.k;
+      if (i) ctx.lineTo(x, y);
+      else ctx.moveTo(x, y);
+    }
+  }
+  ctx.stroke();
+}
+
+export function Tracks({ value, math, onChange }) {
+  const tick = useTheme();
+  const glimpse = (patch) => (
+    <Art
+      paint={(ctx, w, h, dpr) => etch(ctx, glance(math, value, resolve(math, value), patch), w, h, dpr)}
+      deps={[math, patch.kind, patch.ring, patch.wheel, patch.sides, patch.laps, value.base, value.code, value.number, value.mode, value.reach, value.jitter, value.seed, tick]}
+    />
+  );
+  return (
+    <Shelf name="Tracks" grid>
+      {TRACKS.map(([name, patch]) => <Item key={name} label={name} sub={sub(patch)} on={lit(value, patch)} onPick={() => onChange(patch)} art={math ? glimpse(patch) : undefined} />)}
+    </Shelf>
+  );
+}
+
+export function Pane({ value, at, math, onChange }) {
   const values = { ...value, at };
   const units = math ? { math } : undefined;
   return (
     <Bar side="right">
       {FOLDS.map(([fold, keys]) => {
         const rows = shown(keys, value);
-        const wheel = fold === 'Wheel';
-        const live = wheel ? `${called(value, facts)} · ${gist(rows, values)}` : gist(rows, values);
         return (
-          <Fold key={fold} name={fold} live={live}>
-            {wheel && math && <Pick value={{ ...read(value), dim: 2 }} onChange={onDesign} math={math} dims={[2]} />}
+          <Fold key={fold} name={fold} live={gist(rows, values)}>
             {rows.map((row) => <Knob key={row.key} row={row} value={values[row.key]} values={values} units={units} onChange={onChange} />)}
           </Fold>
         );
@@ -64,26 +99,19 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
     setStat(next);
   }, []);
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math: unit, tell }), [unit, tell]);
-  const reroll = () => {
-    const seed = Math.floor(Math.random() * SEEDS);
-    change.current({ seed, code: roll(unit, now.current.base, rng(seed)) });
-  };
+  useReroll(value.seed, (seed) => unit && change.current({ code: roll(unit, now.current.base, rng(seed)) }));
   const ready = (handle) => {
     live.current = handle;
     const fix = (next) => {
       if (next?.step) handle.take();
       handle.fix?.(next);
     };
-    onReady?.(handle && { ...handle, reroll, fix });
+    onReady?.(handle && { ...handle, fix });
   };
   const toggle = () => live.current?.toggle();
-  const design = ({ dim, ...patch }) => {
-    const moved = unit && patch.base !== undefined && patch.base !== value.base;
-    onChange(moved ? { ...patch, code: rebase(unit, patch.code ?? value.code, value.base, patch.base, value.number, rng(value.seed)) } : patch);
-  };
   const keep = () => {
     const picture = live.current?.svg?.();
-    if (picture) text(picture, file(now.current), 'svg');
+    if (picture) text(picture, file(now.current, units), 'svg');
   };
   const have = Boolean(stat);
   useEffect(() => onExport?.(have ? [['SVG', keep]] : []), [have]);
@@ -115,7 +143,10 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={cancel} />}
-      <Pane value={value} at={at} math={unit} facts={stat?.facts} onChange={onChange} onDesign={design} />
+      <Library>
+        <Tracks value={value} math={unit} onChange={onChange} />
+      </Library>
+      <Pane value={value} at={at} math={unit} onChange={onChange} />
     </>
   );
 }

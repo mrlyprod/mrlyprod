@@ -3,6 +3,7 @@ title: The walk dimension
 lead: The walk-dimension census: same mass, different music.
 figure: research-walks
 slug: walks
+date: 2026-08-28
 ---
 
 # The walk dimension
@@ -10,6 +11,8 @@ slug: walks
 The walk-dimension census: same mass, different music.
 
 - [notes/walks.md](notes/walks.md): The walk dimension
+- [notes/shortest-paths.md](notes/shortest-paths.md): Shortest paths
+- [notes/conduction.md](notes/conduction.md): Conduction at large side
 - [claims/conduction-at-large-side.md](claims/conduction-at-large-side.md): Conduction at large side
 - [claims/shortest-paths.md](claims/shortest-paths.md): Shortest paths
 - [claims/walk-dimension.md](claims/walk-dimension.md): Walk dimension

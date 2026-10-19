@@ -21,6 +21,6 @@ uv run python research/coprime/lab/py/sponge-visible-census/census.py 9
 
 - the claims line - `A(7) = 1038074187`, `A(8) = 20860210527`, `A(9) = 418429711224`, and `G = 100` and `G = 150` agreeing on `A(9)`.
 - the claims line - the gaps `0.347, 0.349, 0.344` in units of `12^level`.
-- `coprime.md:251` - the base 3 carpet bracket `513/520`.
-- `coprime.md:282` - the same three counts under "Counting without enumerating".
-- `coprime.md:283` - the same three gaps.
+- `visibility-parity-and-slices.md:84` - the base 3 carpet bracket `513/520`.
+- `visibility-parity-and-slices.md:115` - the same three counts under "Counting without enumerating".
+- `visibility-parity-and-slices.md:118` - the same three gaps.

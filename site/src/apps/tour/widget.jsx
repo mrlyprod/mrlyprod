@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { rng } from '../../lib/rand.js';
 import { Scene } from '../../lib/app/page.jsx';
 import { ledger } from '../../lib/sequences/engine.js';
 import { CARDS, build, shown } from './cards.js';
 import { make } from './scene.js';
-import { useUnits } from '../../lib/app/hooks.js';
+import { useReroll, useUnits } from '../../lib/app/hooks.js';
 import { wasm } from '../../lib/units/index.js';
 
 const UNITS = wasm('math', 'num');
@@ -35,16 +36,11 @@ export function Widget({ value, onChange, onReady, onStatus }) {
   const stage = useRef(null);
   const now = useRef(value);
   const tell = useRef(onChange);
-  const seeded = useRef(value.seed);
   now.current = value;
   tell.current = onChange;
   const book = useMemo(() => units && ledger(units.math), [units]);
   const { card, step, seed } = value;
-  useEffect(() => {
-    if (seeded.current === seed) return;
-    seeded.current = seed;
-    tell.current?.(rolled(seed));
-  }, [seed]);
+  useReroll(seed, (fresh) => tell.current?.(rolled(fresh)));
   const made = useMemo(() => (units && book ? build({ ...units, book }, card, step) : null), [units, book, card, step]);
   const said = shown(card, step);
   useEffect(() => {
@@ -77,5 +73,17 @@ export function Widget({ value, onChange, onReady, onStatus }) {
     if (got.tap((e.clientX - box.left) * k, (e.clientY - box.top) * k)?.picture) handle.walk(1);
   };
   const one = CARDS[card];
-  return units ? <Scene make={scene} value={STILL} onReady={ready} onPointerUp={tap} role="img" aria-label={`${card + 1}, ${one.title}: ${one.say}`} /> : null;
+  if (!units) return null;
+  return (
+    <>
+      <Scene make={scene} value={STILL} onReady={ready} onPointerUp={tap} role="img" aria-label={`${card + 1}, ${one.title}: ${one.say}`} />
+      <Library name="Cards">
+        <Shelf>
+          {CARDS.map((each, i) => (
+            <Item key={each.key} label={each.title} sub={String(i + 1)} on={i === card} onPick={() => tell.current?.({ card: i, step: each.first })} />
+          ))}
+        </Shelf>
+      </Library>
+    </>
+  );
 }

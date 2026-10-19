@@ -4,7 +4,7 @@ import { palette } from '../../lib/theme/palette.gen.js';
 import { defaults, describe, tidy } from '../../lib/app/spec.js';
 import { keymap, labels } from '../../lib/app/page.jsx';
 import { rng } from '../../lib/rand.js';
-import { HOLD, PAD, ROUND, cover, fit, index, roll, span, study } from './engine.js';
+import { EASE, HOLD, PAD, ROUND, cover, fit, index, roll, span, study } from './engine.js';
 import { PAGE, SPEC, file, make, parked, scrub, status } from './scene.js';
 
 const pen = (log) =>
@@ -183,7 +183,7 @@ test('a code the crate cannot read keeps the last picture and tells the fault, a
 test('the lock rolls a design from its seed in one ink, draws it over the span, holds it, then starts over', () => {
   const lock = stage({ seed: 1 }, false, 800, 600, true);
   const plan = study(math, BASE, roll(math, 3, rng(1)));
-  const length = span(plan.beats);
+  const length = span(plan.beats) * EASE;
   lock.at(length);
   const full = drawn();
   expect(full).toBe(plan.facts.pencils * (plan.samples - 1));
@@ -270,16 +270,21 @@ test('Space and Enter are the one play, the primary reading Play or Stop as the 
   expect([page.scene.playing(), label(' '), label('Enter')]).toEqual([true, 'Pause', 'Stop']);
 });
 
-test('an export is named by the design, the track and the radii', () => {
-  expect(file({ ...BASE, kind: 'polyin', ring: 9, wheel: 2 })).toBe('spirograph-495-polyin-9-2');
+test('an export is named by the design, the track and the radii, the empty code the carpet', () => {
+  const track = { ...BASE, kind: 'polyin', ring: 9, wheel: 2 };
+  expect([file(track, { math }), file(track), file({ ...track, code: '7', base: 2 }, { math })]).toEqual(['spirograph-495-polyin-9-2', 'spirograph-carpet-polyin-9-2', 'spirograph-7-polyin-9-2']);
 });
 
-test('the reroll and the play are app actions on the scene', () => {
+test('the play is an app action on the scene, the reroll is the framework event, and the wheel takes a plane design through the chip', () => {
   const calls = [];
-  const scene = { toggle: () => calls.push('toggle'), reroll: () => calls.push('reroll') };
-  PAGE.actions.toggle(scene);
-  PAGE.actions.reroll(scene);
-  expect(calls).toEqual(['toggle', 'reroll']);
+  PAGE.actions.toggle({ toggle: () => calls.push('toggle') });
+  expect([calls, 'reroll' in PAGE.actions, PAGE.design, PAGE.keys.map((row) => row.menu)]).toEqual([['toggle'], false, { dim: 2, base: 'base', code: 'code' }, ['Edit']]);
+});
+
+test('an empty code is the home design of the base, never a roll', () => {
+  const page = open({ code: '' });
+  expect(page.last().facts.code).toBe('495');
+  expect(open({ code: '', base: 2 }).last().facts.code).toBe('7');
 });
 
 const stat = (over, value = {}) => {

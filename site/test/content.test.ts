@@ -119,8 +119,8 @@ test("every kept redirect goes from a gone path to a route, never through anothe
   const moves = JSON.parse(readFileSync(join(out, "redirects.json"), "utf8")) as Record<string, { to: string }>;
   const stray = Object.entries(moves).flatMap(([from, { to }]) => [
     ...(known.has(from) ? [`${from} is still a route`] : []),
-    ...(known.has(to) ? [] : [`${from} -> ${to}, no such route`]),
-    ...(to in moves ? [`${from} -> ${to} chains`] : []),
+    ...(known.has(to.split("?")[0]!) ? [] : [`${from} -> ${to}, no such route`]),
+    ...(to.split("?")[0]! in moves ? [`${from} -> ${to} chains`] : []),
   ]);
   expect(stray).toEqual([]);
 });

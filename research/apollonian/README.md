@@ -3,6 +3,7 @@ title: The Apollonian gasket
 lead: The circle face of the stack: the Descartes reflection as exact integer arithmetic on `(k, k x, k y)`, the strip packing's line-tangent circles proved to be exactly the Ford circles so the Farey stack is the packing's shadow with brightness `floor(Q sqrt(2/k))`, the curvature census, root quadruple excluded, whose exponent by ratio lands at `1.305` against the rigorous residual dimension, the eight residues mod 24, and why no design of base at most 100 carries that dimension.
 figure: research-apollonian
 slug: apollonian
+date: 2026-09-14
 ---
 
 # The Apollonian gasket

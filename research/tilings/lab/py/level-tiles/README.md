@@ -2,7 +2,7 @@
 
 - Decides, for a base `b` and a digit set `F`, which levels `A_n = F + b F + ... + b^(n-1) F` tile the integers and which are spectral, from the zero set of the digit transform `hat F` at roots of unity.
 - The zero set `Z(F) = {m : Phi_m | F(x)}` is computed exactly by integer division by `Phi_m` for every `m` with `phi(m) <= deg F`; the level zero set comes from the index lemma, never from a factorisation of the level.
-- T1 and T2 of Coven-Meyerowitz are read on the level exponents; T1 at every level is decided by the closed condition of `notes/tilings.md`, T2 at every level by the levels up to the horizon `1 + G(2 omega - 1)`.
+- T1 and T2 of Coven-Meyerowitz are read on the level exponents; T1 at every level is decided by the closed condition of `notes/tiling-levels.md`, T2 at every level by the levels up to the horizon `1 + G(2 omega - 1)`.
 - Independent checks: PARI `gp -q` factors the masks; an exhaustive exact-cover search looks for a complement in `Z/N`; the Coven-Meyerowitz complement is built and `A + B` is checked to be all residues; a clique search decides rational spectra in `Z/L`, `L` the lcm of the level zero set, and PARI certifies when no other spectrum can exist.
 - Exact integer arithmetic throughout; floats only in the final re-check of a found spectrum.
 
@@ -24,11 +24,11 @@ uv run python research/tilings/lab/py/level-tiles/level_tiles.py census measure
 
 ## WITNESSES
 
-- `notes/tilings.md` "The index lemma": 752 of 752 masks (`index`).
+- `notes/tiling-levels.md` "The index lemma": 752 of 752 masks (`index`).
 - "The hand check": the Cantor level (`hand`).
 - "T1 at every level": the asserts on 65519 sets, the depth histogram, and the depths `2` of `{0, 1, 4, 5}` at base 6 and `3` of `{0, 1, 8, 9}` at base 10 (`census`, `witness`).
 - "The guess is false": `{0, 2}` at base 6, `{0, 1, 8, 9}` and `{0, 3, 8, 11}` at base 12, the only two counterexamples after the gcd at bases <= 16, both mirror-symmetric (`census`); no multiple of either tiles `Z/12` (`witness`).
 - "T2 at every level": `{0, 1, 2, 6, 7, 8}` at base 18, the counts 0, 16, 0, 4, 258 at bases 12, 18, 20, 24, 30, and the horizon checked six levels past itself (`witness`, `census`).
-- "The census": the totals 65519, 588, 609, 641 and 32 (`census`); 492 of 492 and 803 of 803 (`search`).
-- "Spectral levels": 6749 decided levels, spectral iff tiling on all, 117 undecided (`spectral`).
+- `notes/tilings.md` "The census": the totals 65519, 588, 609, 641 and 32 (`census`); 492 of 492 and 803 of 803 (`search`).
+- `notes/limit-measure.md` "Spectral levels": 6749 decided levels, spectral iff tiling on all, 117 undecided (`spectral`).
 - "The limit measure": 576422 of 576422 and 2016 of 2016 (`measure`); the T1 depth `8` of `{0, 1} + 256{0, 1}` at base 18 (`witness`).

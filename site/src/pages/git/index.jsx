@@ -1,6 +1,6 @@
 import { mount as start, unmount as stop } from './git.js';
 
-export const layout = { left: true, right: 'late', sheet: 'git' };
+export const layout = { left: true, right: 'late', sheet: 'git', window: 'wide' };
 
 const TREE = '/git.json';
 

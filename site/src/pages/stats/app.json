@@ -1,5 +1,4 @@
 {
   "title": "Stats",
-  "line": "The CDN, the Lambdas and the bucket, read from the bucket every minute.",
-  "menu": "tool"
+  "line": "The CDN, the Lambdas and the bucket, read from the bucket every minute."
 }

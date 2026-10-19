@@ -18,14 +18,14 @@
 
 /* PATH */
 
-.bar { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: baseline; justify-content: space-between; font: 13px/1.7 var(--mono); padding-bottom: var(--s3); border-bottom: var(--hair); }
-.bar .sep { color: var(--dim); padding: 0 var(--s1); }
-.bar .tools { color: var(--dim); }
-.bar b { font-weight: 600; }
+.path { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: baseline; justify-content: space-between; font: 13px/1.7 var(--mono); padding-bottom: var(--s3); border-bottom: var(--hair); }
+.path .sep { color: var(--dim); padding: 0 var(--s1); }
+.path .tools { color: var(--dim); }
+.path b { font-weight: 600; }
 
 /* FILES */
 
-.files { list-style: none; margin: var(--s5) 0 0; padding: 0; border: var(--hair); border-radius: var(--r2); overflow: hidden; }
+.files { list-style: none; margin: var(--s5) 0 0; padding: 0; border: var(--hair); border-radius: var(--r-panel); overflow: hidden; }
 .files li { display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s4); font: 14px/1.6 var(--mono); border-top: var(--hair); }
 .files li:first-child { border-top: 0; }
 .files li a { text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -36,7 +36,7 @@
 
 /* CODE */
 
-.code { margin-top: var(--s5); border: var(--hair); border-radius: var(--r2); background: var(--panel); overflow: hidden; }
+.code { margin-top: var(--s5); border: var(--hair); border-radius: var(--r-panel); background: var(--panel); overflow: hidden; }
 .code pre { margin: 0; padding: var(--s4) 0; overflow-x: auto; background: none; border: 0; }
 .code code { font: 13px/1.7 var(--mono); }
 .code.plain pre { padding: var(--s4); }
@@ -56,8 +56,8 @@
 /* BLOB */
 
 .shot { margin: var(--s5) 0 0; }
-.shot img { max-width: 100%; height: auto; display: block; border: var(--hair); border-radius: var(--r2); background: var(--art); }
-.doc { display: block; width: 100%; height: 80vh; margin-top: var(--s5); border: var(--hair); border-radius: var(--r2); }
+.shot img { max-width: 100%; height: auto; display: block; border: var(--hair); border-radius: var(--r-control); background: var(--art); }
+.doc { display: block; width: 100%; height: 80vh; margin-top: var(--s5); border: var(--hair); border-radius: var(--r-control); }
 
 /* PRINT */
 

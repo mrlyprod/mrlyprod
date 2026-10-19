@@ -1,12 +1,12 @@
 import { rng } from '../../lib/rand.js';
 import { num, sheet as paper } from '../../lib/app/svg.js';
-import { roll, settle, title } from '../../lib/designs/engine.js';
+import { canon, roll, title } from '../../lib/designs/engine.js';
 
 export const DIM = 3;
 export const NUMBERS = [3, 5, 7, 9];
 export const VIEWS = [['cut', 'Middle slice'], ['pro', 'Three sides'], ['iso', 'Iso skin']];
 export const SHEETS = [['rect', 'Rectangle'], ['disc', 'Disc']];
-export const PRESETS = [[5, 5], [3, 9]];
+export const PRESETS = [{ sheet: 'rect', x: 5, y: 5 }, { sheet: 'rect', x: 3, y: 9 }, { sheet: 'disc', radius: 2 }];
 export const ORDER = ['VOID', 'FILL', 'UP', 'LEFT', 'RIGHT'];
 export const BUDGET = 32000;
 export const REPEATS = 12;
@@ -26,9 +26,25 @@ export const cropped = (value) => croppable(value) && Number(value.overhang) !==
 
 export const reroll = (math, base, seed) => roll(math, DIM, base, rng(seed));
 
+export const titled = (one) => (one.sheet === 'disc' ? `disc(${one.radius})` : `tile(${one.x},${one.y})`);
+
+export const holds = (value, one) => Object.entries(one).every(([key, v]) => value[key] === v);
+
 /* STUDY */
 
 const keyed = (...parts) => JSON.stringify(parts);
+
+const solid = (math, code, value, level) => {
+  const made = math.three.create(code, value.number, level, value.base);
+  return value.invert ? math.cell.models.anti(made) : made;
+};
+
+const laid = (math, one, value) => (value.sheet === 'disc' ? math.six.disc(one, value.radius) : math.six.tile_cell(one, value.x, value.y, cropped(value)));
+
+export function sample(math, value) {
+  const one = math.six[value.view](solid(math, canon(math, DIM, value.base, value.code), value, 1));
+  return mesh(math, math.six.framed(laid(math, one, value)), value.turn === 1);
+}
 
 export function studio(math) {
   const six = math.six;
@@ -44,19 +60,13 @@ export function studio(math) {
     const n = copies(math, value);
     const top = cap(math, value.number, n);
     const level = Math.min(value.level, top);
-    const blank = String(value.code ?? '').trim() === '';
-    const code = layer('code', keyed(value.base, value.code, blank ? value.seed : 0), () => settle(math, DIM, value.base, value.code, rng(value.seed)));
+    const code = layer('code', keyed(value.base, value.code), () => canon(math, DIM, value.base, value.code));
     const grown = keyed(code, value.number, level, value.base, value.invert);
-    const cube = layer('cube', grown, () => {
-      const made = math.three.create(code, value.number, level, value.base);
-      return value.invert ? math.cell.models.anti(made) : made;
-    });
+    const cube = layer('cube', grown, () => solid(math, code, value, level));
     const seen = keyed(grown, value.view);
     const one = layer('one', seen, () => six[value.view](cube));
-    const crop = cropped(value);
-    const disc = value.sheet === 'disc';
-    const key = keyed(seen, disc ? ['disc', value.radius] : [value.x, value.y, crop]);
-    const sheet = layer('sheet', key, () => (disc ? six.disc(one, value.radius) : six.tile_cell(one, value.x, value.y, crop)));
+    const key = keyed(seen, value.sheet === 'disc' ? ['disc', value.radius] : [value.x, value.y, cropped(value)]);
+    const sheet = layer('sheet', key, () => laid(math, one, value));
     const drawn = layer('drawn', key, () => six.framed(sheet));
     const facts = layer('facts', keyed(key, top), () => {
       const skin = six.skin(sheet);

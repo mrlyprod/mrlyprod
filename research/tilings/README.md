@@ -3,6 +3,7 @@ title: Which designs tile
 lead: Which levels of a dimension-one design tile the integers: a closed condition on the zero set of the digit transform decides T1 at every level, a horizon decides T2, the guess that the digit set must tile its residues fails at base 12, a level fails T2 first at base 18, spectral levels agree with the tiling verdict on every case the census decides, and a design whose every level tiles has a spectral limit measure at prime-power size, at `pq` digits, at four digits or fewer, and on every case of the census, while a spectral limit measure whose levels are sets needs integer orthogonal sets of every size `|F|^L`, which proves the converse at five and seven digits, and at eleven and thirteen digits at every base whose `{2, 3}`-part is below the size, with `0` in `F` and levels that are sets, and decides it on every set of its prime-size census, on every 11-set at base 60 and on every 11-set and 13-set at base 120.
 figure: research-tilings
 slug: tilings
+date: 2026-10-03
 ---
 
 # Which designs tile
@@ -10,6 +11,9 @@ slug: tilings
 Which levels of a dimension-one design tile the integers: a closed condition on the zero set of the digit transform decides T1 at every level, a horizon decides T2, the guess that the digit set must tile its residues fails at base 12, a level fails T2 first at base 18, spectral levels agree with the tiling verdict on every case the census decides, and a design whose every level tiles has a spectral limit measure at prime-power size, at `pq` digits, at four digits or fewer, and on every case of the census, while a spectral limit measure whose levels are sets needs integer orthogonal sets of every size `|F|^L`, which proves the converse at five and seven digits, and at eleven and thirteen digits at every base whose `{2, 3}`-part is below the size, with `0` in `F` and levels that are sets, and decides it on every set of its prime-size census, on every 11-set at base 60 and on every 11-set and 13-set at base 120.
 
 - [notes/tilings.md](notes/tilings.md): Which designs tile
+- [notes/tiling-levels.md](notes/tiling-levels.md): Which levels tile
+- [notes/limit-measure.md](notes/limit-measure.md): The limit measure
+- [notes/converse.md](notes/converse.md): The converse
 - [claims/level-tilings.md](claims/level-tilings.md): Level tilings
 - [papers/spectral-tiling-levels.md](papers/spectral-tiling-levels.md): Spectral Measures from Tiling Levels
 - [refs.md](refs.md): the references this topic cites
@@ -17,6 +21,7 @@ Which levels of a dimension-one design tile the integers: a closed condition on 
 - [lab/py/measure-spectra/](lab/py/measure-spectra/): Decides, for a base `b` and a digit set `F` whose every level tiles, which route makes the limit measure `mu_{b,F}` spectral
 - [figures/paper-covering-bound-witness.ts](figures/paper-covering-bound-witness.ts): paper-covering-bound-witness
 - [figures/paper-spectral-tiling-levels.ts](figures/paper-spectral-tiling-levels.ts): paper-spectral-tiling-levels
+- [figures/paper-spectral-tiling-levels.json](figures/paper-spectral-tiling-levels.json): paper-spectral-tiling-levels census
 - [figures/research-tilings.ts](figures/research-tilings.ts): research-tilings
 - [figures/research-tilings.json](figures/research-tilings.json): research-tilings census
 

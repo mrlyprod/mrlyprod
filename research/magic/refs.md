@@ -27,9 +27,3 @@
 | Van Loan and Pitsianis 1993 | Approximation with Kronecker products, in Linear Algebra for Large Scale and Real-Time Applications, NATO ASI Series 232, Springer. The nearest Kronecker product `min norm(A - B (x) C)_F` is the rank-one SVD of a rearrangement `R(A)` whose rows are the vectorised blocks, `R(B (x) C) = vec(B) vec(C)^T`, so the singular values of `R(A)` are the data's Kronecker spectrum. The chapter is paywalled: the operator and the theorem are read in the verbatim restatement of KoPA: Automated Kronecker Product Approximation, arXiv:1912.02392, which defines `R` and attributes the SVD connection to this chapter | https://doi.org/10.1007/978-94-015-8196-7_17 |
 | DLMF 5.11 | Gamma Function, Asymptotic Expansions, NIST Digital Library of Mathematical Functions, read at source: 5.11.13 gives Gamma(z+a)/Gamma(z+b) ~ z^(a-b) sum_k G_k(a,b)/z^k as z -> inf in abs(ph z) <= pi - delta, with G_1(a,b) = (1/2)(a-b)(a+b-1) in 5.11.15 | https://dlmf.nist.gov/5.11 |
 | DLMF 5.17 | Barnes' G-Function (Double Gamma Function), NIST Digital Library of Mathematical Functions, read at source: 5.17.1 G(z+1) = Gamma(z) G(z), G(1) = 1, and 5.17.5 the asymptotic expansion of Ln G(z+1) in abs(ph z) <= pi - delta | https://dlmf.nist.gov/5.17 |
-
-## REFERENCE PAGES
-
-| ref | title | url |
-|---|---|---|
-| OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |

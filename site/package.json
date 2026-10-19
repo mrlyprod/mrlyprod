@@ -17,6 +17,7 @@
     "types": "tsc -p tsconfig.json",
     "shots": "bun scripts/shots.ts",
     "film": "bun scripts/film.ts",
+    "draw": "bun scripts/draw.ts",
     "time": "bun scripts/time.ts",
     "vendor": "bun scripts/vendor.ts"
   },

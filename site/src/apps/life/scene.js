@@ -1,8 +1,8 @@
 import { tidy } from '../../lib/app/spec.js';
 import { board } from '../../lib/app/run.js';
 import { veil } from '../../lib/color.js';
-import { rng } from '../../lib/rand.js';
-import { BOARD, LIMIT, LINE, ROWS, SPANS, STARTS, destiny, dimOf, fate, hash, lattice, maskName, maskOf, population, ruleOf, sow, told } from '../../lib/life/engine.js';
+import { pick, rng } from '../../lib/rand.js';
+import { BOARD, LIMIT, LINE, LINES, ROWS, SPANS, STARTS, destiny, dimOf, fate, hash, lattice, maskName, maskOf, population, ruleOf, sow, told } from '../../lib/life/engine.js';
 import { PANE, SOUP, runs } from '../../lib/life/scene.js';
 import { wasm } from '../../lib/units/index.js';
 
@@ -10,7 +10,7 @@ const NUMBERS = [3, 5, 7, 9].map((n) => [n, String(n)]);
 
 const LEVELS = [1, 2, 3];
 
-const LINES = ['noise', 'one'];
+const START = 'glider';
 
 export const SPEC = [
   { key: 'dim', label: 'Dim', kind: 'segment', def: 2, options: [[1, '1D'], [2, '2D']], group: 'Mask', when: PANE },
@@ -20,9 +20,21 @@ export const SPEC = [
   { key: 'born', label: 'Born', kind: 'text', def: '3', group: 'Rule', when: PANE },
   { key: 'stay', label: 'Stay', kind: 'text', def: '23', group: 'Rule', when: PANE },
   { key: 'wrap', label: 'Wrap', kind: 'toggle', def: 1, group: 'Rule', when: PANE },
-  { key: 'from', label: 'Start', kind: 'pick', def: 'noise', options: (value) => (dimOf(value) === 1 ? STARTS.filter(([one]) => LINES.includes(one)) : STARTS), group: 'Board', when: PANE },
+  { key: 'from', label: 'Start', kind: 'pick', def: START, options: (value) => (dimOf(value) === 1 ? STARTS.filter(([one]) => LINES.includes(one)) : STARTS), group: 'Board', when: PANE },
   { key: 'density', label: 'Density', kind: 'slider', def: 0.3, min: 0.05, max: 0.95, step: 0.01, group: 'Board', when: PANE },
   { key: 'speed', label: 'Speed', kind: 'slider', def: 25, min: 1, max: 60, step: 1, unit: '/s', group: 'Board', when: PANE },
+];
+
+export const RULES = [
+  ['Conway', { born: '3', stay: '23' }],
+  ['HighLife', { born: '36', stay: '23' }],
+  ['Day and Night', { born: '3678', stay: '34678' }],
+  ['Seeds', { born: '2', stay: '-' }],
+  ['Life without Death', { born: '3', stay: '012345678' }],
+  ['Maze', { born: '3', stay: '12345' }],
+  ['Replicator', { born: '1357', stay: '1357' }],
+  ['2x2', { born: '36', stay: '125' }],
+  ['Diamoeba', { born: '35678', stay: '5678' }],
 ];
 
 export const PRESETS = [
@@ -41,24 +53,32 @@ export const worn = (presets, value) => presets.find(([, one]) => wears(value, o
 
 export const PAGE = {
   spec: SPEC,
+  design: { dim: 'dim', base: 2, code: 'code', dims: [2] },
   gestures: true,
   record: true,
   about: [
     "Conway's Life is one rule on the eight cells around a cell: a dead cell with three live neighbours is born, a live cell with two or three stays, and every other cell dies.",
-    'Here the neighbourhood is a design. The carpet at side 3, level 1 is the Moore ring; any other code, side and level is another life. Born and Stay count live mask cells, as digits or as a named sequence.',
+    'Here the neighbourhood is a design, picked with the design chip. The carpet at side 3, level 1 is the Moore ring; any other code, side and level is another life. Born and Stay count live mask cells, as digits or as a named sequence.',
+    'The Library holds famous patterns to seed the board, whole worlds of mask and rule, and named rules. Reroll sows a random soup.',
     'Paint cells by hand, then press Play. Run to fate replays the board for up to 512 generations and says whether it dies, freezes, loops, or is still moving.',
     'In 1D the board is one line of 320 cells, drawn top to bottom with the newest row last. Wrap joins the edges. A side-3 line at level 1 runs elementary rules, as on [Wolfram](/wolfram/); the whole family is in [the automata note](/research/automata/).',
   ],
   name: (value) => ['life', slug(worn(PRESETS, value) || `${dimOf(value)}d ${value.code} ${value.number} ${value.level} b${value.born} s${value.stay}`), SOUP(value) ? value.seed : slug(value.from)].join('-'),
   keys: [
-    { key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Pause' : 'Play'), act: 'play', button: true },
-    { key: 'n', label: 'Step', act: 'step' },
-    { key: 'f', label: 'Run to fate', act: 'fate' },
+    { key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Pause' : 'Play'), act: 'play', button: true, menu: 'Edit' },
+    { key: 'n', label: 'Step', act: 'step', menu: 'Edit' },
+    { key: 'f', label: 'Run to fate', act: 'fate', menu: 'Edit' },
     { key: ['0', 'Home'], label: 'Reset', act: 'reset' },
     { key: 'c', label: 'Clear', act: 'clear' },
   ],
   actions: { play: (scene) => scene.toggle(), step: (scene) => scene.step(), fate: (scene) => scene.doom(), reset: (scene) => scene.reset(), clear: (scene) => scene.clear() },
 };
+
+export const SAVERS = [
+  { id: 'soup', title: 'Soup', pick: (rand) => ({ dim: 2, code: '7', number: 3, level: 1, ...pick(rand, RULES.slice(0, 2))[1], wrap: 1, from: 'noise', density: Math.round((0.26 + rand() * 0.12) * 100) / 100, speed: 12 }) },
+  { id: 'crystal', title: 'Crystal', pick: () => ({ dim: 2, code: '15', number: 3, level: 1, born: '1357', stay: '02468', wrap: 0, from: 'one', speed: 10 }) },
+  { id: 'tapestry', title: 'Tapestry', pick: (rand) => ({ dim: 1, code: '1', number: 3, level: 1, born: '1', stay: rand() < 0.5 ? '02' : '1', wrap: 1, from: 'one', speed: 16 }) },
+];
 
 export const units = wasm('life', 'math');
 
@@ -83,7 +103,11 @@ const EPS = 1e-6;
 export function make(canvas, view, opts = {}) {
   const ctx = canvas.getContext('2d');
   const { life, math } = opts;
-  let value = { ...tidy(SPEC, opts), seed: opts.seed };
+  const read = (next) => {
+    const one = { ...tidy(SPEC, next), seed: next.seed };
+    return view.lock && one.from === START ? { ...one, from: 'noise' } : one;
+  };
+  let value = read(opts);
   let shape = null;
   let rule = null;
   let name = '';
@@ -315,7 +339,7 @@ export function make(canvas, view, opts = {}) {
   };
   const set = (next) => {
     const was = value;
-    value = { ...tidy(SPEC, next), seed: next.seed };
+    value = read(next);
     const moved = (...keys) => keys.some((key) => String(value[key]) !== String(was[key]));
     if (moved('dim', 'code', 'number', 'level')) mould();
     if (moved('dim', 'code', 'number', 'level', 'born', 'stay')) judge();

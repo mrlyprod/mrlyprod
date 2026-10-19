@@ -4,7 +4,7 @@ import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/app/spec.js';
 import { Knobs } from '../../lib/app/knobs.jsx';
 import { rng } from '../../lib/rand.js';
-import { SPEC, heights, layout, lid, make, name, profile, scrub, study } from './scene.js';
+import { SPEC, heights, layout, lid, make, name, near, plot, profile, scrub, shelf, study, thumb } from './scene.js';
 
 const value = (over) => ({ ...defaults(SPEC), seed: 1, base: 2, code: '126', height: '', ...over });
 
@@ -92,6 +92,18 @@ test('a new height keeps the last points on the stage until its own picture land
   } finally {
     globalThis.Image = was;
   }
+});
+
+test('the shelf lists every height of a small support and an even spread of a deep one, and a height lights the nearest', () => {
+  const [small, deep] = [profile(math, '126', 2, 5), profile(math, '126', 2, 9)];
+  expect([shelf(small).length, shelf(small)[0], shelf(small).at(-1), shelf(deep).length, shelf(deep)[0], shelf(deep).at(-1), shelf({ empty: true })]).toEqual([32, 31, 62, 48, deep.low, deep.high, []]);
+  expect([near(shelf(deep), shelf(deep)[7] + 1), near(shelf(small), 50)]).toEqual([shelf(deep)[7], 50]);
+});
+
+test('a thumb is one path with a dot a cell of its height', () => {
+  const log = [];
+  thumb(pen(log), 56, plot(math, '126', 2, 3, 10), 8, '#008cff');
+  expect([log.filter(([key]) => key === 'arc').length, log.filter(([key]) => key === 'fill').length]).toEqual([27, 1]);
 });
 
 test('tint shows only for the section, since the crate colours the points itself', () => {

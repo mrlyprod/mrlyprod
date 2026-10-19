@@ -3,6 +3,7 @@ title: Complexity
 lead: Boolean complexity of the catalog, and the Laplacian spectra of the fractals it builds.
 figure: research-complexity
 slug: complexity
+date: 2026-08-28
 ---
 
 # Complexity

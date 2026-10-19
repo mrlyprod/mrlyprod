@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Bar } from '../../lib/app/frame.jsx';
 import { Scene } from '../../lib/app/page.jsx';
 import { cut, facts, gallery } from './engine.js';
-import { Gallery } from './gallery.jsx';
+import { Pens } from './gallery.jsx';
 import { PAGE, make } from './scene.js';
 import { useUnit } from '../../lib/app/hooks.js';
 
@@ -22,7 +21,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   const live = useRef(null);
   const kinds = useMemo(() => (font ? gallery(font) : null), [font]);
   const known = useMemo(() => (kinds ? facts(kinds) : null), [kinds]);
-  const fps = useMemo(() => (font ? font.FPS() : 25), [font]);
   const made = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, font, kinds, onPlan: setPlan }), [font, kinds]);
   const ready = (handle) => {
     live.current = handle;
@@ -42,11 +40,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   return (
     <>
       {font && <Scene make={made} value={value} onReady={ready} onPointerDown={tap} />}
-      {kinds && (
-        <Bar side="left">
-          <Gallery kinds={kinds} tint={value.tint} rate={fps * value.speed} hold={value.hold} onPick={(char) => onChange(added(value, plan, char))} />
-        </Bar>
-      )}
+      {kinds && <Pens kinds={kinds} tint={value.tint} onPick={(char) => onChange(added(value, plan, char))} />}
     </>
   );
 }

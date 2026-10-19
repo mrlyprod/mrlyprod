@@ -36,11 +36,11 @@ cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo
 
 ## WITNESSES
 
-- `cobham.md:87` the three dimensions of `E`
-- `cobham.md:88` and `cobham.md:89` the pair budgets and the triple budget
-- `cobham.md:91` and `cobham.md:92` the infinitude criterion at each pair
-- `cobham.md:94` the members below `7^17`
-- `cobham.md:95` the members below `3^80000`
-- `cobham.md:96` the scan control below `10^8`
-- `cobham.md:97` the fourth dimension `log_7 4 = 0.712414` and the wider budget `0.025951`
-- `cobham.md:99` the `23` published terms rebuilt, the `1374` below `10^70`, the `216020` below `10^140` and the two effective exponents
+- `gasket-three-base-and-two-frequencies.md:24` the three dimensions of `E`
+- `gasket-three-base-and-two-frequencies.md:25` and `gasket-three-base-and-two-frequencies.md:26` the pair budgets and the triple budget
+- `gasket-three-base-and-two-frequencies.md:28` and `gasket-three-base-and-two-frequencies.md:29` the infinitude criterion at each pair
+- `gasket-three-base-and-two-frequencies.md:31` the members below `7^17`
+- `gasket-three-base-and-two-frequencies.md:32` the members below `3^80000`
+- `gasket-three-base-and-two-frequencies.md:33` the scan control below `10^8`
+- `gasket-three-base-and-two-frequencies.md:34` the fourth dimension `log_7 4 = 0.712414` and the wider budget `0.025951`
+- `gasket-three-base-and-two-frequencies.md:36` the `23` published terms rebuilt, the `1374` below `10^70`, the `216020` below `10^140` and the two effective exponents

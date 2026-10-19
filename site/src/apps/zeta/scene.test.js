@@ -4,7 +4,7 @@ import { defaults, describe, tidy } from '../../lib/app/spec.js';
 import { shown } from '../../lib/app/knobs.jsx';
 import { rng } from '../../lib/rand.js';
 import { BEAT, FLASH, FOLDING, HEAD, HOLD, PAD, REACH, index, plane, snap, study } from './engine.js';
-import { PAGE, SPEC, make } from './scene.js';
+import { PAGE, SLOW, SPEC, inked, make, sketch } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -205,14 +205,14 @@ test('the t slider reads with two decimals', () => {
   expect([shown(row, 30), shown(row, 34.45)]).toEqual(['30.00', '34.45']);
 });
 
-test('the lock folds the stairs over and over, the formula leaving the no-zero guess and coming back to it', () => {
+test('the lock folds the stairs over and over, SLOW times slower, the formula leaving the no-zero guess and coming back to it', () => {
   const lock = open({ view: 'stairs', zeros: 10 }, { lock: true });
-  const length = 11 * BEAT;
+  const length = 11 * BEAT * SLOW;
   const same = (t) => {
     const [guess, formula] = strokes(lock.at(t));
     return formula.every((v, i) => v === guess[i]);
   };
-  expect([same(0), same(length), same(length + HOLD + 10)]).toEqual([true, false, true]);
+  expect([same(0), same(length), same(length + HOLD * SLOW + 10)]).toEqual([true, false, true]);
 });
 
 test('the stage carries no words: neither view writes a label or a number on the picture', () => {
@@ -274,4 +274,21 @@ test('a canvas smaller than its padding draws every arc with a radius of zero or
       expect(arcs.every(([, x, y, r]) => Number.isFinite(x) && Number.isFinite(y) && r >= 0)).toBe(true);
     }
   }
+});
+
+test('the Enter and zero to zero rows also sit in the bar menus', () => {
+  expect(PAGE.keys.filter((row) => row.menu).map((row) => [row.act, row.menu])).toEqual([['go', 'Edit'], ['hop', 'View']]);
+});
+
+test('a library thumb strokes the walk to its zero with a ring at the origin and a dot at the head, or the staircase with its curve and steps', () => {
+  const thumb = (set) => {
+    const log = [];
+    sketch(num, set, pen(log), 112, 112, 1, inked(null, '#008cff'));
+    return log;
+  };
+  const walk = thumb({ view: 'walk', t: plan.zeros[0] });
+  expect(walk.filter(([name]) => name === 'arc')).toHaveLength(2);
+  expect(walk.filter(([name]) => name === 'lineTo')).toHaveLength(index(plan.zeros[0]));
+  const stairs = thumb({ view: 'stairs', x: 100, zeros: 10 });
+  expect(stairs.filter(([name]) => name === 'stroke')).toHaveLength(3);
 });

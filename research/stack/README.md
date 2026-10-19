@@ -3,6 +3,7 @@ title: The algebra of the stack
 lead: The algebra of the stack: stacking is Dirichlet convolution and the group knows nothing new, the exact spun stack is a Gaussian Farey whose Fourier `L^2` discrepancy obeys Franel's identity one field up and is equivalent to the Riemann hypothesis for `zeta(s) L(s, chi_-4)`, its hexagonal twin puts `L(2, chi_-3)` in a proved node constant, the layers are a dilation system whose symbol is `zeta(1 + s)` so no reweighting moves the line, and the lean is the operation outside the Dirichlet group that still lands a closed form.
 figure: research-stack
 slug: stack
+date: 2026-09-09
 ---
 
 # The algebra of the stack
@@ -10,6 +11,11 @@ slug: stack
 The algebra of the stack: stacking is Dirichlet convolution and the group knows nothing new, the exact spun stack is a Gaussian Farey whose Fourier `L^2` discrepancy obeys Franel's identity one field up and is equivalent to the Riemann hypothesis for `zeta(s) L(s, chi_-4)`, its hexagonal twin puts `L(2, chi_-3)` in a proved node constant, the layers are a dilation system whose symbol is `zeta(1 + s)` so no reweighting moves the line, and the lean is the operation outside the Dirichlet group that still lands a closed form.
 
 - [notes/stack.md](notes/stack.md): The algebra of the stack
+- [notes/stacking-and-spinning.md](notes/stacking-and-spinning.md): Stacking, selecting and spinning
+- [notes/franel-and-eisenstein.md](notes/franel-and-eisenstein.md): Franel and the Eisenstein twin
+- [notes/levels-dilations-nodes.md](notes/levels-dilations-nodes.md): Levels, dilations and nodes
+- [notes/lean-and-meter.md](notes/lean-and-meter.md): The lean and the novelty meter
+- [notes/horocycle-and-moire.md](notes/horocycle-and-moire.md): The design horocycle and the moire limit
 - [claims/design-horocycle.md](claims/design-horocycle.md): The design horocycle
 - [claims/eisenstein-stack.md](claims/eisenstein-stack.md): The Eisenstein stack
 - [claims/franel-one-field-up.md](claims/franel-one-field-up.md): Franel one field up

@@ -3,6 +3,7 @@ title: Dilated stacks
 lead: The effective receptive field of a dilated convolution stack is a digit-design representation count: Stern's diatomic sequence for three taps at base 2, with Fibonacci peaks and `2L + 1` single-path lags, and a depth limit that is absolutely continuous exactly when the block polynomial vanishes at the right roots of unity, which the two common residual blocks break at every gain but at most one.
 figure: research-dilations
 slug: dilations
+date: 2026-09-23
 ---
 
 # Dilated stacks

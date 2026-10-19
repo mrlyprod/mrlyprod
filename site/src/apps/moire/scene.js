@@ -1,7 +1,6 @@
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS } from '../../lib/color.js';
-import { rng } from '../../lib/rand.js';
-import { BEAT, COMBINES, CROPS, GRAIN, RAMPS, SIZES, TOP, climb, colorizer, crop, css, field, heat, law, matrix, odd, paint, palette, study } from '../../lib/moire/engine.js';
+import { BEAT, COMBINES, CROPS, DEEPEST, GRAIN, RAMPS, SIZES, TOP, climb, colorizer, crop, css, field, heat, law, matrix, odd, paint, palette, study } from '../../lib/moire/engine.js';
 import { fit, shell } from '../../lib/moire/sheet.js';
 
 const VIEWS = [['field', 'Field'], ['matrix', 'R-matrix']];
@@ -15,6 +14,7 @@ const cropped = (value) => stacks(value) && Boolean(value.crop);
 export const SPEC = [
   { key: 'view', label: 'View', kind: 'segment', def: 'field', options: VIEWS, group: 'Stack' },
   { key: 'limit', label: 'Scales up to', kind: 'slider', def: TOP, min: 1, max: TOP, step: 2, group: 'Stack' },
+  { key: 'level', label: 'Level', kind: 'slider', def: 1, min: 1, max: DEEPEST, step: 1, when: stacks, group: 'Stack' },
   { key: 'combine', label: 'Combine', kind: 'pick', def: 'sum', options: COMBINES, when: stacks, group: 'Stack' },
   { key: 'size', label: 'Size', kind: 'segment', def: 512, options: SIZES.map((n) => [n, String(n)]), when: stacks, group: 'Stack' },
   { key: 'scale', label: 'Carpet m', kind: 'slider', def: 9, min: 3, max: (value) => Math.max(3, odd(value.limit).at(-1)), step: 2, keep: true, when: reads, group: 'R-matrix' },
@@ -28,12 +28,13 @@ export const SPEC = [
   { key: 'anti', label: 'Anti', kind: 'toggle', def: 0, when: cropped, group: 'Crop' },
 ];
 
-export const DESIGN = { base: 2, code: '9', level: 1 };
+export const DESIGN = { base: 2, code: '9' };
 
 const named = (value) => (value.view === 'matrix' ? `moire-matrix-${value.limit}` : `moire-${value.code}-${value.limit}`);
 
 export const PAGE = {
   defaults: DESIGN,
+  design: { dim: 2, base: 'base', code: 'code' },
   spec: SPEC,
   record: true,
   gestures: true,
@@ -44,11 +45,11 @@ export const PAGE = {
     'The R-matrix view reads a law off the stack: two parity carpets at odd scales correlate to exactly zero when the scales are coprime and to a positive number when they share a factor, so a scale whose row is zero against every earlier scale is prime. Tap a cell to pick the pair.',
     'The closed form and its proof are in [the stack note](/research/stack/), and the stack that counts pi is in [the pi note](/research/pi/).',
   ],
-  keys: [{ key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Stop' : 'Play'), act: 'play', button: true }],
-  actions: { play: (scene) => scene.toggle?.(), reroll: (scene) => scene.random?.() },
+  keys: [{ key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Stop' : 'Play'), act: 'play', button: true, menu: 'Edit' }],
+  actions: { play: (scene) => scene.toggle?.() },
 };
 
-const read = (opts) => ({ ...tidy(SPEC, opts), base: opts.base, code: opts.code, level: opts.level, seed: opts.seed >>> 0 });
+const read = (opts) => ({ ...tidy(SPEC, opts), base: opts.base, code: opts.code, seed: opts.seed >>> 0 });
 
 const GAP = 0.06;
 
@@ -121,7 +122,7 @@ export function make(canvas, view, opts = {}) {
   let failed = '';
   let gone = false;
   const done = { plan: '', field: '', paint: '', law: '' };
-  const planKey = () => [value.base, value.code, value.level, value.limit, value.combine, value.seed].join(' ');
+  const planKey = () => [value.base, value.code, value.level, value.limit, value.combine].join(' ');
   const fieldKey = () => [planKey(), value.size, value.crop, value.radius, value.anti].join(' ');
   const paintKey = () => [fieldKey(), value.ramp, value.levels, value.invert, value.tint, tone].join(' ');
   const lawKey = () => [value.limit, value.scale, value.mate].join(' ');
@@ -143,7 +144,7 @@ export function make(canvas, view, opts = {}) {
   };
   const stack = () => {
     if (done.plan !== planKey()) {
-      plan = study(math, value, rng(value.seed));
+      plan = study(math, value);
       done.plan = planKey();
     }
     if (done.field !== fieldKey()) {

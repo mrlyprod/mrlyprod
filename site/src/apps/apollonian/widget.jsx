@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { text } from '../../lib/app/export.js';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
 import { rng } from '../../lib/rand.js';
-import { roll, said, step } from './engine.js';
-import { file, make } from './scene.js';
+import { ROOTS, quadruple, roll, said, step } from './engine.js';
+import { file, make, portrait } from './scene.js';
+import { useReroll } from '../../lib/app/hooks.js';
+
+const ART = 112;
 
 const at = (e) => {
   const box = e.currentTarget.getBoundingClientRect();
@@ -30,12 +36,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
   now.current = value;
   const hooks = useRef({});
   hooks.current = { onChange, onStatus };
-  const seed = useRef(value.seed);
-  useEffect(() => {
-    if (seed.current === value.seed) return;
-    seed.current = value.seed;
-    onChange?.(roll(rng(value.seed)));
-  }, [value.seed]);
+  const tick = useTheme();
+  useReroll(value.seed, (next) => hooks.current.onChange?.(roll(rng(next))));
   const tell = useCallback((facts) => hooks.current.onStatus?.(rows(facts)), []);
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onTell: tell }), [unit, tell]);
   const deeper = (by) => {
@@ -63,6 +65,22 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
   useEffect(() => onExport?.(have ? [['SVG', keep], ['JSON', dump]] : []), [have]);
   return (
     <>
+      {unit && (
+        <Library>
+          <Shelf name="Packings" grid>
+            {ROOTS.map((root) => (
+              <Item
+                key={root}
+                label={quadruple(root)}
+                sub={root === 'strip' ? 'strip' : 'bounded'}
+                on={value.root === root}
+                onPick={() => onChange?.({ root })}
+                art={<Art px={ART} paint={(ctx, w, h, dpr) => portrait(unit, root, ctx, w, h, dpr, paints(ctx.canvas, value.tint))} deps={[unit, value.tint, tick]} />}
+              />
+            ))}
+          </Shelf>
+        </Library>
+      )}
       {unit && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} />}
     </>
   );

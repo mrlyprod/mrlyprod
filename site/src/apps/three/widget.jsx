@@ -1,29 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Group } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
+import { paints } from '../../lib/color.js';
 import { rng } from '../../lib/rand.js';
 import { roll } from '../../lib/designs/engine.js';
-import { Pick, read } from '../../lib/designs/pick.jsx';
+import { read, useTheme } from '../../lib/designs/pick.jsx';
 import { DIM } from '../../lib/three/engine.js';
+import { BLOCK, POSES, block, glance } from '../../lib/three/thumbs.js';
 
-import { make, name } from './scene.js';
+import { CROPS, make, name } from './scene.js';
 import { useReroll, useThree, useUnit } from '../../lib/app/hooks.js';
 
 const WHEEL = 0.0015;
 const FRESH = 80;
-const LOOKS = [['corner', 'Corner'], ['edge', 'Edge'], ['face', 'Face']];
+const LOOKS = [['corner', 'Corner', '1'], ['edge', 'Edge', '2'], ['face', 'Face', '3']];
 const COMBINE = ['sum', 'xor'];
 
-const warn = { position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', maxWidth: '80%', textAlign: 'center', fontSize: 13, opacity: 0.85, pointerEvents: 'none' };
+const warn = { position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', maxWidth: '80%', textAlign: 'center', fontSize: 13, opacity: 0.85, pointerEvents: 'none' };
 
-export const hands = (at, onChange, math) => ({
-  random: () => {
-    const patch = { code: roll(math, DIM, read(at()).base) };
-    if (at().source === 'field') patch.combine = COMBINE[Math.floor(Math.random() * COMBINE.length)];
-    onChange(patch);
-  },
+export const hands = (at, onChange) => ({
   deeper: (by) => onChange({ level: at().level + by }),
   widen: (by) => onChange({ radius: at().radius + by }),
   toggle: () => onChange({ spin: Number(at().spin) === 1 ? 0 : 1 }),
@@ -37,6 +33,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   const now = useRef(value);
   const touch = useRef({ points: new Map(), mode: 'turn', last: [0, 0], at: 0 });
   const [info, setInfo] = useState(null);
+  const tick = useTheme();
   now.current = value;
   const tell = useCallback((next) => setInfo(next), []);
   useEffect(() => onStatus?.(info?.rows ?? []), [info]);
@@ -77,7 +74,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
         canvas.removeEventListener('contextmenu', menu);
       };
     }
-    onReady?.(handle && { ...handle, ...hands(() => now.current, onChange, math) });
+    onReady?.(handle && { ...handle, ...hands(() => now.current, onChange) });
   };
   useEffect(() => () => wheel.current?.(), []);
   const down = (e) => {
@@ -122,21 +119,25 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   const obj = () => keep(live.current?.obj?.(), 'obj');
   useEffect(() => onExport?.(math ? [['OBJ', obj]] : []), [Boolean(math)]);
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math, three, tell }), [math, three]);
-  const pick = ({ base, code }) => onChange({ base, code });
+  const tone = (canvas) => paints(canvas, value.tint);
   return (
     <>
       {math && three && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} />}
       {info?.error && <p style={warn}>{info.error}</p>}
-      <Bar side="right">
-        <Group name="Design">{math ? <Pick value={{ ...read(value), dim: DIM }} onChange={pick} math={math} dims={[DIM]} /> : <span>loading</span>}</Group>
-        <Group name="Look from">
-          {LOOKS.map(([key, label]) => (
-            <Btn key={key} onClick={() => live.current?.look?.(key)}>
-              {label}
-            </Btn>
-          ))}
-        </Group>
-      </Bar>
+      {math && (
+        <Library>
+          <Shelf name="Look from" grid>
+            {LOOKS.map(([key, label, hint]) => (
+              <Item key={key} label={label} sub={hint} onPick={() => live.current?.look?.(key)} art={<Art deps={[tick, value.tint]} paint={(ctx, side) => glance(ctx, BLOCK, POSES[key], side, tone(ctx.canvas))} />} />
+            ))}
+          </Shelf>
+          <Shelf name="Crop" grid>
+            {CROPS.map(([key, label]) => (
+              <Item key={key || 'none'} label={label} on={(value.crop || '') === key} onPick={() => onChange({ crop: key })} art={<Art deps={[tick, value.tint, key]} paint={(ctx, side) => glance(ctx, block(math, key), POSES.corner, side, tone(ctx.canvas))} />} />
+            ))}
+          </Shelf>
+        </Library>
+      )}
     </>
   );
 }

@@ -15,7 +15,7 @@ const FAVOUR = 0.75;
 const RATE = 12.5;
 export const LEAST = 3000;
 export const MOST = 10000;
-const FIT = 0.94;
+export const EDGE = 16;
 const SHOWN = 8;
 const UNIT = 10;
 export const GROUND = 0.12;
@@ -64,10 +64,12 @@ export function lay(num, lattice, px, w, h) {
   return { lattice, px, s: px, cx, cy, at: (x, y) => [cx + x * px, cy - y * px], cell: (x, y) => [Math.floor((x - cx) / px + 0.5), Math.floor((cy - y) / px + 0.5)] };
 }
 
-export function fitted(lattice, rings, w, h) {
+export function fitted(lattice, rings, w, h, pad = 0) {
   const side = 2 * rings + 1;
-  if (lattice === 'hex') return ROOT3 * FIT * Math.min(w / (ROOT3 * side), h / (3 * rings + 2));
-  return (FIT * Math.min(w, h)) / side;
+  const wide = Math.max(1, w - 2 * pad);
+  const high = Math.max(1, h - 2 * pad);
+  if (lattice === 'hex') return ROOT3 * Math.min(wide / (ROOT3 * side), high / (3 * rings + 2));
+  return Math.min(wide, high) / side;
 }
 
 /* WIND */
@@ -112,6 +114,26 @@ export function span(rings) {
 export function share(t, length, still) {
   return still ? 1 : Math.max(0, Math.min(1, t / length));
 }
+
+/* LIBRARY */
+
+export const SPIRALS = [
+  { id: 'primes', name: 'Primes', note: 'the first spiral', set: { lattice: 'square', mark: 'prime', a: 0 } },
+  { id: 'twins', name: 'Twin primes', note: 'two apart', set: { lattice: 'square', mark: 'twin', a: 0 } },
+  { id: 'free', name: 'Squarefree', note: 'no square divides', set: { lattice: 'square', mark: 'squarefree', a: 0 } },
+  { id: 'mobius', name: 'Mobius sign', note: 'minus one dim', set: { lattice: 'square', mark: 'mobius', a: 0 } },
+  { id: 'hex', name: 'Hexagons', note: 'on hexagons', set: { lattice: 'hex', mark: 'prime', a: 0 } },
+];
+
+export const POLYS = [
+  { id: 'euler', name: 'Euler diagonal', note: 'prime for its first 21 values', set: { lattice: 'square', mark: 'prime', a: 4, b: -2, c: 41 } },
+  { id: 'axis', name: 'Euler axis', note: 'prime for its first 40 values', set: { lattice: 'square', mark: 'prime', a: 1, b: 1, c: 41 } },
+  { id: 'legendre', name: 'Legendre', note: 'prime for its first 29 values', set: { lattice: 'square', mark: 'prime', a: 2, b: 0, c: 29 } },
+  { id: 'hexaxis', name: 'Hexagon axis', note: 'prime for its first 40 values', set: { lattice: 'hex', mark: 'prime', a: 1, b: 1, c: 41 } },
+  { id: 'hexdiagonal', name: 'Hexagon diagonal', note: 'prime for its first 22 values', set: { lattice: 'hex', mark: 'prime', a: 3, b: 3, c: 23 } },
+];
+
+export const holds = (value, set) => Object.entries(set).every(([key, v]) => value[key] === v);
 
 /* LINE */
 
@@ -167,9 +189,9 @@ export function quadratic(num, value) {
   return { line: value.a > 0 ? num.spiral.diagonal(title(value.lattice), value.side, value.a, value.b, value.c) : null };
 }
 
-export function study(num, value, w, h) {
+export function study(num, value, w, h, pad = 0) {
   const plan = spiral(num, value.lattice, value.side);
-  return { ...plan, geo: lay(num, value.lattice, fitted(value.lattice, plan.rings, w, h), w, h), ...toned(num, value, plan.top), ...quadratic(num, value) };
+  return { ...plan, geo: lay(num, value.lattice, fitted(value.lattice, plan.rings, w, h, pad), w, h), ...toned(num, value, plan.top), ...quadratic(num, value) };
 }
 
 export function read(num, plan, value) {

@@ -3,7 +3,7 @@ import * as math from '@mrlyprod/mrly/math';
 import { palette } from '../../lib/theme/palette.gen.js';
 import { defaults, tidy, unitOf } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { COOL, TICK } from './engine.js';
+import { COOL, PAD, TICK } from './engine.js';
 import { HOLD, PAGE, SPEC, make, tones } from './scene.js';
 import { ORBIT, START, VIEWS, detail } from './space.js';
 
@@ -66,24 +66,31 @@ const arcs = (log) => log.filter(([name]) => name === 'arc');
 
 const lines = (log) => log.filter(([name]) => name === 'lineTo');
 
+const CUBE = { dim: 3, base: 2, view: 'cube', graph: 'tunnel' };
+
 const NODES = 64;
 
 const BRANCHES = 88;
 
-test('the page opens on the demo\'s carpet: flat 495 at base 3, its core on the lattice at level 2, the cube keeping its own 23 at base 2', () => {
-  expect(tidy(SPEC, {}, { math })).toEqual({ view: 'flat', base: 3, code: '495', cbase: 2, ccode: '23', number: 3, layout: 'lattice', graph: 'core', level: 2, dots: 3, camera: 'eye', spin: 0, tint: '' });
-  expect([tidy(SPEC, { level: 9 }, { math }).level, tidy(SPEC, { level: 9, view: 'cube', graph: 'edge' }, { math }).level, tidy(SPEC, { view: 'hex', graph: 'tunnel' }).graph]).toEqual([4, 2, 'core']);
+test('the page opens on the demo\'s carpet: the plane design at base 3 with no code, its core on the lattice at level 2', () => {
+  expect(tidy(SPEC, {}, { math })).toEqual({ dim: 2, view: 'cube', base: 3, code: '', number: 3, layout: 'lattice', graph: 'core', level: 2, dots: 3, camera: 'eye', spin: 0, tint: '' });
+  expect([tidy(SPEC, { level: 9 }, { math }).level, tidy(SPEC, { level: 9, ...CUBE, graph: 'edge' }, { math }).level, tidy(SPEC, { dim: 3, view: 'hex', graph: 'tunnel' }).graph]).toEqual([4, 2, 'core']);
 });
 
-test('the view leads the spec as a visible row, so a phone gets the switch, and the level reads against its cap', () => {
+test('the view picks the cube or its hex slice for a 3D design alone, the graph is the library\'s, and the level reads against its cap', () => {
   const level = SPEC.find((row) => row.key === 'level');
-  expect([SPEC[0].key, SPEC[0].when, SPEC[0].group]).toEqual(['view', undefined, undefined]);
-  expect([unitOf(level, HOME, { math }), unitOf(level, { ...HOME, view: 'cube', graph: 'edge' }, { math })]).toEqual(['of 4', 'of 2']);
-  expect(SPEC.filter((row) => !row.group && !row.when).map((row) => row.key)).toEqual(['view', 'number', 'graph', 'level']);
+  const row = (key) => SPEC.find((one) => one.key === key);
+  expect([row('view').when({ dim: 2 }), row('view').when({ dim: 3 }), row('graph').when({}), SPEC[0].key]).toEqual([false, true, false, 'dim']);
+  expect([unitOf(level, HOME, { math }), unitOf(level, { ...HOME, ...CUBE, graph: 'edge' }, { math })]).toEqual(['of 4', 'of 2']);
+  expect(SPEC.filter((one) => !one.group && !one.when).map((one) => one.key)).toEqual(['number', 'level']);
 });
 
-test('an export is named by the design shown, its view and its graph', () => {
-  expect([PAGE.name(HOME), PAGE.name({ ...HOME, view: 'hex', graph: 'dual' })]).toEqual(['graphs-495-flat-core', 'graphs-23-hex-dual']);
+test('an export is named by the design shown, its view and its graph, the empty code the carpet', () => {
+  expect([PAGE.name(HOME, { math }), PAGE.name(HOME), PAGE.name({ ...HOME, ...CUBE, view: 'hex', graph: 'dual' }, { math })]).toEqual(['graphs-495-flat-core', 'graphs-carpet-flat-core', 'graphs-23-hex-dual']);
+});
+
+test('the page takes a design of either dimension, and the keys step the level and the graph from the View menu', () => {
+  expect([PAGE.design, PAGE.keys.map((row) => row.menu)]).toEqual([{ dim: 'dim', base: 'base', code: 'code' }, ['Edit', 'View', 'View']]);
 });
 
 test('the first draw lays every branch then every node in the role hues, a draw with nothing new is a no-op, and a resize or a theme redraws', () => {
@@ -118,7 +125,7 @@ test('the dots knob sets the radius in css pixels and the line width with it, th
   expect(Math.min(...ys) + Math.max(...ys)).toBeCloseTo(600, 6);
   expect(arcs(live.log)[0][3]).toBe(12);
   expect(live.log).toContainEqual(['lineWidth', 4]);
-  expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(600 - 2 * (32 + 12), 6);
+  expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(600 - 2 * (PAD * 2 + 12), 6);
 });
 
 test('a value change keeps the canvas: a new design restudies on the same context, a look change only redraws', () => {
@@ -128,7 +135,7 @@ test('a value change keeps the canvas: a new design restudies on the same contex
   live.scene.set({ ...HOME, dots: 5 });
   expect(live.scene.facts()).toBe(first);
   expect(arcs(live.at(10))[0][3]).toBe(10);
-  live.scene.set({ ...HOME, view: 'hex', graph: 'dual' });
+  live.scene.set({ ...HOME, ...CUBE, view: 'hex', graph: 'dual' });
   expect(live.scene.facts()).toMatchObject({ space: 'hex', graph: 'dual', nodes: 486 });
   expect(arcs(live.at(20)).length).toBe(486);
   live.scene.set({ ...HOME, code: '487', level: 3 });
@@ -139,9 +146,9 @@ test('a value change keeps the canvas: a new design restudies on the same contex
 test('a switch between the flat and the cube stage asks for a new canvas and keeps the old plan', () => {
   const live = open();
   const first = live.scene.facts();
-  expect(live.scene.set({ ...HOME, view: 'cube' })).toBe(false);
+  expect(live.scene.set({ ...HOME, ...CUBE })).toBe(false);
   expect(live.scene.facts()).toBe(first);
-  expect(live.scene.set({ ...HOME, view: 'hex' })).not.toBe(false);
+  expect(live.scene.set({ ...HOME, ...CUBE, view: 'hex' })).not.toBe(false);
 });
 
 test('a force layout relaxes from its own ticks as t runs, the same at a t in one jump or by frames, until it cools and rests', () => {
@@ -246,8 +253,6 @@ test('the svg draws the dots and lines at css size in the shades on screen, and 
   expect([facts.network.dim, facts.network.nodes.length, facts.network.branches.length]).toEqual([2, NODES, BRANCHES]);
 });
 
-const CUBE = { view: 'cube', graph: 'tunnel' };
-
 test('a cube builds one renderer that keeps its picture, two instanced meshes of the nodes and the branches in the role hues, and renders only what changed', () => {
   const live = open(CUBE, { three: true });
   expect(live.scene.facts()).toMatchObject({ space: 'cube', nodes: 329, branches: 600 });
@@ -328,7 +333,7 @@ test('the geometry of a cube coarsens as its instances multiply, so the triangle
 });
 
 test('a cube without three in hand draws nothing until it lands and keeps its facts', () => {
-  const live = open({ view: 'cube' });
+  const live = open({ dim: 3, base: 2, view: 'cube' });
   live.at(0);
   expect(live.log).toEqual([]);
   expect(live.scene.facts().nodes).toBe(400);

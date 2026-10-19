@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { wasm } from '../units/index.js';
 
 const ONE = {};
@@ -14,14 +14,31 @@ export function useStatus(onStatus, rows) {
   useEffect(() => onStatus?.(rows), [key]);
 }
 
+export const Rolls = createContext(null);
+
+export function rolls() {
+  const ears = new Set();
+  return {
+    listen: (ear) => {
+      ears.add(ear);
+      return () => ears.delete(ear);
+    },
+    tell: (seed) => {
+      for (const ear of ears) ear(seed);
+    },
+  };
+}
+
 export function useReroll(seed, roll) {
+  const told = useContext(Rolls);
   const was = useRef(seed);
   const latest = useLatest(roll);
+  useEffect(() => told?.listen((next) => latest.current(next)), [told]);
   useEffect(() => {
-    if (was.current === seed) return;
+    if (told || was.current === seed) return;
     was.current = seed;
     latest.current(seed);
-  }, [seed]);
+  }, [seed, told]);
 }
 
 export function useUnits(units, given) {

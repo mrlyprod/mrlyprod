@@ -1,7 +1,8 @@
 import { expect, test } from 'bun:test';
+import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
-import { study } from './engine.js';
-import { named, rows } from './widget.jsx';
+import { laws, study } from './engine.js';
+import { Laws, rows } from './widget.jsx';
 
 const value = { seed: 1, base: 2, code: '', level: 5, look: 'all', width: 0, cells: 1, tint: 'orange', strand: 'blue' };
 
@@ -14,8 +15,10 @@ test('the readouts lead with the design and the loops, name the law at its level
   expect(rows(null)).toEqual([]);
 });
 
-test('the named designs carry their algebraic normal form at base 2 and their word at the other bases', () => {
-  expect(named(math, 2)[0]).toEqual(['7', 'carpet · 1+xy']);
-  expect(named(math, 3)[0]).toEqual(['495', 'carpet']);
-  expect(named(math, 5)).toHaveLength(math.name.words(2, 5).length);
+test('the library holds the designs whose law counts some loops, by base, each with its count at this level, the one in use lit', () => {
+  expect(laws(math).map((one) => `${one.base}:${one.code}`)).toEqual(['2:7', '2:9', '2:11', '2:13', '2:14', '3:495']);
+  const html = renderToStaticMarkup(<Laws math={math} value={value} tick={0} onChange={() => {}} />);
+  expect([...html.matchAll(/<h3>([^<]*)<\/h3>/g)].map((hit) => hit[1])).toEqual(['Base 2', 'Base 3']);
+  expect([...html.matchAll(/class="label">([^<]*)<\/span><span class="sub">([^<]*)</g)].map((hit) => `${hit[1]}, ${hit[2]}`)).toEqual(['carpet 7, 50 loops', 'void 9, 31 loops', 'code 11, 65 loops', 'code 13, 65 loops', 'net 14, 50 loops', 'carpet 495, 4444 loops']);
+  expect(html.match(/aria-current="true"[^>]*title="([^"]*)"/)[1]).toBe('L(n) = 3^(n-1) - 2^n + 1, n &gt;= 1');
 });

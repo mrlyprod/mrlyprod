@@ -209,8 +209,9 @@ fn hunt(l: &Ladder, lo: f64, hi: f64) -> Vec<Complex> {
                     (lane..=cols)
                         .step_by(lanes)
                         .map(|i| {
-                            let column: Vec<f64> =
-                                (0..=rows).map(|j| Complex::abs(l.cofactor(at(i, j)))).collect();
+                            let column: Vec<f64> = (0..=rows)
+                                .map(|j| Complex::abs(l.cofactor(at(i, j))))
+                                .collect();
                             (i, column)
                         })
                         .collect::<Vec<_>>()

@@ -3,6 +3,7 @@ title: Windows of a design
 lead: The infinite design of a plane code as a subshift: its `k x k` windows counted exactly through the substitution, the carpet's count, conjecturally piecewise quadratic with `p(k)/k^2` of lower limit `8` and upper limit `9.6`, every code at bases 2 and 3 of growth `1`, `k` or `k^2`, of finite type only when empty, full or on the boundary, and sofic always.
 figure: research-windows
 slug: windows
+date: 2026-10-03
 ---
 
 # Windows of a design

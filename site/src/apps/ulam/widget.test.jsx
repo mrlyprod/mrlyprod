@@ -2,11 +2,10 @@ import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as num from '@mrlyprod/mrly/num';
 import { Frame } from '../../lib/app/frame.jsx';
-import { defaults } from '../../lib/app/spec.js';
-import { rng } from '../../lib/rand.js';
-import { read, shuffle, study } from './engine.js';
-import { SPEC } from './scene.js';
-import { Widget, readouts, rolled, streak } from './widget.jsx';
+import { defaults, tidy } from '../../lib/app/spec.js';
+import { POLYS, SPIRALS, holds, read, study } from './engine.js';
+import { SPEC, sketch } from './scene.js';
+import { Widget, readouts, streak } from './widget.jsx';
 
 const value = { ...defaults(SPEC), seed: 1 };
 
@@ -37,7 +36,24 @@ test('the readouts lead with the line, then the tapped cell, the first values an
   expect(readouts(facts({}, { n: 1, ring: 0, x: 0, y: 0, prime: false, factors: [] }))[2]).toEqual(['Verdict', 'one, neither prime nor composite']);
 });
 
-test('a new seed rolls the sheet and its quadratic into the knobs, and the seed the page opened on rolls nothing', () => {
-  expect([rolled(num, 7, 7), rolled(null, 8, 7)]).toEqual([null, null]);
-  expect(rolled(num, 8, 7)).toEqual(shuffle(num, rng(8)));
+test('every library entry stands for knobs the sheet accepts, a spiral with no line and a polynomial prime for its opening values', () => {
+  for (const { set } of [...SPIRALS, ...POLYS]) expect(tidy(SPEC, { ...value, ...set })).toMatchObject(set);
+  expect(SPIRALS.every(({ set }) => set.a === 0)).toBe(true);
+  for (const { set, note } of POLYS) {
+    const line = read(num, study(num, { ...value, ...set }, 800, 600), { ...value, ...set }).line;
+    expect(note).toBe(`prime for its first ${line.streak} values`);
+  }
+  expect([holds(value, POLYS[0].set), holds(value, SPIRALS[0].set)]).toEqual([true, false]);
+});
+
+test('a library thumb lays a cell for every number and the line over them, a spiral without a line none', () => {
+  const cells = (set) => {
+    let n = 0;
+    const pen = new Proxy({}, { get: (_, key) => () => key === 'rect' && n++, set: () => true });
+    sketch(num, set, pen, 112, 112, 1, { paper: '#000000', accent: '#ffd100' });
+    return n;
+  };
+  const line = POLYS[0].set;
+  expect(cells(SPIRALS[0].set)).toBe(53 * 53);
+  expect(cells(line)).toBe(53 * 53 + study(num, tidy(SPEC, { ...line, side: 53 }), 112, 112).line.values.length);
 });

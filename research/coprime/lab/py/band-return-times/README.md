@@ -41,4 +41,4 @@
 
 ## WITNESSES
 
-- coprime.md, THE WINDOW AT DIMENSION ONE: the lift half as a union count over irreducible submasks, and the return count of the critical band automaton, the block ladder at every depth, the block rate `lam_b` as an exact algebraic number, the return-time support and the depth reading of the deep tail.
+- the-window-occupancy-and-the-band.md, THE WINDOW AT DIMENSION ONE: the lift half as a union count over irreducible submasks, and the return count of the critical band automaton, the block ladder at every depth, the block rate `lam_b` as an exact algebraic number, the return-time support and the depth reading of the deep tail.

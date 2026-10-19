@@ -3,6 +3,7 @@ title: Structure against noise
 lead: Self-similar designs raced against matched random cell sets on components and boundary.
 figure: research-connectivity
 slug: connectivity
+date: 2026-08-28
 ---
 
 # Structure against noise
@@ -10,6 +11,8 @@ slug: connectivity
 Self-similar designs raced against matched random cell sets on components and boundary.
 
 - [notes/connectivity.md](notes/connectivity.md): Structure against noise
+- [notes/order-in-the-mixed-product.md](notes/order-in-the-mixed-product.md): Order in the mixed product
+- [notes/word-order-closure-and-spectral-radius.md](notes/word-order-closure-and-spectral-radius.md): Word order, closed and bounded
 - [claims/acoustic-barrier.md](claims/acoustic-barrier.md): Acoustic barrier
 - [claims/cocycle-joint-spectral-radius.md](claims/cocycle-joint-spectral-radius.md): The cocycle's joint spectral radius
 - [claims/component-counts.md](claims/component-counts.md): Component counts

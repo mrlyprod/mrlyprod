@@ -3,19 +3,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
 import { Frame } from '../../lib/app/frame.jsx';
 import { defaults } from '../../lib/app/spec.js';
-import { Accordion } from '../../lib/app/controls.jsx';
-import { Knobs, useAccordion } from '../../lib/app/knobs.jsx';
 import { studio } from './engine.js';
 import { SPEC } from './scene.js';
-import { Pane, Presets, Widget, label, rows } from './widget.jsx';
+import { Sheets, Widget, label, rows } from './widget.jsx';
 
 const VALUE = { ...defaults(SPEC), seed: 1, base: 2, code: '23' };
-
-function Shared({ children }) {
-  return <Accordion.Provider value={useAccordion('', SPEC)}>{children}</Accordion.Provider>;
-}
-
-const order = (html) => [...html.matchAll(/<(?:section|details)([^>]*)>(?:<summary>)?(?:<h3>([^<]*)<\/h3>)?/g)].filter(([, attrs]) => attrs.includes('order:')).map(([, attrs, name]) => [Number(attrs.match(/order:(\d+)/)[1]), name ?? '']).sort(([a], [b]) => a - b).map(([, name]) => name);
 
 test('the picture is labelled for a reader', () => {
   const page = (units) => renderToStaticMarkup(<Frame label="Six"><Widget value={VALUE} onChange={() => {}} units={units} /></Frame>);
@@ -30,17 +22,12 @@ test('the readouts are the demo stats of the sheet', () => {
   expect(rows(null)).toEqual([]);
 });
 
-test('the presets are the demo sheets as buttons, the one in use lit, and a tap writes a rectangle', () => {
-  const html = renderToStaticMarkup(<Presets value={VALUE} onChange={() => {}} />);
-  expect(html.match(/<button /g)).toHaveLength(2);
-  expect(html).toContain('class="on">tile(5,5)<');
-  expect(renderToStaticMarkup(<Presets value={{ ...VALUE, sheet: 'disc' }} onChange={() => {}} />)).not.toContain('class="on"');
+test('the library holds the sheets with their copies, the one in use lit, and a pick writes the whole sheet', () => {
+  const html = renderToStaticMarkup(<Sheets math={math} value={VALUE} tick={0} onChange={() => {}} />);
+  expect([...html.matchAll(/class="label">([^<]*)<\/span><span class="sub">([^<]*)</g)].map((hit) => `${hit[1]}, ${hit[2]}`)).toEqual(['tile(5,5), 25 copies', 'tile(3,9), 27 copies', 'disc(2), 19 copies']);
+  expect(html.match(/aria-current="true"/g)).toHaveLength(1);
+  expect(renderToStaticMarkup(<Sheets math={math} value={{ ...VALUE, sheet: 'disc' }} tick={0} onChange={() => {}} />)).toContain('aria-current="true" class="on" role="listitem"><canvas width="56" height="56" aria-hidden="true"></canvas><span class="label">disc(2)');
   const wrote = [];
-  Presets({ value: VALUE, onChange: (patch) => wrote.push(patch) }).props.children[1].props.onClick();
+  Sheets({ math, value: VALUE, tick: 0, onChange: (patch) => wrote.push(patch) }).props.children[1].props.onPick();
   expect(wrote).toEqual([{ sheet: 'rect', x: 3, y: 9 }]);
-});
-
-test('the pane reads the view, the design, the sheet and its presets, then the tile and the look', () => {
-  const html = renderToStaticMarkup(<Shared><Pane value={VALUE} onChange={() => {}} /><Knobs spec={SPEC} value={VALUE} onChange={() => {}} /></Shared>);
-  expect([order(html), html.includes('loading')]).toEqual([['', 'Design', 'Sheet', 'Presets', 'Tile', 'Look'], true]);
 });

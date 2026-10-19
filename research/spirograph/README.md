@@ -3,6 +3,7 @@ title: The spirograph
 lead: The roulette a design draws: the coincidence law that counts its distinct curves, the node count `2ab C(k,2) + k a(b-1)` inside the window `min(1, A)` with the plane cut into `nodes + 2` regions, the exact crossing staircase above the loop threshold whose thresholds are algebraic numbers obeying a reciprocity, the alignment reaches where four of the carpet's curves run through one point, and the walls, whose cover no closed form tried survives.
 figure: research-spirograph
 slug: spirograph
+date: 2026-09-10
 ---
 
 # The spirograph

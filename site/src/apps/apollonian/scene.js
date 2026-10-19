@@ -1,13 +1,13 @@
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS, mix, paints, rgb, veil } from '../../lib/color.js';
-import { rng } from '../../lib/rand.js';
+import { pick, rng } from '../../lib/rand.js';
 import { sheet } from '../../lib/app/svg.js';
-import { CAPS, HOLD, INKS, LEAST, LOOKS, PAD, ROOTS, SIX, STRIDE, clock, count, glyph, hit, layout, named, nib, reach, roll, shade, study } from './engine.js';
+import { CAPS, GLANCE, HOLD, INKS, LEAST, LOOKS, PAD, ROOTS, SIX, STRIDE, clock, count, glyph, hit, layout, named, nib, reach, roll, shade, study } from './engine.js';
 import { circles, clip, labels, rules } from './shapes.js';
 import { wasm } from '../../lib/units/index.js';
 
 export const SPEC = [
-  { key: 'root', label: 'Root quadruple', kind: 'pick', def: 'strip', options: ROOTS.map((name) => [name, named(name)]), group: 'Packing' },
+  { key: 'root', label: 'Root quadruple', kind: 'pick', def: 'strip', options: ROOTS.map((name) => [name, named(name)]), when: () => false },
   { key: 'cap', label: 'Curvature cap T', kind: 'pick', def: 2048, options: CAPS.map((cap) => [cap, String(cap)]), group: 'Packing' },
   { key: 'ink', label: 'Ink', kind: 'pick', def: 'size', options: INKS, group: 'Look' },
   { key: 'look', label: 'Discs', kind: 'segment', def: 'wash', options: LOOKS, group: 'Look' },
@@ -31,11 +31,17 @@ export const PAGE = {
   units,
   name: file,
   about: ABOUT,
-  keys: [{ key: ['ArrowUp', 'ArrowDown'], label: 'Cap T', act: 'cap' }],
+  keys: [{ key: ['ArrowUp', 'ArrowDown'], label: 'Cap T', act: 'cap', menu: 'View' }],
   actions: {
     cap: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
   },
 };
+
+export const SAVERS = [
+  { id: 'gasket', title: 'Gasket', pick: (rand) => ({ root: pick(rand, ROOTS.slice(1)), cap: pick(rand, [1024, 2048, 4096]), ink: 'shade', look: pick(rand, ['solid', 'wash']), labels: 0 }) },
+  { id: 'ford', title: 'Ford circles', pick: (rand) => ({ root: 'strip', cap: pick(rand, [1024, 2048, 4096]), ink: 'ford', look: pick(rand, ['wash', 'rings']), labels: 0 }) },
+  { id: 'curvatures', title: 'Curvatures', pick: (rand) => ({ root: pick(rand, ROOTS), cap: pick(rand, [512, 1024]), ink: pick(rand, ['one', 'shade']), look: 'rings', labels: 1 }) },
+];
 
 export const FACE = 'Noto Sans Mono';
 
@@ -46,6 +52,8 @@ const EDGE = 1.5;
 const HULL = 1.3;
 const HALO = [4, 2];
 const NIBS = 16;
+const SOFT = 4;
+export const SLOW = 2;
 
 const font = (size) => `${size}px "${FACE}", ui-monospace, monospace`;
 
@@ -53,6 +61,44 @@ export const fg = (paper) => {
   const [r, g, b] = rgb(paper);
   return 0.299 * r + 0.587 * g + 0.114 * b < 128 ? '#ffffff' : '#000000';
 };
+
+/* THUMB */
+
+export function portrait(num, root, ctx, w, h, dpr, look) {
+  const a = num.apollonian;
+  const packing = a.grow(root, GLANCE);
+  const data = a.flat(root, GLANCE);
+  const frame = Array.from(a.frame(packing));
+  const roots = packing.root.filter((c) => c.k > 0).length;
+  const hull = packing.root.find((c) => c.k < 0);
+  const box = layout(frame, w, h, SOFT * dpr);
+  const [x0, y0, x1, y1] = frame;
+  const hues = SIX.map((hue) => paints(ctx.canvas, hue).accent);
+  const ink = fg(look.paper);
+  ctx.lineWidth = dpr;
+  if (packing.strip) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(box.ox + x0 * box.k, box.oy - y1 * box.k, (x1 - x0) * box.k, (y1 - y0) * box.k);
+    ctx.clip();
+  }
+  for (let i = 0; i < data.length / STRIDE; i++) {
+    const color = i < roots ? ink : hues[Math.floor(Math.log2(data[i * STRIDE + 3])) % SIX.length];
+    ctx.beginPath();
+    ctx.arc(box.ox + data[i * STRIDE] * box.k, box.oy - data[i * STRIDE + 1] * box.k, data[i * STRIDE + 2] * box.k, 0, TAU);
+    ctx.fillStyle = veil(color, WASH);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.stroke();
+  }
+  if (packing.strip) ctx.restore();
+  if (hull) {
+    ctx.beginPath();
+    ctx.arc(box.ox + (hull.x / hull.k || 0) * box.k, box.oy - (hull.y / hull.k || 0) * box.k, (-1 / hull.k) * box.k, 0, TAU);
+    ctx.strokeStyle = ink;
+    ctx.stroke();
+  }
+}
 
 /* SCENE */
 
@@ -206,7 +252,7 @@ export function make(canvas, view, opts = {}) {
     ctx.stroke();
   };
   const reached = () => {
-    const { loop, share } = clock(view.t, plan.span, HOLD, whole || view.still);
+    const { loop, share } = clock(view.t / SLOW, plan.span, HOLD, whole || view.still);
     return { loop, to: count(plan.data, plan.roots, plan.total, reach(plan.k0, value.cap, share)) };
   };
   const draw = () => {

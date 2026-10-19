@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../rand.js';
-import { CUT, FIELD, HEX, LEAD, ORDERS, OUT, PRESETS, SIDE, STEPS, WHEEL, cap, cells, degrees, disc, drawn, key, layout, leading, pace, paint, peak, petals, rings, rosette, seen, shares, source, spun, step, stops, study, title, turn } from './engine.js';
-import { SOURCE } from './scene.js';
+import { CUT, FIELD, HEX, LEAD, ORDERS, OUT, PRESETS, SIDE, STEPS, WHEEL, cap, cells, degrees, disc, drawn, field, key, layout, leading, pace, paint, peak, petals, rings, rosette, seen, shares, sketch, source, spun, step, stops, study, title, turn } from './engine.js';
+import { PAD, SOURCE } from './scene.js';
 import { read } from './source.jsx';
 
 const value = (over) => ({ ...read({}), seed: 1, ...over });
@@ -14,39 +14,39 @@ test('the level caps keep the flat raster under its budget and the slice under i
 });
 
 test('the source opens on the carpet 495 of 3 at level 4, the demo still', () => {
-  const plan = study(math, value({}), rng(1));
+  const plan = study(math, value({}));
   expect([plan.kind, plan.code, plan.name, plan.side, plan.fills, plan.order, title(plan)]).toEqual(['flat', '495', 'carpet', 81, 4096, 4, 'carpet 495']);
 });
 
 test('the presets are the moire unit names, and a moire source is its field at its side with no fills', () => {
   expect(math.moire.all(1).map((one) => one.name)).toEqual(PRESETS);
-  const made = source(math, value({ source: 'moire', preset: 'weave', limit: 9 }), rng(1));
+  const made = source(math, value({ source: 'moire', preset: 'weave', limit: 9 }));
   expect([made.kind, made.name, made.side, made.data.length, made.fills, made.binary]).toEqual(['moire', 'weave', FIELD, FIELD * FIELD, null, false]);
 });
 
 test('a hex slice is the cut of the cube design rastered on its square, its fills the cut triangles', () => {
-  const made = source(math, value({ source: 'slice', scode: '23', tile: 3, slevel: 2 }), rng(1));
+  const made = source(math, value({ dim: 3, base: 2, code: '23', tile: 3, slevel: 2 }));
   expect([made.kind, made.code, made.name, made.side, made.data.length, made.fills]).toEqual(['slice', '23', 'carpet', HEX, HEX * HEX, 306]);
-  expect(source(math, value({ source: 'slice', scode: '23', tile: 5, slevel: 9 }), rng(1)).fills).toBe(math.six.fills(math.six.cut_design('23', 5, 2, 2)));
+  expect(source(math, value({ dim: 3, base: 2, code: '23', tile: 5, slevel: 9 })).fills).toBe(math.six.fills(math.six.cut_design('23', 5, 2, 2)));
 });
 
-test('a study is kept for its source keys, and the seed joins the key only where a junk code rolls from it', () => {
-  const first = study(math, value({ level: 2 }), rng(1));
-  expect(study(math, value({ level: 2, seed: 9 }), rng(9))).toBe(first);
-  expect(study(math, value({ level: 3 }), rng(1))).not.toBe(first);
-  expect(key(value({ code: 'x', seed: 3 }))).not.toBe(key(value({ code: 'x', seed: 4 })));
-  expect(key(value({ source: 'moire', seed: 3 }))).toBe(key(value({ source: 'moire', seed: 4 })));
+test('a study is kept for its source keys alone, and an empty or junk code is the home design, never a roll', () => {
+  const first = study(math, value({ level: 2 }));
+  expect(study(math, value({ level: 2, seed: 9 }))).toBe(first);
+  expect(study(math, value({ level: 3 }))).not.toBe(first);
+  expect(key(value({ seed: 3 }))).toBe(key(value({ seed: 4 })));
+  expect([source(math, value({ code: '' })).code, source(math, value({ code: 'x' })).code, source(math, value({ dim: 3, base: 2, code: '' })).code]).toEqual(['495', '495', '23']);
 });
 
 test('a roll draws a new design for the source in hand', () => {
   expect(Object.keys(drawn(math, value({}), rng(2)))).toEqual(['code']);
-  expect(Object.keys(drawn(math, value({ source: 'slice' }), rng(2)))).toEqual(['scode']);
+  expect(Number(drawn(math, value({ dim: 3, base: 2 }), rng(2)).code)).toBeLessThan(256);
   const moire = drawn(math, value({ source: 'moire' }), rng(2));
   expect([PRESETS.includes(moire.preset), moire.limit % 2, read({ ...value({ source: 'moire' }), ...moire }).limit]).toEqual([true, 1, moire.limit]);
 });
 
 test('the carpet facts: rings of the mass of the fills, the dark disc, the edge and the leading orders', () => {
-  const plan = study(math, value({ level: 2 }), rng(1));
+  const plan = study(math, value({ level: 2 }));
   expect([plan.side, plan.fills, plan.profile.length, plan.power.length, plan.peak]).toEqual([9, 64, STEPS, ORDERS + 1, 1]);
   expect(Math.abs(plan.mass - plan.fills)).toBeLessThan(0.5);
   expect(plan.reach).toBeCloseTo(9 / Math.SQRT2, 9);
@@ -56,7 +56,7 @@ test('the carpet facts: rings of the mass of the fills, the dark disc, the edge 
 });
 
 test('a full turn shares the copies over one turn and shows lcm petals; a partial orbit shows none', () => {
-  const plan = study(math, value({ level: 2 }), rng(1));
+  const plan = study(math, value({ level: 2 }));
   const whole = { copies: 6, full: 1, step: 10 };
   const part = { copies: 6, full: 0, step: 45 };
   expect([turn(whole), degrees(whole), turn(part), degrees(part)]).toEqual([1 / 6, 60, 0.125, 45]);
@@ -64,7 +64,7 @@ test('a full turn shares the copies over one turn and shows lcm petals; a partia
 });
 
 test('the rosette is kept per plan and stack, its step in turns, its top the peak of the stack', () => {
-  const plan = study(math, value({ level: 2 }), rng(1));
+  const plan = study(math, value({ level: 2 }));
   const stack = { copies: 4, full: 1, step: 60, blend: 'mean', samples: 2 };
   const mean = rosette(math, plan, stack);
   expect([mean.values.length, mean.side, mean.top]).toEqual([OUT * OUT, OUT, 1]);
@@ -73,8 +73,16 @@ test('the rosette is kept per plan and stack, its step in turns, its top the pea
   expect(rosette(math, plan, { ...stack, blend: 'sum' }).top).toBeGreaterThan(1);
 });
 
+test('a thumb is the same stack at any side, and a moire field is the preset at the side asked', () => {
+  const plan = study(math, value({ level: 2 }));
+  const stack = { copies: 6, full: 1, step: 60, blend: 'mean', samples: 2 };
+  const small = sketch(math, plan, stack, 40);
+  expect([small.values.length, small.side, small.top]).toEqual([1600, 40, 1]);
+  expect(field(math, 'weave', 9, 40)).toHaveLength(1600);
+});
+
 test('the wheel raster is kept per plan and painted to the profile peak', () => {
-  const dot = study(math, value({ code: '1', level: 2 }), rng(1));
+  const dot = study(math, value({ code: '1', level: 2 }));
   const bull = rings(math, dot);
   expect([bull.values.length, bull.side, bull.top]).toEqual([WHEEL * WHEEL, WHEEL, dot.peak]);
   expect(rings(math, dot)).toBe(bull);
@@ -111,9 +119,9 @@ test('what the eye sees is the step reduced by the rotation order, eased over fr
 });
 
 test('the stage is one disc on the whole stage at any aspect, phone included', () => {
-  expect(layout(800, 600, 32)).toEqual({ x: 400, y: 300, r: 268 });
-  expect(layout(780, 1688, 32)).toEqual({ x: 390, y: 844, r: 358 });
-  expect(layout(10, 10, 32).r).toBe(1);
+  expect(layout(800, 600, PAD * 2)).toEqual({ x: 400, y: 300, r: 300 - PAD * 2 });
+  expect(layout(780, 1688, PAD * 2)).toEqual({ x: 390, y: 844, r: 390 - PAD * 2 });
+  expect(layout(10, 10, PAD * 2).r).toBe(1);
 });
 
 test('every source row tidies to its default', () => {

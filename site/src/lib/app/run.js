@@ -1,4 +1,5 @@
 import { paints } from '../color.js';
+import { fed } from '../glass/feed.js';
 import { rng } from '../rand.js';
 
 /* BOARD */
@@ -30,7 +31,7 @@ export function run(canvas, make, opts = {}, how = {}) {
   let lent = false;
   let fall = null;
   let owed = 0;
-  const view = { rand: rng(opts.seed), look: () => skin, still, lock: Boolean(how.lock), w: 1, h: 1, dpr: 1, t: 0, fixed: false };
+  const view = { rand: rng(opts.seed), look: () => skin, still, lock: Boolean(how.lock), w: 1, h: 1, dpr: 1, t: 0, fixed: false, drew: () => fed(canvas) };
   const size = () => {
     const shot = held?.frame;
     view.fixed = Boolean(shot) && !held.dpr;
@@ -47,6 +48,10 @@ export function run(canvas, make, opts = {}, how = {}) {
   };
   size();
   const saver = make(canvas, view, opts);
+  const draw = () => {
+    saver.draw();
+    fed(canvas);
+  };
   if (saver.still) {
     still = true;
     view.still = true;
@@ -63,7 +68,7 @@ export function run(canvas, make, opts = {}, how = {}) {
     if (debt < step) return;
     debt -= step;
     view.t += step;
-    saver.draw();
+    draw();
     if (debt > DEBT * step) {
       late += Math.floor(debt / step);
       debt = 0;
@@ -85,7 +90,7 @@ export function run(canvas, make, opts = {}, how = {}) {
     else {
       if (last) view.t += Math.min(now - last, LAG) * r;
       last = now;
-      saver.draw();
+      draw();
       after();
     }
     if (paused) return halt();
@@ -96,7 +101,7 @@ export function run(canvas, make, opts = {}, how = {}) {
     if (owed >= 1) {
       owed -= 1;
       view.t += saver.every;
-      saver.draw();
+      draw();
       after();
     }
     if (paused) halt();
@@ -123,12 +128,12 @@ export function run(canvas, make, opts = {}, how = {}) {
   const paint = () => {
     skin = paints(canvas, opts.tint);
     saver.theme?.();
-    if (still || paused) saver.draw();
+    if (still || paused) draw();
   };
   const grow = () => {
     if (held?.frame || !size()) return;
     saver.size?.();
-    if (still || paused) saver.draw();
+    if (still || paused) draw();
   };
   const spy = ([entry]) => {
     seen = entry.isIntersecting;
@@ -145,7 +150,7 @@ export function run(canvas, make, opts = {}, how = {}) {
     shade?.addEventListener('change', paint);
     window.addEventListener('theme', paint);
     document.addEventListener('visibilitychange', watch);
-    if (still || saver.every) saver.draw();
+    if (still || saver.every) draw();
     if (!still) watch();
   };
   if (saver.font && document.fonts) document.fonts.load(`1em ${JSON.stringify(saver.font)}`).then(start, start);
@@ -190,7 +195,7 @@ export function run(canvas, make, opts = {}, how = {}) {
     debt = 0;
     last = 0;
     if (size()) saver.size?.();
-    if (still || paused) saver.draw();
+    if (still || paused) draw();
   };
   stop.set = (next) => {
     if (gone || !saver.set) return false;
@@ -198,7 +203,7 @@ export function run(canvas, make, opts = {}, how = {}) {
     opts = next;
     skin = paints(canvas, opts.tint);
     if (saver.set(next) === false) return false;
-    if (still || paused) saver.draw();
+    if (still || paused) draw();
     return true;
   };
   Object.defineProperty(stop, 'late', { get: () => late });

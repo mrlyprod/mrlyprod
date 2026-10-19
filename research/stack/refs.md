@@ -4,8 +4,8 @@
 
 | ref | title | url |
 |---|---|---|
-| A019554 | Smallest number whose square is divisible by n; multiplicative with `a(p^e) = p^ceiling(e/2)`, Dirichlet series `zeta(2s-1) zeta(s-1)/zeta(2s-2)` on the record; the period of the quadratic lean of the [stack](notes/stack.md) is `lcm(b, a(d))` | https://oeis.org/A019554 |
-| A000188 | Number of solutions to `x^2 = 0 mod n`, also the square root of the largest square dividing `n`; first terms `1, 1, 1, 2, 1, 1, 1, 2, 3, 1, 1, 2`; the quadratic lean on the [stack](notes/stack.md) has `d* = d/a(d)` for the least `k` with `d` dividing `k^2` | https://oeis.org/A000188 |
+| A019554 | Smallest number whose square is divisible by n; multiplicative with `a(p^e) = p^ceiling(e/2)`, Dirichlet series `zeta(2s-1) zeta(s-1)/zeta(2s-2)` on the record; the period of the quadratic lean of the [stack](notes/lean-and-meter.md) is `lcm(b, a(d))` | https://oeis.org/A019554 |
+| A000188 | Number of solutions to `x^2 = 0 mod n`, also the square root of the largest square dividing `n`; first terms `1, 1, 1, 2, 1, 1, 1, 2, 3, 1, 1, 2`; the quadratic lean on the [stack](notes/lean-and-meter.md) has `d* = d/a(d)` for the least `k` with `d` dividing `k^2` | https://oeis.org/A000188 |
 
 ## PAPERS AND BOOKS
 

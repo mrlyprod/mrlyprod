@@ -1,6 +1,6 @@
 # design-averages
 
-- Averages `abs(M_S(x))^2`, `M_S(x) = sum_(n <= x, n in S) mu(n)`, over the three flat families of [the Franel note](../../../notes/franel.md)'s section The average over designs: the translates of the level set mod `base^level`, the digit shifts, and the digit subsets.
+- Averages `abs(M_S(x))^2`, `M_S(x) = sum_(n <= x, n in S) mu(n)`, over the three flat families of [the Franel note](../../../notes/strict-set-and-average.md)'s section The average over designs: the translates of the level set mod `base^level`, the digit shifts, and the digit subsets.
 - Computes each average three ways: member by member, through the pair form `sum mu(n) mu(m) P(n, m)`, and through the Fourier form, exactly in `Z[e(1/3)]` for the digit families at base 3 and by FFT for the translates.
 
 ## METHOD

@@ -25,7 +25,8 @@ export function tones(view) {
   const { accent, paper } = view.look();
   const dpr = view.dpr;
   const px = Math.round(13 * dpr);
-  return { accent, paper, dim: blend(accent, paper, 0.5), hair: veil(accent, 0.14), px, dpr };
+  const edge = { x: Math.round(16 * dpr), top: Math.round(16 * dpr), bottom: Math.round(16 * dpr) };
+  return { accent, paper, dim: blend(accent, paper, 0.5), hair: veil(accent, 0.14), px, dpr, edge };
 }
 
 export const font = (tones, k = 1, weight = '') => `${weight ? `${weight} ` : ''}${Math.round(tones.px * k)}px "${FACE}", ui-monospace, monospace`;

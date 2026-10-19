@@ -27,13 +27,13 @@ uv run python research/integers/lab/py/field-ladder/ladder.py norm ladder sign f
 
 ## WITNESSES
 
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the norm-form law, the lift on the half of designs with `s_dim = 0`, and the linear-factor law: `norm`.
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the ladder by degree at `dim 2..6`: `ladder`.
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the oriented-design table at `dim 2..6` with the quadratic split by field sign, `6518` imaginary, `105` real, `261` mixed of `6884` at `dim 4`: `ladder`.
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the field-by-field tables, the pure law of the first `dim` at `dim` at most 6, the `43` quaddisc checks, the monotone designs column, the fields no pure signature carries: `sign`.
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the `-87` witness at `dim 7`, the family `-(2 dim (dim - 1) + 3)`, the root bound `c <= 14, 27, 45, 66, 92, 122, 156, 194`, the full quadratic census at `dim 7` (`28 + 14` fields over `211529` signatures), the cut at `dim 8..10`, the fields outside the pure layer and their pure `dim`, the `b = dim + 1` mechanism behind `29` and `33`: `beyond`.
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the Polya exponents and the upper bounds `dim 9, 10, 9, 11` for `37`, `316`, `1125`, `14641` and `dim 7` for `-87`: `polya`.
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the quadratic layer, the imaginary run and its first gaps `7, 15, 31, 43, 67`, the real run and the two extras `29, 33` at `dim 6`: `fields`.
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the field-discriminant runs by degree and signature, the Hunter bounds `B` and the field-level merge behind `B(2,3) = 7`: `fields` and `hunter`.
-- [integers](../../../notes/integers.md), THE FIELD LADDER - the fill and void table `17, 4, 67, 40` at `dim 3` and `413, 91, 4994, 27270` at `dim 4`: `swap`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the norm-form law, the lift on the half of designs with `s_dim = 0`, and the linear-factor law: `norm`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the ladder by degree at `dim 2..6`: `ladder`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the oriented-design table at `dim 2..6` with the quadratic split by field sign, `6518` imaginary, `105` real, `261` mixed of `6884` at `dim 4`: `ladder`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the field-by-field tables, the pure law of the first `dim` at `dim` at most 6, the `43` quaddisc checks, the monotone designs column, the fields no pure signature carries: `sign`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the `-87` witness at `dim 7`, the family `-(2 dim (dim - 1) + 3)`, the root bound `c <= 14, 27, 45, 66, 92, 122, 156, 194`, the full quadratic census at `dim 7` (`28 + 14` fields over `211529` signatures), the cut at `dim 8..10`, the fields outside the pure layer and their pure `dim`, the `b = dim + 1` mechanism behind `29` and `33`: `beyond`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the Polya exponents and the upper bounds `dim 9, 10, 9, 11` for `37`, `316`, `1125`, `14641` and `dim 7` for `-87`: `polya`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the quadratic layer, the imaginary run and its first gaps `7, 15, 31, 43, 67`, the real run and the two extras `29, 33` at `dim 6`: `fields`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the field-discriminant runs by degree and signature, the Hunter bounds `B` and the field-level merge behind `B(2,3) = 7`: `fields` and `hunter`.
+- [integers](../../../notes/field-ladder.md), THE FIELD LADDER - the fill and void table `17, 4, 67, 40` at `dim 3` and `413, 91, 4994, 27270` at `dim 4`: `swap`.
 - [sequences](../../../../shared/sequences.md), THE ODD-SIDE FILLS - the divisor tribe is the all-rational floor of the ladder: `norm` and `ladder`.

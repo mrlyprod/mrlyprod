@@ -16,19 +16,19 @@
 
 ## WITNESSES
 
-- dimensions.md:14-15 and dimensions.md:302 name two scratch passes; this study is the one pass that replaces both.
-- dimensions.md:47-51 all 81 poles at `m = -40..40` kill the denominator to `5e-14`, minimum `|D(s)| = 0.500000` for the Cantor design, `D(1) = 1 - fill/base` for all four.
-- dimensions.md:62-65 `dimension` 0.630930, 0.682606, 0.511916, 0.661642 and `omega` 5.719202, 3.903963, 2.320188, 2.320188.
-- dimensions.md:74-76 every periodogram peak within 1% of `2*pi/ln(base)`.
-- dimensions.md:87-92 folding 0.192, 0.030, 0.016; 0.018, 0.509, 0.034; 0.007, 0.022, 0.667; 0.009, 0.030, 0.534; 0.082, 0.047, 0.038; 0.007, 0.012, 0.115.
-- dimensions.md:106-113 the alternation equals base 15 `{0,4,10,14}` and the 256 intervals are identical.
-- dimensions.md:158-164 `dimension = 0.518370`, 21 roots and winding number 21, real parts `-0.699926` to `0.518370`, offsets 0.43, 0.17, 0.38.
-- dimensions.md:181-184 minimum `2.494975716` at `t = 0.584963`, maximum `2.583040469`, swing 3.53%, measured tube within `4.9e-9` at the minimum.
-- dimensions.md:186-191 swings flat from `u = 15` to `u = 60` (`eps = 8.8e-27`), periodicity at the own base to `1e-9` or better, the two-ratio swing decaying `3.79%` to `0.42%`.
+- dimensions.md (the lead and the last section) name two scratch passes; this study is the one pass that replaces both.
+- string-to-composition.md all 81 poles at `m = -40..40` kill the denominator to `5e-14`, minimum `|D(s)| = 0.500000` for the Cantor design, `D(1) = 1 - fill/base` for all four.
+- string-to-composition.md `dimension` 0.630930, 0.682606, 0.511916, 0.661642 and `omega` 5.719202, 3.903963, 2.320188, 2.320188.
+- string-to-composition.md every periodogram peak within 1% of `2*pi/ln(base)`.
+- string-to-composition.md folding 0.192, 0.030, 0.016; 0.018, 0.509, 0.034; 0.007, 0.022, 0.667; 0.009, 0.030, 0.534; 0.082, 0.047, 0.038; 0.007, 0.012, 0.115.
+- string-to-composition.md the alternation equals base 15 `{0,4,10,14}` and the 256 intervals are identical.
+- string-to-composition.md `dimension = 0.518370`, 21 roots and winding number 21, real parts `-0.699926` to `0.518370`, offsets 0.43, 0.17, 0.38.
+- measurability-and-sponge.md minimum `2.494975716` at `t = 0.584963`, maximum `2.583040469`, swing 3.53%, measured tube within `4.9e-9` at the minimum.
+- measurability-and-sponge.md swings flat from `u = 15` to `u = 60` (`eps = 8.8e-27`), periodicity at the own base to `1e-9` or better, the two-ratio swing decaying `3.79%` to `0.42%`.
 - research/claims/:360 the poles of `1/(1 - fill base^(-s))` on one vertical line of period `2 pi/ln(base)`.
-- dimensions.md:122 the sponge's hole boundary is not in the sponge: `(1/2, 1/2, 1)` at distance `1/6`, `(2/3, 1/2, 5/6)` at distance `1/18`; read off the digit rule, no generator.
-- dimensions.md:126 `dimension = 1.892789`; every hole ringed by filled cells and the holes exhausting the complement at levels 3, 4, 5 (`carpet_tube.py`, HOLES).
-- dimensions.md:129-130 the two branches of `G(t)`, the level sum equal to the closed form at 96 exact rationals (`carpet_tube.py`, TUBE and PROFILE).
-- dimensions.md:133 seam `(44/35) 2^(2-dimension) = 1.354123517`, ends `379/280`, maximum `1.35561708227` (rounded up) at `t = 0.429638415`, minimum `1.3506702097` (rounded down) at `t = 0.692137253`, swing `0.36625%`, the level sum within `1e-9` of `G` on `u in [50, 60]`, the raster equal to `V(21/729)` as rationals (`carpet_tube.py`, PROFILE, MEASURED, RASTER).
-- dimensions.md:135 the area of `F_eps` inside `Gamma`, `4 eps/3 - 4 eps^2` on `(0, 1/6]`: the level-1 term of the sum, read off the closed form; the theorem numbers are the arXiv version's.
-- dimensions.md:137 the class profile `G(t) = t^(dimension-dim) sum_j fill^(j-1) base^(-j dim) h(t base^j)`: at base 3, dim 2, fill 8 it is the two branches the script checks; no other member is run.
+- measurability-and-sponge.md the sponge's hole boundary is not in the sponge: `(1/2, 1/2, 1)` at distance `1/6`, `(2/3, 1/2, 5/6)` at distance `1/18`; read off the digit rule, no generator.
+- measurability-and-sponge.md `dimension = 1.892789`; every hole ringed by filled cells and the holes exhausting the complement at levels 3, 4, 5 (`carpet_tube.py`, HOLES).
+- measurability-and-sponge.md the two branches of `G(t)`, the level sum equal to the closed form at 96 exact rationals (`carpet_tube.py`, TUBE and PROFILE).
+- measurability-and-sponge.md seam `(44/35) 2^(2-dimension) = 1.354123517`, ends `379/280`, maximum `1.35561708227` (rounded up) at `t = 0.429638415`, minimum `1.3506702097` (rounded down) at `t = 0.692137253`, swing `0.36625%`, the level sum within `1e-9` of `G` on `u in [50, 60]`, the raster equal to `V(21/729)` as rationals (`carpet_tube.py`, PROFILE, MEASURED, RASTER).
+- measurability-and-sponge.md the area of `F_eps` inside `Gamma`, `4 eps/3 - 4 eps^2` on `(0, 1/6]`: the level-1 term of the sum, read off the closed form; the theorem numbers are the arXiv version's.
+- measurability-and-sponge.md the class profile `G(t) = t^(dimension-dim) sum_j fill^(j-1) base^(-j dim) h(t base^j)`: at base 3, dim 2, fill 8 it is the two branches the script checks; no other member is run.

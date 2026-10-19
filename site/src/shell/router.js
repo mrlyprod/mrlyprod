@@ -1,8 +1,7 @@
 import { css } from 'site:css';
 import { rows, site } from 'site:routes';
-import { paint } from './crumbs.js';
 import { drawn, figures } from './figures.js';
-import { deeps, match, named, sort, trail, walled } from './route.js';
+import { deeps, match, named, sort, walled } from './route.js';
 
 const FRESH = 30000;
 const STILL = '(prefers-reduced-motion: reduce)';
@@ -14,12 +13,15 @@ const SHELLS = { app: () => import('./app.jsx'), prose: () => import('./prose.js
 
 const html = document.documentElement;
 const main = document.getElementById('main');
+const pane = () => document.querySelector('.window');
+const bar = () => document.querySelector('.window > .title');
 const panes = { left: document.getElementById('left'), right: document.getElementById('right') };
 const DEEP = deeps(rows);
 const place = (at) => walled(at.pathname, DEEP) || at.pathname;
 const key = (at) => walled(at.pathname, DEEP) || at.pathname + at.search;
 const state = () => (history.state && typeof history.state === 'object' ? history.state : {});
 const frame = () => new Promise((done) => requestAnimationFrame(done));
+const roll = (top) => main.scrollTo({ top, behavior: 'instant' });
 const still = () => matchMedia(STILL).matches;
 let here = key(location);
 let shown = place(location);
@@ -98,12 +100,28 @@ function head(row, url) {
   if (!lost) robots?.remove();
 }
 
-const crumbs = (row, url) => paint(trail(row, url.pathname));
+/* WINDOW */
 
-/* FRAME */
+const kind = (layout) => layout.window ?? (layout.wide ? 'wide' : 'page');
+
+function title(row) {
+  const name = bar()?.querySelector('.name');
+  if (name) name.textContent = row.title;
+}
 
 function dress(next) {
-  const { layout, side } = next;
+  const { layout, side, row } = next;
+  const shape = kind(layout);
+  const box = pane();
+  html.dataset.window = shape;
+  if (box) {
+    box.setAttribute('aria-label', row.title);
+    if (shape === 'page' || shape === 'wide') box.dataset.lens = 'window';
+    else delete box.dataset.lens;
+  }
+  title(row);
+  const app = document.querySelector('.trio .app');
+  if (app) app.textContent = shape === 'app' ? row.title : '';
   main.className = layout.wide ? 'wide' : '';
   const late = layout.right === 'late';
   const fill = { left: Boolean(layout.left), right: late || side.right.childNodes.length > 0 };
@@ -113,7 +131,7 @@ function dress(next) {
     pane.hidden = name === 'right' && late;
     if (fill[name] && !pane.isConnected) (name === 'left' ? main.before(pane) : main.after(pane));
     if (!fill[name]) pane.remove();
-    const button = document.querySelector(`.subheader .actions [data-pane="${name}"]`);
+    const button = document.querySelector(`.title .actions [data-pane="${name}"]`);
     if (button) button.hidden = !fill[name] || (name === 'right' && late);
     html.dataset[name] = 'shut';
   }
@@ -136,16 +154,16 @@ function target(hash) {
 }
 
 function pin() {
-  if (place(location) === shown) history.replaceState({ ...state(), y: Math.round(scrollY) }, '');
+  if (place(location) === shown) history.replaceState({ ...state(), y: Math.round(main.scrollTop) }, '');
 }
 
 function swap(next, url, mode, y) {
   if (mode === 'push') pin();
   leave();
-  if (mode === 'push') history.pushState(null, '', url.href);
-  if (mode === 'replace') history.replaceState(null, '', url.href);
+  const depth = state().depth ?? 0;
+  if (mode === 'push') history.pushState({ depth: depth + 1 }, '', url.href);
+  if (mode === 'replace') history.replaceState({ depth }, '', url.href);
   head(next.row, url);
-  crumbs(next.row, url);
   dress(next);
   main.replaceChildren(next.host);
   current = next;
@@ -154,7 +172,7 @@ function swap(next, url, mode, y) {
   const spot = mode === 'pop' ? null : target(url.hash);
   if (mode === 'boot') return spot?.scrollIntoView();
   if (spot) spot.scrollIntoView();
-  else scrollTo({ top: y, behavior: 'instant' });
+  else roll(y);
   main.focus({ preventScroll: true });
 }
 
@@ -182,6 +200,7 @@ function fail(url, error) {
     sessionStorage.removeItem(ONCE);
   } catch {}
   leave();
+  html.dataset.window ??= 'page';
   const lede = document.createElement('div');
   lede.className = 'lede';
   lede.innerHTML = '<h1 id="error">This page did not load</h1><p class="lead">The network or the site failed twice. <a href="">Reload</a> to try again, or go <a href="/">home</a>.</p>';
@@ -198,7 +217,18 @@ function morph(run, calm) {
   return made.updateCallbackDone;
 }
 
-export async function go(url, mode = 'push', y = 0, calm = still()) {
+function moved(url) {
+  const to = site.redirects?.[url.pathname]?.to;
+  if (!to) return url;
+  const next = new URL(to, url);
+  for (const [key, value] of url.searchParams) next.searchParams.append(key, value);
+  next.hash = url.hash;
+  return next;
+}
+
+export async function go(asked, how = 'push', y = 0, calm = still()) {
+  const url = moved(asked);
+  const mode = url !== asked && how === 'boot' ? 'replace' : how;
   const mine = ++turn;
   html.setAttribute('aria-busy', 'true');
   const row = match(rows, url.pathname);
@@ -213,7 +243,7 @@ export async function go(url, mode = 'push', y = 0, calm = still()) {
     if (mode === 'pop' && y && mine === turn) {
       await frame();
       await frame();
-      if (mine === turn) scrollTo({ top: y, behavior: 'instant' });
+      if (mine === turn) roll(y);
     }
   } catch (error) {
     if (mine === turn) fail(url, error);
@@ -255,7 +285,7 @@ function pop(event) {
   if (walled(location.pathname, DEEP)) return;
   const spot = y === null ? target(location.hash) : null;
   if (spot) spot.scrollIntoView();
-  else scrollTo({ top: y ?? 0, behavior: 'instant' });
+  else roll(y ?? 0);
 }
 
 function back(event) {
@@ -265,21 +295,19 @@ function back(event) {
 function note() {
   if (html.getAttribute('aria-busy') === 'true' || place(location) !== shown) return;
   try {
-    history.replaceState({ ...state(), y: Math.round(scrollY) }, '');
+    history.replaceState({ ...state(), y: Math.round(main.scrollTop) }, '');
   } catch {}
 }
 
 /* BOOT */
 
 function boot() {
-  const year = new Date().getFullYear();
-  const legal = document.querySelector('.base .legal');
-  if (legal) legal.textContent = `Copyright © ${site.company || site.title} ${site.since < year ? `${site.since}-${year}` : year}. All rights reserved.`;
   for (const name of SIDES) panes[name].remove();
   document.addEventListener('click', click);
   for (const type of ['pointerenter', 'focus', 'pointerdown']) document.addEventListener(type, hint, true);
   addEventListener('popstate', pop);
-  addEventListener('scrollend', note);
+  addEventListener('go', (e) => go(new URL(e.detail, location.href)));
+  main.addEventListener('scrollend', note);
   addEventListener('pagehide', note);
   addEventListener('pageshow', back);
   document.addEventListener('visibilitychange', () => document.hidden && note());

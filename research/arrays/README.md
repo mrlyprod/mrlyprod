@@ -3,6 +3,7 @@ title: Sparse arrays
 lead: A fractal sparse array is a digit design in the balanced base of its generator's coarray, so its coarray weight is a product over digits and, from order 2 on, its fragility is exact: a sensor is essential exactly when every digit has a unique-difference partner, the fragility is `(u/L)^r`, the power bound of Yang and coauthors is tight exactly when the generator's essential sensors all have such partners, and the bound of Cohen and Eldar exactly when every sensor has one; at a compressed base the essential count can leave the product law.
 figure: research-arrays
 slug: arrays
+date: 2026-09-23
 ---
 
 # Sparse arrays

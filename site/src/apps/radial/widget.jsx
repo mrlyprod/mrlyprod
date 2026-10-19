@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bar } from '../../lib/app/frame.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { BLENDS, COPIES, drawn, title } from '../../lib/spin/engine.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { BLENDS, COPIES, degrees, drawn, key, sketch, study, title } from '../../lib/spin/engine.js';
+import { Moires, stamp } from '../../lib/spin/shelves.jsx';
 import { Source, read, useReroll } from '../../lib/spin/source.jsx';
-import { make } from './scene.js';
-import { useLatest, useUnit } from '../../lib/app/hooks.js';
+import { STACKS, make } from './scene.js';
+import { useLatest } from '../../lib/app/hooks.js';
 
 const pct = (x) => `${(x * 100).toFixed(1)}%`;
 
@@ -30,8 +33,31 @@ export function rolled(math, value, rand) {
   return { ...drawn(math, read(value), rand), copies: 1 + Math.floor(rand() * COPIES), blend: BLEND[Math.floor(rand() * BLEND.length)], full: 1 };
 }
 
-export function Widget({ value, onChange, onReady, onStatus, unit: given }) {
-  const unit = useUnit('math', given);
+export const lit = (value, patch) => Number(value.full) === patch.full && Number(value.copies) === patch.copies && (patch.full === 1 || Number(value.step) === patch.step);
+
+export function Rosettes({ value, onChange, math }) {
+  const tick = useTheme();
+  const src = read(value);
+  const thumb = (patch, ...live) => (
+    <Art
+      paint={(ctx, w, h, dpr) => stamp(ctx, sketch(math, study(math, src), { ...value, ...patch, samples: 1 }, w), value, dpr)}
+      deps={[math, key(src), JSON.stringify(patch), value.ramp, value.levels, value.invert, value.tint, tick, ...live]}
+    />
+  );
+  return (
+    <>
+      <Shelf name="Blends" grid>
+        {BLENDS.map(([blend, text]) => <Item key={blend} label={text} on={value.blend === blend} onPick={() => onChange({ blend })} art={math ? thumb({ blend }, value.copies, value.full, value.step) : undefined} />)}
+      </Shelf>
+      <Shelf name="Stacks" grid>
+        {STACKS.map(([text, patch]) => <Item key={text} label={text} sub={`${patch.copies} x ${degrees(patch)}°`} on={lit(value, patch)} onPick={() => onChange(patch)} art={math ? thumb(patch, value.blend) : undefined} />)}
+      </Shelf>
+    </>
+  );
+}
+
+export function Widget({ value, onChange, onReady, onStatus, units }) {
+  const unit = units?.math;
   const [facts, setFacts] = useState(null);
   const now = useLatest(value);
   const change = useLatest(onChange);
@@ -62,6 +88,10 @@ export function Widget({ value, onChange, onReady, onStatus, unit: given }) {
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} onClick={() => copies(1, true)} />}
+      <Library>
+        <Rosettes value={value} onChange={onChange} math={unit} />
+        <Moires value={value} onChange={onChange} math={unit} />
+      </Library>
       <Bar side="right">
         <Source value={value} onChange={onChange} math={unit} />
       </Bar>

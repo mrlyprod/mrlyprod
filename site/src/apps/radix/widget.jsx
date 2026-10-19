@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Fold, Icon, Pick, Text } from '../../lib/app/controls.jsx';
+import { Btn, Fold, Pick, Text } from '../../lib/app/controls.jsx';
 import { Knob } from '../../lib/app/knobs.jsx';
 import { rng } from '../../lib/rand.js';
+import { paints } from '../../lib/color.js';
 import { Scene } from '../../lib/app/page.jsx';
-import { classes } from '../../lib/designs/engine.js';
-import { Thumbs } from '../../lib/designs/pick.jsx';
-import { BASES, BOX, DIM, PRESETS, RINGS, boxOf, boxed, boxy, cap, coded, dial, every, flat, pair, preset, rebase, roll, rolled, spell, toggle, turn, twisted, wears } from './engine.js';
-import { SPEC, file, make } from './scene.js';
-import { useUnits } from '../../lib/app/hooks.js';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { thumb } from '../../lib/designs/thumb.js';
+import { BASES, BOX, DIM, LETTERS, PRESETS, RINGS, boxOf, boxed, boxes, cap, coded, dial, every, flat, pair, preset, rebase, rolled, spell, toggle, turn, twisted, wears } from './engine.js';
+import { SPEC, file, make, sketch } from './scene.js';
+import { useReroll, useUnits } from '../../lib/app/hooks.js';
 import { wasm } from '../../lib/units/index.js';
 
 const UNITS = wasm('math', 'num');
@@ -61,7 +63,7 @@ export function Chips({ dialed, onToggle }) {
   );
 }
 
-export function Pane({ value, units, dialed, facts, name, label, onChange, change, moves }) {
+export function Pane({ value, units, dialed, facts, label, onChange, change, moves }) {
   const letter = dialed?.letter ?? 'w';
   const held = dialed?.held ?? [];
   const turned = held.filter(({ u }) => u > 0).length;
@@ -70,21 +72,11 @@ export function Pane({ value, units, dialed, facts, name, label, onChange, chang
       {children}
     </Fold>
   );
-  const baseOptions = (BASES[value.ring] ?? []).map((one) => {
-    const [a, c] = pair(one);
-    return [one, `${spell(letter, a, c)}${dialed ? `, norm ${units.num.gauss.Ring.norm(dialed.ring, a, c)}` : ''}`];
-  });
-  const box = dialed ? boxOf(dialed) : '';
-  const square = Boolean(units) && boxy(value);
-  const names = square ? units.math.name.words(DIM, BOX) : [];
-  const reps = square ? (classes(units.math, DIM, BOX) ?? []) : [];
-  const load = (patch) => units && change(patch);
   return [
     fold(
       'Design',
       `${label} · level ${value.level} · ${value.line ? 'line' : 'cells'}`,
       <>
-        <Pick label="Preset" value={name} options={[['', 'Custom'], ...PRESETS.map(([one, title]) => [one, title])]} disabled={!units} onChange={(one) => one && load(preset(units.num, units.math, one))} />
         <Chips dialed={dialed} onToggle={(cls) => change(toggle(dialed, cls))} />
         <span className="tabs">
           <Btn disabled={!dialed} onClick={moves.every}>Every residue</Btn>
@@ -102,28 +94,75 @@ export function Pane({ value, units, dialed, facts, name, label, onChange, chang
       )),
     ),
     fold(
-      'Base',
-      `Z[${letter}] · ${spell(letter, ...pair(value.base))}`,
-      <>
-        <Pick label="Ring" value={value.ring} options={RINGS} disabled={!units} onChange={(ring) => load(rebase(units.num, units.math, ring, value.base))} />
-        <Pick label="Base" value={value.base} options={baseOptions} disabled={!units} onChange={(base) => load(rebase(units.num, units.math, value.ring, base))} />
-        <Text label="Code" value={facts?.code ?? ''} commit inputMode="numeric" onChange={(code) => dialed && change(coded(dialed, units.math, code))} />
-      </>,
+      'Code',
+      [`Z[${letter}]`, spell(letter, ...pair(value.base)), facts?.code].filter(Boolean).join(' · '),
+      <Text label="Code" value={facts?.code ?? ''} commit inputMode="numeric" onChange={(code) => dialed && change(coded(dialed, units.math, code))} />,
     ),
-    square &&
-      fold(
-        'Box',
-        names.find(([one]) => one === box)?.[1] ?? box,
-        <>
-          <Pick label="Named" value={names.some(([one]) => one === box) ? box : ''} options={[['', 'Code'], ...names]} onChange={(code) => code && load(boxed(units.num, units.math, code))} />
-          <Btn onClick={() => load(boxed(units.num, units.math, roll(Math.random)))}>
-            <Icon name="casino" />
-            Random
-          </Btn>
-          {reps.length > 0 && <Thumbs math={units.math} dim={DIM} base={BOX} codes={reps.map((one) => one.code)} code={box} onPick={(code) => load(boxed(units.num, units.math, code))} px={40} />}
-        </>,
-      ),
   ];
+}
+
+/* DESIGNS */
+
+const titles = Object.fromEntries(PRESETS.map(([id, title]) => [id, title]));
+
+const cells = (patch) => ({ ...patch, line: 0 });
+
+export function Designs({ value, units, dialed, presets, name, change }) {
+  const tick = useTheme();
+  const [find, setFind] = useState('');
+  const { num, math } = units;
+  const want = find.trim().toLowerCase();
+  const hit = (...words) => !want || words.some((one) => one.toLowerCase().includes(want));
+  const lattices = useMemo(
+    () => RINGS.map(([ring, title]) => {
+      const known = num.gauss.Ring.named(ring) ?? 'Gaussian';
+      return [ring, title, BASES[ring].map((base) => [base, spell(LETTERS[ring], ...pair(base)), `norm ${num.gauss.Ring.norm(known, ...pair(base))}`, cells(rebase(num, math, ring, base))])];
+    }),
+    [units],
+  );
+  const squares = useMemo(() => boxes(math), [units]);
+  const box = dialed ? boxOf(dialed) : '';
+  const deps = [units, value.tint, tick];
+  const draw = (patch) => (ctx, w, h, dpr) => sketch(ctx, units, patch, w, dpr, paints(ctx.canvas, value.tint).accent);
+  const square = ([code, word]) => (
+    <Item key={code} label={word || code} sub={word ? code : undefined} on={box === code} onPick={() => change(cells(boxed(num, math, code)))} art={<Art deps={[...deps, code]} paint={(ctx, w) => thumb(ctx, math, DIM, BOX, code, w, paints(ctx.canvas, value.tint))} />} />
+  );
+  const starts = presets.filter(([id]) => hit(titles[id]));
+  const named = squares.named.filter(([code, word]) => hit(word, code));
+  const rest = squares.rest.filter(([code]) => hit(code));
+  return (
+    <Library name="Designs" find={find} onFind={setFind} hint="Search designs">
+      {starts.length > 0 && (
+        <Shelf name="Presets" grid>
+          {starts.map(([id, patch]) => (
+            <Item key={id} label={titles[id]} on={name === id} onPick={() => change(patch)} art={<Art deps={[...deps, id]} paint={draw(patch)} />} />
+          ))}
+        </Shelf>
+      )}
+      {lattices.map(([ring, title, list]) => {
+        const kept = list.filter(([, word, norm]) => hit(title, word, norm));
+        return (
+          kept.length > 0 && (
+            <Shelf key={ring} name={title} grid>
+              {kept.map(([base, word, norm, patch]) => (
+                <Item key={base} label={word} sub={norm} on={value.ring === ring && value.base === base} onPick={() => change(patch)} art={<Art deps={[...deps, ring, base]} paint={draw(patch)} />} />
+              ))}
+            </Shelf>
+          )
+        );
+      })}
+      {named.length > 0 && (
+        <Shelf name="Named boxes" grid>
+          {named.map(square)}
+        </Shelf>
+      )}
+      {rest.length > 0 && (
+        <Shelf name="Other boxes" grid>
+          {rest.map(square)}
+        </Shelf>
+      )}
+    </Library>
+  );
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units: given }) {
@@ -152,12 +191,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
     if (!handle) setFacts(null);
     onReady?.(handle && { ...handle, ...moves });
   };
-  const seen = useRef(value.seed);
-  useEffect(() => {
-    if (seen.current === value.seed) return;
-    seen.current = value.seed;
-    if (dialed) change(rolled(dialed, rng(value.seed)));
-  }, [value.seed]);
+  useReroll(value.seed, (seed) => dialed && change(rolled(dialed, rng(seed))));
   const told = facts ? [['design', label], ...rows(facts)] : [];
   const key = JSON.stringify(told);
   useEffect(() => onStatus?.(told), [key]);
@@ -171,8 +205,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
   return (
     <>
       {units && <Scene make={scene} value={value} onReady={ready} onClick={() => change({ level: deeper(value) })} role="img" aria-label={`The level ${value.level} words of the radix design ${label} at base ${spelled}`} />}
+      {units && <Designs value={value} units={units} dialed={dialed} presets={presets} name={name} change={change} />}
       <Bar side="right">
-        <Pane value={value} units={units} dialed={dialed} facts={facts} name={name} label={label} onChange={onChange} change={change} moves={moves} />
+        <Pane value={value} units={units} dialed={dialed} facts={facts} label={label} onChange={onChange} change={change} moves={moves} />
       </Bar>
     </>
   );

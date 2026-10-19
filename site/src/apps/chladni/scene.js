@@ -8,6 +8,8 @@ const VIEWS = [['plate', 'Plate'], ['carpet', 'Carpet']];
 const LOOKS = [['sand', 'Sand'], ['field', 'Field'], ['lines', 'Lines']];
 const GRAINS = [[10000, '10k'], [20000, '20k'], [40000, '40k'], [80000, '80k']];
 
+const HIDE = () => false;
+
 const plate = (value) => value.view !== 'carpet';
 const carpet = (value) => value.view === 'carpet';
 const sanded = (value) => value.look === 'sand';
@@ -18,7 +20,7 @@ export const SPEC = [
   { key: 'm', label: 'm', kind: 'slider', def: 5, min: 0, max: TOP, step: 1, when: plate, group: 'Figure' },
   { key: 'sign', label: 'Sign', kind: 'segment', def: -1, options: [[1, '+'], [-1, '-']], when: (value) => plate(value) && value.n !== value.m, group: 'Figure' },
   { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), when: carpet, group: 'Figure' },
-  { key: 'code', label: 'Design', kind: 'pick', def: '7', options: codes, when: carpet, group: 'Figure' },
+  { key: 'code', label: 'Design', kind: 'pick', def: '7', options: codes, when: HIDE, group: 'Figure' },
   { key: 'level', label: 'Level', kind: 'slider', def: 3, min: lowest, max: highest, step: 1, when: carpet, group: 'Figure' },
   { key: 'k', label: 'k', kind: 'slider', def: 8, min: 1, max: (value) => known(value) ?? COUNT, step: 1, keep: true, when: carpet, group: 'Figure' },
   { key: 'look', label: 'Look', kind: 'segment', def: 'sand', options: LOOKS, group: 'Look' },
@@ -39,13 +41,14 @@ export const named = (value) => (carpet(value) ? `chladni-${value.code}-${value.
 export const units = wasm('num', 'math');
 
 export const PAGE = {
+  design: { dim: 2, base: 2, code: 'code' },
   spec: SPEC,
   units,
   record: true,
   gestures: true,
   about: ABOUT,
   name: named,
-  keys: [{ key: 'Enter', label: (value, scene) => (scene?.walking?.() ? 'Stop' : 'Play'), act: 'walk', button: true }],
+  keys: [{ key: 'Enter', label: (value, scene) => (scene?.walking?.() ? 'Stop' : 'Play'), act: 'walk', button: true, menu: 'Edit' }],
   actions: { walk: (scene) => scene.walk?.() },
 };
 

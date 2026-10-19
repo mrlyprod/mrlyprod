@@ -2,9 +2,9 @@ import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { asked, defaults } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { design, lay } from '../../lib/two/engine.js';
+import { lay } from '../../lib/two/engine.js';
 import { second } from '../../lib/two/scene.js';
-import { PAGE, SPEC, make, name, plan } from './scene.js';
+import { PAGE, SHEETS, SPEC, make, name, plan, sketch } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -111,30 +111,26 @@ test('seams draw where the copies meet in a second ink that is not the accent', 
 
 test('a set rebuilds only from the first stage it changed and keeps the rest', () => {
   const stages = {};
-  const first = plan(math, start({}), rng(1), stages);
-  const tint = plan(math, start({ tint: 'pink', invert: 1 }), rng(1), stages);
+  const first = plan(math, start({}), stages);
+  const tint = plan(math, start({ tint: 'pink', invert: 1 }), stages);
   expect(tint.tile).toBe(first.tile);
   expect(tint.block).toBe(first.block);
   expect(tint.look).not.toBe(first.look);
-  const wide = plan(math, start({ x: 6 }), rng(1), stages);
+  const wide = plan(math, start({ x: 6 }), stages);
   expect(wide.tile).toBe(first.tile);
   expect(wide.block).not.toBe(first.block);
-  const deep = plan(math, start({ x: 6, level: 1 }), rng(1), stages);
+  const deep = plan(math, start({ x: 6, level: 1 }), stages);
   expect(deep.tile).not.toBe(first.tile);
 });
 
-test('a code rolled from a blank stays put through every change but the seed and the base', () => {
-  const stages = {};
-  const rand = rng(9);
-  const code = plan(math, start({ code: '' }), rand, stages).value.code;
-  expect(plan(math, start({ code: '', x: 2, seams: 1 }), rand, stages).value.code).toBe(code);
-  expect(plan(math, start({ code: '', seed: 2 }), rng(2), stages).value.code).toBe(design(math, 3, '', rng(2)));
+test('a blank code is the carpet of the base, whatever the seed', () => {
+  expect([plan(math, start({ code: '' })).value.code, plan(math, start({ code: '', seed: 2 })).value.code, plan(math, start({ code: '', base: 2 })).value.code]).toEqual(['495', '495', '7']);
 });
 
 test('the level is kept as asked in the url and drawn at the cap of the sheet, so lowering the copies brings it back', () => {
   expect(asked(SPEC, start({ level: 5, x: 12, y: 12 }), { math }).level).toBe(5);
-  expect(plan(math, start({ level: 5, x: 12, y: 12 }), rng(1)).value.level).toBe(3);
-  const small = plan(math, start({ level: 5, x: 1, y: 1 }), rng(1));
+  expect(plan(math, start({ level: 5, x: 12, y: 12 })).value.level).toBe(3);
+  const small = plan(math, start({ level: 5, x: 1, y: 1 }));
   expect([small.value.level, small.facts().side]).toEqual([5, 243]);
 });
 
@@ -164,6 +160,25 @@ test('an export is named by the design and the sheet it shows', () => {
   expect(PAGE.name).toBe(name);
 });
 
+test('the design slot takes the base and the code of the two-dimensional space', () => {
+  expect(PAGE.design).toEqual({ dim: 2, base: 'base', code: 'code' });
+});
+
+test('a sheet thumb lays the tile across and down in the accent over faint voids, edge to edge in the square', () => {
+  const log = [];
+  sketch(pen(log), math, start({}), 3, 2, 100, ACCENT);
+  const box = lay(9, 6, 100, 100, 0.92);
+  const count = (list) => list.reduce((sum, [, , w]) => sum + Math.round(w / box.px), 0);
+  expect([count(fills(log, ACCENT)), count(fills(log, 'rgba(0, 140, 255, 0.16)'))]).toEqual([6 * 8, 9 * 6 - 6 * 8]);
+  expect(Math.min(...fills(log, ACCENT).map(([x]) => x))).toBeGreaterThanOrEqual(Math.floor(box.x));
+});
+
+test('every named sheet sits inside the across and down sliders, and the default is one of them', () => {
+  const rows = (key) => SPEC.find((one) => one.key === key);
+  expect(SHEETS.every(([, x, y]) => x >= rows('x').min && x <= rows('x').max && y >= rows('y').min && y <= rows('y').max)).toBe(true);
+  expect(SHEETS.some(([, x, y]) => x === rows('x').def && y === rows('y').def)).toBe(true);
+});
+
 test('the primary flips the seams and names what it will do', () => {
   const rows = (value) => PAGE.keys.filter((row) => row.button && row.when(value)).map((row) => row.label);
   expect(rows({ seams: 0 })).toEqual(['Seams']);
@@ -171,8 +186,8 @@ test('the primary flips the seams and names what it will do', () => {
 });
 
 test('under invert the counts follow the lit voids the picture shows', () => {
-  const plain = plan(math, start({}), rng(1));
-  const inverse = plan(math, start({ invert: 1 }), rng(1));
+  const plain = plan(math, start({}));
+  const inverse = plan(math, start({ invert: 1 }));
   const facts = inverse.facts();
   expect([facts.fills, facts.voids]).toEqual([plain.facts().voids, plain.facts().fills]);
   expect(facts.one).toBe(Number(math.two.perimeter(math.cell.models.invert(plain.tile))));

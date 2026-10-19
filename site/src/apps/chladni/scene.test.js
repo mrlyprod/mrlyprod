@@ -3,7 +3,7 @@ import * as math from '@mrlyprod/mrly/math';
 import * as num from '@mrlyprod/mrly/num';
 import { defaults, maxOf, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { COUNT, HOLD, NUMBERS, POUR, RATE, REST, SIDE, TAP, codes, highest, ladder, lowest, rungOf } from './engine.js';
+import { COUNT, HOLD, NUMBERS, POUR, RATE, REST, SIDE, TAP, carpets, cell, codes, highest, hits, inks, ladder, lowest, rungOf, swatch } from './engine.js';
 import { PAGE, SPEC, fit, make } from './scene.js';
 import { rows } from './widget.jsx';
 
@@ -221,9 +221,9 @@ test('a slider move while walking re-bases the walk on the new figure', () => {
   expect(live.scene.walking()).toBe(true);
 });
 
-test('Enter is Play or Stop by the walk, and the scene leaves Space to the lib pause', () => {
+test('Enter is Play or Stop by the walk in the Edit menu, and the scene leaves Space to the lib pause', () => {
   const [row] = PAGE.keys;
-  expect([row.key, row.button, row.label(VALUE, { walking: () => false }), row.label(VALUE, { walking: () => true }), row.label(VALUE, null)]).toEqual(['Enter', true, 'Play', 'Stop', 'Play']);
+  expect([row.key, row.menu, row.button, row.label(VALUE, { walking: () => false }), row.label(VALUE, { walking: () => true }), row.label(VALUE, null)]).toEqual(['Enter', 'Edit', true, 'Play', 'Stop', 'Play']);
   const live = open();
   expect([live.scene.toggle, live.scene.playing]).toEqual([undefined, undefined]);
   live.scene.walk();
@@ -451,4 +451,30 @@ test('k past a small design reads its last figure, and the echo of the tidied k 
   live.set({ k: 16 });
   live.at(60000);
   expect(live.sheet()).toEqual(rested);
+});
+
+test('the design slot is the code of a base 2 plane design, and its row hides in the pane while the url keeps it', () => {
+  expect(PAGE.design).toEqual({ dim: 2, base: 2, code: 'code' });
+  const row = SPEC.find((one) => one.key === 'code');
+  expect([row.when({ view: 'carpet' }), tidy(SPEC, { ...VALUE, view: 'carpet', code: '10' }, UNITS).code]).toEqual([false, '10']);
+});
+
+test('the carpet shelf lists every design that holds, shown at a level that draws more than 25 cells, and its cell is the figure mask', () => {
+  const list = carpets(math);
+  expect(list.length).toBe(NUMBERS.reduce((sum, number) => sum + codes({ number }, UNITS).length, 0));
+  expect(list.find((one) => one.number === 3 && one.code === '7')).toEqual({ number: 3, code: '7', level: 3, name: 'carpet' });
+  expect(list.every((one) => math.nodal.holds(BigInt(one.code), one.number, one.level))).toBe(true);
+  for (const one of list.filter((pick) => pick.number > 3)) expect(one.level).toBe(Math.min(2, highest(one, UNITS)));
+  const one = list.find((pick) => pick.number === 3 && pick.code === '10');
+  const figure = math.nodal.figures(BigInt(one.code), one.number, one.level, 2).fields.slice(0, 27 * 27);
+  expect(Array.from(cell(math, one).types, (type) => type === 0)).toEqual(Array.from(figure, (v) => v !== v));
+});
+
+test('the plate shelf finds a figure by its numbers, and a swatch paints the field in the ink to a square of the asked side', () => {
+  const one = ladder(num).find((rung) => rung.n === 3 && rung.m === 5 && rung.sign === -1);
+  expect([hits(one, ''), hits(one, '3 5'), hits(one, '5,3'), hits(one, '3'), hits(one, '4 5')]).toEqual([true, true, true, true, false]);
+  const bytes = swatch(num, one, inks(LOOK), 24);
+  expect(bytes.length).toBe(24 * 24 * 4);
+  expect(bytes.every((v, i) => i % 4 !== 3 || v === 255)).toBe(true);
+  expect(bytes.some((v, i) => i % 4 === 2 && v === 255)).toBe(true);
 });

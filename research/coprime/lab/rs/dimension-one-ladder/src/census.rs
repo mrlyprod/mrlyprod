@@ -119,7 +119,9 @@ pub fn report(level: u32, detail: bool) {
         .map(|(j, c)| format!("{}:{}", j, c))
         .collect();
     println!("octaves {}", octaves.join(" "));
-    println!("occ(8,n)/3^8 {:.3}", bins[8] as f64 / 6561.0);
+    if let Some(occ) = bins.get(8) {
+        println!("occ(8,n)/3^8 {:.3}", *occ as f64 / 6561.0);
+    }
     let cut = |j: usize| (bins[..=j].iter().sum::<u64>() as f64).ln() / 3f64.ln() / level as f64;
     if level.is_multiple_of(2) {
         println!("band exponent j <= n/2 {:.4}", cut(level as usize / 2));

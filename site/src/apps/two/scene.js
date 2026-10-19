@@ -2,11 +2,11 @@ import { tidy } from '../../lib/app/spec.js';
 import { TINTS, veil } from '../../lib/color.js';
 import { rects } from '../../lib/app/svg.js';
 import { DESIGN } from '../../lib/designs/engine.js';
-import { cap, count, design, joins, lay, layers, memo, sheet, shot, stamp, stroke } from '../../lib/two/engine.js';
+import { DIM, cap, count, design, joins, lay, layers, memo, sheet, shot, stamp, stroke } from '../../lib/two/engine.js';
 import { second } from '../../lib/two/scene.js';
 import { wasm } from '../../lib/units/index.js';
 
-export const PRESETS = [[5, 5], [3, 9]];
+export const SHEETS = [['Single', 1, 1], ['Square', 3, 3], ['Block', 5, 5], ['Wall', 8, 8], ['Full', 12, 12], ['Pair', 2, 1], ['Wide', 9, 3], ['Tall', 3, 9], ['Strip', 12, 1], ['Column', 1, 12]];
 
 const never = () => false;
 
@@ -26,6 +26,7 @@ export const units = wasm('math');
 
 export const PAGE = {
   defaults: { base: 3, code: '495' },
+  design: { dim: DIM, base: 'base', code: 'code' },
   spec: SPEC,
   units,
   about: [
@@ -36,9 +37,9 @@ export const PAGE = {
   ],
   name,
   keys: [
-    { key: 'Enter', label: 'Seams', act: 'seams', button: true, when: (value) => !value.seams },
-    { key: 'Enter', label: 'Hide seams', act: 'seams', button: true, when: (value) => Boolean(value.seams) },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
+    { key: 'Enter', label: 'Seams', act: 'seams', button: true, menu: 'View', when: (value) => !value.seams },
+    { key: 'Enter', label: 'Hide seams', act: 'seams', button: true, menu: 'View', when: (value) => Boolean(value.seams) },
+    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level', menu: 'View' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Across', act: 'across' },
   ],
   actions: {
@@ -58,10 +59,10 @@ const SEAM = 0.3;
 
 /* PLAN */
 
-export function plan(math, next, rand, stages = {}) {
+export function plan(math, next, stages = {}) {
   const at = (name) => (stages[name] ??= memo());
   const value = { ...tidy(DESIGN, next), ...tidy(SPEC, next, { math }) };
-  const code = at('code')(`${value.base}:${value.code}:${next.seed}`, () => design(math, value.base, value.code, rand));
+  const code = at('code')(`${value.base}:${value.code}:${next.seed}`, () => design(math, value.base, value.code));
   const kept = [code, value.base, value.number, value.level].join();
   const tile = at('tile')(kept, () => math.two.create(code, value.number, value.level, 0, value.base));
   const whole = `${kept}|${value.x}|${value.y}`;
@@ -75,6 +76,23 @@ export function plan(math, next, rand, stages = {}) {
   return { value: read, tile, block, look, lines, facts };
 }
 
+/* SKETCH */
+
+const GLANCE = 0.92;
+
+export function sketch(pen, math, next, x, y, side, accent) {
+  const value = { ...tidy(DESIGN, next), ...tidy(SPEC, next, { math }) };
+  const tile = math.two.create(design(math, value.base, value.code), value.number, 1, 0, value.base);
+  const block = sheet(math, tile, x, y);
+  const look = layers(math, block, value.invert);
+  const [rows, cols] = block.shape;
+  const box = lay(cols, rows, side, side, GLANCE);
+  pen.setTransform(1, 0, 0, 1, 0, 0);
+  pen.clearRect(0, 0, side, side);
+  stamp(pen, look.faint, box, veil(accent, FAINT));
+  stamp(pen, look.lit, box, accent);
+}
+
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
@@ -82,7 +100,7 @@ export function make(canvas, view, opts = {}) {
   if (!math) throw new Error('two: the scene wants @mrlyprod/mrly/math as opts.math');
   const ctx = canvas.getContext('2d');
   const stages = {};
-  let now = plan(math, opts, view.rand, stages);
+  let now = plan(math, opts, stages);
   let dirty = true;
   const paint = (pen, box, w, h) => {
     const { paper, accent } = view.look();
@@ -104,7 +122,7 @@ export function make(canvas, view, opts = {}) {
     draw();
   };
   const set = (next) => {
-    now = plan(math, next, view.rand, stages);
+    now = plan(math, next, stages);
     touch();
   };
   const svg = () => rects(now.look.drawn, { fill: view.look().accent, unit: UNIT });

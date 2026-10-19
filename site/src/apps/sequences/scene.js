@@ -27,11 +27,11 @@ export const PAGE = {
     'Terms are read within a budget of cells a term, and a row the budget stops says so. Enter opens the row in Plot, which finds its recurrence and mixes it with a second row.',
   ],
   keys: [
-    { key: 'Enter', label: 'Plot', act: 'plot', button: true },
+    { key: 'Enter', label: 'Plot', act: 'plot', button: true, menu: 'File' },
     { key: ['ArrowDown', 'ArrowUp'], label: 'Browse', act: 'browse' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Term', act: 'term' },
     { key: '/', label: 'Search', act: 'search' },
-    { key: 'c', label: 'Chart', act: 'cycle' },
+    { key: 'c', label: 'Chart', act: 'cycle', menu: 'View' },
   ],
   actions: {
     plot: (scene) => scene.plot?.(),
@@ -82,7 +82,7 @@ export function make(canvas, view, opts = {}) {
     const t = tones(view);
     clear(ctx, view, t);
     const { px } = t;
-    const pad = Math.round(16 * view.dpr);
+    const { x: pad, top: high, bottom: low } = t.edge;
     if (!rows.length) {
       ctx.fillStyle = t.dim;
       ctx.textAlign = 'center';
@@ -100,9 +100,9 @@ export function make(canvas, view, opts = {}) {
     const index = count ? (at < 0 ? count - 1 : Math.min(at, count - 1)) : -1;
     const shades = rows.map((_, i) => shade(t.accent, t.paper, i, rows.length));
     const width = view.w - 2 * pad;
-    const top = legend(ctx, rows, shades, t, pad, pad, width);
+    const top = legend(ctx, rows, shades, t, pad, high, width);
     const laid = ribbon(ctx, first, t, width);
-    const body = { x: pad, y: pad + top.height + px * 0.4, w: width, h: Math.max(px * 8, view.h - 2 * pad - top.height - laid.height - px * 1.6) };
+    const body = { x: pad, y: high + top.height + px * 0.4, w: width, h: Math.max(px * 8, view.h - high - low - top.height - laid.height - px * 1.6) };
     const wide = body.w >= body.h * 1.25;
     const room = wide ? Math.min(body.h, body.w * 0.42) : Math.min(body.w, body.h * 0.42);
     const pic = wide ? { x: body.x, y: body.y, w: room, h: body.h - px * 2 } : { x: body.x, y: body.y, w: body.w, h: room - px * 2 };
@@ -113,7 +113,7 @@ export function make(canvas, view, opts = {}) {
       caption(ctx, `${said(one)}${one.at < index ? ', as large as the picture draws' : ''}`, pic.x, Math.min(pic.y + pic.h + px * 1.5, drawn.y + drawn.h + px * 1.5), pic.w, t);
     }
     const slots = chart(ctx, plot, rows, shades, t, { kind, base, at: index, shown: (i) => grown.shown(rows[i]) });
-    drawRibbon(ctx, laid, pad, view.h - pad - laid.height, t, index, shades[0]);
+    drawRibbon(ctx, laid, pad, view.h - low - laid.height, t, index, shades[0]);
     hits = { legend: rows.length > 1 ? top.hits : [], slots };
   };
   const draw = () => {

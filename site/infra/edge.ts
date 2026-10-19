@@ -11,4 +11,4 @@ const table = JSON.stringify(Object.fromEntries(Object.entries(rows).map(([from,
 
 const text = readFileSync(join(import.meta.dir, "edge.js"), "utf8");
 
-export const decide = new Function(`${text.replace(MARK, table)}\nreturn decide;`)() as (uri: string) => Step;
+export const { decide, join: joined } = new Function(`${text.replace(MARK, table)}\nreturn { decide, join };`)() as { decide: (uri: string) => Step; join: (to: string, tail: string) => string };

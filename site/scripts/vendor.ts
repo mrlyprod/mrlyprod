@@ -80,6 +80,25 @@ function rule(family: string, file: string, weight: string, display: string, ran
   return lines.join("\n");
 }
 
+/* ICONS */
+
+const file = (name: string) => {
+  const base = name.replace(/_fill$/, "");
+  return `${MATERIAL}/symbols/web/${base}/materialsymbolsoutlined/${base}${base === name ? "" : "_fill1"}_24px.svg`;
+};
+
+async function glyphs(root: string, icons: Icons, save: (file: string, data: string) => Promise<void>) {
+  const drawn: [string, string][] = [];
+  let box = "";
+  for (const name of icons.names) {
+    const one = symbol(await text(file(name)));
+    if (box && one.box !== box) throw new Error(`vendor: ${name} has viewBox ${one.box}, not ${box}`);
+    box = one.box;
+    drawn.push([name, one.d]);
+  }
+  await save(resolve(root, icons.out), source(box, drawn));
+}
+
 /* MAIN */
 
 export async function main(root: string) {
@@ -118,16 +137,7 @@ export async function main(root: string) {
   const kept = fonts.keep ? (await readFile(resolve(root, fonts.keep), "utf8")).trim() : "";
   await save(join(out, "fonts.css"), sheet.join("\n\n") + (kept ? `\n\n${kept}` : "") + "\n");
 
-  const names = icons.names;
-  const drawn: [string, string][] = [];
-  let box = "";
-  for (const name of names) {
-    const one = symbol(await text(`${MATERIAL}/symbols/web/${name}/materialsymbolsoutlined/${name}_24px.svg`));
-    if (box && one.box !== box) throw new Error(`vendor: ${name} has viewBox ${one.box}, not ${box}`);
-    box = one.box;
-    drawn.push([name, one.d]);
-  }
-  await save(resolve(root, icons.out), source(box, drawn));
+  await glyphs(root, icons, save);
   licences.push(["LICENSE-icons.txt", `${MATERIAL}/LICENSE`]);
 
   for (const [name, url] of licences) await save(join(out, name), await get(url));
@@ -136,4 +146,10 @@ export async function main(root: string) {
   for (const [name, n] of sizes) console.log(`${name.padEnd(width)}  ${n} bytes`);
 }
 
-if (import.meta.main) await main(resolve(import.meta.dir, ".."));
+export async function only(root: string) {
+  const { icons } = JSON.parse(await readFile(join(root, "site.json"), "utf8")) as { icons?: Icons };
+  if (!icons) throw new Error("vendor: site.json needs an icons block");
+  await glyphs(root, icons, (file, data) => writeFile(file, data));
+}
+
+if (import.meta.main) await (process.argv.includes("--icons") ? only : main)(resolve(import.meta.dir, ".."));

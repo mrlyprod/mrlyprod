@@ -1,0 +1,3 @@
+# Design classes
+
+- 2026-10-19 [Proved] The base-2 orbit walk `representatives 2 dim`, the generator `mrly::math::bang::baseq::representatives` restated in Lean function by function (`axisMaps`, `residueCorners`, `permutations`, `choices`, `group`, `carry`, `orbit`), returns `3, 6, 22, 402` least codes at `dim = 1, 2, 3, 4` over the `2^(2^dim)` codes and the `2^dim dim!` signed coordinate permutations; kernel `decide` at `dim 1..3` (axiom `propext` only), `native_decide` at `dim 4`, which trusts the compiler; that the cell maps of `group 2 dim` are closed under composition is the generator's construction, not proved in Lean. Witness: ../lean/Core.lean.

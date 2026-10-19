@@ -34,7 +34,7 @@ const matches = (one, selector) => {
 class Node extends Element {
   constructor(tag) {
     super();
-    Object.assign(this, { tag, kids: [], attrs: {}, dataset: {}, parent: null, className: '', hidden: false });
+    Object.assign(this, { tag, kids: [], attrs: {}, dataset: {}, parent: null, className: '', hidden: false, scrollTop: 0 });
   }
 
   get childNodes() {
@@ -89,6 +89,12 @@ class Node extends Element {
   }
 
   focus() {}
+
+  scrollTo({ top }) {
+    this.scrollTop = top;
+  }
+
+  addEventListener() {}
 }
 
 const el = (tag) => new Node(tag);

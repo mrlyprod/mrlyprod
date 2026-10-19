@@ -3,6 +3,7 @@ title: Loops in arcs
 lead: A design drawn in quarter-circle arcs, its deleted cells turned once, and the closed loops the arcs make level by level.
 figure: research-arcs
 slug: arcs
+date: 2026-10-03
 ---
 
 # Loops in arcs

@@ -1,3 +1,5 @@
+import { home } from '../../lib/designs/engine.js';
+
 export const KINDS = [['in', 'Inside a circle'], ['out', 'Outside a circle'], ['line', 'A line'], ['polyin', 'Inside a polygon'], ['polyout', 'Outside a polygon']];
 export const MODES = [['fill', 'Filled cells'], ['void', 'Empty cells'], ['both', 'Both'], ['corners', 'Corners']];
 export const INKS = [['kind', 'By kind'], ['wheel', 'Six inks'], ['one', 'One ink']];
@@ -10,6 +12,7 @@ export const BANDS = 8;
 export const PAD = 24;
 export const PACE = 0.5;
 export const HOLD = 3000;
+export const EASE = 2;
 export const LEAST = 3000;
 export const MOST = 60000;
 export const LIVE = 480000;
@@ -17,20 +20,27 @@ export const DENSITY = 720;
 export const CURVES = 64;
 export const RASTER = [512, 256];
 export const ORBIT = 720;
+export const GLANCE = 90;
+export const TRACKS = [
+  ['Classic', { kind: 'in', ring: 7, wheel: 3, sides: 4, laps: 2 }],
+  ['Three lobes', { kind: 'in', ring: 3, wheel: 1, sides: 4, laps: 2 }],
+  ['Four lobes', { kind: 'in', ring: 4, wheel: 1, sides: 4, laps: 2 }],
+  ['Star', { kind: 'in', ring: 5, wheel: 2, sides: 4, laps: 2 }],
+  ['Rose', { kind: 'in', ring: 5, wheel: 3, sides: 4, laps: 2 }],
+  ['Weave', { kind: 'in', ring: 8, wheel: 3, sides: 4, laps: 2 }],
+  ['Limacon', { kind: 'out', ring: 1, wheel: 1, sides: 4, laps: 2 }],
+  ['Two lobes', { kind: 'out', ring: 2, wheel: 1, sides: 4, laps: 2 }],
+  ['Bloom', { kind: 'out', ring: 5, wheel: 3, sides: 4, laps: 2 }],
+  ['Cycloid', { kind: 'line', ring: 7, wheel: 3, sides: 4, laps: 2 }],
+  ['Square', { kind: 'polyin', ring: 7, wheel: 3, sides: 4, laps: 2 }],
+  ['Hexagon', { kind: 'polyout', ring: 5, wheel: 2, sides: 6, laps: 2 }],
+];
 export const ROUND = 'the fill needs a circle track: the wall of a line or a polygon roulette need not close';
 const FEW = 3;
 const INSET = 1e-9;
 const TAU = Math.PI * 2;
 
 export const message = (error) => String(error?.message ?? error);
-
-const attempt = (fn) => {
-  try {
-    return fn();
-  } catch {
-    return null;
-  }
-};
 
 /* DESIGN */
 
@@ -42,16 +52,9 @@ export function named(math, code, base) {
   return math.name.of(String(code), 2, base) ?? null;
 }
 
-export function reads(math, code, number, base) {
-  const text = String(code ?? '').trim();
-  return text !== '' && attempt(() => math.two.create(text, number, 1, 0, base)) !== null;
-}
-
-export function rebase(math, code, from, to, number, rand) {
-  const word = named(math, code, from);
-  const same = word && math.name.words(2, to).find(([, one]) => one === word);
-  if (same) return same[0];
-  return reads(math, code, number, to) ? String(code) : roll(math, to, rand);
+export function resolve(math, value) {
+  const text = String(value.code ?? '').trim();
+  return text === '' ? home(math, 2, value.base) : text;
 }
 
 export function cap(math, number) {
@@ -144,6 +147,18 @@ export function share(t, length, still) {
 
 export function index(part, samples) {
   return Math.round(part * (samples - 1));
+}
+
+/* GLANCE */
+
+export function glance(math, value, code, patch) {
+  const s = math.spirograph;
+  const { pencils } = seat(math, { ...value, level: 1 }, code);
+  const [ring, wheel] = legal(patch.kind, patch.ring, patch.wheel, patch.sides);
+  const track = s.track(patch.kind, ring, wheel, patch.sides, patch.laps);
+  const beats = Math.max(Math.abs(s.turn(track, track.total)) / TAU, track.orbits);
+  const samples = Math.max(2, Math.ceil(GLANCE * beats) + 1);
+  return { count: pencils.length, samples, trace: s.trace(track, pencils, samples), frame: Array.from(s.frame(track, pencils)) };
 }
 
 /* FIT */

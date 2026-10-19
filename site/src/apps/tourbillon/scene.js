@@ -1,8 +1,9 @@
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS } from '../../lib/color.js';
+import { pick } from '../../lib/rand.js';
 import { RAMPS, colorizer, paint } from '../../lib/moire/engine.js';
 import { fit, shell } from '../../lib/moire/sheet.js';
-import { BLENDS, DRAG, MODES, NUDGE, READ, SCHEDULES, SETS, SIZES, SLOP, STAMP, WEIGHTS, angle, live, reading, settle, shade, spin, trim } from './engine.js';
+import { BLENDS, BUDGET, DRAG, HUSH, LEAN, MODES, NUDGE, READ, REEL, SCHEDULES, SETS, SIZES, SLOP, STAMP, SWEEP, WEIGHTS, angle, live, reading, settle, shade, spin, trim } from './engine.js';
 import { wasm } from '../../lib/units/index.js';
 
 const OWN = () => false;
@@ -34,11 +35,25 @@ export const PAGE = {
     'Unspun, the stack is the one [Moire](/moire/) shows; spinning it breaks the shared grid, and the exact nodes that survive a turn are the Gaussian-integer angles. What a stack is lives in [the stack note](/research/stack/).',
   ],
   keys: [
-    { key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Stop' : 'Play'), act: 'play', button: true },
+    { key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Stop' : 'Play'), act: 'play', button: true, menu: 'Edit' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Nudge', act: 'nudge' },
   ],
-  actions: { play: (scene) => scene.toggle?.(), nudge: (scene, e) => scene.nudge?.(e.key === 'ArrowLeft' ? -1 : 1), reroll: (scene) => scene.random?.() },
+  actions: { play: (scene) => scene.toggle?.(), nudge: (scene, e) => scene.nudge?.(e.key === 'ArrowLeft' ? -1 : 1) },
 };
+
+/* SAVERS */
+
+const dial = (rand) => Math.round(rand() * 36000) / 100;
+
+const odd = (rand, from, to) => from + 2 * Math.floor(rand() * ((to - from) / 2 + 1));
+
+const stack = (rand, from, to, over) => ({ increment: dial(rand), limit: odd(rand, from, to), set: 'odd', weights: 'plain', mode: 'cells', blend: 'mean', ramp: pick(rand, ['ink', 'tint']), levels: 0, size: 512, ...over });
+
+export const SAVERS = [
+  { id: 'swirl', title: 'Swirl', pick: (rand) => stack(rand, 25, 41, { weights: 'harmonic' }) },
+  { id: 'lattices', title: 'Lattices', pick: (rand) => stack(rand, 21, 41, { set: pick(rand, ['primes', 'primes', 'prime powers']) }) },
+  { id: 'lace', title: 'Lace', pick: (rand) => stack(rand, 21, 35, { weights: 'harmonic', mode: 'edges' }) },
+];
 
 export const units = wasm('math');
 
@@ -72,7 +87,7 @@ export function make(canvas, view, opts = {}) {
   let grab = null;
   let gone = false;
   const planKey = () => [value.limit, value.sched, value.set, value.weights, value.mode, value.blend, value.seed].join(' ');
-  const shown = () => (playing ? angle(from, view.t - origin) : value.increment);
+  const shown = () => (playing ? angle(from, view.t - origin, view.lock ? HUSH : SWEEP) : value.increment);
   const facts = () => {
     if (error) return { error };
     if (!stats) return null;
@@ -103,7 +118,7 @@ export function make(canvas, view, opts = {}) {
   const sync = () => {
     const at = shown();
     const fine = value.size;
-    const quick = view.fixed || view.still ? fine : live(stats?.layers ?? 1, fine);
+    const quick = view.fixed || view.still ? fine : live(stats?.layers ?? 1, fine, view.lock ? LEAN : BUDGET);
     const busy = playing || streak > 1;
     const want = `${planKey()} ${at} ${busy ? quick : fine}`;
     if (want === failed) return;
@@ -203,5 +218,5 @@ export function make(canvas, view, opts = {}) {
     held?.field.free();
     held = null;
   };
-  return { draw, set, toggle, nudge, touch, lift, theme, size, stop, playing: () => playing, angle: shown };
+  return { draw, set, toggle, nudge, touch, lift, theme, size, stop, playing: () => playing, angle: shown, every: view.lock ? REEL : 0 };
 }

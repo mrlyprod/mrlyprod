@@ -1,14 +1,15 @@
 import { apps, own } from 'site:apps';
 import { escape } from '../lib/md/text.ts';
 
-const APP = { wide: true, bare: true, sheet: 'mrly' };
+const APP = { wide: true, bare: true, sheet: 'mrly', window: 'app' };
+
+const PAGE = { ...APP, window: 'wide' };
 
 const live = new WeakMap();
 
 const chunk = (id) => (apps[id] ? apps[id]() : Promise.reject(new Error(`app: no chunk for ${id}`)));
 
 const still = {
-  layout: APP,
   render(row, site, host) {
     const title = escape(row.title);
     const figure = row.figure ? `<figure class="opener" data-figure="${escape(row.figure)}"><canvas role="img" aria-label="${title}"></canvas></figure>` : '';
@@ -28,5 +29,5 @@ const still = {
 };
 
 export function page(row) {
-  return own.has(row.meta.id) ? chunk(row.meta.id) : still;
+  return own.has(row.meta.id) ? chunk(row.meta.id) : { ...still, layout: row.meta.scene ? APP : PAGE };
 }

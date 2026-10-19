@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33a3ff"/><stop offset="0.7" stop-color="#008cff"/></linearGradient>
+    <linearGradient id="topg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eef7ff"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M512 312L425.4 362L512 412Z" fill="#1d6fd1" data-dark="#0b3d75" data-mono="hide"/>
+  <path d="M512 312L598.6 362L512 412Z" fill="#3d8fe6" data-dark="#0f4f93" data-mono="hide"/>
+  <path d="M685.2 612L685.2 512L598.6 562Z" fill="#3d8fe6" data-dark="#0f4f93" data-mono="hide"/>
+  <path d="M685.2 612L598.6 662L598.6 562Z" fill="#5aa6f0" data-dark="#1460ad" data-mono="hide"/>
+  <path d="M338.8 612L338.8 512L425.4 562Z" fill="#1d6fd1" data-dark="#0b3d75" data-mono="hide"/>
+  <path d="M338.8 612L425.4 662L425.4 562Z" fill="#5aa6f0" data-dark="#1460ad" data-mono="hide"/>
+  <path d="M512 212L771.8 362L512 512L252.2 362ZM512 312L598.6 362L512 412L425.4 362Z" fill-rule="evenodd" fill="url(#topg)" data-dark="#6cc0ff"/>
+  <path d="M252.2 662L512 812L512 512L252.2 362ZM338.8 612L425.4 662L425.4 562L338.8 512Z" fill-rule="evenodd" fill="#cfe8ff" data-dark="#2f97f2"/>
+  <path d="M771.8 662L512 812L512 512L771.8 362ZM685.2 612L598.6 662L598.6 562L685.2 512Z" fill-rule="evenodd" fill="#8cc6ff" data-dark="#176fc4" data-mono="dim"/>
+</svg>

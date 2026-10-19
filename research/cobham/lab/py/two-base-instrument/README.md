@@ -34,7 +34,7 @@ uv run python research/cobham/lab/py/two-base-instrument/detector.py blocks 47
 
 ## WITNESSES
 
-- Each row is a number this study prints and stands behind; the page section they belong to is `cobham.md`.
+- Each row is a number this study prints and stands behind; the page section they belong to is `gasket-three-base-and-two-frequencies.md`.
 - The enumerator agrees with direct digit filtering at every level to `3^9`, where both routes return the same `42` values, and the first members of the cell are `1, 10, 12, 27, 30, 31, 36, 37, 252, 255, 256, 280`.
 - The height `3^44 = 984770902183611232881`, the hit count `5667470`, and at `3^47` the hit count `19042219`.
 - The budget `0.313536` rounded up, against a fitted exponent `0.323301` over the whole window and `0.295978` over its upper half at `3^44`, `0.318728` and `0.292184` at `3^47`.

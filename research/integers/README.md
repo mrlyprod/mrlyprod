@@ -3,6 +3,7 @@ title: Integers
 lead: The census the other way round: which integers the whole registry writes, which it never writes, and which it writes thousands of times.
 figure: research-integers
 slug: integers
+date: 2026-08-31
 ---
 
 # Integers
@@ -10,6 +11,7 @@ slug: integers
 The census the other way round: which integers the whole registry writes, which it never writes, and which it writes thousands of times.
 
 - [notes/integers.md](notes/integers.md): Integers
+- [notes/field-ladder.md](notes/field-ladder.md): The field ladder
 - [claims/divisor-avatars.md](claims/divisor-avatars.md): Divisor avatars
 - [claims/fill-polynomials.md](claims/fill-polynomials.md): Fill polynomials
 - [claims/integer-census-and-avatars.md](claims/integer-census-and-avatars.md): Integer census and avatars

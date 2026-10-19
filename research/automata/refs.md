@@ -52,4 +52,3 @@
 | NKS note, rule 150 | A New Kind of Science note for page 885: there are 2^m Fibonacci[m+2] black cells up to step 2^m, so the fractal dimension is Log[2, 1 + Sqrt[5]] | https://www.wolframscience.com/nks/notes-3-2--rule-150/ |
 | NKS note, surjectivity | A New Kind of Science note for page 959: 30 surjective elementary rules, and in two dimensions such properties are in general undecidable | https://www.wolframscience.com/nks/notes-6-7--surjectivity-and-injectivity-of-cellular-automaton-maps/ |
 | NKS page 436 | A New Kind of Science: of the 256 elementary rules only six are reversible; the page does not name them | https://www.wolframscience.com/nks/p436--the-notion-of-reversibility/ |
-| OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |

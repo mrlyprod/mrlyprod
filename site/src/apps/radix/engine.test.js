@@ -3,7 +3,7 @@ import * as math from '@mrlyprod/mrly/math';
 import * as num from '@mrlyprod/mrly/num';
 import { defaults } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { BASES, BUDGET, KOCH, MOST, PRESETS, bands, bits, boxOf, boxed, cap, coded, corners, deepest, dial, every, flat, lattice, lay, picture, preset, reach, rebase, roll, rolled, spell, study, toggle, turn } from './engine.js';
+import { BASES, BUDGET, KOCH, MOST, PRESETS, bands, boxOf, boxed, boxes, cap, coded, corners, deepest, dial, every, flat, glance, lattice, lay, picture, preset, reach, rebase, rolled, spell, study, toggle, turn } from './engine.js';
 import { SPEC } from './scene.js';
 
 const value = (over) => ({ ...defaults(SPEC), seed: 1, ...over });
@@ -76,18 +76,27 @@ test('a reroll holds two classes or more with twists of the ring, the same for o
   expect(rolled(dialed, rng(7))).toEqual(rolled(dialed, rng(7)));
 });
 
-test('a rolled box code has five cells or more and never the whole box, the same for one seed', () => {
-  const codes = Array.from({ length: 3000 }, (_, i) => Number(roll(rng(i))));
-  expect(codes.every((code) => code >= 1 && code <= 510 && bits(code) >= 5)).toBe(true);
-  expect(Array.from({ length: 20 }, (_, i) => roll(rng(i)))).toEqual(Array.from({ length: 20 }, (_, i) => roll(rng(i))));
-});
-
 test('a box code loads its box digits on base 3 of the square lattice and reads back only while they stay untwisted in the box', () => {
   const carpet = value(boxed(num, math, '495'));
   expect(boxed(num, math, '495')).toEqual({ ring: 'gaussian', base: '3:0', d: preset(num, math, 'carpet').d, t: '0_0_0_0_0_0_0_0' });
   expect(boxOf(dial(num, math, carpet))).toBe('495');
   expect(boxOf(dial(num, math, { ...carpet, t: '1_0_0_0_0_0_0_0' }))).toBe('');
   expect(boxOf(dial(num, math, value({ ring: 'gaussian', base: '3:0', d: '0:0_-1:0', t: '0_0' })))).toBe('');
+});
+
+test('a glance goes as deep as the preset asks while the words stay few, and a single digit stops at the ceiling', () => {
+  expect([glance(4, 5), glance(2, 14), glance(2), glance(9), glance(1), glance(4, 99)]).toEqual([5, 11, 11, 3, MOST, 5]);
+  expect(study(num, math, preset(num, math, 'twindragon'), 3).cap).toBe(3);
+});
+
+test('the boxes are the named designs of the base 3 square, then each class that no name covers, with no code twice', () => {
+  const { named, rest } = boxes(math);
+  expect(named).toHaveLength(10);
+  expect(named[0]).toEqual(['495', 'carpet']);
+  expect(rest.every(([, word]) => word === '')).toBe(true);
+  const codes = [...named, ...rest].map(([code]) => code);
+  expect(new Set(codes).size).toBe(codes.length);
+  expect(rest).toHaveLength(18);
 });
 
 test('the Koch study reads base 3 of norm 9, four digits off the canonical system and no glue', () => {

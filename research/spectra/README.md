@@ -3,6 +3,7 @@ title: Spectra
 lead: The tile grammar of the diagonal slice at every odd base: the two-tile claim, the closed forms, and the mod-4 split.
 figure: research-spectra
 slug: spectra
+date: 2026-08-28
 ---
 
 # Spectra

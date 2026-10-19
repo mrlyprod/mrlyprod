@@ -1,4 +1,12 @@
-import { hub } from '../../shell/hub.jsx';
-import { filled, Menu } from '../../shell/parts.jsx';
+import { Launchpad, opened } from '../../shell/launchpad.jsx';
+import { hide, show } from '../../shell/parts.jsx';
 
-export const { layout, render, mount, unmount } = hub((row, site, { rows }) => <Menu tree={filled(site, rows)} />);
+export const layout = { wide: true, bare: true, window: 'none' };
+
+export function render(row, site, host) {
+  show(host, <Launchpad />);
+}
+
+export const mount = opened;
+
+export const unmount = hide;

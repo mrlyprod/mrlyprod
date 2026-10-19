@@ -1,18 +1,30 @@
 import { num, path, sheet } from '../../lib/app/svg.js';
-import { roll, settle, title } from '../../lib/designs/engine.js';
+import { canon, roll, title } from '../../lib/designs/engine.js';
 
 export const NUMBERS = [3, 5, 7];
-export const SPACES = [['flat', '2D'], ['cube', '3D'], ['hex', '6D']];
+export const DIMS = [[2, '2D'], [3, '3D']];
+export const VIEWS = [['cube', '3D'], ['hex', '6D']];
 export const NAMES = { core: 'Core, filled cells', edge: 'Edge, corners and sides', tunnel: 'Tunnel, empty cells', dual: 'Dual, fills and voids' };
 export const KINDS = { flat: ['core', 'edge', 'tunnel'], cube: ['core', 'edge', 'tunnel'], hex: ['core', 'dual', 'edge'] };
+export const SETS = [
+  ['Carpet', { dim: 2, base: 3, code: '', number: 3, graph: 'core', level: 2, layout: 'lattice' }],
+  ['Carpet tunnels', { dim: 2, base: 3, code: '', number: 3, graph: 'tunnel', level: 3, layout: 'lattice' }],
+  ['Carpet relaxed', { dim: 2, base: 3, code: '', number: 3, graph: 'edge', level: 2, layout: 'force' }],
+  ['Sponge', { dim: 3, view: 'cube', base: 3, code: '', number: 3, graph: 'core', level: 2, layout: 'lattice' }],
+  ['Cube relaxed', { dim: 3, view: 'cube', base: 2, code: '', number: 3, graph: 'core', level: 2, layout: 'force' }],
+  ['Sponge slice', { dim: 3, view: 'hex', base: 3, code: '', number: 3, graph: 'dual', level: 2, layout: 'lattice' }],
+];
 export const LAYOUTS = [['lattice', 'Lattice'], ['force', 'Force']];
 export const CAMERAS = [['eye', 'Perspective'], ['iso', 'Isometric']];
 export const BUDGET = { lattice: 20000, force: 2000 };
 export const COOL = 360;
 export const TICK = 3;
 export const DEEPEST = 8;
-export const FIRST = 4;
 export const PAD = 16;
+const SEEN = 3;
+const DEPTH = 2;
+const SKEW = 0.5;
+const KEPT = 128;
 const SAID = ['Alone', 'Tip', 'Through', 'Junction'];
 const LOAD = 4e-6;
 const SNAP = 200;
@@ -28,17 +40,11 @@ const count = (x) => (x === undefined || x === null ? null : Number(x));
 
 /* SPACE */
 
-export const spaceOf = (value) => (KINDS[value?.view] ? value.view : 'flat');
+export const spaceOf = (value) => (Number(value?.dim) === 3 ? (value.view === 'hex' ? 'hex' : 'cube') : 'flat');
 
 export const solid = (value) => spaceOf(value) === 'cube';
 
-export const keysOf = (space) => (space === 'flat' ? { base: 'base', code: 'code' } : { base: 'cbase', code: 'ccode' });
-
-export function design(value) {
-  const space = spaceOf(value);
-  const { base, code } = keysOf(space);
-  return { dim: space === 'flat' ? 2 : 3, base: value[base], code: String(value[code] ?? '').trim() };
-}
+export const design = (value) => ({ dim: Number(value?.dim) === 3 ? 3 : 2, base: value?.base, code: String(value?.code ?? '').trim() });
 
 export const kindOf = (value) => (KINDS[spaceOf(value)].includes(value?.graph) ? value.graph : KINDS[spaceOf(value)][0]);
 
@@ -51,8 +57,6 @@ export function turn(value, by) {
 
 /* ROOM */
 
-const pinned = (math, dim, base, code) => (code !== '' && Number.isFinite(Number(code)) ? settle(math, dim, base, code) : null);
-
 export function bound(math, space, base, code, number, level, graph) {
   if (space === 'hex') return Number(graph === 'edge' ? math.counts.six.solid_slice_vertices(number ** level) : math.counts.six.grid_triangles(number, level));
   const dim = space === 'cube' ? 3 : 2;
@@ -60,12 +64,11 @@ export function bound(math, space, base, code, number, level, graph) {
   return Number(math.counts.fill(code, number, dim, level, base)) * (graph === 'edge' ? 2 ** dim : 1);
 }
 
-export function top(math, value) {
+export function top(math, value, room) {
   const space = spaceOf(value);
   const { dim, base, code } = design(value);
-  const settled = pinned(math, dim, base, code);
-  if (settled === null) return FIRST;
-  const budget = BUDGET[value.layout] ?? BUDGET.force;
+  const settled = canon(math, dim, base, code);
+  const budget = room ?? BUDGET[value.layout] ?? BUDGET.force;
   const fits = (level) => {
     if (value.number ** (level * dim) > GRID) return false;
     try {
@@ -113,6 +116,31 @@ export function flatten(net) {
   return { dim, count: nodes.length, positions, pairs };
 }
 
+const sights = new Map();
+
+export function glimpse(math, value, graph) {
+  const space = spaceOf(value);
+  const { dim, base, code } = design(value);
+  const at = [space, base, code, graph].join(':');
+  if (!sights.has(at)) {
+    if (sights.size >= KEPT) sights.clear();
+    const { net } = build(math, space, base, canon(math, dim, base, code), SEEN, DEPTH, graph);
+    sights.set(at, flatten(net));
+    net.free();
+  }
+  return sights.get(at);
+}
+
+export function plane({ dim, count, positions }) {
+  if (dim === 2) return positions;
+  const out = new Float64Array(count * 2);
+  for (let i = 0; i < count; i++) {
+    out[2 * i] = positions[3 * i] + SKEW * positions[3 * i + 2];
+    out[2 * i + 1] = positions[3 * i + 1] + SKEW * positions[3 * i + 2];
+  }
+  return out;
+}
+
 export function roles(math, net) {
   return Uint8Array.from(math.graph.roles(net), (role) => Math.max(0, SAID.indexOf(role)));
 }
@@ -136,16 +164,16 @@ export function giant(math, net) {
 
 /* DEAL */
 
-export function deal(math, value, rand, ask = { code: true, graph: true, level: true, layout: true }) {
+export function deal(math, value, rand, ask = { code: true, graph: true, level: true, layout: true }, room) {
   const space = spaceOf(value);
   const { dim, base, code: kept } = design(value);
   let best = null;
   for (let go = 0; go < ROLLS; go++) {
-    const code = ask.code ? roll(math, dim, base, rand) : pinned(math, dim, base, kept) ?? roll(math, dim, base, rand);
+    const code = ask.code ? roll(math, dim, base, rand) : canon(math, dim, base, kept);
     const graph = ask.graph ? pick(rand, KINDS[space]) : kindOf(value);
     const layout = ask.layout ? pick(rand, ['lattice', 'force']) : value.layout;
-    const asked = { ...value, [keysOf(space).code]: code, graph, layout };
-    const most = top(math, asked);
+    const asked = { ...value, code, graph, layout };
+    const most = top(math, asked, room);
     const low = Math.min(LOW, most);
     const level = ask.level ? low + Math.floor(rand() * (most - low + 1)) : Math.min(value.level, most);
     const { net } = build(math, space, base, code, value.number, Math.min(level, top(math, { ...asked, layout: 'force' })), graph);
@@ -157,17 +185,17 @@ export function deal(math, value, rand, ask = { code: true, graph: true, level: 
     if (fine || (!ask.code && !ask.graph && !ask.level)) break;
   }
   const { code, graph, layout, level, whole } = best;
-  return { [keysOf(space).code]: code, graph, level, layout: ask.layout && !whole ? 'lattice' : layout };
+  return { code, graph, level, layout: ask.layout && !whole ? 'lattice' : layout };
 }
 
 /* STUDY */
 
-export function study(math, value, rand) {
+export function study(math, value) {
   const space = spaceOf(value);
   const { dim, base, code: asked } = design(value);
-  const code = settle(math, dim, base, asked, rand);
+  const code = canon(math, dim, base, asked);
   const graph = kindOf(value);
-  const most = top(math, { ...value, [keysOf(space).code]: code });
+  const most = top(math, { ...value, code });
   const level = Math.max(1, Math.min(value.level, most));
   const { side, net, euler } = build(math, space, base, code, value.number, level, graph);
   const census = math.graph.census(net);

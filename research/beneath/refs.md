@@ -50,9 +50,7 @@
 | ref | title | url |
 |---|---|---|
 | Perron-Frobenius theorem | Wikipedia: the Collatz-Wielandt formula, the min-max over positive vectors behind the even-half certificates of the `slice-sign-even-half` shelf paper | https://en.wikipedia.org/wiki/Perron%E2%80%93Frobenius_theorem |
-| OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |
 | OEIS A191363 | Numbers m whose deficiency is 2: sigma(m) - 2*m = -2. | https://oeis.org/A191363 |
-| OEIS A000930 | Narayana's cows sequence | https://oeis.org/A000930 |
 | A007582 | a(n) = 2^(n-1)*(1+2^n). | https://oeis.org/A007582 |
 | A003714 | Fibbinary numbers: if n = F(i1) + F(i2) + ... + F(ik) is the Zeckendorf representation of n (i.e., write n in Fibonacci number system) then a(n) = 2^(i1 - 2) + 2^(i2 - 2) + ... + 2^(ik - 2). Also numbers whose binary representation contains no two adjacent 1's. | https://oeis.org/A003714 |
 | A000225 | a(n) = 2^n - 1. (Sometimes called Mersenne numbers, although that name is usually reserved for A001348.) | https://oeis.org/A000225 |

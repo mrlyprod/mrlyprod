@@ -168,6 +168,8 @@ ${probe ? `  int q = gone ? int(clamp(sl * 8.0, 0.0, 65535.0)) : 0;
 
 /* COLOUR */
 
+export const glow = (sl) => 0.5 + 0.5 * Math.cos(PHASE + STRIDE * (sl + SHIFT));
+
 const RAMPS = {
   fire: ['#000000', '#9a2005', '#f06a12', '#ffe79a'],
   ice: ['#000000', '#0d4f8c', '#47c3ee', '#f2fdff'],

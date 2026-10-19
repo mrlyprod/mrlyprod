@@ -1,0 +1,123 @@
+{
+  "at": 1792422361,
+  "hours": 24,
+  "cdn": {
+    "requests": 4989.0,
+    "bytes": 45372436.0,
+    "error_4xx": 17.024,
+    "error_5xx": 0.0,
+    "hourly": [
+      {"at": 1792335960, "requests": 129.0},
+      {"at": 1792339560, "requests": 156.0},
+      {"at": 1792343160, "requests": 207.0},
+      {"at": 1792346760, "requests": 231.0},
+      {"at": 1792350360, "requests": 253.0},
+      {"at": 1792353960, "requests": 267.0},
+      {"at": 1792357560, "requests": 279.0},
+      {"at": 1792361160, "requests": 272.0},
+      {"at": 1792364760, "requests": 250.0},
+      {"at": 1792368360, "requests": 224.0},
+      {"at": 1792371960, "requests": 198.0},
+      {"at": 1792375560, "requests": 175.0},
+      {"at": 1792379160, "requests": 154.0},
+      {"at": 1792382760, "requests": 139.0},
+      {"at": 1792386360, "requests": 144.0},
+      {"at": 1792389960, "requests": 163.0},
+      {"at": 1792393560, "requests": 191.0},
+      {"at": 1792397160, "requests": 222.0},
+      {"at": 1792400760, "requests": 250.0},
+      {"at": 1792404360, "requests": 267.0},
+      {"at": 1792407960, "requests": 246.0},
+      {"at": 1792411560, "requests": 213.0},
+      {"at": 1792415160, "requests": 187.0},
+      {"at": 1792418760, "requests": 172.0}
+    ]
+  },
+  "lambdas": {
+    "mrlynet-site": {
+      "invocations": 598.0,
+      "errors": 2.0,
+      "throttles": 0.0,
+      "duration_ms": 41.873,
+      "hourly": [
+        {"at": 1792335960, "invocations": 16.0},
+        {"at": 1792339560, "invocations": 17.0},
+        {"at": 1792343160, "invocations": 25.0},
+        {"at": 1792346760, "invocations": 31.0},
+        {"at": 1792350360, "invocations": 29.0},
+        {"at": 1792353960, "invocations": 27.0},
+        {"at": 1792357560, "invocations": 30.0},
+        {"at": 1792361160, "invocations": 34.0},
+        {"at": 1792364760, "invocations": 30.0},
+        {"at": 1792368360, "invocations": 29.0},
+        {"at": 1792371960, "invocations": 22.0},
+        {"at": 1792375560, "invocations": 22.0},
+        {"at": 1792379160, "invocations": 18.0},
+        {"at": 1792382760, "invocations": 16.0},
+        {"at": 1792386360, "invocations": 19.0},
+        {"at": 1792389960, "invocations": 18.0},
+        {"at": 1792393560, "invocations": 24.0},
+        {"at": 1792397160, "invocations": 27.0},
+        {"at": 1792400760, "invocations": 33.0},
+        {"at": 1792404360, "invocations": 31.0},
+        {"at": 1792407960, "invocations": 32.0},
+        {"at": 1792411560, "invocations": 24.0},
+        {"at": 1792415160, "invocations": 22.0},
+        {"at": 1792418760, "invocations": 22.0}
+      ]
+    },
+    "mrlynet-stats": {
+      "invocations": 24.0,
+      "errors": 0.0,
+      "throttles": 0.0,
+      "duration_ms": 4720.369,
+      "hourly": [
+        {"at": 1792335960, "invocations": 1.0},
+        {"at": 1792339560, "invocations": 1.0},
+        {"at": 1792343160, "invocations": 1.0},
+        {"at": 1792346760, "invocations": 1.0},
+        {"at": 1792350360, "invocations": 1.0},
+        {"at": 1792353960, "invocations": 1.0},
+        {"at": 1792357560, "invocations": 1.0},
+        {"at": 1792361160, "invocations": 1.0},
+        {"at": 1792364760, "invocations": 1.0},
+        {"at": 1792368360, "invocations": 1.0},
+        {"at": 1792371960, "invocations": 1.0},
+        {"at": 1792375560, "invocations": 1.0},
+        {"at": 1792379160, "invocations": 1.0},
+        {"at": 1792382760, "invocations": 1.0},
+        {"at": 1792386360, "invocations": 1.0},
+        {"at": 1792389960, "invocations": 1.0},
+        {"at": 1792393560, "invocations": 1.0},
+        {"at": 1792397160, "invocations": 1.0},
+        {"at": 1792400760, "invocations": 1.0},
+        {"at": 1792404360, "invocations": 1.0},
+        {"at": 1792407960, "invocations": 1.0},
+        {"at": 1792411560, "invocations": 1.0},
+        {"at": 1792415160, "invocations": 1.0},
+        {"at": 1792418760, "invocations": 1.0}
+      ]
+    }
+  },
+  "errors": {
+    "mrlynet-site": [
+      {"at": "2026-10-18T20:18:24.704Z", "level": "ERROR", "message": "Task timed out after 10.01 seconds"},
+      {"at": "2026-10-19T08:37:47.067Z", "level": "ERROR", "message": "fetch failed <url> status 502"}
+    ],
+    "mrlynet-stats": []
+  },
+  "bucket": {
+    "site_objects": 3749,
+    "site_bytes": 124283009,
+    "figures": 1022,
+    "code": 1,
+    "raw": 1832,
+    "demos": 54,
+    "wiki": 58,
+    "notes": 42,
+    "claims": 124,
+    "papers": 25,
+    "blog": 1
+  },
+  "seconds": 4.5
+}

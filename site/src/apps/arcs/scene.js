@@ -3,7 +3,7 @@ import { dark, light } from '../../lib/theme/theme.js';
 import { tidy } from '../../lib/app/spec.js';
 import { HUES, TINTS, mix, rgb } from '../../lib/color.js';
 import { runs } from '../../lib/app/svg.js';
-import { BASES, FADE, LOOKS, PAD, arc, cap, fit, picture, resolve, study, thick } from './engine.js';
+import { BASES, DIM, FADE, LOOKS, PAD, arc, cap, fit, picture, resolve, study, thick } from './engine.js';
 import { wasm } from '../../lib/units/index.js';
 
 const HIDE = () => false;
@@ -22,7 +22,7 @@ export const SPEC = [
 export const ABOUT = [
   'Every cell carries two quarter arcs, each joining the midpoints of two neighbouring edges. A filled cell takes the arcs round its lower-left and upper-right corners, an empty cell the other two.',
   'The arcs join into curves. Strands run from border to border, and there are always twice the side of them. Loops close on themselves, and the design decides how many.',
-  'A law shows where one is proved: the carpet at base 3 and all sixteen codes at base 2. Every count comes from the crate, by union-find over the edge midpoints, and row 0 is at the bottom.',
+  'A law shows where one is proved: the carpet at base 3 and all sixteen codes at base 2. The library holds the designs whose law counts some loops. Every count comes from the crate, by union-find over the edge midpoints, and row 0 is at the bottom.',
   'Trace, or a tap, lights the loops one by one. Reroll rolls a design that loops at this level. [Designs](/designs/) lists the designs, and [Two](/two/) repeats one into a sheet.',
 ];
 
@@ -35,19 +35,24 @@ export const PAGE = {
   units,
   name: file,
   about: ABOUT,
+  design: { dim: DIM, base: 'base', code: 'code', bases: BASES.map(([base]) => base) },
   keys: [
-    { key: 'Enter', label: 'Trace', act: 'trace', button: true },
+    { key: 'Enter', label: 'Trace', act: 'trace', button: true, menu: 'Edit' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Design', act: 'design' },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
+    { key: 'ArrowUp', label: 'Level', act: 'up', menu: 'View' },
+    { key: 'ArrowDown', label: 'Level', act: 'down', menu: 'View' },
   ],
   actions: {
     trace: (scene) => scene.trace?.(),
     design: (scene, e) => scene.step?.(e.key === 'ArrowLeft' ? -1 : 1),
-    level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
+    up: (scene) => scene.deeper?.(1),
+    down: (scene) => scene.deeper?.(-1),
   },
 };
 
 const CHUNK = 8192;
+
+const EDGE = 0.08;
 
 const FLIP = (h) => [1, 0, 0, -1, 0, h];
 
@@ -58,6 +63,65 @@ export function shades(canvas, look, strand) {
   const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
   const other = HUES.includes(strand) ? read(`--${strand}`, palette[strand]) : read('--accent', light.accent);
   return { loop: look.accent, strand: other, dim: mix(rgb(look.accent), rgb(look.paper), FADE), fill: read('--line', bright(look.paper) ? light.line : dark.line) };
+}
+
+/* STROKES */
+
+export function quarter(target, plan, box, a, d, f) {
+  const g = arc(plan, a);
+  const r = box.px / 2;
+  const cx = box.x + g.cx * box.px;
+  const cy = box.y + g.cy * box.px;
+  if (d > 0) {
+    target.moveTo(cx, box.y + (g.y + 0.5) * box.px);
+    target.arc(cx, cy, r, g.av, g.av + g.sweep * f, g.sweep < 0);
+  } else {
+    target.moveTo(box.x + (g.x + 0.5) * box.px, cy);
+    target.arc(cx, cy, r, g.ah, g.ah - g.sweep * f, g.sweep > 0);
+  }
+}
+
+export function strokes(target, plan, box, loops) {
+  const { order, dir, bounds, closed } = plan;
+  let open = 0;
+  target.beginPath();
+  for (let k = 0; k < closed.length; k++) {
+    if (closed[k] !== loops) continue;
+    for (let j = bounds[k]; j < bounds[k + 1]; j++) {
+      quarter(target, plan, box, order[j], dir[j], 1);
+      if (++open >= CHUNK) {
+        target.stroke();
+        target.beginPath();
+        open = 0;
+      }
+    }
+  }
+  if (open) target.stroke();
+}
+
+export function shade(target, spans, box) {
+  target.beginPath();
+  for (const [row, col, len] of spans) target.rect(box.x + col * box.px, box.y + row * box.px, len * box.px, box.px);
+  target.fill();
+}
+
+export function sketch(ctx, w, h, dpr, plan, value, inks) {
+  const box = fit(plan.side, w, h, w * EDGE);
+  ctx.setTransform(...FLIP(h));
+  ctx.lineCap = 'round';
+  ctx.lineWidth = thick(value.width, box.px, dpr);
+  if (value.cells) {
+    ctx.fillStyle = inks.fill;
+    shade(ctx, runs({ shape: [plan.side, plan.side], types: plan.filled }), box);
+  }
+  if (value.look !== 'loops') {
+    ctx.strokeStyle = inks.strand;
+    strokes(ctx, plan, box, 0);
+  }
+  if (value.look !== 'strands') {
+    ctx.strokeStyle = inks.loop;
+    strokes(ctx, plan, box, 1);
+  }
 }
 
 /* SCENE */
@@ -87,19 +151,7 @@ export function make(canvas, view, opts = {}) {
     inks = shades(canvas, view.look(), value.strand);
   };
   const width = () => thick(value.width, box.px, view.dpr);
-  const sweep = (target, a, d, f) => {
-    const g = arc(plan, a);
-    const r = box.px / 2;
-    const cx = box.x + g.cx * box.px;
-    const cy = box.y + g.cy * box.px;
-    if (d > 0) {
-      target.moveTo(cx, box.y + (g.y + 0.5) * box.px);
-      target.arc(cx, cy, r, g.av, g.av + g.sweep * f, g.sweep < 0);
-    } else {
-      target.moveTo(box.x + (g.x + 0.5) * box.px, cy);
-      target.arc(cx, cy, r, g.ah, g.ah - g.sweep * f, g.sweep > 0);
-    }
-  };
+  const sweep = (target, a, d, f) => quarter(target, plan, box, a, d, f);
   const trace = (target, k, f) => {
     const { order, dir, bounds } = plan;
     const from = bounds[k];
@@ -112,23 +164,9 @@ export function make(canvas, view, opts = {}) {
     target.stroke();
   };
   const lay = (target, loops, color) => {
-    const { order, dir, bounds, closed } = plan;
     target.strokeStyle = color;
     target.lineWidth = width();
-    let open = 0;
-    target.beginPath();
-    for (let k = 0; k < closed.length; k++) {
-      if (closed[k] !== loops) continue;
-      for (let j = bounds[k]; j < bounds[k + 1]; j++) {
-        sweep(target, order[j], dir[j], 1);
-        if (++open >= CHUNK) {
-          target.stroke();
-          target.beginPath();
-          open = 0;
-        }
-      }
-    }
-    if (open) target.stroke();
+    strokes(target, plan, box, loops);
   };
   const blank = () => {
     const sheet = new OffscreenCanvas(view.w, view.h);
@@ -143,9 +181,7 @@ export function make(canvas, view, opts = {}) {
     const [back, ink] = blank();
     if (value.cells && spans.length) {
       ink.fillStyle = inks.fill;
-      ink.beginPath();
-      for (const [row, col, len] of spans) ink.rect(box.x + col * box.px, box.y + row * box.px, len * box.px, box.px);
-      ink.fill();
+      shade(ink, spans, box);
     }
     if (value.look !== 'loops') lay(ink, 0, inks.strand);
     if (value.look !== 'strands') lay(ink, 1, tracing ? inks.dim : inks.loop);

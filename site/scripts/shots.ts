@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { decode } from "../src/lib/git/view.ts";
-import { decide } from "../infra/edge.ts";
+import { decide, joined } from "../infra/edge.ts";
 import { kind } from "../infra/mime.ts";
 
 /* WHERE */
@@ -50,7 +50,7 @@ function serve(dist: string) {
     fetch(req) {
       const url = new URL(req.url);
       const step = decide(decode(url.pathname));
-      if (step.redirect) return Response.redirect(`${step.redirect}${url.search}`, 301);
+      if (step.redirect) return Response.redirect(joined(step.redirect, url.search), 301);
       const hit = file(step.uri!);
       if (hit) return hit;
       const lost = file("/404.html");

@@ -3,6 +3,7 @@ title: Weighted designs
 lead: Weighted designs: what weights move on the mass side, what they never move on the length side, and the pressure that closes both.
 figure: research-weights
 slug: weights
+date: 2026-09-06
 ---
 
 # Weighted designs

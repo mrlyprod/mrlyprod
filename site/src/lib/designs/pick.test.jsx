@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
 import { Pick as Select, Text } from '../app/controls.jsx';
-import { Pick, Picker, Thumbs } from './pick.jsx';
+import { Pick, Picker, Thumbs, watch } from './pick.jsx';
 
 const options = (html) => [...html.matchAll(/<option value="([^"]*)"[^>]*>([^<]*)<\/option>/g)].map((found) => [found[1], found[2]]);
 
@@ -41,4 +41,28 @@ test('Thumbs given a note caption each code with its name and its normal form', 
   const html = renderToStaticMarkup(<Thumbs math={math} dim={2} base={2} codes={['7', '11']} code="7" onPick={() => {}} note={(one) => `f${one}`} tone={() => 'pink'} />);
   expect([...html.matchAll(/<small>([^<]*)<\/small>/g)].map((found) => found[1])).toEqual(['7 carpet', 'f7', '11', 'f11']);
   expect(html).toContain('aria-label="carpet 7, f7"');
+});
+
+test('watch calls back once, when a node first comes into sight, and does nothing without an observer', () => {
+  const real = globalThis.IntersectionObserver;
+  const seen = [];
+  expect(watch({}, () => seen.push('none'))).toBeUndefined();
+  let tell = null;
+  globalThis.IntersectionObserver = class {
+    constructor(fn) {
+      tell = fn;
+    }
+    observe() {}
+    unobserve() {}
+  };
+  try {
+    const [near, far] = [{}, {}];
+    watch(near, () => seen.push('near'));
+    watch(far, () => seen.push('far'));
+    tell([{ target: near, isIntersecting: true }, { target: far, isIntersecting: false }]);
+    tell([{ target: near, isIntersecting: true }]);
+    expect(seen).toEqual(['near']);
+  } finally {
+    globalThis.IntersectionObserver = real;
+  }
 });

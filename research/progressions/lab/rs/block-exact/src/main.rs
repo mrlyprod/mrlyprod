@@ -888,16 +888,21 @@ fn climb_thread(
     (best, moves)
 }
 
-fn lift_check(cube: &Cube, set: &[usize], g: &[u128]) -> (usize, usize, usize) {
+fn slice_key(e: &[u32], a: usize, b: usize) -> (u32, u32) {
+    (e[a].min(e[b]), e[a].max(e[b]))
+}
+
+fn lift_check(cube: &Cube, set: &[usize], e: &[u32]) -> (usize, usize, usize) {
     let k = set.len();
     let mut pos = vec![usize::MAX; cube.n];
     for (i, &v) in set.iter().enumerate() {
         pos[v] = i;
     }
-    let mut slices: std::collections::BTreeMap<u128, Vec<(usize, usize)>> = Default::default();
+    let mut slices: std::collections::BTreeMap<(u32, u32), Vec<(usize, usize)>> =
+        Default::default();
     for a in 0..k {
         for b in 0..k {
-            slices.entry(g[a] + g[b]).or_default().push((a, b));
+            slices.entry(slice_key(e, a, b)).or_default().push((a, b));
         }
     }
     let mut largest = 0;
@@ -915,7 +920,7 @@ fn lift_check(cube: &Cube, set: &[usize], g: &[u128]) -> (usize, usize, usize) {
                     }
                     for &yb in cube.mids(xb, zb) {
                         let pb = pos[yb as usize];
-                        if pb != usize::MAX && g[pa] + g[pb] == s {
+                        if pb != usize::MAX && slice_key(e, pa, pb) == s {
                             found += 1;
                         }
                     }
@@ -949,22 +954,6 @@ fn climb(m: usize, d: usize, seconds: f64, seed: u64) {
         .max_by_key(|s| s.len())
         .unwrap();
     best.sort();
-    let level = cube.rounds(&best).expect("the best set peels");
-    let r = level.iter().max().map_or(0, |&l| l + 1);
-    let g: Vec<u128> = level.iter().map(|&l| 3u128.pow(r - 1 - l)).collect();
-    let pos: std::collections::HashMap<usize, usize> =
-        best.iter().enumerate().map(|(i, &v)| (v, i)).collect();
-    let mut triples = 0u64;
-    for a in 0..best.len() {
-        for b in a + 1..best.len() {
-            for &w in cube.mids(best[a], best[b]) {
-                if let Some(&c) = pos.get(&(w as usize)) {
-                    triples += 1;
-                    assert!(g[a] + g[b] > 2 * g[c], "certificate fails");
-                }
-            }
-        }
-    }
     let k = best.len();
     let base = m / 2 + 1;
     println!(
@@ -973,13 +962,29 @@ fn climb(m: usize, d: usize, seconds: f64, seed: u64) {
         sizes.join(" "),
         t0.elapsed().as_secs_f64()
     );
-    println!("  peel rounds {r}, certificate g = 3^({} - round) checked on all {triples} triples x + z = 2y with x != z inside the set", r.saturating_sub(1));
+    let level = cube.rounds(&best).expect("the best set peels");
+    let r = level.iter().max().map_or(0, |&l| l + 1);
+    let e: Vec<u32> = level.iter().map(|&l| r - 1 - l).collect();
+    let pos: std::collections::HashMap<usize, usize> =
+        best.iter().enumerate().map(|(i, &v)| (v, i)).collect();
+    let mut triples = 0u64;
+    for a in 0..k {
+        for b in a + 1..k {
+            for &w in cube.mids(best[a], best[b]) {
+                if let Some(&c) = pos.get(&(w as usize)) {
+                    triples += 1;
+                    assert!(e[a].max(e[b]) > e[c], "certificate fails");
+                }
+            }
+        }
+    }
+    println!("  peel rounds {r}, certificate g = 3^({} - round) checked as exponents (3^i + 3^j > 2 3^k exactly when max(i, j) > k) on all {triples} triples x + z = 2y with x != z inside the set", r.saturating_sub(1));
     let pts: Vec<String> = best.iter().map(|&v| cube.point(v)).collect();
     println!("  points {}", pts.join(" "));
     let rs: Vec<String> = level.iter().map(|l| l.to_string()).collect();
     println!("  rounds {}", rs.join(" "));
     if k * k <= 250000 {
-        let (slices, largest, found) = lift_check(&cube, &best, &g);
+        let (slices, largest, found) = lift_check(&cube, &best, &e);
         assert_eq!(found, 0, "a lifted slice holds a progression");
         println!(
             "  lift to Z_{m}^{}: {slices} slices of T^2 by the sum of g, the largest {largest} points, every slice progression-free by brute force over pairs",

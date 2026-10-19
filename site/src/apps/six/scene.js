@@ -1,7 +1,6 @@
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS, rgb } from '../../lib/color.js';
-import { rng } from '../../lib/rand.js';
-import { DESIGN, settle } from '../../lib/designs/engine.js';
+import { DESIGN, canon } from '../../lib/designs/engine.js';
 import { DIM, NUMBERS, REPEATS, RINGS, SCALE, SHEETS, VIEWS, cap, copies, croppable, fit, kinds, mesh, studio, wrap } from './engine.js';
 import { wasm } from '../../lib/units/index.js';
 
@@ -27,12 +26,12 @@ const ABOUT = [
   'One cube design seen on the triangular lattice makes a hexagon: its middle slice, its three facing sides, or its isometric skin. Copies of the hexagon interlock into a sheet.',
   'The fills multiply by the copy count. The exposed edges, the rim of the filled triangles, do not: each copy buries the edges it shares with a neighbour, so the sheet exposes less than one copy times the copies.',
   'Crop trims the jagged overhang to a clean rectangle, and cuts fills away with it.',
-  'Tap the picture or press the arrows for the next view. Reroll rolls a new design. [Slices](/slices/) counts a single hexagon, and [the core](/research/core/) says why a design\'s symmetries belong to the infinite tiling.',
+  'Tap the picture or press the side arrows for the next view. The library holds a few sheets, and Reroll rolls a new design. [Slices](/slices/) counts a single hexagon, and [the core](/research/core/) says why a design\'s symmetries belong to the infinite tiling.',
 ];
 
 export function name(value, units) {
   const { base, code } = tidy(DESIGN, { ...value, dim: DIM });
-  return `six-${units?.math ? settle(units.math, DIM, base, code, rng(value.seed)) : code}-${value.view}`;
+  return `six-${units?.math ? canon(units.math, DIM, base, code) : code}-${value.view}`;
 }
 
 export const PAGE = {
@@ -41,20 +40,24 @@ export const PAGE = {
   units,
   about: ABOUT,
   name,
+  design: { dim: DIM, base: 'base', code: 'code' },
   keys: [
-    { key: 'Enter', label: 'Crop', act: 'crop', button: true, when: (value) => croppable(value) && value.overhang === 1 },
-    { key: 'Enter', label: 'Uncrop', act: 'crop', button: true, when: (value) => croppable(value) && value.overhang !== 1 },
+    { key: 'Enter', label: 'Crop', act: 'crop', button: true, menu: 'Edit', when: (value) => croppable(value) && value.overhang === 1 },
+    { key: 'Enter', label: 'Uncrop', act: 'crop', button: true, menu: 'Edit', when: (value) => croppable(value) && value.overhang !== 1 },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'View', act: 'view' },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
+    { key: 'ArrowUp', label: 'Level', act: 'up', menu: 'View' },
+    { key: 'ArrowDown', label: 'Level', act: 'down', menu: 'View' },
   ],
   actions: {
     crop: (scene) => scene.crop?.(),
     view: (scene, e) => scene.view?.(e.key === 'ArrowLeft' ? -1 : 1),
-    level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
+    up: (scene) => scene.deeper?.(1),
+    down: (scene) => scene.deeper?.(-1),
   },
 };
 
 const PAD = 24;
+const EDGE = 0.06;
 const VOID = 0.1;
 const LEFT = 0.72;
 const RIGHT = 0.5;
@@ -69,6 +72,23 @@ export function tones(look) {
 }
 
 const css = ([r, g, b, a]) => `rgba(${r}, ${g}, ${b}, ${Math.round((a / 255) * 1000) / 1000})`;
+
+export function fill(ctx, built, look, w, h, pad) {
+  const { k, ox, oy } = fit(built.box, w, h, pad);
+  for (const { name, points } of built.groups) {
+    ctx.fillStyle = css(look[name]);
+    ctx.beginPath();
+    for (let i = 0; i < points.length; i += 6) {
+      ctx.moveTo(ox + points[i] * k, oy + points[i + 1] * k);
+      ctx.lineTo(ox + points[i + 2] * k, oy + points[i + 3] * k);
+      ctx.lineTo(ox + points[i + 4] * k, oy + points[i + 5] * k);
+      ctx.closePath();
+    }
+    ctx.fill();
+  }
+}
+
+export const sketch = (ctx, w, h, built, look) => fill(ctx, built, tones(look), w, h, w * EDGE);
 
 /* SCENE */
 
@@ -96,21 +116,9 @@ export function make(canvas, view, opts = {}) {
   };
   take(opts);
   const paint = () => {
-    const look = tones(view.look());
-    const { k, ox, oy } = fit(built.box, view.w, view.h, PAD * view.dpr);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, view.w, view.h);
-    for (const { name, points } of built.groups) {
-      ctx.fillStyle = css(look[name]);
-      ctx.beginPath();
-      for (let i = 0; i < points.length; i += 6) {
-        ctx.moveTo(ox + points[i] * k, oy + points[i + 1] * k);
-        ctx.lineTo(ox + points[i + 2] * k, oy + points[i + 3] * k);
-        ctx.lineTo(ox + points[i + 4] * k, oy + points[i + 5] * k);
-        ctx.closePath();
-      }
-      ctx.fill();
-    }
+    fill(ctx, built, tones(view.look()), view.w, view.h, PAD * view.dpr);
   };
   const custom = () => {
     const look = tones(view.look());

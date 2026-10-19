@@ -21,7 +21,7 @@
 ## WITNESSES
 
 - The certificate paragraph of [apollonian](../../../../apollonian/notes/apollonian.md), `## The horocycle`.
-- The finite orphans paragraph and table of [beneath](../../../notes/beneath.md), `### Every rule is a graph-directed continued fraction set`, the table printed by `orphans`, every `h` and tail rounded up.
+- The finite orphans paragraph and table of [beneath](../../../notes/graph-directed.md), `### Every rule is a graph-directed continued fraction set`, the table printed by `orphans`, every `h` and tail rounded up.
 - `zero`: `16189` trace classes to period `18`, disc `7/10`, `4/5`, `beta = 9/5`, `h = 29/56`, `K <= 5.73393` at `s_1`, tail at most `4.95e-40`, derivative tail at most `5.08e-37`, printed box half-widths `3.5e-39` and `4.0e-39`; exactly one zero of `D` with `Re s` in `[0.457015235230560657361880338944633917910, 0.457015235230560657361880338944633917917]` and `Im s` in `[6.958882679527224185470967589885884480867, 6.958882679527224185470967589885884480875]`; the constant on the Jenkinson-Pollicott disc at most `4.098461` unconjugated and `2.406247` at `beta = 33/20` at `dim E_2`, `5123.603` and `6.847291` at `s_1` at `beta = 9/5`, every bound rounded up.
 - `control`: `dim E_2` in `[0.5312805062772051416244686473684717854930591089, 0.5312805062772051416244686473684717854930591092]`, containing the Jenkinson-Pollicott interval; `{1,3}`, `{2,3}`, `{1,2,3}` within `1e-20` of Pollicott-Vytnova, `{2,3}` bracketed to `3e-60`.
 - `orphans`: `12` rows certified, the `8` cofinite rows `54699, 55275, 59799, 60375, 60855, 61431, 63903, 64479` listed; every minimal graph has `1` or `2` states; code `31710` reaches only `[0.57451176, 0.57451180]` at period `14`, its graph growing at `2.73` per letter.

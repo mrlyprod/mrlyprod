@@ -9,7 +9,7 @@ import { PAGE, SPEC, approach, come, entry, inside, leave, make, quiet, roll, sh
 import { arrange, clock } from './score.js';
 
 const L = 60000;
-const RANDOM = { from: '', to: '', ship: -1 };
+const RANDOM = { from: '', to: '', ship: '' };
 const VIEW = { w: 1280, h: 720 };
 
 const open = (opts = {}, { still = false, webgl = true } = {}) => {
@@ -80,9 +80,9 @@ test('a fixed from=earth stays the same world across three loops', () => {
   expect([worlds[0].name, new Set(worlds.map((one) => JSON.stringify(one))).size]).toEqual(['earth', 1]);
 });
 
-test('a ship of -1 or 0 is drawn from the gated corridor codes and a hand-set ship stays', () => {
-  const drawn = [-1, 0].flatMap((ship) => Array.from({ length: 6 }, (_, loop) => roll(math, { ...RANDOM, ship }, 5, loop).code));
-  expect([drawn.every((code) => codes(math, 3).includes(code)), new Set(drawn).size > 1, roll(math, { ...RANDOM, ship: 23 }, 5, 4).code]).toEqual([true, true, 23]);
+test('an empty ship is drawn from the gated corridor codes and a hand-set ship stays', () => {
+  const drawn = ['', '0', '999'].flatMap((ship) => Array.from({ length: 6 }, (_, loop) => roll(math, { ...RANDOM, ship }, 5, loop).code));
+  expect([drawn.every((code) => codes(math, 3).includes(code)), new Set(drawn).size > 1, roll(math, { ...RANDOM, ship: '23' }, 5, 4).code]).toEqual([true, true, 23]);
 });
 
 test('the departure sits at 1.1 R with the planet filling two thirds of the centre column and the sun 95 degrees off the view', () => {
@@ -243,13 +243,14 @@ test('under reduced motion the still is the departure at 6 s, and windDown lands
 });
 
 test('sound and music leave the value the scene gets, so toggling them never restarts the film', () => {
-  const value = { from: '', to: '', ship: -1, length: 60, look: 'studio', sound: 0, music: 1, seed: 9 };
+  const value = { from: '', to: '', ship: '', length: 60, look: 'studio', sound: 0, music: 1, seed: 9 };
   const keyed = (patch) => JSON.stringify(quiet({ ...value, ...patch }));
   expect([keyed({ sound: 1 }) === keyed({}), keyed({ music: 0 }) === keyed({}), keyed({ length: 90 }) === keyed({}), SPEC.map((row) => row.key)]).toEqual([true, true, false, ['from', 'to', 'ship', 'length', 'look', 'sound', 'music']]);
 });
 
-test('Enter is the Again button and m the sound', () => {
+test('Enter is the Again button and m the sound, and the ship is the 3D base 2 design in its slot', () => {
   expect(PAGE.keys.map((row) => [row.key, row.act, row.button ?? false])).toEqual([['Enter', 'again', true], ['m', 'mute', false]]);
+  expect(PAGE.design).toEqual({ dim: 3, base: 2, code: 'ship', blank: 'Random' });
 });
 
 test('without WebGL2 the scene paints black and windDown lands at once', () => {

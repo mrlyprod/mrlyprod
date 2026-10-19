@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b3358"/><stop offset=".7" stop-color="#141a33"/></linearGradient><radialGradient id="lit" cx=".5" cy=".35" r=".65"><stop offset="0" stop-color="#fff6c2"/><stop offset=".5" stop-color="#ffd60a"/><stop offset="1" stop-color="#ffb300"/></radialGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)" data-key="#ffd100"/>
+  <path d="M388 636L760 264" fill="none" stroke="#ffd60a" stroke-opacity=".22" stroke-width="128" stroke-linecap="round" data-mono="hide"/>
+  <path d="M512 512L636 512L636 388L388 388L388 636L760 636L760 264L264 264L264 760L760 760" fill="none" stroke="#9aa8ff" stroke-opacity=".45" stroke-width="40" stroke-linejoin="round" stroke-linecap="round" data-mono="dim"/>
+  <path d="M478 512A34 34 0 1 0 546 512A34 34 0 1 0 478 512ZM496 512A16 16 0 1 0 528 512A16 16 0 1 0 496 512Z" fill="#fff" fill-rule="evenodd" data-dark="#ffffff"/>
+  <circle cx="636" cy="512" r="44" fill="url(#lit)" data-mono="full"/>
+  <circle cx="636" cy="388" r="50" fill="url(#lit)" data-mono="full"/>
+  <circle cx="388" cy="388" r="44" fill="url(#lit)" data-mono="full"/>
+  <circle cx="388" cy="636" r="50" fill="url(#lit)" data-mono="full"/>
+  <circle cx="760" cy="512" r="44" fill="url(#lit)" data-mono="full"/>
+  <circle cx="760" cy="264" r="50" fill="url(#lit)" data-mono="full"/>
+  <circle cx="264" cy="264" r="44" fill="url(#lit)" data-mono="full"/>
+  <circle cx="264" cy="512" r="44" fill="url(#lit)" data-mono="full"/>
+  <circle cx="512" cy="760" r="44" fill="url(#lit)" data-mono="full"/>
+</svg>

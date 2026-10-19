@@ -3,6 +3,7 @@ title: Pi out of the stack
 lead: Pi recovered three disjoint ways: the density of coprime points in the stacked set, one design's fill fluctuation, and one design across rising odd sides.
 figure: research-pi
 slug: pi
+date: 2026-08-28
 ---
 
 # Pi out of the stack

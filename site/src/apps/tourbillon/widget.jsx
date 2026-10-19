@@ -1,17 +1,16 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Fold, Pick as Select, Slider, Text } from '../../lib/app/controls.jsx';
-import { Knob } from '../../lib/app/knobs.jsx';
+import { Btn, Fold, Slider, Text } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
 import { useTouch } from '../../lib/app/touch.js';
-import { fixed, roll } from '../../lib/moire/parts.jsx';
-import { EYES, SCHEDULES, eyeOf, label, place, settle, trim } from './engine.js';
-import { SPEC, make } from './scene.js';
-import { useLatest, useStatus, useUnit } from '../../lib/app/hooks.js';
-
-const OFF = ['', 'Off the lattice'];
-
-const SCHED = SPEC.find((row) => row.key === 'sched');
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { fixed } from '../../lib/moire/parts.jsx';
+import { stamp } from '../../lib/moire/sheet.js';
+import { EYES, KINDS, SCHEDULES, eyeOf, label, place, settle, shown, swatch, trim } from './engine.js';
+import { make } from './scene.js';
+import { useLatest, useReroll, useStatus, useUnit } from '../../lib/app/hooks.js';
 
 export function rows(f) {
   if (!f) return [];
@@ -39,23 +38,47 @@ export const typed = (text) => {
   return String(text).trim() && Number.isFinite(v) && v >= 0 && v <= 360 ? settle(v) : null;
 };
 
+export function Shelves({ value, onChange, math }) {
+  const [kind, setKind] = useState('unit');
+  const [find, setFind] = useState('');
+  const tick = useTheme();
+  const eyes = useMemo(() => (math ? math.tourbillon.eyes(EYES) : []), [math]);
+  const now = eyeOf(eyes, value.increment);
+  const look = [value.limit, value.set, value.weights, value.mode, value.blend, value.ramp, value.levels, value.invert, value.tint, value.seed, tick];
+  const thumb = (over, at) => (ctx, w) => stamp(ctx, swatch(math, { ...value, ...over }, at, w, paints(ctx.canvas, value.tint)), w);
+  return (
+    <Library chips={KINDS} chip={kind} onChip={setKind} find={find} onFind={kind === 'all' ? setFind : undefined}>
+      {math && kind === 'sched' && (
+        <Shelf name="Schedules">
+          {SCHEDULES.map(([key, text]) => <Item key={key} label={text} on={value.sched === key} onPick={() => onChange({ sched: key })} art={<Art paint={thumb({ sched: key }, value.increment)} deps={[key, value.increment, ...look]} />} />)}
+        </Shelf>
+      )}
+      {math && kind !== 'sched' && (
+        <Shelf name="Quarter turns" grid>
+          {shown(eyes, kind, find).map(([eye, at]) => (
+            <Item key={at} label={trim(eye.angle)} sub={eye.denom === 1 ? '' : `${eye.numer}/${eye.denom}`} title={label(eye)} on={now === String(at)} onPick={() => onChange({ increment: settle(eye.angle), sched: 'degrees' })} art={<Art px={64} paint={thumb({ sched: 'degrees' }, eye.angle)} deps={[at, ...look]} />} />
+          ))}
+        </Shelf>
+      )}
+    </Library>
+  );
+}
+
 export function Widget({ value, onChange, onReady, onStatus, unit }) {
   const math = useUnit('math', unit);
   const [facts, setFacts] = useState(null);
   const handle = useRef(null);
   const change = useLatest(onChange);
   const made = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math, onFacts: setFacts, onTurn: (patch) => change.current(patch) }), [math]);
-  const random = () => change.current({ sched: 'random', seed: roll() });
   const ready = (scene) => {
-    const rich = scene && { ...scene, random };
-    handle.current = rich;
-    onReady?.(rich);
+    handle.current = scene;
+    onReady?.(scene);
   };
   const nudge = (by) => handle.current?.nudge?.(by);
   const touch = useTouch(handle, change);
+  useReroll(value.seed, () => change.current({ sched: 'random' }));
   useStatus(onStatus, rows(facts));
-  const eyes = useMemo(() => (math ? math.tourbillon.eyes(EYES) : []), [math]);
-  const shown = facts?.playing ? facts.angle : value.increment;
+  const shownNow = facts?.playing ? facts.angle : value.increment;
   const sched = SCHEDULES.find(([key]) => key === value.sched)?.[1] ?? value.sched;
   const write = (text) => {
     const v = typed(text);
@@ -65,14 +88,13 @@ export function Widget({ value, onChange, onReady, onStatus, unit }) {
     <>
       {math && <Scene make={made} value={value} onReady={ready} {...touch} />}
       <Bar side="status">{!math && <span>loading</span>}</Bar>
+      <Shelves value={value} onChange={onChange} math={math} />
       <Bar side="right">
-        <Fold name="Spin" live={`${place(shown, 2)} deg · ${sched}`}>
-          <Slider label="Increment" value={Number(shown.toFixed(2))} min={0} max={360} step={0.5} unit="deg" onChange={(v) => onChange({ increment: settle(v) })} />
-          <Text label="Degrees" inputMode="decimal" value={trim(shown)} commit onChange={write} />
+        <Fold name="Spin" live={`${place(shownNow, 2)} deg · ${sched}`}>
+          <Slider label="Increment" value={Number(shownNow.toFixed(2))} min={0} max={360} step={0.5} unit="deg" onChange={(v) => onChange({ increment: settle(v) })} />
+          <Text label="Degrees" inputMode="decimal" value={trim(shownNow)} commit onChange={write} />
           <Btn disabled={!math} onClick={() => nudge(-1)}>- 0.05</Btn>
           <Btn disabled={!math} onClick={() => nudge(1)}>+ 0.05</Btn>
-          <Select label="Quarter turn" value={eyeOf(eyes, shown)} options={[OFF, ...eyes.map((eye, i) => [String(i), label(eye)])]} onChange={(v) => v !== '' && onChange({ increment: settle(eyes[+v].angle), sched: 'degrees' })} />
-          <Knob row={SCHED} value={value.sched} values={value} onChange={onChange} />
         </Fold>
       </Bar>
     </>

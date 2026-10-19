@@ -4,7 +4,7 @@ import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/app/spec.js';
 import { Knobs } from '../../lib/app/knobs.jsx';
 import { rng } from '../../lib/rand.js';
-import { SPEC, TOP, layout, make, name, scrub, study } from './scene.js';
+import { SPEC, TOP, codesOf, glance, layout, make, name, scrub, study, thumb } from './scene.js';
 
 const value = (over) => ({ ...defaults(SPEC), seed: 1, base: 2, code: '23', ...over });
 
@@ -66,6 +66,13 @@ test('the picture takes the whole stage at any aspect, a phone included', () => 
 test('a drag across the stage picks the side under it, from 1 at the left edge to 16 at the right', () => {
   expect([scrub(0, 800), scrub(400, 800), scrub(799, 800), scrub(-20, 800), scrub(900, 800)]).toEqual([1, 9, TOP, 1, TOP]);
   expect(open().scene.seek(799)).toBe(TOP);
+});
+
+test("a side's thumb is its own hexagon, one fill a triangle, kept for the next paint", () => {
+  const log = [];
+  thumb(pen(log), 56, glance(math, value({}), 2), codesOf(math), '#008cff');
+  expect(log.filter(([key]) => key === 'fill').length).toBe(54);
+  expect(glance(math, value({}), 2)).toBe(glance(math, value({}), 2));
 });
 
 test('the svg holds the hexagon alone, one polygon a triangle', async () => {

@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { text } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { REACH, ZEROS, roll } from './engine.js';
-import { PAGE, make } from './scene.js';
-import { useUnit } from '../../lib/app/hooks.js';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { REACH, ZEROS, roll, shelves, study } from './engine.js';
+import { PAGE, inked, make, sketch } from './scene.js';
+import { useReroll, useUnit } from '../../lib/app/hooks.js';
 
 const SWIPE = 6;
 
 const SCRUB = REACH / 2;
+
+const ART = 112;
 
 const four = (v) => v.toFixed(4);
 
@@ -33,13 +38,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   now.current = value;
   const hooks = useRef({});
   hooks.current = { onChange, onStatus };
-  const seed = useRef(value.seed);
   const grab = useRef(null);
-  useEffect(() => {
-    if (seed.current === value.seed) return;
-    seed.current = value.seed;
-    onChange?.(roll(value.seed));
-  }, [value.seed]);
+  const tick = useTheme();
+  useReroll(value.seed, (next) => hooks.current.onChange?.(roll(next)));
   const tell = useCallback((said) => {
     if (said.t !== now.current.t) hooks.current.onChange?.({ t: said.t });
     hooks.current.onStatus?.(rows(now.current.view, said));
@@ -84,6 +85,24 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   };
   return (
     <>
+      {unit && (
+        <Library>
+          {shelves(study(unit).zeros, value).map(([name, list]) => (
+            <Shelf key={name} name={name} grid>
+              {list.map(({ id, label, sub, set, on }) => (
+                <Item
+                  key={id}
+                  label={label}
+                  sub={sub}
+                  on={on}
+                  onPick={() => onChange?.(set)}
+                  art={<Art px={ART} paint={(ctx, w, h, dpr) => sketch(unit, set, ctx, w, h, dpr, inked(ctx.canvas, paints(ctx.canvas, value.tint).accent))} deps={[unit, value.tint, tick]} />}
+                />
+              ))}
+            </Shelf>
+          ))}
+        </Library>
+      )}
       {unit && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={cancel} style={{ cursor: 'ew-resize' }} />}
       {!unit && (
         <Bar side="status">

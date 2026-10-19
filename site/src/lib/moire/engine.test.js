@@ -1,7 +1,6 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
-import { rng } from '../rand.js';
-import { CROPS, TOP, bins, climb, colorizer, crop, design, drawn, field, heat, law, matrix, odd, paint, palette, presetOf, presets, stops, study } from './engine.js';
+import { CROPS, TOP, bins, climb, colorizer, crop, design, drawn, field, heat, law, matrix, odd, paint, palette, presetOf, presets, stops, study, swatch } from './engine.js';
 
 const LOOK = { paper: '#ffffff', accent: '#008cff' };
 
@@ -38,10 +37,10 @@ test('the r-matrix paints zero in the foreground and a full correlation deep', (
   expect(heat(ink, 1)).toEqual(ink.mix(ink.blue, ink.ground, 0.6));
 });
 
-test('a typed code is kept modulo the space, a blank one rolls from the seed, the level is clamped', () => {
-  expect(design(math, { base: 3, code: '495', level: 1 }, rng(1))).toEqual({ base: 3, code: '495', level: 1, name: 'carpet' });
-  expect(design(math, { base: 2, code: '23', level: 9 }, rng(1))).toMatchObject({ base: 2, code: '7', level: 5, name: 'carpet' });
-  expect(design(math, { base: 3, code: '', level: 1 }, rng(1)).code).not.toBe(design(math, { base: 3, code: '', level: 1 }, rng(2)).code);
+test('a typed code is kept modulo the space, a blank one is the home carpet, the level is clamped', () => {
+  expect(design(math, { base: 3, code: '495', level: 1 })).toEqual({ base: 3, code: '495', level: 1, name: 'carpet' });
+  expect(design(math, { base: 2, code: '23', level: 9 })).toMatchObject({ base: 2, code: '7', level: 5, name: 'carpet' });
+  expect([design(math, { base: 3, code: '', level: 1 }), design(math, { base: 2, code: '', level: 1 })]).toMatchObject([{ code: '495', name: 'carpet' }, { code: '7', name: 'carpet' }]);
 });
 
 test('the presets come from the door as design keys, and a seed draws one of them with an odd limit', () => {
@@ -69,9 +68,9 @@ test('the law reads the row at the largest scale under the pick and snaps the ma
 });
 
 test('a stack layers the odd scales on a square, on the hexagonal lattice for the hive', () => {
-  const plan = study(math, value(), rng(1));
+  const plan = study(math, value());
   expect([plan.name, plan.numbers, plan.merge, plan.lattice]).toEqual(['carpet', [1, 3, 5, 7, 9], 'Sum', 'Square']);
-  expect(study(math, value({ combine: 'hive' }), rng(1)).lattice).toBe('Hex');
+  expect(study(math, value({ combine: 'hive' })).lattice).toBe('Hex');
   const made = field(math, plan, 64);
   expect([made.size, made.data.length, made.field.max(), nans(made.data)]).toEqual([64, 4096, 5, 0]);
   made.field.free();
@@ -80,7 +79,7 @@ test('a stack layers the odd scales on a square, on the hexagonal lattice for th
 test('a crop keeps the inside of the shape, an anti crop the outside, the rest NaN', () => {
   expect(CROPS.slice(1).map(([one]) => one)).toEqual(math.shape.shapes(2));
   expect(crop(math, '', 16, 0, 64)).toBe(null);
-  const plan = study(math, value(), rng(1));
+  const plan = study(math, value());
   const inside = field(math, plan, 64, crop(math, 'ball', 16, 0, 64));
   const outside = field(math, plan, 64, crop(math, 'ball', 16, 1, 64));
   expect([Number.isNaN(inside.data[0]), Number.isNaN(inside.data[32 * 64 + 32]), Number.isNaN(outside.data[0]), Number.isNaN(outside.data[32 * 64 + 32])]).toEqual([true, false, false, true]);
@@ -90,9 +89,14 @@ test('a crop keeps the inside of the shape, an anti crop the outside, the rest N
 });
 
 test('the paint is one colour a level with a clear alpha wherever the field is NaN', () => {
-  const plan = study(math, value(), rng(1));
+  const plan = study(math, value());
   const made = field(math, plan, 32, crop(math, 'ball', 16, 0, 32));
   const image = paint(math, made, colorizer('tint', 4, LOOK), 4, 0);
   expect([image.shape, image.colors[3], image.colors[(16 * 32 + 16) * 4 + 3]]).toEqual([[32, 32], 0, 255]);
   made.field.free();
+});
+
+test('a swatch paints every preset to a square of the asked side', () => {
+  const sides = presets(math).map((one) => swatch(math, value({ ...one, ramp: 'tint', levels: 4, invert: 0 }), 40, LOOK).colors.length);
+  expect(sides).toEqual([4, 4, 4, 4].map(() => 40 * 40 * 4));
 });

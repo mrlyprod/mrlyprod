@@ -3,7 +3,7 @@ import * as life from '@mrlyprod/mrly/life';
 import * as math from '@mrlyprod/mrly/math';
 import { defaults, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { HOLD, PAGE, PRESETS, SPEC, make, wears } from './scene.js';
+import { HOLD, PAGE, PRESETS, RULES, SPEC, make, wears } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -40,10 +40,10 @@ const TOP = (480 - 96 * CELL) / 2;
 const u = (c) => (LEFT + (c + 0.5) * CELL) / 640;
 const v = (r) => (TOP + (r + 0.5) * CELL) / 480;
 
-test('the page opens paused at generation 0, and Play runs it at the speed from where it stood', () => {
+test('the page opens on the glider paused at generation 0, and Play runs it at the speed from where it stood', () => {
   const run = open({ speed: 10 });
   run.at(1000);
-  expect([run.last().gen, run.scene.playing()]).toEqual([0, false]);
+  expect([run.last().pop, run.last().gen, run.scene.playing()]).toEqual([5, 0, false]);
   run.scene.toggle();
   run.at(2000);
   expect([run.last().gen, run.scene.playing(), run.log.some(([verb]) => verb === 'rect')]).toEqual([10, true, true]);
@@ -77,6 +77,10 @@ test('a jump past the budget of steps a frame rebases, so play never chases a lo
   expect(landed).toBeLessThan(600);
   run.at(11000);
   expect(run.last().gen - landed).toBeLessThanOrEqual(60);
+});
+
+test('the saver opens the default start as a soup, and keeps a start that was chosen', () => {
+  expect([open({}).last().pop, open({}, { lock: true }).last().pop > 100, open({ from: 'pentomino' }, { lock: true }).last().pop]).toEqual([5, true, 5]);
 });
 
 test('a speed change mid-play keeps the generation count continuous', () => {
@@ -182,12 +186,13 @@ test('the primary is the Enter row, reading Play or Pause from the scene', () =>
 
 test('the export is named by the preset or the rule, with the seed only for a soup', () => {
   const value = { ...defaults(SPEC), seed: 7 };
-  expect([PAGE.name(value), PAGE.name({ ...value, from: 'glider' }), PAGE.name({ ...value, born: 'primes' })]).toEqual(['life-conway-7', 'life-conway-glider', 'life-2d-7-3-1-bprimes-s23-7']);
+  const soup = { ...value, from: 'noise' };
+  expect([PAGE.name(value), PAGE.name(soup), PAGE.name({ ...soup, born: 'primes' })]).toEqual(['life-conway-glider', 'life-conway-7', 'life-2d-7-3-1-bprimes-s23-7']);
 });
 
-test('the presets round-trip through the value, and a line keeps only the starts a line can take', () => {
-  for (const [, preset] of PRESETS) expect(tidy(SPEC, { ...defaults(SPEC), ...preset })).toMatchObject(preset);
-  expect([tidy(SPEC, { dim: 1, from: 'glider' }).from, tidy(SPEC, { dim: 1, from: 'one' }).from, tidy(SPEC, { dim: 2, from: 'glider' }).from]).toEqual(['noise', 'one', 'glider']);
+test('the presets and the rules round-trip through the value, and a line keeps only the starts a line can take', () => {
+  for (const [, preset] of [...PRESETS, ...RULES]) expect(tidy(SPEC, { ...defaults(SPEC), ...preset })).toMatchObject(preset);
+  expect([1, 2].map((dim) => SPEC.find((row) => row.key === 'from').options({ dim }).length)).toEqual([2, 15]);
 });
 
 test('the Level pick offers the levels whose mask fits the span of its dimension', () => {

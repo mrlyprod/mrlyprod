@@ -1,21 +1,18 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { text } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { maxOf } from '../../lib/app/spec.js';
-import { Fold } from '../../lib/app/controls.jsx';
-import { Knob } from '../../lib/app/knobs.jsx';
 import { rng } from '../../lib/rand.js';
 import { Scene } from '../../lib/app/page.jsx';
 import { next } from '../../lib/designs/engine.js';
-import { Pick, read } from '../../lib/designs/pick.jsx';
-import { COLOURS, DESIGNED, DIM, KINDS, LEVELS, PICTURES, ROUNDS, fits, pictureOf, place, roll, sideOf, study } from './engine.js';
-import { SPEC, file, make, tidied } from './scene.js';
-import { useUnits } from '../../lib/app/hooks.js';
-import { wasm } from '../../lib/units/index.js';
-
-const UNITS = wasm('math', 'num');
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { COLOURS, FORMULA, KINDS, LEVELS, PICTURES, READS, ROUNDS, based, fits, pictureOf, place, roll, sideOf, study, survey } from './engine.js';
+import { SPEC, file, inks, make, sketch, tidied } from './scene.js';
+import { useReroll } from '../../lib/app/hooks.js';
 
 const STEP = 700;
+
+const SMALL = { round: 5, level: 4, power: 2, depth: 1 };
 
 const row = (key) => SPEC.find((one) => one.key === key);
 
@@ -43,7 +40,7 @@ export function rerolled(math, value, rand) {
   const kind = pictureOf(value);
   if (kind === 'plane') return { lift: among(KINDS.filter((one) => one !== value.lift), rand), level: among(span(LEVELS), rand) };
   if (kind === 'word') return { round: among(span(ROUNDS).filter((one) => one !== value.round), rand), colour: among(COLOURS, rand)[0] };
-  return { code: roll(math, sideOf(value), read(value).base, rand) };
+  return { code: roll(math, sideOf(value), based(value), rand) };
 }
 
 /* ROWS */
@@ -108,30 +105,36 @@ export const ROWS = {
   ],
 };
 
-/* PANES */
+/* LIBRARY */
 
-export function Design({ value, units, facts, onChange }) {
-  if (!units || !DESIGNED.includes(pictureOf(value))) return null;
-  const own = ({ dim, ...patch }) => onChange(patch);
-  const live = [facts ? design(facts) : read(value).code, `side ${sideOf(value)}`].join(' · ');
-  return (
-    <Fold name="Design" live={live}>
-      <Pick value={{ ...read(value), dim: DIM }} onChange={own} math={units.math} dims={[DIM]} />
-      <Knob row={row('number')} value={value.number} values={value} onChange={onChange} />
-    </Fold>
-  );
+const SHELVES = [
+  ['Word', COLOURS.map(([colour, name]) => [name, { view: 'word', colour }])],
+  ['Lifts', KINDS.map((lift) => [lift, { view: 'plane', lift }, FORMULA[lift]])],
+  ['Design', READS.map(([read, name]) => [name, { view: 'design', read }])],
+];
+
+const shows = (value, patch) => Object.entries(patch).every(([key, v]) => value[key] === v);
+
+export function Pictures({ units, value, tick, onChange }) {
+  const paint = (patch) => (ctx, w, h, dpr) => sketch(ctx, w, h, dpr, survey(units, tidied({ ...value, ...patch, ...SMALL })), inks(ctx.canvas));
+  return SHELVES.map(([name, items]) => (
+    <Shelf key={name} name={name}>
+      {items.map(([label, patch, sub]) => (
+        <Item key={label} label={label} sub={sub} on={shows(value, patch)} onPick={() => onChange(patch)} art={<Art paint={paint(patch)} deps={[tick, value.code, value.base, value.number, value.fold]} />} />
+      ))}
+    </Shelf>
+  ));
 }
 
 /* WIDGET */
 
-export function Widget({ value, onChange, onReady, onExport, onStatus, units: given }) {
-  const units = useUnits(UNITS, given);
+export function Widget({ value, onChange, onReady, onExport, onStatus, units }) {
+  const tick = useTheme();
   const live = useRef(null);
   const now = useRef(value);
   now.current = value;
   const hooks = useRef(onChange);
   hooks.current = onChange;
-  const seen = useRef(value.seed);
   const timer = useRef(0);
   const wrote = useRef(null);
   const plan = units ? study(units, tidied(value)) : null;
@@ -152,7 +155,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
   };
   const keep = () => {
     const picture = live.current?.svg?.();
-    if (picture) text(picture, file(now.current), 'svg');
+    if (picture) text(picture, file(now.current, units), 'svg');
   };
   useEffect(() => onStatus?.(told), [JSON.stringify(told)]);
   useEffect(() => onExport?.(sheet ? [['SVG', keep]] : []), [sheet]);
@@ -160,11 +163,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
   useEffect(() => {
     if (!word || (timer.current && value.round !== wrote.current)) play(false);
   }, [word, value.round]);
-  useEffect(() => {
-    if (value.seed === seen.current || !units) return;
-    seen.current = value.seed;
-    hooks.current(rerolled(units.math, value, rng(value.seed)));
-  }, [value.seed, units]);
+  useReroll(value.seed, (seed) => units && onChange(rerolled(units.math, value, rng(seed))));
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, ...units }), [units]);
   const ready = (handle) => {
     live.current = handle;
@@ -181,14 +180,11 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
   return (
     <>
       {units && <Scene make={scene} value={value} onReady={ready} onClick={tap} />}
-      {!units && (
-        <Bar side="status">
-          <span>loading</span>
-        </Bar>
+      {units && (
+        <Library name="Pictures">
+          <Pictures units={units} value={value} tick={tick} onChange={onChange} />
+        </Library>
       )}
-      <Bar side="right">
-        <Design value={value} units={units} facts={f} onChange={onChange} />
-      </Bar>
     </>
   );
 }

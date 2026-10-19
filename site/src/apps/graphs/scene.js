@@ -1,8 +1,10 @@
 import { palette } from '../../lib/theme/palette.gen.js';
 import { tidy } from '../../lib/app/spec.js';
+import { pick } from '../../lib/rand.js';
 import { HUES, mix, rgb } from '../../lib/color.js';
 import { tints } from '../../lib/theme/hues.js';
-import { CAMERAS, COOL, DEEPEST, LAYOUTS, NUMBERS, PAD, SPACES, bounds, cube, deal, design, graphs, keysOf, kindOf, lay, pace, picture, quick, solid, spaceOf, study, top } from './engine.js';
+import { canon } from '../../lib/designs/engine.js';
+import { CAMERAS, COOL, DEEPEST, DIMS, LAYOUTS, NUMBERS, PAD, VIEWS, bounds, cube, deal, design, graphs, kindOf, lay, pace, picture, quick, solid, spaceOf, study, top } from './engine.js';
 import { space } from './space.js';
 import { wasm } from '../../lib/units/index.js';
 
@@ -12,14 +14,13 @@ const BASES = [[2, '2'], [3, '3']];
 const most = (value, units) => (units?.math ? top(units.math, value) : DEEPEST);
 
 export const SPEC = [
-  { key: 'view', label: 'View', kind: 'segment', def: 'flat', options: SPACES },
+  { key: 'dim', label: 'Dim', kind: 'segment', def: 2, options: DIMS, when: NEVER },
+  { key: 'view', label: 'View', kind: 'segment', def: 'cube', options: VIEWS, when: (value) => Number(value.dim) === 3 },
   { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]) },
-  { key: 'graph', label: 'Graph', kind: 'pick', def: 'core', options: graphs },
+  { key: 'graph', label: 'Graph', kind: 'pick', def: 'core', options: graphs, when: NEVER },
   { key: 'level', label: 'Level', kind: 'slider', def: 2, min: 1, max: most, unit: (value, units) => `of ${most(value, units)}`, step: 1 },
   { key: 'base', label: 'Base', kind: 'segment', def: 3, options: BASES, when: NEVER },
-  { key: 'code', label: 'Code', kind: 'text', def: '495', when: NEVER },
-  { key: 'cbase', label: 'Base', kind: 'segment', def: 2, options: BASES, when: NEVER },
-  { key: 'ccode', label: 'Code', kind: 'text', def: '23', when: NEVER },
+  { key: 'code', label: 'Code', kind: 'text', def: '', when: NEVER },
   { key: 'layout', label: 'Layout', kind: 'segment', def: 'lattice', options: LAYOUTS, group: 'Layout' },
   { key: 'dots', label: 'Dots', kind: 'slider', def: 3, min: 1, max: 12, step: 1, group: 'Layout' },
   { key: 'camera', label: 'Camera', kind: 'segment', def: 'eye', options: CAMERAS, group: 'Camera', when: solid },
@@ -27,13 +28,17 @@ export const SPEC = [
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: tints('Roles'), group: 'Look' },
 ];
 
-export const name = (value) => `graphs-${design(value).code}-${spaceOf(value)}-${kindOf(value)}`;
+export const name = (value, loaded) => {
+  const { dim, base, code } = design(value);
+  return `graphs-${loaded?.math ? canon(loaded.math, dim, base, code) : code || 'carpet'}-${spaceOf(value)}-${kindOf(value)}`;
+};
 
 export const units = wasm('math');
 
 export const PAGE = {
   spec: SPEC,
   units,
+  design: { dim: 'dim', base: 'base', code: 'code' },
   gestures: true,
   record: true,
   name,
@@ -44,9 +49,9 @@ export const PAGE = {
     'The force layout is Fruchterman and Reingold\'s: every pair repels, every branch pulls, and a cooling cap on each move settles the lattice, while the seed jitters the start so a symmetric one can fold. Energy is the mean net force per node; heat is the cap on the next move.',
   ],
   keys: [
-    { key: 'Enter', label: (value, handle) => (handle?.playing?.() ? 'Pause' : 'Relax'), act: 'relax', button: true },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Graph', act: 'graph' },
+    { key: 'Enter', label: (value, handle) => (handle?.playing?.() ? 'Pause' : 'Relax'), act: 'relax', button: true, menu: 'Edit' },
+    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level', menu: 'View' },
+    { key: ['ArrowLeft', 'ArrowRight'], label: 'Graph', act: 'graph', menu: 'View' },
   ],
   actions: {
     relax: (scene) => scene.toggle?.(),
@@ -55,8 +60,22 @@ export const PAGE = {
   },
 };
 
+/* SAVERS */
+
+const nets = (kinds) => (rand) => {
+  const number = pick(rand, [3, 3, 5]);
+  return { graph: pick(rand, kinds), number, level: number === 3 ? 3 : 2, base: pick(rand, [3, 3, 2]), dots: pick(rand, [3, 4, 5]) };
+};
+
+export const SAVERS = [
+  { id: 'webs', title: 'Cell webs', pick: nets(['core', 'core', 'edge']) },
+  { id: 'tunnels', title: 'Tunnels', pick: nets(['tunnel']) },
+];
+
 const TAU = Math.PI * 2;
-export const HOLD = 4000;
+export const HOLD = 8000;
+const ROOM = 600;
+const SLOW = 24;
 const ROD = 0.35;
 const INKS = ['dim', 'yellow', 'blue', 'pink'];
 const FADES = [0.6, 0.4, 0.2, 0];
@@ -66,7 +85,7 @@ let clock = 0;
 const ink = (canvas, name) => (typeof getComputedStyle === 'function' && canvas?.nodeType ? getComputedStyle(canvas).getPropertyValue(`--${name}`).trim() : '') || palette[name] || palette.gray;
 
 export function tones(canvas, view, tint) {
-  if (!HUES.includes(tint)) return INKS.map((name) => ink(canvas, name));
+  if (!HUES.includes(tint) && !view.lock) return INKS.map((name) => ink(canvas, name));
   const { accent, paper } = view.look();
   return FADES.map((t) => (t ? mix(rgb(accent), rgb(paper), t) : accent));
 }
@@ -76,17 +95,17 @@ export function tones(canvas, view, tint) {
 const built = (value) => JSON.stringify([spaceOf(value), design(value), value.number, value.level, kindOf(value)]);
 
 export function shape(math, opts, lock = false) {
-  const ask = { code: !(keysOf(spaceOf(opts)).code in opts), graph: !('graph' in opts), level: !('level' in opts), layout: false };
+  const ask = { code: !('code' in opts), graph: !('graph' in opts), level: !('level' in opts), layout: false };
   const seed = opts.seed >>> 0;
   const first = { ...tidy(SPEC, { ...opts, layout: opts.layout ?? (lock ? 'force' : undefined) }, { math }), seed };
   if (!lock || !(ask.code || ask.graph || ask.level)) return first;
-  return { ...tidy(SPEC, { ...first, ...deal(math, first, opts.rand, ask) }, { math }), seed };
+  return { ...tidy(SPEC, { ...first, ...deal(math, first, opts.rand, ask, ROOM) }, { math }), seed };
 }
 
 /* RELAX */
 
 export function relax(math, plan, { seed, layout }, view) {
-  const per = pace(plan.count, plan.dim);
+  const per = view.lock ? Math.max(pace(plan.count, plan.dim), SLOW) : pace(plan.count, plan.dim);
   let bed = null;
   let on = false;
   let cooled = false;
@@ -323,7 +342,9 @@ function solid3(canvas, view, mover, three) {
     dress();
     placed = -1;
     dirty = true;
-    if (late) draw();
+    if (!late) return;
+    draw();
+    view.drew?.();
   };
   const size = () => {
     stage?.size();
@@ -370,7 +391,7 @@ export function make(canvas, view, opts = {}) {
   const { math, three } = opts;
   if (!math) throw new Error('graphs: the scene wants @mrlyprod/mrly/math as opts.math');
   let value = shape(math, { ...opts, rand: view.rand }, view.lock);
-  let plan = study(math, value, view.rand);
+  let plan = study(math, value);
   let mover = relax(math, plan, value, view);
   const stage = solid(value) ? solid3(canvas, view, () => mover, three) : flat(canvas, view, () => mover);
   stage.restyle(value);
@@ -386,13 +407,13 @@ export function make(canvas, view, opts = {}) {
     if (built(was) !== built(value)) {
       mover.free();
       plan.net.free();
-      plan = study(math, value, view.rand);
+      plan = study(math, value);
       stage.load(plan);
       mover = relax(math, plan, value, view);
     } else if (was.layout !== value.layout || was.seed !== value.seed) {
       mover.free();
       mover = relax(math, plan, value, view);
-      plan.facts = { ...plan.facts, layout: value.layout, top: top(math, { ...value, [keysOf(plan.space).code]: plan.facts.code }) };
+      plan.facts = { ...plan.facts, layout: value.layout, top: top(math, { ...value, code: plan.facts.code }) };
     }
     stage.restyle(value);
   };

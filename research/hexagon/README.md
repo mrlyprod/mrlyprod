@@ -3,6 +3,7 @@ title: The hexagon moire
 lead: The moire of the stacked diagonal slices: the exact cut-ink laws, the doubling sign law, the quarter-line bands, and the ghost star, whose cell-frame decay is a closed form at every band width, `-1/4` at the arm and `-1/8` in the limit, every layer-pair constant an exact rational, and no frame-free coefficient.
 figure: research-hexagon
 slug: hexagon
+date: 2026-09-06
 ---
 
 # The hexagon moire

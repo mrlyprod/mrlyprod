@@ -28,6 +28,7 @@ const write = () => {
   }
   const tail = String(params);
   history.replaceState(history.state, '', location.pathname + (tail ? `?${tail}` : '') + location.hash);
+  dispatchEvent(new Event('stamp'));
 };
 
 export function stamp(values) {

@@ -3,6 +3,7 @@ title: Spin
 lead: A design turned about its centre: the ripple identity, the complete spin spectrum, the sponge's opaque diagonal, and a Gaussian Farey.
 figure: research-spin
 slug: spin
+date: 2026-08-30
 ---
 
 # Spin

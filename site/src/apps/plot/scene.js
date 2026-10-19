@@ -2,15 +2,18 @@ import { tidy } from '../../lib/app/spec.js';
 import { KINDS } from '../../lib/sequences/chart.js';
 import { MEASURES, TERMS, applies, print } from '../../lib/sequences/engine.js';
 import { FACE, chart, clear, drawRibbon, fit, font, growth, legend, ribbon, shade, slotAt, tones } from '../../lib/sequences/paint.js';
+import { wasm } from '../../lib/units/index.js';
 import { ARG, OPS, PAIRED, TAKES, decimal } from './engine.js';
 
 const measures = (value) => MEASURES.filter((one) => applies(one, value.dim ?? 2, value.base ?? 2)).map((one) => [one.slug, one.label]);
 
 const mixed = (value) => Number(value.mix) === 1;
 
+const HIDE = () => false;
+
 export const SPEC = [
-  { key: 'measure', label: 'Measure', kind: 'pick', def: 'surface', options: measures, group: 'Sequence' },
-  { key: 'axis', label: 'Axis', kind: 'segment', def: 'level', options: [['level', 'Level'], ['side', 'Odd side']], group: 'Sequence' },
+  { key: 'measure', label: 'Measure', kind: 'pick', def: 'surface', options: measures, group: 'Sequence', when: HIDE },
+  { key: 'axis', label: 'Axis', kind: 'segment', def: 'level', options: [['level', 'Level'], ['side', 'Odd side']], group: 'Sequence', when: HIDE },
   { key: 'terms', label: 'Terms', kind: 'slider', def: 12, min: TERMS.min, max: TERMS.max, step: 1, group: 'Sequence' },
   { key: 'chart', label: 'Chart', kind: 'pick', def: 'pins', options: KINDS, group: 'View' },
   { key: 'digits', label: 'Digits', kind: 'segment', def: 2, options: [[2, '2'], [3, '3'], [10, '10']], group: 'View', when: (value) => value.chart === 'digits' },
@@ -27,8 +30,12 @@ export const filed = (value) => {
   return ['plot', row, ...(mixed(value) ? [value.op] : []), value.chart].join('-');
 };
 
+export const units = wasm('math', 'num');
+
 export const PAGE = {
   defaults: { dim: 2, base: 2, code: '7' },
+  design: { dim: 'dim', base: 'base', code: 'code', spaces: [[2, 2], [2, 3], [3, 2]] },
+  units,
   spec: SPEC,
   name: filed,
   about: [
@@ -38,10 +45,10 @@ export const PAGE = {
     'Terms are exact. The rule and the mix work within 128 bits and say where they stop.',
   ],
   keys: [
-    { key: 'Enter', label: 'Mix', act: 'mix', button: true },
+    { key: 'Enter', label: 'Mix', act: 'mix', button: true, menu: 'Edit' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Design', act: 'design' },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Terms', act: 'terms' },
-    { key: 'c', label: 'Chart', act: 'cycle' },
+    { key: 'c', label: 'Chart', act: 'cycle', menu: 'View' },
   ],
   actions: {
     mix: (scene) => scene.mix?.(),
@@ -102,7 +109,7 @@ export function make(canvas, view, opts = {}) {
   const paint = (panels) => {
     const t = tones(view);
     clear(ctx, view, t);
-    const pad = Math.round(16 * view.dpr);
+    const { x: pad, top: high, bottom: low } = t.edge;
     const gap = Math.round(t.px * 2);
     if (!panels.length) {
       ctx.fillStyle = t.dim;
@@ -112,7 +119,7 @@ export function make(canvas, view, opts = {}) {
       hits = [];
       return;
     }
-    const inner = { x: pad, y: pad, w: view.w - 2 * pad, h: view.h - 2 * pad };
+    const inner = { x: pad, y: high, w: view.w - 2 * pad, h: view.h - high - low };
     const two = panels.length > 1;
     const across = two && inner.w > inner.h * 1.3;
     const boxes = panels.map((_, i) => {

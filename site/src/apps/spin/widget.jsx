@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Group } from '../../lib/app/controls.jsx';
+import { Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
 import { NEEDLES, RPM, drawn, title } from '../../lib/spin/engine.js';
 import { make, spinning } from './scene.js';
+import { Moires } from '../../lib/spin/shelves.jsx';
 import { Source, read, useReroll } from '../../lib/spin/source.jsx';
-import { useLatest, useUnit } from '../../lib/app/hooks.js';
+import { useLatest } from '../../lib/app/hooks.js';
 
 const deg = (x) => `${x.toFixed(1)}°`;
+
+const SPEEDS = { 33: 'long play', 45: 'single', 78: 'shellac', 899: 'drifts back', 900: 'freezes' };
 
 export const next = (rpm) => NEEDLES.find((at) => at > rpm) ?? NEEDLES[0];
 
@@ -29,23 +32,14 @@ export function rows(facts, pace) {
 
 export function Needles({ rpm, onChange }) {
   return (
-    <Group name="Needles" after="">
-      {NEEDLES.map((at) => <Btn key={at} on={rpm === at} onClick={() => onChange({ rpm: at })}>{at}</Btn>)}
-    </Group>
+    <Shelf name="Needles">
+      {NEEDLES.map((at) => <Item key={at} label={`${at} rpm`} sub={SPEEDS[at]} on={rpm === at} onPick={() => onChange({ rpm: at })} />)}
+    </Shelf>
   );
 }
 
-export function Pane({ value, onChange, math }) {
-  return (
-    <>
-      <Source value={value} onChange={onChange} math={math} />
-      {spinning(value) && <Needles rpm={value.rpm} onChange={onChange} />}
-    </>
-  );
-}
-
-export function Widget({ value, onChange, onReady, onStatus, unit: given }) {
-  const unit = useUnit('math', given);
+export function Widget({ value, onChange, onReady, onStatus, units }) {
+  const unit = units?.math;
   const [facts, setFacts] = useState(null);
   const [pace, setPace] = useState(null);
   const live = useRef(null);
@@ -71,8 +65,12 @@ export function Widget({ value, onChange, onReady, onStatus, unit: given }) {
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} onClick={table ? needle : undefined} />}
+      <Library>
+        {table && <Needles rpm={value.rpm} onChange={onChange} />}
+        <Moires value={value} onChange={onChange} math={unit} />
+      </Library>
       <Bar side="right">
-        <Pane value={value} onChange={onChange} math={unit} />
+        <Source value={value} onChange={onChange} math={unit} />
       </Bar>
     </>
   );

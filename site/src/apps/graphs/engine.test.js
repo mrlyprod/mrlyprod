@@ -1,13 +1,17 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
+import { tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { BUDGET, FIRST, TICK, bound, bounds, cube, deal, design, giant, graphs, kindOf, lay, pace, picture, quick, study, top, turn, worthy } from './engine.js';
+import { BUDGET, SETS, TICK, bound, bounds, cube, deal, design, giant, glimpse, graphs, kindOf, lay, pace, picture, plane, quick, spaceOf, study, top, turn, worthy } from './engine.js';
+import { SPEC } from './scene.js';
 
-const value = { view: 'flat', base: 3, code: '495', cbase: 2, ccode: '23', number: 3, level: 2, graph: 'core', layout: 'lattice' };
+const value = { dim: 2, view: 'cube', base: 3, code: '495', number: 3, level: 2, graph: 'core', layout: 'lattice' };
+
+const cubed = { ...value, dim: 3, base: 2, code: '23' };
 
 test('the level cap reads the design through the count doors and stops at the deepest level whose network fits the layout budget', () => {
-  const caps = [top(math, value), top(math, { ...value, layout: 'force' }), top(math, { ...value, view: 'cube' }), top(math, { ...value, view: 'cube', graph: 'edge' }), top(math, { ...value, view: 'hex' }), top(math, { ...value, code: 'junk' })];
-  expect(caps).toEqual([4, 3, 3, 2, 3, FIRST]);
+  const caps = [top(math, value), top(math, { ...value, layout: 'force' }), top(math, cubed), top(math, { ...cubed, graph: 'edge' }), top(math, { ...cubed, view: 'hex' }), top(math, { ...value, code: '' })];
+  expect(caps).toEqual([4, 3, 3, 2, 3, 4]);
   const at = (level) => bound(math, 'flat', 3, '495', 3, level, 'core');
   expect([at(4), at(5)]).toEqual([4096, 32768]);
   expect(at(4) <= BUDGET.lattice && at(5) > BUDGET.lattice).toBe(true);
@@ -17,14 +21,16 @@ test('a sparse design climbs past the full-lattice cap until its grid of cells w
   expect([bound(math, 'flat', 3, '264', 3, 8, 'edge'), top(math, { ...value, code: '264', graph: 'edge' }), top(math, { ...value, code: '264', graph: 'edge', number: 5 })]).toEqual([1024, 6, 4]);
 });
 
-test('the flat space reads code and base, the cube and the hex slice read their own ccode and cbase, and each space offers its own graphs', () => {
-  expect([design(value), design({ ...value, view: 'cube' }), design({ ...value, view: 'hex' })]).toEqual([{ dim: 2, base: 3, code: '495' }, { dim: 3, base: 2, code: '23' }, { dim: 3, base: 2, code: '23' }]);
-  expect([graphs(value).map(([one]) => one), graphs({ view: 'hex' }).map(([one]) => one)]).toEqual([['core', 'edge', 'tunnel'], ['core', 'dual', 'edge']]);
-  expect([kindOf({ view: 'hex', graph: 'tunnel' }), turn({ view: 'hex', graph: 'edge' }, 1), turn(value, -1)]).toEqual(['core', 'core', 'tunnel']);
+test('the dim of the design picks the space, a 3D design is a cube or its hex slice by the view, and each space offers its own graphs', () => {
+  expect([design(value), design(cubed), design({ ...cubed, code: ' 7 ' })]).toEqual([{ dim: 2, base: 3, code: '495' }, { dim: 3, base: 2, code: '23' }, { dim: 3, base: 2, code: '7' }]);
+  expect([spaceOf(value), spaceOf({ ...value, view: 'hex' }), spaceOf(cubed), spaceOf({ ...cubed, view: 'hex' })]).toEqual(['flat', 'flat', 'cube', 'hex']);
+  const hex = { dim: 3, view: 'hex' };
+  expect([graphs(value).map(([one]) => one), graphs(hex).map(([one]) => one)]).toEqual([['core', 'edge', 'tunnel'], ['core', 'dual', 'edge']]);
+  expect([kindOf({ ...hex, graph: 'tunnel' }), turn({ ...hex, graph: 'edge' }, 1), turn(value, -1)]).toEqual(['core', 'core', 'tunnel']);
 });
 
 test('the study reads the network of a flat design: its counts and the design\'s own Euler number', () => {
-  const plan = study(math, value, rng(1));
+  const plan = study(math, value);
   expect(plan.facts).toMatchObject({ code: '495', name: 'carpet', space: 'flat', level: 2, top: 4, side: 9, graph: 'core', layout: 'lattice', nodes: 64, branches: 88, tips: 0, junctions: 44, pieces: 1, length: 88, euler: -8 });
   expect(plan.facts.box).toBeCloseTo(1.57, 2);
   expect([plan.dim, plan.count, plan.positions.length, plan.pairs.length, plan.shade.branches.length]).toEqual([2, 64, 128, 176, 88]);
@@ -32,14 +38,14 @@ test('the study reads the network of a flat design: its counts and the design\'s
 });
 
 test('a cube reads through the three doors and its hex slice through the six doors, triangles at their true aspect', () => {
-  const solid = study(math, { ...value, view: 'cube', graph: 'tunnel' }, rng(1));
+  const solid = study(math, { ...cubed, graph: 'tunnel' });
   expect(solid.facts).toMatchObject({ dim: 3, side: 9, nodes: 329, branches: 600, tips: 48, pieces: 1, euler: -80 });
   expect(solid.positions.length).toBe(329 * 3);
-  const hex = study(math, { ...value, view: 'hex' }, rng(1));
+  const hex = study(math, { ...cubed, view: 'hex' });
   expect(hex.facts).toMatchObject({ space: 'hex', code: '23', nodes: 306, branches: 378, euler: -6 });
   expect([hex.dim, hex.facts.length]).toEqual([2, expect.any(Number)]);
   expect(hex.facts.length).toBeCloseTo(378 / Math.sqrt(3), 6);
-  const dual = study(math, { ...value, view: 'hex', graph: 'dual' }, rng(1));
+  const dual = study(math, { ...cubed, view: 'hex', graph: 'dual' });
   expect([dual.facts.graph, dual.facts.nodes]).toEqual(['dual', 486]);
   [solid, hex, dual].forEach((plan) => plan.net.free());
 });
@@ -50,14 +56,13 @@ test('a deal rolls a worthy code, graph, level and layout from the seed, the sam
   expect(new Set(dealt.map((one) => one.graph)).size).toBe(3);
   expect(new Set(dealt.map((one) => one.layout))).toEqual(new Set(['lattice', 'force']));
   const fine = dealt.map((one) => {
-    const plan = study(math, { ...value, ...one }, rng(1));
+    const plan = study(math, { ...value, ...one });
     const good = one.level >= 2 && one.level <= top(math, { ...value, ...one }) && worthy(plan.shade.nodes, giant(math, plan.net));
     plan.net.free();
     return good;
   });
   expect(fine.every(Boolean)).toBe(true);
-  const cubed = deal(math, { ...value, view: 'cube' }, rng(3));
-  expect(Object.keys(cubed).sort()).toEqual(['ccode', 'graph', 'layout', 'level']);
+  expect(Object.keys(deal(math, cubed, rng(3))).sort()).toEqual(['code', 'graph', 'layout', 'level']);
 });
 
 test('a deal that rolls only the layout rests a network in pieces on the lattice, since a force would fling the pieces apart', () => {
@@ -88,4 +93,21 @@ test('the svg is one path per shade of lines and one group of circles per shade 
   expect(text).toContain('<g fill="d"><circle cx="10" cy="10" r="2.5"/></g>');
   expect(text).toContain('<g fill="b"><circle cx="20" cy="10" r="2.5"/></g>');
   expect(text).not.toContain('stroke="a"');
+});
+
+test('an empty or junk code is the home design, a glimpse is a small network of the design under the graph, and a cube flattens to a plane', () => {
+  expect([study(math, { ...value, code: '' }).facts.code, study(math, { ...value, code: 'x' }).facts.code]).toEqual(['495', '495']);
+  const flat = glimpse(math, value, 'core');
+  expect([flat.dim, flat.count, flat.pairs.length / 2, plane(flat)]).toEqual([2, 64, 88, flat.positions]);
+  expect(glimpse(math, value, 'core')).toBe(flat);
+  const solid = glimpse(math, cubed, 'core');
+  expect([solid.dim, plane(solid).length]).toEqual([3, solid.count * 2]);
+  expect(glimpse(math, { ...cubed, view: 'hex' }, 'dual').dim).toBe(2);
+});
+
+test('every set is a whole state the page keeps as it stands', () => {
+  for (const [name, patch] of SETS) {
+    const kept = tidy(SPEC, { ...patch }, { math });
+    expect([name, Object.keys(patch).map((key) => kept[key])]).toEqual([name, Object.values(patch)]);
+  }
 });

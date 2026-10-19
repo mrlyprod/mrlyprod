@@ -15,6 +15,11 @@ export const SPEC = [
 
 export const PAGE = { spec: SPEC };
 
+export const SAVERS = [
+  { id: 'rain', title: 'Glyph rain', pick: (rand) => ({ set: pick(rand, ['lds', 'ld', 'd', 'l']), color: 'tint', tick: 100, cell: 14 + 2 * Math.floor(rand() * 5) }) },
+  { id: 'rainbow', title: 'Rainbow rain', pick: (rand) => ({ set: pick(rand, ['lds', 'ds', 's']), color: 'rainbow', tick: 100, cell: 22 + 2 * Math.floor(rand() * 6) }) },
+];
+
 const SETS = { l: /^[A-Z]$/, d: /^[0-9]$/, s: /^[^\sA-Za-z0-9]$/u };
 const FACE = 'MrlyFont';
 const FADE = 0.05;
@@ -53,7 +58,7 @@ export function make(canvas, view, opts) {
     cols = Math.max(1, Math.floor(view.w / unit));
     rows = Math.max(1, Math.floor(view.h / unit));
     grid = board(view, cols, rows);
-    const opening = drops.length === 0;
+    const opening = drops.length === 0 && !view.lock;
     for (let i = drops.length; i < cols; i++) {
       drops[i] = opening ? 1 : 1 + Math.floor(rand() * rows);
       hues[i] = hue();

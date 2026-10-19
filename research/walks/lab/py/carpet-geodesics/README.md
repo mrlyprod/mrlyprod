@@ -16,4 +16,4 @@
 
 ## WITNESSES
 
-- walks.md, section "Shortest paths: two limits that do not commute": the codes `495` and `33226431`; every `D(N, L)` and `N (D(N, L) - sqrt(2))` printed there; the level-1 formula at `N = 3..41` to `4.4e-16`; the upper bounds on `nu_L` at `22.5` degrees, the lower bounds on the gap to the octagon and the explicit path; the bridge readings; the counts `18, 48, 32`, a check of the proof on the page.
+- shortest-paths.md, section "Shortest paths: two limits that do not commute": the codes `495` and `33226431`; every `D(N, L)` and `N (D(N, L) - sqrt(2))` printed there; the level-1 formula at `N = 3..41` to `4.4e-16`; the upper bounds on `nu_L` at `22.5` degrees, the lower bounds on the gap to the octagon and the explicit path; the bridge readings; the counts `18, 48, 32`, a check of the proof on the page.

@@ -1,6 +1,6 @@
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS } from '../../lib/color.js';
-import { DIM, HEX, HIT, LATTICES, LEADS, LIT, MARKS, MISS, REACH, SIDES, SOIL, fitted, ink, landed, lay, palette, picture, quadratic, read, share, span, study, table, toned } from './engine.js';
+import { DIM, EDGE, HEX, HIT, LATTICES, LEADS, LIT, MARKS, MISS, REACH, SIDES, SOIL, fitted, ink, landed, lay, palette, picture, quadratic, read, share, span, study, table, toned } from './engine.js';
 
 export const SPEC = [
   { key: 'lattice', label: 'Lattice', kind: 'segment', def: 'square', options: LATTICES, group: 'Sheet' },
@@ -29,7 +29,7 @@ export const PAGE = {
     'The mark is lit in the tint, pink is a Mobius value of minus one, and the quadratic lands orange on a prime and blue on a composite. Tap a cell for its number and its factors. Next c (Enter) and the arrows step c through the primes; Reroll rolls a new lattice, side and quadratic.',
   ],
   keys: [
-    { key: 'Enter', label: 'Next c', act: 'next', button: true, when: lined },
+    { key: 'Enter', label: 'Next c', act: 'next', button: true, when: lined, menu: 'Edit' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Step c', act: 'line', when: lined },
   ],
   actions: {
@@ -44,6 +44,52 @@ const RING = 0.8;
 const HALO = 6;
 const CHUNK = 4096;
 const TURN = Math.PI * 2;
+const THUMB = 53;
+
+/* CELLS */
+
+function outline(p, geo, dpr, x, y) {
+  const px = geo.px;
+  if (geo.lattice === 'hex') {
+    const r = geo.s * (px >= GAP * dpr ? 1 - INSET : 1);
+    p.moveTo(x + HEX[0][0] * r, y + HEX[0][1] * r);
+    for (let i = 1; i < HEX.length; i++) p.lineTo(x + HEX[i][0] * r, y + HEX[i][1] * r);
+    p.closePath();
+    return;
+  }
+  const g = px >= GAP * dpr ? Math.max(1, Math.round(px * INSET)) : 0;
+  const left = Math.round(x - px / 2) + g;
+  const top = Math.round(y - px / 2) + g;
+  p.rect(left, top, Math.round(x + px / 2) - g - left, Math.round(y + px / 2) - g - top);
+}
+
+function stamp(p, geo, dpr, color, cells) {
+  p.fillStyle = color;
+  let open = 0;
+  for (const [x, y] of cells) {
+    if (!open) p.beginPath();
+    outline(p, geo, dpr, ...geo.at(x, y));
+    if (++open >= CHUNK) {
+      p.fill();
+      open = 0;
+    }
+  }
+  if (open) p.fill();
+}
+
+const where = (plan, ns) => ns.map((n) => [plan.xs[n], plan.ys[n]]);
+
+export function sketch(num, one, ctx, w, h, dpr, look) {
+  const plan = study(num, tidy(SPEC, { ...one, side: THUMB }), w, h);
+  const tones = palette(look.accent, look.paper);
+  for (const t of [SOIL, DIM, LIT]) {
+    const ns = [];
+    for (let n = 1; n <= plan.top; n++) if (plan.tone[n] === t) ns.push(n);
+    stamp(ctx, plan.geo, dpr, tones[t], where(plan, ns));
+  }
+  const { line } = plan;
+  if (line) for (const hit of [true, false]) stamp(ctx, plan.geo, dpr, tones[hit ? HIT : MISS], line.cells.filter((_, i) => line.hit[i] === hit));
+}
 
 /* SCENE */
 
@@ -52,12 +98,12 @@ export function make(canvas, view, opts = {}) {
   if (!num) throw new Error('ulam: the scene wants @mrlyprod/mrly/num as opts.num');
   const ctx = canvas.getContext('2d');
   let value = tidy(SPEC, opts);
-  let plan = study(num, value, view.w, view.h);
+  const room = () => EDGE * view.dpr;
+  let plan = study(num, value, view.w, view.h, room());
   const length = span(plan.rings);
   let whole = false;
   let layer = null;
   let pen = null;
-  let bed;
   let drawn = 0;
   let shown = -1;
   let dirty = true;
@@ -72,61 +118,23 @@ export function make(canvas, view, opts = {}) {
   };
   const facts = () => (known = { ...read(num, plan, value), pick: picked });
   const tell = () => opts.onFacts?.(facts());
-  const outline = (p, x, y) => {
-    const { geo } = plan;
-    const px = geo.px;
-    if (geo.lattice === 'hex') {
-      const r = geo.s * (px >= GAP * view.dpr ? 1 - INSET : 1);
-      p.moveTo(x + HEX[0][0] * r, y + HEX[0][1] * r);
-      for (let i = 1; i < HEX.length; i++) p.lineTo(x + HEX[i][0] * r, y + HEX[i][1] * r);
-      p.closePath();
-      return;
-    }
-    const g = px >= GAP * view.dpr ? Math.max(1, Math.round(px * INSET)) : 0;
-    const left = Math.round(x - px / 2) + g;
-    const top = Math.round(y - px / 2) + g;
-    p.rect(left, top, Math.round(x + px / 2) - g - left, Math.round(y + px / 2) - g - top);
-  };
-  const stamp = (p, t, cells) => {
-    const { geo } = plan;
-    p.fillStyle = tones[t];
-    let open = 0;
-    for (const [x, y] of cells) {
-      if (!open) p.beginPath();
-      outline(p, ...geo.at(x, y));
-      if (++open >= CHUNK) {
-        p.fill();
-        open = 0;
-      }
-    }
-    if (open) p.fill();
-  };
-  const where = (ns) => ns.map((n) => [plan.xs[n], plan.ys[n]]);
-  const ground = () => {
-    if (!value.faint) return null;
-    const plate = new OffscreenCanvas(view.w, view.h);
-    stamp(plate.getContext('2d'), SOIL, where(Array.from({ length: plan.top }, (_, i) => i + 1)));
-    return plate;
-  };
   const reset = () => {
-    if (bed === undefined) bed = ground();
     layer = new OffscreenCanvas(view.w, view.h);
     pen = layer.getContext('2d');
-    if (bed) pen.drawImage(bed, 0, 0);
     drawn = 0;
   };
   const extend = (to) => {
     const { tone } = plan;
     const seen = [];
-    for (let n = drawn + 1; n <= to; n++) if (tone[n] === LIT || tone[n] === DIM) seen.push(n);
+    for (let n = drawn + 1; n <= to; n++) if (tone[n]) seen.push(n);
     drawn = Math.max(drawn, to);
-    for (const t of [LIT, DIM]) stamp(pen, t, where(seen.filter((n) => tone[n] === t)));
+    for (const t of [SOIL, DIM, LIT]) stamp(pen, plan.geo, view.dpr, tones[t], where(plan, seen.filter((n) => tone[n] === t)));
   };
   const overlay = (to) => {
     const { line } = plan;
     if (!line) return;
     const down = line.values.flatMap((n, i) => (n <= to ? [i] : []));
-    for (const hit of [true, false]) stamp(ctx, hit ? HIT : MISS, down.filter((i) => line.hit[i] === hit).map((i) => line.cells[i]));
+    for (const hit of [true, false]) stamp(ctx, plan.geo, view.dpr, tones[hit ? HIT : MISS], down.filter((i) => line.hit[i] === hit).map((i) => line.cells[i]));
   };
   const ring = () => {
     if (!picked || picked.off) return;
@@ -152,9 +160,8 @@ export function make(canvas, view, opts = {}) {
     shown = n;
     dirty = false;
   };
-  const fresh = (bare = true) => {
+  const fresh = () => {
     layer = null;
-    if (bare) bed = undefined;
     dirty = true;
   };
   const theme = () => {
@@ -162,7 +169,7 @@ export function make(canvas, view, opts = {}) {
     fresh();
   };
   const size = () => {
-    plan.geo = lay(num, plan.lattice, fitted(plan.lattice, plan.rings, view.w, view.h), view.w, view.h);
+    plan.geo = lay(num, plan.lattice, fitted(plan.lattice, plan.rings, view.w, view.h, room()), view.w, view.h);
     fresh();
   };
   const set = (next) => {
@@ -171,13 +178,13 @@ export function make(canvas, view, opts = {}) {
     const moved = (...keys) => keys.some((key) => value[key] !== was[key]);
     whole = true;
     if (moved('lattice', 'side')) {
-      plan = study(num, value, view.w, view.h);
+      plan = study(num, value, view.w, view.h, room());
       picked = null;
       fresh();
     } else {
       if (moved('mark', 'faint')) {
         plan = { ...plan, ...toned(num, value, plan.top) };
-        fresh(moved('faint'));
+        fresh();
       }
       if (moved('a', 'b', 'c')) plan = { ...plan, ...quadratic(num, value) };
     }

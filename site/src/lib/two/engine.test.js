@@ -1,6 +1,5 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
-import { rng } from '../rand.js';
 import { cap, count, design, joins, lay, layers, sheet, tag } from './engine.js';
 
 const carpet = math.two.create('495', 3, 2, 0, 3);
@@ -41,11 +40,10 @@ test('the layers light the fills over faint voids, and invert swaps the two', ()
   expect(inverse.faint).toEqual(plain.lit);
 });
 
-test('a blank or junk code rolls one from the seed, the same one twice', () => {
-  const rolled = design(math, 3, '', rng(7));
-  expect(rolled).toBe(design(math, 3, 'junk', rng(7)));
-  expect(Number(rolled)).toBeGreaterThan(0);
-  expect(design(math, 3, '495', rng(7))).toBe('495');
+test('a blank or junk code is the carpet, and a number wraps into the space', () => {
+  expect([design(math, 3, ''), design(math, 3, 'junk'), design(math, 3, '495')]).toEqual(['495', '495', '495']);
+  expect(design(math, 2, '')).toBe('7');
+  expect(design(math, 3, '-1')).toBe(String(2 ** 9 - 1));
 });
 
 test('the level cap shrinks as the copies grow, so the sheet stays in budget', () => {

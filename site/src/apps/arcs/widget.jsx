@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Fold, Pick as Select, Segment, Text } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
+import { paints } from '../../lib/color.js';
 import { rng } from '../../lib/rand.js';
-import { classes, next } from '../../lib/designs/engine.js';
-import { Thumbs } from '../../lib/designs/pick.jsx';
-import { BASES, DIM, looping, names, resolve } from './engine.js';
-import { file, make } from './scene.js';
+import { next } from '../../lib/designs/engine.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { useReroll } from '../../lib/app/hooks.js';
+import { BASES, cap, curves, laws, looping, names, resolve } from './engine.js';
+import { file, make, shades, sketch } from './scene.js';
 
-const STRIP = 32;
+const SMALL = { 2: 3, 3: 2 };
 
 export function rows(f) {
   if (!f) return [];
@@ -19,24 +20,33 @@ export function rows(f) {
   return [design, ['loops', String(f.loops)], ['strands', `${f.strands} = 2 x ${f.side}, proved`], ['side', String(f.side)], ['filled', `${f.filled} of ${f.cells}`], ...law];
 }
 
-export function named(math, base) {
-  return names(math, base).map(([code, word]) => [code, base === 2 ? `${word} · ${math.bang.universe.anf_string(code, DIM)}` : word]);
+export function Laws({ math, value, tick, onChange }) {
+  const code = resolve(math, value.base, value.code);
+  const paint = (one) => (ctx, w, h, dpr) => sketch(ctx, w, h, dpr, curves(math, one.code, one.base, SMALL[one.base] ?? 1), value, shades(ctx.canvas, paints(ctx.canvas, value.tint), value.strand));
+  return BASES.map(([base]) => {
+    const list = laws(math).filter((one) => one.base === base);
+    if (!list.length) return null;
+    const level = Math.min(value.level, cap(math, base));
+    return (
+      <Shelf key={base} name={`Base ${base}`}>
+        {list.map((one) => (
+          <Item key={one.code} label={one.name ? `${one.name} ${one.code}` : `code ${one.code}`} sub={`${Number(math.arcs.law(one.code, base, level).loops)} loops`} title={`L(n) = ${one.formula}`} on={Number(value.base) === base && code === one.code} onPick={() => onChange({ base, code: one.code })} art={<Art paint={paint(one)} deps={[tick, value.tint, value.strand, value.cells, value.look, value.width]} />} />
+        ))}
+      </Shelf>
+    );
+  });
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units }) {
   const unit = units?.math;
+  const tick = useTheme();
   const live = useRef(null);
   const now = useRef(value);
   now.current = value;
   const hooks = useRef({});
   hooks.current = { onChange, onStatus };
-  const seed = useRef(value.seed);
   const [facts, setFacts] = useState(null);
-  useEffect(() => {
-    if (!unit || seed.current === value.seed) return;
-    seed.current = value.seed;
-    onChange({ code: looping(unit, value.base, value.level, rng(value.seed)) });
-  }, [unit, value.seed]);
+  useReroll(value.seed, (seed) => unit && onChange({ code: looping(unit, value.base, value.level, rng(seed)) }));
   const tell = useCallback((f) => {
     setFacts(f);
     hooks.current.onStatus?.(rows(f));
@@ -58,26 +68,15 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
   };
   const have = Boolean(unit);
   useEffect(() => onExport?.(have ? [['SVG', keep]] : []), [have]);
-  const code = facts?.code ?? value.code;
-  const list = unit ? named(unit, value.base) : [];
-  const reps = unit && value.base === 2 ? (classes(unit, DIM, 2) ?? []) : [];
   const label = `${facts?.name || 'a design'} at level ${value.level} drawn in arcs`;
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} onClick={() => live.current?.trace?.()} role="img" aria-label={label} />}
-      <Bar side="right">
-        <Fold name="Design" live={facts ? `${facts.name || 'code'} ${code} · base ${value.base}` : ''}>
-          <Segment label="Base" value={value.base} options={BASES} onChange={(v) => onChange({ base: Number(v), code: '' })} />
-          <Select label="Named" value={list.some(([one]) => one === code) ? code : ''} options={[['', 'Code'], ...list]} onChange={(v) => v && onChange({ code: v })} />
-          <Text label="Code" value={value.code || code} commit onChange={(v) => onChange({ code: v })} />
-          {facts?.fault && (
-            <p className="note" role="alert">
-              {facts.fault}
-            </p>
-          )}
-          {reps.length > 0 && reps.length <= STRIP && <Thumbs math={unit} dim={DIM} base={2} codes={reps.map((one) => one.code)} code={code} onPick={(v) => onChange({ code: v })} px={40} />}
-        </Fold>
-      </Bar>
+      {unit && (
+        <Library name="Laws">
+          <Laws math={unit} value={value} tick={tick} onChange={onChange} />
+        </Library>
+      )}
     </>
   );
 }

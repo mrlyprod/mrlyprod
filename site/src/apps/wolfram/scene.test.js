@@ -4,7 +4,7 @@ import * as math from '@mrlyprod/mrly/math';
 import { defaults, describe } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { keymap } from '../../lib/app/page.jsx';
-import { PAGE, SPEC, card, make } from './scene.js';
+import { FAMOUS, PAGE, SPEC, card, make } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -35,6 +35,14 @@ test('the default diagram is rule 110 from one cell on the padded light cone, dr
   const cone = life.single_seed(110, 128);
   expect([run.last().rows, run.last().cols, run.last().live, run.last().how]).toEqual([129, 257, lit(cone), 'one live cell, padded by 128 and cropped to 257']);
   expect(run.log.filter(([verb]) => verb === 'rect').length).toBeGreaterThan(0);
+});
+
+test('the cone is centred on the live columns whichever way the rule leans', () => {
+  const ground = (run) => run.log.find(([verb]) => verb === 'fillRect').slice(1);
+  const [x, , w] = ground(open({ rule: 110 }));
+  expect([x + w / 2, w < 1028 * 0.96]).toEqual([514, true]);
+  const [x30, , w30] = ground(open({ rule: 30 }));
+  expect([x30 + w30 / 2, w30 > w]).toEqual([514, true]);
 });
 
 test('a rule change redraws the whole sheet under the new rule', () => {
@@ -71,6 +79,10 @@ test('a tap on the top row edits the seed and reruns it, and a tap far below doe
   expect(run.last().how).toBe('a seed row edited by hand');
   run.set({ steps: 128 });
   expect(run.last().how).toBe('one live cell, padded by 128 and cropped to 257');
+});
+
+test('the famous rules are distinct bytes of the cube, each with a word', () => {
+  expect([new Set(FAMOUS.map(([rule]) => rule)).size, FAMOUS.every(([rule, word]) => rule >= 0 && rule < 256 && word)]).toEqual([FAMOUS.length, true]);
 });
 
 test('the card reads the byte as a design: rule 110 has five corners, rule 90 is affine and draws the gasket', () => {

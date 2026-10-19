@@ -3,6 +3,7 @@ title: The coprimality spine
 lead: The coprimality spine: exact base-local factors on every design, the census behind them, the window at dimension one with the band automaton's critical out-degree and its algebraic block rate, and primes on a design, where the least base below the quarter threshold is 21 at one missing digit and 32 at two, the one-digit family closes at 34 and the two-digit family closes at 21 against the third.
 figure: research-coprime
 slug: coprime
+date: 2026-08-28
 ---
 
 # The coprimality spine
@@ -10,6 +11,12 @@ slug: coprime
 The coprimality spine: exact base-local factors on every design, the census behind them, the window at dimension one with the band automaton's critical out-degree and its algebraic block rate, and primes on a design, where the least base below the quarter threshold is 21 at one missing digit and 32 at two, the one-digit family closes at 34 and the two-digit family closes at 21 against the third.
 
 - [notes/coprime.md](notes/coprime.md): The coprimality spine
+- [notes/the-master-density.md](notes/the-master-density.md): The master density
+- [notes/primes-on-a-design.md](notes/primes-on-a-design.md): Primes on a design
+- [notes/gaussian-primes-on-a-design.md](notes/gaussian-primes-on-a-design.md): Gaussian primes on a design
+- [notes/the-window-moments-and-rays.md](notes/the-window-moments-and-rays.md): The window: moments and rays
+- [notes/the-window-occupancy-and-the-band.md](notes/the-window-occupancy-and-the-band.md): The window: occupancy and the band
+- [notes/visibility-parity-and-slices.md](notes/visibility-parity-and-slices.md): Visibility, parity and slices
 - [claims/b-visibility.md](claims/b-visibility.md): b-visibility
 - [claims/coprimality-at-dimension-one.md](claims/coprimality-at-dimension-one.md): Coprimality at dimension one
 - [claims/coprimality-density.md](claims/coprimality-density.md): Coprimality density

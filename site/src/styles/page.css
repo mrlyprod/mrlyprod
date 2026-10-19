@@ -2,5 +2,10 @@
 @import "./tokens.css";
 @import "./base.css";
 @import "./chrome.css";
+@import "./desk.css";
+@import "./appicons.css";
 @import "./fonts/fonts.css";
 @import "./pages.css";
+@import "./settings.css";
+@import "./saver.css";
+@import "./screensavers.css";

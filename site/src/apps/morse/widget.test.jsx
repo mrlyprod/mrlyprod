@@ -7,7 +7,7 @@ import { Knobs } from '../../lib/app/knobs.jsx';
 import { study } from './engine.js';
 import { SPEC, tidied } from './scene.js';
 import { rng } from '../../lib/rand.js';
-import { Design, ROWS, rerolled, shift, tapped, turned } from './widget.jsx';
+import { Pictures, ROWS, rerolled, shift, tapped, turned } from './widget.jsx';
 
 const units = { num, math };
 
@@ -17,27 +17,33 @@ const facts = (over) => study(units, value(over)).facts;
 
 const pane = (over) => renderToStaticMarkup(<Knobs spec={SPEC} value={value(over)} onChange={() => {}} />);
 
-const design = (over, given = units) => renderToStaticMarkup(<Design value={value(over)} units={given} facts={facts(over)} onChange={() => {}} />);
+const library = (over) => renderToStaticMarkup(<Pictures units={units} value={value(over)} tick={0} onChange={() => {}} />);
 
 const heads = (html) => html.match(/<h3>(\w+)<\/h3>/g);
 
-test('the knobs hold one View group: the view segment first, then the view own rows, a level reading its side', () => {
+test('the knobs hold one View group: the view segment first, then the view own rows, a level reading its side, the tile side where a design is read', () => {
   const lifts = pane({});
   expect(heads(lifts)).toEqual(['<h3>View</h3>']);
   expect(lifts.indexOf('class="segment"')).toBeLessThan(lifts.indexOf('Level'));
   expect(lifts).toContain('<span class="num">6 · side 64</span>');
-  expect(lifts).toContain('Lifts · Parity, t(i) xor t(j) · 6 · side 64 · Fit');
+  expect(lifts).toContain('Lifts · 6 · side 64 · Fit');
+  expect([lifts.includes('Lift<'), lifts.includes('Tile side')]).toEqual([false, false]);
   expect(pane({ view: 'word' })).toContain('<span class="num">6 · 64 letters</span>');
   expect(pane({ view: 'word' })).not.toContain('Cell');
   expect(pane({ view: 'design', read: 'filter' })).toContain('<span class="num">3 · side 16</span>');
+  expect(pane({ view: 'design', read: 'filter' })).toContain('Tile side');
 });
 
-test('the Design fold shows only where a design is read and the units are in hand, naming the design and its tile side', () => {
-  expect([design({}), design({ view: 'word' }), design({ view: 'design' }, null)]).toEqual(['', '', '']);
-  const filter = design({ view: 'design', read: 'filter' });
-  expect(heads(filter)).toEqual(['<h3>Design</h3>']);
-  expect(filter).toContain('void 9 · side 2');
-  expect(filter).toContain('Tile side');
+test('the library holds every picture by shelf, the lifts with their formulas, the one on the stage lit, and a pick writes its whole state', () => {
+  const html = library({});
+  expect(heads(html)).toEqual(['<h3>Word</h3>', '<h3>Lifts</h3>', '<h3>Design</h3>']);
+  expect([...html.matchAll(/class="label">([^<]*)</g)].map((hit) => hit[1])).toEqual(['Letters', 'Runs', 'Parity', 'And', 'Xor', 'Sum', 'Sign power', 'Filter']);
+  expect(html).toContain('class="label">Xor</span><span class="sub">t(i xor j)</span>');
+  const lit = (over) => library(over).match(/aria-current="true"[^]*?class="label">([^<]*)</)[1];
+  expect([lit({}), lit({ lift: 'Sum' }), lit({ view: 'word', colour: 'runs' }), lit({ view: 'design', read: 'filter' })]).toEqual(['Parity', 'Sum', 'Runs', 'Filter']);
+  const wrote = [];
+  Pictures({ units, value: value({}), tick: 0, onChange: (patch) => wrote.push(patch) })[2].props.children[1].props.onPick();
+  expect(wrote).toEqual([{ view: 'design', read: 'filter' }]);
 });
 
 test('a lift reads out its formula, its counts and whether it folds', () => {

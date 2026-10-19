@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as life from '@mrlyprod/mrly/life';
 import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../rand.js';
-import { BOARD, LINE, codeOf, destiny, drawn, fate, fitLevel, hash, lattice, levelOf, maskName, maskOf, parse, population, ruleOf, sources, sow, spell, told } from './engine.js';
+import { BOARD, LINE, PATTERNS, STARTS, codeOf, destiny, drawn, fate, fitLevel, hash, lattice, levelOf, maskName, maskOf, parse, population, ruleOf, sources, sow, spell, startOf, told } from './engine.js';
 
 test('counts read as digits, as separated numbers, as ranges, and nothing from a dash', () => {
   expect([parse('23'), parse('1 3 5'), parse('34-45'), parse('5-3, 9'), parse('-'), parse('3 3 1'), parse('2-9', 4)]).toEqual([
@@ -74,13 +74,24 @@ test('a soup, one cell and a design seed the board; the design is the code grown
   expect([population(design), Uint8Array.from(cut)]).toEqual([population(carpet), carpet]);
 });
 
-test('a named pattern seeds the board centred, and its middle row seeds a line', () => {
+test('a named pattern seeds the board centred, and a line takes none and sows a soup instead', () => {
   const mid = (BOARD >> 1) - 1;
   const glider = sow({ from: 'glider' }, rng(1), math, BOARD, BOARD);
   expect([population(glider), glider[mid * BOARD + mid + 1], glider[(mid + 1) * BOARD + mid + 2], glider[(mid + 2) * BOARD + mid]]).toEqual([5, 1, 1, 1]);
-  expect(population(sow({ from: 'pentomino' }, rng(1), math, BOARD, BOARD))).toBe(5);
-  const blinker = sow({ from: 'blinker' }, rng(1), math, 255);
-  expect([blinker.length, population(blinker), blinker[126], blinker[127], blinker[128]]).toEqual([255, 3, 1, 1, 1]);
+  const gun = sow({ from: 'gun' }, rng(1), math, BOARD, BOARD);
+  expect(gun[((BOARD - 9 + 1) >> 1) * BOARD + ((BOARD - 36 + 1) >> 1) + 24]).toBe(1);
+  const line = sow({ from: 'blinker', density: 0.3 }, rng(1), math, 255);
+  expect(line).toEqual(sow({ from: 'noise', density: 0.3 }, rng(1), math, 255));
+});
+
+test('every named pattern draws the cells its rows name, and the starts list them after the soup, the cell and the design', () => {
+  const cells = Object.fromEntries(Object.keys(PATTERNS).map((id) => [id, population(sow({ from: id }, rng(1), math, BOARD, BOARD))]));
+  expect(cells).toEqual({ glider: 5, lwss: 9, pentomino: 5, acorn: 7, diehard: 7, gun: 36, blinker: 3, toad: 6, beacon: 8, pulsar: 48, block: 4, beehive: 6 });
+  expect(STARTS.slice(0, 4).map(([id]) => id)).toEqual(['noise', 'one', 'design', 'glider']);
+});
+
+test('a line keeps the starts it can sow, and any other start reads as a soup', () => {
+  expect([startOf({ dim: 1, from: 'glider' }), startOf({ dim: 1, from: 'one' }), startOf({ dim: 1, from: 'design' }), startOf({ dim: 2, from: 'glider' })]).toEqual(['noise', 'one', 'noise', 'glider']);
 });
 
 test('a line seeds one cell at its centre, or the middle row of the design', () => {

@@ -93,8 +93,10 @@ export function describe(spec, value = {}) {
   return groups;
 }
 
+export const viewing = (row) => row.key === 'view' || row.view === true;
+
 export function places(spec = []) {
-  const view = spec.find((row) => row.key === 'view');
+  const view = spec.find(viewing);
   const lead = view ? (view.group ?? '') : null;
   const rest = [...new Set(spec.map((row) => row.group ?? ''))].filter((name) => name !== lead);
   const of = (name) => (name === lead ? 0 : 2 * rest.indexOf(name) + 3);

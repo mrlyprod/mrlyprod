@@ -775,7 +775,7 @@ def onestep():
         print("%5d %10.6f %11.6f %18.6f %11.6f %11.6f %14.6f %5.3f"
               % (q, up(psi_q(q) / q), up(psi2_q(q) / q), dn(e), up(psi_q(q) / q - e),
                  up(psi2_q(q) / q - e), dn(v / q), at))
-    print("H is the harmonic upper bound ln n + gamma + 1/(2n) of mobius.md at every Psi and Psi' here")
+    print("H is the harmonic upper bound ln n + gamma + 1/(2n) of grh-power-saving.md at every Psi and Psi' here")
     print("the monotone step of the sharpening needs Psi'_q >= (1 + pi) q/2, first true at q = %d with that H"
           % mono_floor())
     print("and at q = %d with the harmonic number itself, the two floors the convention separates"

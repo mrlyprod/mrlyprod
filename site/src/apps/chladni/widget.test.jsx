@@ -1,5 +1,18 @@
 import { expect, test } from 'bun:test';
-import { rows } from './widget.jsx';
+import * as math from '@mrlyprod/mrly/math';
+import * as num from '@mrlyprod/mrly/num';
+import { all, mount, text } from '../../../test/dom.js';
+import { Frame } from '../../lib/app/frame.jsx';
+import { defaults } from '../../lib/app/spec.js';
+import { carpets, ladder } from './engine.js';
+import { SPEC } from './scene.js';
+import { Shelves, rows } from './widget.jsx';
+
+const items = (value) =>
+  mount(async (draw, host) => {
+    await draw(<Frame label="Chladni"><Shelves value={{ ...defaults(SPEC), seed: 1, ...value }} onChange={() => {}} units={{ num, math }} /></Frame>);
+    return all(host, (at) => 'data-item' in (at.attributes ?? {}));
+  });
 
 test('the plate reads its figure, pitch and grains, the sign left out when n equals m', () => {
   expect(rows({ view: 'plate', n: 3, m: 5, sign: -1, pitch: 5.8309518948, grains: 40000 })).toEqual([['figure', '(3, 5, -)'], ['pitch', '5.831'], ['grains', '40000']]);
@@ -12,4 +25,11 @@ test('the carpet reads k, lambda, its domains against the bound as one row, and 
 
 test('an error reads as its error alone', () => {
   expect(rows({ error: 'the carpet waits for its door' })).toEqual([['error', 'the carpet waits for its door']]);
+});
+
+test('the plate view lists every figure of the ladder and marks the one on show, the carpet view lists the designs that hold', async () => {
+  const plates = await items({});
+  expect([plates.length, plates.filter((at) => at.attributes['aria-current'] === 'true').map(text)]).toEqual([ladder(num).length, ['3, 5-']]);
+  const designs = await items({ view: 'carpet' });
+  expect([designs.length, designs.filter((at) => at.attributes['aria-current'] === 'true').map(text)]).toEqual([carpets(math).length, ['carpetno. 3']]);
 });

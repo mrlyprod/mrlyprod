@@ -1,6 +1,6 @@
 # Magic Words
 
-- Regenerates the order-sensitivity section of [connectivity](../../../notes/connectivity.md): the two sensitivity tables, the minimal witness, the order-blind laws, the rational-series representation, the component growth families, and the component exponent along a word with its closed forms on all 105 letter pairs, its frequency comparison, its named-word value with a certificate, and its boundary witnesses.
+- Regenerates the order-sensitivity chapters [order in the mixed product](../../../notes/order-in-the-mixed-product.md) and [word order, closed and bounded](../../../notes/word-order-closure-and-spectral-radius.md): the two sensitivity tables, the minimal witness, the order-blind laws, the rational-series representation, the component growth families, and the component exponent along a word with its closed forms on all 105 letter pairs, its frequency comparison, its named-word value with a certificate, and its boundary witnesses.
 - A word is an ordered list of base-2, dim 2 codes folded by the Kronecker product, first letter outermost, of length `L`; bit `i` of a code is residue corner `i` in row-major order, so code 3 is the top row and code 5 the left column. The empty word is the one filled cell.
 - Observables are fixed once and printed once: `fill`; the main-diagonal count; `boundary`, the number of filled cells with a void or exterior 4-neighbour; `components`, 4-connected; `holes`, the bounded 4-connected components of the complement; the Euler characteristic `N - A + Q` over cells, face-adjacent pairs and full `2 x 2` blocks; the anti-diagonal profile, filled cells by `i + j`; and the row and column contact counts.
 - The exposed-face reading `4N - 2E` of [the race](../../../notes/connectivity.md) is a second observable under the same word "boundary" and is printed beside the first, because it is order-sensitive at length 2 where the cell count is not.
@@ -32,29 +32,29 @@
 
 ## WITNESSES
 
-- connectivity.md the order table: `0, 0, 0, 74, 78, 10` sensitive of 105 multisets at length 2 and `0, 0, 36, 188, 188, 100` of 210 at length 3.
-- connectivity.md the denominators: 225 words and 105 multisets with two or more orderings at length 2; 1000 words and 210 at length 3.
-- connectivity.md the scope guard: the whole anti-diagonal profile sensitive on 99 of 105 at length 2, its peak on 23 and its support on 27.
-- connectivity.md the minimal witness: `comp(A_3 (x) A_6) = 4` against `comp(A_6 (x) A_3) = 2`.
-- connectivity.md the fill 2 split: all 7 same-class pairs commute, diagonal against diagonal at 4, all 8 adjacent-against-diagonal pairs 4 against 2.
-- connectivity.md the fill 3 and above line: all 10 pairs among codes 7, 11, 13, 14, 15 give one component in either order.
-- connectivity.md the order-blind sweeps: the main-diagonal count factors and the contacts multiply on all 3375 words of length 3, and boundary and interior survive the factor swap on all 256 code pairs, all with zero mismatches.
-- connectivity.md the series table: Hankel ranks 4, 4, 8, 11 with 6, 6, 9, 10 distinct matrices and basis words `e, 3, 5, 15`, `e, 3, 5, 15`, `e, 3, 5, 7, 11, 13, 14, (7,14)`, `e, 3, 5, 7, 11, 13, 14, 15, (7,6), (7,7), (11,11)`.
-- connectivity.md the component representation: `lambda = (1,0,0,0)`, `gamma = (1,1,1,1)^T`, six classes `{1,2,4,8}`, `{3,12}`, `{5,10}`, `{6,9}`, `{7,11,13,14}`, `{15}`, 14 of 15 class pairs failing to commute, and `M(6,9) = 2 M(1,2,4,8)`.
-- connectivity.md the growth line: `2 * 4^(L-1)` on `(15^(L-1), 6)`, `2^(L-1)` on `(15^(L-1), 3)`, `2 * 3^(L-1)` on `(7^(L-1), 6)`.
-- connectivity.md the closed forms: 59 of the 105 letter pairs, in seven families of 16, 8, 4, 8, 4, 4 and 15 pairs, each exhaustive to length 14 against the representation and to length 7 against the drawn cells.
-- connectivity.md the constant-word line: `comp(c^L) = comp(c)^L` on all 15 codes and `comp(c) = 2` exactly at codes 6 and 9.
-- connectivity.md the cut law: 49420 of 54240 words of length at most 4 admit the cut, zero mismatches, with `h = 0` on codes 1, 2, 4, 5, 6, 8, 9, 10 and `v = 0` on codes 1, 2, 3, 4, 6, 8, 9, 12.
-- connectivity.md the Thue-Morse reading: terminal run at most 2, exactly `L/2` of each letter at even length, terminal-run counts 524288, 349526, 174762 over lengths to `2^20`, the period-doubling boundary word, and the prefix rates `1/2`, `1/2`, `1048575/1048576`, `1`, `524287/1048576`, 0.
-- connectivity.md the simplex boundary: `4/7, 8/15, ..., 8192/16383` at the powers of 2 and `n/(n+2)` at the squares.
-- connectivity.md the other forty-six: five families of 16, 8, 4, 2 and 16 pairs, 753572 words against the representation and 11684 against the drawn cells, zero mismatches.
-- connectivity.md the ledger: 89 of 105 pairs saturating and 16 falling short, `Phi` exact on 27 and refuted on 78, and 4 letter pairs strictly between.
-- connectivity.md the Thue-Morse value: prefix rates `1.291967463826` and `1.292352803727` in one reading and `1.291291597694` and `1.292183837194` in the other, largest deviation `4.273459` nats against the certificate constant `4.884864`, saturation minimum `0.0113766545`, the sampled `0.2325367033` at `L = 4096`, and the exact maxima `43397/186624` and `151/648`.
-- connectivity.md the sandwich: `comp/T` in `[1.0004, 2.0000]` over six named words with no violation.
-- connectivity.md the cone: the chart `(1/3,1/3) (2/3,0) (5/9,1/3) (14/27,4/9) (41/54,0) (95/108,0) (203/324,1/3)`, the gasket-domino-gasket vertex images with `b + c` at most `17/18`, 0 of 8190 entrywise-positive products, and `max |entry(M_3^L)| = 2^(L+2) - 2`.
-- connectivity.md the boundary over `(3, 7)`: `0.502367981` at `L = 2048` through `0.500219405` at `L = 32768`, and the block `4097 <= L <= 8192` sweeping `1.00123` down to `0.50073`.
-- connectivity.md the by-products: `(6^k + 4)/5` reading 2, 8, 44, 260, 1556, 9332, the largest count `1094` at `L = 8`, and the tripling word's range `[0.4792, 1.4379]`.
-- connectivity.md every alphabet: contact-free codes 1, 2, 4, 6, 8, 9; the 455 three-letter alphabets split 84, 216, 135, 20 by contact-free letters; saturation on 443 of 455 and 32724 of 32767, `Phi` exact on 30 of 455; 213192 and 271572 drawn words with 755664 cut places, zero mismatches; readings within `2.869e-4` of the law at `L = 2^14`.
+- order-in-the-mixed-product.md the order table: `0, 0, 0, 74, 78, 10` sensitive of 105 multisets at length 2 and `0, 0, 36, 188, 188, 100` of 210 at length 3.
+- order-in-the-mixed-product.md the denominators: 225 words and 105 multisets with two or more orderings at length 2; 1000 words and 210 at length 3.
+- order-in-the-mixed-product.md the scope guard: the whole anti-diagonal profile sensitive on 99 of 105 at length 2, its peak on 23 and its support on 27.
+- order-in-the-mixed-product.md the minimal witness: `comp(A_3 (x) A_6) = 4` against `comp(A_6 (x) A_3) = 2`.
+- order-in-the-mixed-product.md the fill 2 split: all 7 same-class pairs commute, diagonal against diagonal at 4, all 8 adjacent-against-diagonal pairs 4 against 2.
+- order-in-the-mixed-product.md the fill 3 and above line: all 10 pairs among codes 7, 11, 13, 14, 15 give one component in either order.
+- order-in-the-mixed-product.md the order-blind sweeps: the main-diagonal count factors and the contacts multiply on all 3375 words of length 3, and boundary and interior survive the factor swap on all 256 code pairs, all with zero mismatches.
+- order-in-the-mixed-product.md the series table: Hankel ranks 4, 4, 8, 11 with 6, 6, 9, 10 distinct matrices and basis words `e, 3, 5, 15`, `e, 3, 5, 15`, `e, 3, 5, 7, 11, 13, 14, (7,14)`, `e, 3, 5, 7, 11, 13, 14, 15, (7,6), (7,7), (11,11)`.
+- order-in-the-mixed-product.md the component representation: `lambda = (1,0,0,0)`, `gamma = (1,1,1,1)^T`, six classes `{1,2,4,8}`, `{3,12}`, `{5,10}`, `{6,9}`, `{7,11,13,14}`, `{15}`, 14 of 15 class pairs failing to commute, and `M(6,9) = 2 M(1,2,4,8)`.
+- order-in-the-mixed-product.md the growth line: `2 * 4^(L-1)` on `(15^(L-1), 6)`, `2^(L-1)` on `(15^(L-1), 3)`, `2 * 3^(L-1)` on `(7^(L-1), 6)`.
+- order-in-the-mixed-product.md the closed forms: 59 of the 105 letter pairs, in seven families of 16, 8, 4, 8, 4, 4 and 15 pairs, each exhaustive to length 14 against the representation and to length 7 against the drawn cells.
+- order-in-the-mixed-product.md the constant-word line: `comp(c^L) = comp(c)^L` on all 15 codes and `comp(c) = 2` exactly at codes 6 and 9.
+- order-in-the-mixed-product.md the cut law: 49420 of 54240 words of length at most 4 admit the cut, zero mismatches, with `h = 0` on codes 1, 2, 4, 5, 6, 8, 9, 10 and `v = 0` on codes 1, 2, 3, 4, 6, 8, 9, 12.
+- order-in-the-mixed-product.md the Thue-Morse reading: terminal run at most 2, exactly `L/2` of each letter at even length, terminal-run counts 524288, 349526, 174762 over lengths to `2^20`, the period-doubling boundary word, and the prefix rates `1/2`, `1/2`, `1048575/1048576`, `1`, `524287/1048576`, 0.
+- order-in-the-mixed-product.md the simplex boundary: `4/7, 8/15, ..., 8192/16383` at the powers of 2 and `n/(n+2)` at the squares.
+- word-order-closure-and-spectral-radius.md the other forty-six: five families of 16, 8, 4, 2 and 16 pairs, 753572 words against the representation and 11684 against the drawn cells, zero mismatches.
+- word-order-closure-and-spectral-radius.md the ledger: 89 of 105 pairs saturating and 16 falling short, `Phi` exact on 27 and refuted on 78, and 4 letter pairs strictly between.
+- word-order-closure-and-spectral-radius.md the Thue-Morse value: prefix rates `1.291967463826` and `1.292352803727` in one reading and `1.291291597694` and `1.292183837194` in the other, largest deviation `4.273459` nats against the certificate constant `4.884864`, saturation minimum `0.0113766545`, the sampled `0.2325367033` at `L = 4096`, and the exact maxima `43397/186624` and `151/648`.
+- word-order-closure-and-spectral-radius.md the sandwich: `comp/T` in `[1.0004, 2.0000]` over six named words with no violation.
+- word-order-closure-and-spectral-radius.md the cone: the chart `(1/3,1/3) (2/3,0) (5/9,1/3) (14/27,4/9) (41/54,0) (95/108,0) (203/324,1/3)`, the gasket-domino-gasket vertex images with `b + c` at most `17/18`, 0 of 8190 entrywise-positive products, and `max |entry(M_3^L)| = 2^(L+2) - 2`.
+- word-order-closure-and-spectral-radius.md the boundary over `(3, 7)`: `0.502367981` at `L = 2048` through `0.500219405` at `L = 32768`, and the block `4097 <= L <= 8192` sweeping `1.00123` down to `0.50073`.
+- word-order-closure-and-spectral-radius.md the by-products: `(6^k + 4)/5` reading 2, 8, 44, 260, 1556, 9332, the largest count `1094` at `L = 8`, and the tripling word's range `[0.4792, 1.4379]`.
+- word-order-closure-and-spectral-radius.md every alphabet: contact-free codes 1, 2, 4, 6, 8, 9; the 455 three-letter alphabets split 84, 216, 135, 20 by contact-free letters; saturation on 443 of 455 and 32724 of 32767, `Phi` exact on 30 of 455; 213192 and 271572 drawn words with 755664 cut places, zero mismatches; readings within `2.869e-4` of the law at `L = 2^14`.
 - research/claims/ the transfer-state row: `kappa = 2^(L-1)` on `(15^(L-1), 3)` at `L = 1..10` with maxima 1, 2, 4, 8 over all words of length 1 to 4.
 - research/claims/ the block-reduction row: six periodic cases at periods 2 and 3 and lengths to 6, matching cell for cell.
 - `mrly::math::bang::magic`, `mrly::math::bang::MagicLayer` and `mrly::core::Tensor::fractal`, the crate paths both renderers are checked against.

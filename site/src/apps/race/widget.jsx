@@ -1,13 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
+import { turn } from '../../lib/app/turn.js';
+import { paints } from '../../lib/color.js';
+import { total } from '../../lib/designs/engine.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { flat } from '../../lib/designs/thumb.js';
 import { rng } from '../../lib/rand.js';
 import { Scene } from '../../lib/app/page.jsx';
-import { pair } from './engine.js';
-import { make, named } from './scene.js';
+import { DIM, TURN, kin, pair, reads } from './engine.js';
+import { MATCHUPS, make, named } from './scene.js';
 import { useUnit } from '../../lib/app/hooks.js';
 
 const ENDS = { stall: 'stalled', limit: 'time up' };
+
+const LEVEL = 2;
+
+const FAIR = { base: 3, number: 3 };
 
 const roll = () => Math.floor(Math.random() * 4294967296);
 
@@ -50,6 +60,13 @@ export function rows(stat) {
   ];
 }
 
+function sketch(ctx, math, value, sides, w) {
+  const { accent } = paints(ctx.canvas);
+  const hues = [accent, turn(accent, TURN)];
+  const edge = w / sides.length;
+  sides.forEach(([code, hue], i) => flat(ctx, math.two.create(code, value.number, LEVEL, 0, value.base), i * edge, (w - edge) / 2, edge, hues[hue]));
+}
+
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }) {
   const unit = useUnit('math', given);
   const live = useRef(null);
@@ -58,6 +75,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const hooks = useRef({});
   hooks.current = { onChange, onStatus };
   const [stat, setStat] = useState(null);
+  const [find, setFind] = useState('');
+  const tick = useTheme();
   const tell = useCallback((next) => {
     setStat(next);
     hooks.current.onStatus?.(rows(next));
@@ -90,8 +109,30 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const have = Boolean(unit);
   useEffect(() => onExport?.(have ? [['SVG', keep], ['CSV', log]] : []), [have]);
   const names = stat?.sides.map(call);
+  const count = unit ? total(unit, DIM, value.base) : 0;
+  const mine = reads(value.a, count);
+  const rivals = useMemo(() => (unit && mine !== null ? kin(unit, value, mine, count) : []), [unit, mine, value.base, value.number]);
+  const word = (code, base = value.base) => unit?.name.of(code, DIM, base) ?? '';
+  const want = find.trim().toLowerCase();
+  const match = (code, name) => !want || code.startsWith(want) || name.toLowerCase().includes(want);
+  const fair = MATCHUPS.map(([a, b]) => [a, b, word(a, FAIR.base), word(b, FAIR.base)]).filter(([a, b, x, y]) => match(a, x) || match(b, y));
+  const rest = rivals.map((code) => [code, word(code)]).filter(([code, name]) => match(code, name));
   return (
     <>
+      {unit && (
+        <Library find={find} onFind={setFind}>
+          {fair.length > 0 && (
+            <Shelf name="Matchups">
+              {fair.map(([a, b, x, y]) => <Item key={`${a}-${b}`} label={`${x || a} v ${y || b}`} on={value.a === a && value.b === b} onPick={() => onChange({ a, b, ...FAIR })} art={<Art paint={(ctx, w) => sketch(ctx, unit, FAIR, [[a, 0], [b, 1]], w)} deps={[unit, a, b, tick]} />} />)}
+            </Shelf>
+          )}
+          {rest.length > 0 && (
+            <Shelf name={`Rivals of ${word(mine) || mine}`} grid>
+              {rest.map(([code, name]) => <Item key={code} label={name || code} sub={name ? code : undefined} on={reads(value.b, count) === code} onPick={() => onChange({ b: code })} art={<Art paint={(ctx, w) => sketch(ctx, unit, value, [[code, 1]], w)} deps={[unit, code, value.base, value.number, tick]} />} />)}
+            </Shelf>
+          )}
+        </Library>
+      )}
       {unit && <Scene make={scene} value={value} onReady={ready} onClick={go} role="img" aria-label={names ? `${names[0]} against ${names[1]}` : 'Two boards of walkers'} style={{ cursor: 'pointer' }} />}
       {!unit && (
         <Bar side="status">

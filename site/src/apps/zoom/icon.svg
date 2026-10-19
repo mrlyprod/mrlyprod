@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="l0" gradientUnits="userSpaceOnUse" x1="0" y1="192" x2="0" y2="832"><stop offset="0" stop-color="#a9aec0"/><stop offset="1" stop-color="#6f7489"/></linearGradient>
+    <linearGradient id="l1" gradientUnits="userSpaceOnUse" x1="0" y1="392" x2="0" y2="632"><stop offset="0" stop-color="#dfe2eb"/><stop offset="1" stop-color="#b3b7c7"/></linearGradient>
+    <linearGradient id="l2" gradientUnits="userSpaceOnUse" x1="0" y1="480" x2="0" y2="544"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1f2f7"/></linearGradient>
+    <radialGradient id="ld" gradientUnits="userSpaceOnUse" cx="512" cy="512" r="407.3"><stop offset=".417" stop-color="#c6cad8"/><stop offset="1" stop-color="#8a8fa3"/></radialGradient>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="512" cy="512" r="300"><stop offset="0" stop-color="#fff" stop-opacity="0.3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f5466"/><stop offset=".7" stop-color="#2b2e3a"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <rect x="256" y="256" width="512" height="512" fill="url(#glow)" data-mono="hide"/>
+  <path d="M201.4 246.6L465.9 494.1L494.1 465.9L246.6 201.4Z M777.4 201.4L529.9 465.9L558.1 494.1L822.6 246.6Z M822.6 777.4L558.1 529.9L529.9 558.1L777.4 822.6Z M246.6 822.6L494.1 558.1L465.9 529.9L201.4 777.4Z" fill="url(#ld)"/>
+  <path d="M192 192H832V832H192Z M256 256V768H768V256Z" fill="url(#l0)" fill-rule="evenodd"/>
+  <path d="M392 392H632V632H392Z M440 440V584H584V440Z" fill="url(#l1)" fill-rule="evenodd"/>
+  <rect x="480" y="480" width="64" height="64" fill="url(#l2)" data-mono="full"/>
+</svg>

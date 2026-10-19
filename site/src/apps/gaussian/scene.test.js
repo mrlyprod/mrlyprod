@@ -6,7 +6,8 @@ import { defaults } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { keymap, live } from '../../lib/app/page.jsx';
 import { GROW, PAD, lay, study } from './engine.js';
-import { PAGE, SPEC, make, named } from './scene.js';
+import { PAGE, SPEC, make, named, sketch } from './scene.js';
+import { THUMB } from './engine.js';
 
 const pen = (log) =>
   new Proxy(
@@ -193,4 +194,21 @@ test('Enter grows, the arrows walk, and the turn keys join the map once a point 
   const map = (value) => keymap(live(PAGE.keys, value));
   expect([map({}).find((row) => row.button)?.act, hit(map({}), { key: 'Enter' })?.act, hit(map({}), { key: 'ArrowRight' })?.act]).toEqual(['grow', 'grow', 'walk']);
   expect([hit(map({ click: '' }), { key: 'ArrowUp' }), hit(map({ click: '2,3' }), { key: 'ArrowUp' })?.act]).toEqual([null, 'turn']);
+});
+
+test('Grow and the walk are also in the Edit menu', () => {
+  expect(PAGE.keys.filter((row) => row.menu).map((row) => [row.act, row.menu])).toEqual([['grow', 'Edit'], ['walk', 'Edit']]);
+});
+
+test('a library thumb fills the window cut at the thumb reach, rects for the gaussian ring and circles for the eisenstein', () => {
+  const thumb = (set) => {
+    const log = [];
+    sketch(num, set, pen(log), 112, 112, 1, { paper: '#000000', accent: '#ff00ff' });
+    return log;
+  };
+  const square = thumb({ ring: 'gaussian', limit: 40, look: 'fate' });
+  const round = thumb({ ring: 'eisenstein', limit: 12, look: 'norm' });
+  const count = (log, name) => log.filter(([key]) => key === name).length;
+  expect([count(square, 'rect'), count(square, 'arc')]).toEqual([study(num, 'gaussian', THUMB).count - 1, 0]);
+  expect([count(round, 'rect'), count(round, 'arc') > 0]).toEqual([0, true]);
 });

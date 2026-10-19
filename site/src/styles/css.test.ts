@@ -52,7 +52,7 @@ test("the git and app sheets import nothing the shell sheet already links", () =
 
 /* TOKENS */
 
-const SHEETS = ["chrome.css", "base.css", "pages.css", "../lib/app/mrly.css"];
+const SHEETS = ["chrome.css", "desk.css", "base.css", "pages.css", "../lib/app/mrly.css"];
 
 const bare = (name: string) => readFileSync(join(import.meta.dir, name), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 

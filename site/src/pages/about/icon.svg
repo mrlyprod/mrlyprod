@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8889fb"/><stop offset="0.7" stop-color="#6768fa"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M194 512A318 318 0 1 0 830 512A318 318 0 1 0 194 512ZM469 309A12 12 0 0 1 481 297L543 297A12 12 0 0 1 555 309L555 371A12 12 0 0 1 543 383L481 383A12 12 0 0 1 469 371ZM383 481A12 12 0 0 1 395 469L543 469A12 12 0 0 1 555 481L555 629A12 12 0 0 0 567 641L629 641A12 12 0 0 1 641 653L641 715A12 12 0 0 1 629 727L395 727A12 12 0 0 1 383 715L383 653A12 12 0 0 1 395 641L457 641A12 12 0 0 0 469 629L469 567A12 12 0 0 0 457 555L395 555A12 12 0 0 1 383 543Z" fill="#fff" fill-rule="evenodd"/>
+</svg>

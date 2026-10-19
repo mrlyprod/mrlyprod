@@ -15,10 +15,10 @@
 
 ## WITNESSES
 
-- dimensions.md the arithmetic pole, certified, "The string above lives in [0,1]": Burnol's Proposition 5.1 limit formula and the statement that the paper does not study the off-real residues further.
-- dimensions.md the arithmetic pole, certified, "Write G(u) = A(3^u)/2^u": the profile lemma: `Phi(u) = 2^(1-u)` on `[1 - s_0, 1]`, `Phi(1 - s_0) = 2^(s_0) = 1.548562`.
-- dimensions.md the arithmetic pole, certified, "For Re s > s_0": the dictionary `Res_(s_(0,k)) K = s_(0,k) c_k`.
-- dimensions.md the arithmetic pole, certified, "Let Lev_j(w) = sum n^(-w)": `lambda_(0,1)` in `[0.231891517689918, 0.231891517689919] + i [-0.501067414481069, -0.501067414481068]`, width `3.4e-18`, level tail `2.4e-19`, distance from zero at least `0.552125193`, `I = 66`, `level 40`.
-- dimensions.md the arithmetic pole, certified, "The same certificate at k = 0..10" and its table: the band `k = 0..10`, `I` from 52 to 164, widths from `2e-18` to `4e-13`.
-- dimensions.md the arithmetic pole, certified, "Two independent floating-point computations": the level-sum control `0.231891518 - 0.501067414 i` at distance `1.9e-10` against its bound `7.5e-10`, the Fourier control `c_1 = -0.082138842 - 0.049607499 i` at distance `7.2e-08`, the second enclosure `[0.23189098, 0.23189280] + i [-0.50106814, -0.50106632]`, the `{0,2}` enclosure `[0.135292875345483, 0.135292875345484] + i [0.329874091244466, 0.329874091244467]`, the zeta boxes around `1` and `0`.
-- dimensions.md the arithmetic pole, certified, "Burnol's Proposition 7.1 recurrence carried down": the column `lambda_(1,1)`, `lambda_(2,1)`, `lambda_(3,1)` and the closed forms with `[t^1] = -1/4`, `[t^2] = 1/64`.
+- string-to-composition.md the arithmetic pole, certified, "The string above lives in [0,1]": Burnol's Proposition 5.1 limit formula and the statement that the paper does not study the off-real residues further.
+- string-to-composition.md the arithmetic pole, certified, "Write G(u) = A(3^u)/2^u": the profile lemma: `Phi(u) = 2^(1-u)` on `[1 - s_0, 1]`, `Phi(1 - s_0) = 2^(s_0) = 1.548562`.
+- string-to-composition.md the arithmetic pole, certified, "For Re s > s_0": the dictionary `Res_(s_(0,k)) K = s_(0,k) c_k`.
+- string-to-composition.md the arithmetic pole, certified, "Let Lev_j(w) = sum n^(-w)": `lambda_(0,1)` in `[0.231891517689918, 0.231891517689919] + i [-0.501067414481069, -0.501067414481068]`, width `3.4e-18`, level tail `2.4e-19`, distance from zero at least `0.552125193`, `I = 66`, `level 40`.
+- string-to-composition.md the arithmetic pole, certified, "The same certificate at k = 0..10" and its table: the band `k = 0..10`, `I` from 52 to 164, widths from `2e-18` to `4e-13`.
+- string-to-composition.md the arithmetic pole, certified, "Two independent floating-point computations": the level-sum control `0.231891518 - 0.501067414 i` at distance `1.9e-10` against its bound `7.5e-10`, the Fourier control `c_1 = -0.082138842 - 0.049607499 i` at distance `7.2e-08`, the second enclosure `[0.23189098, 0.23189280] + i [-0.50106814, -0.50106632]`, the `{0,2}` enclosure `[0.135292875345483, 0.135292875345484] + i [0.329874091244466, 0.329874091244467]`, the zeta boxes around `1` and `0`.
+- string-to-composition.md the arithmetic pole, certified, "Burnol's Proposition 7.1 recurrence carried down": the column `lambda_(1,1)`, `lambda_(2,1)`, `lambda_(3,1)` and the closed forms with `[t^1] = -1/4`, `[t^2] = 1/64`.

@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { palette } from '../../lib/theme/palette.gen.js';
-import { defaults } from '../../lib/app/spec.js';
+import { defaults, describe as groups } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { PAGE, SPEC, make, named } from './scene.js';
 
@@ -158,4 +158,9 @@ test('a cube without three in hand is a blank stage that still tells its counts'
   const { scene, log, told } = open(1, { dim: 3, base: 2, code: '23', level: 2 });
   scene.draw();
   expect([log, scene.svg(), told.at(-1).fills]).toEqual([[], undefined, 400]);
+});
+
+test('the design keys stay out of the knobs, which hold the level and the look', () => {
+  const shown = (value) => groups(SPEC, { ...defaults(SPEC), ...value }).map(({ name, rows }) => [name, rows.map((row) => row.key)]);
+  expect([shown({ dim: 2 }), shown({ dim: 3 })]).toEqual([[['Design', ['level']], ['Look', ['tint']]], [['Design', ['level']], ['Look', ['tint', 'spin']]]]);
 });

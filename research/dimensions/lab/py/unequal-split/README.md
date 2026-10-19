@@ -15,7 +15,7 @@
 
 ## WITNESSES
 
-- dimensions.md The unequal split, The patch: the open set condition, `dimension = 1.778602507`, the render's fill `29^level` and `log(29)/log(6) = 1.879323585`, the census of cells (`patch`).
-- dimensions.md The unequal split, Its complex dimensions: 21 zeros and winding number 21 at every `k = 1..27`, the margins of at least 161, the gap `0.0116` from `D_l`, the floored offsets `0.470, 0.058, 0.461`, the first eleven at `k = 5`, the root of the 2-3 nonlattice equation, the convergent law to 7 digits at `q >= 665` (`poles`).
-- dimensions.md The unequal split, The count of cells: 59448 sizes, the renewal identity, `1/(D f'(D)) = 0.573459971`, swing times `sqrt(U)` between `1.486` and `1.546` on the six printed windows, folds `0.003, 0.005, 0.004` against the carpet's `0.999` at `ln 3`, the ten peaks within `0.001` of a complex dimension and within `1.3%` of its residue amplitude (`count`).
-- dimensions.md The unequal split, What the detectors see: the identity at 96 shifted radii per centre, swings `0.23906`, `0.15388`, `0.17843` against enclosures at most `8.2e-5`, at least 2661-fold, folds `1.000` at the centre's own period (`ripple`).
+- staircase-schedules.md The unequal split, The patch: the open set condition, `dimension = 1.778602507`, the render's fill `29^level` and `log(29)/log(6) = 1.879323585`, the census of cells (`patch`).
+- staircase-schedules.md The unequal split, Its complex dimensions: 21 zeros and winding number 21 at every `k = 1..27`, the margins of at least 161, the gap `0.0116` from `D_l`, the floored offsets `0.470, 0.058, 0.461`, the first eleven at `k = 5`, the root of the 2-3 nonlattice equation, the convergent law to 7 digits at `q >= 665` (`poles`).
+- staircase-schedules.md The unequal split, The count of cells: 59448 sizes, the renewal identity, `1/(D f'(D)) = 0.573459971`, swing times `sqrt(U)` between `1.486` and `1.546` on the six printed windows, folds `0.003, 0.005, 0.004` against the carpet's `0.999` at `ln 3`, the ten peaks within `0.001` of a complex dimension and within `1.3%` of its residue amplitude (`count`).
+- staircase-schedules.md The unequal split, What the detectors see: the identity at 96 shifted radii per centre, swings `0.23906`, `0.15388`, `0.17843` against enclosures at most `8.2e-5`, at least 2661-fold, folds `1.000` at the centre's own period (`ripple`).

@@ -2,9 +2,9 @@ import { text as file } from '../../lib/app/export.js';
 import { tidy } from '../../lib/app/spec.js';
 import { board } from '../../lib/app/run.js';
 import { TINTS, veil } from '../../lib/color.js';
-import { rng } from '../../lib/rand.js';
+import { pick, rng } from '../../lib/rand.js';
 import { grid, rects } from '../../lib/app/svg.js';
-import { GAP, SLOT, cells, common, cut, gallery, index, pen, plan, sample, shift, slug, written } from './engine.js';
+import { GAP, SAMPLES, SLOT, cells, common, cut, gallery, index, pen, plan, sample, shift, slug, written } from './engine.js';
 import { wasm } from '../../lib/units/index.js';
 
 export const VIEWS = [['pens', 'Pens'], ['text', 'Text']];
@@ -40,7 +40,7 @@ export const PAGE = {
   about: ABOUT,
   record: true,
   keys: [
-    { key: 'Enter', label: 'Write', act: 'write', button: true },
+    { key: 'Enter', label: 'Write', act: 'write', button: true, menu: 'Edit' },
     { key: 'j', label: 'JSON', act: 'json' },
     { key: 's', label: 'SVG', act: 'svg' },
   ],
@@ -50,6 +50,11 @@ export const PAGE = {
     svg: (scene) => file(scene.svg(), scene.name(), 'svg'),
   },
 };
+
+export const SAVERS = [
+  { id: 'pens', title: 'Pens writing', pick: (rand) => ({ view: 'pens', speed: 0.5, hold: 30 + Math.floor(rand() * 41), flags: pick(rand, [0, 1]) }) },
+  { id: 'words', title: 'Words folding', pick: (rand) => ({ view: 'text', speed: 0.75, hold: 30 + Math.floor(rand() * 31), pad: pick(rand, [1, 2, 3]) }) },
+];
 
 export const units = wasm('font');
 
@@ -135,6 +140,20 @@ export function make(canvas, view, opts = {}) {
     });
     return out;
   };
+  const roams = (k) => TEXT(value) && !value.text && value.loop && !view.still && k - start >= show.frames.length;
+  const turn = (k) => {
+    said = pick(view.rand, SAMPLES.filter((one) => one !== said));
+    build(said);
+    start = k;
+    fit();
+    shown = null;
+    told();
+  };
+  const drift = () => {
+    pens.forEach((one, i) => {
+      starts[i] = -Math.floor(view.rand() * (one.frames.length + value.hold));
+    });
+  };
   const plates = (cell) => {
     const pad = Math.round(cell / 2);
     const side = SLOT * cell + 2 * pad;
@@ -168,6 +187,7 @@ export function make(canvas, view, opts = {}) {
   };
   const draw = () => {
     const k = now();
+    if (view.lock && roams(k)) turn(k);
     if (key(k) !== shown) paint(k);
   };
   const size = () => {
@@ -263,6 +283,7 @@ export function make(canvas, view, opts = {}) {
     return rects(grid(box.down * PITCH - GAP, across, lit(k).map(([cx, cy]) => cy * across + cx)), { fill, unit });
   };
   const name = () => named(value);
+  if (view.lock && PENS(value)) drift();
   fit();
   told();
   return { draw, size, theme, set, tap, write, json, svg, name, box: () => box, plan: () => show };

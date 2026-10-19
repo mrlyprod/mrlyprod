@@ -1,17 +1,16 @@
 import { useCallback, useRef, useState } from 'react';
 import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Fold, Icon, Pick as Select } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
 import { useTouch } from '../../lib/app/touch.js';
-import { Pick } from '../../lib/designs/pick.jsx';
-import { drawn, presetOf, presets } from '../../lib/moire/engine.js';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { drawn, matrix, presetOf, presets, swatch } from '../../lib/moire/engine.js';
+import { stamp } from '../../lib/moire/sheet.js';
 import { make } from './scene.js';
-import { roll } from '../../lib/moire/parts.jsx';
-import { useLatest, useStatus, useUnit } from '../../lib/app/hooks.js';
+import { useLatest, useReroll, useStatus, useUnit } from '../../lib/app/hooks.js';
 
 const exact = (r) => (r === 0 ? '0' : r.toFixed(9));
-
-export const patch = ({ dim, ...rest }) => rest;
 
 export function rows(f) {
   if (!f) return [];
@@ -35,43 +34,51 @@ export function rows(f) {
 
 const title = (name) => name.charAt(0).toUpperCase() + name.slice(1);
 
+export function split(n) {
+  for (let d = 2; d * d <= n; d++) if (n % d === 0) return `${d} x ${n / d}`;
+  return 'prime';
+}
+
+export function Shelves({ value, onChange, math }) {
+  const tick = useTheme();
+  const list = math ? presets(math) : [];
+  const preset = presetOf(list, value);
+  const look = [value.limit, value.ramp, value.levels, value.invert, value.tint, tick];
+  const thumb = (one) => (ctx, w) => stamp(ctx, swatch(math, { ...value, ...one }, w, paints(ctx.canvas, value.tint)), w);
+  return (
+    <Library>
+      {math && value.view === 'matrix' && (
+        <Shelf name="Scales">
+          {matrix(math, value.limit).scales.map((m) => <Item key={m} label={`m ${m}`} sub={split(m)} on={value.scale === m} onPick={() => onChange({ scale: m })} />)}
+        </Shelf>
+      )}
+      {math && value.view !== 'matrix' && (
+        <Shelf name="Presets" grid>
+          {list.map(({ name, ...one }) => <Item key={name} label={title(name)} on={preset === name} onPick={() => onChange(one)} art={<Art px={64} paint={thumb(one)} deps={[name, ...look]} />} />)}
+        </Shelf>
+      )}
+    </Library>
+  );
+}
+
 export function Widget({ value, onChange, onReady, onStatus, unit }) {
   const math = useUnit('math', unit);
   const [facts, setFacts] = useState(null);
   const handle = useRef(null);
   const change = useLatest(onChange);
   const made = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math, onFacts: setFacts, onLimit: (limit) => change.current({ limit }) }), [math]);
-  const random = () => math && change.current(drawn(math, roll()));
   const ready = (scene) => {
-    const rich = scene && { ...scene, random };
-    handle.current = rich;
-    onReady?.(rich);
+    handle.current = scene;
+    onReady?.(scene);
   };
   const touch = useTouch(handle, change);
+  useReroll(value.seed, (seed) => math && change.current(drawn(math, seed)));
   useStatus(onStatus, rows(facts));
-  const list = math ? presets(math) : [];
-  const preset = presetOf(list, value);
-  const name = facts?.name ? `${facts.name} ${facts.code}` : `code ${value.code}`;
-  const pick = (one) => {
-    const found = list.find((p) => p.name === one);
-    if (found) onChange({ base: found.base, code: found.code, level: found.level, combine: found.combine });
-  };
   return (
     <>
       {math && <Scene make={made} value={value} onReady={ready} {...touch} />}
       <Bar side="status">{!math && <span>loading</span>}</Bar>
-      {value.view !== 'matrix' && (
-        <Bar side="right">
-          <Fold name="Design" after="Stack" live={preset ? title(preset) : name}>
-            <Select label="Preset" value={preset} options={[['', 'Custom'], ...list.map((one) => [one.name, title(one.name)])]} onChange={pick} />
-            {math ? <Pick value={{ ...value, dim: 2 }} onChange={(next) => onChange(patch(next))} math={math} dims={[2]} /> : <span>loading</span>}
-            <Btn disabled={!math} onClick={random}>
-              <Icon name="casino" />
-              Randomize
-            </Btn>
-          </Fold>
-        </Bar>
-      )}
+      <Shelves value={value} onChange={onChange} math={math} />
     </>
   );
 }

@@ -1,16 +1,19 @@
-import { palette as PAINT } from '../../lib/theme/palette.gen.js';
 import { tidy } from '../../lib/app/spec.js';
-import { HUES, TINTS, rgb } from '../../lib/color.js';
+import { HUES, TINTS } from '../../lib/color.js';
+import { pick } from '../../lib/rand.js';
 import { BAND, CROSS, FIRST, PALETTES, SHAPES, WAVES, art, glow, live, paint, peak, ripple, spread, tiles, wave } from './engine.js';
+import { css, inks as dyes, shade, trace } from './swatch.js';
+
+const HIDE = () => false;
 
 const named = (word) => word[0].toUpperCase() + word.slice(1);
 
 const moving = (v) => Boolean(v.shimmer || v.morph);
 
 export const SPEC = [
-  { key: 'shape', label: 'Shape', kind: 'pick', def: 'square', options: SHAPES.map((one) => [one, named(one)]), group: 'Tiles' },
+  { key: 'shape', label: 'Shape', kind: 'pick', def: 'square', options: SHAPES.map((one) => [one, named(one)]), group: 'Tiles', when: HIDE },
   { key: 'size', label: 'Size', kind: 'slider', def: 0, min: 0, max: 240, step: 8, unit: 'px', zero: 'Fit', group: 'Tiles' },
-  { key: 'palette', label: 'Palette', kind: 'pick', def: '', options: [['', 'Seeded'], ...Object.keys(PALETTES).map((one) => [one, named(one)])], group: 'Colour' },
+  { key: 'palette', label: 'Palette', kind: 'pick', def: '', options: [['', 'Seeded'], ...Object.keys(PALETTES).map((one) => [one, named(one)])], group: 'Colour', when: HIDE },
   { key: 'noise', label: 'Noise', kind: 'slider', def: 0.9, min: 0, max: 2, step: 0.05, group: 'Colour' },
   { key: 'spark', label: 'Sparks', kind: 'slider', def: 0.04, min: 0, max: 0.3, step: 0.01, group: 'Colour' },
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Colour' },
@@ -25,31 +28,42 @@ export const SPEC = [
 
 export const PAGE = {
   spec: SPEC,
-  keys: [{ key: 'Enter', label: 'Wave', act: 'again', button: true }],
-  actions: { again: (scene) => scene.again() },
+  keys: [
+    { key: 'Enter', label: 'Wave', act: 'again', button: true, menu: 'Edit' },
+    { key: ['ArrowLeft', 'ArrowRight'], label: 'Shape', act: 'shape', menu: 'View' },
+    { key: ['ArrowUp', 'ArrowDown'], label: 'Palette', act: 'palette', menu: 'View' },
+  ],
+  actions: {
+    again: (scene) => scene.again(),
+    shape: (scene, e) => scene.cycle?.('shape', e.key === 'ArrowLeft' ? -1 : 1),
+    palette: (scene, e) => scene.cycle?.('palette', e.key === 'ArrowUp' ? -1 : 1),
+  },
   record: true,
 };
 
+const CALM = ['sea', 'ice', 'meadow', 'dusk', 'night', 'tint'];
+
+const VIVID = ['rainbow', 'sun', 'sea', 'dusk', 'leaf', 'clay', 'ice', 'lime'];
+
+export const SAVERS = [
+  { id: 'cubes', title: 'Cubes', pick: (rand) => ({ shape: 'cube', palette: pick(rand, CALM), wave: 'diagonal', every: 30, noise: 0.6, spark: 0 }) },
+  { id: 'honeycomb', title: 'Honeycomb', pick: () => ({ shape: 'hex', palette: '', wave: 'ripple', every: 20, noise: 0.8, spark: 0.02, outline: 1, line: 4 }) },
+  { id: 'facets', title: 'Facets', pick: (rand) => ({ shape: 'triangle', palette: pick(rand, VIVID), wave: 'sweep', every: 24, noise: 1.2, spark: 0.03 }) },
+];
+
+export const SETS = { shape: SHAPES, palette: ['', ...Object.keys(PALETTES)] };
+
 const FIT = 20;
+
+const CELLS = 600;
 
 const LEVELS = 8;
 
 const LIGHT = 0.3;
 
-const FACES = { cube: [0.18, 0, -0.24], mix: [0, -0.12, 0.14] };
+const SETTLED = FIRST + CROSS + BAND;
 
-const TONES = { tint1: ['paper', 'accent', 0.3], tint2: ['paper', 'accent', 0.55], tint3: ['paper', 'accent', 0.8], ink1: ['paper', 'fg', 0.12], ink2: ['paper', 'fg', 0.3], ink3: ['paper', 'fg', 0.55], ink4: ['paper', 'fg', 0.8] };
-
-const blend = (a, b, x) => a.map((v, i) => v + (b[i] - v) * x);
-
-const css = (c) => `rgb(${c.map(Math.round).join(', ')})`;
-
-const trace = (pen, cell) => {
-  const p = cell.pts;
-  pen.moveTo(p[0][0], p[0][1]);
-  for (let i = 1; i < p.length; i++) pen.lineTo(p[i][0], p[i][1]);
-  pen.closePath();
-};
+export const fit = (w, h, lock) => (lock ? Math.max(w, h) / FIT : Math.sqrt((w * h) / CELLS));
 
 export function make(canvas, view, opts = {}) {
   const ctx = canvas.getContext('2d');
@@ -71,22 +85,12 @@ export function make(canvas, view, opts = {}) {
   let shown = false;
   let stale = true;
   const read = () => {
-    const style = typeof getComputedStyle === 'function' ? getComputedStyle(canvas) : null;
-    const get = (name, fallback) => style?.getPropertyValue(name).trim() || fallback;
-    const { paper, accent } = view.look();
-    inks = { paper: rgb(paper), accent: rgb(accent), fg: rgb(get('--fg', PAINT.black)) };
-    for (const hue of HUES) inks[hue] = rgb(get(`--${hue}`, PAINT[hue]));
-    for (const [name, [from, to, x]] of Object.entries(TONES)) inks[name] = blend(inks[from], inks[to], x);
-    inks.ground = inks.paper;
-    inks.ink = inks.fg;
+    inks = dyes(canvas, view.look());
     tones.clear();
   };
   const tone = (name, face) => {
     const key = `${name} ${face}`;
-    if (!tones.has(key)) {
-      const lift = FACES[knobs.shape]?.[face] ?? 0;
-      tones.set(key, css(lift ? blend(inks[name], lift > 0 ? [255, 255, 255] : [0, 0, 0], Math.abs(lift)) : inks[name]));
-    }
+    if (!tones.has(key)) tones.set(key, shade(inks, knobs.shape, name, face));
     return tones.get(key);
   };
   const look = (n) => {
@@ -140,7 +144,7 @@ export function make(canvas, view, opts = {}) {
     if (knobs.outline) edge(pen);
   };
   const rebuild = (t) => {
-    grid ??= tiles(knobs.shape, view.w, view.h, (knobs.size * view.dpr || Math.max(view.w, view.h) / FIT));
+    grid ??= tiles(knobs.shape, view.w, view.h, (knobs.size * view.dpr || fit(view.w, view.h, view.lock)));
     if (cache.width !== view.w || cache.height !== view.h) {
       cache.width = view.w;
       cache.height = view.h;
@@ -206,7 +210,7 @@ export function make(canvas, view, opts = {}) {
     return any ? buckets : null;
   };
   const draw = () => {
-    const t = view.t;
+    const t = view.lock && view.still ? SETTLED : view.t;
     let fresh = stale || t < then;
     if (fresh) rebuild(t);
     else fresh = flip(t);

@@ -3,12 +3,14 @@ import { veil } from '../../lib/color.js';
 import { render } from '../../lib/audio/audio.js';
 import { EFFECTS } from '../../lib/audio/voices.js';
 
-const named = (word) => word[0].toUpperCase() + word.slice(1);
+const HIDE = () => false;
+
+export const named = (word) => word[0].toUpperCase() + word.slice(1);
 
 export const NAMES = Object.keys(EFFECTS);
 
 export const SPEC = [
-  { key: 'effect', label: 'Effect', kind: 'pick', def: 'jump', options: NAMES.map((name) => [name, named(name)]), group: 'Effect' },
+  { key: 'effect', label: 'Effect', kind: 'pick', def: 'jump', options: NAMES.map((name) => [name, named(name)]), group: 'Effect', when: HIDE },
   { key: 'pitch', label: 'Pitch', kind: 'slider', def: 0, min: -12, max: 12, step: 1, unit: 'st', group: 'Shape' },
   { key: 'length', label: 'Length', kind: 'slider', def: 1, min: 0.5, max: 2, step: 0.1, unit: 'x', group: 'Shape' },
   { key: 'bright', label: 'Bright', kind: 'slider', def: 0.5, min: 0, max: 1, step: 0.05, group: 'Shape' },
@@ -19,13 +21,35 @@ export const SPEC = [
 export const PAGE = {
   spec: SPEC,
   keys: [
-    { key: 'Enter', label: 'Play', act: 'go', button: true },
-    { key: ['ArrowLeft', 'ArrowUp'], label: 'Previous', act: 'prev' },
-    { key: ['ArrowRight', 'ArrowDown'], label: 'Next', act: 'next' },
+    { key: 'Enter', label: 'Play', act: 'go', button: true, menu: 'Edit' },
+    { key: ['ArrowLeft', 'ArrowUp'], label: 'Previous effect', act: 'prev', menu: 'View' },
+    { key: ['ArrowRight', 'ArrowDown'], label: 'Next effect', act: 'next', menu: 'View' },
     { key: 'm', label: 'Sound', act: 'mute' },
   ],
   actions: { go: (scene) => scene.go?.(), prev: (scene) => scene.step?.(-1), next: (scene) => scene.step?.(1), mute: (scene) => scene.mute?.() },
 };
+
+export const SHAPE = ['pitch', 'length', 'bright', 'drive', 'space'];
+
+export const PRESETS = [
+  { id: 'blip', name: 'Blip', set: { effect: 'tick', pitch: 7, length: 1, bright: 0.8, drive: 0.1, space: 0.2 } },
+  { id: 'click', name: 'Click', set: { effect: 'tick', pitch: 0, length: 1, bright: 0.6, drive: 0.4, space: 0.1 } },
+  { id: 'boom', name: 'Boom', set: { effect: 'hit', pitch: -12, length: 2, bright: 0.3, drive: 0.6, space: 0.7 } },
+  { id: 'slam', name: 'Slam', set: { effect: 'hit', pitch: -5, length: 0.6, bright: 0.7, drive: 0.8, space: 0.2 } },
+  { id: 'warp', name: 'Warp', set: { effect: 'jump', pitch: 5, length: 0.7, bright: 0.8, drive: 0.3, space: 0.4 } },
+  { id: 'drag', name: 'Slow jump', set: { effect: 'jump', pitch: -3, length: 1.8, bright: 0.4, drive: 0.2, space: 0.7 } },
+  { id: 'rumble', name: 'Rumble', set: { effect: 'tunnel', pitch: -12, length: 2, bright: 0.2, drive: 0.5, space: 0.6 } },
+  { id: 'hum', name: 'Hum', set: { effect: 'tunnel', pitch: 0, length: 0.8, bright: 0.5, drive: 0.1, space: 0.3 } },
+  { id: 'whoosh', name: 'Whoosh', set: { effect: 'exit', pitch: 3, length: 0.6, bright: 0.85, drive: 0.2, space: 0.5 } },
+  { id: 'glow', name: 'Glow', set: { effect: 'arrive', pitch: 7, length: 1.5, bright: 0.6, drive: 0, space: 0.9 } },
+];
+
+export const preset = (value) => PRESETS.find((one) => one.set.effect === value.effect && SHAPE.every((key) => one.set[key] === value[key]))?.id ?? '';
+
+export function lasts(name) {
+  const span = EFFECTS[name].span(1);
+  return span < 0.1 ? `${Math.round(span * 1000)} ms` : `${span.toFixed(1)} s`;
+}
 
 const TAIL = 1.5;
 const PEAKS = 1024;

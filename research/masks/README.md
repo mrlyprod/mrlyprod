@@ -3,6 +3,7 @@ title: Design masks
 lead: A Toeplitz attention mask whose offsets form a digit design reaches every offset in two hops exactly when its digit sumset covers the digits; the sparsest ties the strided mask in density and loses to it on tiny Shakespeare, which reads the nearest offsets.
 figure: research-masks
 slug: masks
+date: 2026-10-19
 ---
 
 # Design masks

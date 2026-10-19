@@ -1,6 +1,6 @@
 import { tidy } from '../../lib/app/spec.js';
 import { num as fix, runs, sheet } from '../../lib/app/svg.js';
-import { DESIGN, settle, title, total } from '../../lib/designs/engine.js';
+import { DESIGN, canon, title, total } from '../../lib/designs/engine.js';
 
 export const DIM = 2;
 export const VIEWS = [['word', 'Word'], ['plane', 'Lifts'], ['design', 'Design']];
@@ -37,7 +37,7 @@ export function cap(number) {
 
 export const LEVELS = cap(2);
 
-const based = (value) => tidy(DESIGN, value).base;
+export const based = (value) => tidy(DESIGN, value).base;
 
 export function sides(value) {
   const base = based(value);
@@ -73,10 +73,7 @@ export function roll(math, number, base, rand) {
   return FALLBACK;
 }
 
-export function coded(math, value) {
-  const typed = String(value.code ?? '').trim();
-  return /^\d+$/.test(typed) ? settle(math, DIM, value.base, typed) : FALLBACK;
-}
+export const coded = (math, value) => canon(math, DIM, value.base, value.code);
 
 const named = (math, code, base = 2) => math.name.of(code, DIM, base) ?? '';
 
@@ -111,10 +108,19 @@ let kept = null;
 
 const keyed = (value, code) => ({ word: [value.round, value.colour], plane: [value.level, value.lift], power: [code, value.number, value.base, value.power], filter: [code, value.number, value.base, value.depth, value.fold] })[pictureOf(value)];
 
-export function study(units, given) {
+const read = (units, given) => {
   const value = { ...given, number: sideOf(given) };
   const kind = pictureOf(value);
-  const code = DESIGNED.includes(kind) ? coded(units.math, value) : '';
+  return { value, kind, code: DESIGNED.includes(kind) ? coded(units.math, value) : '' };
+};
+
+export function survey(units, given) {
+  const { value, kind, code } = read(units, given);
+  return SURVEYS[kind](units, value, code);
+}
+
+export function study(units, given) {
+  const { value, kind, code } = read(units, given);
   const key = JSON.stringify([kind, keyed(value, code)]);
   if (kept && kept.num === units.num && kept.math === units.math && kept.key === key) return kept.plan;
   const plan = SURVEYS[kind](units, value, code);
@@ -217,8 +223,7 @@ export function lay(w, h, side, cell, pad) {
   return { x: Math.round((w - size) / 2), y: Math.round((h - size) / 2), size };
 }
 
-export function tower(w, h, rows, dpr) {
-  const pad = PAD * dpr;
+export function tower(w, h, rows, dpr, pad = PAD * dpr) {
   const gap = rows.length > 1 ? Math.max(1, Math.round(h * GAP)) : 0;
   const tall = (h - 2 * pad - (rows.length - 1) * gap) / rows.length;
   return rows.map((letters, k) => {

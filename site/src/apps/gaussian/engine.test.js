@@ -3,7 +3,7 @@ import { palette } from '../../lib/theme/palette.gen.js';
 import * as num from '@mrlyprod/mrly/num';
 import { defaults, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { BAND, BANDS, FAINTLY, INERT, PLAIN, RAMIFIED, REACH, SKIP, SPAN, SPLIT, UNITS, clicked, coords, hit, inks, lay, name, parse, picture, product, reached, share, shuffle, study, styleOf, table, tones, turned, verdict, walk } from './engine.js';
+import { BAND, BANDS, FAINTLY, INERT, PEEK, PLAIN, POINTS, RAMIFIED, REACH, SKIP, SPAN, SPLIT, UNITS, WINDOWS, clicked, coords, hit, inks, lay, name, parse, picture, product, reached, share, shelves, shuffle, study, styleOf, table, tones, turned, verdict, walk } from './engine.js';
 import { SPEC } from './scene.js';
 
 const BUDGET = 160801;
@@ -170,4 +170,19 @@ test('the svg lays the gaussian window as runs of rects per hue and the eisenste
   expect(rows.length - 1).toBe(square.facts.primes);
   expect(rows).toContain('1,1,2,ramified');
   expect(rows).toContain('2,3,13,split');
+});
+
+test('every library point is the prime it says in its window, its norm and class as the survey finds them', () => {
+  for (const { ring, a, b, norm, fate } of POINTS) {
+    const point = hit(num, study(num, ring, PEEK), a, b);
+    expect([ring, a, b, point.norm, point.fate]).toEqual([ring, a, b, norm, fate]);
+  }
+});
+
+test('the library marks the window and the point the page holds, and picking a window lets the point go', () => {
+  const [windows, primes] = shelves({ ring: 'eisenstein', limit: 12, look: 'fate', click: '3,1' });
+  expect(windows[1].filter((one) => one.on).map((one) => one.id)).toEqual(['eisenstein-close']);
+  expect(primes[1].filter((one) => one.on).map((one) => [one.label, one.sub])).toEqual([['3 + ω', '7 splits']]);
+  expect(WINDOWS.every(({ set }) => set.click === '')).toBe(true);
+  expect(primes[1].map((one) => one.sub)).toContain('3 stays prime');
 });

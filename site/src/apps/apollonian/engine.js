@@ -15,6 +15,10 @@ export const PALE = 0.55;
 export const STRIDE = 4;
 const KEEP = 6;
 
+export const GLANCE = 128;
+
+export const quadruple = (root) => (root === 'strip' ? '(0, 0, 2, 2)' : `(${root.split(',').join(', ')})`);
+
 export const named = (name) => (name === 'strip' ? 'Strip' : `Bounded (${name.split(',').join(', ')})`);
 
 export const stack = (cap) => Math.min(ORDER_CAP, Math.floor(Math.sqrt(cap / 2)));

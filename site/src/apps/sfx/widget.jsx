@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { download, wav } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
 import { Btn, Icon } from '../../lib/app/controls.jsx';
+import { Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
 import { bus, engine, render } from '../../lib/audio/audio.js';
-import { NAMES, make, score, seconds } from './scene.js';
+import { NAMES, PRESETS, lasts, make, named, preset, score, seconds } from './scene.js';
 
-export function Widget({ value, onChange, onReady }) {
+export function Widget({ value, onChange, onReady, onExport }) {
   const line = useMemo(bus, []);
   const box = useRef(null);
   const heard = useRef(0);
@@ -16,8 +17,8 @@ export function Widget({ value, onChange, onReady }) {
   const tell = useRef(onChange);
   now.current = value;
   tell.current = onChange;
+  const working = useRef(false);
   const [sound, setSound] = useState(0);
-  const [busy, setBusy] = useState(false);
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, audio: line }), [line]);
   useEffect(
     () => () => {
@@ -58,25 +59,35 @@ export function Widget({ value, onChange, onReady }) {
     onReady?.(handle && { ...handle, go, mute, step });
   };
   const save = async () => {
-    if (busy) return;
-    setBusy(true);
+    if (working.current) return;
+    working.current = true;
     const one = now.current;
     try {
       download(wav(await render(seconds(one), score(one))), `sfx-${one.effect}-${one.seed}.wav`);
     } catch {}
-    setBusy(false);
+    working.current = false;
   };
+  useEffect(() => onExport?.([['WAV', save]]), []);
+  const kept = preset(value);
   return (
     <>
       <Scene make={scene} value={value} onReady={ready} />
+      <Library name="Sounds">
+        <Shelf name="Effects">
+          {NAMES.map((name) => (
+            <Item key={name} label={named(name)} sub={lasts(name)} on={value.effect === name} onPick={() => onChange({ effect: name })} />
+          ))}
+        </Shelf>
+        <Shelf name="Presets">
+          {PRESETS.map((one) => (
+            <Item key={one.id} label={one.name} sub={one.set.effect} on={kept === one.id} onPick={() => onChange(one.set)} />
+          ))}
+        </Shelf>
+      </Library>
       <Bar side="actions">
         <Btn className="short" on={sound === 1} aria-pressed={sound === 1} onClick={mute}>
           <Icon name="volume_up" />
           Sound
-        </Btn>
-        <Btn className="short" onClick={save} disabled={busy}>
-          <Icon name="graphic_eq" />
-          WAV
         </Btn>
       </Bar>
     </>

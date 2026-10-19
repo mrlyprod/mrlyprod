@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { defaults } from '../../lib/app/spec.js';
-import { RATIO, bounds, cropped, fit, mesh, reroll, studio, wrap } from './engine.js';
+import { RATIO, bounds, cropped, fit, mesh, reroll, sample, studio, wrap } from './engine.js';
 import { SPEC } from './scene.js';
 
 const CARPET = { ...defaults(SPEC), seed: 1, base: 2, code: '23' };
@@ -50,11 +50,9 @@ test('a studio rebuilds only the layers a change reaches', () => {
   expect(study({ ...CARPET, x: 6, view: 'iso', tint: 'red', turn: 1 }).facts).toBe(c.facts);
 });
 
-test('a blank code and a reroll both roll the code from the seed', () => {
-  const rolled = (seed) => read({ code: '', seed }).facts.code;
-  expect(rolled(5)).toBe(reroll(math, 2, 5));
-  expect(new Set([1, 2, 3, 4, 5, 6].map(rolled)).size).toBeGreaterThan(1);
-  expect(rolled(5)).not.toBe('0');
+test('a blank or junk code is the carpet of the cube whatever the seed, and a reroll rolls a code from the seed', () => {
+  expect([read({ code: '', seed: 5 }).facts.code, read({ code: 'x', seed: 6 }).facts.code]).toEqual(['23', '23']);
+  expect(new Set([1, 2, 3, 4, 5, 6].map((seed) => reroll(math, 2, seed))).size).toBeGreaterThan(1);
 });
 
 test('a framed sheet stands the right way up, two across four down tall and four across two down wide', () => {
@@ -90,4 +88,9 @@ test('wrap gives an svg its true aspect and turns it a quarter when asked', () =
   const spun = wrap(text, true, true);
   expect(spun.startsWith('<svg xmlns="http://www.w3.org/2000/svg" width="20.78" height="36" viewBox="0 0 20.78 36"><g transform="translate(20.785 0) rotate(90) scale(1 0.866)">')).toBe(true);
   expect(wrap('<p>no</p>', true, false)).toBe('<p>no</p>');
+});
+
+test('a thumb is the sheet at level one, the same mesh the stage draws there', () => {
+  const thumb = (value) => sample(math, { ...CARPET, ...value });
+  expect([thumb({ x: 3, y: 2 }), thumb({ sheet: 'disc', view: 'iso', turn: 1 })]).toEqual([mesh(math, read({ x: 3, y: 2, level: 1 }).drawn, false), mesh(math, read({ sheet: 'disc', view: 'iso', level: 1 }).drawn, true)]);
 });

@@ -5,8 +5,10 @@ import { CARDS, pick, shown } from './cards.js';
 
 const at = (value) => CARDS[pick(value).card];
 
+const HIDE = () => false;
+
 export const SPEC = [
-  { key: 'card', label: 'Card', kind: 'pick', def: 0, options: CARDS.map((one, i) => [i, `${i + 1} · ${one.title}`]), group: 'Card' },
+  { key: 'card', label: 'Card', kind: 'pick', def: 0, options: CARDS.map((one, i) => [i, `${i + 1} · ${one.title}`]), group: 'Card', when: HIDE },
   { key: 'step', label: (value) => at(value).label, kind: 'slider', def: CARDS[0].first, min: (value) => at(value).min, max: (value) => at(value).max, step: 1, show: (v, value) => shown(pick(value).card, v), group: 'Card' },
 ];
 
@@ -24,7 +26,7 @@ export const PAGE = {
     'A line that is a row of the ledger opens in Sequences with its terms filled in. The counts of designs, of fractals, of slice vertices, of gasket points and of Farey nodes are not ledger rows. The record after the terms is found from the terms alone, as a window of the record, with the record index of the first term shown.',
   ],
   keys: [
-    { key: 'Enter', label: 'Next card', act: 'next', button: true },
+    { key: 'Enter', label: 'Next card', act: 'next', button: true, menu: 'View' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Card', act: 'card' },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Step', act: 'step' },
   ],
@@ -142,7 +144,7 @@ export function make(canvas, view, opts = {}) {
     const t = tones(view);
     clear(ctx, view, t);
     const { px } = t;
-    const pad = Math.round(18 * view.dpr);
+    const { x: pad, top: high, bottom: low } = t.edge;
     const made = data.made;
     if (!made) {
       ctx.fillStyle = t.dim;
@@ -156,11 +158,11 @@ export function make(canvas, view, opts = {}) {
     const width = view.w - 2 * pad;
     ctx.font = font(t, 1.45, '600');
     ctx.fillStyle = t.accent;
-    ctx.fillText(fit(ctx, `${data.card + 1} · ${card.title}`, width), pad, pad + px * 1.3);
+    ctx.fillText(fit(ctx, `${data.card + 1} · ${card.title}`, width), pad, high + px * 1.3);
     ctx.font = font(t);
     ctx.fillStyle = t.dim;
-    ctx.fillText(fit(ctx, [data.shown, made.sub].filter(Boolean).join(' · '), width), pad, pad + px * 2.9);
-    const top = pad + px * 4;
+    ctx.fillText(fit(ctx, [data.shown, made.sub].filter(Boolean).join(' · '), width), pad, high + px * 2.9);
+    const top = high + px * 4;
     const wide = width > (view.h - top) * 1.2;
     const text = wide ? { x: pad + width * 0.5 + px * 1.5, w: width * 0.5 - px * 1.5 } : { x: pad, w: width };
     ctx.font = font(t, 0.95);
@@ -168,7 +170,7 @@ export function make(canvas, view, opts = {}) {
     const lay = made.lines.map((line) => ribbon(ctx, line, t, text.w, LINES));
     const tall = lay.reduce((sum, one) => sum + one.height + px * 3.2, 0);
     const words = story.length * px * 1.45 + px * 0.8;
-    pic = wide ? { x: pad, y: top, w: width * 0.5, h: view.h - top - pad } : { x: pad, y: top + words, w: width, h: Math.max(px * 6, view.h - top - words - tall - pad - px) };
+    pic = wide ? { x: pad, y: top, w: width * 0.5, h: view.h - top - low } : { x: pad, y: top + words, w: width, h: Math.max(px * 6, view.h - top - words - tall - low - px) };
     picture(ctx, pic, made.art, t, (row) => grown.shown(row));
     let y = wide ? top + px : top + px;
     ctx.font = font(t, 0.95);
@@ -179,7 +181,7 @@ export function make(canvas, view, opts = {}) {
     });
     y = wide ? y + px * 0.8 : pic.y + pic.h + px * 1.2;
     made.lines.forEach((line, i) => {
-      if (y > view.h - pad) return;
+      if (y > view.h - low) return;
       ctx.font = font(t, 0.85);
       ctx.fillStyle = t.dim;
       ctx.fillText(fit(ctx, `${line.label}${line.capped ? ', to the budget' : ''}`, text.w), text.x, y);
@@ -192,7 +194,7 @@ export function make(canvas, view, opts = {}) {
     });
     if (made.error) {
       ctx.fillStyle = t.dim;
-      ctx.fillText(fit(ctx, made.error, text.w), text.x, view.h - pad);
+      ctx.fillText(fit(ctx, made.error, text.w), text.x, view.h - low);
     }
     ctx.font = font(t);
   };

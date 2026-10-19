@@ -1,6 +1,7 @@
 import { defaults, tidy } from '../../lib/app/spec.js';
 import { rgb } from '../../lib/color.js';
-import { BEAT, NEEDLES, RPM, cells, edge, key, layout, pace, paint, rings, seen, spun, step, stops, study } from '../../lib/spin/engine.js';
+import { pick } from '../../lib/rand.js';
+import { BEAT, LIMIT, NEEDLES, PRESETS, RPM, cells, edge, key, layout, pace, paint, rings, seen, spun, step, stops, study } from '../../lib/spin/engine.js';
 import { LOOK, PAD, SOURCE, TAU, place, rim, sheet, tag } from '../../lib/spin/scene.js';
 import { wasm } from '../../lib/units/index.js';
 
@@ -26,16 +27,20 @@ const ABOUT = [
   'A plane wave averaged over a turn is the Bessel function J0, so the wheel is the Hankel transform of the radially averaged spectrum. The identities are in [the spin topic](/research/spin/) of Research.',
 ];
 
-export const name = (value) => `spin-${tag(value)}-${value.view}`;
+export const name = (value, units) => `spin-${tag(value, units?.math)}-${value.view}`;
+
+export const units = wasm('math');
 
 export const PAGE = {
   defaults: defaults(SOURCE),
   spec: SPEC,
+  units,
+  design: { dim: 'dim', base: 'base', code: 'code', when: (value) => value.source !== 'moire' },
   record: true,
   about: ABOUT,
   name,
   keys: [
-    { key: 'Enter', label: (value, handle) => (handle?.playing?.() === false ? 'Spin' : 'Stop'), act: 'spin', button: true, when: spinning },
+    { key: 'Enter', label: (value, handle) => (handle?.playing?.() === false ? 'Spin' : 'Stop'), act: 'spin', button: true, menu: 'Edit', when: spinning },
     { key: Object.keys(SPEED), label: 'Speed', act: 'speed', when: spinning },
     { key: NEEDLES.map((_, i) => String(i + 1)), label: 'Needle', act: 'needle', does: `${NEEDLES.join(', ')} rpm`, when: spinning },
   ],
@@ -46,7 +51,42 @@ export const PAGE = {
   },
 };
 
-export const units = wasm('math');
+/* SAVERS */
+
+const FILLS = { 2: [2, 3], 3: [4, 8] };
+
+const DEPTH = { 3: 4, 5: 3 };
+
+const TRIES = 16;
+
+const lit = (code) => code.toString(2).replaceAll('0', '').length;
+
+const odd = (rand, from, to) => from + 2 * Math.floor(rand() * ((to - from) / 2 + 1));
+
+function carve(rand, base) {
+  const [least, most] = FILLS[base];
+  const total = 2 ** base ** 2 - 2;
+  let code = 1 + Math.floor(rand() * total);
+  for (let n = 0; n < TRIES && (lit(code) < least || lit(code) > most); n++) code = 1 + Math.floor(rand() * total);
+  return String(code);
+}
+
+export const SAVERS = [
+  {
+    id: 'table',
+    title: 'Turntable',
+    pick: (rand) => {
+      const base = rand() < 0.75 ? 3 : 2;
+      const number = pick(rand, [3, 3, 5]);
+      return { source: 'design', dim: 2, base, code: carve(rand, base), number, level: DEPTH[number], rpm: 6, glow: 12 };
+    },
+  },
+  {
+    id: 'moire',
+    title: 'Moire disc',
+    pick: (rand) => ({ source: 'moire', preset: pick(rand, PRESETS), limit: odd(rand, 9, LIMIT), ramp: pick(rand, ['heat', 'tint']), levels: pick(rand, [12, 24, 64]), rpm: 4 }),
+  },
+];
 
 const GROUND = 36;
 
@@ -88,9 +128,9 @@ export function make(canvas, view, opts = {}) {
   let ema = 0;
   let told = false;
   let stopped = false;
-  const marked = () => key({ ...value, seed: given.seed >>> 0 });
+  const marked = () => key(value);
   const learn = () => {
-    plan = study(math, { ...value, seed: given.seed >>> 0 }, view.rand);
+    plan = study(math, value);
     given.onFacts?.(facts(plan));
   };
   const coat = () => {

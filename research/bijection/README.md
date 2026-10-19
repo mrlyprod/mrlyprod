@@ -3,6 +3,7 @@ title: A design is a Boolean function
 lead: Designs are Boolean functions up to cube symmetry; the strongest theorem in the tree.
 figure: research-bijection
 slug: bijection
+date: 2026-08-28
 ---
 
 # A design is a Boolean function

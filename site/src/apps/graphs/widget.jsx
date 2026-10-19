@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Fold, Group } from '../../lib/app/controls.jsx';
+import { Btn, Group } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
+import { paints } from '../../lib/color.js';
 import { rng } from '../../lib/rand.js';
-import { Picker } from '../../lib/designs/pick.jsx';
-import { deal, design, keysOf, solid as isSolid, spaceOf, turn } from './engine.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { SETS, bounds, deal, design, glimpse, graphs, kindOf, lay, plane, solid as isSolid, spaceOf, turn } from './engine.js';
 import { make, name } from './scene.js';
-import { useThree } from '../../lib/app/hooks.js';
+import { useReroll, useThree } from '../../lib/app/hooks.js';
 
 const POLL = 250;
 const TAP = 6;
 const WHEEL = 0.0015;
+const DOT = 1.5;
 const POSES = [['corner', 'Corner'], ['edge', 'Edge'], ['face', 'Face']];
 const CAMERA = { eye: 'perspective', iso: 'isometric' };
 
@@ -36,16 +39,58 @@ export function rows(f, r, camera) {
   return [...out, ['Ticks', r.ticks], ...(r.ticks ? [['Energy', sci(r.energy)], ['Moved', sci(r.moved)]] : []), ['Heat', sci(r.heat)]];
 }
 
-export function Pane({ value, onChange, math, relax, onRelax, onReset, onPose }) {
-  const keys = keysOf(spaceOf(value));
-  const { dim, base, code } = design(value);
-  const pick = (next) => onChange({ [keys.base]: next.base, [keys.code]: next.code });
+export function etch(ctx, seen, w, h, dpr) {
+  const at = plane(seen);
+  const box = lay(bounds(at, 2, seen.count), w, h, 4 * dpr);
+  ctx.strokeStyle = paints(ctx.canvas).accent;
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.lineWidth = dpr;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (let j = 0; j < seen.pairs.length; j += 2) {
+    const [a, b] = [seen.pairs[j], seen.pairs[j + 1]];
+    ctx.moveTo(box.ox + at[2 * a] * box.k, box.oy + at[2 * a + 1] * box.k);
+    ctx.lineTo(box.ox + at[2 * b] * box.k, box.oy + at[2 * b + 1] * box.k);
+  }
+  ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i < seen.count; i++) {
+    const x = box.ox + at[2 * i] * box.k;
+    ctx.moveTo(x + DOT * dpr, box.oy + at[2 * i + 1] * box.k);
+    ctx.arc(x, box.oy + at[2 * i + 1] * box.k, DOT * dpr, 0, Math.PI * 2);
+  }
+  ctx.fill();
+}
+
+export const lit = (value, patch) => Object.entries(patch).every(([key, v]) => String(value[key]) === String(v));
+
+export function Shelves({ value, onChange, math }) {
+  const tick = useTheme();
+  const glance = (look) => (
+    <Art
+      paint={(ctx, w, h, dpr) => etch(ctx, glimpse(math, look.value, look.graph), w, h, dpr)}
+      deps={[math, spaceOf(look.value), look.value.dim, look.value.base, look.value.code, look.graph, tick]}
+    />
+  );
+  return (
+    <>
+      <Shelf name="Graphs" grid>
+        {graphs(value).map(([graph, text]) => {
+          const [head, tail] = text.split(', ');
+          return <Item key={graph} label={head} sub={tail} on={kindOf(value) === graph} onPick={() => onChange({ graph })} art={math ? glance({ value, graph }) : undefined} />;
+        })}
+      </Shelf>
+      <Shelf name="Sets" grid>
+        {SETS.map(([text, patch]) => <Item key={text} label={text} on={lit(value, patch)} onPick={() => onChange(patch)} art={math ? glance({ value: patch, graph: patch.graph }) : undefined} />)}
+      </Shelf>
+    </>
+  );
+}
+
+export function Pane({ value, relax, onRelax, onReset, onPose }) {
   const running = Boolean(relax?.on);
   return (
     <>
-      <Fold name="Design" live={code}>
-        {math ? <Picker value={{ dim, base, code }} onChange={pick} math={math} dims={[dim]} /> : <span>loading</span>}
-      </Fold>
       {value.layout === 'force' && (
         <Group name="Relax" after="Layout">
           <Btn on={running} onClick={onRelax}>{running ? 'Pause' : 'Relax'}</Btn>
@@ -73,7 +118,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
   const three = useThree(cube, given);
   const live = useRef(null);
   const now = useRef(value);
-  const said = useRef(value.seed);
   const touch = useRef({ points: new Map(), from: null });
   const wheel = useRef(null);
   const tell = useRef(onChange);
@@ -115,11 +159,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
     });
   };
   useEffect(() => () => wheel.current?.(), []);
-  useEffect(() => {
-    if (!math || said.current === value.seed) return;
-    said.current = value.seed;
-    onChange(deal(math, value, rng(value.seed)));
-  }, [value.seed, math]);
+  useReroll(value.seed, (seed) => math && tell.current(deal(math, now.current, rng(seed))));
   const have = Boolean(seen);
   useEffect(() => {
     if (!have) return undefined;
@@ -130,7 +170,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
   useEffect(() => {
     sync();
     const facts = live.current?.facts?.();
-    if (facts && facts.space === spaceOf(value) && facts.code !== design(value).code) onChange({ [keysOf(facts.space).code]: facts.code });
+    if (facts && facts.space === spaceOf(value) && design(value).code !== '' && facts.code !== design(value).code) onChange({ code: facts.code });
   }, [JSON.stringify(value), have]);
   const keep = (body, kind) => body && text(body, name(now.current), kind);
   const svg = () => keep(live.current?.svg?.(), 'svg');
@@ -179,8 +219,11 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
   return (
     <>
       {math && (!cube || three) && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onContextMenu={hush} />}
+      <Library>
+        <Shelves value={value} onChange={onChange} math={math} />
+      </Library>
       <Bar side="right">
-        <Pane value={value} onChange={onChange} math={math} relax={seen?.relax} onRelax={relax} onReset={reset} onPose={(pose) => live.current?.snap?.(pose)} />
+        <Pane value={value} relax={seen?.relax} onRelax={relax} onReset={reset} onPose={(pose) => live.current?.snap?.(pose)} />
       </Bar>
     </>
   );

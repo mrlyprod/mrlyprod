@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Group } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
+import { paints } from '../../lib/color.js';
 import { rng } from '../../lib/rand.js';
 import { roll } from '../../lib/designs/engine.js';
-import { Pick, read } from '../../lib/designs/pick.jsx';
+import { read, useTheme } from '../../lib/designs/pick.jsx';
 import { DIM } from '../../lib/three/engine.js';
 
-import { TOP, make, name } from './scene.js';
+import { TOP, codesOf, glance, make, name, thumb } from './scene.js';
 import { useReroll, useUnit } from '../../lib/app/hooks.js';
+
+const SIDES = Array.from({ length: TOP }, (_, i) => i + 1);
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit }) {
   const math = useUnit('math', unit);
@@ -17,6 +19,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }) {
   const now = useRef(value);
   const held = useRef(false);
   const [rows, setRows] = useState([]);
+  const tick = useTheme();
   now.current = value;
   const tell = useCallback((next) => setRows(next.rows), []);
   useEffect(() => onStatus?.(rows), [rows]);
@@ -24,7 +27,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }) {
   const ready = (handle) => {
     live.current = handle;
     const hands = {
-      random: () => onChange({ code: roll(math, DIM, read(now.current).base) }),
       step: (by) => onChange({ k: Math.min(TOP, Math.max(1, Number(now.current.tile) ? now.current.k : now.current.k + by)), tile: 0 }),
       deeper: (by) => onChange({ level: now.current.level + by }),
     };
@@ -50,12 +52,19 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }) {
   const svg = () => live.current?.svg?.().then((body) => text(body, name(now.current), 'svg'));
   useEffect(() => onExport?.(math ? [['SVG', svg]] : []), [Boolean(math)]);
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math, tell }), [math]);
+  const tiled = Number(value.tile) !== 0;
   return (
     <>
       {math && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} />}
-      <Bar side="right">
-        <Group name="Design">{math ? <Pick value={{ ...read(value), dim: DIM }} onChange={({ base, code }) => onChange({ base, code })} math={math} dims={[DIM]} /> : <span>loading</span>}</Group>
-      </Bar>
+      {math && (
+        <Library>
+          <Shelf name="Sides" grid>
+            {SIDES.map((k) => (
+              <Item key={k} label={`k ${k}`} sub={`side ${2 * k - 1}`} on={!tiled && value.k === k} onPick={() => go(k)} art={<Art deps={[tick, value.base, value.code, k]} paint={(ctx, side) => thumb(ctx, side, glance(math, value, k), codesOf(math), paints(ctx.canvas).accent)} />} />
+            ))}
+          </Shelf>
+        </Library>
+      )}
     </>
   );
 }

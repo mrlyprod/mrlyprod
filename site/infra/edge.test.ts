@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 const MARK = "/*MOVED*/{}";
-const TABLE = JSON.stringify({ "/math/": "/mrlymath/" });
+const TABLE = JSON.stringify({ "/math/": "/mrlymath/", "/julia/": "/fractals/?kind=julia" });
 
 const text = await Bun.file(new URL("./edge.js", import.meta.url)).text();
 const edge = new Function(text.replace(MARK, TABLE) + "; return { decide, handler }")() as {
@@ -31,6 +31,10 @@ test("the 301 keeps the query string", () => {
   const out = ask("/x", { seed: { value: "1" } });
   expect(out.statusCode).toBe(301);
   expect(out.headers.location.value).toBe("/x/?seed=1");
+});
+
+test("a move that carries a query joins the asked query after it", () => {
+  expect([ask("/julia/").headers.location.value, ask("/julia/", { seed: { value: "1" } }).headers.location.value]).toEqual(["/fractals/?kind=julia", "/fractals/?kind=julia&seed=1"]);
 });
 
 test("the 301 keeps a repeated key", () => {

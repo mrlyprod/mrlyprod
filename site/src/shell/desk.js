@@ -1,88 +1,24 @@
 import { lock as saver } from 'site:apps';
-import { word } from './word.js';
-import { KEY, read, root, screen, write } from './prefs.js';
+import { source } from '../lib/glass/feed.js';
+import { KEY, calm, read, root, screen, write } from './prefs.js';
 
-/* NAME */
-
-const SVG = 'http://www.w3.org/2000/svg';
-const STILL = '(prefers-reduced-motion: reduce)';
-
-function paint(svg, rows, cols, on) {
-  svg.setAttribute('viewBox', `0 0 ${cols} ${rows}`);
-  svg.style.setProperty('--rows', rows);
-  svg.style.setProperty('--cols', cols);
-  svg.replaceChildren(
-    ...on.map((i) => {
-      const cell = document.createElementNS(SVG, 'rect');
-      for (const [k, v] of [['x', i % cols], ['y', Math.floor(i / cols)], ['width', 1], ['height', 1]]) cell.setAttribute(k, v);
-      return cell;
-    }),
-  );
-}
-
-export function folds(mark) {
-  let anim = null;
-  let at = 0;
-  let way = 0;
-  let timer = 0;
-  const halt = () => {
-    clearInterval(timer);
-    timer = 0;
-  };
-  const tick = () => {
-    const next = at + way;
-    if (next < 0 || next >= anim.frames.length) return halt();
-    at = next;
-    paint(mark.querySelector('svg'), anim.rows, anim.cols, anim.frames[at]);
-  };
-  const run = async (dir) => {
-    const text = mark.dataset.word;
-    if (!text || (dir > 0 && matchMedia(STILL).matches)) return;
-    if (anim?.text !== text) {
-      const { fold } = await import('../lib/font/font.js');
-      if (mark.dataset.word !== text) return;
-      anim = { text, ...fold(text) };
-      at = 0;
-    }
-    way = dir;
-    if (!timer) timer = setInterval(tick, 1000 / anim.fps);
-  };
-  mark.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && run(1));
-  mark.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && run(-1));
-  mark.refold = () => {
-    halt();
-    anim = null;
-    at = 0;
-  };
-}
-
-const FOLD = 'fold';
+/* MARK */
 
 export let route = '';
-let doors = [];
-let drawn = FOLD;
+let homed = null;
 
 export function visit(detail) {
-  ({ route, doors } = detail);
+  ({ route } = detail);
 }
 
-export async function rename() {
-  const mark = document.querySelector('.top .mark');
-  if (!mark || !route) return;
-  const next = word(route, doors);
-  const want = route === '/' ? FOLD : next || 'X';
-  mark.dataset.word = next;
-  const title = mark.getAttribute('aria-label').replace(/^.*, /, '');
-  mark.setAttribute('aria-label', next ? `${next}, ${title}` : title);
-  if (want === drawn) return;
-  drawn = want;
-  mark.refold?.();
-  if (want === FOLD) return arrive(mark);
-  depart(mark);
-  const { letters } = await import('../lib/font/font.js');
-  if (drawn !== want) return;
-  const { rows, cols, grid } = letters(want);
-  paint(mark.querySelector('svg'), rows, cols, grid.flat().flatMap((on, i) => (on ? [i] : [])));
+export function mark() {
+  const home = route === '/';
+  if (!route || home === homed) return;
+  homed = home;
+  const one = document.querySelector('.bar .mark');
+  if (!one) return;
+  if (home) return arrive(one);
+  depart();
 }
 
 /* WELCOME */
@@ -107,7 +43,7 @@ const rolls = () => CSS.supports('animation-timeline', 'scroll()');
 
 function glide(path, time, done) {
   playing = true;
-  const span = matchMedia(STILL).matches ? 0 : time;
+  const span = calm() ? 0 : time;
   const start = performance.now();
   const step = (now) => {
     const t = span ? Math.min(1, Math.max(0, (now - start) / span)) : 1;
@@ -119,9 +55,9 @@ function glide(path, time, done) {
   requestAnimationFrame(step);
 }
 
-function calm() {
+function hush() {
   if (greeting() === 'open') return;
-  if (performance.now() < quiet) return setTimeout(calm, QUIET);
+  if (performance.now() < quiet) return setTimeout(hush, QUIET);
   unlisten();
 }
 
@@ -133,7 +69,7 @@ function settle() {
   root().dataset.welcome = 'shut';
   jump(top);
   quiet = performance.now() + QUIET;
-  setTimeout(calm, QUIET);
+  setTimeout(hush, QUIET);
 }
 
 function enter() {
@@ -167,7 +103,7 @@ function greet() {
   setTimeout(() => {
     jump(hall().offsetHeight);
     glide((t, height) => height * (1 - t), PLAY, () => (asked ? enter() : lid()));
-  }, matchMedia(STILL).matches ? 0 : FADE);
+  }, calm() ? 0 : FADE);
 }
 
 function hold(e) {
@@ -239,7 +175,7 @@ export function knock(mark) {
 
 async function arrive(mark) {
   const { markup, welcome } = await import('./welcome.js');
-  if (drawn !== FOLD) return;
+  if (!homed) return;
   const model = welcome();
   const svg = mark.querySelector('svg');
   svg.setAttribute('class', 'glyphs fold');
@@ -247,25 +183,24 @@ async function arrive(mark) {
   svg.style.setProperty('--rows', 5);
   svg.style.setProperty('--cols', model.cols);
   svg.innerHTML = markup(model);
-  mark.style.setProperty('--cols', model.cols);
   const due = owed;
   owed = false;
   if (!rolls()) return;
-  root().dataset.welcome = read(KEY.welcome) || matchMedia(STILL).matches ? 'shut' : 'open';
+  root().dataset.welcome = read(KEY.welcome) || calm() ? 'shut' : 'open';
   if (greeting() === 'open') {
+    clearTimeout(later);
+    shown?.stop?.play?.();
     listen();
     lid();
   }
   if (due) greet();
 }
 
-function depart(mark) {
+function depart() {
   owed = false;
-  close();
+  unlock();
   delete root().dataset.welcome;
   unlisten();
-  mark.style.removeProperty('--cols');
-  mark.querySelector('svg')?.setAttribute('class', 'glyphs');
 }
 
 /* DESK */
@@ -279,14 +214,20 @@ let shown = null;
 let pinned = null;
 let nap = 0;
 let later = 0;
+let idle = false;
 
 export async function desk() {
-  if (shown) return;
+  if (!idle) {
+    idle = true;
+    import('./idle.js').then((one) => one.watch()).catch(() => {});
+  }
+  if (shown?.want === read(KEY.saver)) return;
+  if (shown) close();
   const box = document.createElement('div');
   box.className = 'desk';
   box.setAttribute('aria-hidden', 'true');
   box.append(document.createElement('canvas'));
-  const mine = { box, stop: null };
+  const mine = { box, stop: null, want: read(KEY.saver) };
   shown = mine;
   document.body.append(box);
   const want = read(KEY.saver);
@@ -294,9 +235,11 @@ export async function desk() {
   const stop = await saver().then(({ lock }) => lock(box.firstChild, use)).catch(() => null);
   if (shown !== mine) return stop?.();
   if (!stop) return close();
-  if (use === want && stop.pick !== want) screen(stop.pick);
-  pinned = { pick: read(KEY.saver), as: stop.as };
+  mine.drop = source(box.firstChild);
   mine.stop = stop;
+  mine.want = use === want && stop.pick !== want ? stop.pick : want;
+  pinned = { pick: mine.want, as: stop.as };
+  if (mine.want !== want) screen(mine.want);
   box.classList.add('on');
   if (greeting() === 'open') return lid();
   later = setTimeout(() => stop.coast?.(SETTLE), HOLD);
@@ -330,6 +273,7 @@ function close() {
   unlock();
   clearTimeout(later);
   shown?.stop?.();
+  shown?.drop?.();
   shown?.box.remove();
   shown = null;
 }

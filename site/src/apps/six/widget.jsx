@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Group } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { Pick, read } from '../../lib/designs/pick.jsx';
-import { DIM, PRESETS, VIEWS, reroll } from './engine.js';
-import { make, name } from './scene.js';
+import { paints } from '../../lib/color.js';
+import { read, useTheme } from '../../lib/designs/pick.jsx';
+import { useReroll } from '../../lib/app/hooks.js';
+import { PRESETS, VIEWS, copies, holds, reroll, sample, titled } from './engine.js';
+import { make, name, sketch } from './scene.js';
 
 const ORDER = VIEWS.map(([key]) => key);
 
@@ -35,41 +36,27 @@ export function rows(f) {
 
 export const label = (f) => `${f ? f.name || f.title : 'a cube design'} repeated into a sheet`;
 
-export function Presets({ value, onChange }) {
+export function Sheets({ math, value, tick, onChange }) {
+  const paint = (one) => (ctx, w, h) => sketch(ctx, w, h, sample(math, { ...value, ...read(value), ...one }), paints(ctx.canvas, value.tint));
   return (
-    <Group name="Presets" after="Sheet">
-      {PRESETS.map(([x, y]) => (
-        <Btn key={`${x}.${y}`} on={value.sheet !== 'disc' && value.x === x && value.y === y} onClick={() => onChange({ sheet: 'rect', x, y })}>
-          tile({x},{y})
-        </Btn>
+    <Shelf grid>
+      {PRESETS.map((one) => (
+        <Item key={titled(one)} label={titled(one)} sub={`${copies(math, { ...value, ...one })} copies`} on={holds(value, one)} onPick={() => onChange(one)} art={<Art paint={paint(one)} deps={[tick, value.code, value.base, value.number, value.view, value.turn, value.invert, value.overhang, value.tint]} />} />
       ))}
-    </Group>
-  );
-}
-
-export function Pane({ value, onChange, unit }) {
-  return (
-    <>
-      <Group name="Design">{unit ? <Pick value={{ ...read(value), dim: DIM }} onChange={({ base, code }) => onChange({ base, code })} math={unit} dims={[DIM]} /> : <span>loading</span>}</Group>
-      <Presets value={value} onChange={onChange} />
-    </>
+    </Shelf>
   );
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units }) {
   const unit = units?.math;
+  const tick = useTheme();
   const [facts, setFacts] = useState(null);
   const live = useRef(null);
   const now = useRef(value);
   const change = useRef(onChange);
-  const seed = useRef(value.seed);
   now.current = value;
   change.current = onChange;
-  useEffect(() => {
-    if (seed.current === value.seed) return;
-    seed.current = value.seed;
-    if (unit) change.current({ code: reroll(unit, read(now.current).base, value.seed) });
-  }, [value.seed]);
+  useReroll(value.seed, (seed) => unit && onChange({ code: reroll(unit, read(value).base, seed) }));
   useEffect(() => onStatus?.(rows(facts)), [facts]);
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math: unit, onFacts: setFacts }), [unit]);
   const hands = {
@@ -90,9 +77,11 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} role="img" aria-label={label(facts)} onClick={() => hands.view(1)} />}
-      <Bar side="right">
-        <Pane value={value} onChange={onChange} unit={unit} />
-      </Bar>
+      {unit && (
+        <Library name="Sheets">
+          <Sheets math={unit} value={value} tick={tick} onChange={onChange} />
+        </Library>
+      )}
     </>
   );
 }

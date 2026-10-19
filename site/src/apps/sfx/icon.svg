@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b86"/><stop offset=".7" stop-color="#ff325a"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M204 364.8H204A24 24 0 0 1 228 388.8V635.2A24 24 0 0 1 204 659.2H204A24 24 0 0 1 180 635.2V388.8A24 24 0 0 1 204 364.8Z" fill="#fff"/>
+  <path d="M292 192H292A24 24 0 0 1 316 216V808A24 24 0 0 1 292 832H292A24 24 0 0 1 268 808V216A24 24 0 0 1 292 192Z" fill="#fff"/>
+  <path d="M380 281.6H380A24 24 0 0 1 404 305.6V718.4A24 24 0 0 1 380 742.4H380A24 24 0 0 1 356 718.4V305.6A24 24 0 0 1 380 281.6Z" fill="#fff"/>
+  <path d="M468 243.2H468A24 24 0 0 1 492 267.2V756.8A24 24 0 0 1 468 780.8H468A24 24 0 0 1 444 756.8V267.2A24 24 0 0 1 468 243.2Z" fill="#fff"/>
+  <path d="M556 352H556A24 24 0 0 1 580 376V648A24 24 0 0 1 556 672H556A24 24 0 0 1 532 648V376A24 24 0 0 1 556 352Z" fill="#fff" fill-opacity="0.92"/>
+  <path d="M644 396.8H644A24 24 0 0 1 668 420.8V603.2A24 24 0 0 1 644 627.2H644A24 24 0 0 1 620 603.2V420.8A24 24 0 0 1 644 396.8Z" fill="#fff" fill-opacity="0.84"/>
+  <path d="M732 448H732A24 24 0 0 1 756 472V552A24 24 0 0 1 732 576H732A24 24 0 0 1 708 552V472A24 24 0 0 1 732 448Z" fill="#fff" fill-opacity="0.76"/>
+  <path d="M820 488H820A24 24 0 0 1 844 512V512A24 24 0 0 1 820 536H820A24 24 0 0 1 796 512V512A24 24 0 0 1 820 488Z" fill="#fff" fill-opacity="0.68"/>
+</svg>

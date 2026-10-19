@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
-import { BLENDS, BUDGET, LEAST, MODES, SCHEDULES, SETS, SWEEP, WEIGHTS, angle, eyeOf, label, live, reading, settle, shade, spin, trim } from './engine.js';
+import { BLENDS, BUDGET, LEAST, MODES, SCHEDULES, SETS, SWEEP, WEIGHTS, angle, eyeOf, label, live, reading, settle, shade, shown, spin, swatch, trim } from './engine.js';
 
 const value = (over) => ({ limit: 21, sched: 'degrees', set: 'odd', weights: 'plain', mode: 'cells', blend: 'mean', seed: 1, ramp: 'auto', levels: 0, ...over });
 
@@ -49,4 +49,14 @@ test('mobius weights under a weighted blend paint signed on the diverge ramp, on
   expect(shade(value({ weights: 'mobius', blend: 'parity' }), { ...read, weighted: false })).toEqual({ ramp: 'fire', levels: 12, signed: false });
   expect(shade(value({ ramp: 'tint', levels: 5 }), read)).toEqual({ ramp: 'tint', levels: 5, signed: false });
   held.field.free();
+});
+
+test('the turns shelf holds the unit turns, all searches the names, and a swatch paints a square of the asked side', () => {
+  const eyes = math.tourbillon.eyes(12);
+  const unit = shown(eyes, 'unit', '').map(([eye]) => label(eye));
+  expect([unit.length, unit[0], unit.at(-1)]).toEqual([13, '0 deg', '90 deg']);
+  expect(shown(eyes, 'all', ' 22.5 ').map(([eye, at]) => [label(eye), eyes[at] === eye])).toContainEqual(['22.5 deg = 90/4', true]);
+  expect(shown(eyes, 'all', '').length).toBe(eyes.length);
+  const out = swatch(math, value(), 22.5, 32, { paper: '#ffffff', accent: '#008cff' });
+  expect([out.shape, out.colors.length]).toEqual([[32, 32], 32 * 32 * 4]);
 });

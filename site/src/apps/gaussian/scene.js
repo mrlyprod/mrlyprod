@@ -1,6 +1,6 @@
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS } from '../../lib/color.js';
-import { GROW, LOOKS, PAD, RINGS, cap, coords, hit, inks, lay, parse, picture, reached, share, study, styleOf, table, tones, turned, walk } from './engine.js';
+import { GROW, LOOKS, PAD, RINGS, THUMB, cap, coords, hit, inks, lay, parse, picture, reached, share, study, styleOf, table, tones, turned, walk } from './engine.js';
 
 const plain = (value) => value.look === 'plain';
 
@@ -33,8 +33,8 @@ export const PAGE = {
   record: true,
   about: ABOUT,
   keys: [
-    { key: 'Enter', label: 'Grow', act: 'grow', button: true },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Walk the primes', act: 'walk' },
+    { key: 'Enter', label: 'Grow', act: 'grow', button: true, menu: 'Edit' },
+    { key: ['ArrowLeft', 'ArrowRight'], label: 'Walk the primes', act: 'walk', menu: 'Edit' },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Turn by a unit', act: 'turn', when: picked },
   ],
   actions: {
@@ -51,6 +51,42 @@ const SMALL = 6;
 const RING = 3;
 const THIN = 1.5;
 const DASH = [4, 3];
+const SOFT = 3;
+
+/* CELLS */
+
+const place = (plan, box, x, y) => [box.ox + (x * plan.ex[0] + y * plan.ey[0]) * box.k, box.oy - (x * plan.ex[1] + y * plan.ey[1]) * box.k];
+
+const bulk = (k, dpr) => {
+  const gap = k >= SMALL ? Math.max(dpr, GAP * k) : 0;
+  return Math.max(0.5, (k - gap) / 2);
+};
+
+function mark(target, word, x, y, h) {
+  if (word === 'eisenstein') {
+    target.moveTo(x + h, y);
+    target.arc(x, y, h, 0, TAU);
+    return;
+  }
+  const x0 = Math.round(x - h);
+  const y0 = Math.round(y - h);
+  target.rect(x0, y0, Math.max(1, Math.round(x + h) - x0), Math.max(1, Math.round(y + h) - y0));
+}
+
+export function sketch(num, set, ctx, w, h, dpr, look) {
+  const value = tidy(SPEC, { ...set, limit: Math.min(set.limit, THUMB) });
+  const plan = study(num, value.ring, value.limit);
+  const box = lay(plan.frame, w, h, SOFT * dpr);
+  const r = bulk(box.k, dpr);
+  const style = Uint8Array.from({ length: plan.count }, (_, p) => styleOf(value.look, value.faint, plan.fate[p], plan.norm[p], plan.top));
+  tones(inks(look)).forEach((color, s) => {
+    if (!color) return;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let p = 0; p < plan.count; p++) if (style[p] === s) mark(ctx, plan.word, ...place(plan, box, plan.a[p], plan.b[p]), r);
+    ctx.fill();
+  });
+}
 
 /* SCENE */
 
@@ -90,22 +126,8 @@ export function make(canvas, view, opts = {}) {
   const fit = () => {
     box = lay(plan.frame, view.w, view.h, PAD * view.dpr, value.cell * view.dpr);
   };
-  const spot = (x, y) => [box.ox + (x * plan.ex[0] + y * plan.ey[0]) * box.k, box.oy - (x * plan.ex[1] + y * plan.ey[1]) * box.k];
-  const half = () => {
-    const s = box.k;
-    const gap = s >= SMALL ? Math.max(view.dpr, GAP * s) : 0;
-    return Math.max(0.5, (s - gap) / 2);
-  };
-  const mark = (target, x, y, h) => {
-    if (plan.word === 'eisenstein') {
-      target.moveTo(x + h, y);
-      target.arc(x, y, h, 0, TAU);
-      return;
-    }
-    const x0 = Math.round(x - h);
-    const y0 = Math.round(y - h);
-    target.rect(x0, y0, Math.max(1, Math.round(x + h) - x0), Math.max(1, Math.round(y + h) - y0));
-  };
+  const spot = (x, y) => place(plan, box, x, y);
+  const half = () => bulk(box.k, view.dpr);
   const lays = (target, from, to, h) => {
     tone.forEach((color, s) => {
       if (!color) return;
@@ -122,7 +144,7 @@ export function make(canvas, view, opts = {}) {
           target.beginPath();
         }
         const [x, y] = spot(plan.a[p], plan.b[p]);
-        mark(target, x, y, h);
+        mark(target, plan.word, x, y, h);
         if (++open >= CHUNK) flush();
       }
       flush();

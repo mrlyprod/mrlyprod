@@ -1,7 +1,5 @@
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { Btn, Group, Pick } from '../lib/app/controls.jsx';
-import { tints } from '../lib/theme/hues.js';
 
 const FEW = 3;
 
@@ -68,77 +66,38 @@ export function Grid({ nodes = [] }) {
   return <div className="gallery grid">{nodes.map((node) => <Card key={node.href} node={node} />)}</div>;
 }
 
-/* LOST */
+/* GLYPH */
 
-export function Lost({ site, rows, row = rows.find((one) => one.meta?.id === 'missing') }) {
-  const doors = rows.filter((one) => one.meta?.menu === 'read' && !one.hidden).sort((a, b) => a.title.localeCompare(b.title)).map((one) => <a key={one.route} href={one.route}>{one.title}</a>);
-  const list = doors.flatMap((one, n) => (n === 0 ? [one] : [n === doors.length - 1 ? ' and ' : ', ', one]));
+export const ART = {
+  plus: '..#.. ..#.. ##### ..#.. ..#..',
+  find: '####. #..#. #..#. ####. ....#',
+  apps: '##.## ##.## ..... ##.## ##.##',
+  minus: '..... ..... ##### ..... .....',
+};
+
+export function Glyph({ art, className = 'glyphs' }) {
+  const rows = ART[art].split(' ');
   return (
-    <div className="lede">
-      <h1 id="lost">{row.title}</h1>
-      <p className="lead">{row.lead} The <a href={site.menu}>Menu</a> holds every door of this site, starting with {list}. A page that moved is on <a href="/redirects/">Redirects</a>.</p>
-    </div>
+    <svg className={className} viewBox={`0 0 ${rows[0].length} ${rows.length}`} style={{ '--rows': rows.length, '--cols': rows[0].length }} aria-hidden="true">
+      {rows.flatMap((line, y) => [...line].map((c, x) => (c === '#' ? <rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" /> : null)))}
+    </svg>
   );
 }
 
-/* MENU */
+/* LOST */
 
-export const GROUPS = [
-  ['play', 'Play'],
-  ['read', 'Read'],
-  ['tool', 'Tools'],
-];
-
-export function filled(site, rows) {
-  const card = (one) => ({ name: one.title, href: one.route, figure: one.figure ?? undefined });
-  const shown = rows.filter((one) => one.meta?.menu && !one.hidden).sort((a, b) => a.title.localeCompare(b.title));
-  const groups = GROUPS.map(([key, name]) => ({ name, nodes: shown.filter((one) => one.meta.menu === key).map(card) }));
-  const fills = { elsewhere: [...site.socials, { name: site.contact, href: `mailto:${site.contact}` }] };
-  const tree = site.tree.map((node) => ({ ...node, nodes: node.nodes ?? fills[node.name.toLowerCase()] ?? [] }));
-  return [...groups, ...tree].filter((node) => node.nodes.length);
-}
-
-const anchor = (name) => name.toLowerCase();
-
-export function Menu({ tree = [] }) {
+export function Lost({ site, rows, row = rows.find((one) => one.meta?.id === 'missing') }) {
   return (
-    <div className="menu">
-      {tree.map((folder) => (
-        <section key={folder.name} id={anchor(folder.name)} aria-label={folder.name}>
-          <h2>{folder.name}</h2>
-          <Grid nodes={folder.nodes} />
-        </section>
-      ))}
+    <div className="lede">
+      <h1 id="lost">{row.title}</h1>
+      <p className="lead">{row.lead} The <a href={site.menu}>Launchpad</a> holds every door of this site. A page that moved is on <a href="/redirects/">Redirects</a>.</p>
     </div>
   );
 }
 
 /* SETTINGS */
 
-const FACES = [
-  ['', 'Default'],
-  ['sans', 'Noto Sans'],
-  ['serif', 'Noto Serif'],
-  ['mono', 'Noto Sans Mono'],
-  ['mrly', 'MrlyFont'],
-];
-
-const TINTS = tints('Auto');
-
-export function Settings({ savers }) {
-  return (
-    <section className="controls" aria-label="Settings">
-      <Group name="Appearance">
-        <Btn data-theme-toggle>Theme <b>auto</b></Btn>
-        <Pick label="Font" options={FACES} data-font-pick defaultValue="" />
-        <Pick label="Tint" options={TINTS} data-tint-pick defaultValue="" />
-      </Group>
-      <Group name="Screensaver">
-        <Pick label="Saver" options={[['random', 'Random'], ...savers.map((one) => [one.id, one.title])]} data-saver-pick defaultValue={savers[0]?.id ?? 'random'} />
-      </Group>
-    </section>
-  );
-}
+export { PANES } from './panes.js';
 
 /* CONTENTS */
 

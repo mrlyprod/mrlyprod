@@ -23,19 +23,19 @@ test('a cell found under its own centre is itself on both lattices, and the cent
   expect(lay(num, 'hex', 10, 300, 200).at(0, 2)[1]).toBeCloseTo(100 + 3 * (10 / Math.sqrt(3)));
 });
 
-test('a fitted sheet sits inside the stage on both lattices', () => {
+test('a fitted sheet fills the stage inside its margin on both lattices, touching the margin on the tighter axis', () => {
+  const pad = 56;
+  const rings = 20;
+  const across = (lattice, px) => (2 * rings + 1) * px;
+  const down = (lattice, px) => (lattice === 'hex' ? (px / Math.sqrt(3)) * (3 * rings + 2) : across(lattice, px));
   for (const lattice of ['square', 'hex']) {
     for (const [w, h] of [[800, 600], [300, 900], [1000, 1000]]) {
-      const rings = 20;
-      const geo = lay(num, lattice, fitted(lattice, rings, w, h), w, h);
-      for (let n = 1; n <= L.count(lattice === 'hex' ? 'Hex' : 'Square', 2 * rings + 1); n++) {
-        const [x, y] = L.xy(lattice === 'hex' ? 'Hex' : 'Square', n);
-        const [px, py] = geo.at(Number(x), Number(y));
-        expect(px > geo.px / 2 && px < w - geo.px / 2 && py > geo.px / 2 && py < h - geo.px / 2).toBe(true);
-      }
+      const px = fitted(lattice, rings, w, h, pad);
+      expect(Math.max(across(lattice, px) / (w - 2 * pad), down(lattice, px) / (h - 2 * pad))).toBeCloseTo(1);
     }
   }
-  expect(fitted('square', 100, 800, 600)).toBeCloseTo((0.94 * 600) / 201);
+  expect(fitted('square', 100, 800, 600, pad)).toBeCloseTo((600 - 2 * pad) / 201);
+  expect(fitted('square', 100, 800, 600)).toBeCloseTo(600 / 201);
 });
 
 test('the winding lists the cell of every number from one, agreeing with the unit', () => {

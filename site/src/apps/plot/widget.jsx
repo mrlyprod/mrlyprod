@@ -1,22 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
-import { Fold } from '../../lib/app/controls.jsx';
+import { Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { rng } from '../../lib/rand.js';
 import { Scene } from '../../lib/app/page.jsx';
 import { next, roll } from '../../lib/designs/engine.js';
-import { Pick } from '../../lib/designs/pick.jsx';
 import { KINDS } from '../../lib/sequences/chart.js';
-import { DEEP, TERMS, csv, json, ledger, measureOf, parse, print } from '../../lib/sequences/engine.js';
+import { DEEP, MEASURES, TERMS, applies, csv, json, ledger, measureOf, parse, print } from '../../lib/sequences/engine.js';
 import { facts, found, hit } from '../../lib/sequences/facts.js';
 import { title } from '../../lib/sequences/paint.js';
 import { Record } from '../../lib/sequences/parts.jsx';
 import { PAIRED, combine, decimal, named, rule } from './engine.js';
 import { filed, make } from './scene.js';
-import { useUnits } from '../../lib/app/hooks.js';
-import { wasm } from '../../lib/units/index.js';
+import { useReroll } from '../../lib/app/hooks.js';
 
-const UNITS = wasm('math', 'num');
+const AXES = [['level', 'By level'], ['side', 'By odd side']];
 
 const SLICE = 8;
 const PULSE = 90;
@@ -43,14 +41,12 @@ export function panels(num, a, b, value) {
   return out;
 }
 
-export function Widget({ value, onChange, onReady, onExport, onStatus }) {
-  const unit = useUnits(UNITS);
+export function Widget({ value, onChange, onReady, onExport, onStatus, units: unit }) {
   const [tick, setTick] = useState(0);
   const live = useRef({ panels: [], version: 0 });
   const stage = useRef(null);
   const now = useRef(value);
   const tell = useRef(onChange);
-  const rolled = useRef(value.seed);
   now.current = value;
   tell.current = onChange;
   const math = unit?.math;
@@ -65,12 +61,11 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   useEffect(() => {
     if (dim === 3 && base !== 2) tell.current?.({ base: 2 });
   }, [dim, base]);
-  useEffect(() => {
-    if (!math || rolled.current === seed) return;
-    rolled.current = seed;
-    const { dim: d, base: q } = space(dim, base);
-    tell.current?.({ code: roll(math, d, q, rng(seed >>> 0)) });
-  }, [math, seed]);
+  useReroll(seed, (fresh) => {
+    if (!math) return;
+    const { dim: d, base: q } = space(now.current.dim, now.current.base);
+    tell.current?.({ code: roll(math, d, q, rng(fresh >>> 0)) });
+  });
   useEffect(() => {
     if (!book || !a) return undefined;
     let timer = 0;
@@ -163,15 +158,22 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
     onStatus?.(rows);
   }, [toldKey]);
   const label = a ? `The terms of ${title(a)} as ${KINDS.find(([one]) => one === chart)?.[1].toLowerCase()}, with the recurrence they satisfy${mixed ? ', and the mix beside it' : ''}` : 'Plot';
-  const pick = (next) => tell.current?.({ ...space(next.dim, next.base), code: next.code });
+  const room = space(dim, base);
+  const sequences = MEASURES.filter((one) => applies(one, room.dim, room.base));
   return (
     <>
       {unit && <Scene make={scene} value={{ chart, digits }} onReady={ready} onPointerUp={tap} role="img" aria-label={label} />}
-      <Bar side="right">
-        <Fold name="Design" live={a ? a.label : ''}>
-          {math ? <Pick value={{ dim, base: space(dim, base).base, code }} onChange={pick} math={math} /> : <span>loading</span>}
-        </Fold>
-      </Bar>
+      {math && (
+        <Library name="Sequences">
+          {AXES.map(([slug, name]) => (
+            <Shelf key={slug} name={name}>
+              {sequences.map((one) => (
+                <Item key={one.slug} label={one.label} on={measure === one.slug && axis === slug} onPick={() => tell.current?.({ measure: one.slug, axis: slug })} />
+              ))}
+            </Shelf>
+          ))}
+        </Library>
+      )}
       {!one && book && (
         <Bar side="status">
           <span>{`no row for code ${code} in dimension ${dim}`}</span>

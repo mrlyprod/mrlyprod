@@ -1,16 +1,18 @@
 import { light } from '../../lib/theme/theme.js';
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS, rgb, veil } from '../../lib/color.js';
-import { rng } from '../../lib/rand.js';
+import { pick, rng } from '../../lib/rand.js';
 import { num, runs, sheet } from '../../lib/app/svg.js';
 import { turn } from '../../lib/app/turn.js';
-import { HOLD, HOT, NUMBERS, TURN, aim, bake, budget, cap, heat, keeping, lay, plan, roots, series, top } from './engine.js';
+import { DIM, HOLD, HOT, NUMBERS, TURN, aim, bake, budget, cap, heat, keeping, lay, plan, roots, series, top } from './engine.js';
 import { wasm } from '../../lib/units/index.js';
 
+const HIDE = () => false;
+
 export const SPEC = [
-  { key: 'a', label: 'Code A', kind: 'text', def: '127', group: 'Race' },
-  { key: 'b', label: 'Code B', kind: 'text', def: '239', group: 'Race' },
-  { key: 'base', label: 'Base', kind: 'segment', def: 3, options: [[2, '2'], [3, '3']], group: 'Board' },
+  { key: 'a', label: 'Code A', kind: 'text', def: '127', group: 'Race', when: HIDE },
+  { key: 'b', label: 'Rival code', kind: 'text', def: '239', group: 'Race' },
+  { key: 'base', label: 'Base', kind: 'segment', def: 3, options: [[2, '2'], [3, '3']], group: 'Board', when: HIDE },
   { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Board' },
   { key: 'level', label: 'Level', kind: 'slider', def: 4, min: 1, max: (value) => cap(value.number), step: 1, group: 'Board' },
   { key: 'finish', label: 'Finish', kind: 'slider', def: 20, min: 1, max: (value) => top(value.number ** value.level), step: 1, unit: 'cells', group: 'Race' },
@@ -25,23 +27,43 @@ const ABOUT = [
   'Each tick every walker takes one blind step, and a step into a hole is a lost turn. The shape alone sets the pace. Distance grows like a power of time whose exponent the shape sets, which [the walk dimension note](/research/walks/) measures.',
   'Code A walks the left board, the top one on a tall screen, in the accent colour; code B walks the other in the opposite hue. The dashed ring is the finish and the solid ring is how far the swarm has spread.',
   'Space, Enter or a tap on the boards starts, pauses and races again on the next seed. Reroll is a new walk on the same pair, n rolls a new pair of one mass, and the codes take any two designs.',
+  'The design chip picks the left board. The Library lists matchups of one mass and every rival of the left board that weighs the same.',
 ];
 
 export const LABELS = { ready: 'Start', running: 'Pause', held: 'Resume', done: 'Race again' };
 
 export const named = (value) => `race-${value.a}-${value.b}-${value.seed}`;
 
+export const MATCHUPS = [
+  ['127', '239'],
+  ['495', '510'],
+  ['186', '316'],
+  ['486', '187'],
+  ['494', '254'],
+];
+
 export const PAGE = {
   spec: SPEC,
+  design: { dim: DIM, base: 'base', code: 'a' },
   record: true,
   about: ABOUT,
   name: named,
   keys: [
-    { key: 'Enter', label: (value, scene) => LABELS[scene?.phase?.() ?? 'ready'], act: 'go', button: true },
-    { key: 'n', label: 'New pair', act: 'pair' },
+    { key: 'Enter', label: (value, scene) => LABELS[scene?.phase?.() ?? 'ready'], act: 'go', button: true, menu: 'Edit' },
+    { key: 'n', label: 'New pair', act: 'pair', menu: 'Edit' },
   ],
   actions: { go: (scene) => scene.go?.(), pair: (scene) => scene.pair?.() },
 };
+
+const duel = (rand) => {
+  const [a, b] = pick(rand, MATCHUPS);
+  return rand() < 0.5 ? { a, b } : { a: b, b: a };
+};
+
+export const SAVERS = [
+  { id: 'footprints', title: 'Footprints', pick: (rand) => ({ ...duel(rand), base: 3, number: 3, level: 4, finish: 20, walkers: 300, speed: 180, heat: 0 }) },
+  { id: 'embers', title: 'Embers', pick: () => ({ base: 3, number: 5, level: 3, finish: 28, walkers: 500, speed: 240, heat: 40 }) },
+];
 
 export const units = wasm('math');
 

@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../../lib/rand.js';
 import { gl } from '../../../test/fake.js';
-import { PAGE, SPEC, make, units } from './scene.js';
+import { PAGE, SPEC, make, step, units } from './scene.js';
 
 const canvas = (fake) => ({ width: 1, height: 1, getContext: (kind) => (kind === 'webgl2' ? fake : null) });
 
@@ -30,7 +30,12 @@ test('without WebGL2 the scene is the blank one and still draws', () => {
 
 test('the value is ten knobs and the seed, studio by default, and the page keeps only the default keys', () => {
   expect(SPEC.map((one) => one.key)).toEqual(['code', 'n', 'pick', 'speed', 'path', 'pilot', 'look', 'palette', 'quality', 'hyper']);
-  expect([SPEC.find((one) => one.key === 'look').def, SPEC.find((one) => one.key === 'look').options.map(([key]) => key), PAGE]).toEqual(['studio', ['graphic', 'studio', 'haze'], { spec: SPEC, units, record: true }]);
+  expect([SPEC.find((one) => one.key === 'look').def, SPEC.find((one) => one.key === 'look').options.map(([key]) => key), PAGE.design, PAGE.units, PAGE.record]).toEqual(['studio', ['graphic', 'studio', 'haze'], { dim: 3, base: 2, code: 'code' }, units, true]);
+});
+
+test('the arrows step through the pool and wrap, and from a code outside it they go to the nearest one', () => {
+  const pool = [3, 23, 60, 200];
+  expect([step(pool, 23, 1), step(pool, 200, 1), step(pool, 3, -1), step(pool, 100, 1), step(pool, 100, -1), step(pool, 250, 1), step(pool, 1, -1), step([], 7, 1)]).toEqual([60, 3, 200, 200, 60, 3, 200, 7]);
 });
 
 test('the HUD teaches the code in five lines: name, level, bits and fill, dimension and class, and the mode', () => {

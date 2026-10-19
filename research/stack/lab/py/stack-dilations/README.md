@@ -23,6 +23,6 @@ Under a second, prints only, writes nothing.
 
 ## WITNESSES
 
-- The dilation reading of `stack.md`, "The layers as a dilation system": the symbol `S(s)`, the Gram identity, the block splitting, the failed Riesz condition and the completeness.
+- The dilation reading of `levels-dilations-nodes.md`, "The layers as a dilation system": the symbol `S(s)`, the Gram identity, the block splitting, the failed Riesz condition and the completeness.
 - The eigenvalue window it prints is the finite half of the layer Gram spectrum named as the open object in "What a breakthrough would look like".
 - It does not re-derive the covariance law of `lab/py/stack-levels`; it matches it, and extends it to the even scales the odd convention drops.

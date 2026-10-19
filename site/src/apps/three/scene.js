@@ -11,14 +11,17 @@ const word = (one) => one[0].toUpperCase() + one.slice(1);
 const fixed = (v, k) => Number(v).toFixed(k);
 const is = (key, want) => (value) => value[key] === want;
 const crop = (value) => Boolean(value.crop);
+const HIDE = () => false;
 const grows = is('source', 'design');
 const fills = is('source', 'field');
 const counting = (value) => grows(value) && Number(value.circle) === 1;
 
+export const CROPS = [['', 'None'], ...SHAPES.map((one) => [one, word(one)])];
+
 export const SPEC = [
   { key: 'source', label: 'Solid', kind: 'segment', def: 'design', options: [['design', 'Design'], ['field', 'Field']], group: 'Solid' },
   { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Solid', when: grows },
-  { key: 'crop', label: 'Shape', kind: 'pick', def: '', options: [['', 'None'], ...SHAPES.map((one) => [one, word(one)])], group: 'Crop' },
+  { key: 'crop', label: 'Shape', kind: 'pick', def: '', options: CROPS, group: 'Crop', when: HIDE },
   { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value, units) => units && cap(units.math, value.number, value.crop), step: 1, group: 'Solid', when: grows },
   { key: 'draw', label: 'Draw', kind: 'segment', def: 'shell', options: [['shell', 'Shell'], ['cubes', 'Cubes']], group: 'Solid', when: grows },
   { key: 'opacity', label: 'Opacity', kind: 'slider', def: 1, min: 0.05, max: 1, step: 0.05, group: 'Solid' },
@@ -54,6 +57,7 @@ export const name = (value) => `three-${String(value.code ?? '').trim() || CARPE
 
 export const PAGE = {
   defaults: { base: 2, code: '23' },
+  design: { dim: 3, base: 'base', code: 'code' },
   spec: SPEC,
   units,
   gestures: true,
@@ -66,15 +70,13 @@ export const PAGE = {
   ],
   name,
   keys: [
-    { key: 'Enter', label: 'Random', act: 'random', button: true },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level', when: grows },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Radius', act: 'radius', when: crop },
-    { key: '1', label: 'Corner', act: 'corner' },
-    { key: '2', label: 'Edge', act: 'edge' },
-    { key: '3', label: 'Face', act: 'face' },
+    { key: '1', label: 'Corner', act: 'corner', menu: 'View' },
+    { key: '2', label: 'Edge', act: 'edge', menu: 'View' },
+    { key: '3', label: 'Face', act: 'face', menu: 'View' },
   ],
   actions: {
-    random: (scene) => scene.random?.(),
     level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
     radius: (scene, e) => scene.widen?.(e.key === 'ArrowLeft' ? -1 : 1),
     corner: (scene) => scene.look?.('corner'),

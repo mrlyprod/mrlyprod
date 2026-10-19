@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import * as num from '@mrlyprod/mrly/num';
-import { BANDS, FADE, GHOST, HOLD, LISTED, PER, REACH, ROLLS, ZEROS, bands, fold, hop, ladder, passed, phase, picture, plane, reading, roll, snap, study, table } from './engine.js';
+import { BANDS, FADE, FIRST, GHOST, HOLD, LISTED, PER, REACH, ROLLS, STATES, ZEROS, bands, fold, hop, ladder, passed, phase, picture, plane, reading, roll, shelves, snap, study, table } from './engine.js';
 
 const line = new num.zeta.Line();
 
@@ -122,4 +122,15 @@ test('the csv lists the zeros numbered from one to six decimals', () => {
   expect(rows).toHaveLength(ZEROS + 1);
   expect([rows[0], rows[1]]).toEqual(['zero,t', '1,14.134725']);
   expect(rows[13].startsWith('13,59.347044')).toBe(true);
+});
+
+test('the library lists the first zeros as walks that land on them and the staircase states, the entry on the page marked', () => {
+  const zeros = study(num).zeros;
+  const [walks, stairs] = shelves(zeros, { view: 'walk', t: snap(zeros[1]), x: 100, zeros: 10 });
+  expect([walks[0], walks[1].length, stairs[0]]).toEqual(['Zeros', FIRST, 'Staircase']);
+  expect(walks[1].map((one) => one.on)).toEqual(walks[1].map((_, i) => i === 1));
+  expect(walks[1][0]).toMatchObject({ label: 'Zero 1', sub: '14.1347', set: { view: 'walk', t: snap(zeros[0]) } });
+  expect(stairs[1].map((one) => one.label)).toEqual(STATES.map((one) => one.name));
+  const [steps, climbs] = shelves(zeros, { view: 'stairs', t: 30, x: 100, zeros: 10 });
+  expect([climbs[1].find((one) => one.on).label, steps[1].find((one) => one.on)]).toEqual(['10 zeros', undefined]);
 });

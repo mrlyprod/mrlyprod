@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
 import { defaults } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { tempo } from '../../lib/audio/audio.js';
-import { SPEC, make, song } from './scene.js';
+import { pattern, tempo } from '../../lib/audio/audio.js';
+import { FEEL, SPEC, STYLES, make, song, stamp, styled } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -49,4 +49,18 @@ test('the grid holds within a step and moves at the next', () => {
 test('one seed draws one grid; another seed another', () => {
   expect(open({ seed: 7 }).frame(900)).toEqual(open({ seed: 7 }).frame(900));
   expect(open({ seed: 8 }).frame(900)).not.toEqual(open({ seed: 7 }).frame(900));
+});
+
+test('every style is a song the knobs keep, the first is the default one, and a value finds its style', () => {
+  const kept = STYLES.map((one) => FEEL.every((key) => song(one.song)[key] === one.song[key]));
+  expect([kept.every(Boolean), new Set(STYLES.map((one) => JSON.stringify(one.song))).size, FEEL.every((key) => STYLES[0].song[key] === defaults(SPEC)[key])]).toEqual([true, STYLES.length, true]);
+  expect([styled({ ...defaults(SPEC), ...STYLES[3].song }), styled({ ...defaults(SPEC), bpm: 119 })]).toEqual([STYLES[3].id, '']);
+});
+
+test('a stamp lights one square for each hit of the first bar, four rows of sixteen', () => {
+  const log = [];
+  const p = pattern(7, song({ ...defaults(SPEC), seed: 7 }), 0);
+  stamp(pen(log), 56, 56, p, '#008cff');
+  const lit = [p.kick, p.hat, p.clap, p.bass].flat().filter(Boolean).length;
+  expect([log.filter(([key]) => key === 'fillRect').length, log.filter(([key, v]) => key === 'fillStyle' && v === '#008cff').length]).toEqual([64, lit]);
 });

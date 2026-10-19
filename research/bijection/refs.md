@@ -18,9 +18,3 @@
 | ref | title | url |
 |---|---|---|
 | Ethier and Lee 2015 | Counting Toroidal Binary Arrays, II, J. Integer Seq. 18, Article 15.8.3 | https://cs.uwaterloo.ca/journals/JIS/VOL18/Lee/lee6.html |
-
-## REFERENCE PAGES
-
-| ref | title | url |
-|---|---|---|
-| OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |

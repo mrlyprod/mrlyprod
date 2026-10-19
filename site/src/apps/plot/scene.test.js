@@ -64,6 +64,14 @@ test('the measures follow the space, the mix rows show only with the mix on, and
   expect(PAGE.keys.find((row) => row.button).act).toBe('mix');
 });
 
+test('the design is a slot on dim, base and code, and the measure and axis ride the library, hidden but kept in the url', () => {
+  expect(PAGE.design).toEqual({ dim: 'dim', base: 'base', code: 'code', spaces: [[2, 2], [2, 3], [3, 2]] });
+  const keys = describe(SPEC, { ...defaults(SPEC), dim: 2, base: 2 }).flatMap(({ rows }) => rows.map((row) => row.key));
+  expect(keys).not.toContain('measure');
+  expect(keys).not.toContain('axis');
+  expect(tidy(SPEC, { dim: 2, base: 2, measure: 'fills', axis: 'side' })).toMatchObject({ measure: 'fills', axis: 'side' });
+});
+
 test('an export is named by the row, the operation while the mix is on, and the chart', () => {
   expect(PAGE.name).toBe(filed);
   const value = { ...defaults(SPEC), dim: 2, base: 2, code: '7' };

@@ -13,7 +13,7 @@ export function crumbs(path) {
 }
 
 export function paint(steps) {
-  const list = document.querySelector('.subheader .crumbs ol');
+  const list = document.querySelector('.title .crumbs ol');
   if (!list) return;
   list.replaceChildren(
     ...steps.map((step, n) => {

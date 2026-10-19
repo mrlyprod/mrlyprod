@@ -12,6 +12,8 @@ const CARPET = '23';
 const PAD = 0.04;
 const FAINT = 18;
 
+export const codesOf = (math) => ({ fill: math.six.FILL(), void: math.six.VOID() });
+
 export const lid = (math, tile) => (tile ? math.bang.level_cap(tile, 1, REACH) : 1);
 
 const tiled = (value) => Number(value.tile) !== 0;
@@ -29,6 +31,7 @@ export const name = (value) => `slices-${String(value.code ?? '').trim() || CARP
 
 export const PAGE = {
   defaults: { base: 2, code: '23' },
+  design: { dim: 3, base: 'base', code: 'code' },
   spec: SPEC,
   units,
   gestures: true,
@@ -39,13 +42,13 @@ export const PAGE = {
   ],
   name,
   keys: [
-    { key: 'Enter', label: 'Random', act: 'random', button: true },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Side', act: 'side' },
+    { key: 'ArrowLeft', label: 'Smaller side', act: 'smaller', menu: 'View' },
+    { key: 'ArrowRight', label: 'Larger side', act: 'larger', menu: 'View' },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level', when: tiled },
   ],
   actions: {
-    random: (scene) => scene.random?.(),
-    side: (scene, e) => scene.step?.(e.key === 'ArrowLeft' ? -1 : 1),
+    smaller: (scene) => scene.step?.(-1),
+    larger: (scene) => scene.step?.(1),
     level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
   },
 };
@@ -54,6 +57,7 @@ export const PAGE = {
 
 const cuts = memo(6);
 const splits = memo(8);
+const glances = memo(20);
 
 function cut(math, code, base, number, level) {
   return cuts(`${code} ${base} ${number} ${level}`, () => {
@@ -102,6 +106,11 @@ export function study(math, value) {
   return { mesh: one.mesh, side: one.side, rows: facts };
 }
 
+export function glance(math, value, k) {
+  const { base, code } = design(math, value);
+  return glances(`${code} ${base} ${k}`, () => math.six.cut(math.three.create(code, 2 * k - 1, 1, base)));
+}
+
 /* PAINT */
 
 export const layout = (w, h) => box(0, 0, w, h).inset(Math.min(w, h) * PAD);
@@ -115,6 +124,12 @@ export function picture(page, frame, plan, paint) {
   hex.draw(page, frame, plan.mesh, 0, (type) => codes[type] ?? null);
 }
 
+export function thumb(ctx, side, mesh, codes, accent) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, side, side);
+  picture(pen(ctx, side, side), layout(side, side), { mesh }, { ...codes, accent: [...rgb(accent), 255] });
+}
+
 /* SCENE */
 
 const settle = (opts) => ({ ...tidy(SPEC, opts, opts.math && { math: opts.math }), seed: opts.seed, base: opts.base, code: opts.code });
@@ -123,7 +138,7 @@ export function make(canvas, view, opts = {}) {
   const { math, tell } = opts;
   if (!math) throw new Error('slices: the scene wants @mrlyprod/mrly/math as opts.math');
   const ctx = canvas.getContext('2d');
-  const codes = { fill: math.six.FILL(), void: math.six.VOID() };
+  const codes = codesOf(math);
   let value = settle(opts);
   let plan = study(math, value);
   let dirty = true;

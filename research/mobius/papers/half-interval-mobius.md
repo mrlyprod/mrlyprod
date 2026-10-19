@@ -46,7 +46,7 @@ Section 2 fixes the set and proves the binomial reading. Section 3 sets up the t
 |hat F(t)| = |sin(pi fill t)/sin(pi t)| ,   read as fill at the integers .
 ```
 
-`|hat F|` has period `1` and is even. Write `||z||` for the distance from `z` to the nearest integer. The set is the subject of the section The half interval of the note [The Mobius meter across digit designs](../notes/mobius.md), which records every statement proved here.
+`|hat F|` has period `1` and is even. Write `||z||` for the distance from `z` to the nearest integer. The set is the subject of the section The half interval of the note [The half interval and the even digits](../notes/half-interval-even-digits.md), which records every statement proved here.
 
 **Lemma 2.2 (the central binomial coefficients).** At a prime base `p`, `v_p(C(2k,k))` is the number of carries in the base-`p` addition `k + k`, so `S_F = {k >= 1 : p does not divide C(2k,k)}`.
 

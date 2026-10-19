@@ -2,7 +2,6 @@ import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { asked, defaults, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { reroll } from './engine.js';
 import { PAGE, SPEC, make, tones } from './scene.js';
 
 const pen = (log) =>
@@ -106,7 +105,7 @@ test('the view leads the spec as a visible row, so a phone gets the switch', () 
 });
 
 test('an export is named by the design shown and its view', () => {
-  expect([PAGE.name({ ...VALUE, view: 'iso' }, { math }), PAGE.name({ ...VALUE, code: '', seed: 5 }, { math }) === `six-${reroll(math, 2, 5)}-cut`]).toEqual(['six-23-iso', true]);
+  expect([PAGE.name({ ...VALUE, view: 'iso' }, { math }), PAGE.name({ ...VALUE, code: '', seed: 5 }, { math })]).toEqual(['six-23-iso', 'six-23-cut']);
 });
 
 test('Enter crops a rectangle of two or more each way, uncrops a cropped one, and leaves a disc alone', () => {

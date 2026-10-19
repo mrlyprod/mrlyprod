@@ -15,11 +15,9 @@
         { "name": "robots.txt", "href": "/robots.txt" },
         { "name": "sitemap.xml", "href": "/sitemap.xml" },
         { "name": "llms.txt", "href": "/llms.txt" },
-        { "name": "404.html", "href": "/404.html" },
-        { "name": "manifest.webmanifest", "href": "/manifest.webmanifest" }
+        { "name": "404.html", "href": "/404.html" }
       ]
-    },
-    { "name": "Elsewhere" }
+    }
   ],
   "socials": [
     { "name": "GitHub", "href": "https://github.com/mrlyprod" },
@@ -57,18 +55,5 @@
       { "family": "Noto Color Emoji", "file": "emoji", "weight": "400", "licence": "notocoloremoji" }
     ]
   },
-  "icons": { "names": ["casino", "close", "download", "expand_more", "fullscreen_exit", "graphic_eq", "info", "left_panel_open", "link", "more_horiz", "music_note", "tune", "volume_up"], "out": "src/lib/icons.gen.js" },
-  "manifest": {
-    "name": "MrlyProd",
-    "short_name": "MrlyProd",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#070707",
-    "theme_color": "#070707",
-    "icons": [
-      { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
-      { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-      { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
-    ]
-  }
+  "icons": { "names": ["casino", "check", "chevron_right", "close", "download", "expand_more", "fullscreen_exit", "graphic_eq", "grid_view", "info", "ios_share", "keyboard", "keyboard_command_key", "left_panel_close", "left_panel_open", "link", "more_horiz", "music_note", "right_panel_close", "right_panel_open", "search", "shift", "star", "star_fill", "tune", "volume_up"], "out": "src/lib/icons.gen.js" }
 }

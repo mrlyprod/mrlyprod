@@ -4,8 +4,8 @@ import { defaults } from '../../lib/app/spec.js';
 import { rgb } from '../../lib/color.js';
 import { rng } from '../../lib/rand.js';
 import { WHEEL } from '../../lib/spin/engine.js';
-import { SOURCE } from '../../lib/spin/scene.js';
-import { PAGE, SPEC, make } from './scene.js';
+import { PAD, SOURCE } from '../../lib/spin/scene.js';
+import { PAGE, SPEC, make, units } from './scene.js';
 
 const brief = (arg) => (arg && typeof arg === 'object' ? 'layer' : arg);
 
@@ -66,15 +66,17 @@ const open = (value, { still = false, w = 800, h = 600, unit = math } = {}) => {
 
 const draws = (log) => log.filter(([name]) => name === 'drawImage');
 
+const reach = (w, h) => Math.min(w, h) / 2 - PAD * 2;
+
 const turned = (frame) => frame.sheets.flat().find(([name]) => name === 'rotate')?.[1];
 
 test('the turntable alone fills the stage at any aspect with no text on it, and a still turns nothing', () => {
   const still = open({}, { still: true });
   const frame = still.at(0);
-  expect(draws(frame.main)).toEqual([['drawImage', 'layer', 400 - 268, 300 - 268]]);
+  expect(draws(frame.main)).toEqual([['drawImage', 'layer', 400 - reach(800, 600), 300 - reach(800, 600)]]);
   expect(frame.main.some(([name]) => name === 'fillText')).toBe(false);
   expect(turned(frame)).toBe(0);
-  expect(draws(open({}, { w: 780, h: 1688 }).at(0).main)).toEqual([['drawImage', 'layer', 390 - 358, 844 - 358]]);
+  expect(draws(open({}, { w: 780, h: 1688 }).at(0).main)).toEqual([['drawImage', 'layer', 390 - reach(780, 1688), 844 - reach(780, 1688)]]);
   expect(still.facts.at(-1)).toMatchObject({ code: '495', name: 'carpet', side: 9, fills: 64, order: 4, peak: 1 });
 });
 
@@ -83,7 +85,7 @@ test('the wheel view swaps in the exact wheel on the whole stage, drawn once, th
   for (let n = 1; n <= 60; n++) live.at((n * 1000) / 60);
   live.scene.set({ view: 'wheel' });
   const frame = live.at(1100);
-  expect(draws(frame.main)).toEqual([['drawImage', 'layer', 400 - 268, 300 - 268, 536, 536]]);
+  expect(draws(frame.main)).toEqual([['drawImage', 'layer', 400 - reach(800, 600), 300 - reach(800, 600), 2 * reach(800, 600), 2 * reach(800, 600)]]);
   expect(turned(frame)).toBe(undefined);
   expect(images.at(-1).width).toBe(WHEEL);
   expect(live.paces.at(-1)).toBe(null);
@@ -162,7 +164,7 @@ test('a theme change recolours the wheel and a size lays the stage again without
   live.view.w = 600;
   live.view.h = 800;
   live.scene.size();
-  expect(draws(live.at(32).main)).toEqual([['drawImage', 'layer', 300 - 268, 400 - 268, 536, 536]]);
+  expect(draws(live.at(32).main)).toEqual([['drawImage', 'layer', 300 - reach(600, 800), 400 - reach(600, 800), 2 * reach(600, 800), 2 * reach(600, 800)]]);
   expect(images.filter((one) => one.width === WHEEL).length).toBe(before);
 });
 
@@ -174,7 +176,7 @@ test('Enter is the primary, Stop or Spin as the scene plays, and 1 to 5 set the 
   PAGE.actions.spin(hands);
   expect(got).toEqual([900, 33, 'toggle']);
   const enter = PAGE.keys.find((row) => row.key === 'Enter');
-  expect([enter.button, enter.label({}, { playing: () => true }), enter.label({}, { playing: () => false })]).toEqual([true, 'Stop', 'Spin']);
+  expect([enter.button, enter.menu, enter.label({}, { playing: () => true }), enter.label({}, { playing: () => false })]).toEqual([true, 'Edit', 'Stop', 'Spin']);
   expect(PAGE.keys.map((row) => [row.when({ view: 'table' }), row.when({ view: 'wheel' })])).toEqual([[true, false], [true, false], [true, false]]);
 });
 
@@ -189,8 +191,20 @@ test('the ramp rows show only where the ramp paints: the wheel, or a moire on th
   expect([shown({ view: 'table', source: 'moire' }), shown({ view: 'wheel', source: 'flat' })]).toEqual([['ramp', 'levels', 'invert', 'tint'], ['ramp', 'levels', 'invert', 'tint']]);
 });
 
-test('an export is named by the source, its design and the view', () => {
-  expect([PAGE.name({ ...defaults(SOURCE), view: 'table' }), PAGE.name({ ...defaults(SOURCE), source: 'moire', view: 'wheel' }), PAGE.name({ ...defaults(SOURCE), source: 'slice', scode: '7', view: 'table' })]).toEqual(['spin-flat-495-table', 'spin-moire-weave-wheel', 'spin-slice-7-table']);
+test('an export is named by the source, its design and the view, the home design settled by the unit', () => {
+  const base = defaults(SOURCE);
+  const named = (patch, units) => PAGE.name({ ...base, view: 'table', ...patch }, units);
+  expect([named({}, { math }), named({}), named({ source: 'moire', view: 'wheel' }), named({ dim: 3, code: '7' })]).toEqual(['spin-flat-495-table', 'spin-flat-carpet-table', 'spin-moire-weave-wheel', 'spin-slice-7-table']);
+});
+
+test('the page takes a design of either dimension and the empty code opens the carpet, never a roll', () => {
+  const { when, ...slot } = PAGE.design;
+  expect(slot).toEqual({ dim: 'dim', base: 'base', code: 'code' });
+  expect([when({ source: 'flat' }), when({ source: 'moire' })]).toEqual([true, false]);
+  expect(PAGE.units).toBe(units);
+  const home = open({ seed: 1 });
+  const other = open({ seed: 9 });
+  expect([home.facts.at(-1).code, other.facts.at(-1).code, open({ dim: 3, base: 2 }).facts.at(-1).code]).toEqual(['495', '495', '23']);
 });
 
 test('without the unit the scene is blank and throws nothing', () => {

@@ -2,8 +2,8 @@ import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { defaults, describe as groups } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { PAD, fit, study, thick } from './engine.js';
-import { SPEC, file, make, shades } from './scene.js';
+import { PAD, curves, fit, study, thick } from './engine.js';
+import { SPEC, file, make, shades, sketch } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -234,4 +234,16 @@ test('an export is named by the design, the base and the level', () => {
 test('the design keys stay out of the knobs, which open on the arcs', () => {
   const shown = groups(SPEC, START).map(({ name, rows }) => [name, rows.map((row) => row.key)]);
   expect(shown).toEqual([['Arcs', ['level', 'cells', 'look', 'width']], ['Colour', ['tint', 'strand']]]);
+});
+
+test('a thumb draws the shaded cells, the strands and the loops in their inks, and leaves out what the look hides', () => {
+  const plan = curves(math, '495', 3, 2);
+  const looped = plan.closed.reduce((sum, closed, k) => sum + (closed ? plan.bounds[k + 1] - plan.bounds[k] : 0), 0);
+  const drawn = (over) => {
+    const log = [];
+    sketch(pen(log), 112, 112, 2, plan, { ...START, ...over }, INKS);
+    return [log.filter(([name]) => name === 'rect').length > 0, log.filter(([name]) => name === 'strokeStyle').map(([, v]) => v), arcs(log)];
+  };
+  expect(drawn({})).toEqual([true, [INKS.strand, INKS.loop], plan.order.length]);
+  expect(drawn({ cells: 0, look: 'loops' })).toEqual([false, [INKS.loop], looped]);
 });

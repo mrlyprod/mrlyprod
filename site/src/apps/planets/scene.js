@@ -1,5 +1,5 @@
 import { tidy } from '../../lib/app/spec.js';
-import { rng } from '../../lib/rand.js';
+import { pick, rng } from '../../lib/rand.js';
 import { drift, ease, look } from '../../lib/gl/camera.js';
 import { blank, context, governor, tier } from '../../lib/gl/gl2.js';
 import { planet, pole } from '../../lib/space/planet.js';
@@ -8,12 +8,14 @@ import { post } from '../../lib/gl/post.js';
 import { sky } from '../../lib/space/sky.js';
 import { add, cross, dot, len, mul, norm, rot, sub } from '../../lib/gl/vec.js';
 
-const named = (word) => word[0].toUpperCase() + word.slice(1);
+const HIDE = () => false;
+
+export const named = (word) => word[0].toUpperCase() + word.slice(1);
 
 export const CAMS = ['orbit', 'drift', 'approach', 'flyby'];
 
 export const SPEC = [
-  { key: 'world', label: 'World', kind: 'pick', def: 'earth', options: NAMES.map((name) => [name, named(name)]), group: 'World' },
+  { key: 'world', label: 'World', kind: 'pick', def: 'earth', options: NAMES.map((name) => [name, named(name)]), group: 'World', when: HIDE },
   { key: 'moons', label: 'Moons', kind: 'pick', def: -1, options: [[-1, 'Own'], [0, 'None'], [1, '1'], [2, '2'], [3, '3']], group: 'World' },
   { key: 'rings', label: 'Rings', kind: 'segment', def: '', options: [['', 'Auto'], ['on', 'On'], ['off', 'Off']], group: 'World' },
   { key: 'cam', label: 'Camera', kind: 'pick', def: 'orbit', options: CAMS.map((cam) => [cam, named(cam)]), group: 'View' },
@@ -24,13 +26,19 @@ export const SPEC = [
 export const PAGE = {
   spec: SPEC,
   keys: [
-    { key: 'Enter', label: 'Next world', act: 'next', button: true },
-    { key: ['ArrowLeft', 'ArrowUp'], label: 'Previous', act: 'prev' },
+    { key: 'Enter', label: 'Next world', act: 'next', button: true, menu: 'View' },
+    { key: ['ArrowLeft', 'ArrowUp'], label: 'Previous world', act: 'prev', menu: 'View' },
     { key: ['ArrowRight', 'ArrowDown'], label: 'Next', act: 'next' },
   ],
   actions: { next: (scene) => scene.step?.(1), prev: (scene) => scene.step?.(-1) },
   record: true,
 };
+
+export const SAVERS = [
+  { id: 'orbit', title: 'Solar system orbit', pick: (rand) => ({ world: pick(rand, ['earth', 'mars', 'jupiter', 'saturn', 'neptune', 'venus', 'moon']), cam: 'orbit', sun: pick(rand, [30, 50, 70, 90]), speed: 0.75 }) },
+  { id: 'flyby', title: 'Dawn flyby', pick: (rand) => ({ world: pick(rand, ['earth', 'mars', 'jupiter', 'neptune', 'moon']), cam: 'flyby', rings: 'off', speed: 0.75 }) },
+  { id: 'far', title: 'Far worlds', pick: (rand) => ({ world: 'exo', cam: pick(rand, ['approach', 'drift']), sun: pick(rand, [40, 60, 80, 100]), speed: 0.75 }) },
+];
 
 const TAU = Math.PI * 2;
 const FOV = 1;
@@ -53,6 +61,8 @@ const TERMINATOR = -0.35;
 const NOTCHES = { phone: [0.75, 0.6, 0.5], desk: [1, 0.85, 0.7, 0.5], big: [0.75, 0.6, 0.5] };
 const LOOK = { ev: 0, bloom: 0.55, vignette: 0.3, grain: 0.012, aberration: 0.0012, flare: 0.04 };
 const SALT = 0x2f6b9d31;
+const LAP = { close: 100000, pass: 220000 };
+const HEAD = 120000;
 
 export const next = (name, by) => NAMES[(NAMES.indexOf(name) + by + NAMES.length) % NAMES.length];
 
@@ -84,12 +94,12 @@ function phase(cam, at, deg) {
   return norm(rot(to, axis, (deg * Math.PI) / 180));
 }
 
-function flyby(params, az, t) {
+function flyby(params, az, t, pass) {
   const c = around(params, 1, HIGH, az);
   const east = norm(cross(pole(params), c));
   const sun = norm(add(mul(east, Math.cos(DIP)), mul(c, -Math.sin(DIP))));
   const rise = (1 - FLY * Math.cos(DIP)) / Math.sin(DIP);
-  const u = (((t % PASS) + PASS) % PASS) / PASS;
+  const u = (((t % pass) + pass) % pass) / pass;
   const pos = add(mul(c, FLY), mul(east, rise + (u - RISE) * REACH));
   const up = norm(pos);
   const ahead = norm(sub(east, mul(up, dot(east, up))));
@@ -97,23 +107,23 @@ function flyby(params, az, t) {
   return { cam: look(pos, add(pos, add(mul(ahead, Math.cos(dip)), mul(up, -Math.sin(dip)))), up), sun };
 }
 
-function eye(params, cam, seed, start, room, t) {
+function eye(params, cam, seed, start, room, t, close) {
   if (cam === 'drift') {
     return { pos: add(around(params, Math.max(AFAR, room), LAT, start + t / 100000), drift(seed, t, 0.25)), at: drift(seed + 1, t, 0.05) };
   }
   if (cam === 'approach') {
-    const u = (((t % CLOSE) + CLOSE) % CLOSE) / CLOSE;
+    const u = (((t % close) + close) % close) / close;
     return { pos: around(params, FAR * (NEAR / FAR) ** ease.out(u, 2), LAT * 0.6, start + t / 200000), at: [0, 0, 0] };
   }
   return { pos: around(params, Math.max(ORBIT, room), LAT, start + (TAU * t) / LOOP), at: [0, 0, 0] };
 }
 
-export function shot(params, { cam = 'orbit', sun = 60, seed = 0, t = 0, aspect = 16 / 9 } = {}) {
+export function shot(params, { cam = 'orbit', sun = 60, seed = 0, t = 0, aspect = 16 / 9, close = CLOSE, pass = PASS } = {}) {
   const start = rng(((seed >>> 0) ^ SALT) >>> 0)() * TAU;
-  if (cam === 'flyby') return flyby(params, start, t);
+  if (cam === 'flyby') return flyby(params, start, t, pass);
   const room = fit(params, aspect);
   const view = (when) => {
-    const { pos, at } = eye(params, cam, seed, start, room, when);
+    const { pos, at } = eye(params, cam, seed, start, room, when, close);
     return { cam: look(pos, at, pole(params)), at };
   };
   const first = view(EPOCH);
@@ -140,6 +150,8 @@ export function make(canvas, view, opts = {}) {
   }
   const gov = governor(view, NOTCHES[level]);
   const look = level === 'phone' ? { ...LOOK, flare: 0 } : LOOK;
+  const lap = view.lock ? LAP : {};
+  const head = view.lock ? HEAD : 0;
   let seen = opts;
   let now = value;
   let last = 0;
@@ -157,7 +169,7 @@ export function make(canvas, view, opts = {}) {
     spun += (view.t - last) * speed;
     last = view.t;
     film.begin(gov.tick());
-    const { cam, sun } = shot(params, { cam: kind, sun: deg, seed, t: view.t, aspect: view.w / view.h });
+    const { cam, sun } = shot(params, { cam: kind, sun: deg, seed, t: view.t + (kind === 'flyby' ? head : 0), aspect: view.w / view.h, ...lap });
     field.draw(cam, { k: 0.5 });
     body.draw(cam, sun, spun);
     film.end(look);

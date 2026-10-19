@@ -1,0 +1,38 @@
+/* ICON */
+
+.appicons { position: absolute; width: 0; height: 0; overflow: hidden; }
+.appicon { display: block; width: 100%; height: 100%; overflow: visible; }
+.appicon .ink { filter: url(#appicon-lift); }
+.appicon .rim { fill: none; stroke: url(#appicon-rim); stroke-width: 25; pointer-events: none; }
+
+/* DARK */
+
+[data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) .back { fill: url(#appicon-dark); }
+[data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) :is(.back.d, .ink .d) { fill: var(--d); }
+[data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) .ink .w { fill: var(--key); }
+[data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon) .ink .ds { stroke: var(--ds); }
+:is([data-icons="dark"] .appicon:not([data-icons="dark"] [data-icons]:not([data-icons="dark"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) .rim { stroke: url(#appicon-rim-dark); }
+
+/* MONO */
+
+[data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon) .back { fill: url(#appicon-tint-dark); }
+[data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon) .ink { filter: url(#appicon-accent); }
+[data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon) .back { fill: url(#appicon-tint-light); }
+:is([data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon)) .ink { filter: url(#appicon-white); }
+[data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon) .back { fill: url(#appicon-clear-light); }
+[data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon) .rim { stroke: url(#appicon-rim-clear-light); }
+[data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .back { fill: url(#appicon-clear-dark); }
+[data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .ink { filter: url(#appicon-white-soft); }
+[data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .rim { stroke: url(#appicon-rim-clear-dark); }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) [data-mono="hide"] { display: none; }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="full"], [data-mono="full"] *):not([fill="none"]) { fill: #fff; }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="full"], [data-mono="full"] *)[stroke]:not([stroke="none"]) { stroke: #fff; }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="dim"], [data-mono="dim"] *):not([fill="none"]) { fill: #6e6e6e; }
+:is([data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon), [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon), [data-icons="tinted-light"] .appicon:not([data-icons="tinted-light"] [data-icons]:not([data-icons="tinted-light"]) .appicon), [data-icons="tinted-dark"] .appicon:not([data-icons="tinted-dark"] [data-icons]:not([data-icons="tinted-dark"]) .appicon)) :is([data-mono="dim"], [data-mono="dim"] *)[stroke]:not([stroke="none"]) { stroke: #6e6e6e; }
+
+/* GLASS */
+
+:root:is([data-icons="clear-light"], [data-icons="clear-dark"]) .dock .face { -webkit-backdrop-filter: blur(6px) saturate(1.4); backdrop-filter: blur(6px) saturate(1.4); clip-path: url(#appicon-shape); }
+:root[data-glass="off"]:is([data-icons="clear-light"], [data-icons="clear-dark"]) .dock .face { -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-glass="off"] [data-icons="clear-light"] .appicon:not([data-icons="clear-light"] [data-icons]:not([data-icons="clear-light"]) .appicon) .back { fill: #d9d9d9; }
+:root[data-glass="off"] [data-icons="clear-dark"] .appicon:not([data-icons="clear-dark"] [data-icons]:not([data-icons="clear-dark"]) .appicon) .back { fill: #2b2b2b; }

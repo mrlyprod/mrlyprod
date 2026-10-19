@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import * as num from '@mrlyprod/mrly/num';
-import { labelOf, maxOf, minOf, tidy } from '../../lib/app/spec.js';
+import { describe, labelOf, maxOf, minOf, tidy } from '../../lib/app/spec.js';
 import { shown } from '../../lib/app/knobs.jsx';
 import { rng } from '../../lib/rand.js';
 import { ledger } from '../../lib/sequences/engine.js';
@@ -50,7 +50,8 @@ test('a line spells its forms and its records, and asks for three terms before i
   expect(PAGE.keys.find((row) => row.button).act).toBe('next');
 });
 
-test('the Card group picks a card and slides its step, labelled, ranged and shown as the card says, the step held inside the card', () => {
+test('the library picks the card, the Card group only slides its step, labelled, ranged and shown as the card says, the step held inside the card', () => {
+  expect(describe(SPEC, { card: 0, step: 5 }).flatMap(({ rows }) => rows.map((row) => row.key))).toEqual(['step']);
   const step = SPEC.find((row) => row.key === 'step');
   const value = { card: 0, step: 5 };
   expect([labelOf(step, value), minOf(step, value), maxOf(step, value), shown(step, 5, value)]).toEqual(['Side up to', 4, 8, 'side 9']);

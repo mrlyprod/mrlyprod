@@ -8,6 +8,7 @@ import { useUnit } from '../app/hooks.js';
 
 const STRIP = 32;
 const FILL = { width: '100%' };
+const MARGIN = '160px';
 
 /* UNIT */
 
@@ -26,21 +27,47 @@ export function useTheme() {
   return tick;
 }
 
+/* SIGHT */
+
+const sights = new Map();
+let eye = null;
+
+export function watch(node, fn) {
+  if (!node || typeof IntersectionObserver !== 'function') return undefined;
+  eye ??= new IntersectionObserver((rows) => {
+    for (const row of rows) {
+      if (!row.isIntersecting) continue;
+      const seen = sights.get(row.target);
+      eye.unobserve(row.target);
+      sights.delete(row.target);
+      seen?.();
+    }
+  }, { rootMargin: MARGIN });
+  sights.set(node, fn);
+  eye.observe(node);
+  return () => {
+    eye.unobserve(node);
+    sights.delete(node);
+  };
+}
+
 /* THUMBS */
 
-export function Thumb({ math, dim, base, code, px = 56, tick = 0, hue = '' }) {
+export function Thumb({ math, dim, base, code, px = 56, tick = 0, hue = '', level }) {
   const at = useRef(null);
+  const [seen, setSeen] = useState(() => typeof IntersectionObserver !== 'function');
+  useEffect(() => (seen ? undefined : watch(at.current, () => setSeen(true))), [seen]);
   useEffect(() => {
     const canvas = at.current;
-    if (!canvas || !math) return undefined;
+    if (!seen || !canvas || !math) return undefined;
     return enqueue(() => {
       const dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
       const side = Math.round(px * dpr);
       canvas.width = side;
       canvas.height = side;
-      thumb(canvas.getContext('2d'), math, dim, base, code, side, paints(canvas, hue));
+      thumb(canvas.getContext('2d'), math, dim, base, code, side, paints(canvas, hue), level);
     });
-  }, [math, dim, base, code, px, tick, hue]);
+  }, [seen, math, dim, base, code, px, tick, hue, level]);
   return <canvas ref={at} width={px} height={px} aria-hidden="true" />;
 }
 

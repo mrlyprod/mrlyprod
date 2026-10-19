@@ -6,11 +6,13 @@ import { DESIGNS, NUMBERS, ink, tile } from '../../lib/designs/tiles.js';
 import { DOWN, LEFT, RIGHT, UP, rounds, starve, start, step, turn } from './engine.js';
 import { STARVED, pick as choose } from './policy.js';
 
-const PARTS = ['head', 'body', 'food'];
+export const PARTS = ['head', 'body', 'food'];
 
-const named = (word) => word[0].toUpperCase() + word.slice(1);
+const HIDE = () => false;
 
-const PIECES = [['', 'Random'], ...DESIGNS.map((design) => [design, named(design)])];
+export const named = (word) => word[0].toUpperCase() + word.slice(1);
+
+export const PIECES = [['', 'Random'], ...DESIGNS.map((design) => [design, named(design)])];
 
 export const SPEC = [
   { key: 'size', label: 'Size', kind: 'slider', def: 16, min: 8, max: 32, step: 2, group: 'Board' },
@@ -18,7 +20,7 @@ export const SPEC = [
   { key: 'apples', label: 'Apples', kind: 'slider', def: 1, min: 1, max: 10, step: 1, group: 'Board' },
   { key: 'tick', label: 'Tick', kind: 'slider', def: 150, min: 50, max: 500, step: 25, unit: 'ms', group: 'Pace' },
   { key: 'play', label: 'Player', kind: 'segment', def: 'me', options: [['me', 'Me'], ['smart', 'Smart'], ['silly', 'Silly']], group: 'Play' },
-  ...PARTS.map((part) => ({ key: part, label: named(part), kind: 'pick', def: '', options: PIECES, group: 'Pieces' })),
+  ...PARTS.map((part) => ({ key: part, label: named(part), kind: 'pick', def: '', options: PIECES, group: 'Pieces', when: HIDE })),
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
 ];
 
@@ -40,11 +42,17 @@ export const PAGE = {
   actions: { arrows: steer, wasd: steer },
 };
 
+export const SAVERS = [
+  { id: 'solo', title: 'One apple', pick: (rand) => ({ play: 'smart', size: 12 + 2 * Math.floor(rand() * 5), wrap: pick(rand, [0, 1]), apples: 1, tick: 200 }) },
+  { id: 'feast', title: 'Many apples', pick: (rand) => ({ play: 'smart', size: 20 + 2 * Math.floor(rand() * 4), wrap: pick(rand, [0, 1]), apples: 5 + Math.floor(rand() * 5), tick: 175 }) },
+];
+
 const TAU = Math.PI * 2;
 const HOLD = 1000;
 const FIT = 0.92;
 const GROUND = 0.07;
 const DIM = 0.35;
+const PREVIEW = 160;
 
 /* SCENE */
 
@@ -129,6 +137,7 @@ export function make(canvas, view, opts = {}) {
     if (!auto) view.wake?.();
   };
   begin();
+  if (view.lock && view.still) for (let i = 0; i < PREVIEW && !state.over; i++) advance();
   paint();
   return { draw, every: value.tick, size: paint, theme: paint, turn: move, restart, stop };
 }

@@ -17,4 +17,4 @@
 
 ## WITNESSES
 
-- walks.md, section "Conduction at large side": the cell value and its bar, the orders, the contrast and Keller readings, the duality products and bars, the level-1 boundary readings, the ratios `sigma(N, 1)/sigma(N, 2)` and the fits, the table, the drifts, the trap ends, the Archie readings and `-0.1412`, and the dim 3 value and exponent.
+- conduction.md, section "Conduction at large side": the cell value and its bar, the orders, the contrast and Keller readings, the duality products and bars, the level-1 boundary readings, the ratios `sigma(N, 1)/sigma(N, 2)` and the fits, the table, the drifts, the trap ends, the Archie readings and `-0.1412`, and the dim 3 value and exponent.

@@ -3,6 +3,7 @@ title: The Mobius meter across digit designs
 lead: The Mobius meter across digit designs: exact transfer between scaled columns, the 47-column cancellation census, a power saving on the dense columns under GRH, the pair route with its major-arc lemma and its `l^1` threshold `1/4`, and square-root cancellation as the open exponent.
 figure: research-mobius
 slug: mobius
+date: 2026-09-01
 ---
 
 # The Mobius meter across digit designs
@@ -10,6 +11,13 @@ slug: mobius
 The Mobius meter across digit designs: exact transfer between scaled columns, the 47-column cancellation census, a power saving on the dense columns under GRH, the pair route with its major-arc lemma and its `l^1` threshold `1/4`, and square-root cancellation as the open exponent.
 
 - [notes/mobius.md](notes/mobius.md): The Mobius meter across digit designs
+- [notes/meter-transfer-census.md](notes/meter-transfer-census.md): The meter, the transfer and the census
+- [notes/digit-strings-across-divisors.md](notes/digit-strings-across-divisors.md): Digit strings across divisors
+- [notes/grh-power-saving.md](notes/grh-power-saving.md): A power saving under GRH at large base
+- [notes/pair-route.md](notes/pair-route.md): The pair route
+- [notes/unconditional-dissection.md](notes/unconditional-dissection.md): The unconditional dissection
+- [notes/half-interval-even-digits.md](notes/half-interval-even-digits.md): The half interval and the even digits
+- [notes/digit-progressions.md](notes/digit-progressions.md): The digit progressions
 - [claims/design-mobius-meter.md](claims/design-mobius-meter.md): The design Mobius meter
 - [claims/digit-progressions.md](claims/digit-progressions.md): The digit progressions
 - [claims/digit-restricted-mobius-exponent.md](claims/digit-restricted-mobius-exponent.md): The digit-restricted Mobius exponent

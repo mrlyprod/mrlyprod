@@ -1,5 +1,4 @@
 import { start } from '../../lib/git/client.ts';
-import { crumbs, paint } from '../../shell/crumbs.js';
 
 /* MARKDOWN */
 
@@ -10,8 +9,6 @@ async function md(text, link) {
 }
 
 /* CHROME */
-
-const trail = () => paint(crumbs(location.pathname));
 
 const opener = () => document.querySelector('[data-pane="right"]');
 
@@ -65,10 +62,7 @@ export function mount(host) {
       mount: host,
       md,
       paint: () => import('../../lib/git/code.ts').then((one) => one.paint),
-      after: () => {
-        trail();
-        contents(host);
-      },
+      after: () => contents(host),
     }),
   );
 }

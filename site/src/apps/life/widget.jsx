@@ -1,34 +1,19 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Btn, Icon, Pick, Segment } from '../../lib/app/controls.jsx';
+import { Btn, Pick, Segment } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { roll } from '../../lib/designs/engine.js';
-import { Thumbs } from '../../lib/designs/pick.jsx';
-import { codeOf, codesOf, dimOf, maskName, sources, spell } from '../../lib/life/engine.js';
-import { SOUP } from '../../lib/life/scene.js';
-import { PRESETS, SPEC, make, wears, worn } from './scene.js';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { PATTERNS, SEEDS, dimOf, maskOf, sow, sources, spell, startOf } from '../../lib/life/engine.js';
+import { SOUP, sprite } from '../../lib/life/scene.js';
+import { PRESETS, RULES, SPEC, make, wears } from './scene.js';
 import { MaskView, Pane, useLife, usePaint } from '../../lib/life/parts.jsx';
-import { useStatus } from '../../lib/app/hooks.js';
+import { useReroll, useStatus } from '../../lib/app/hooks.js';
+import { rng } from '../../lib/rand.js';
 
 const HAND = ['', 'By hand'];
 
-export function Design({ math, dim, code, onChange }) {
-  const now = String(codeOf(code, dim));
-  const options = codesOf(dim).map((one) => {
-    const word = math ? maskName(math, one, dim) : '';
-    return [one, word ? `${one} ${word}` : one];
-  });
-  const named = math && dim === 2 ? math.name.words(2, 2).map(([one]) => one) : [];
-  return (
-    <>
-      <Pick label="Code" value={now} options={options} onChange={onChange} />
-      <Btn disabled={!math} onClick={() => onChange(roll(math, dim, 2))}>
-        <Icon name="casino" />
-        Random
-      </Btn>
-      {named.length > 0 && <Thumbs math={math} dim={2} base={2} codes={named} code={now} onPick={onChange} px={40} />}
-    </>
-  );
-}
+const THUMB = 40;
 
 const listed = (counts) => (counts?.length ? counts.join(' ') : 'none');
 
@@ -50,10 +35,16 @@ export const status = (stat) =>
 
 const clean = (text) => String(text ?? '').trim().toLowerCase();
 
+const has = (text, find) => clean(text).includes(clean(find));
+
+const ink = (ctx) => paints(ctx.canvas).accent;
+
 export function Widget({ value, onChange, onReady, onStatus }) {
   const units = useLife();
   const handle = useRef(null);
   const [stat, setStat] = useState(null);
+  const [find, setFind] = useState('');
+  const tick = useTheme();
   const paint = usePaint(handle);
   const names = useMemo(() => (units ? sources(units.life) : []), [units]);
   const options = useMemo(() => [HAND, ...names.map((one) => [one, one.replaceAll('_', ' ')])], [names]);
@@ -67,12 +58,11 @@ export function Widget({ value, onChange, onReady, onStatus }) {
   const chosen = (text) => (names.includes(clean(text)) ? clean(text) : '');
   const from = (key, i, label) => <Pick key={`${key}-from`} label={label} value={chosen(value[key])} options={options} onChange={(one) => onChange({ [key]: one || spell(stat?.counts?.[i] ?? []) })} />;
   useStatus(onStatus, status(stat));
-  const preset = worn(PRESETS, value);
+  useReroll(value.seed, () => onChange({ from: 'noise' }));
   const folds = [
     {
       name: 'Board',
       items: [
-        'from',
         ...(SOUP(value) ? ['density'] : []),
         'speed',
         <Btn key="step" onClick={act('step')}>Step</Btn>,
@@ -81,7 +71,6 @@ export function Widget({ value, onChange, onReady, onStatus }) {
         <Btn key="clear" onClick={act('clear')}>Clear</Btn>,
       ],
     },
-    { name: 'Presets', live: preset, items: PRESETS.map(([label, one]) => <Btn key={label} on={wears(value, one)} onClick={() => onChange(one)}>{label}</Btn>) },
     { name: 'Rule', live: stat?.name, items: ['born', ...(units ? [from('born', 0, 'Born from')] : []), 'stay', ...(units ? [from('stay', 1, 'Stay from')] : []), 'wrap'] },
     {
       name: 'Mask',
@@ -89,15 +78,45 @@ export function Widget({ value, onChange, onReady, onStatus }) {
       items: [
         <MaskView key="view" mask={stat?.mask} />,
         <Segment key="dim" label="Dim" value={dim} options={SPEC[0].options} onChange={(v) => onChange({ dim: Number(v), code: Number(v) === 1 ? '1' : '7' })} />,
-        <Design key="code" math={units?.math} dim={dim} code={value.code} onChange={(code) => onChange({ code })} />,
         'number',
         'level',
       ],
     },
   ];
+  const start = startOf(value);
+  const soup = (id) => sow({ ...value, from: id }, rng(1), units.math, THUMB, THUMB);
+  const shapes = (list) => list.filter(([, name]) => has(name, find));
+  const seeds = shapes(SEEDS.filter(([id]) => dim === 2 || id !== 'design'));
+  const patterns = dim === 2 ? shapes(Object.entries(PATTERNS).map(([id, { name }]) => [id, name])) : [];
+  const worlds = PRESETS.filter(([label]) => has(label, find));
+  const rules = RULES.filter(([label]) => has(label, find));
   return (
     <>
       {units && <Scene make={made} value={value} onReady={ready} {...paint} />}
+      {units && (
+        <Library find={find} onFind={setFind}>
+          {patterns.length > 0 && (
+            <Shelf name="Patterns" grid>
+              {patterns.map(([id, name]) => <Item key={id} label={name} on={start === id} onPick={() => onChange({ from: id })} art={<Art paint={(ctx, w) => sprite(ctx, soup(id), THUMB, THUMB, w, ink(ctx))} deps={[id, tick]} />} />)}
+            </Shelf>
+          )}
+          {seeds.length > 0 && (
+            <Shelf name="Seeds" grid={dim === 2}>
+              {seeds.map(([id, name]) => <Item key={id} label={name} on={start === id} onPick={() => onChange({ from: id })} art={dim === 2 ? <Art paint={(ctx, w) => sprite(ctx, soup(id), THUMB, THUMB, w, ink(ctx))} deps={[id, tick, value.code, value.number, value.density]} /> : undefined} />)}
+            </Shelf>
+          )}
+          {worlds.length > 0 && (
+            <Shelf name="Worlds">
+              {worlds.map(([label, one]) => <Item key={label} label={label} sub={`B${one.born}/S${one.stay}`} on={wears(value, one)} onPick={() => onChange(one)} art={<Art paint={(ctx, w) => { const { mask } = maskOf(units.life, one); sprite(ctx, mask.data, mask.shape[1], mask.shape[0], w, ink(ctx)); }} deps={[label, tick]} />} />)}
+            </Shelf>
+          )}
+          {rules.length > 0 && (
+            <Shelf name="Rules">
+              {rules.map(([label, one]) => <Item key={label} label={label} sub={`B${one.born}/S${one.stay}`} on={wears(value, one)} onPick={() => onChange(one)} />)}
+            </Shelf>
+          )}
+        </Library>
+      )}
       <Pane spec={SPEC} value={value} onChange={onChange} folds={folds} />
     </>
   );

@@ -9,6 +9,13 @@ export const STEP = 0.05;
 export const ZEROS = 100;
 export const LISTED = 8;
 export const UPTO = [10, 1000];
+export const FIRST = 12;
+export const STATES = [
+  { id: 'smooth', name: 'No zeros', note: 'the smooth guess', set: { view: 'stairs', x: 100, zeros: 0 } },
+  { id: 'few', name: '3 zeros', note: 'the first folds', set: { view: 'stairs', x: 100, zeros: 3 } },
+  { id: 'ten', name: '10 zeros', note: 'the start', set: { view: 'stairs', x: 100, zeros: 10 } },
+  { id: 'all', name: '100 zeros', note: 'the steps appear', set: { view: 'stairs', x: 100, zeros: 100 } },
+];
 export const ROLLS = { t: [10, 150], zeros: [1, 60], x: [50, 500] };
 export const HOLD = 2500;
 export const FADE = 600;
@@ -103,6 +110,15 @@ export function reading(num, plan, t) {
   const count = passed(plan.zeros, t);
   const list = Array.from(plan.zeros.subarray(0, LISTED), (zero) => [zero, zero <= t]);
   return { t, re: p.re, im: p.im, z, theta: line.theta(t), count, next: plan.zeros[count] ?? null, list };
+}
+
+export function shelves(zeros, value) {
+  const walked = Array.from(zeros.subarray(0, FIRST), (zero, i) => {
+    const set = { view: 'walk', t: snap(zero) };
+    return { id: `zero${i + 1}`, label: `Zero ${i + 1}`, sub: zero.toFixed(4), set, on: value.view === 'walk' && value.t === set.t };
+  });
+  const climbed = STATES.map(({ id, name, note, set }) => ({ id, label: name, sub: note, set, on: value.view === 'stairs' && value.x === set.x && value.zeros === set.zeros }));
+  return [['Zeros', walked], ['Staircase', climbed]];
 }
 
 export function roll(seed) {

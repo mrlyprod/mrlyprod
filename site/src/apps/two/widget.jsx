@@ -1,9 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 import { Bar } from '../../lib/app/frame.jsx';
-import { Btn } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { cap, tag } from '../../lib/two/engine.js';
-import { PRESETS, SPEC, make, name as called } from './scene.js';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { cap, read, tag } from '../../lib/two/engine.js';
+import { SHEETS, SPEC, make, name as called, sketch } from './scene.js';
 import { Folds, design, knobs, useReroll, useShots, useStatus } from '../../lib/two/parts.jsx';
 import { useUnit } from '../../lib/app/hooks.js';
 
@@ -33,26 +35,32 @@ export function panes(value, onChange, unit) {
     {
       name: 'Sheet',
       live: `${value.x} by ${value.y}`,
-      body: (
-        <>
-          {knobs(['x', 'y'], value, onChange, SPEC)}
-          <span className="tabs" role="group" aria-label="Presets">
-            {PRESETS.map(([x, y]) => (
-              <Btn key={`${x}.${y}`} on={value.x === x && value.y === y} onClick={() => onChange({ x, y })}>
-                {`${x} by ${y}`}
-              </Btn>
-            ))}
-          </span>
-        </>
-      ),
+      body: knobs(['x', 'y'], value, onChange, SPEC),
     },
   ];
 }
 
+/* SHEETS */
+
+export function Sheets({ value, onChange, unit }) {
+  const tick = useTheme();
+  const { base, code } = read(value);
+  const deps = [unit, base, code, value.number, value.invert, value.tint, tick];
+  return (
+    <Library name="Sheets">
+      <Shelf grid>
+        {SHEETS.map(([label, x, y]) => (
+          <Item key={label} label={label} sub={`${x} by ${y}`} on={value.x === x && value.y === y} onPick={() => onChange({ x, y })} art={<Art deps={[x, y, ...deps]} paint={(ctx, w) => sketch(ctx, unit, value, x, y, w, paints(ctx.canvas, value.tint).accent)} />} />
+        ))}
+      </Shelf>
+    </Library>
+  );
+}
+
 /* WIDGET */
 
-export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }) {
-  const unit = useUnit('math', given);
+export function Widget({ value, onChange, onReady, onExport, onStatus, units }) {
+  const unit = useUnit('math', units?.math);
   const live = useRef(null);
   const now = useRef(value);
   now.current = value;
@@ -76,6 +84,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} />}
+      {unit && <Sheets value={value} onChange={onChange} unit={unit} />}
       <Bar side="right">
         <Folds groups={panes(value, onChange, unit)} />
       </Bar>

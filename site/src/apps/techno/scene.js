@@ -17,11 +17,26 @@ export const SPEC = [
 export const PAGE = {
   spec: SPEC,
   keys: [
-    { key: 'Enter', label: 'Play', does: 'Again to stop', act: 'go' },
+    { key: 'Enter', label: (value, handle) => (handle?.going?.() ? 'Stop' : 'Play'), does: 'Again to stop', act: 'go', button: true, menu: 'Edit' },
     { key: 'm', label: 'Sound', act: 'mute' },
   ],
   actions: { go: (scene) => scene.go?.(), mute: (scene) => scene.mute?.() },
 };
+
+export const FEEL = ['bpm', 'key', 'scale', 'density', 'drive', 'swing'];
+
+export const STYLES = [
+  { id: 'acid', name: 'Acid', song: { bpm: 128, key: 'a', scale: 'minor', density: 0.6, drive: 0.4, swing: 0.1 } },
+  { id: 'warehouse', name: 'Warehouse', song: { bpm: 134, key: 'd', scale: 'phrygian', density: 0.75, drive: 0.6, swing: 0.05 } },
+  { id: 'dub', name: 'Dub', song: { bpm: 120, key: 'f', scale: 'dorian', density: 0.35, drive: 0.2, swing: 0.15 } },
+  { id: 'peak', name: 'Peak time', song: { bpm: 138, key: 'c', scale: 'minor', density: 0.9, drive: 0.7, swing: 0 } },
+  { id: 'hypnotic', name: 'Hypnotic', song: { bpm: 124, key: 'e', scale: 'minor', density: 0.45, drive: 0.3, swing: 0.08 } },
+  { id: 'detroit', name: 'Detroit', song: { bpm: 126, key: 'ds', scale: 'dorian', density: 0.55, drive: 0.25, swing: 0.12 } },
+  { id: 'rave', name: 'Rave', song: { bpm: 140, key: 'g', scale: 'dorian', density: 0.8, drive: 0.55, swing: 0.02 } },
+  { id: 'slow', name: 'Slow burn', song: { bpm: 118, key: 'a', scale: 'phrygian', density: 0.3, drive: 0.5, swing: 0.2 } },
+];
+
+export const styled = (value) => STYLES.find((one) => FEEL.every((key) => String(one.song[key]) === String(value[key])))?.id ?? '';
 
 const TAIL = 2;
 const HEARD = 50;
@@ -29,6 +44,8 @@ const ROWS = 4;
 const WIDE = 17.5;
 const TALL = 6.2;
 const PITCH = 1.35;
+const SIDE = 0.08;
+const STRETCH = 1.7;
 
 /* SONG */
 
@@ -42,6 +59,23 @@ function at(tune, t) {
   const time = tempo(tune);
   const i = time.index(Math.max(0, t - HEARD));
   return { bar: Math.floor(i / 16) % tune.bars, step: i % 16 };
+}
+
+/* STAMP */
+
+export function stamp(ctx, w, h, p, accent) {
+  const pad = Math.round(w * SIDE);
+  const cell = (w - 2 * pad) / 16;
+  const tall = cell * STRETCH;
+  const top = (h - ROWS * tall) / 2;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  [p.kick, p.hat, p.clap, p.bass].forEach((row, r) => {
+    for (let s = 0; s < 16; s++) {
+      ctx.fillStyle = row[s] ? accent : veil(accent, 0.12);
+      ctx.fillRect(pad + s * cell, top + r * tall, Math.max(1, cell - 1), Math.max(1, tall - 1));
+    }
+  });
 }
 
 /* SCENE */

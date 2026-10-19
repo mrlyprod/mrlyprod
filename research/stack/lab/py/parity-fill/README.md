@@ -36,6 +36,6 @@
 
 ## WITNESSES
 
-- `stack.md` THE SPUN PICTURE: the same field this study folds by parity is the one that study averages, scales `n = 1, 3, ..., 55`, `28` layers, disc-masked raster; the mean-blend paper coverage `0.7682` there and the parity fill here are two blends of one stack.
-- `stack.md` SELECTING THE SCALES: the moire correlation law's coprime independence is what makes the exact and independent fills agree at `N = 3` and `N = 5`, and the joint mass `m_{3,5,7} = 0` is what makes them disagree at `N = 7`.
+- `franel-and-eisenstein.md` THE SPUN PICTURE: the same field this study folds by parity is the one that study averages, scales `n = 1, 3, ..., 55`, `28` layers, disc-masked raster; the mean-blend paper coverage `0.7682` there and the parity fill here are two blends of one stack.
+- `stacking-and-spinning.md` SELECTING THE SCALES: the moire correlation law's coprime independence is what makes the exact and independent fills agree at `N = 3` and `N = 5`, and the joint mass `m_{3,5,7} = 0` is what makes them disagree at `N = 7`.
 - `mrly::math::spin::Blend::Parity`: the blend this study measures, the sum of the copies folded to its parity.

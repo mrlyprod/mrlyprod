@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
 import { rng } from '../../lib/rand.js';
-import { REACH, factors, formula, shuffle, step } from './engine.js';
-import { make, named } from './scene.js';
-import { useUnit } from '../../lib/app/hooks.js';
+import { POLYS, REACH, SPIRALS, factors, formula, holds, shuffle, step } from './engine.js';
+import { make, named, sketch } from './scene.js';
+import { useReroll, useUnit } from '../../lib/app/hooks.js';
+
+const ART = 112;
 
 const pct = (x, places = 1) => `${(x * 100).toFixed(places)}%`;
 
@@ -24,8 +29,6 @@ export function verdict(pick) {
   return pick.prime ? 'prime' : `composite, ${factors(pick.factors)}`;
 }
 
-export const rolled = (unit, seed, was) => (unit && seed !== was ? shuffle(unit, rng(seed)) : null);
-
 export function readouts(f) {
   const pick = f.pick?.off ? [['Cell', 'off the sheet']] : f.pick ? [['Cell', `${f.pick.n} on ring ${f.pick.ring} at ${f.pick.x}, ${f.pick.y}`], ['Verdict', verdict(f.pick)]] : [];
   const line = f.line ? [['Values', values(f.line)], ['Streak', streak(f.line)], ['Hits', `${f.line.hits} of ${f.line.count}`], ['Share', pct(f.line.share)]] : [];
@@ -41,13 +44,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   now.current = value;
   const change = useRef(onChange);
   change.current = onChange;
-  const seed = useRef(value.seed);
-  useEffect(() => {
-    const next = rolled(unit, value.seed, seed.current);
-    if (!next) return;
-    seed.current = value.seed;
-    onChange(next);
-  }, [unit, value.seed]);
+  const tick = useTheme();
+  useReroll(value.seed, (next) => unit && change.current(shuffle(unit, rng(next))));
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onFacts: setFacts }), [unit]);
   const ready = (handle) => {
     live.current = handle;
@@ -73,8 +71,29 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const rows = facts ? readouts(facts) : [];
   const said = JSON.stringify(rows);
   useEffect(() => onStatus?.(rows), [said]);
+  const shelf = (name, list, sub) => (
+    <Shelf name={name} grid>
+      {list.map((one) => (
+        <Item
+          key={one.id}
+          label={one.name}
+          sub={sub(one)}
+          title={one.note}
+          on={holds(value, one.set)}
+          onPick={() => change.current(one.set)}
+          art={<Art px={ART} paint={(ctx, w, h, dpr) => sketch(unit, one.set, ctx, w, h, dpr, paints(ctx.canvas, value.tint))} deps={[unit, value.tint, tick]} />}
+        />
+      ))}
+    </Shelf>
+  );
   return (
     <>
+      {unit && (
+        <Library>
+          {shelf('Spirals', SPIRALS, (one) => one.note)}
+          {shelf('Prime polynomials', POLYS, (one) => formula(one.set.a, one.set.b, one.set.c))}
+        </Library>
+      )}
       {unit && <Scene make={scene} value={value} onReady={ready} onClick={tap} aria-label={LABEL} />}
       {!unit && (
         <Bar side="status">

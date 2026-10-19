@@ -4,7 +4,7 @@ import { palette as hues } from '../../lib/theme/palette.gen.js';
 import { defaults, describe } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { live } from '../../lib/app/page.jsx';
-import { fitted, span } from './engine.js';
+import { EDGE, fitted, landed, span } from './engine.js';
 import { PAGE, SPEC, make, named } from './scene.js';
 
 const pen = (log) =>
@@ -65,8 +65,6 @@ const rects = (log) => log.filter(([name]) => name === 'rect');
 
 const cells = () => rects(laid()).length;
 
-const ground = () => rects(sheets.at(-2).log);
-
 const painted = (log, color) => {
   const from = log.findIndex(([name, v]) => name === 'fillStyle' && v === color);
   if (from < 0) return 0;
@@ -74,11 +72,11 @@ const painted = (log, color) => {
   return rects(log.slice(from, to < 0 ? undefined : to)).length;
 };
 
-test('make draws nothing, the first draw lays the ground and no mark yet, and a picture at a t is the same reached in one jump or by steps', () => {
+test('make draws nothing, the first draw lays the one at the centre, the ground winds with the numbers, and a picture at a t is the same reached in one jump or by steps', () => {
   const stepped = open({ side: 101 });
   expect(stepped.quiet).toBe(0);
   stepped.at(0);
-  expect([ground().length, cells()]).toEqual([101 * 101, 0]);
+  expect(cells()).toBe(1);
   for (let t = 0; t <= 3000; t += 100) stepped.at(t);
   const total = cells();
   const stepLog = [...stepped.log];
@@ -86,20 +84,33 @@ test('make draws nothing, the first draw lays the ground and no mark yet, and a 
   const jumpLog = [...jumped.at(3000)];
   expect(cells()).toBe(total);
   expect(jumpLog).toEqual(stepLog);
-  expect(total).toBeGreaterThan(1);
+  expect(total).toBe(landed(num, 'Square', 50, 3000 / span(50)));
+  expect(total).toBeLessThan(101 * 101);
   expect(stepLog.find(([name]) => name === 'drawImage')).toEqual(['drawImage', 'layer', 0, 0]);
 });
 
-test('under reduced motion the first draw lays the whole sheet, the ground under a mark for each prime when faint and the marks alone when not, and a second draw is a no-op', () => {
+test('under reduced motion the first draw lays the whole sheet, a cell for every number when faint and the marks alone when not, and a second draw is a no-op', () => {
   const faint = open({ side: 101, a: 0 }, true);
   faint.at(0);
-  expect([ground().length, cells()]).toEqual([101 * 101, num.prime.prime_count(101 * 101)]);
-  expect(laid().filter(([name]) => name === 'drawImage')).toEqual([['drawImage', 'layer', 0, 0]]);
+  expect(cells()).toBe(101 * 101);
   expect(faint.at(0)).toEqual([]);
   const bare = open({ side: 101, a: 0, faint: 0 }, true);
   bare.at(0);
   expect(cells()).toBe(num.prime.prime_count(101 * 101));
-  expect(laid().some(([name]) => name === 'drawImage')).toBe(false);
+});
+
+test('the sheet is centred with the margin for the pills on the tighter axis, and the ground is its cells and nothing more', () => {
+  const live = open({ side: 101, a: 0 }, true);
+  live.at(0);
+  const boxes = rects(laid());
+  const left = Math.min(...boxes.map(([, x]) => x));
+  const right = Math.max(...boxes.map(([, x, , w]) => x + w));
+  const top = Math.min(...boxes.map(([, , y]) => y));
+  const bottom = Math.max(...boxes.map(([, , y, , h]) => y + h));
+  expect(boxes).toHaveLength(101 * 101);
+  expect([Math.abs(left + right - 800) <= 1, Math.abs(top + bottom - 600) <= 1]).toEqual([true, true]);
+  expect(Math.abs(bottom - top - (600 - 4 * EDGE)) <= 1).toBe(true);
+  expect(right - left).toBe(bottom - top);
 });
 
 test('the sheet winds once: past the span it stays whole and draws nothing new', () => {
@@ -108,7 +119,7 @@ test('the sheet winds once: past the span it stays whole and draws nothing new',
   live.at(length);
   const full = cells();
   const made = sheets.length;
-  expect(full).toBe(num.prime.prime_count(101 * 101));
+  expect(full).toBe(101 * 101);
   expect([live.at(length * 3), live.at(length * 50)]).toEqual([[], []]);
   expect([cells(), sheets.length]).toEqual([full, made]);
 });
@@ -123,7 +134,7 @@ test('the line lands over the layer, orange on a prime and blue on a composite, 
   expect(painted(early, hues.orange) + painted(early, hues.blue)).toBe(0);
 });
 
-test('a change of c keeps the layer and the ground, lands the whole new line at once mid-wind, and tells the host', () => {
+test('a change of c keeps the layer, lands the whole new line at once mid-wind, and tells the host', () => {
   const live = open({ side: 101 });
   live.at(100);
   const made = sheets.length;
@@ -136,16 +147,16 @@ test('a change of c keeps the layer and the ground, lands the whole new line at 
   expect(live.scene.facts).toBe(live.told.at(-1));
 });
 
-test('a change of mark rebuilds the layer on the kept ground, a change of tint lays the ground again, and faint off lays none', () => {
+test('a change of mark, tint or faint lays the layer again', () => {
   const live = open({ side: 101 }, true);
   live.at(0);
   const made = sheets.length;
   live.set({ mark: 'twin' });
   expect(sheets.length).toBe(made + 1);
   live.set({ tint: 'red' });
-  expect([sheets.length, ground().length]).toEqual([made + 3, 101 * 101]);
+  expect(sheets.length).toBe(made + 2);
   live.set({ faint: 0 });
-  expect(sheets.length).toBe(made + 4);
+  expect(sheets.length).toBe(made + 3);
 });
 
 test('a change of side or lattice reads the sheet again and lets go of the tap, and a change of c keeps it', () => {
@@ -163,7 +174,7 @@ test('a change of side or lattice reads the sheet again and lets go of the tap, 
 test('a tap names the cell under it with its ring, its place and its factors, rings it, a second tap lets go, and one off the sheet says so', () => {
   const live = open({ side: 21 }, true);
   live.at(0);
-  const px = fitted('square', 10, 800, 600);
+  const px = fitted('square', 10, 800, 600, EDGE * 2);
   expect(live.scene.pick(0.5, 0.5)).toMatchObject({ n: 1, x: 0, y: 0, ring: 0, prime: false, factors: [] });
   expect(live.log.filter(([name]) => name === 'arc')).toHaveLength(1);
   expect(live.scene.pick(0.5 + px / 800, 0.5)).toMatchObject({ n: 2, x: 1, y: 0, ring: 1, prime: true });
@@ -178,13 +189,13 @@ test('a tap mid-wind lays the whole sheet at once', () => {
   const live = open({ side: 101, a: 0 });
   live.at(100);
   live.scene.pick(0.5, 0.5);
-  expect(cells()).toBe(num.prime.prime_count(101 * 101));
+  expect(cells()).toBe(101 * 101);
 });
 
 test('a tap on the hexagon sheet finds the hexagon under it', () => {
   const live = open({ side: 21, lattice: 'hex' }, true);
   live.at(0);
-  const px = fitted('hex', 10, 800, 600);
+  const px = fitted('hex', 10, 800, 600, EDGE * 2);
   expect(live.scene.pick(0.5, 0.5)).toMatchObject({ n: 1 });
   expect(live.scene.pick(0.5 + px / 800, 0.5)).toMatchObject({ n: 2, ring: 1 });
   const [q, r] = num.spiral.Lattice.xy('Hex', 7);

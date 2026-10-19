@@ -1,6 +1,7 @@
 mod blocks;
 mod census;
 mod design;
+mod mass;
 mod radii;
 mod terms;
 
@@ -91,6 +92,13 @@ fn main() {
                 (n == 6 && args[4] == "probe").then(|| args[5].bytes().map(|b| b - b'0').collect()),
             ),
         },
+        Some("mass") => {
+            mass::report(
+                args[1].parse().expect("a"),
+                args[2].parse().expect("b"),
+                args[3].parse().expect("top level"),
+            );
+        }
         Some("ray") => {
             radii::single(args[1].parse().expect("a"), args[2].parse().expect("b"));
         }

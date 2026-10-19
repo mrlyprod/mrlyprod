@@ -3,6 +3,7 @@ title: Information
 lead: A render as data: the rearranged SVD reads a design's code out of noise and peels a magic word, while the fractal codebook loses to deflate.
 figure: research-information
 slug: information
+date: 2026-09-06
 ---
 
 # Information

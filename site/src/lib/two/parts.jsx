@@ -1,22 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { download, text } from '../app/export.js';
 import { Fold } from '../app/controls.jsx';
 import { Knob } from '../app/knobs.jsx';
 import { rng } from '../rand.js';
-import { roll, settle } from '../designs/engine.js';
-import { Pick, read } from '../designs/pick.jsx';
-import { DIM, named } from './engine.js';
+import { canon, roll } from '../designs/engine.js';
+import { useReroll as onRoll } from '../app/hooks.js';
+import { DIM, named, read } from './engine.js';
 import { SIZES } from './scene.js';
 
 const WAIT = 90;
 
 export function useReroll(value, onChange, math) {
-  const seen = useRef(value.seed);
-  useEffect(() => {
-    if (value.seed === seen.current || !math) return;
-    seen.current = value.seed;
-    onChange({ code: roll(math, DIM, read(value).base, rng(value.seed)) });
-  }, [value.seed, math]);
+  onRoll(value.seed, (seed) => math && onChange({ code: roll(math, DIM, read(value).base, rng(seed)) }));
 }
 
 export function useStatus(live, key, onStatus, rows) {
@@ -55,19 +50,13 @@ export function knobs(keys, value, onChange, spec, units) {
 }
 
 export function design(value, onChange, unit, spec) {
-  const pick = ({ dim, ...patch }) => onChange(patch);
   const { base, code } = read(value);
-  const shown = unit ? settle(unit, DIM, base, code, rng(value.seed)) : code;
+  const shown = unit ? canon(unit, DIM, base, code) : code;
   const name = unit ? named(unit, shown, base) : '';
   const word = spec.find((one) => one.key === 'number').label.toLowerCase();
   return {
     name: 'Design',
     live: [name || shown, `${word} ${value.number}`, `level ${value.level}`].join(' · '),
-    body: (
-      <>
-        {unit && <Pick value={{ ...read(value), dim: DIM }} onChange={pick} math={unit} dims={[DIM]} />}
-        {knobs(['number', 'level'], value, onChange, spec, unit && { math: unit })}
-      </>
-    ),
+    body: knobs(['number', 'level'], value, onChange, spec, unit && { math: unit }),
   };
 }

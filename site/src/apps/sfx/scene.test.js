@@ -2,7 +2,8 @@ import { expect, test } from 'bun:test';
 import { defaults } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { audio } from '../../../test/fake.js';
-import { SPEC, analyse, band, make, seconds } from './scene.js';
+import { tidy } from '../../lib/app/spec.js';
+import { NAMES, PRESETS, SHAPE, SPEC, analyse, band, lasts, make, preset, seconds } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -71,4 +72,10 @@ test('analyse reads a sine at its level and in its band', () => {
   expect([Math.max(...seen.peaks).toFixed(2), Math.min(...seen.peaks).toFixed(2)]).toEqual(['0.50', '-0.50']);
   const column = Array.from(seen.heat.slice(4 * 48, 5 * 48));
   expect(column.indexOf(Math.max(...column))).toBe(band(1000));
+});
+
+test('every preset is a sound the knobs keep, a value finds its preset, and an effect says how long it lasts', () => {
+  const kept = PRESETS.map((one) => NAMES.includes(one.set.effect) && ['effect', ...SHAPE].every((key) => tidy(SPEC, one.set)[key] === one.set[key]));
+  expect([kept.every(Boolean), new Set(PRESETS.map((one) => one.id)).size]).toEqual([true, PRESETS.length]);
+  expect([preset({ ...defaults(SPEC), ...PRESETS[2].set }), preset({ ...defaults(SPEC), ...PRESETS[2].set, pitch: 0 }), lasts('tick'), lasts('hit'), lasts('jump')]).toEqual([PRESETS[2].id, '', '20 ms', '0.8 s', '2.6 s']);
 });

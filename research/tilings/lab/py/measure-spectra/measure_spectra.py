@@ -662,10 +662,14 @@ def built_sets(b, ms):
         per[m] = n
     return np.unique(np.sort(np.vstack(rows), axis=1), axis=0), per
 
+@lru_cache(maxsize=None)
+def covering_of(orders, b):
+    return covering(orders, b)
+
 def seven_tally(A, Z, b, shapes, tally, examples):
     e2 = vq(b, 2)
     tally["sets"] += A.shape[0]
-    for key in ("not", "no order", "v2 values 0", "rho_2 0"):
+    for key in ("not", "no order", "v2 values 0", "rho_2 0", "bound 1"):
         tally[key] += A.shape[0] - len(Z)
     for i, orders in Z.items():
         F = tuple(int(x) for x in A[i])
@@ -679,8 +683,7 @@ def seven_tally(A, Z, b, shapes, tally, examples):
         tally["odd order"] += odd
         tally["v2 values %d" % len(v2)] += 1
         tally["rho_2 %d" % rho] += 1
-        if odd or rho >= 3:
-            tally["witness"] += covering(orders, b) >= 7
+        tally["bound %d" % covering_of(frozenset(orders), b)] += 1
         if shapes or len(v2) >= 2:
             for m in orders:
                 if len(factor(m)) > 1:
@@ -690,6 +693,10 @@ def seven_tally(A, Z, b, shapes, tally, examples):
 
 def fmt(tally):
     return ", ".join("%s %d" % kv for kv in sorted(tally.items()))
+
+def bound_line(tally):
+    bounds = sorted(int(k[6:]) for k in tally if k.startswith("bound "))
+    return "covering bound of every non-tiling set at most %d, with bound 7 or more %d" % (max(bounds), sum(tally["bound %d" % c] for c in bounds if c >= 7))
 
 def full_census(b, shapes):
     t1 = time.time()
@@ -701,7 +708,7 @@ def full_census(b, shapes):
         A = np.hstack([np.zeros((n, 1), dtype=np.int64), np.full((n, 1), f1, dtype=np.int64), A])
         A = A[np.gcd.reduce(A, axis=1) == 1]
         seven_tally(A, relevant(A, b, ms), b, shapes, tally, examples)
-    print("base %d, every 7-set with 0 and gcd 1 in {0..%d}: orders tested %s; %s; examples with two 2-adic exponents %s (%.1f s)" % (b, b - 1, ms, fmt(tally), examples, time.time() - t1), flush=True)
+    print("base %d, every 7-set with 0 and gcd 1 in {0..%d}: orders tested %s; %s; %s; examples with two 2-adic exponents %s (%.1f s)" % (b, b - 1, ms, fmt(tally), bound_line(tally), examples, time.time() - t1), flush=True)
 
 def built_census(b):
     t1 = time.time()
@@ -710,7 +717,7 @@ def built_census(b):
     g = np.gcd.reduce(A, axis=1) == 1
     tally, examples = defaultdict(int), []
     seven_tally(A[g], relevant(A[g], b, ms), b, b <= 120, tally, examples)
-    print("base %d, every 7-set with 0 in {0..%d} built from the asymmetric splittings: lifts per order %s, %d distinct sets, %d with gcd 1, orders tested %s; %s; examples with two 2-adic exponents %s (%.1f s)" % (b, b - 1, dict(sorted(per.items())), len(A), int(g.sum()), ms, fmt(tally), examples, time.time() - t1), flush=True)
+    print("base %d, every 7-set with 0 in {0..%d} built from the asymmetric splittings: lifts per order %s, %d distinct sets, %d with gcd 1, orders tested %s; %s; %s; examples with two 2-adic exponents %s (%.1f s)" % (b, b - 1, dict(sorted(per.items())), len(A), int(g.sum()), ms, fmt(tally), bound_line(tally), examples, time.time() - t1), flush=True)
 
 def seven(full=(30, 60), built=(30, 60, 90, 120, 210)):
     t0 = time.time()

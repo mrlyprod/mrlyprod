@@ -64,18 +64,18 @@
 
 ## WITNESSES
 
-- coprime.md THE WINDOW AT DIMENSION ONE: the uncapped `A(X) = 32 .. 184266` at `X = 32 .. 16384`, `log A / log X` inside `[1.2057, 1.2494]`, and `A(3^n) >= 0.655 * 3^n` at `n = 13`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the band, the weight-layer sandwich and the reduction `Z(w) <= C w^beta` giving O at every `alpha < 1/(1+beta)`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the band cap unviolated to height 3000, largest reach `0.9865` of it, and `log Z_max / log W` inside `[0.5000, 0.7010]`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the top-digit law `max(z_1, z_2) > 2 min(z_1, z_2)` and the empty slope band `[1/3, 2/3]`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the congruence-layer identity `Z(w) <= 2 |R_k|`, sharp at `k = 2, 3, 4` and slack at `w = 797161`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the metric route, `n N_P(3^-n) / 3^n` rising `2.4132 -> 2.4785` over `n = 12..18`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the per-weight corridor, `0.7093` at `w = 121`, `1.5975` at `w = 1093`, the repunit and shift families to `w = 1594324`, and `beta = log 2 / log 3`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the divisor route refuted by `D_2h(1 + 3^h) >= 2^h` and worst modulus `q = 244` at `1.8094`, the short-witness route by mean `lev` running `3.875 -> 27.287`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the criticality reading `k c_k -> 1 / log 3 = 0.9102392` against `[0.8418, 0.8628]`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the repunit floor formula and its values to `k = 15`, the lift family and the deep tail `18, 16, 108, 162, 624`, the excess ratio `X_k` and the drift factorisation.
-- coprime.md THE WINDOW AT DIMENSION ONE: the cyclotomic lift `m_T = Phi_6(3^t)` dividing `3^(3t) + 1`, the peak `376843.283` at `k = 19`, and the refuted exponent range against the one convergence needs.
-- coprime.md THE WINDOW AT DIMENSION ONE: the lift union to `k = 19`, `L_k < 3/2` with its band, `agg_k` inside `[1.01748, 1.11457]` and `U_k / Phi_k` across `[1.19611, 1.36517]`.
-- coprime.md THE WINDOW AT DIMENSION ONE: the Fourier form of the lift count, the antipodal family `(3^(pt) + 1)/(3^t + 1)` with `N_T = 2^(((p-1)/2)(t-s) + s)`, the cut-free aggregate `agg'_k` inside `[1.03919, 1.3403]`, and the absolute sum growing by `1.26` or more per step (`ratio.py agg`).
-- coprime.md THE WINDOW AT DIMENSION ONE: the block ladder, the `2 * 3^k + 1` binary multiples of `R_k` below `3^(3k)`, the depth census `V_k` and the share of the deep tail it captures falling `0.4444 -> 0.1025` over `k = 11..15` (`ratio.py tail`).
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the uncapped `A(X) = 32 .. 184266` at `X = 32 .. 16384`, `log A / log X` inside `[1.2057, 1.2494]`, and `A(3^n) >= 0.655 * 3^n` at `n = 13`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the band, the weight-layer sandwich and the reduction `Z(w) <= C w^beta` giving O at every `alpha < 1/(1+beta)`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the band cap unviolated to height 3000, largest reach `0.9865` of it, and `log Z_max / log W` inside `[0.5000, 0.7010]`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the top-digit law `max(z_1, z_2) > 2 min(z_1, z_2)` and the empty slope band `[1/3, 2/3]`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the congruence-layer identity `Z(w) <= 2 |R_k|`, sharp at `k = 2, 3, 4` and slack at `w = 797161`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the metric route, `n N_P(3^-n) / 3^n` rising `2.4132 -> 2.4785` over `n = 12..18`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the per-weight corridor, `0.7093` at `w = 121`, `1.5975` at `w = 1093`, the repunit and shift families to `w = 1594324`, and `beta = log 2 / log 3`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the divisor route refuted by `D_2h(1 + 3^h) >= 2^h` and worst modulus `q = 244` at `1.8094`, the short-witness route by mean `lev` running `3.875 -> 27.287`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the criticality reading `k c_k -> 1 / log 3 = 0.9102392` against `[0.8418, 0.8628]`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the repunit floor formula and its values to `k = 15`, the lift family and the deep tail `18, 16, 108, 162, 624`, the excess ratio `X_k` and the drift factorisation.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the cyclotomic lift `m_T = Phi_6(3^t)` dividing `3^(3t) + 1`, the peak `376843.283` at `k = 19`, and the refuted exponent range against the one convergence needs.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the lift union to `k = 19`, `L_k < 3/2` with its band, `agg_k` inside `[1.01748, 1.11457]` and `U_k / Phi_k` across `[1.19611, 1.36517]`.
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the Fourier form of the lift count, the antipodal family `(3^(pt) + 1)/(3^t + 1)` with `N_T = 2^(((p-1)/2)(t-s) + s)`, the cut-free aggregate `agg'_k` inside `[1.03919, 1.3403]`, and the absolute sum growing by `1.26` or more per step (`ratio.py agg`).
+- the-window-occupancy-and-the-band.md THE WINDOW AT DIMENSION ONE: the block ladder, the `2 * 3^k + 1` binary multiples of `R_k` below `3^(3k)`, the depth census `V_k` and the share of the deep tail it captures falling `0.4444 -> 0.1025` over `k = 11..15` (`ratio.py tail`).
 - research/claims/ the top-digit, congruence-layer, occupancy-relaxation and `R_k`-offset rows.

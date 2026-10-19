@@ -1,5 +1,5 @@
 import { tidy } from '../../lib/app/spec.js';
-import { NAMES, SPEED, canon, name, pickCode, route, teach } from '../../lib/space/bang.js';
+import { NAMES, SPEED, canon, name, route, teach } from '../../lib/space/bang.js';
 import { look as aim } from '../../lib/gl/camera.js';
 import { blank, context } from '../../lib/gl/gl2.js';
 import { hud } from './hud.js';
@@ -8,12 +8,18 @@ import { GRADES, march, tone } from '../../lib/space/march.js';
 import { post } from '../../lib/gl/post.js';
 import { trails } from './trails.js';
 import { add } from '../../lib/gl/vec.js';
+import { pick } from '../../lib/rand.js';
 import { wasm } from '../../lib/units/index.js';
 
+const HIDE = () => false;
+const FAMILY = NAMES.map(([code]) => code);
+const GRIDS = [3, 5];
+const SLOW = 0.5;
+
 export const SPEC = [
-  { key: 'code', label: 'Code', kind: 'slider', def: 23, min: -1, max: 255, step: 1, group: 'Shape' },
+  { key: 'code', label: 'Code', kind: 'slider', def: 23, min: 0, max: 255, step: 1, group: 'Shape', when: HIDE },
   { key: 'n', label: 'N', kind: 'segment', def: 3, options: [[3, '3'], [5, '5']], group: 'Shape' },
-  { key: 'pick', label: 'Pick', kind: 'segment', def: 'all', options: [['all', 'All'], ['flyable', 'Flyable'], ['named', 'Named'], ['family', 'Family']], group: 'Shape' },
+  { key: 'pick', label: 'Pick', kind: 'segment', def: 'all', options: [['all', 'All'], ['flyable', 'Flyable'], ['named', 'Named'], ['family', 'Family']], group: 'Shape', when: HIDE },
   { key: 'speed', label: 'Speed', kind: 'slider', def: 1, min: 0.25, max: 2, step: 0.25, group: 'Flight' },
   { key: 'path', label: 'Path', kind: 'toggle', def: 1, group: 'Flight' },
   { key: 'pilot', label: 'Pilot', kind: 'segment', def: 'steady', options: [['steady', 'Steady'], ['fighter', 'Fighter'], ['coaster', 'Coaster']], group: 'Flight' },
@@ -25,7 +31,31 @@ export const SPEC = [
 
 export const units = wasm('math');
 
-export const PAGE = { spec: SPEC, units, record: true };
+export const PAGE = {
+  spec: SPEC,
+  units,
+  design: { dim: 3, base: 2, code: 'code' },
+  keys: [
+    { key: 'ArrowRight', label: 'Next shape', act: 'next', menu: 'View' },
+    { key: 'ArrowLeft', label: 'Previous shape', act: 'prev', menu: 'View' },
+  ],
+  actions: { next: (scene) => scene.step?.(1), prev: (scene) => scene.step?.(-1) },
+  record: true,
+};
+
+const flight = (look) => (rand) => ({ code: pick(rand, FAMILY), n: pick(rand, GRIDS), speed: SLOW, path: 0, pilot: 'steady', look, palette: 'accent', quality: 'low' });
+
+export const SAVERS = [
+  { id: 'studio', title: 'Studio', pick: flight('studio') },
+  { id: 'graphic', title: 'Graphic', pick: flight('graphic') },
+  { id: 'haze', title: 'Haze', pick: flight('haze') },
+];
+
+export function step(pool, code, by) {
+  const at = pool.indexOf(code);
+  if (at >= 0) return pool[(at + by + pool.length) % pool.length];
+  return (by > 0 ? (pool.find((one) => one > code) ?? pool[0]) : (pool.findLast((one) => one < code) ?? pool.at(-1))) ?? code;
+}
 
 const FOV = 1.25;
 const OPEN = -4000;
@@ -42,8 +72,7 @@ export function make(canvas, view, opts = {}) {
   if (!gl) return blank(canvas);
   const value = tidy(SPEC, opts);
   const seed = Number.isFinite(Number(opts.seed)) ? Number(opts.seed) >>> 0 : 0;
-  const { n } = value;
-  const code = pickCode(math, value, seed);
+  const { n, code } = value;
   const design = { code, n };
   const info = teach(math, code, n);
   const path = info.kept ? route(math, design, seed, { pilot: value.pilot }) : null;
@@ -127,6 +156,7 @@ export function make(canvas, view, opts = {}) {
       film.end(grade);
     }
     said = words(state);
+    if (view.lock) return;
     face.lines(said, 'tl');
     face.draw();
   };

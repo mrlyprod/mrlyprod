@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
+import { paints, veil } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
 import { rng } from '../../lib/rand.js';
 import { Scene } from '../../lib/app/page.jsx';
 import { KINDS } from '../../lib/sequences/chart.js';
@@ -9,73 +12,52 @@ import { RECORDS, facts, hit } from '../../lib/sequences/facts.js';
 import { glyph, title } from '../../lib/sequences/paint.js';
 import { Found, Record, shift } from '../../lib/sequences/parts.jsx';
 import { make, named } from './scene.js';
-import { useUnit } from '../../lib/app/hooks.js';
+import { useReroll, useUnit } from '../../lib/app/hooks.js';
 
 const SLICE = 8;
 const PULSE = 90;
 const PEEK = 6;
 const SIDE = 3;
-const THUMB = 1.25;
 const PER = 50;
+const HINT = '8, 21, 40 or carpet or A000567 or 23';
+const MODES = [['one', 'One'], ['many', 'Compare']];
 
 const roll = (seed, n) => Math.floor(rng(seed >>> 0)() * n);
 
 const terse = (terms, count) => terms.slice(0, count).join(', ') + (terms.length > count ? ', …' : '');
 
-const tone = (i, m) => `color-mix(in srgb, var(--accent) ${Math.round(100 - (m > 1 ? (62 * i) / (m - 1) : 0))}%, var(--art))`;
-
-const ROW = { display: 'block', width: '100%', minHeight: 0, padding: '6px 8px', background: 'none', border: 0, borderLeft: '3px solid transparent', borderRadius: 0, textAlign: 'left', lineHeight: 1.4 };
-
-const LINE = { display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
-
-const CHIP = { marginRight: 6, fontSize: 'var(--t1)', textTransform: 'lowercase' };
-
-const STATUS = { Proved: 'var(--green)', Verified: 'var(--teal)', Collision: 'var(--orange)' };
-
-function Thumb({ cells }) {
+export const stamp = (cells) => (ctx, w, h) => {
   const shape = glyph(cells);
-  if (!shape) return null;
-  return (
-    <svg viewBox={`0 0 ${shape.width} ${SIDE}`} height={`${THUMB}em`} width={`${(THUMB * shape.width) / SIDE}em`} fill="currentColor" aria-hidden="true" style={{ flex: 'none', alignSelf: 'center', marginLeft: 6 }}>
-      {cells.map((v, i) => <rect key={i} x={Math.floor(i / (SIDE * SIDE)) * (SIDE + 1) + (i % SIDE) + 0.08} y={(Math.floor(i / SIDE) % SIDE) + 0.08} width="0.84" height="0.84" opacity={v ? 1 : 0.15} />)}
-    </svg>
-  );
-}
+  if (!shape) return;
+  const { accent } = paints(ctx.canvas);
+  const pad = w * 0.08;
+  const unit = (w - 2 * pad) / shape.width;
+  const size = unit - Math.max(1, unit / 6);
+  const y0 = (h - SIDE * unit) / 2;
+  cells.forEach((v, i) => {
+    ctx.fillStyle = v ? accent : veil(accent, 0.15);
+    ctx.fillRect(pad + (Math.floor(i / (SIDE * SIDE)) * (SIDE + 1) + (i % SIDE)) * unit, y0 + (Math.floor(i / SIDE) % SIDE) * unit, size, size);
+  });
+};
 
-const Row = ({ row, hit, on, tone, typed, last, choose, add }) => (
-  <li style={{ display: 'flex', alignItems: 'stretch', color: on ? 'var(--fg)' : 'var(--dim)' }}>
-    <Thumb cells={row.cells} />
-    <button type="button" aria-pressed={on} onClick={choose} style={{ ...ROW, flex: 1, minWidth: 0, borderLeftColor: on ? tone : 'transparent', color: 'inherit' }}>
-      <span style={LINE}>
-        <b style={{ fontWeight: 500 }}>{row.label}</b> · {measureOf(row.measure)?.label} by {row.axis}
-      </span>
-      <span className="mono" style={{ ...LINE, fontSize: 'var(--t2)' }}>
-        {typed && <span style={{ ...CHIP, color: 'var(--purple)' }}>typed</span>}
-        {hit && <span style={{ ...CHIP, color: STATUS[hit.status] }}>{hit.status}</span>}
-        {hit && <span style={{ color: 'var(--link)', marginRight: 6 }}>{hit.id}{shift(hit)}</span>}
-        {row.terms.length ? terse(row.terms, PEEK) : '…'}
-      </span>
-    </button>
-    <button type="button" className="icon" aria-label={on ? 'Drop' : 'Add'} aria-pressed={on} disabled={on && last} onClick={add} style={{ minWidth: '1.75rem', fontFamily: 'var(--mono)' }}>
-      {on ? '−' : '+'}
-    </button>
-  </li>
-);
+const hover = (row, hit, typed) => [typed ? 'typed' : '', hit ? `${hit.status} ${hit.id}${shift(hit)} ${hit.name}` : '', row.terms.length ? terse(row.terms, PEEK) : '…'].filter(Boolean).join(' · ');
 
-const PAGER = { display: 'flex', gap: 'var(--s2)', alignItems: 'center', padding: 'var(--s1) var(--s1) var(--s2)', fontSize: 'var(--t2)' };
+const PAGER = { display: 'flex', gap: 'var(--s2)', alignItems: 'center', padding: '0 var(--s2)', fontSize: 'var(--t2)' };
+
+const NOTE = { padding: '0 var(--s2)', fontSize: 'var(--t2)', lineHeight: 1.5 };
 
 export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   const math = useUnit('math');
   const [tick, setTick] = useState(0);
   const [page, setPage] = useState(0);
+  const [many, setMany] = useState(false);
+  const theme = useTheme();
   const live = useRef({ rows: [], version: 0 });
   const stage = useRef(null);
   const now = useRef(value);
   const tell = useRef(onChange);
-  const field = useRef(null);
   const listed = useRef([]);
   const chosen = useRef([]);
-  const rolled = useRef(value.seed);
   now.current = value;
   tell.current = onChange;
   const book = useMemo(() => math && ledger(math), [math]);
@@ -100,13 +82,12 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   chosen.current = rows;
   const chosenKey = rows.map((row) => row.key).join('.');
   const write = (next) => tell.current?.({ pick: next.slice(0, MOST).join('.') });
-  useEffect(() => {
-    if (!book || rolled.current === seed) return;
-    rolled.current = seed;
+  useReroll(seed, (next) => {
+    if (!book) return;
     const from = listed.current.length ? listed.current : space;
-    const next = from.length ? lead(book, from, roll(seed, from.length), chosen.current[0]?.key) : null;
-    if (next) write([next.key]);
-  }, [book, seed]);
+    const row = from.length ? lead(book, from, roll(next, from.length), chosen.current[0]?.key) : null;
+    if (row) write([row.key]);
+  });
   const typed = numbers(q);
   const asked = typed && typed.length > 1;
   const first = list[0]?.key ?? '';
@@ -150,8 +131,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
     };
   }, [book, dim, base, terms, chosenKey]);
   const choose = (row, e) => {
-    const held = e?.shiftKey || e?.metaKey || e?.ctrlKey;
-    if (held) return toggle(row);
+    if (many || e?.shiftKey || e?.metaKey || e?.ctrlKey) return toggle(row);
     write([row.key]);
   };
   const toggle = (row) => {
@@ -164,7 +144,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
     const next = listed.current[Math.max(0, Math.min(listed.current.length - 1, at + by))];
     if (next) write([next.key]);
   };
-  const find = () => field.current?.focus();
+  const find = () => document.querySelector('.library .find input')?.focus();
   const cycle = () => {
     const at = KINDS.findIndex(([slug]) => slug === now.current.chart);
     tell.current?.({ chart: KINDS[(at + 1) % KINDS.length][0] });
@@ -220,51 +200,46 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   const slice = shown.slice(at * PER, (at + 1) * PER);
   const holders = asked ? identify(RECORDS, typed).slice(0, 3) : [];
   const label = head ? `The terms of ${title(head)}, charted as ${KINDS.find(([one]) => one === chart)?.[1].toLowerCase()} beside the design` : 'Sequences';
+  const go = () => listed.current[0] && write([listed.current[0].key]);
+  const heading = picked && !applies(picked, dim, base) ? `no ${picked.label.toLowerCase()} in this space` : `${list.length} rows${done.done < done.total ? ` · reading ${done.done} of ${done.total}` : ''}`;
   return (
     <>
-      {book && <Scene make={scene} value={{ chart, digits }} onReady={ready} onPointerUp={tap} role="img" aria-label={label} />}
-      <Bar side="left">
-        <section aria-label="Search">
-          <h3>Search</h3>
-          <input
-            ref={field}
-            type="search"
-            value={q}
-            placeholder="8, 21, 40 or carpet or A000567 or 23"
-            aria-label="Search"
-            onChange={(e) => tell.current?.({ q: e.target.value })}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && listed.current[0]) {
-                e.preventDefault();
-                write([listed.current[0].key]);
-              }
-              if (e.key === 'Escape') e.currentTarget.blur();
-            }}
-            style={{ width: '100%', background: 'var(--panel)', color: 'var(--fg)', border: 'var(--hair)', borderRadius: 'var(--r1)', padding: 'var(--s1) var(--s2)', minHeight: '2rem', font: 'var(--t3) var(--mono)' }}
-          />
-          {asked && (
-            <p className="dim" style={{ padding: 'var(--s2) var(--s1) 0', fontSize: 'var(--t2)', lineHeight: 1.5 }}>
-              <Found found={holders} />
-            </p>
-          )}
-        </section>
-        <section aria-label="Rows">
-          <h3>{picked && !applies(picked, dim, base) ? `no ${picked.label.toLowerCase()} in this space` : `${list.length} rows${done.done < done.total ? ` · reading ${done.done} of ${done.total}` : ''}`}</h3>
-          {pages > 1 && (
-            <div style={PAGER}>
-              <button type="button" disabled={at === 0} onClick={() => setPage(at - 1)}>prev</button>
-              <span className="mono">{`${at * PER + 1}-${Math.min(shown.length, (at + 1) * PER)} of ${shown.length}`}</span>
-              <button type="button" disabled={at >= pages - 1} onClick={() => setPage(at + 1)}>next</button>
-            </div>
-          )}
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {slice.map((row) => {
-              const on = rows.findIndex((one) => one.key === row.key);
-              return <Row key={row.key} row={row} hit={hit(row)} on={on >= 0} tone={on >= 0 ? tone(on, rows.length) : ''} typed={listedKeys.has(row.key) && !homes.has(row.key)} last={rows.length === 1} choose={(e) => choose(row, e)} add={() => toggle(row)} />;
-            })}
-          </ul>
-        </section>
-      </Bar>
+      {book && (
+        <>
+          <Scene make={scene} value={{ chart, digits }} onReady={ready} onPointerUp={tap} role="img" aria-label={label} />
+          <Library name="Ledger" find={q} onFind={(next) => tell.current?.({ q: next })} onGo={go} hint={HINT} chips={MODES} chip={many ? 'many' : 'one'} onChip={(mode) => setMany(mode === 'many')}>
+            {asked && (
+              <p className="dim" style={NOTE}>
+                <Found found={holders} />
+              </p>
+            )}
+            {pages > 1 && (
+              <div style={PAGER}>
+                <button type="button" disabled={at === 0} onClick={() => setPage(at - 1)}>prev</button>
+                <span className="mono">{`${at * PER + 1}-${Math.min(shown.length, (at + 1) * PER)} of ${shown.length}`}</span>
+                <button type="button" disabled={at >= pages - 1} onClick={() => setPage(at + 1)}>next</button>
+              </div>
+            )}
+            <Shelf name={heading}>
+              {slice.map((row) => {
+                const mark = hit(row);
+                const own = listedKeys.has(row.key) && !homes.has(row.key);
+                return (
+                  <Item
+                    key={row.key}
+                    label={`${row.label} · ${measureOf(row.measure)?.label} by ${row.axis}`}
+                    sub={mark ? `${mark.id}${shift(mark)}` : ''}
+                    title={hover(row, mark, own)}
+                    on={rows.some((one) => one.key === row.key)}
+                    onPick={(e) => choose(row, e)}
+                    art={<Art paint={stamp(row.cells)} deps={[row.key, theme]} />}
+                  />
+                );
+              })}
+            </Shelf>
+          </Library>
+        </>
+      )}
       {!book && (
         <Bar side="status">
           <span>loading</span>

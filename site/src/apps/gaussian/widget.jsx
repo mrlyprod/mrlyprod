@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { text } from '../../lib/app/export.js';
-import { rng } from '../../lib/rand.js';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { FATES, clicked, coords, hit, name, parse, product, shuffle, study, verdict } from './engine.js';
-import { make, named } from './scene.js';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { rng } from '../../lib/rand.js';
+import { FATES, clicked, coords, hit, name, parse, product, shelves, shuffle, study, verdict } from './engine.js';
+import { make, named, sketch } from './scene.js';
 import { useLatest, useReroll, useStatus, useUnit } from '../../lib/app/hooks.js';
 
 const TAP = 8;
+
+const ART = 112;
 
 const KEY = 'blue split · orange inert · pink ramified · green units';
 
@@ -62,6 +67,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   }, [plan, value.click]);
   const key = JSON.stringify(value);
   useEffect(() => setMissed(false), [key]);
+  const tick = useTheme();
   useReroll(value.seed, (seed) => change.current(rerolled(seed)));
   useStatus(onStatus, rows(plan?.facts, point, missed, value.look));
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit }), [unit]);
@@ -102,5 +108,26 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   };
   const have = Boolean(unit);
   useEffect(() => onExport?.(have ? [['SVG', keep], ['CSV', sheet]] : []), [have]);
-  return unit ? <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerUp={up} onPointerCancel={cancel} aria-label="The window: the primes of the ring around the origin" /> : null;
+  if (!unit) return null;
+  return (
+    <>
+      <Library>
+        {shelves(value).map(([title, list], n) => (
+          <Shelf key={title} name={title} grid={n === 0}>
+            {list.map(({ id, label, sub, set, on }) => (
+              <Item
+                key={id}
+                label={label}
+                sub={sub}
+                on={on}
+                onPick={() => change.current(set)}
+                art={n === 0 ? <Art px={ART} paint={(ctx, w, h, dpr) => sketch(unit, set, ctx, w, h, dpr, paints(ctx.canvas, value.tint))} deps={[unit, value.tint, tick]} /> : undefined}
+              />
+            ))}
+          </Shelf>
+        ))}
+      </Library>
+      <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerUp={up} onPointerCancel={cancel} aria-label="The window: the primes of the ring around the origin" />
+    </>
+  );
 }

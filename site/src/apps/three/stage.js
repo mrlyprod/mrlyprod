@@ -3,8 +3,10 @@ export const ORBIT = 26000;
 export const POSE = [0.84, 0.47];
 export const LOOKS = { corner: [Math.PI / 4, Math.atan(Math.SQRT1_2)], edge: [Math.PI / 4, 0], face: [0, 0] };
 const FOV = 38;
-const REACH = 4.2;
-const HALF = 1.7;
+const EDGE = 16;
+const LEAST = 0.5;
+const BALL = Math.sqrt(3);
+const TAN = Math.tan((FOV / 2) * (Math.PI / 180));
 const LEAN = 1.5;
 const GRIP = 0.9;
 const REST = 1e-4;
@@ -21,6 +23,19 @@ const ALPHA = 0.5;
 const lean = (phi) => Math.min(LEAN, Math.max(-LEAN, phi));
 
 const clamp = (v, [lo, hi]) => Math.min(hi, Math.max(lo, v));
+
+export function room(w, h, dpr = 1) {
+  const tall = Math.max(LEAST, 1 - (2 * EDGE * dpr) / h);
+  const wide = Math.max(LEAST, 1 - (2 * EDGE * dpr) / w);
+  return Math.min(tall, (wide * w) / h);
+}
+
+export function stand(free) {
+  const k = TAN * free;
+  return (BALL * Math.sqrt(1 + k * k)) / k;
+}
+
+export const span = (free) => BALL / free;
 
 export function angle(swing, t, spin) {
   return swing + (spin ? (t / ORBIT) * TAU : 0);
@@ -99,13 +114,15 @@ export function space(three, canvas, view) {
   let fling = [0, 0];
   let spin = 0;
   let dirty = true;
-  let aspect = 1;
+  let away = 1;
   const fit = () => {
     renderer.setSize(view.w, view.h, false);
-    aspect = view.w / view.h;
+    const aspect = view.w / view.h;
+    const free = room(view.w, view.h, view.dpr);
+    const high = span(free);
+    away = stand(free);
     near.aspect = aspect;
-    const half = HALF / Math.min(1, aspect);
-    Object.assign(flat, { left: -half * aspect, right: half * aspect, top: half, bottom: -half });
+    Object.assign(flat, { left: -high * aspect, right: high * aspect, top: high, bottom: -high });
     frame();
   };
   const frame = () => {
@@ -116,8 +133,7 @@ export function space(three, canvas, view) {
     }
   };
   const pose = () => {
-    const reach = (REACH / Math.min(1, aspect)) / (camera === near ? zoom : 1);
-    camera.position.set(...eye(angle(swing, view.t, spin), tilt, reach));
+    camera.position.set(...eye(angle(swing, view.t, spin), tilt, away / (camera === near ? zoom : 1)));
     camera.lookAt(0, 0, 0);
     rig.quaternion.copy(camera.quaternion);
   };

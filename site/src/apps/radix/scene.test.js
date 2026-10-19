@@ -5,7 +5,7 @@ import { hit } from '../../lib/app/keys.jsx';
 import { defaults, describe, tidy } from '../../lib/app/spec.js';
 import { keymap, live } from '../../lib/app/page.jsx';
 import { GAP, PAD, lattice, lay, preset, study } from './engine.js';
-import { PAGE, SPEC, file, make } from './scene.js';
+import { PAGE, SPEC, file, make, sketch } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -186,6 +186,20 @@ test('a set of the digits remakes the design and tells its facts, a set of the l
   expect(live.at(3000)).toEqual([]);
   live.set({ d: '0:0_1:0_1:1', t: '0_0_0', tint: 'red' });
   expect(live.at(4000)).toEqual([]);
+});
+
+test('a thumb draws a preset at a level of a few thousand words in the accent, a line as one stroke and cells as squares', () => {
+  const thumb = (name) => {
+    const log = [];
+    sketch(pen(log), { num, math }, preset(num, math, name), 112, 2, '#008cff');
+    return log;
+  };
+  const koch = thumb('koch');
+  expect(koch.slice(0, 2)).toEqual([['setTransform', 1, 0, 0, 1, 0, 0], ['clearRect', 0, 0, 112, 112]]);
+  expect([koch.filter(([name]) => name === 'lineTo').length, koch.filter(([name]) => name === 'stroke').length]).toEqual([1023, 1]);
+  const carpet = thumb('carpet');
+  expect(carpet).toContainEqual(['fillStyle', '#008cff']);
+  expect(carpet.filter(([name]) => name === 'rect')).toHaveLength(8 ** 3);
 });
 
 test('Enter drops the twists only while a digit is turned', () => {

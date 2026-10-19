@@ -72,7 +72,7 @@ fn hits(corners: &[Vec<u8>], divisor: usize) -> usize {
         .count()
 }
 
-fn bracket(corners: &[Vec<u8>], base: usize) -> f64 {
+pub fn bracket(corners: &[Vec<u8>], base: usize) -> f64 {
     let sum: f64 = squarefree_divisors(base)
         .iter()
         .map(|&e| f64::from(mobius(e)) * hits(corners, e) as f64)
@@ -80,7 +80,7 @@ fn bracket(corners: &[Vec<u8>], base: usize) -> f64 {
     sum / corners.len() as f64
 }
 
-fn foreign(base: usize, dimension: usize) -> f64 {
+pub fn foreign(base: usize, dimension: usize) -> f64 {
     let mut out = 1.0 / zeta(dimension as f64, ZETA_TERMS).expect("the dimension is above one");
     for (prime, _) in factorize(base) {
         out /= 1.0 - (prime as f64).powi(-(dimension as i32));
@@ -124,7 +124,7 @@ fn choose(start: usize, count: usize, size: usize) -> Vec<Vec<usize>> {
     out
 }
 
-fn index(corners: &[Vec<u8>], dimension: usize) -> usize {
+pub fn index(corners: &[Vec<u8>], dimension: usize) -> usize {
     let first = &corners[0];
     let diffs: Vec<Vec<i64>> = corners[1..]
         .iter()

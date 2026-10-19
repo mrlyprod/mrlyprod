@@ -55,5 +55,5 @@
 ## WITNESSES
 
 - `farey.md` WHERE THE LINES LAND: `floor(N/b)` survives the linear lean verbatim on a translated Farey set, and is replaced under the quadratic lean by a floor-linear count over `2^w` classes modulo the period `lcm(b, d*)`.
-- `stack.md` STACKING THE STACKS: the lean is not a weight on the scales, so it leaves the Dirichlet group; the origin density `1/d*` is nonetheless a coefficient of `zeta(2s+1) zeta(s+1)/zeta(2s+2)`.
-- `stack.md` SPINNING THE STACK: the dead-spin theorem kills coincidences by rotation; the irrational quadratic lean kills them by translation, and needs no Niven.
+- `stacking-and-spinning.md` STACKING THE STACKS: the lean is not a weight on the scales, so it leaves the Dirichlet group; the origin density `1/d*` is nonetheless a coefficient of `zeta(2s+1) zeta(s+1)/zeta(2s+2)`.
+- `stacking-and-spinning.md` SPINNING THE STACK: the dead-spin theorem kills coincidences by rotation; the irrational quadratic lean kills them by translation, and needs no Niven.

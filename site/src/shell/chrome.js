@@ -1,22 +1,23 @@
-import { KEY, PREFIX, face, read, root, screen, theme, tint, turn } from './prefs.js';
-import { desk, folds, greeting, knock, listen, rename, route, visit } from './desk.js';
+import { handle } from '../lib/handle.js';
+import { KEY, PREFIX, face, glass, icons, magnify, read, root, screen, shade, theme, tint, turn, write } from './prefs.js';
+import { desk, greeting, knock, listen, mark, route, visit } from './desk.js';
+import { track, type } from './catalog.js';
 import { expand, turns } from './tree.js';
+import { menus } from './menus.js';
 
 const DOCK = '(min-width: 74rem)';
 const SIDES = ['left', 'right'];
 
-/* SUB */
+/* SCROLL */
 
-const docked = () => matchMedia(DOCK).matches;
-const isOpen = (side) => root().dataset[side] === 'open';
-const sub = () => document.querySelector('.subheader');
+const main = () => document.getElementById('main');
 
 const spot = () => `${PREFIX}spot:${location.href}`;
 
 function keep() {
   if (root().getAttribute('aria-busy') === 'true') return;
   try {
-    sessionStorage.setItem(spot(), String(scrollY));
+    sessionStorage.setItem(spot(), String(main()?.scrollTop ?? 0));
   } catch {}
 }
 
@@ -35,17 +36,17 @@ function resumed() {
   return kind === 'back_forward' || kind === 'reload';
 }
 
-function pin() {
-  const top = sub()?.getBoundingClientRect().top ?? 0;
-  if (top) scrollTo({ top: top + scrollY, behavior: 'instant' });
-}
-
 function land() {
   const at = saved() || Number(history.state?.y) || 0;
-  if (at > 0 && resumed() && !location.hash) scrollTo({ top: at, behavior: 'instant' });
+  if (at > 0 && resumed() && !location.hash) main()?.scrollTo({ top: at, behavior: 'instant' });
 }
 
 /* DRAWERS */
+
+const DOCKED = 960;
+
+const docked = () => root().dataset.window === 'wide' && (document.querySelector('.window')?.getBoundingClientRect().width ?? 0) >= DOCKED;
+const isOpen = (side) => root().dataset[side] === 'open';
 
 function set(side, open) {
   root().dataset[side] = open ? 'open' : 'shut';
@@ -62,7 +63,6 @@ function sync() {
 
 function toggle(side) {
   const open = !isOpen(side);
-  if (open) pin();
   set(side, open);
   if (!open) return;
   set(side === 'left' ? 'right' : 'left', false);
@@ -124,10 +124,105 @@ function contents(nav) {
         else a.removeAttribute('aria-current');
       }
     },
-    { rootMargin: `-${Math.round(sub()?.getBoundingClientRect().height ?? 0)}px 0px -60% 0px` },
+    { root: main(), rootMargin: '0px 0px -60% 0px' },
   );
   for (const t of targets) eye.observe(t);
   eyes.set(nav, eye);
+}
+
+/* CLOCK */
+
+let ticking = 0;
+
+const two = (n) => String(n).padStart(2, '0');
+
+function tick() {
+  const now = new Date();
+  const date = document.querySelector('.tray .date');
+  const clock = document.querySelector('.tray .clock');
+  if (date) {
+    date.textContent = now.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    date.dateTime = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
+  }
+  if (clock) {
+    clock.textContent = now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    clock.dateTime = `${two(now.getHours())}:${two(now.getMinutes())}`;
+  }
+  clearTimeout(ticking);
+  ticking = setTimeout(tick, 60000 - (now.getSeconds() * 1000 + now.getMilliseconds()) + 50);
+}
+
+/* WINDOW */
+
+const WIDTHS = { page: ['--win', KEY.page, 720], wide: ['--wide', KEY.wide, 1280] };
+const LEAST = 352;
+
+function edges() {
+  const box = document.querySelector('.window');
+  if (!box || box.querySelector(':scope > .edge')) return;
+  const kind = () => WIDTHS[root().dataset.window] ?? WIDTHS.page;
+  const room = () => innerWidth - 2 * (Number.parseFloat(getComputedStyle(root()).fontSize) || 16) * 0.75;
+  const get = () => box.getBoundingClientRect().width;
+  const put = (px) => root().style.setProperty(kind()[0], `${Math.round(px)}px`);
+  for (const side of SIDES) {
+    const grip = document.createElement('div');
+    grip.className = 'edge';
+    grip.dataset.side = side;
+    box.append(grip);
+    handle(grip, {
+      get,
+      set: put,
+      done: (px) => write(kind()[1], px >= room() - 1 ? '' : String(Math.round(px))),
+      reset: () => kind()[2],
+      min: LEAST,
+      max: room,
+      rate: side === 'left' ? -2 : 2,
+      label: 'Window width',
+      busy: (on) => box.classList.toggle('drag', on),
+    });
+  }
+}
+
+function zoom(button) {
+  const box = button.closest('.window');
+  const on = !box.classList.contains('zoomed');
+  box.classList.toggle('zoomed', on);
+  button.setAttribute('aria-pressed', String(on));
+}
+
+function close(e) {
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (!(history.state?.depth > 0)) return;
+  e.preventDefault();
+  history.back();
+}
+
+/* TYPE */
+
+let typing = false;
+
+function ahead(e) {
+  if (route !== '/' || greeting() === 'open' || e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1 || !/\S/.test(e.key)) return;
+  const at = e.target instanceof Element ? e.target : null;
+  if (at?.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open], :popover-open') || root().hasAttribute('data-editing')) return;
+  e.preventDefault();
+  type(e.key);
+  if (typing) return;
+  typing = true;
+  dispatchEvent(new CustomEvent('go', { detail: '/menu/' }));
+}
+
+/* PIECES */
+
+const pieces = { dock: null, widgets: null };
+
+function lay(name, load) {
+  pieces[name] ??= load()
+    .then((one) => one.start())
+    .catch((error) => {
+      pieces[name] = null;
+      console.error(error);
+    });
 }
 
 /* WIRE */
@@ -143,9 +238,11 @@ const once = (selector, fn) => {
 };
 
 let landed = false;
+let lit = false;
 
 function wire(event) {
   if (event?.detail?.route) visit(event.detail);
+  typing = false;
   if (!landed && route) {
     landed = true;
     land();
@@ -155,20 +252,25 @@ function wire(event) {
   theme(root().dataset.theme ?? '');
   face(root().dataset.font ?? '');
   tint(root().dataset.tint ?? '');
+  glass(read(KEY.glass));
+  icons(read(KEY.icons), read(KEY.always) === '1');
   screen(read(KEY.saver));
+  magnify(read(KEY.magnify) === '1');
   cart();
   once('.contents', contents);
   once('.tree summary', turns);
-  once('.top .mark', (mark) => {
-    folds(mark);
-    knock(mark);
-  });
+  once('.bar .mark', knock);
   if (greeting() === 'open') listen();
-  if (route === '/') {
-    root().dataset.desk = '';
-    desk();
-  } else delete root().dataset.desk;
-  rename();
+  if (route === '/') root().dataset.desk = '';
+  else delete root().dataset.desk;
+  desk();
+  mark();
+  lay('dock', () => import('./dock.jsx'));
+  if (route === '/') lay('widgets', () => import('./widgets.jsx'));
+  if (!lit) {
+    lit = true;
+    import('../lib/glass/index.js').then((one) => one.start()).catch((error) => console.error(error));
+  }
 }
 
 function boot() {
@@ -177,8 +279,16 @@ function boot() {
   theme(read(KEY.theme));
   face(read(KEY.font));
   tint(read(KEY.tint));
+  glass(read(KEY.glass));
+  icons(read(KEY.icons), read(KEY.always) === '1');
   screen(read(KEY.saver));
+  magnify(read(KEY.magnify) === '1');
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', shade);
+  track();
+  menus();
   stow();
+  tick();
+  edges();
   matchMedia(DOCK).addEventListener('change', stow);
   document.addEventListener('click', (e) => {
     const target = e.target instanceof Element ? e.target : null;
@@ -186,6 +296,9 @@ function boot() {
     const button = target.closest('[data-pane]');
     if (button) return button.closest('.pane') ? shut() : toggle(button.dataset.pane);
     if (target.closest('[data-theme-toggle]')) return turn();
+    if (target.closest('.window > .title .close')) return close(e);
+    const zoomer = target.closest('.window > .title .zoom');
+    if (zoomer) return zoom(zoomer);
     if (target.closest('.scrim') || target.closest('.pane a[href]')) shut();
   });
   document.addEventListener('change', (e) => {
@@ -193,14 +306,27 @@ function boot() {
     if (!pick) return;
     if (pick.matches('[data-font-pick]')) return face(pick.value);
     if (pick.matches('[data-tint-pick]')) return tint(pick.value);
-    if (pick.matches('[data-saver-pick]')) return screen(pick.value);
+    if (pick.matches('[data-glass-pick]')) return glass(pick.value);
+    if (pick.matches('[data-magnify-pick]')) return magnify(pick.checked);
+    if (pick.matches('[data-saver-pick]')) {
+      screen(pick.value);
+      return desk();
+    }
   });
   document.addEventListener('toggle', expand, true);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !document.querySelector('dialog[open]') && shut()) e.preventDefault();
+    if (e.key === 'Escape' && !document.querySelector('dialog[open]') && shut()) return e.preventDefault();
+    if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      const field = location.pathname === '/menu/' ? document.querySelector('.launchpad .find input') : null;
+      if (field) return (field.focus(), field.select());
+      document.querySelector('.tray .find')?.click();
+      return;
+    }
+    ahead(e);
   });
+  document.addEventListener('visibilitychange', () => !document.hidden && tick());
   window.addEventListener('wire', wire);
-  window.addEventListener('saver', (e) => screen(e.detail ?? ''));
   window.addEventListener('cart', cart);
   window.addEventListener('storage', cart);
   window.addEventListener('pageshow', cart);

@@ -2,22 +2,25 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { download, wav } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
 import { Btn, Icon } from '../../lib/app/controls.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { bus, engine, render } from '../../lib/audio/audio.js';
-import { make, score, seconds } from './scene.js';
+import { bus, engine, pattern, render } from '../../lib/audio/audio.js';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { STYLES, make, score, seconds, song, stamp, styled } from './scene.js';
 
-export function Widget({ value, onReady }) {
+export function Widget({ value, onChange, onReady, onExport }) {
   const line = useMemo(bus, []);
   const box = useRef(null);
   const heard = useRef(0);
   const live = useRef(null);
   const loud = useRef(0);
   const going = useRef(0);
+  const working = useRef(false);
   const now = useRef(value);
   now.current = value;
+  const theme = useTheme();
   const [sound, setSound] = useState(0);
-  const [playing, setPlaying] = useState(0);
-  const [busy, setBusy] = useState(false);
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, audio: line }), [line]);
   useEffect(
     () => () => {
@@ -50,7 +53,6 @@ export function Widget({ value, onReady }) {
     going.current = on;
     box.current?.set({ music: on });
     if (on) live.current?.wake?.();
-    setPlaying(on);
   };
   const go = () => play(going.current ? 0 : 1);
   const mute = () => hear(loud.current ? 0 : 1);
@@ -64,29 +66,34 @@ export function Widget({ value, onReady }) {
       handle.play();
       box.current?.set({ music: loud.current ? going.current : 0 });
     };
-    onReady?.(handle && { ...handle, pause, play: resume, go, mute });
+    onReady?.(handle && { ...handle, pause, play: resume, go, mute, going: () => going.current === 1 });
   };
   const save = async () => {
-    if (busy) return;
-    setBusy(true);
+    if (working.current) return;
+    working.current = true;
     const one = now.current;
     try {
       download(wav(await render(seconds(one), score(one))), `techno-${one.seed}.wav`);
     } catch {}
-    setBusy(false);
+    working.current = false;
   };
+  useEffect(() => onExport?.([['WAV', save]]), []);
+  const style = styled(value);
+  const seed = value.seed >>> 0;
   return (
     <>
       <Scene make={scene} value={value} onReady={ready} />
+      <Library name="Styles">
+        <Shelf grid>
+          {STYLES.map((one) => (
+            <Item key={one.id} label={one.name} sub={`${one.song.bpm} bpm`} on={style === one.id} onPick={() => onChange(one.song)} art={<Art paint={(ctx, w, h) => stamp(ctx, w, h, pattern(seed, song({ ...value, ...one.song }), 0), paints(ctx.canvas).accent)} deps={[one.id, seed, theme]} />} />
+          ))}
+        </Shelf>
+      </Library>
       <Bar side="actions">
-        <Btn primary onClick={go}>{playing ? 'Stop' : 'Play'}</Btn>
         <Btn className="short" on={sound === 1} aria-pressed={sound === 1} onClick={mute}>
           <Icon name="volume_up" />
           Sound
-        </Btn>
-        <Btn className="short" onClick={save} disabled={busy}>
-          <Icon name="graphic_eq" />
-          WAV
         </Btn>
       </Bar>
     </>

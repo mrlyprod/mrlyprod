@@ -1,9 +1,12 @@
-import { odd } from '../../lib/moire/engine.js';
+import { colorizer, odd, paint } from '../../lib/moire/engine.js';
 
 export const CARPET = '23';
 export const SIZES = [128, 192, 256, 320, 384];
 export const LEAST = 4;
 export const MOST = 128;
+export const TILE = 64;
+export const STACKS = [['Doublings', [4, 8, 16, 32, 64]], ['Fours', [12, 20, 28, 48]], ['Twos', [6, 10, 18, 30]]];
+export const DEEP = [96, 128];
 const RIBBON = 12;
 const DIAGONAL = [1, 1, 1];
 const MIDDLE = 0.5;
@@ -57,6 +60,13 @@ export function field(math, cuts, layers, size) {
     high = Math.max(high, data[i]);
   }
   return { field: math.moire.Field.from_data(data, size), data, size, low, high };
+}
+
+export function swatch(math, cuts, value, layers, size, look) {
+  const made = field(math, cuts, layers, size);
+  const out = paint(math, made, colorizer(value.ramp, value.levels, look), value.levels, value.invert);
+  made.field.free();
+  return out;
 }
 
 /* LAW */

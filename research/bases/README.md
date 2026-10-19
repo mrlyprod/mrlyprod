@@ -3,6 +3,7 @@ title: What base 3 hides
 lead: What base 3 hides: an Eisenstein L-value where base 2 hid pi, and the collapse theorem that turns any multiplicatively dependent family of bases into one design in base `r^lcm(e_i)`.
 figure: research-bases
 slug: bases
+date: 2026-08-28
 ---
 
 # What base 3 hides

@@ -1,5 +1,5 @@
 import { tidy } from '../../lib/app/spec.js';
-import { rng } from '../../lib/rand.js';
+import { pick, rng } from '../../lib/rand.js';
 import { codes, route } from '../../lib/space/bang.js';
 import { look as aim, drift, ease, project } from '../../lib/gl/camera.js';
 import { blank, blend, context, fill, governor, program, tier } from '../../lib/gl/gl2.js';
@@ -12,12 +12,14 @@ import { add, basis, clamp01, cross, dot, len, mat3, mix, mul, norm, rot, sub } 
 import { arrange, clock, cues, song } from './score.js';
 import { wasm } from '../../lib/units/index.js';
 
-const PLACES = [['', 'Random'], ['earth', 'Earth'], ['mars', 'Mars'], ['jupiter', 'Jupiter'], ['saturn', 'Saturn'], ['moon', 'Moon'], ['venus', 'Venus'], ['neptune', 'Neptune'], ['terran', 'Terran'], ['desert', 'Desert'], ['ice', 'Ice'], ['lava', 'Lava'], ['gas', 'Gas']];
+const HIDE = () => false;
+
+export const PLACES = [['', 'Random'], ['earth', 'Earth'], ['mars', 'Mars'], ['jupiter', 'Jupiter'], ['saturn', 'Saturn'], ['moon', 'Moon'], ['venus', 'Venus'], ['neptune', 'Neptune'], ['terran', 'Terran'], ['desert', 'Desert'], ['ice', 'Ice'], ['lava', 'Lava'], ['gas', 'Gas']];
 
 export const SPEC = [
-  { key: 'from', label: 'From', kind: 'pick', def: '', options: PLACES, group: 'Trip' },
-  { key: 'to', label: 'To', kind: 'pick', def: '', options: PLACES, group: 'Trip' },
-  { key: 'ship', label: 'Ship', kind: 'slider', def: -1, min: -1, max: 255, step: 1, group: 'Trip' },
+  { key: 'from', label: 'From', kind: 'pick', def: '', options: PLACES, group: 'Trip', when: HIDE },
+  { key: 'to', label: 'To', kind: 'pick', def: '', options: PLACES, group: 'Trip', when: HIDE },
+  { key: 'ship', label: 'Ship', kind: 'text', def: '', group: 'Trip', when: HIDE },
   { key: 'length', label: 'Length', kind: 'slider', def: 60, min: 30, max: 180, step: 15, group: 'Film' },
   { key: 'look', label: 'Look', kind: 'segment', def: 'studio', options: [['graphic', 'Graphic'], ['studio', 'Studio'], ['haze', 'Haze']], group: 'Look' },
   { key: 'sound', label: 'Sound', kind: 'toggle', def: 0, group: 'Sound' },
@@ -29,17 +31,33 @@ export const units = wasm('math');
 export const PAGE = {
   spec: SPEC,
   units,
+  design: { dim: 3, base: 2, code: 'ship', blank: 'Random' },
   keys: [
-    { key: 'Enter', label: 'Again', does: 'Restart the film from the departure', act: 'again', button: true },
+    { key: 'Enter', label: 'Again', does: 'Restart the film from the departure', act: 'again', button: true, menu: 'Edit' },
     { key: 'm', label: 'Sound', act: 'mute' },
   ],
   actions: { again: (scene) => scene.again?.(), mute: (scene) => scene.mute?.() },
   record: true,
 };
 
+export const SAVERS = [
+  {
+    id: 'solar',
+    title: 'Solar system',
+    pick: (rand) => {
+      const from = pick(rand, SOLAR);
+      return { from, to: pick(rand, SOLAR.filter((one) => one !== from)), look: 'studio', length: REEL };
+    },
+  },
+  { id: 'strange', title: 'Strange worlds', pick: (rand) => ({ look: pick(rand, MOODS), length: REEL }) },
+];
+
 export const quiet = ({ sound, music, ...rest }) => rest;
 
 const NAMED = ['earth', 'mars', 'jupiter', 'saturn', 'moon', 'venus', 'neptune'];
+const SOLAR = ['earth', 'mars', 'jupiter', 'saturn', 'neptune'];
+const MOODS = ['haze', 'graphic'];
+const REEL = 90;
 const TYPES = ['terran', 'desert', 'ice', 'lava', 'gas'];
 const WEIGHTS = [0.42, 0.16, 0.14, 0.1, 0.18];
 const SALT = 0x2a9f53c1;
@@ -172,18 +190,21 @@ function weigh(rand, skip) {
   return pool.findLast(([, w]) => w > 0)[0];
 }
 
-function place(pick, seed, rand, skip) {
+export function stand(pick, seed) {
   if (NAMED.includes(pick)) return world(pick, seed);
   if (TYPES.includes(pick)) return world('exo', seed, { type: pick });
-  return world('exo', Math.floor(rand() * 4294967296), { type: weigh(rand, skip) });
+  return null;
 }
+
+const place = (pick, seed, rand, skip) => stand(pick, seed) ?? world('exo', Math.floor(rand() * 4294967296), { type: weigh(rand, skip) });
 
 export function roll(math, value, seed, loop) {
   const rand = rng(((seed >>> 0) ^ SALT ^ Math.imul(loop + 1, GOLD)) >>> 0);
   const a = place(value.from, seed >>> 0, rand, '');
   const b = place(value.to, ((seed >>> 0) ^ OTHER) >>> 0, rand, a.kind);
   const pool = codes(math, N);
-  const code = value.ship > 0 ? value.ship : pool[Math.floor(rand() * pool.length)];
+  const hand = Number.parseInt(value.ship, 10);
+  const code = hand > 0 && hand < 256 ? hand : pool[Math.floor(rand() * pool.length)];
   const up = unit(rand);
   const head = across(rand, up);
   const toward = unit(rand);
@@ -401,7 +422,7 @@ export function make(canvas, view, opts = {}) {
     console.error(error);
     return blank(canvas);
   }
-  const gov = governor(view, NOTCHES[tier(view)]);
+  const gov = governor(view, NOTCHES[view.lock ? 'big' : tier(view)]);
   const timed = (r, start, span) => {
     const m = clock(span);
     Object.assign(r, { start, span, fire: start + m.fire, open: start + m.open, enter: start + m.enter, out: start + m.out, arrive: start + m.arrive, end: start + m.end, next: start + m.next, score: arrange(span) });

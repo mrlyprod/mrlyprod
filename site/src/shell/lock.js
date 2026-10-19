@@ -1,8 +1,10 @@
-import { scenes } from 'apps:scenes';
+import { site } from 'site:routes';
 import { run } from '../lib/app/run.js';
+import { calm } from './prefs.js';
+import { all, find, load, on, roll } from './savers.js';
 
 const RANDOM = 'random';
-const STILL = '(prefers-reduced-motion: reduce)';
+const SEEDS = 4294967296;
 const CAP = 1500;
 const QUIET = 2000;
 
@@ -15,7 +17,7 @@ function parse(query) {
 function exits(scene) {
   let go = null;
   let left = false;
-  let calm = 0;
+  let still = 0;
   let cap = 0;
   const done = () => {
     clearTimeout(cap);
@@ -25,7 +27,7 @@ function exits(scene) {
     then?.();
   };
   const fall = () => {
-    clearTimeout(calm);
+    clearTimeout(still);
     left = true;
     if (!scene.windDown) return done();
     cap = setTimeout(done, CAP);
@@ -33,8 +35,8 @@ function exits(scene) {
   };
   const stay = () => {
     scene.hold();
-    clearTimeout(calm);
-    calm = setTimeout(fall, QUIET);
+    clearTimeout(still);
+    still = setTimeout(fall, QUIET);
   };
   const key = (e) => {
     if (go && !left && scene.hold && !e.metaKey && !e.ctrlKey && !e.altKey) stay();
@@ -48,37 +50,45 @@ function exits(scene) {
   const leave = (then) => {
     if (left) return;
     go = then;
-    if (typeof matchMedia === 'function' && matchMedia(STILL).matches) return done();
+    if (calm()) return done();
     if (scene.hold) stay();
     else fall();
   };
   const end = () => {
     for (const [type, fn] of ears) window.removeEventListener(type, fn, true);
-    clearTimeout(calm);
+    clearTimeout(still);
     clearTimeout(cap);
     go = null;
   };
   return { leave, end };
 }
 
-export async function lock(canvas, pick = '') {
-  const ids = Object.keys(scenes);
+function choose(pick, pool) {
   const at = pick.indexOf('?');
   const head = at < 0 ? pick : pick.slice(0, at);
-  const known = Object.hasOwn(scenes, head);
-  const kept = known || !head ? pick : RANDOM;
-  const id = known ? head : kept ? ids[Math.floor(Math.random() * ids.length)] : ids[0];
-  if (!id) return Object.assign(() => {}, { pick: kept, as: '' });
-  const value = { seed: Math.floor(Math.random() * 4294967296), ...(known && at >= 0 ? parse(pick.slice(at + 1)) : {}) };
-  const scene = await scenes[id]();
+  const named = head === RANDOM ? null : find(head);
+  if (named) return { pick, entry: named, query: at < 0 ? '' : pick.slice(at + 1) };
+  if (!head) return { pick: '', entry: find(site.desk) ?? all()[0] ?? null, query: '' };
+  const kept = (pool ?? on()).map(find).filter(Boolean);
+  const list = kept.length ? kept : all();
+  return { pick: RANDOM, entry: list[Math.floor(Math.random() * list.length)] ?? null, query: '' };
+}
+
+export async function lock(canvas, pick = '', { pool } = {}) {
+  const chosen = choose(pick, pool);
+  const loaded = chosen.entry ? await load(chosen.entry.id) : null;
+  if (!loaded) return Object.assign(() => {}, { pick: chosen.pick, id: '', as: '', leave: (then) => then?.() });
+  const { entry, scene, saver } = loaded;
+  const seed = Math.floor(Math.random() * SEEDS);
+  const value = chosen.query ? { seed, ...parse(chosen.query) } : roll(saver, seed);
   const held = scene.units ? await scene.units() : {};
   await held.ready;
   const { ready, ...units } = held;
-  const stop = run(canvas, scene.make, { ...value, ...units }, { lock: true, still: scene.PAGE?.still });
+  const stop = run(canvas, scene.make, { ...value, ...units }, { lock: true, still: calm() || scene.PAGE?.still });
   const { leave, end } = exits(stop.scene);
   const close = () => {
     end();
     stop();
   };
-  return Object.assign(close, stop, { pick: kept, as: `${id}?${new URLSearchParams(value)}`, leave });
+  return Object.assign(close, stop, { pick: chosen.pick, id: entry.id, as: `${entry.id}?${new URLSearchParams(value)}`, leave });
 }

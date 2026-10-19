@@ -28,8 +28,8 @@ uv run python research/cobham/lab/py/two-base-gasket/census.py selftest
 
 ## WITNESSES
 
-- `cobham.md:76` the budget `0.584963`
-- `cobham.md:77` the twenty-five terms `C(3^m)` at `m = 0..24` and the control that rebuilds them to `m = 6`
-- `cobham.md:78` the axis lower bound `C(3^m) >= 2^(m+1) - 1`
-- `cobham.md:79` the excess `log_3 2 >= 0.630929` over `0.584963`
-- `cobham.md:81` the falling readings `log_3 C(3^m) / m` at `m = 14..24`
+- `gasket-three-base-and-two-frequencies.md:12` the budget `0.584963`
+- `gasket-three-base-and-two-frequencies.md:13` the twenty-five terms `C(3^m)` at `m = 0..24` and the control that rebuilds them to `m = 6`
+- `gasket-three-base-and-two-frequencies.md:14` the axis lower bound `C(3^m) >= 2^(m+1) - 1`
+- `gasket-three-base-and-two-frequencies.md:15` the excess `log_3 2 >= 0.630929` over `0.584963`
+- `gasket-three-base-and-two-frequencies.md:17` the falling readings `log_3 C(3^m) / m` at `m = 14..24`

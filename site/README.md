@@ -13,9 +13,10 @@ site/
   package.json  bun.lock  bunfig.toml       deps, the bun run verbs, the dev plugin, the test preload
   tsconfig.json                             tsc over every .ts file; paths: @mrlyprod/mrly/* -> ../bindings/js, #view -> its index.d.ts
   site.json  redirects.json  wasm.lock      identity and tool blocks; moved urls; the wasm pin
+  launchpad.json                            the Launchpad sections and the default dock
   public/                                   copied to the site root
   src/                                      everything that ships to the browser
-    shell/                                  index.html, boot, router, chrome, the page shells
+    shell/                                  index.html, boot, router, chrome (the bar, the window, the desk), the page shells
     styles/                                 the sheets, the palette, the fonts
     pages/                                  the site pages, one folder a route
     apps/                                   the apps, one folder a route
@@ -26,7 +27,7 @@ site/
 
 request /about/
   edge   infra/edge.js: no dot in the last segment -> /index.html
-  shell  src/shell/index.html: boot.js, page.css, the tint style, the static chrome, chrome.js + router.js
+  shell  src/shell/index.html: boot.js, page.css, the tint style, the bar and the window, chrome.js + router.js
   router the site:routes row -> src/shell/app.jsx (a page's index.jsx or an app's app:<id>) or src/shell/prose.jsx + /raw/<source> -> #main
   figure src/lib/figure.js draws each host from an intersection queue
 ```
@@ -36,26 +37,30 @@ request /about/
 ## THE UNIT
 
 - A route is the only unit: one folder, `/<id>/`, under `src/pages/` for a site page or `src/apps/` for an app; an id is taken once across both; `home` is `/`.
-- `app.json`: `title`, `line` (the lead), `menu` (`play`, `read` or `tool`), and `saver`, `hidden`, `deep` (each `true` or absent), `source` (a repo path of a markdown page), `route` (`/404.html` for `missing`). No other field; nothing else is configured.
+- `app.json`: `title`, `line` (the lead), and `saver`, `hidden`, `deep` (each `true` or absent), `source` (a repo path of a markdown page), `route` (`/404.html` for `missing`). No other field; nothing else is configured.
 - The page is exactly one of `index.jsx`, `index.md` or `source`; a folder with none of them and both `scene.js` and `widget.jsx` is an app whose entry the build writes (`app:<id>`, `src/apps/README.md`).
-- `index.jsx` exports `mount(at)` and `unmount(at)`, an island under the still (title, figure, `<noscript>`), wide, bare and wearing `src/lib/app/mrly.css`; or `render(row, site, host, { text, rows, url, left, right })`, `unmount(host)`, optional `mount(host)`, a page drawn before the swap; an optional `layout` (`left`, `right`, `wide`, `bare`, `sheet`) overrides the island's.
-- `index.md` and `source` are prose, rendered by `src/shell/prose.jsx` from `/raw/<source>`; front matter `opener: true` (draws the route's icon above the lede), `button` and `link`.
+- `index.jsx` exports `mount(at)` and `unmount(at)`, an island under the still (title, figure, `<noscript>`), wide, bare, in a wide window and wearing `src/lib/app/mrly.css`; or `render(row, site, host, { text, rows, url, left, right })`, `unmount(host)`, optional `mount(host)`, a page drawn before the swap; an optional `layout` (`left`, `right`, `wide`, `bare`, `sheet`, `window`) overrides the island's.
+- `index.md` and `source` are prose, rendered by `src/shell/prose.jsx` from `/raw/<source>`; front matter `opener: true` (draws the route's icon above the lede), `button` and `link`, `legal: true` (the copyright line at the end).
 - `icon.js` is the route's figure, named by the id; a hidden route may omit it, a shown one may not.
-- `scene.js` and `widget.jsx`: every app has them, a saver must; `src/apps/README.md` has the app contract.
+- `icon.svg` is the route's app icon: viewBox `0 0 1024 1024`, an optional `<defs>` first, the plate as the first shape with `class="back"`, then the glyph; no text, images, style or class; `data-dark`, `data-dark-stroke`, `data-mono` (`full`, `dim`, `hide`) and `data-key` steer the Dark, Clear and Tinted looks. The build checks each with `src/lib/appicon.js` and serves them all in `site:icons`.
+- `scene.js` and `widget.jsx`: every app has them; `src/apps/README.md` has the app contract.
+- Savers: a scene declares them as `export const SAVERS = [{ id, title, pick }]`, 1 to 3; `id` a slug once in the app, `title` at most 32 characters, `pick(rand)` a plain patch of `SPEC` or `PAGE.defaults` keys, never `seed`. A saver's id is `<app>/<id>`; the shell's live in `src/shell/tiles.js` as `mrly`.
+- `saver: true` in `app.json` is the bridge: with no `SAVERS`, the app is one saver, `<app>/<app>`, named after it; the flag beside `SAVERS` stops the build.
 - Blog posts: `src/pages/blog/<slug>/index.md` is `/blog/<slug>/` (front matter `title`, `date` YYYY-MM-DD, `lead`), with its `icon.js`, the figure `blog-<slug>`.
-- `site.json` `desk` names the saver home plays and the Settings pick offers first.
+- `site.json` `desk` names the desktop saver: an app (its first saver) or a full saver id.
+- `launchpad.json` is where every shown route lives: `sections`, each `{ name, apps }` in order, every route but home and the Launchpad itself in exactly one; `dock`, the groups of the default dock. The Launchpad's Export JSON writes this file byte for byte; the build stops on an unknown id, an id twice, a left-out route and a name twice.
 
 ## ROUTES
 
 - `scripts/build.ts` collects the rows from `src/pages/*/app.json` and `src/apps/*/app.json`, home first, then by id: `{ route, kind, title, source, date, lead, figure, hidden, meta }`.
-- `kind` is `app` (an `index.jsx` or a written entry) or `prose` (a markdown source); `meta` holds `id`, `menu`, `saver`, `deep`, and `prose` (`page`, `post` or `source`).
+- `kind` is `app` (an `index.jsx` or a written entry) or `prose` (a markdown source); `meta` holds `id`, `scene` (an app of `scene.js` and `widget.jsx`), `deep`, and `prose` (`page`, `post` or `source`).
 - `source` is the repo path served at `/raw/<source>` for a prose row, null otherwise; no row carries a body.
 - `/mrlymath/` renders `crates/mrly-core/src/name/NAMES.md`, so the page and the crate never disagree.
-- `research.json` is built from `../research/*/README.md` (a folder with a front matter `title`; `shared/` never): `{ topics: [{ slug, title, figure, figures }] }`, `figure` the README's, `figures` every figure of `<topic>/figures/`.
-- A hidden route (`redirects`, `missing`, `figures`) has no sitemap entry, no `llms.txt` line, no search row and no menu card; it sets no `menu`.
+- `research.json` is built from `../research/*/README.md` (a folder with a front matter `title`; `shared/` never): `{ topics: [{ slug, title, date, lead, figure, figures }] }`, `date` (YYYY-MM-DD, required) and `lead` the README's front matter, `figure` the README's, `figures` every figure of `<topic>/figures/`.
+- A hidden route (`redirects`, `missing`, `figures`) has no sitemap entry, no `llms.txt` line, no search row and no Launchpad tile.
 - A missing url renders "Nothing here" with `noindex`, status 200 by design.
-- The build stops on a bad `app.json`, an unknown figure, a missing source and two rows for one route.
-- `redirects.json` is the moved urls, `{ "/old/": { "to": "/new/", "since": "YYYY-MM-DD" } }`; the edge answers each with a 301, `/redirects/` lists them, and the build drops a row whose target is no route.
+- The build stops on a bad `app.json`, a bad `SAVERS`, a desk that is no saver, an unknown figure, a missing source and two rows for one route.
+- `redirects.json` is the moved urls, `{ "/old/": { "to": "/new/", "since": "YYYY-MM-DD" } }`; `to` may carry a query (`/fractals/?kind=julia`), joined before the asked one; the edge answers each with a 301, the router follows one on an inner link, `/redirects/` lists them, and the build drops a row whose target is no route.
 
 ## FIGURES
 
@@ -78,23 +83,23 @@ request /about/
 
 - `bun run build` runs `scripts/build.ts` into `dist/`, or into `MRLY_DIST`; pure Bun, no Chrome, no cargo.
 - Prime: bundle `src/shell/boot.js`, `src/styles/git.css` and `src/lib/app/mrly.css`; each woff2 ships as `/fonts/<stem>-<sha8>.woff2`.
-- Collect: the routes, the rows, the figure roster, the wasm units, the kept redirects, the raw list (`git ls-files`), the research topics.
+- Collect: the routes, the rows, the figure roster, the wasm units, the kept redirects, the raw list (`git ls-files`), the research topics, the savers (every `scene.js` that exports `SAVERS`, loaded in Bun with `require`).
 - Bundle: one `Bun.build` with splitting over `src/shell/index.html`, `src/shell/app.jsx`, `src/shell/prose.jsx`, `src/pages/git/git.js`, every live figure, every `src/pages/<id>/index.jsx` and `src/shell/lock.js`; each `app:<id>` is a chunk of the `site:apps` thunks.
 - Names: entries `[name]-[hash]`, chunks `lib-[hash]`; the build refuses a bundled file with no hash.
 - Shell: the bundled `index.html` with the hashed boot script swapped in for `/boot.js` and its empty `<style id="tint">` filled with `tintCss(site.tint)` (`withTint`, which dev uses too); `404.html` is its copy.
 - Copy: `raw/<path>` for every listed file, `public/`, the font licences.
-- Globals: `routes.json`, `llms.txt`, `sitemap.xml` with one `sitemap-<section>.xml` per section and `sitemap-raw.xml`, `robots.txt`, `git.json`, `manifest.webmanifest`, `redirects.json`.
+- Globals: `routes.json`, `llms.txt`, `sitemap.xml` with one `sitemap-<section>.xml` per section and `sitemap-raw.xml`, `robots.txt`, `git.json`, `redirects.json`.
 - Write: `dist/` is emptied, then written whole; `bun run push` ships it (`infra/README.md`).
 
 ## VIRTUAL MODULES
 
 - `scripts/build.ts` is one Bun plugin; Bun cannot import a computed path, so each lazy family is a module of `() => import()` thunks.
-- `site:routes`: `{ site, rows }`.
+- `site:routes`: `{ site, rows }`; `site` carries `savers` (`{ id, app, name, title }`, the desk app's first, then the apps by name, the shell's last), `desk` (a saver id), `version` (of `@mrlyprod/mrly`), `units` (the live wasm units) and `licences` (`{ name, href }`, each licence under `/fonts/` and the repo `LICENSE`).
 - `site:figures`: name to figure chunk, the wasm urls of the live units, and the plates.
 - `site:apps`: id to route chunk, `own` (the routes whose index.jsx exports `render`), plus `lock`, the desk and its lock screen.
 - `app:<id>`: an app's entry, `entry(dir)`: `page(Widget, { seed: 0, ...PAGE.defaults }, PAGE)` from its `scene.js` and `widget.jsx`.
 - `site:css`: the `git` and `mrly` sheet urls.
-- `apps:scenes`: the saver scenes, the desk first, then by title.
+- `apps:scenes`: app id to its scene chunk, for every app with a saver, and `mrly` for `src/shell/tiles.js`.
 - `@mrlyprod/mrly/<door>` resolves through `tsconfig.json` paths onto `../bindings/js` and `#view` through the `imports` of `package.json`; the `mrly` plugin, also used by the figure test and `time`, maps both for research figures outside `site/`; `wasm/<unit>/mrly_js_<unit>*` resolves to `site/wasm/`.
 
 ## WASM
@@ -123,8 +128,8 @@ request /about/
 
 ## PUBLIC
 
-- `public/` copies to the site root: `og.png`, `favicon.svg`, `favicon.png`, `favicon.ico`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`.
-- They are committed images, not drawn at build; the shell and `manifest.webmanifest` name them by absolute url.
+- `public/` copies to the site root: `og.png`, `favicon.svg`, `favicon.png`, `favicon.ico`, `apple-touch-icon.png`.
+- They are committed images, not drawn at build; the shell names them by absolute url; there is no web manifest, so browsers offer no install.
 
 ## GENERATED
 

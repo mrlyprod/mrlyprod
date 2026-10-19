@@ -10,6 +10,10 @@ export const REACH = { points: 512, section: 64 };
 const SPAN = 512;
 const PAD = 0.04;
 const FAINT = 18;
+const SHELF = 48;
+const FIT = 0.9;
+const TAU = Math.PI * 2;
+const ROOT6 = Math.sqrt(6);
 
 export const lid = (math, view) => math.bang.level_cap(NUMBER, 1, REACH[view] ?? REACH.points);
 
@@ -26,6 +30,7 @@ export const name = (value) => `cuts-${String(value.code ?? '').trim() || GASKET
 
 export const PAGE = {
   defaults: { base: 2, code: '126', height: '' },
+  design: { dim: 3, base: 'base', code: 'code' },
   spec: SPEC,
   units,
   gestures: true,
@@ -36,13 +41,13 @@ export const PAGE = {
   ],
   name,
   keys: [
-    { key: 'Enter', label: 'Random', act: 'random', button: true },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Height', act: 'height' },
+    { key: 'ArrowLeft', label: 'Height down', act: 'lower', menu: 'View' },
+    { key: 'ArrowRight', label: 'Height up', act: 'higher', menu: 'View' },
     { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
   ],
   actions: {
-    random: (scene) => scene.random?.(),
-    height: (scene, e) => scene.slide?.(e.key === 'ArrowLeft' ? -1 : 1),
+    lower: (scene) => scene.slide?.(-1),
+    higher: (scene) => scene.slide?.(1),
     level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
   },
 };
@@ -109,7 +114,41 @@ export function study(math, value) {
   return { code, base, level, cut, heights: list, rows: facts, art, view: value.view };
 }
 
+/* SHELF */
+
+export function shelf(cut, count = SHELF) {
+  if (cut.empty) return [];
+  const { low, high } = cut;
+  if (high - low < count) return Array.from({ length: high - low + 1 }, (_, i) => low + i);
+  return Array.from({ length: count }, (_, i) => low + Math.round((i * (high - low)) / (count - 1)));
+}
+
+export function near(list, at) {
+  return list.reduce((best, one) => (Math.abs(one - at) < Math.abs(best - at) ? one : best), list[0]);
+}
+
+export function plot(math, code, base, level, height) {
+  return math.three.diagonal_slice(code, NUMBER, level, base, height).map(([x, y, z]) => [(x - y) / Math.SQRT2, (x + y - 2 * z) / ROOT6]);
+}
+
 /* PAINT */
+
+export function thumb(ctx, side, dots, edge, accent) {
+  const reach = (edge - 1) * Math.sqrt(2 / 3);
+  const scale = (FIT * side) / 2 / (reach + Math.SQRT1_2);
+  const radius = Math.max(0.5, scale * Math.SQRT1_2 * FIT);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, side, side);
+  ctx.fillStyle = accent;
+  ctx.beginPath();
+  for (const [u, v] of dots) {
+    const x = side / 2 + u * scale;
+    const y = side / 2 - v * scale;
+    ctx.moveTo(x + radius, y);
+    ctx.arc(x, y, radius, 0, TAU);
+  }
+  ctx.fill();
+}
 
 export const layout = (w, h) => box(0, 0, w, h).inset(Math.min(w, h) * PAD);
 
@@ -174,7 +213,7 @@ export function make(canvas, view, opts = {}) {
     };
     one.src = link;
   };
-  const report = () => tell?.({ rows: plan.rows, cut: plan.cut, heights: plan.heights });
+  const report = () => tell?.({ rows: plan.rows, cut: plan.cut, heights: plan.heights, code: plan.code, base: plan.base, level: plan.level });
   report();
   fetch();
   return {

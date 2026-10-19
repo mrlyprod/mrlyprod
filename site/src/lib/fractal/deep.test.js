@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { rng } from '../rand.js';
 import { FLOOR } from './consts.js';
+import { fixed } from './orbit.js';
 import { FADE, SPAN, deep } from './deep.js';
 import { gl } from '../../../test/fake.js';
 
@@ -206,4 +207,20 @@ test('path 1 draws the plan in one draw after the fractal: a 3 px accent line on
   const none = zigzags();
   deep(none, { ...VIEW, t: 1000 }, { path: 0 }).draw();
   expect(none.draws().filter((one) => one.vs.includes('aShape')).length).toBe(0);
+});
+
+test('a still view holds as time runs, flies once from where it rests, and comes to rest at the bottom span', () => {
+  const still = { centre: [fixed(-0.7463), fixed(0.1102)], span: 0.01, angle: 0.5 };
+  const at = { ...VIEW, t: 0 };
+  const made = deep(gl(), at, { seed: 1, still, bottom: 1e-4 });
+  made.draw();
+  at.t = 60000;
+  made.draw();
+  const held = [made.flying(), made.at() === still];
+  made.fly();
+  const from = made.at();
+  at.t += 20000;
+  made.draw();
+  const end = made.at();
+  expect([...held, from.span, +from.angle.toFixed(9), made.flying(), +end.span.toExponential(6)]).toEqual([false, true, 0.01, 0.5, false, 1e-4]);
 });

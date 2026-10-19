@@ -317,7 +317,8 @@ fn wide_with(
     let wu = w as u128;
     let mut b = Bits::new(w + 64);
     let limit = 1usize << 25;
-    let mut sparse: Vec<u128> = vec![];
+    let mut sparse: Vec<u64> = vec![];
+    let mut next: Vec<u64> = vec![];
     let mut s: u128 = 0;
     let mut seen = 0usize;
     let mut top: Option<usize> = None;
@@ -342,21 +343,22 @@ fn wide_with(
                 } else if z >= s - wu {
                     b.get((s - z) as usize)
                 } else if 2 * z <= s {
-                    sparse.binary_search(&z).is_err()
+                    sparse.binary_search(&(z as u64)).is_err()
                 } else {
-                    sparse.binary_search(&(s - z)).is_err()
+                    sparse.binary_search(&((s - z) as u64)).is_err()
                 }
             };
-            let mut next: Vec<u128> = vec![];
+            next.clear();
+            next.reserve(limit + 1);
             let mut keep = |z: u128| -> bool {
                 if z > wu && z <= half && !mem(z as i128 - x as i128) {
-                    next.push(z);
+                    next.push(z as u64);
                 }
                 next.len() > limit
             };
             let mut spill = false;
             for &g in &sparse {
-                spill |= keep(g) || keep(s - g);
+                spill |= keep(g as u128) || keep(s - g as u128);
             }
             if s > wu {
                 let d = s as i128 - x as i128;
@@ -372,9 +374,9 @@ fn wide_with(
             if spill {
                 return (Verdict::Cap, Lanes::default());
             }
-            next.sort();
+            next.sort_unstable();
             next.dedup();
-            sparse = next;
+            std::mem::swap(&mut sparse, &mut next);
         }
         if x <= wu {
             b.fold(x as usize, w.min(snew as usize));
@@ -385,7 +387,7 @@ fn wide_with(
         top = fresh.or_else(|| top.and_then(|t| b.hole_in(0, t)));
         seen = seen.max(h + 1);
         let t = match sparse.last() {
-            Some(&z) => z + 1,
+            Some(&z) => z as u128 + 1,
             None => top.map_or(0, |z| z as u128 + 1),
         };
         log(n + 1, s, t);
@@ -404,7 +406,7 @@ fn wide_with(
                 false
             });
             for &z in &sparse {
-                count(z);
+                count(z as u128);
             }
             lanes.last = lane(&a, &pre, t - 1);
             let v = Verdict::Found {

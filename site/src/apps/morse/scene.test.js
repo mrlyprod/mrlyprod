@@ -6,8 +6,8 @@ import { defaults } from '../../lib/app/spec.js';
 import { keymap, labels, live } from '../../lib/app/page.jsx';
 import { rgb } from '../../lib/color.js';
 import { rng } from '../../lib/rand.js';
-import { PAD, lay } from './engine.js';
-import { PAGE, SPEC, file, make, stamp } from './scene.js';
+import { PAD, lay, survey } from './engine.js';
+import { PAGE, SPEC, file, make, sketch, stamp, tidied } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -134,6 +134,24 @@ test('the scene is still off the word view, and a set across the word asks for a
   expect([open({}).scene.set({ ...BASE, view: 'word' }), open({ view: 'word' }).scene.set({ ...BASE, view: 'plane' }), open({}).scene.set({ ...BASE, view: 'design' })]).toEqual([false, false, undefined]);
 });
 
+test('the design chip shows on the design view alone', () => {
+  expect(['design', 'plane', 'word'].map((view) => PAGE.design.when({ view }))).toEqual([true, false, false]);
+});
+
 test('an export is named by the picture on the stage', () => {
-  expect([file({ ...BASE, view: 'word', round: 6 }), file({ ...BASE, view: 'word', colour: 'runs' }), file({ ...BASE, lift: 'Sum' }), file({ ...BASE, view: 'design', power: 4 }), file({ ...BASE, view: 'design', read: 'filter', code: 'x' })]).toEqual(['morse-word-6', 'morse-word-6-runs', 'morse-sum-3', 'morse-9-power-4', 'morse-9-filter-3']);
+  const name = (over) => file({ ...BASE, ...over }, { math });
+  expect([name({ view: 'word', round: 6 }), name({ view: 'word', colour: 'runs' }), name({ lift: 'Sum' }), name({ view: 'design', power: 4 }), name({ view: 'design', read: 'filter', code: 'x' })]).toEqual(['morse-word-6', 'morse-word-6-runs', 'morse-sum-3', 'morse-9-power-4', 'morse-7-filter-3']);
+});
+
+test('a thumb draws a grid as one image sampled nearest and the word as its bars, both inside a small edge', () => {
+  const ink = { plus: '#ff0000', minus: '#0000ff', unlit: '#000000', diff: '#00ff00', one: '#ffff00', two: '#ff00ff' };
+  const thumb = (over) => {
+    const log = [];
+    sketch(pen(log), 112, 112, 2, survey({ num, math }, tidied({ ...BASE, ...over })), ink);
+    return log;
+  };
+  const box = lay(112, 112, 16, 0, 7);
+  expect(drawn(thumb({ level: 4 }))).toEqual([[0, 0, 16, 16, box.x, box.y, box.size, box.size]]);
+  const bars = rects(thumb({ view: 'word', round: 3 }));
+  expect([bars.length, Math.min(...bars.map(([, x]) => x)), Math.min(...bars.map(([, , y]) => y))]).toEqual([2 + 4 + 8, 7, 7]);
 });

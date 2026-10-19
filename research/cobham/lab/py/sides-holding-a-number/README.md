@@ -1,6 +1,6 @@
 # sides-holding-a-number
 
-- The numbers of Object E on [Two bases](../../../notes/cobham.md): the even-digit design `E_N` at odd side `N`, its integers `Z_N = 2 K_N`, and which sides hold one number.
+- The numbers of Object E on [Two bases](../../../notes/object-e-and-the-schanuel-wall.md): the even-digit design `E_N` at odd side `N`, its integers `Z_N = 2 K_N`, and which sides hold one number.
 - Exact arithmetic throughout: integers, `Fraction`, and numpy integer arrays; the only floats are the printed ratios, rounded outward where they are bounds.
 - Membership of `p/q` is the orbit rule `N^j p mod 2q in {0, ..., q}`; its control is an independent walk on the digits of `p/q` by `Fraction`.
 
@@ -30,7 +30,7 @@ uv run python research/cobham/lab/py/sides-holding-a-number/sides.py weyl 100000
 
 ## WITNESSES
 
-- `cobham.md`, Object E: the orbit rule against the digit walk, `1661996` checks, the least period `2q`, the bounds and the maximum `2/3`, the rule mod `q`, the coset count and the prime formula at all `12231` fractions with `q <= 200`, and the shares printed there (`period 200`).
+- `object-e-and-the-schanuel-wall.md`, Object E: the orbit rule against the digit walk, `1661996` checks, the least period `2q`, the bounds and the maximum `2/3`, the rule mod `q`, the coset count and the prime formula at all `12231` fractions with `q <= 200`, and the shares printed there (`period 200`).
 - The half-period parity law and the full-period identity at all `4180` pairs with `q` an odd prime `<= 200` (`eisenstein 200`).
 - The readings `0.9821` to `1.0496` of the share to level `L` times `2^L` (`weyl 100000 6`).
 - The error extremes `0.547191`, `0.357533`, `[-0.348228, -0.082525]` and `c(10^6) = 306665` (`count 1000000`).

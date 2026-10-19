@@ -161,7 +161,7 @@ function bar(wood: Wood, path: string, dir: boolean, tools: string[]): string {
     crumbs.push(last ? `<b>${escape(part)}</b>` : `<a href="${href(dirRoute(at))}">${escape(part)}</a>`);
   });
   const side = tools.filter(Boolean).join(" · ");
-  return `<nav class="bar" aria-label="Path"><span class="crumbs">${crumbs.join('<span class="sep">/</span>')}</span><span class="tools">${side}</span></nav>`;
+  return `<nav class="path" aria-label="Path"><span class="crumbs">${crumbs.join('<span class="sep">/</span>')}</span><span class="tools">${side}</span></nav>`;
 }
 
 const lede = (name: string, lead: string) => `<div class="lede"><h1 id="${anchor(name)}">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;

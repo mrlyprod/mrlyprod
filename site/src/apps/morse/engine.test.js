@@ -49,8 +49,8 @@ test('a rolled code is never empty, full or flat, and is the same for one seed',
   expect(roll(math, 3, 3, rng(5))).toBe(roll(math, 3, 3, rng(5)));
 });
 
-test('a typed code wraps by the code count, and a blank or junk code reads as 9, never a roll', () => {
-  expect([coded(math, { code: '21', base: 2 }), coded(math, { code: ' 6 ', base: 2 }), coded(math, { code: '', base: 2 }), coded(math, { code: 'void', base: 3 })]).toEqual(['5', '6', '9', '9']);
+test('a typed code wraps by the code count, and a blank or junk code reads as the carpet of its base, never a roll', () => {
+  expect([coded(math, { code: '21', base: 2 }), coded(math, { code: ' 6 ', base: 2 }), coded(math, { code: '', base: 2 }), coded(math, { code: 'void', base: 3 })]).toEqual(['5', '6', '7', '495']);
 });
 
 test('the lifts open on parity, one grid a lift: parity and and fold as void and carpet read plus-minus, xor is parity again, sum fails', () => {

@@ -19,17 +19,18 @@ test('the stage waits for three as well as the unit', () => {
   expect(page(math).includes('<canvas')).toBe(false);
 });
 
-test("the level runs to the demo's reach of each number, and a source shows only its own groups", () => {
+test("the level runs to the demo's reach of each number, and a source and a crop show only their own groups", () => {
   const max = (html) => /<span>Level<\/span><span class="num">\d+<\/span><input type="range" min="1" max="(\d)"/.exec(html)?.[1];
   expect([2, 3, 4, 5].map((number) => max(knobs({ number })))).toEqual(['7', '4', '3', '3']);
-  expect(folds(knobs({}))).toEqual(['Solid', 'Crop', 'Circle', 'Look']);
-  expect(folds(knobs({ source: 'field' }))).toEqual(['Solid', 'Crop', 'Field', 'Planes', 'Colour', 'Look']);
+  expect(folds(knobs({}))).toEqual(['Solid', 'Circle', 'Look']);
+  expect(folds(knobs({ crop: 'ball' }))).toEqual(['Solid', 'Crop', 'Circle', 'Look']);
+  expect(folds(knobs({ source: 'field', crop: 'ball' }))).toEqual(['Solid', 'Crop', 'Field', 'Planes', 'Colour', 'Look']);
 });
 
 test('Space is the spin: the scene toggles the spin knob and plays while it is on', () => {
   const asked = [];
-  const on = hands(() => ({ ...value, spin: 1 }), (patch) => asked.push(patch), math);
-  const off = hands(() => ({ ...value, spin: 0 }), (patch) => asked.push(patch), math);
+  const on = hands(() => ({ ...value, spin: 1 }), (patch) => asked.push(patch));
+  const off = hands(() => ({ ...value, spin: 0 }), (patch) => asked.push(patch));
   on.toggle();
   off.toggle();
   expect([asked, on.playing(), off.playing()]).toEqual([[{ spin: 0 }, { spin: 1 }], true, false]);

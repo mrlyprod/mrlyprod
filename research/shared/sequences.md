@@ -107,7 +107,7 @@ At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so 
 
 The side axis is code specific, not orbit invariant: a flip of one axis swaps `k` and `k - 1`, so code 9, the void, reads `2k^2 - 2k + 1` where its orbit mate code 6 reads `2k^2 - 2k`, and code 11 reads `3k^2 - 3k + 1` where code 7, the carpet of the same orbit, reads `3k^2 - 2k`. The catalog lists the least code of every orbit, and the table names the code each record needs.
 
-The odd-side fill of a design is a product of norm forms, one per irreducible factor over `Q` of the corner set's weight enumerator, and the divisor tribe is the all-rational floor of that ladder: the field census by degree, signature and dimension is on [integers](../integers/notes/integers.md), THE FIELD LADDER.
+The odd-side fill of a design is a product of norm forms, one per irreducible factor over `Q` of the corner set's weight enumerator, and the divisor tribe is the all-rational floor of that ladder: the field census by degree, signature and dimension is on [integers](../integers/notes/field-ladder.md), THE FIELD LADDER.
 
 ### The level axis
 

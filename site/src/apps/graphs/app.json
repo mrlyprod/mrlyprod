@@ -1,6 +1,4 @@
 {
   "title": "Graphs",
-  "line": "A design as a network: count its tips and pieces, then let the lattice relax.",
-  "menu": "play",
-  "saver": true
+  "line": "A design as a network: count its tips and pieces, then let the lattice relax."
 }

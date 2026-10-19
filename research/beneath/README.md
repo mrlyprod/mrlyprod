@@ -3,6 +3,7 @@ title: Beneath a design
 lead: The object beneath a design as three slots, accept, place and glue: the memory dial priced by a transfer matrix with `kappa` zero on exactly the non-empty product rules over `19563` live classes, the Collatz carry landed on that dial as a four-state transducer of unbounded radius whose zero-carry sets are the golden and supergolden rules at `3n + 1` and `7n + 1`, and the radix dial that keeps every count, carries the gasket, the dragons and the Koch curve as codes with a twist vector, and loses the fill law the moment a digit turns; the Mobius meter of every width-three rule to `2^30` against its own mass, the memory zeta as a matrix ladder with one pole comb per eigenvalue, and the design census up to similarity and up to affine conjugacy.
 figure: research-beneath
 slug: beneath
+date: 2026-09-13
 ---
 
 # Beneath a design
@@ -10,6 +11,11 @@ slug: beneath
 The object beneath a design as three slots, accept, place and glue: the memory dial priced by a transfer matrix with `kappa` zero on exactly the non-empty product rules over `19563` live classes, the Collatz carry landed on that dial as a four-state transducer of unbounded radius whose zero-carry sets are the golden and supergolden rules at `3n + 1` and `7n + 1`, and the radix dial that keeps every count, carries the gasket, the dragons and the Koch curve as codes with a twist vector, and loses the fill law the moment a digit turns; the Mobius meter of every width-three rule to `2^30` against its own mass, the memory zeta as a matrix ladder with one pole comb per eigenvalue, and the design census up to similarity and up to affine conjugacy.
 
 - [notes/beneath.md](notes/beneath.md): Beneath a design
+- [notes/memory-dial.md](notes/memory-dial.md): The memory dial
+- [notes/memory-meter.md](notes/memory-meter.md): The memory meter and zeta
+- [notes/question-mark.md](notes/question-mark.md): The question mark
+- [notes/graph-directed.md](notes/graph-directed.md): Rules as continued fraction sets
+- [notes/radix-dial.md](notes/radix-dial.md): The radix dial
 - [claims/collatz-carry.md](claims/collatz-carry.md): The Collatz carry
 - [claims/memory-dial.md](claims/memory-dial.md): The memory dial
 - [claims/memory-zeta.md](claims/memory-zeta.md): Memory zeta

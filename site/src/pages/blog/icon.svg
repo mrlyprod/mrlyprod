@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#f2f1ec"/></linearGradient>
+    <linearGradient id="paint" x1="0" y1="-74" x2="0" y2="74" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffe466"/><stop offset="0.333" stop-color="#ffe466"/><stop offset="0.333" stop-color="#ffd100"/><stop offset="0.667" stop-color="#ffd100"/><stop offset="0.667" stop-color="#ffad00"/><stop offset="1" stop-color="#ffad00"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="-74" x2="0" y2="74" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f2f2f5"/><stop offset="0.5" stop-color="#c9c9ce"/><stop offset="1" stop-color="#a1a1a8"/></linearGradient>
+    <linearGradient id="rub" x1="0" y1="-74" x2="0" y2="74" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ff9aa6"/><stop offset="1" stop-color="#ff5a6e"/></linearGradient>
+    <linearGradient id="wood" x1="0" y1="-74" x2="0" y2="74" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffecd1"/><stop offset="1" stop-color="#e8bb85"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)" data-key="#ffd100"/>
+  <path d="M313 699C340 776 420 782 500 746S640 702 730 742" fill="none" stroke="#3a3a3c" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" data-dark-stroke="#d1d1d6" data-mono="full"/>
+  <g transform="translate(512.13 499.87) rotate(-45)"><path d="M-300 0L-101.03 -74V74Z" fill="url(#wood)"/><path d="M-300 0L-239.48 -25.16V25.16Z" fill="#3a3a3c" data-dark="#aeaeb2" data-mono="full"/><path d="M-122 74A20.97 24.67 0 0 1 -122 24.67A20.97 24.67 0 0 1 -122 -24.67A20.97 24.67 0 0 1 -122 -74H161V74Z" fill="url(#paint)"/><path d="M-134.58 24.67H161V74H-122A20.97 24.67 0 0 1 -134.58 24.67Z" fill="#ffad00" data-mono="dim"/><path d="M160 -74H223V74H160Z" fill="url(#metal)"/><path d="M180.67 -74V74M201.33 -74V74" stroke="#8e8e93" stroke-width="7" fill="none" data-mono="hide"/><path d="M222 -74H264A36 36 0 0 1 300 -38V38A36 36 0 0 1 264 74H222Z" fill="url(#rub)"/></g>
+</svg>

@@ -5,7 +5,7 @@ import { all, classed, find, mount, text } from '../../../test/dom.js';
 import { Bar } from './frame.jsx';
 import { hit } from './keys.jsx';
 import { Fold, Group } from './controls.jsx';
-import { Held, Scene, called, keymap, live, menu, resume, saves, tail, toggle } from './page.jsx';
+import { Held, Scene, called, carried, keymap, knobbed, live, menu, resume, tail, toggle, undoing } from './page.jsx';
 
 const handle = () => {
   const seen = [];
@@ -118,9 +118,9 @@ test('a scene with toggle and playing owns Space: Space flips the scene, and the
   let flips = 0;
   const Widget = staged(() => ({ draw: () => {}, toggle: () => ((playing = !playing), flips++), playing: () => playing }));
   const seen = await open({ Widget }, async (host) => {
-    const before = text(within(host, 'status'));
+    const before = text(within(host, 'facts'));
     await press(' ');
-    return [before, text(within(host, 'status')), flips, text(within(host, 'keys')).includes('SpacePlay')];
+    return [before, text(within(host, 'facts')), flips, text(within(host, 'keys')).includes('SpacePlay')];
   });
   expect(seen).toEqual(['seed 7', 'seed 7paused', 1, true]);
 });
@@ -145,20 +145,31 @@ test('a still page, or a scene that returns still, binds no Space and never read
   expect([await space({ calm: true, Widget: moving }), await space({ Widget: still }), await space({ Widget: moving })]).toEqual([false, false, true]);
 });
 
-test('the desk status holds the seed and the first four readouts, and Info lists them all', async () => {
+test('the status pill holds the seed and the first three readouts, and Info lists them all', async () => {
   const rows = ['a', 'b', 'c', 'd', 'e', 'f'].map((one, n) => [one, n]);
   const Widget = ({ onStatus }) => {
     useEffect(() => onStatus(rows), []);
     return null;
   };
-  const seen = await open({ Widget }, (host) => [all(within(host, 'status'), classed('out')).map(text), all(within(host, 'info'), (at) => at.tagName === 'DT').length]);
-  expect(seen).toEqual([['a 0', 'b 1', 'c 2', 'd 3'], 6]);
+  const seen = await open({ Widget }, (host) => [all(within(host, 'facts'), classed('out')).map(text), all(within(host, 'info'), (at) => at.tagName === 'DT').length]);
+  expect(seen).toEqual([['a 0', 'b 1', 'c 2'], 6]);
 });
 
-test('the More menu offers Set as screensaver only to an app the site lists as a saver', async () => {
-  const offered = (saver) => open({ saver }, (host) => text(within(host, 'pop')).includes('Set as screensaver'));
-  const site = { site: { savers: [{ id: 'life', title: 'Life' }] } };
-  expect([saves(site, 'life'), saves(site, 'two'), saves(undefined, 'life'), await offered(true), await offered(false)]).toEqual([true, false, false, true, false]);
+test('Cmd or Ctrl with z undoes, with Shift or y redoes, and a text field keeps its own undo', () => {
+  const field = { closest: (selector) => (selector.includes('input') ? {} : null) };
+  const key = (key, more = {}) => undoing({ key, metaKey: true, shiftKey: false, ...more, target: more.target ?? { closest: () => null } });
+  expect([key('z'), key('Z', { shiftKey: true }), key('y'), key('z', { metaKey: false, ctrlKey: true }), key('z', { target: field }), key('z', { metaKey: false }), key('k')]).toEqual([-1, 1, 1, -1, 0, 0, 0]);
+});
+
+test('Reset Knobs puts every spec row back to its default but the keys the design slot holds', () => {
+  const spec = [{ key: 'code', def: '' }, { key: 'level', def: 3 }, { key: 'tint', def: 'site' }];
+  expect(knobbed(spec, ['code'])).toEqual({ level: 3, tint: 'site' });
+});
+
+test('a url with no design takes the current one when it fits the slot, and keeps its own otherwise or when an empty code means something', () => {
+  const slot = { dim: 2, base: 'base', code: 'code' };
+  const at = (search, one) => String(carried(new URLSearchParams(search), slot, one));
+  expect([at('seed=1', { dim: 2, base: 3, code: '42' }), at('code=7', { dim: 2, base: 3, code: '42' }), at('seed=1', { dim: 3, base: 2, code: '23' }), at('seed=1', null), String(carried(new URLSearchParams('seed=1'), { ...slot, blank: 'Random' }, { dim: 2, base: 3, code: '42' }))]).toEqual(['seed=1&base=3&code=42', 'code=7', 'seed=1', 'seed=1', 'seed=1']);
 });
 
 test('the widget is handed the units the page loaded', async () => {

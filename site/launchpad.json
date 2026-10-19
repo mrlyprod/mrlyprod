@@ -1,0 +1,16 @@
+{
+  "sections": [
+    { "name": "Designs", "apps": ["arcs", "chladni", "crop", "cuts", "designs", "graphs", "moire", "morse", "polygons", "radial", "six", "sleep", "slices", "spin", "spirograph", "star", "three", "tourbillon", "two", "wolfram"] },
+    { "name": "Numbers", "apps": ["apollonian", "gaussian", "plot", "radix", "sequences", "tour", "ulam", "zeta"] },
+    { "name": "Fractals", "apps": ["fractals", "zoom"] },
+    { "name": "Space", "apps": ["planets", "lightspeed", "voyage"] },
+    { "name": "Sound", "apps": ["techno", "sfx"] },
+    { "name": "Games", "apps": ["snake"] },
+    { "name": "Simulations", "apps": ["life", "race"] },
+    { "name": "Type", "apps": ["font", "matrix"] },
+    { "name": "Read", "apps": ["about", "blog", "method", "mrlymath", "research"] },
+    { "name": "System", "apps": ["settings", "stats", "git", "contact", "donate", "cart"] },
+    { "name": "Developer", "apps": ["kit", "screensavers"] }
+  ],
+  "dock": [["designs", "three", "life", "sequences", "planets", "snake", "techno", "font"], ["research", "settings"]]
+}

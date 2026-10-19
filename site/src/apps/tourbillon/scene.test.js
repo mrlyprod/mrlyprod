@@ -2,7 +2,7 @@ import { afterAll, expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { defaults, describe } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { NUDGE, STAMP, SWEEP } from './engine.js';
+import { HUSH, NUDGE, REEL, STAMP, SWEEP } from './engine.js';
 import { PAGE, SPEC, make } from './scene.js';
 
 const pen = (log) =>
@@ -77,12 +77,13 @@ test('the page opens still on the increment, drawn once at the fine size, smooth
   expect(page.last()).toMatchObject({ angle: 1, playing: false, size: 256, layers: 11, period: 90, classes: 11, pairs: 0, unused: false });
 });
 
-test('in the lock the spin plays from t with no hand, on the degrees schedule', () => {
+test('in the lock the spin plays from t with no hand, on the degrees schedule, hushed and on a reel', () => {
   const lock = open({ sched: 'golden' }, true);
   lock.at(0);
   lock.at(1000);
   expect(lock.scene.playing()).toBe(true);
-  expect(lock.calls.field.at(-1)[1]).toBeCloseTo(1 + SWEEP);
+  expect(lock.calls.field.at(-1)[1]).toBeCloseTo(1 + HUSH);
+  expect([lock.scene.every, open().scene.every]).toEqual([REEL, 0]);
 });
 
 test('a take started while stopped plays', () => {
@@ -165,9 +166,9 @@ test('a paint key repaints the held field, a plan key restacks it, and a drag of
   expect(page.calls.field[3][0]).toBeLessThan(1024);
 });
 
-test('the primary is the Enter row, and its label follows the scene playing', () => {
+test('the primary is the Enter row in the Edit menu, and its label follows the scene playing', () => {
   const [row] = PAGE.keys;
-  expect([row.button, row.label(start, { playing: () => false }), row.label(start, { playing: () => true })]).toEqual([true, 'Play', 'Stop']);
+  expect([row.menu, row.button, row.label(start, { playing: () => false }), row.label(start, { playing: () => true })]).toEqual(['Edit', true, 'Play', 'Stop']);
 });
 
 test('an export is named by the increment on screen', () => {

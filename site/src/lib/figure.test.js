@@ -32,16 +32,20 @@ test('a seen host is due again when its ink changed or it loops, so a looping fi
   expect([due(host(true, 'a', false), 'a'), due(host(true, 'b', false), 'a'), due(host(true, 'a', true), 'a'), due(host(false, 'b', true), 'a')]).toEqual([false, true, true, false]);
 });
 
-test('a route change frees every host canvas', () => {
+test('a route change frees every host canvas but the kept ones still on the page', () => {
   const real = globalThis.IntersectionObserver;
   globalThis.IntersectionObserver = class {
     observe() {}
-    disconnect() {}
+    unobserve() {}
   };
-  const node = { width: 800, height: 800 };
-  const host = { dataset: { figure: 'home' }, closest: () => null, querySelector: () => node, setAttribute() {}, removeAttribute() {} };
-  scan({ querySelectorAll: () => [host] });
+  const made = (connected) => {
+    const node = { width: 800, height: 800 };
+    return { node, host: { isConnected: connected, dataset: { figure: 'home' }, closest: () => null, querySelector: () => node, setAttribute() {}, removeAttribute() {} } };
+  };
+  const [page, kept, gone] = [made(true), made(true), made(false)];
+  scan({ querySelectorAll: () => [page.host] });
+  scan({ querySelectorAll: () => [kept.host, gone.host] }, false, true);
   drop();
   globalThis.IntersectionObserver = real;
-  expect([node.width, node.height]).toEqual([0, 0]);
+  expect([page, kept, gone].map(({ node }) => node.width)).toEqual([0, 800, 0]);
 });

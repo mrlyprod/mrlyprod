@@ -25,5 +25,5 @@
 
 ## WITNESSES
 
-- `stack.md`, "The novelty meter": the three slopes with their windows, the explicit formula and its residuals, the jump at a prime.
+- `lean-and-meter.md`, "The novelty meter": the three slopes with their windows, the explicit formula and its residuals, the jump at a prime.
 - The Mellin transform of the `C^2` bump at `s = 2` is `24/35`, printed from the closed form beside the exact value.

@@ -24,7 +24,6 @@ export const PAGE = {
     'L steps by two and stays even, since odd L shifts the constant by 1/8. The slope is read from L/2 to L, and only when L is divisible by four. Widening the band W walks the coefficient onto the width law -(K + b)/(4(2K + 1)) at K = floor(W/2), so an odd W reads the same band as the even one under it.',
     'The proofs and the frames the star was measured in are on [the hexagon page](/research/hexagon/).',
   ],
-  actions: { reroll: (scene) => scene.random?.() },
 };
 
 const read = (opts) => ({ ...tidy(SPEC, opts), seed: opts.seed >>> 0 });

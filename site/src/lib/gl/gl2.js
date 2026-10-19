@@ -38,7 +38,7 @@ const park = (gl) => gl.activeTexture(gl.TEXTURE0 + SCRATCH);
 
 export function context(canvas) {
   try {
-    return canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false }) ?? null;
+    return canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: true }) ?? null;
   } catch {
     return null;
   }

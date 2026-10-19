@@ -1,10 +1,10 @@
 import { num as fix, lines, path, sheet } from '../../lib/app/svg.js';
+import { classes, facts } from '../../lib/designs/engine.js';
 
 export const DIM = 2;
 export const BOX = 3;
 export const BUDGET = 131072;
 export const MOST = 20;
-export const FEW = 5;
 export const PAD = 16;
 export const GAP = 0.12;
 export const SMALL = 6;
@@ -13,6 +13,7 @@ export const SIZE = 2048;
 export const UNIT = 10;
 export const THIN = 0.25;
 export const KEEP = 4;
+export const GLANCE = 3000;
 export const RINGS = [['gaussian', 'Z[i], square'], ['eisenstein', 'Z[w], hexagonal']];
 export const BASES = { gaussian: ['2:0', '1:1', '2:1', '3:0'], eisenstein: ['2:0', '2:1', '3:0', '3:1'] };
 export const LETTERS = { gaussian: 'i', eisenstein: 'w' };
@@ -20,8 +21,6 @@ export const DRAWN = [[0, 'Cells'], [1, 'Line']];
 export const KOCH = { ring: 'eisenstein', base: '3:0', d: '0:0_1:0_2:1_2:0', t: '0_1_5_0', level: 5, line: 1 };
 export const PRESETS = [['koch', 'Koch curve', 5, 1], ['terdragon', 'Terdragon', 8, 1], ['twindragon', 'Twindragon', 14, 0], ['gasket', 'Gasket', 7, 0], ['flowsnake', 'Flowsnake', 5, 0], ['carpet', 'Carpet', 5, 0]];
 const CARPET = 495;
-const CELLS = BOX * BOX;
-const TOTAL = 2 ** CELLS;
 const TAU = Math.PI * 2;
 
 /* WORDS */
@@ -59,6 +58,12 @@ export function deepest(fill) {
 }
 
 export const cap = (value) => deepest(count(value.d));
+
+export function glance(fill, level = MOST) {
+  let at = 1;
+  while (at < Math.min(level, MOST) && fill ** (at + 1) <= GLANCE) at++;
+  return at;
+}
 
 /* DIAL */
 
@@ -138,21 +143,6 @@ export const wears = (value, patch) => Boolean(patch) && ['ring', 'base', 'd', '
 
 /* BOX */
 
-export const boxy = (value) => value.ring === 'gaussian' && value.base === `${BOX}:0`;
-
-export function bits(code) {
-  let n = 0;
-  for (let c = code; c; c >>>= 1) n += c & 1;
-  return n;
-}
-
-export function roll(rand) {
-  let code;
-  do code = 1 + Math.floor(rand() * (TOTAL - 1));
-  while (bits(code) < FEW || bits(code) >= CELLS);
-  return String(code);
-}
-
 export function boxOf(dialed) {
   let code = 0;
   for (const { z: [x, y], u } of dialed.held) {
@@ -160,6 +150,13 @@ export function boxOf(dialed) {
     code += 2 ** (x + BOX * y);
   }
   return String(code);
+}
+
+export function boxes(math) {
+  const named = math.name.words(DIM, BOX).map(([code, word]) => [String(code), word]);
+  const seen = new Set(named.map(([code]) => String(facts(math, DIM, BOX, code).rep)));
+  const rest = (classes(math, DIM, BOX) ?? []).map(({ code }) => [String(code), '']).filter(([code]) => !seen.has(code));
+  return { named, rest };
 }
 
 export function boxed(num, math, code) {
@@ -220,7 +217,7 @@ export function span(pts) {
 
 /* STUDY */
 
-export function study(num, math, value) {
+export function study(num, math, value, most = MOST) {
   const { ring, letter, base, held, units, error } = dial(num, math, value);
   const bare = new math.radix.Radix(base, held.map(({ z }) => z), held.map(() => [1, 0]));
   const radix = bare.with_twists(Uint32Array.from(held.map(({ u }) => u)));
@@ -231,7 +228,7 @@ export function study(num, math, value) {
   const norm = Number(base.norm());
   const sides = units.length;
   const size = radix.size();
-  const top = deepest(size);
+  const top = Math.min(deepest(size), most);
   const down = sides === 4 && bc === 0;
   const sign = down ? 1 : -1;
   const levels = [];

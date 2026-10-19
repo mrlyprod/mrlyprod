@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
 import * as num from '@mrlyprod/mrly/num';
-import { defaults } from '../../lib/app/spec.js';
+import { defaults, describe, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { HOLD, count, hit, layout, roll, study } from './engine.js';
-import { FACE, SPEC, fg, file, make } from './scene.js';
+import { GLANCE, HOLD, ROOTS, count, hit, layout, quadruple, roll, study } from './engine.js';
+import { FACE, PAGE, SLOW, SPEC, fg, file, make, portrait } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -89,16 +89,16 @@ test('a draw with nothing new paints nothing, so a still page costs no frame', (
   expect(live.at(SPAN + HOLD + 100)).toEqual([]);
 });
 
-test('in the lock the packing grows an octave a second from the first grown circles, holds, then starts over', () => {
+test('in the lock the packing grows an octave every SLOW seconds from the first grown circles, holds, then starts over', () => {
   const lock = open({}, { lock: true });
   lock.at(0);
   expect(laid()).toBe(count(PLAN.data, PLAN.roots, PLAN.total, PLAN.k0));
-  lock.at(SPAN / 2);
+  lock.at((SPAN / 2) * SLOW);
   expect(laid()).toBe(count(PLAN.data, PLAN.roots, PLAN.total, 128));
-  lock.at(SPAN);
+  lock.at(SPAN * SLOW);
   expect(laid()).toBe(PLAN.total);
-  expect(lock.at(SPAN + HOLD / 2)).toEqual([]);
-  lock.at(SPAN + HOLD + 100);
+  expect(lock.at((SPAN + HOLD / 2) * SLOW)).toEqual([]);
+  lock.at((SPAN + HOLD + 100) * SLOW);
   expect(laid()).toBeLessThan(PLAN.total / 100);
 });
 
@@ -252,4 +252,24 @@ test('the json carries the root quadruple and every grown circle as an integer t
   const rows = JSON.parse(live.scene.json());
   expect([rows.root, rows.cap, rows.quadruple, rows.circles.length]).toEqual(['strip', 64, [[0, 0, -1], [0, 0, 1], [2, 0, 1], [2, 2, 1]], 26]);
   expect(rows.circles.slice(0, 2)).toEqual([[8, 4, 1], [8, 4, 7]]);
+});
+
+test('the root is a url key the knobs no longer show, the library picks it, and the cap arrows are also in the View menu', () => {
+  expect(describe(SPEC, defaults(SPEC)).flatMap(({ rows }) => rows.map((row) => row.key))).not.toContain('root');
+  expect(tidy(SPEC, { root: '-2,3,6,7' }).root).toBe('-2,3,6,7');
+  expect(PAGE.keys.map((row) => [row.act, row.menu])).toEqual([['cap', 'View']]);
+  expect(ROOTS.map(quadruple)).toEqual(['(0, 0, 2, 2)', '(-1, 2, 2, 3)', '(-2, 3, 6, 7)', '(-3, 4, 12, 13)']);
+});
+
+test('a library thumb draws every circle of the packing at the glance cap, and the hull of a bounded root, clipped to the period on the strip', () => {
+  const thumb = (root) => {
+    const log = [];
+    portrait(num, root, pen(log), 112, 112, 1, { paper: PAPER });
+    return log;
+  };
+  const arcs = (log) => log.filter(([name]) => name === 'arc').length;
+  const strip = thumb('strip');
+  const round = thumb('-1,2,2,3');
+  expect([arcs(strip), strip.some(([name]) => name === 'clip')]).toEqual([num.apollonian.flat('strip', GLANCE).length / 4, true]);
+  expect([arcs(round), round.some(([name]) => name === 'clip')]).toEqual([num.apollonian.flat('-1,2,2,3', GLANCE).length / 4 + 1, false]);
 });

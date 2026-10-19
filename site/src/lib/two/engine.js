@@ -1,4 +1,5 @@
-import { settle } from '../designs/engine.js';
+import { tidy } from '../app/spec.js';
+import { DESIGN, canon } from '../designs/engine.js';
 import { runs } from '../app/svg.js';
 
 export const DIM = 2;
@@ -25,7 +26,9 @@ export function memo() {
 
 /* DESIGN */
 
-export const design = (math, base, code, rand) => settle(math, DIM, base, code, rand);
+export const read = (value) => tidy(DESIGN, value);
+
+export const design = (math, base, code) => canon(math, DIM, base, code);
 
 export const named = (math, code, base) => math.name.of(code, DIM, base) ?? '';
 

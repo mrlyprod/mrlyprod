@@ -3,6 +3,7 @@ title: The toolpath
 lead: Self-similar curves on the triangular lattice as one-stroke print paths, and the sharp turn a printer slows for: the edge-covering kind never turns 60 degrees, every point-avoiding replacement curve of order 3 to 13 (order 12 without mirrors) turns 120 degrees at some level, the junction law that makes that a finite check, the exact sharp-turn count of the Gosper curve, the bead axis, which on the Gosper curve fades as `7^(-k/2)`, slower than Hilbert's, while Peano's holds at `1/2`, and the radix census, where unit steps at every level are one identity at level 1 and a short periodic check and no plane-filling replacement curve with every flag `F` to a chord among the seven radix bases avoids points.
 figure: research-toolpaths
 slug: toolpaths
+date: 2026-09-23
 ---
 
 # The toolpath

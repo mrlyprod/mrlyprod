@@ -2,7 +2,7 @@ import { tidy } from '../../lib/app/spec.js';
 import { TINTS, paints, veil } from '../../lib/color.js';
 import { num, runs, sheet } from '../../lib/app/svg.js';
 import { DESIGN } from '../../lib/designs/engine.js';
-import { cell, design, lay, memo, named, stamp, shot } from '../../lib/two/engine.js';
+import { DIM, cell, design, lay, memo, named, stamp, shot } from '../../lib/two/engine.js';
 import { second } from '../../lib/two/scene.js';
 import { CUT, IN, OUT, POLICIES, RDEN, RMAX, SHAPES, census, circle, counted, exposed, grid, keep, layers, outline, room, shape, top } from './engine.js';
 import { wasm } from '../../lib/units/index.js';
@@ -16,7 +16,7 @@ const most = (value, units) => room(units.math, value.number, value.count, value
 export const SPEC = [
   { key: 'number', label: 'Number', kind: 'slider', def: 3, min: 2, max: 7, step: 1, group: 'Design', when: never },
   { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value, units) => units && top(units.math, value.number), step: 1, keep: true, group: 'Design', when: never },
-  { key: 'shape', label: 'Shape', kind: 'pick', def: 'ball', options: SHAPES, group: 'Shape' },
+  { key: 'shape', label: 'Shape', kind: 'pick', def: 'ball', options: SHAPES, group: 'Shape', when: never },
   { key: 'radius', label: 'Radius', kind: 'slider', def: 60, min: 0, max: RMAX, step: 1, unit: `/${RDEN}`, group: 'Shape' },
   { key: 'mode', label: 'Mode', kind: 'segment', def: 'crop', options: [['crop', 'Crop'], ['anti', 'Anti']], group: 'Shape' },
   { key: 'policy', label: 'Policy', kind: 'pick', def: 'touching', options: POLICIES, group: 'Shape' },
@@ -32,8 +32,24 @@ export const name = (value) => `crop-${String(value.code ?? '').trim() || value.
 
 export const units = wasm('math');
 
+const framed = (shape, radius, mode = 'crop', policy = 'touching', edge = 0) => ({ shape, radius, mode, policy, edge });
+
+export const WINDOWS = [
+  ['Porthole', framed('ball', 36)],
+  ['Moon', framed('ball', 84)],
+  ['Lozenge', framed('diamond', 72)],
+  ['Arrowhead', framed('triangle', 66)],
+  ['Stop', framed('octagon', 66)],
+  ['Frame', framed('box', 54, 'anti')],
+  ['Eclipse', framed('ball', 66, 'anti')],
+  ['Exact', framed('ball', 66, 'crop', 'touching', 1)],
+  ['Fine rim', framed('ball', 66, 'crop', 'refined2')],
+  ['Inside', framed('ball', 66, 'crop', 'inside')],
+];
+
 export const PAGE = {
   defaults: { base: 2, code: '7' },
+  design: { dim: DIM, base: 'base', code: 'code' },
   spec: SPEC,
   units,
   gestures: true,
@@ -45,10 +61,10 @@ export const PAGE = {
   ],
   name,
   keys: [
-    { key: 'Enter', label: 'Anti', act: 'mode', button: true, when: (value) => value.mode !== 'anti' },
-    { key: 'Enter', label: 'Crop', act: 'mode', button: true, when: (value) => value.mode === 'anti' },
+    { key: 'Enter', label: 'Anti', act: 'mode', button: true, menu: 'Edit', when: (value) => value.mode !== 'anti' },
+    { key: 'Enter', label: 'Crop', act: 'mode', button: true, menu: 'Edit', when: (value) => value.mode === 'anti' },
     { key: ['ArrowLeft', 'ArrowRight'], label: 'Radius', act: 'radius' },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
+    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level', menu: 'View' },
   ],
   actions: {
     mode: (scene) => scene.flip?.(),
@@ -65,13 +81,13 @@ const UNIT = 10;
 
 /* PLAN */
 
-export function plan(math, next, rand, stages = {}) {
+export function plan(math, next, stages = {}) {
   const at = (name) => (stages[name] ??= memo());
   const value = { ...tidy(DESIGN, next), ...tidy(SPEC, next, { math }) };
   const { base, number, level, radius, policy, centre, count: deep, r } = value;
   const anti = value.mode === 'anti';
   const edge = Boolean(value.edge);
-  const code = at('code')(`${base}:${value.code}:${next.seed}`, () => design(math, base, value.code, rand));
+  const code = at('code')(`${base}:${value.code}:${next.seed}`, () => design(math, base, value.code));
   const one = [code, base, number, level].join();
   const types = at('types')(one, () => grid(math, code, number, level, base));
   const before = at('before')(one, () => exposed(math, types));
@@ -157,6 +173,19 @@ export function stage(w, h) {
   return { x, y, w: px, h: px };
 }
 
+/* SKETCH */
+
+const GLANCE = 64;
+
+export function sketch(pen, math, next, side, dpr, look = paints(pen.canvas, next.tint)) {
+  let level = 1;
+  while (next.number ** (level + 1) <= GLANCE) level++;
+  const now = plan(math, { ...next, level, circle: 0, policy: next.policy === 'inside' ? 'inside' : 'touching' });
+  pen.setTransform(1, 0, 0, 1, 0, 0);
+  pen.clearRect(0, 0, side, side);
+  crop(pen, now, stage(side, side), inks(pen.canvas, { look: () => look }, next.tint), dpr);
+}
+
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
@@ -164,7 +193,7 @@ export function make(canvas, view, opts = {}) {
   if (!math) throw new Error('crop: the scene wants @mrlyprod/mrly/math as opts.math');
   const ctx = canvas.getContext('2d');
   const stages = {};
-  let now = plan(math, opts, view.rand, stages);
+  let now = plan(math, opts, stages);
   let dirty = true;
   const draw = () => {
     if (!dirty) return;
@@ -180,7 +209,7 @@ export function make(canvas, view, opts = {}) {
     draw();
   };
   const set = (next) => {
-    now = plan(math, next, view.rand, stages);
+    now = plan(math, next, stages);
     touch();
   };
   const drag = (px, py) => {

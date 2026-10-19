@@ -3,6 +3,7 @@ title: The stack is an RH-observable
 lead: The stack's moire is a Farey resonance diagram; each scale `n` adds exactly `phi(n)` bright nodes, the stack is an address rather than a construction (any depth evaluates in closed form, which buys rendering and provably nothing toward RH), and restricting the Farey sequence to a digit design empties a fixed sixth of the line at base 3 `{0,1}` when both coordinates are restricted, while restricting the denominator alone leaves the Franel-Landau shape reading the same.
 figure: research-farey
 slug: farey
+date: 2026-08-28
 ---
 
 # The stack is an RH-observable

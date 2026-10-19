@@ -15,9 +15,3 @@
 |---|---|---|
 | Huang 2019 | Induced subgraphs of hypercubes and a proof of the Sensitivity Conjecture, Annals of Mathematics 190(3) | https://doi.org/10.4007/annals.2019.190.3.6 |
 | Huang 2019 preprint | same paper, arXiv:1907.00847 | https://arxiv.org/abs/1907.00847 |
-
-## REFERENCE PAGES
-
-| ref | title | url |
-|---|---|---|
-| OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |

@@ -1,6 +1,6 @@
 # design-recursion
 
-- The design meter `M_F(x) = sum of mu(n) over n in S_F, n <= x` at base 3 `{0,1}` to `3^27`, beside `A(x)`, the same sum over the elements coprime to `3`, and the recursion of [the Franel note](../../../notes/franel.md)'s section The recursion in the base, `M_F(x) = A(x) - A(x/3)`, asserted exactly at every `3^n`.
+- The design meter `M_F(x) = sum of mu(n) over n in S_F, n <= x` at base 3 `{0,1}` to `3^27`, beside `A(x)`, the same sum over the elements coprime to `3`, and the recursion of [the Franel note](../../../notes/identity-and-recursion.md)'s section The recursion in the base, `M_F(x) = A(x) - A(x/3)`, asserted exactly at every `3^n`.
 - Prints, at every `n`, `M_F(3^n)`, `A(3^n)`, the running maximum `max abs M_F(y)` over `y <= 3^n`, the reading `log max / log 3^n` and the same over `log 2^n`, the least-squares slope of `log max` on `log x` over the five rungs `n-4..n` with the bracket `[min, max]` of the reading over them, and `abs A(3^n)/(n + 1)`, the floor the recursion puts under `max_(j <= n) abs M_F(3^j)`.
 
 ## METHOD

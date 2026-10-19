@@ -40,12 +40,18 @@ async function wood(url: string): Promise<Wood | null> {
 
 const tail = () => (document.title.includes(" · ") ? document.title.slice(document.title.lastIndexOf(" · ")) : "");
 
+const roller = () => document.getElementById("main");
+
+const roll = (top: number) => roller()?.scrollTo({ top, behavior: "instant" });
+
+type Kept = { y?: number; depth?: number } | null;
+
 function settle() {
   const id = decode(location.hash.slice(1));
   const spot = id ? document.getElementById(id) : null;
-  const kept = (history.state as { y?: number } | null)?.y;
+  const kept = (history.state as Kept)?.y;
   if (spot) spot.scrollIntoView();
-  else if (kept !== undefined) scrollTo(0, kept);
+  else if (kept !== undefined) roll(kept);
 }
 
 function mark(base: string, path: string, mine: number) {
@@ -146,10 +152,11 @@ function wire(data: Wood, options: Options, brand: string): () => void {
     if (!a || a.target || a.hasAttribute("download") || a.origin !== location.origin || !a.pathname.startsWith(data.base)) return;
     if (a.pathname === location.pathname && a.hash) return;
     event.preventDefault();
-    if (a.pathname === location.pathname) return scrollTo(0, 0);
-    history.replaceState({ y: scrollY }, "");
-    history.pushState(null, "", a.href);
-    scrollTo(0, 0);
+    if (a.pathname === location.pathname) return roll(0);
+    const was = history.state as Kept;
+    history.replaceState({ ...was, y: Math.round(roller()?.scrollTop ?? 0) }, "");
+    history.pushState({ depth: (was?.depth ?? 0) + 1 }, "", a.href);
+    roll(0);
     go();
   };
   const pop = () => {

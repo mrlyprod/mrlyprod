@@ -11,7 +11,14 @@ export function node(tag, nodeType = 1) {
     tagName: tag.toUpperCase(),
     namespaceURI: 'http://www.w3.org/1999/xhtml',
     childNodes: kids,
-    style: {},
+    style: {
+      setProperty(name, value) {
+        this[name] = value;
+      },
+      removeProperty(name) {
+        delete this[name];
+      },
+    },
     attributes: {},
     dataset: {},
     parentNode: null,

@@ -1,4 +1,8 @@
 import type { Ink, Pen } from "#view";
+import census from "./paper-spectral-tiling-levels.json" with { type: "json" };
+
+type Column = [number[], number[]];
+type Census = { base: number; digits: number[]; depth: number; low: number; high: number; points: number; columns: number; gap: number; thin: number; heights: number[]; stacks: Column[][] };
 
 export const units = {};
 
@@ -7,59 +11,54 @@ const DIGITS = [0, 3, 6, 9];
 const DEPTH = 5;
 const LOW = -1.25;
 const HIGH = 2;
-const TERMS = 16;
+const GAP = 4;
 
-function lattice(): number[] {
-  let pts = [0];
-  for (let j = 0; j < DEPTH; j++) {
-    const w = BASE ** j;
-    pts = pts.flatMap((p) => DIGITS.map((l) => p + w * l));
+// FACTS
+
+function check(c: Census, cols: number, side: number) {
+  if (c.base !== BASE || c.digits.join() !== DIGITS.join() || c.depth !== DEPTH || c.low !== LOW || c.high !== HIGH) throw new Error("paper-spectral-tiling-levels: the census draws another measure");
+  if (c.points !== 4 ** DEPTH) throw new Error(`paper-spectral-tiling-levels: ${c.points} lattice points, want ${4 ** DEPTH}`);
+  if (c.columns !== cols || c.heights.length !== cols || c.stacks.length !== 2 || c.stacks.some((s) => s.length !== cols)) throw new Error(`paper-spectral-tiling-levels: the census holds ${c.columns} columns, the frame ${cols}`);
+  if (c.gap !== GAP || Math.abs(c.thin * side - GAP) > 1e-9) throw new Error(`paper-spectral-tiling-levels: bands thinner than ${c.thin * side} px merged, want ${GAP}`);
+  const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
+  for (let k = 0; k < cols; k++) {
+    const q = c.heights[k];
+    if (!(q <= 1 + 1e-9 && q > 1 - 1e-2)) throw new Error(`paper-spectral-tiling-levels: Q at column ${k} = ${q}`);
+    let total = 0;
+    for (const [bands, runs] of c.stacks.map((s) => s[k])) {
+      if (runs.length !== bands.length + 1) throw new Error(`paper-spectral-tiling-levels: column ${k} holds ${bands.length} bands and ${runs.length} runs`);
+      if (bands.some((b) => b < c.thin) || runs.some((r) => r < 0)) throw new Error(`paper-spectral-tiling-levels: column ${k} holds a thin band or a negative run`);
+      total += sum(bands) + sum(runs);
+    }
+    if (Math.abs(total - q) > 1e-6) throw new Error(`paper-spectral-tiling-levels: column ${k} stacks to ${total}, Q = ${q}`);
   }
-  return pts.sort((a, b) => a - b);
 }
 
-function power(xi: number): number {
-  let v = 1;
-  let t = xi;
-  for (let j = 0; j < TERMS; j++) {
-    t /= BASE;
-    v *= Math.cos(Math.PI * t) * Math.cos(8 * Math.PI * t);
-  }
-  return v * v;
-}
+// DRAW
 
 export default function draw(pen: Pen, ink: Ink) {
-  const base = lattice();
-  if (base.length !== 4 ** DEPTH) throw new Error(`paper-spectral-tiling-levels: ${base.length} lattice points, want ${4 ** DEPTH}`);
-  const groups = [base.map((l) => 3 * l), base.map((l) => 3 * l + 0.75)];
+  const data = census as Census;
   const frame = pen.frame(0.08);
   const cols = Math.round(frame.w);
+  check(data, cols, frame.h);
   const tones = [ink.blue, ink.orange];
   for (let c = 0; c < cols; c++) {
-    const xi = LOW + ((c + 0.5) / cols) * (HIGH - LOW);
-    const parts = groups.map((g) => g.map((l) => power(xi - l)));
-    const total = parts.flat().reduce((a, b) => a + b, 0);
-    if (!(total <= 1 + 1e-9 && total > 1 - 1e-2)) throw new Error(`paper-spectral-tiling-levels: Q(${xi}) = ${total}`);
     let y = frame.y + frame.h;
-    parts.forEach((bands, g) => {
-      let run = 0;
-      const flush = () => {
-        if (run > 0) pen.rect(frame.x + c, y - run, 1, run, tones[g]);
-        y -= run;
-        run = 0;
-      };
-      for (const q of bands) {
+    data.stacks.forEach((stack, g) => {
+      const [bands, runs] = stack[c];
+      const run = (q: number) => {
         const h = q * frame.h;
-        if (h < 4) {
-          run += h;
-          continue;
-        }
-        flush();
+        if (h > 0) pen.rect(frame.x + c, y - h, 1, h, tones[g]);
+        y -= h;
+      };
+      bands.forEach((q, i) => {
+        run(runs[i]);
+        const h = q * frame.h;
         pen.rect(frame.x + c, y - h, 1, h - 1.5, tones[g]);
         pen.rect(frame.x + c, y - 1.5, 1, 1.5, ink.ground);
         y -= h;
-      }
-      flush();
+      });
+      run(runs[bands.length]);
     });
   }
 }

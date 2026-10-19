@@ -1,5 +1,5 @@
 import { hex } from '../color.js';
-import { settle } from '../designs/engine.js';
+import { canon } from '../designs/engine.js';
 
 export const DIM = 3;
 export const CARPET = '23';
@@ -73,7 +73,7 @@ export function top(math, number, count, centre) {
 export function design(math, value) {
   const base = Number(value.base) === 3 ? 3 : 2;
   const text = String(value.code ?? '').trim();
-  return { base, code: settle(math, DIM, base, text || CARPET) };
+  return { base, code: canon(math, DIM, base, text) };
 }
 
 export function named(math, code, base) {

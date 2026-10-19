@@ -46,4 +46,4 @@ cargo run --release --manifest-path research/cobham/lab/rs/sumset-density/Cargo.
 
 ## WITNESSES
 
-- `cobham.md` section "Object S: the base-3 design plus the base-4 design", every number there.
+- `object-s-base-3-plus-base-4.md` section "Object S: the base-3 design plus the base-4 design", every number there.

@@ -2,7 +2,7 @@ import { dark, light } from '../theme/theme.js';
 import { hex, rgb } from '../color.js';
 import { rng } from '../rand.js';
 import { ink } from '#view';
-import { settle } from '../designs/engine.js';
+import { canon } from '../designs/engine.js';
 
 export const RAMPS = [['fire', 'Fire'], ['heat', 'Heat'], ['diverge', 'Diverge'], ['tint', 'Tint'], ['ink', 'Ink'], ['bands', 'Bands']];
 export const COMBINES = [['sum', 'Sum'], ['and', 'And'], ['xor', 'Xor'], ['hive', 'Hive']];
@@ -10,7 +10,7 @@ export const CROPS = [['', 'Off'], ['ball', 'Ball'], ['box', 'Box'], ['diamond',
 export const SIZES = [128, 256, 384, 512];
 export const TOP = 41;
 export const BEAT = 350;
-const DEEPEST = 5;
+export const DEEPEST = 5;
 export const GRAIN = 32;
 const DIM = 2;
 const MERGE = { sum: 'Sum', and: 'And', xor: 'Xor', hive: 'Sum' };
@@ -88,9 +88,9 @@ export function paint(math, { field: made, data }, colors, levels, invert, symme
 
 /* DESIGN */
 
-export function design(math, value, rand) {
+export function design(math, value) {
   const base = Number(value.base) === 2 ? 2 : 3;
-  const code = settle(math, DIM, base, value.code, rand);
+  const code = canon(math, DIM, base, value.code);
   const level = Math.min(DEEPEST, Math.max(1, Math.round(Number(value.level) || 1)));
   return { base, code, level, name: math.name.of(code, DIM, base) ?? '' };
 }
@@ -159,10 +159,17 @@ export function law(math, limit, scale, mate) {
 
 /* STUDY */
 
-export function study(math, value, rand) {
-  const made = design(math, value, rand);
+export function study(math, value) {
+  const made = design(math, value);
   const numbers = odd(value.limit);
   return { ...made, numbers, spec: math.moire.Spec.new(made.code, made.base, DIM), merge: MERGE[value.combine] ?? 'Sum', lattice: value.combine === 'hive' ? 'Hex' : 'Square' };
+}
+
+export function swatch(math, value, size, look) {
+  const made = field(math, study(math, value), size);
+  const out = paint(math, made, colorizer(value.ramp, value.levels, look), value.levels, value.invert);
+  made.field.free();
+  return out;
 }
 
 export function crop(math, name, radius, anti, size) {

@@ -22,6 +22,13 @@ function decide(uri) {
     return { redirect: uri + '/' };
 }
 
+function join(to, tail) {
+    if (!tail || to.indexOf('?') === -1) {
+        return to + tail;
+    }
+    return to + '&' + tail.substring(1);
+}
+
 function search(query) {
     var parts = [];
     for (var key in query) {
@@ -42,7 +49,7 @@ function handler(event) {
     }
     var step = decide(request.uri);
     if (step.redirect) {
-        return redirect(step.redirect + tail);
+        return redirect(join(step.redirect, tail));
     }
     request.uri = step.uri;
     return request;

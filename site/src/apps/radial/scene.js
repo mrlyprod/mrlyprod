@@ -1,16 +1,29 @@
 import { defaults, tidy } from '../../lib/app/spec.js';
 import { BLENDS, COPIES, OUT, degrees, edge, key, layout, paint, petals, rosette, stops, study } from '../../lib/spin/engine.js';
 import { LOOK, PAD, SOURCE, place, sheet, tag } from '../../lib/spin/scene.js';
+import { wasm } from '../../lib/units/index.js';
+
+const HIDE = () => false;
 
 export const STACK = [
   { key: 'copies', label: 'Copies', kind: 'slider', def: 6, min: 1, max: COPIES, step: 1 },
   { key: 'full', label: 'Full turn', kind: 'toggle', def: 1 },
   { key: 'step', label: 'Step', kind: 'slider', def: 60, min: 0, max: 360, step: 0.5, unit: 'deg', when: (value) => Number(value.full) !== 1 },
-  { key: 'blend', label: 'Blend', kind: 'pick', def: 'mean', options: BLENDS },
+  { key: 'blend', label: 'Blend', kind: 'pick', def: 'mean', options: BLENDS, when: HIDE },
   { key: 'samples', label: 'Samples', kind: 'segment', def: 2, options: [[1, '1'], [2, '2'], [3, '3']] },
 ];
 
 export const SPEC = [...STACK, ...LOOK];
+
+export const STACKS = [
+  ['Pair', { copies: 2, full: 1 }],
+  ['Three', { copies: 3, full: 1 }],
+  ['Six', { copies: 6, full: 1 }],
+  ['Twelve', { copies: 12, full: 1 }],
+  ['Afterglow', { copies: 2, full: 0, step: 45 }],
+  ['Pentagram', { copies: 5, full: 0, step: 144 }],
+  ['Golden angle', { copies: 34, full: 0, step: 137.5 }],
+];
 
 const STEP = { ArrowUp: 0.5, ArrowDown: -0.5 };
 
@@ -21,16 +34,20 @@ const ABOUT = [
   'Two copies at 45 degrees is the picture an afterglow paints at 900 rpm on a 60 Hz screen. Which harmonics a turned stack keeps is in [the spin topic](/research/spin/) of Research.',
 ];
 
-export const name = (value) => `radial-${tag(value)}-${value.copies}`;
+export const name = (value, units) => `radial-${tag(value, units?.math)}-${value.copies}`;
+
+export const units = wasm('math');
 
 export const PAGE = {
   defaults: defaults(SOURCE),
   spec: SPEC,
+  units,
+  design: { dim: 'dim', base: 'base', code: 'code', when: (value) => value.source !== 'moire' },
   about: ABOUT,
   name,
   keys: [
-    { key: 'Enter', label: 'Full turn', act: 'whole', button: true, when: (value) => Number(value.full) !== 1 },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Copies', act: 'copies' },
+    { key: 'Enter', label: 'Full turn', act: 'whole', button: true, menu: 'Edit', when: (value) => Number(value.full) !== 1 },
+    { key: ['ArrowLeft', 'ArrowRight'], label: 'Copies', act: 'copies', menu: 'Edit' },
     { key: Object.keys(STEP), label: 'Step', act: 'step' },
   ],
   actions: {
@@ -59,9 +76,9 @@ export function make(canvas, view, opts = {}) {
   let disc = null;
   let line = edge(view.look());
   let fresh = true;
-  const marked = () => key({ ...value, seed: given.seed >>> 0 });
+  const marked = () => key(value);
   const learn = () => {
-    plan = study(math, { ...value, seed: given.seed >>> 0 }, view.rand);
+    plan = study(math, value);
   };
   const tell = () => given.onFacts?.(facts(math, plan, value));
   const coat = () => {

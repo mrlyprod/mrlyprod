@@ -1,5 +1,10 @@
 import { expect, test } from 'bun:test';
-import { rows, typed } from './widget.jsx';
+import * as math from '@mrlyprod/mrly/math';
+import { all, mount, text } from '../../../test/dom.js';
+import { Frame } from '../../lib/app/frame.jsx';
+import { defaults } from '../../lib/app/spec.js';
+import { SPEC } from './scene.js';
+import { Shelves, rows, typed } from './widget.jsx';
 
 test('the readings name the angle on screen, its quarter turn and the stack, and flag weights the blend drops', () => {
   const f = { angle: 22.5, playing: false, size: 512, layers: 28, scales: [1, 3], angles: [22.5, 45], mean: 0.5, rms: 0.1, faded: 0.53, centre: 0.5, peaks: [[0.5, 0.25, 0.75]], period: 4, classes: 4, pairs: 10, unused: true };
@@ -12,4 +17,13 @@ test('the readings name the angle on screen, its quarter turn and the stack, and
 
 test('a typed angle lands inside a full turn, junk and outside angles are dropped', () => {
   expect([typed('22.5'), typed(' 90 '), typed(''), typed('abc'), typed('361'), typed('-1')]).toEqual([22.5, 90, null, null, null, null]);
+});
+
+test('the library opens on the unit turns with the one on show marked, behind chips that include the schedules', async () => {
+  const value = { ...defaults(SPEC), seed: 1, increment: 22.5 };
+  const lists = await mount(async (draw, host) => {
+    await draw(<Frame label="Tourbillon"><Shelves value={value} onChange={() => {}} math={math} /></Frame>);
+    return { turns: all(host, (at) => 'data-item' in (at.attributes ?? {})), chips: all(host, (at) => at.attributes?.role === 'radio').map(text) };
+  });
+  expect([lists.turns.length, lists.turns.filter((at) => at.attributes['aria-current'] === 'true').map(text), lists.chips]).toEqual([13, ['22.590/4'], ['Turns', 'All turns', 'Schedules']]);
 });

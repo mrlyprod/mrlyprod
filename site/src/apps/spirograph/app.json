@@ -1,6 +1,4 @@
 {
   "title": "Spirograph",
-  "line": "A design as the wheel: every cell holds a pencil that draws its own rolling curve.",
-  "menu": "play",
-  "saver": true
+  "line": "A design as the wheel: every cell holds a pencil that draws its own rolling curve."
 }

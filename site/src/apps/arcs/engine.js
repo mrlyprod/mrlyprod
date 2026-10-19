@@ -1,4 +1,4 @@
-import { total } from '../../lib/designs/engine.js';
+import { codes, total } from '../../lib/designs/engine.js';
 import { num as fix, runs, sheet } from '../../lib/app/svg.js';
 
 export const DIM = 2;
@@ -49,6 +49,19 @@ export function looping(math, base, level, rand = Math.random) {
     if (loops(math, one, base, level)) return String(one);
   }
   return String(code);
+}
+
+const lawful = new Map();
+
+export function laws(math) {
+  if (!lawful.has(math)) {
+    const found = BASES.flatMap(([base]) => (codes(math, DIM, base) ?? names(math, base).map(([code]) => code)).flatMap((code) => {
+      const law = math.arcs.law(code, base, 1);
+      return law && law.formula !== '0' ? [{ base, code, name: math.name.of(code, DIM, base) ?? '', formula: law.formula }] : [];
+    }));
+    lawful.set(math, found);
+  }
+  return lawful.get(math);
 }
 
 /* ARCS */

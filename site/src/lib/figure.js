@@ -5,7 +5,7 @@ export const TILE = 512;
 export const OPENER = 1024;
 export const BUDGET = 128 * 1024 * 1024;
 
-const SIZE = [1024, 1024];
+export const SIZE = [1024, 1024];
 const MARGIN = '100% 0px';
 const STILL = '(prefers-reduced-motion: reduce)';
 const DARK = '(prefers-color-scheme: dark)';
@@ -72,6 +72,8 @@ export function queue({ near, paint, frame = (fn) => requestAnimationFrame(fn), 
 
 let table = { figures: {}, units: {}, plates: [] };
 
+export const inked = (theme, accent, link) => ink(tinted(theme === 'dark' ? dark : light, { accent, link, theme }));
+
 let shade = null;
 
 function look() {
@@ -82,7 +84,7 @@ function look() {
   const accent = css.getPropertyValue('--accent').trim();
   const link = css.getPropertyValue('--link').trim();
   const key = `${theme} ${accent} ${link}`;
-  if (shade?.key !== key) shade = { key, ink: ink(tinted(theme === 'dark' ? dark : light, { accent, link, theme })) };
+  if (shade?.key !== key) shade = { key, ink: inked(theme, accent, link) };
   return shade;
 }
 
@@ -243,12 +245,12 @@ export function start(given) {
   document.addEventListener('visibilitychange', resume);
 }
 
-export function scan(root, eager = false) {
+export function scan(root, eager = false, keep = false) {
   eye ??= new IntersectionObserver(seen, { rootMargin: MARGIN });
   for (const host of root.querySelectorAll('figure[data-figure]')) {
     if (hosts.has(host)) continue;
     const cap = host.closest('.tile') ? TILE : OPENER;
-    hosts.set(host, { name: host.dataset.figure, cap, bytes: 0, seen: eager, eager, key: '', timer: 0, loop: false });
+    hosts.set(host, { name: host.dataset.figure, cap, bytes: 0, seen: eager, eager, keep, key: '', timer: 0, loop: false });
     eye.observe(host);
     host.setAttribute('aria-busy', 'true');
     if (eager) line.add(host);
@@ -257,13 +259,18 @@ export function scan(root, eager = false) {
 
 export function drop() {
   line?.drop();
-  eye?.disconnect();
+  let key = null;
   for (const [host, one] of hosts) {
+    if (one.keep && host.isConnected) {
+      if (one.seen && due(one, (key ??= look().key))) want(host);
+      continue;
+    }
+    eye?.unobserve(host);
     clearTimeout(one.timer);
     account(one, 0);
     const node = host.querySelector('canvas');
     if (node) node.width = node.height = 0;
     host.removeAttribute('aria-busy');
+    hosts.delete(host);
   }
-  hosts.clear();
 }

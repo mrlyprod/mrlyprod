@@ -1,17 +1,17 @@
 import { tidy } from '../app/spec.js';
 import { TINTS } from '../color.js';
-import { BASES, CUT, LIMIT, NUMBERS, PRESETS, RAMPS, SOURCES, TILES, cap, key, step } from './engine.js';
+import { canon } from '../designs/engine.js';
+import { BASES, CUT, DIMS, LIMIT, NUMBERS, PRESETS, RAMPS, SOURCES, TILES, cap, cube } from './engine.js';
 
 export const SOURCE = [
-  { key: 'source', label: 'Source', kind: 'segment', def: 'flat', options: SOURCES },
+  { key: 'source', label: 'Source', kind: 'segment', def: 'design', options: SOURCES },
+  { key: 'dim', label: 'Dim', kind: 'segment', def: 2, options: DIMS },
   { key: 'base', label: 'Base', kind: 'segment', def: 3, options: BASES },
-  { key: 'code', label: 'Code', kind: 'text', def: '495' },
+  { key: 'code', label: 'Code', kind: 'text', def: '' },
   { key: 'number', label: 'Side', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]) },
   { key: 'level', label: 'Level', kind: 'slider', def: 4, min: 1, max: (value) => cap(value.number), step: 1 },
   { key: 'preset', label: 'Preset', kind: 'pick', def: 'weave', options: PRESETS },
   { key: 'limit', label: 'Scales up to', kind: 'slider', def: 9, min: 1, max: LIMIT, step: 2 },
-  { key: 'sbase', label: 'Base', kind: 'segment', def: 2, options: BASES },
-  { key: 'scode', label: 'Code', kind: 'text', def: '23' },
   { key: 'tile', label: 'Tile', kind: 'pick', def: 3, options: TILES.map((n) => [n, String(n)]) },
   { key: 'slevel', label: 'Level', kind: 'slider', def: 2, min: 1, max: (value) => cap(value.tile, CUT), step: 1 },
 ];
@@ -23,10 +23,12 @@ export const LOOK = [
   { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
 ];
 
-export function tag(value) {
+export function tag(value, math) {
   const src = tidy(SOURCE, value);
-  const code = { flat: src.code, moire: src.preset, slice: src.scode }[src.source];
-  return `${src.source}-${code}`;
+  if (src.source === 'moire') return `moire-${src.preset}`;
+  const dim = cube(src) ? 3 : 2;
+  const code = math ? canon(math, dim, src.base, src.code) : src.code || 'carpet';
+  return `${dim === 3 ? 'slice' : 'flat'}-${code}`;
 }
 
 export const PAD = 16;

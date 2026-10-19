@@ -1,10 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { Bar } from '../../lib/app/frame.jsx';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { tag } from '../../lib/two/engine.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { read, tag } from '../../lib/two/engine.js';
 import { Folds, design, useReroll, useShots, useStatus } from '../../lib/two/parts.jsx';
-import { RMAX, top } from './engine.js';
-import { SPEC, make, name as called } from './scene.js';
+import { RMAX, SHAPES, top } from './engine.js';
+import { SPEC, WINDOWS, make, name as called, sketch } from './scene.js';
 import { useUnit } from '../../lib/app/hooks.js';
 
 /* ROWS */
@@ -30,10 +32,43 @@ export function rows(f) {
 
 export const panes = (value, onChange, unit) => [design(value, onChange, unit, SPEC)];
 
+/* CROPS */
+
+const wears = (value, patch) => Object.entries(patch).every(([key, v]) => value[key] === v);
+
+export function Crops({ value, onChange, unit }) {
+  const tick = useTheme();
+  const [find, setFind] = useState('');
+  const { base, code } = read(value);
+  const want = find.trim().toLowerCase();
+  const kept = (list) => list.filter(([label]) => label.toLowerCase().includes(want));
+  const shapes = kept(SHAPES.map(([shape, label]) => [label, { shape }]));
+  const windows = kept(WINDOWS);
+  const art = (patch, deps) => <Art deps={[unit, base, code, value.number, value.tint, tick, ...deps]} paint={(ctx, w, h, dpr) => sketch(ctx, unit, { ...value, ...patch }, w, dpr)} />;
+  return (
+    <Library name="Crops" find={find} onFind={setFind} hint="Search crops">
+      {shapes.length > 0 && (
+        <Shelf name="Shapes" grid>
+          {shapes.map(([label, patch]) => (
+            <Item key={label} label={label} on={wears(value, patch)} onPick={() => onChange(patch)} art={art(patch, [patch.shape, value.radius, value.mode, value.policy, value.edge])} />
+          ))}
+        </Shelf>
+      )}
+      {windows.length > 0 && (
+        <Shelf name="Windows" grid>
+          {windows.map(([label, patch]) => (
+            <Item key={label} label={label} on={wears(value, patch)} onPick={() => onChange(patch)} art={art(patch, Object.values(patch))} />
+          ))}
+        </Shelf>
+      )}
+    </Library>
+  );
+}
+
 /* WIDGET */
 
-export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }) {
-  const unit = useUnit('math', given);
+export function Widget({ value, onChange, onReady, onExport, onStatus, units }) {
+  const unit = useUnit('math', units?.math);
   const live = useRef(null);
   const now = useRef(value);
   now.current = value;
@@ -77,6 +112,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   return (
     <>
       {unit && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} />}
+      {unit && <Crops value={value} onChange={onChange} unit={unit} />}
       <Bar side="right">
         <Folds groups={panes(value, onChange, unit)} />
       </Bar>

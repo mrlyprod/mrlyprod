@@ -1,7 +1,8 @@
 import { tidy } from '../../lib/app/spec.js';
 import { mix, paints, rgb, veil } from '../../lib/color.js';
 import { lines } from '../../lib/app/svg.js';
-import { BANDS, BASES, INKS, KIND, KINDS, LEAST, MODES, NUMBERS, PAD, SIX, cap, cover, fit, index, legal, message, played, roll, share, span, study } from './engine.js';
+import { BANDS, BASES, EASE, INKS, KIND, KINDS, LEAST, MODES, NUMBERS, PAD, SIX, cap, cover, fit, index, legal, message, played, resolve, roll, share, span, study } from './engine.js';
+import { pick } from '../../lib/rand.js';
 import { wasm } from '../../lib/units/index.js';
 
 const HIDE = () => false;
@@ -18,7 +19,7 @@ export const SPEC = [
   { key: 'ink', label: 'Ink', kind: 'pick', def: 'kind', options: INKS, group: 'Draw', when: HIDE },
   { key: 'fill', label: 'Fill between the walls', kind: 'toggle', def: 0, group: 'Draw', when: HIDE },
   { key: 'base', label: 'Base', kind: 'segment', def: 3, options: BASES, group: 'Wheel', when: HIDE },
-  { key: 'code', label: 'Code', kind: 'text', def: '495', group: 'Wheel', when: HIDE },
+  { key: 'code', label: 'Code', kind: 'text', def: '', group: 'Wheel', when: HIDE },
   { key: 'number', label: 'Side', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Wheel', when: HIDE },
   { key: 'level', label: 'Level', kind: 'slider', def: 1, min: 1, max: (value, units) => units?.math && cap(units.math, value.number), step: 1, group: 'Wheel', when: HIDE },
   { key: 'mode', label: 'Pencils', kind: 'pick', def: 'fill', options: MODES, group: 'Wheel', when: HIDE },
@@ -28,11 +29,12 @@ export const SPEC = [
 
 export const units = wasm('math');
 
-export const file = (value) => `spirograph-${String(value.code ?? '').trim() || 'blank'}-${value.kind}-${value.ring}-${value.wheel}`.replace(/[^\w.+-]+/g, '-');
+export const file = (value, loaded) => `spirograph-${loaded?.math ? resolve(loaded.math, value) : String(value.code ?? '').trim() || 'carpet'}-${value.kind}-${value.ring}-${value.wheel}`.replace(/[^\w.+-]+/g, '-');
 
 export const PAGE = {
   spec: SPEC,
   units,
+  design: { dim: 2, base: 'base', code: 'code' },
   name: file,
   record: true,
   gestures: true,
@@ -42,9 +44,40 @@ export const PAGE = {
     'When every seat sits off the centre and inside the window min(1, (a - b)/b), no curve loops: two curves cross 2ab times and one curve crosses itself a(b - 1) times, so k distinct curves make 2ab C(k,2) + k a(b - 1) nodes.',
     'Fill treats every curve as a wall and shades the shape between the outer and inner walls, and covered is its share of the disc around it. It is a flood on a raster, so the wall share is printed beside it. Everything is computed in Rust.',
   ],
-  keys: [{ key: 'Enter', label: (value, handle) => (handle?.playing?.() ? 'Stop' : 'Play'), act: 'toggle', button: true }],
-  actions: { toggle: (scene) => scene.toggle(), reroll: (scene) => scene.reroll?.() },
+  keys: [{ key: 'Enter', label: (value, handle) => (handle?.playing?.() ? 'Stop' : 'Play'), act: 'toggle', button: true, menu: 'Edit' }],
+  actions: { toggle: (scene) => scene.toggle() },
 };
+
+/* SAVERS */
+
+const SEATED = [[3, 2], [5, 1], [7, 1]];
+const PENCILS = ['fill', 'both', 'corners'];
+const REACHES = [0.7, 0.8, 0.9, 1, 1.1];
+const ROSETTES = [[7, 3], [5, 2], [8, 3], [7, 4], [9, 4], [7, 2], [5, 3]];
+const BLOOMS = [[1, 1], [2, 1], [3, 1], [4, 1], [3, 2]];
+const FACETS = [3, 4, 5, 6, 7, 8];
+
+const seated = (rand) => {
+  const [number, level] = pick(rand, SEATED);
+  return { number, level, mode: pick(rand, PENCILS), reach: pick(rand, REACHES), base: pick(rand, [3, 3, 2]) };
+};
+
+const circle = (kind, list) => (rand) => {
+  const [ring, wheel] = pick(rand, list);
+  return { kind, ring, wheel, ...seated(rand) };
+};
+
+const faceted = (rand) => {
+  const sides = pick(rand, FACETS);
+  const inside = rand() < 0.5;
+  return { kind: inside ? 'polyin' : 'polyout', sides, ring: pick(rand, inside ? [7, 8] : [3, 4]), wheel: 2, laps: 2, ...seated(rand) };
+};
+
+export const SAVERS = [
+  { id: 'rosettes', title: 'Rosettes', pick: circle('in', ROSETTES) },
+  { id: 'blooms', title: 'Blooms', pick: circle('out', BLOOMS) },
+  { id: 'polygon', title: 'Polygon rolls', pick: faceted },
+];
 
 const STUDY = ['kind', 'sides', 'ring', 'wheel', 'laps', 'base', 'code', 'number', 'level', 'mode', 'reach', 'jitter', 'seed'];
 
@@ -177,16 +210,16 @@ export function make(canvas, view, opts = {}) {
   const learn = (next) => {
     const began = clock();
     try {
-      plan = study(math, next, rolled ? roll(math, next.base, view.rand) : next.code);
+      plan = study(math, next, rolled ? roll(math, next.base, view.rand) : resolve(math, next));
       fault = null;
     } catch (error) {
       fault = message(error);
       ms = clock() - began;
       if (plan) return false;
       const first = read({ seed: next.seed, ink: next.ink });
-      plan = study(math, first, first.code);
+      plan = study(math, first, resolve(math, first));
     }
-    length = span(plan.beats);
+    length = span(plan.beats) * (lock ? EASE : 1);
     shape = next.fill ? cover(math, plan) : null;
     ms = clock() - began;
     return true;

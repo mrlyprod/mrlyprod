@@ -49,8 +49,8 @@ export function cube(ctx, shape, cam, cx, cy, tones) {
   });
 }
 
-export function thumb(ctx, math, dim, base, code, side, { accent, paper }) {
-  const cell = grow(math, dim, base, code, LEVEL);
+export function thumb(ctx, math, dim, base, code, side, { accent, paper }, level = LEVEL) {
+  const cell = grow(math, dim, base, code, level);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, side, side);
   if (dim === 2) return flat(ctx, cell, 0, 0, side, accent);

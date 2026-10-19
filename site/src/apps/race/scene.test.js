@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
-import { defaults, tidy } from '../../lib/app/spec.js';
+import { defaults, describe, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { HOLD, pair, plan, roots, series } from './engine.js';
-import { LABELS, PAGE, SPEC, make } from './scene.js';
+import { HOLD, ceiling, fills, pair, plan, roots, series } from './engine.js';
+import { LABELS, MATCHUPS, PAGE, SPEC, make } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -354,4 +354,15 @@ test('the finish is in cells and runs to the most the board offers, read from th
 test('speed opens at 720 a second and reaches 3000 on every board', () => {
   expect(defaults(SPEC).speed).toBe(720);
   for (const [number, level] of [[3, 4], [3, 5], [5, 3], [7, 3]]) expect(tidy(SPEC, { ...defaults(SPEC), number, level, speed: 3000 }).speed).toBe(3000);
+});
+
+test('the design chip owns the left code and the base, so the pane hides them and the value keeps them', () => {
+  const shown = describe(SPEC, defaults(SPEC)).flatMap((group) => group.rows.map((row) => row.key));
+  expect([shown.includes('a'), shown.includes('base'), shown.includes('b'), PAGE.design]).toEqual([false, false, true, { dim: 2, base: 'base', code: 'a' }]);
+  expect(tidy(SPEC, { a: '300', base: 2 })).toMatchObject({ a: '300', base: 2 });
+});
+
+test('every matchup is a fair pair: one mass, and both rooms reach past the opening finish', () => {
+  const value = { base: 3, number: 3, level: 4, finish: 20 };
+  for (const [a, b] of MATCHUPS) expect([a, fills(math, value, a) === fills(math, value, b), ceiling(math, value, a) >= value.finish, ceiling(math, value, b) >= value.finish]).toEqual([a, true, true, true]);
 });

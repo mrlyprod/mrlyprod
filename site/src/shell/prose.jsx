@@ -4,7 +4,12 @@ import { Contents, Figure, heads, hide, Lede, show } from './parts.jsx';
 
 const sides = new WeakMap();
 
-function Page({ row, data, html, slug }) {
+function Legal({ site }) {
+  const year = new Date().getFullYear();
+  return <p className="legal fine">Copyright © {site.company || site.title} {site.since < year ? `${site.since}-${year}` : year}. All rights reserved.</p>;
+}
+
+function Page({ row, site, data, html, slug }) {
   const act = data.button && data.link;
   return (
     <>
@@ -12,6 +17,7 @@ function Page({ row, data, html, slug }) {
       <Lede id={slug} title={row.title} lead={row.lead} />
       <div dangerouslySetInnerHTML={{ __html: html }} />
       {act && <p><a className="button primary" href={data.link}>{data.button}</a></p>}
+      {data.legal && <Legal site={site} />}
     </>
   );
 }

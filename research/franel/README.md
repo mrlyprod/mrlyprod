@@ -3,6 +3,7 @@ title: The restricted Franel identity
 lead: Franel's identity on the Farey fractions whose denominators lie in a digit design: the exponential sums are dilated Mertens sums, the square-root threshold is equivalent to their square-root cancellation in mean square over the dilates, the dilates are regular languages read by long multiplication, their masses need no Mobius input, and the design's repunits refute the uniform law that would give a rate in `d`.
 figure: research-franel
 slug: franel
+date: 2026-09-23
 ---
 
 # The restricted Franel identity
@@ -10,6 +11,9 @@ slug: franel
 Franel's identity on the Farey fractions whose denominators lie in a digit design: the exponential sums are dilated Mertens sums, the square-root threshold is equivalent to their square-root cancellation in mean square over the dilates, the dilates are regular languages read by long multiplication, their masses need no Mobius input, and the design's repunits refute the uniform law that would give a rate in `d`.
 
 - [notes/franel.md](notes/franel.md): The restricted Franel identity
+- [notes/identity-and-recursion.md](notes/identity-and-recursion.md): The identity, the dilates and the recursion
+- [notes/threshold-surrogate-repunits.md](notes/threshold-surrogate-repunits.md): The threshold, the surrogate and the repunits
+- [notes/strict-set-and-average.md](notes/strict-set-and-average.md): The strict set and the average over designs
 - [claims/franel-on-a-digit-design.md](claims/franel-on-a-digit-design.md): Franel on a digit design
 - [papers/franel-converse.md](papers/franel-converse.md): The Franel Threshold Is a Mean Square
 - [refs.md](refs.md): the references this topic cites

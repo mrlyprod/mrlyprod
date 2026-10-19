@@ -1,6 +1,7 @@
 import { palette } from '../../lib/theme/palette.gen.js';
 import { tidy } from '../../lib/app/spec.js';
 import { TINTS, veil } from '../../lib/color.js';
+import { pick } from '../../lib/rand.js';
 import { BEAD, BEAT, CURVE, DASH, DOT, FADE, FILL, FLASH, FOLDING, GHOST, HEAD, HOLD, LINE, LOOKS, PAD, PER, PIP, REACH, RING, STAIR, STEP, TRAIL, UPTO, VIEWS, ZEROS, along, bands, fold, hop, index, ladder, passed, phase, picture, plane, reading, snap, study, table } from './engine.js';
 import { wasm } from '../../lib/units/index.js';
 
@@ -33,11 +34,18 @@ export const PAGE = {
   about: ABOUT,
   name: (value) => (walks(value) ? `zeta-walk-${value.t}` : `zeta-stairs-${value.x}-${value.zeros}`),
   keys: [
-    { key: 'Enter', label: (value, scene) => scene?.word?.() ?? (walks(value) ? 'Play' : 'Fold'), act: 'go', button: true },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Zero to zero', act: 'hop', when: walks },
+    { key: 'Enter', label: (value, scene) => scene?.word?.() ?? (walks(value) ? 'Play' : 'Fold'), act: 'go', button: true, menu: 'Edit' },
+    { key: ['ArrowLeft', 'ArrowRight'], label: 'Zero to zero', act: 'hop', when: walks, menu: 'View' },
   ],
   actions: { go: (scene) => scene.go?.(), hop: (scene, e) => scene.hop?.(e.key === 'ArrowLeft' ? -1 : 1) },
 };
+
+const between = (rand, lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
+
+export const SAVERS = [
+  { id: 'walk', title: 'Critical line', pick: (rand) => ({ view: 'walk', t: between(rand, 10, 120), speed: 2, look: pick(rand, LOOKS)[0], trail: between(rand, 6, 16) }) },
+  { id: 'stairs', title: 'Prime staircase', pick: (rand) => ({ view: 'stairs', zeros: between(rand, 30, 100), x: between(rand, 50, 300) }) },
+];
 
 export const units = wasm('num');
 
@@ -46,6 +54,67 @@ const TELL = 125;
 const SENT = 16;
 const BURST = 0.08;
 const FLARE = 3;
+const SMALL = 8;
+const ZERO = 3;
+const KNOT = 2.5;
+export const SLOW = 3;
+
+/* INKS */
+
+export function inked(canvas, accent) {
+  const css = typeof getComputedStyle === 'function' && canvas ? getComputedStyle(canvas) : null;
+  const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
+  return { accent, zero: read('--yellow', palette.yellow), head: read('--orange', palette.orange), guess: read('--pink', palette.pink) };
+}
+
+/* THUMB */
+
+function line(ctx, pts, color, width, dash = null) {
+  if (pts.length < 4) return;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath();
+  ctx.moveTo(pts[0], pts[1]);
+  for (let j = 2; j < pts.length; j += 2) ctx.lineTo(pts[j], pts[j + 1]);
+  ctx.stroke();
+  if (dash) ctx.setLineDash([]);
+}
+
+export function sketch(num, set, ctx, w, h, dpr, inks) {
+  const rect = { x: 0, y: 0, w, h };
+  const pad = SMALL * dpr;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  if (set.view === 'stairs') {
+    const steps = fold(num, set.x);
+    const box = ladder(rect, steps.x, steps.top(set.zeros), pad);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(box.left, box.roof, box.right - box.left, box.floor - box.roof);
+    ctx.clip();
+    line(ctx, along(box, steps.grid, steps.curve(0)), inks.guess, dpr, DASH.map((d) => d * dpr));
+    line(ctx, along(box, steps.grid, steps.curve(set.zeros)), inks.accent, CURVE * dpr);
+    line(ctx, along(box, steps.ladder.xs, steps.ladder.ys), inks.zero, STAIR * dpr);
+    ctx.restore();
+    return;
+  }
+  const plan = study(num);
+  const i = index(set.t);
+  const box = plane(rect, plan.peak[i], pad);
+  const path = [];
+  for (let j = 0; j <= i; j++) path.push(box.ox + plan.xs[j] * box.k, box.oy - plan.ys[j] * box.k);
+  line(ctx, path, inks.accent, TRAIL * dpr);
+  ctx.strokeStyle = inks.zero;
+  ctx.lineWidth = dpr;
+  ctx.beginPath();
+  ctx.arc(box.ox, box.oy, ZERO * dpr, 0, TAU);
+  ctx.stroke();
+  ctx.fillStyle = inks.head;
+  ctx.beginPath();
+  ctx.arc(path[path.length - 2], path[path.length - 1], KNOT * dpr, 0, TAU);
+  ctx.fill();
+}
 
 /* SCENE */
 
@@ -67,10 +136,9 @@ export function make(canvas, view, opts = {}) {
   let sent = [];
   let gone = false;
   const auto = () => view.lock || view.fixed;
+  const pace = view.lock ? SLOW : 1;
   const paint = () => {
-    const css = typeof getComputedStyle === 'function' && canvas ? getComputedStyle(canvas) : null;
-    const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
-    inks = { accent: view.look().accent, zero: read('--yellow', palette.yellow), head: read('--orange', palette.orange), guess: read('--pink', palette.pink) };
+    inks = inked(canvas, view.look().accent);
   };
   const busy = () => (walks(value) ? walking : folding !== null);
   const word = () => (!walks(value) ? 'Fold' : walking ? 'Pause' : head >= REACH ? 'Replay' : 'Play');
@@ -118,7 +186,7 @@ export function make(canvas, view, opts = {}) {
     if (folding === null) return { k, fade: 1 };
     const length = (k + 1) * Math.min(BEAT, FOLDING / (k + 1));
     if (auto()) {
-      const { at, veil: fade } = phase(view.t - folding, length, view.still);
+      const { at, veil: fade } = phase((view.t - folding) / pace, length, view.still);
       return { k: Math.min(k, Math.floor(at * (k + 1))), fade };
     }
     const at = (view.t - folding) / length;
@@ -126,17 +194,6 @@ export function make(canvas, view, opts = {}) {
     folding = null;
     tell(true);
     return { k, fade: 1 };
-  };
-  const line = (pts, color, width, dash = null) => {
-    if (pts.length < 4) return;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    if (dash) ctx.setLineDash(dash);
-    ctx.beginPath();
-    ctx.moveTo(pts[0], pts[1]);
-    for (let j = 2; j < pts.length; j += 2) ctx.lineTo(pts[j], pts[j + 1]);
-    ctx.stroke();
-    if (dash) ctx.setLineDash([]);
   };
   const walker = (r, fade) => {
     const dpr = view.dpr;
@@ -213,9 +270,9 @@ export function make(canvas, view, opts = {}) {
     ctx.closePath();
     ctx.fillStyle = veil(inks.zero, FILL);
     ctx.fill();
-    line(along(box, steps.grid, steps.curve(0)), inks.guess, dpr, DASH.map((d) => d * dpr));
-    line(along(box, steps.grid, steps.curve(k)), veil(inks.accent, fade), CURVE * dpr);
-    line(edge, inks.zero, STAIR * dpr);
+    line(ctx, along(box, steps.grid, steps.curve(0)), inks.guess, dpr, DASH.map((d) => d * dpr));
+    line(ctx, along(box, steps.grid, steps.curve(k)), veil(inks.accent, fade), CURVE * dpr);
+    line(ctx, edge, inks.zero, STAIR * dpr);
     ctx.restore();
   };
   const draw = () => {

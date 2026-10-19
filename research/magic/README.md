@@ -3,6 +3,7 @@ title: Magic words
 lead: A different design at every scale: the word grammar, what collapses by block reduction, and what only the letter order can see.
 figure: research-magic
 slug: magic
+date: 2026-08-31
 ---
 
 # Magic words
@@ -10,6 +11,8 @@ slug: magic
 A different design at every scale: the word grammar, what collapses by block reduction, and what only the letter order can see.
 
 - [notes/magic.md](notes/magic.md): Magic words
+- [notes/grammar-and-words.md](notes/grammar-and-words.md): The grammar and the four words
+- [notes/order-and-staircase.md](notes/order-and-staircase.md): Order and the staircase
 - [claims/kronecker-word-order.md](claims/kronecker-word-order.md): Kronecker word order
 - [claims/kronecker-words.md](claims/kronecker-words.md): Kronecker words
 - [claims/staircase-law.md](claims/staircase-law.md): The staircase law

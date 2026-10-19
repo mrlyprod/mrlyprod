@@ -1,99 +1,54 @@
-import { useEffect, useRef, useState } from 'react';
-import { Btn } from '../../lib/app/controls.jsx';
-import { HUES } from '../../lib/color.js';
+import { useState } from 'react';
+import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
 import { marks } from '../../lib/app/svg.js';
-import { SLOT, pen } from './engine.js';
+import { paints } from '../../lib/color.js';
+import { useTheme } from '../../lib/designs/pick.jsx';
+import { SLOT } from './engine.js';
 
 const ALL = 'all';
 
-const GRID = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(5.5rem, 1fr))', gap: 'var(--s2)', padding: '0 var(--s2)' };
+const FLAG = 'flag';
 
-const FILTER = { padding: '0 var(--s2)' };
+const MARGIN = 2;
 
-const CARD = { padding: 'var(--s2)', textAlign: 'center' };
-
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-const mouse = (e) => e.pointerType === 'mouse';
-
-export function Mark({ glyph, tint = '', k = null }) {
-  const fill = `var(--${HUES.includes(tint) ? tint : 'accent'})`;
-  const cells = glyph.frames[k ?? glyph.frames.length - 1];
-  const dx = Math.floor((SLOT - glyph.cols) / 2);
-  const dy = Math.floor((SLOT - glyph.rows) / 2);
-  return (
-    <svg viewBox={`-1 -1 ${SLOT + 2} ${SLOT + 2}`} shapeRendering="crispEdges" style={{ fill }} aria-hidden="true">
-      {marks(cells, glyph.cols).map(([x, y]) => <rect key={`${x},${y}`} x={x + dx} y={y + dy} width="1" height="1" />)}
-    </svg>
-  );
+export function ink(ctx, glyph, w, h, color) {
+  const unit = Math.max(1, Math.floor(w / (SLOT + MARGIN)));
+  const x = Math.floor((w - SLOT * unit) / 2) + Math.floor((SLOT - glyph.cols) / 2) * unit;
+  const y = Math.floor((h - SLOT * unit) / 2) + Math.floor((SLOT - glyph.rows) / 2) * unit;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = color;
+  for (const [col, row] of marks(glyph.frames.at(-1) ?? [], glyph.cols)) ctx.fillRect(x + col * unit, y + row * unit, unit, unit);
 }
 
-function Card({ glyph, tint, rate, hold, onPick }) {
-  const [k, setK] = useState(null);
-  const timer = useRef(0);
-  const rest = () => {
-    clearInterval(timer.current);
-    timer.current = 0;
-  };
-  const write = (once) => {
-    const n = glyph.frames.length;
-    if (n < 2 || still()) return;
-    rest();
-    let tick = 0;
-    setK(0);
-    timer.current = setInterval(() => {
-      tick++;
-      if (once && tick >= n - 1) {
-        rest();
-        setK(null);
-      } else setK(pen(tick, n, hold));
-    }, 1000 / rate);
-  };
-  const done = () => {
-    rest();
-    setK(null);
-  };
-  const pick = () => {
-    if (!timer.current) write(true);
-    onPick(glyph.char);
-  };
-  useEffect(() => rest, []);
-  return (
-    <button
-      type="button"
-      className={glyph.flag ? 'card on' : 'card'}
-      style={CARD}
-      title={glyph.name}
-      aria-label={`${glyph.name}, ${glyph.strokes} strokes of a floor of ${glyph.floor}${glyph.flag ? `, ${glyph.flag}` : ''}: add it to the text`}
-      onClick={pick}
-      onPointerEnter={(e) => mouse(e) && write(false)}
-      onPointerLeave={(e) => mouse(e) && done()}
-      onFocus={(e) => e.currentTarget.matches?.(':focus-visible') && write(false)}
-      onBlur={done}
-    >
-      <Mark glyph={glyph} tint={tint} k={k} />
-      <div className="code">{glyph.label}</div>
-      <div className="name">{glyph.strokes} of {glyph.floor}</div>
-      {glyph.flag && <span className="chip refuted">{glyph.flag}</span>}
-    </button>
-  );
+export function shelved(kinds, kind, query) {
+  const want = query.trim().toLowerCase();
+  const has = (glyph) => !want || glyph.char.toLowerCase() === want || (want.length > 1 && glyph.name.includes(want));
+  const shown = (one, glyph) => (kind === ALL || kind === one.id || (kind === FLAG && glyph.flag)) && has(glyph);
+  return kinds.map((one) => ({ id: one.id, name: one.name, glyphs: one.glyphs.filter((glyph) => shown(one, glyph)) })).filter((one) => one.glyphs.length > 0);
 }
 
-export function Gallery({ kinds, tint, rate, hold, onPick }) {
+export function Pens({ kinds, tint, onPick }) {
   const [kind, setKind] = useState(ALL);
-  const shown = kinds.filter((one) => kind === ALL || one.id === kind).flatMap((one) => one.glyphs);
+  const [query, setQuery] = useState('');
+  const theme = useTheme();
+  const chips = [[ALL, 'All'], ...kinds.map((one) => [one.id, one.name]), [FLAG, 'Flagged']];
   return (
-    <section aria-label="Pens">
-      <h3>Pens</h3>
-      <div className="filter" style={FILTER}>
-        <Btn on={kind === ALL} onClick={() => setKind(ALL)}>All<span>{kinds.reduce((n, one) => n + one.glyphs.length, 0)}</span></Btn>
-        {kinds.map((one) => (
-          <Btn key={one.id} on={kind === one.id} onClick={() => setKind(one.id)}>{one.name}<span>{one.glyphs.length}</span></Btn>
-        ))}
-      </div>
-      <div style={GRID}>
-        {shown.map((glyph) => <Card key={glyph.char} glyph={glyph} tint={tint} rate={rate} hold={hold} onPick={onPick} />)}
-      </div>
-    </section>
+    <Library name="Pens" find={query} onFind={setQuery} hint="A, b, 7 or a name" chips={chips} chip={kind} onChip={setKind}>
+      {shelved(kinds, kind, query).map((one) => (
+        <Shelf key={one.id} name={kind === FLAG ? 'Flagged' : one.name} grid>
+          {one.glyphs.map((glyph) => (
+            <Item
+              key={glyph.char}
+              label={glyph.label}
+              sub={`${glyph.strokes} of ${glyph.floor}`}
+              title={`${glyph.name}, ${glyph.strokes} strokes of a floor of ${glyph.floor}${glyph.flag ? `, ${glyph.flag}` : ''}: add it to the text`}
+              onPick={() => onPick(glyph.char)}
+              art={<Art paint={(ctx, w, h) => ink(ctx, glyph, w, h, paints(ctx.canvas, tint).accent)} deps={[glyph.char, tint, theme]} />}
+            />
+          ))}
+        </Shelf>
+      ))}
+    </Library>
   );
 }

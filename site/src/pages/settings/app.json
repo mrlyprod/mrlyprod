@@ -1,5 +1,5 @@
 {
   "title": "Settings",
-  "line": "Theme, font, tint and saver, kept in this browser.",
-  "menu": "tool"
+  "line": "Appearance, glass, desktop, screen saver and accessibility, kept in this browser.",
+  "deep": true
 }

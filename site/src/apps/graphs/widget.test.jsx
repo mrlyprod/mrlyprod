@@ -5,14 +5,17 @@ import { defaults } from '../../lib/app/spec.js';
 import { Frame } from '../../lib/app/frame.jsx';
 import { Accordion } from '../../lib/app/controls.jsx';
 import { Knobs, useAccordion } from '../../lib/app/knobs.jsx';
+import { SETS, glimpse } from './engine.js';
 import { SPEC } from './scene.js';
-import { Pane, Widget, note, rows } from './widget.jsx';
+import { Pane, Shelves, Widget, etch, lit, note, rows } from './widget.jsx';
 
 const value = { ...defaults(SPEC), seed: 1 };
 
 const page = (unit, three, patch = {}) => renderToStaticMarkup(<Frame label="Graphs"><Widget value={{ ...value, ...patch }} onChange={() => {}} units={unit && { math: unit }} three={three} /></Frame>);
 
-const panel = (patch = {}, relax = null) => <Pane value={{ ...value, ...patch }} onChange={() => {}} math={math} relax={relax} onRelax={() => {}} onReset={() => {}} onPose={() => {}} />;
+const CUBE = { dim: 3, base: 2, view: 'cube' };
+
+const panel = (patch = {}, relax = null) => <Pane value={{ ...value, ...patch }} relax={relax} onRelax={() => {}} onReset={() => {}} onPose={() => {}} />;
 
 const pane = (patch, relax) => renderToStaticMarkup(panel(patch, relax));
 
@@ -25,21 +28,40 @@ const order = (html) => [...html.matchAll(/<(?:section|details)([^>]*)>(?:<summa
 const placed = (patch) => order(renderToStaticMarkup(<Shared>{panel(patch)}<Knobs spec={SPEC} value={{ ...value, ...patch }} onChange={() => {}} /></Shared>));
 
 test('a cube mounts its stage only once three is in hand too', () => {
-  expect([page(math, undefined, { view: 'cube' }).includes('<canvas'), page(math, {}, { view: 'cube' }).includes('<canvas')]).toEqual([false, true]);
+  expect([page(math, undefined, CUBE).includes('<canvas'), page(math, {}, CUBE).includes('<canvas')]).toEqual([false, true]);
 });
 
-test('the pane holds the design picker on the view\'s own code, Relax or Pause beside Reset, and the three poses', () => {
+test('the pane holds Relax or Pause beside Reset on a force layout and the three poses on a cube, and no design picker', () => {
   const html = pane();
-  expect(html.startsWith('<details class="group"><summary><h3>Design</h3><span class="live">495</span>')).toBe(true);
-  expect(html).toContain('value="495"');
-  expect(pane({ view: 'hex' })).toContain('value="23"');
+  expect(html).toBe('');
   expect(pane({ layout: 'force' }, { on: false })).toContain('>Relax</button><button type="button">Reset</button>');
   expect(pane({ layout: 'force' }, { on: true })).toContain('>Pause</button>');
-  expect(['Corner', 'Edge', 'Face'].every((word) => pane({ view: 'cube' }).includes(word))).toBe(true);
+  expect(['Corner', 'Edge', 'Face'].every((word) => pane(CUBE).includes(word))).toBe(true);
 });
 
-test('the pane reads the view rows, the design, then the layout with relax and reset on a force layout, the camera with its poses on a cube, and the look', () => {
-  expect([placed({}), placed({ layout: 'force', view: 'cube' })]).toEqual([['', 'Design', 'Layout', 'Look'], ['', 'Design', 'Layout', 'Relax', 'Camera', 'Pose', 'Look']]);
+test('the pane reads the always-open rows, the layout with relax and reset on a force layout, the camera with its poses on a cube, and the look', () => {
+  expect([placed({}), placed({ layout: 'force', ...CUBE })]).toEqual([['', 'Layout', 'Look'], ['', 'Layout', 'Relax', 'Camera', 'Pose', 'Look']]);
+  expect(renderToStaticMarkup(<Shared><Knobs spec={SPEC} value={value} onChange={() => {}} /></Shared>)).not.toContain('Graph');
+});
+
+test('the library lists the graphs of the space and the sets, the one in hand lit, a set lit only when it is the whole state', () => {
+  const html = (patch) => renderToStaticMarkup(<Shelves value={{ ...value, ...patch }} onChange={() => {}} math={math} />);
+  expect([...html().matchAll(/class="label">([^<]*)</g)].map(([, name]) => name)).toEqual(['Core', 'Edge', 'Tunnel', ...SETS.map(([name]) => name)]);
+  expect([...html(CUBE).matchAll(/class="label">([^<]*)</g)].slice(0, 3).map(([, name]) => name)).toEqual(['Core', 'Edge', 'Tunnel']);
+  expect([...html({ dim: 3, view: 'hex' }).matchAll(/class="label">([^<]*)</g)].slice(0, 3).map(([, name]) => name)).toEqual(['Core', 'Dual', 'Edge']);
+  expect(html().match(/class="on"/g)).toHaveLength(2);
+  expect(html({ graph: 'edge' }).match(/class="on"/g)).toHaveLength(1);
+  expect([lit(value, SETS[0][1]), lit({ ...value, level: 3 }, SETS[0][1]), lit(value, SETS[1][1])]).toEqual([true, false, false]);
+});
+
+test('a glimpse thumb is one stroke of the branches and one fill of the dots, fitted inside its square', () => {
+  const log = [];
+  const ctx = { canvas: null, ...Object.fromEntries(['beginPath', 'moveTo', 'lineTo', 'arc', 'stroke', 'fill'].map((name) => [name, (...args) => log.push([name, ...args])])) };
+  const seen = glimpse(math, value, 'core');
+  etch(ctx, seen, 112, 112, 2);
+  const count = (name) => log.filter(([one]) => one === name).length;
+  expect([count('lineTo'), count('arc'), count('stroke'), count('fill')]).toEqual([seen.pairs.length / 2, seen.count, 1, 1]);
+  expect(log.filter(([name]) => name === 'lineTo').every(([, x, y]) => x >= 0 && x <= 112 && y >= 0 && y <= 112)).toBe(true);
 });
 
 test('the status names the design and the network, its counts to the demo\'s places, and the relax readouts on a force layout', () => {

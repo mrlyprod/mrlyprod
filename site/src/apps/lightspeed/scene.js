@@ -2,6 +2,7 @@ import { tidy } from '../../lib/app/spec.js';
 import { TINTS } from '../../lib/color.js';
 import { look as aim } from '../../lib/gl/camera.js';
 import { blank, context } from '../../lib/gl/gl2.js';
+import { pick } from '../../lib/rand.js';
 import { film, hyper } from '../../lib/space/hyper.js';
 
 export const SPEC = [
@@ -15,10 +16,15 @@ export const SPEC = [
 
 export const PAGE = {
   spec: SPEC,
-  keys: [{ key: 'Enter', label: 'Jump', does: 'Again in hyperspace to exit', act: 'jump', button: true }],
+  keys: [{ key: 'Enter', label: 'Jump', does: 'Again in hyperspace to exit', act: 'jump', button: true, menu: 'Edit' }],
   actions: { jump: (scene) => (scene.phase() === 'cruise' ? scene.trigger() : scene.exit()) },
   record: true,
 };
+
+export const SAVERS = [
+  { id: 'cloud', title: 'Hyperspace clouds', pick: (rand) => ({ look: 'cloud', hyper: 'mix', speed: 0.7, idle: pick(rand, [0.01, 0.02, 0.03]), stars: pick(rand, [0.75, 1]) }) },
+  { id: 'classic', title: 'Classic starfield', pick: (rand) => ({ look: 'classic', hyper: 'yes', speed: 0.7, idle: pick(rand, [0.01, 0.02, 0.03]), stars: pick(rand, [1, 1.25, 1.5]) }) },
+];
 
 const AHEAD = aim([0, 0, 0], [0, 0, 1]);
 

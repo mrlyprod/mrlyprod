@@ -3,6 +3,7 @@ title: The zeta function of a digit design
 lead: The design's own zeta function: an explicit zero-free half plane and the census it closes, a residue comb whose teeth are Rouche-certified one by one, a second family that is no critical line and obeys no counting, symmetry, contraction or gain law, the ordinate shadow as a constant-free Newton step from each zeta zero, the multiplicativity wall with the three products that stand where the Euler product does not, and the identity zeta_F N_F = 1 whose Mertens function runs the wrong way.
 figure: research-zeta
 slug: zeta
+date: 2026-09-07
 ---
 
 # The zeta function of a digit design
@@ -10,6 +11,9 @@ slug: zeta
 The design's own zeta function: an explicit zero-free half plane and the census it closes, a residue comb whose teeth are Rouche-certified one by one, a second family that is no critical line and obeys no counting, symmetry, contraction or gain law, the ordinate shadow as a constant-free Newton step from each zeta zero, the multiplicativity wall with the three products that stand where the Euler product does not, and the identity zeta_F N_F = 1 whose Mertens function runs the wrong way.
 
 - [notes/zeta.md](notes/zeta.md): The zeta function of a digit design
+- [notes/design-zeta-zeros.md](notes/design-zeta-zeros.md): The zeros of the design zeta
+- [notes/wall-and-identity.md](notes/wall-and-identity.md): The wall, the products and the identity
+- [notes/meter-and-closure.md](notes/meter-and-closure.md): The Mobius meter and the closure problem
 - [claims/digit-designs-and-the-euler-product.md](claims/digit-designs-and-the-euler-product.md): Digit designs and the Euler product
 - [claims/zeros-of-the-design-zeta.md](claims/zeros-of-the-design-zeta.md): The zeros of the design zeta
 - [papers/design-dirichlet-inverse.md](papers/design-dirichlet-inverse.md): The Dirichlet Inverse of a Digit Design and the Transport of Zeros

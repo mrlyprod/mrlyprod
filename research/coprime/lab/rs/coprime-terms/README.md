@@ -9,7 +9,7 @@
 - `rows`, `U <= 6 sqrt(level 2^level)` distinct masks: one `u16` zeta transform `g` of the mask histogram `c`, then `2 Sum_{a < b disjoint} c_a c_b g(complement(a | b))` plus the zero-mask diagonal, the disjoint pairs read off bitset rows built four masks per NEON lane inside buckets keyed by the top six bits.
 - `cube`, the rest: `u32` ranked zeta transforms truncated at rank `K ~ level/2` with the rare heavier masks folded back by subset enumeration, then `N = Sum_T <c_hat(complement T), Delta[sq(T)]>` per set `T`, `sq` the square of the rank polynomial and `Delta` its binomial difference table, in wrapping `u64` where `Y^3 < 2^64` and `u128` otherwise.
 - `residue`: the automaton on `(Z/m)^3` for `m <= 16`; the earlier nested-loop, zeta and ranked-convolution counters stay as references inside the gate.
-- Cost: `3^level` moduli a level; the `bitset`/`rows` crossover costs `3^level (level 2^level)^(2/3) / 8` and the `rows`/`cube` balance `3^level level 2^(level/2)` cycles, so the level ratio in `terms/menger.txt` is `4.32` from `level = 17` (`28.317 s`) to `18` (`122.294 s`) on eight threads, `3.7x` and `3.8x` the `104 s` and `463 s` of coprime.md:330, and tends to `4.76` only past `level = 22`.
+- Cost: `3^level` moduli a level; the `bitset`/`rows` crossover costs `3^level (level 2^level)^(2/3) / 8` and the `rows`/`cube` balance `3^level level 2^(level/2)` cycles, so the level ratio in `terms/menger.txt` is `4.32` from `level = 17` (`28.317 s`) to `18` (`122.294 s`) on eight threads, `3.7x` and `3.8x` the `104 s` and `463 s` of visibility-parity-and-slices.md:116, and tends to `4.76` only past `level = 22`.
 - `check` gates the engine: direct enumeration to `level = 6` for the sponge and `8` for the plane designs, every counter agreeing with every other on every modulus to level 8, each counter pinned alone agreeing with auto to level 8 (`bitset`), 10 or 11, 45 probed moduli at the sample level across counters, two pinned level-19 probes for the `u64` cube gate (`m = 440`) and the `u32` rows branch (`m = 3^8 + 1`), the `3m` peel identity, and the fill `N_level(1) = fill^level`.
 - `terms/` holds the three ladders with seconds per level and their b-files.
 
@@ -22,6 +22,6 @@
 
 ## WITNESSES
 
-- coprime.md:330: the sponge ladder `A(10) .. A(18)`, ending `215134797774716879278017`, with the 104 s and 463 s timings of the previous engine.
+- visibility-parity-and-slices.md:116: the sponge ladder `A(10) .. A(18)`, ending `215134797774716879278017`, with the 104 s and 463 s timings of the previous engine.
 - research/claims/:161: the same ladder and the gate battery.
 - A399364: DATA `level = 0..17` and the b-file `terms/menger_bfile.txt` to `level = 18`.

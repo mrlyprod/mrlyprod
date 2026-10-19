@@ -2,8 +2,8 @@ import { expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
 import { asked, defaults, tidy } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
-import { RDEN } from './engine.js';
-import { PAGE, SPEC, make, name, plan, stage } from './scene.js';
+import { POLICIES, RDEN, SHAPES } from './engine.js';
+import { PAGE, SPEC, WINDOWS, make, name, plan, sketch, stage } from './scene.js';
 
 const pen = (log) =>
   new Proxy(
@@ -62,13 +62,13 @@ test('the scene is still: make draws nothing, and the first draw lays the crop a
 
 test('a radius set keeps the design and the circle count and only recounts the crop, and the count waits for its toggle', () => {
   const stages = {};
-  expect(plan(math, start({}), rng(1), stages).table).toBe(null);
-  const first = plan(math, start({ circle: 1 }), rng(1), stages);
-  const moved = plan(math, start({ circle: 1, radius: 30 }), rng(1), stages);
+  expect(plan(math, start({}), stages).table).toBe(null);
+  const first = plan(math, start({ circle: 1 }), stages);
+  const moved = plan(math, start({ circle: 1, radius: 30 }), stages);
   expect(moved.types).toBe(first.types);
   expect(moved.table).toBe(first.table);
   expect(moved.tally).not.toBe(first.tally);
-  const r = plan(math, start({ circle: 1, radius: 30, r: 9 }), rng(1), stages);
+  const r = plan(math, start({ circle: 1, radius: 30, r: 9 }), stages);
   expect(r.tally).toBe(moved.tally);
   expect(r.table).toBe(first.table);
   expect(r.facts().circle).toMatchObject({ side: 729, r: 9, seen: r.table.seen[9] });
@@ -107,15 +107,15 @@ test('the level, the count and r are kept as asked in the url and read at the ca
   const raw = start({ number: 7, level: 5, count: 9, r: 700 });
   expect(asked(SPEC, raw, { math })).toMatchObject({ level: 5, count: 9, r: 700 });
   expect(tidy(SPEC, raw, { math })).toMatchObject({ level: 2, count: 3, r: 342 });
-  const read = plan(math, raw, rng(1)).value;
+  const read = plan(math, raw).value;
   expect([read.level, read.count, read.r]).toEqual([2, 3, 342]);
-  const back = plan(math, { ...raw, number: 3 }, rng(1)).value;
+  const back = plan(math, { ...raw, number: 3 }).value;
   expect([back.level, back.count, back.r]).toEqual([5, 6, 700]);
 });
 
 test('the svg holds a rect for each run of the kept cells, clipped by the true outline under the exact edge', () => {
   const plain = open({}).scene.svg();
-  const kept = plan(math, start({}), rng(1)).kept.grid.data.reduce((sum, on) => sum + (on ? 1 : 0), 0);
+  const kept = plan(math, start({})).kept.grid.data.reduce((sum, on) => sum + (on ? 1 : 0), 0);
   expect(plain.startsWith('<svg xmlns="http://www.w3.org/2000/svg" width="270" height="270"')).toBe(true);
   expect(plain).not.toContain('clipPath');
   expect([...plain.matchAll(/width="(\d+)" height="10"/g)].reduce((sum, [, w]) => sum + Number(w) / 10, 0)).toBe(kept);
@@ -134,6 +134,37 @@ test('a shot draws the crop alone, square at the size, over the paper', async ()
 
 test('an export is named by the design, the shape and the radius it shows', () => {
   expect([name(start({})), name(start({ shape: 'box', radius: 30, mode: 'anti' }))]).toEqual(['crop-7-ball-60', 'crop-7-box-30-anti']);
+});
+
+test('the design slot takes the base and the code of the two-dimensional space', () => {
+  expect(PAGE.design).toEqual({ dim: 2, base: 'base', code: 'code' });
+});
+
+test('a blank code is the carpet of the base', () => {
+  expect([plan(math, start({ code: '' })).value.code, plan(math, start({ code: '', base: 3 })).value.code]).toEqual(['7', '495']);
+});
+
+test('every window is a whole crop the knobs accept, and the shape pick is left to the shapes shelf', () => {
+  const row = (key) => SPEC.find((one) => one.key === key);
+  const fits = ([, one]) => SHAPES.some(([shape]) => shape === one.shape) && one.radius >= row('radius').min && one.radius <= row('radius').max && ['crop', 'anti'].includes(one.mode) && POLICIES.some(([policy]) => policy === one.policy) && [0, 1].includes(one.edge);
+  expect(WINDOWS.every(fits)).toBe(true);
+  expect(Object.keys(WINDOWS[0][1]).sort()).toEqual(['edge', 'mode', 'policy', 'radius', 'shape']);
+  expect(row('shape').when()).toBe(false);
+});
+
+test('a crop thumb is small, touching and uncounted, and lays the kept cells in the accent inside the stage', () => {
+  const log = [];
+  sketch(pen(log), math, start({ circle: 1, policy: 'refined2' }), 112, 2, { paper: '#000000', accent: ACCENT });
+  const box = stage(112, 112);
+  expect(log.slice(0, 2)).toEqual([['setTransform', 1, 0, 0, 1, 0, 0], ['clearRect', 0, 0, 112, 112]]);
+  const lit = [];
+  let ink = null;
+  for (const [name, ...args] of log) {
+    if (name === 'fillStyle') ink = args[0];
+    if (name === 'rect' && ink === ACCENT) lit.push(args);
+  }
+  expect(lit.length).toBeGreaterThan(0);
+  expect(lit.every(([x, y, w, h]) => x >= box.x && y >= box.y && x + w <= box.x + box.w + 1 && y + h <= box.y + box.h + 1)).toBe(true);
 });
 
 test('the primary flips the mode and names the one it goes to', () => {
