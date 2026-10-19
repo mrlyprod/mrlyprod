@@ -117,7 +117,7 @@ export function rule(num, all) {
 
 /* MIX */
 
-export function mix(num, left, right, op, arg) {
+export function combine(num, left, right, op, arg) {
   const blend = num.blend;
   const full = PAIRED.includes(op) ? Math.min(left.length, right.length) : left.length;
   const n = room(op, held(left), held(right), arg);

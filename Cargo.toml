@@ -1,7 +1,7 @@
 [workspace]
-resolver = "2"
-members = ["crates/*", "bindings/py", "bindings/js/hand", "bindings/js/units/*"]
-default-members = ["crates/*"]
+resolver = "3"
+members = ["crates/*", "bindings/cli", "bindings/py", "bindings/js/hand", "bindings/js/units/*"]
+default-members = ["crates/*", "bindings/cli"]
 
 [workspace.package]
 version = "0.2.0"
@@ -10,10 +10,24 @@ license = "MIT"
 repository = "https://github.com/mrlyprod/mrlyprod"
 homepage = "https://mrly.net"
 rust-version = "1.96"
+keywords = ["mathematics", "fractal", "cellular-automata", "generative"]
+categories = ["mathematics", "science", "multimedia::images"]
+
+[workspace.lints.rust]
+missing_docs = "deny"
+unsafe_code = "forbid"
+unreachable_pub = "warn"
 
 [profile.release]
 lto = true
 codegen-units = 1
+
+[profile.test]
+opt-level = 1
+
+[profile.wasm]
+inherits = "release"
+opt-level = "s"
 strip = true
 
 [workspace.dependencies]
@@ -27,6 +41,6 @@ mrly-font = { path = "crates/mrly-font", version = "=0.2.0" }
 mrly-js-hand = { path = "bindings/js/hand" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-wasm-bindgen = "0.2"
+wasm-bindgen = "=0.2.125"
 serde-wasm-bindgen = "0.6"
 js-sys = "0.3"

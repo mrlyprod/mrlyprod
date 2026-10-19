@@ -34,4 +34,9 @@ export function rot(v, axis, ang) {
   return add(add(mul(v, c), mul(cross(k, v), s)), mul(k, dot(k, v) * (1 - c)));
 }
 
-export const clamp = (x) => Math.min(Math.max(x, 0), 1);
+export const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
+
+export const smooth = (x) => {
+  const p = clamp01(x);
+  return p * p * (3 - 2 * p);
+};

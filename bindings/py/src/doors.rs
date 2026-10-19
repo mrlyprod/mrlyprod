@@ -3,8 +3,7 @@
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-/// The substrate: tensors, cells, colors, images, resampling and seeded chance.
-/// The substrate: the road from a grid of bytes to pixels, with nothing mrly on it.
+/// The substrate: tensors, cells, colors, images, resampling, seeded chance and the canonical names.
 pub mod core {
     use crate::hand::{PyColor, PyPixels, PyRng, PySerde, ok};
     use pyo3::IntoPyObjectExt;
@@ -1189,6 +1188,78 @@ pub mod core {
         }
     }
 
+    /// The canonical names: one JSON object per thing, its views and its id.
+    pub mod name {
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+
+        /// The sha256 digest the ids are cut from.
+        pub mod sha {
+            use pyo3::IntoPyObjectExt;
+            use pyo3::prelude::*;
+            use pyo3::types::PyDict;
+
+            /// Returns the sha256 digest of `bytes` as 64 lowercase hex digits.
+            #[pyfunction]
+            #[pyo3(name = "hex", signature = (bytes))]
+            pub fn hex<'py>(py: Python<'py>, bytes: Vec<u8>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::core::name::sha::hex(&bytes);
+                (out).into_bound_py_any(py)
+            }
+
+            /// Returns the 32-byte sha256 digest of `bytes`.
+            #[pyfunction]
+            #[pyo3(name = "sha256", signature = (bytes))]
+            pub fn sha256<'py>(py: Python<'py>, bytes: Vec<u8>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::core::name::sha::sha256(&bytes);
+                (out).into_bound_py_any(py)
+            }
+
+            /// Returns the first eight hex digits of the sha256 digest of `bytes`, the id a name prints.
+            #[pyfunction]
+            #[pyo3(name = "short", signature = (bytes))]
+            pub fn short<'py>(py: Python<'py>, bytes: Vec<u8>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::core::name::sha::short(&bytes);
+                (out).into_bound_py_any(py)
+            }
+
+            pub fn init(
+                py: Python<'_>,
+                parent: &Bound<'_, PyModule>,
+                sys: &Bound<'_, PyDict>,
+            ) -> PyResult<()> {
+                let m = PyModule::new(py, "mrly.core.name.sha")?;
+                m.setattr("__doc__", "The sha256 digest the ids are cut from.")?;
+                m.add_function(wrap_pyfunction!(hex, &m)?)?;
+                m.add_function(wrap_pyfunction!(sha256, &m)?)?;
+                m.add_function(wrap_pyfunction!(short, &m)?)?;
+                let names: Vec<&str> = vec!["hex", "sha256", "short"];
+                m.add("__all__", names)?;
+                parent.add("sha", &m)?;
+                sys.set_item("mrly._mrly.core.name.sha", &m)?;
+                Ok(())
+            }
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrly.core.name")?;
+            m.setattr(
+                "__doc__",
+                "The canonical names: one JSON object per thing, its views and its id.",
+            )?;
+            let names: Vec<&str> = vec![];
+            m.add("__all__", names)?;
+            sha::init(py, &m, sys)?;
+            parent.add("name", &m)?;
+            sys.set_item("mrly._mrly.core.name", &m)?;
+            Ok(())
+        }
+    }
+
     /// The editions that distribute a palette over a cell.
     pub mod paint {
         use crate::hand::{PyColor, PyRng, PySerde, PyTensor, ok};
@@ -2245,7 +2316,7 @@ pub mod core {
             ((ok(out)?).to_vec()).into_bound_py_any(py)
         }
 
-        /// Wraps a u8 vector as a tensor of the shape, the same door as [`Tensor::of`].
+        /// Wraps a u8 vector as a tensor of the shape, the same door as `Tensor::of`.
         #[pyfunction]
         #[pyo3(name = "u8", signature = (data, shape))]
         pub fn u8_<'py>(
@@ -2478,7 +2549,7 @@ pub mod core {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.core")?;
-        m.setattr("__doc__", "The substrate: tensors, cells, colors, images, resampling and seeded chance.\nThe substrate: the road from a grid of bytes to pixels, with nothing mrly on it.\n\n- `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.\n- `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.\n- `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.\n- `image` holds the rgba pixels a renderer returns; encoding them into a file is the caller's.\n- `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.\n- `error` holds the one error, its Result and the json parser; `named` names an enum.\n\nThe json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.\n\nThe doors: [`Tensor::of`](crate::tensor::Tensor::of), [`Tensor::rot90`](crate::tensor::Tensor::rot90), [`Color::from_hex`](crate::colors::Color::from_hex), [`Color::to_hex`](crate::colors::Color::to_hex), [`Image::scale`](crate::image::Image::scale) and [`Colorizer::color`](crate::ramp::Colorizer::color).")?;
+        m.setattr("__doc__", "The substrate: tensors, cells, colors, images, resampling, seeded chance and the canonical names.\n\nThe road from a grid of bytes to pixels, and the one JSON object every mrly thing is named by.\n\n- `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.\n- `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.\n- `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.\n- `image` holds the rgba pixels a renderer returns; encoding them into a file is the caller's.\n- `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.\n- `error` holds the one error, its Result and the json parser.\n- `name` holds the `Named` trait, the `kind!` marker, the text views and the sha256 a name's id is cut from; `named_enum!` names an enum.\n\nThe json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.\n\nThe doors: `Tensor::of`, `Tensor::rot90`, `Color::from_hex`, `Color::to_hex`, `Image::scale` and `ramp::color`.")?;
         m.add_class::<PyRng>()?;
         m.add_class::<Colorizer>()?;
         m.add_class::<Dtype>()?;
@@ -2500,6 +2571,7 @@ pub mod core {
         colors::init(py, &m, sys)?;
         error::init(py, &m, sys)?;
         image::init(py, &m, sys)?;
+        name::init(py, &m, sys)?;
         paint::init(py, &m, sys)?;
         ramp::init(py, &m, sys)?;
         rng::init(py, &m, sys)?;
@@ -2510,7 +2582,6 @@ pub mod core {
     }
 }
 
-/// The alphabet: the stroked pixel glyphs, their rasters and their writing animations.
 /// The alphabet: a stroked pixel font of 108 characters, painted whole or written stroke by stroke.
 pub mod font {
     use crate::hand::PySerde;
@@ -2849,7 +2920,7 @@ pub mod font {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.font")?;
-        m.setattr("__doc__", "The alphabet: the stroked pixel glyphs, their rasters and their writing animations.\nThe alphabet: a stroked pixel font of 108 characters, painted whole or written stroke by stroke.\n\n- `bitmaps` holds the raw on/off rows; `glyph` builds them into glyphs and trims them.\n- `pens` holds every glyph's hand-penned strokes; `paths` reads them and drafts new ones.\n- `names` gives a character its Unicode name.\n- `raster` lays a text out as one 0/1 grid; `animate` writes it cell by cell and loops the cycle.\n\nThe font is the uppers, their corner-rounded lowers, the digits, the punctuation and arrows, and four specials; most glyphs are five rows of five, the ten that dip below the baseline are seven.\n\nThe doors: [`glyph`](crate::glyph()), [`supported`](crate::supported()), [`map`](crate::map()), [`raster`](crate::raster()), [`path`](crate::path()), [`floor`](crate::floor()), [`animate`](crate::animate()), [`merge`](crate::merge()), [`cycle`](crate::cycle()) and [`name_of`](crate::name_of()).\n\n`cargo run -p mrly --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor.")?;
+        m.setattr("__doc__", "The alphabet: a stroked pixel font of 108 characters, painted whole or written stroke by stroke.\n\n- `bitmaps` holds the raw on/off rows; `glyph` builds them into glyphs and trims them.\n- `pens` holds every glyph's hand-penned strokes; `paths` reads them and drafts new ones.\n- `names` gives a character its Unicode name.\n- `raster` lays a text out as one 0/1 grid; `animate` writes it cell by cell and loops the cycle.\n\nThe font is the uppers, their corner-rounded lowers, the digits, the punctuation and arrows, and four specials; most glyphs are five rows of five, the ten that dip below the baseline are seven.\n\nThe doors: `glyph`, `supported`, `map`, `raster`, `path`, `floor`, `animate`, `merge`, `cycle` and `name_of`.\n\n`cargo run -p mrly-font --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor.")?;
         m.add_class::<Glyph>()?;
         m.add_function(wrap_pyfunction!(all, &m)?)?;
         m.add_function(wrap_pyfunction!(animate, &m)?)?;
@@ -2907,7 +2978,6 @@ pub mod font {
     }
 }
 
-/// The engine: a rule over a grid, stepped, recorded, measured and rendered.
 /// The engine: a rule over a grid, stepped, recorded, measured and rendered.
 pub mod life {
     use crate::hand::{PyCell2d, PyCellNd, PyCode, PyImage, PySerde, PyTensor, ok};
@@ -3375,7 +3445,7 @@ pub mod life {
         /// Folds a decoded value to its canonical form, or an error for one outside the kind.
         #[pyo3(name = "checked", signature = ())]
         pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::checked(self.0.clone());
+            let out = <mrly::life::Rule as mrly::core::name::Named>::checked(self.0.clone());
             (crate::doors::life::Rule(ok(out)?)).into_bound_py_any(py)
         }
         /// Builds a life config running this rule over a neighborhood mask.
@@ -3389,21 +3459,21 @@ pub mod life {
         #[staticmethod]
         #[pyo3(name = "from_file", signature = (text))]
         pub fn from_file<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::from_file(text);
+            let out = <mrly::life::Rule as mrly::core::name::Named>::from_file(text);
             (crate::doors::life::Rule(ok(out)?)).into_bound_py_any(py)
         }
         /// Reads a JSON object into its canonical value, or an error naming the broken key.
         #[staticmethod]
         #[pyo3(name = "from_json", signature = (text))]
         pub fn from_json<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::from_json(text);
+            let out = <mrly::life::Rule as mrly::core::name::Named>::from_json(text);
             (crate::doors::life::Rule(ok(out)?)).into_bound_py_any(py)
         }
         /// Reads a path and query string back into the value, or an error.
         #[staticmethod]
         #[pyo3(name = "from_url", signature = (text))]
         pub fn from_url<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::from_url(text);
+            let out = <mrly::life::Rule as mrly::core::name::Named>::from_url(text);
             (crate::doors::life::Rule(ok(out)?)).into_bound_py_any(py)
         }
         /// Builds a rule from its counts and edge policy, listed counts folded to a sorted set.
@@ -3433,31 +3503,31 @@ pub mod life {
         /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
         #[pyo3(name = "to_file", signature = ())]
         pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::to_file(&self.0);
+            let out = <mrly::life::Rule as mrly::core::name::Named>::to_file(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
         /// Prints the first eight hex digits of the sha256 of the canonical JSON.
         #[pyo3(name = "to_id", signature = ())]
         pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::to_id(&self.0);
+            let out = <mrly::life::Rule as mrly::core::name::Named>::to_id(&self.0);
             (out).into_bound_py_any(py)
         }
         /// Prints the canonical JSON object.
         #[pyo3(name = "to_json", signature = ())]
         pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::to_json(&self.0);
+            let out = <mrly::life::Rule as mrly::core::name::Named>::to_json(&self.0);
             (out).into_bound_py_any(py)
         }
         /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
         #[pyo3(name = "to_prose", signature = ())]
         pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::to_prose(&self.0);
+            let out = <mrly::life::Rule as mrly::core::name::Named>::to_prose(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
         /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
         #[pyo3(name = "to_url", signature = ())]
         pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let out = <mrly::life::Rule as mrly::math::name::Named>::to_url(&self.0);
+            let out = <mrly::life::Rule as mrly::core::name::Named>::to_url(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
         /// Reads plain data into the class.
@@ -3910,7 +3980,7 @@ pub mod life {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.life")?;
-        m.setattr("__doc__", "The engine: a rule over a grid, stepped, recorded, measured and rendered.\nThe engine: a rule over a grid, stepped, recorded, measured and rendered.\n\n- `step`: one generation of a grid under birth and survive counts.\n- `animate`: a seed run until it fixes, loops or times out.\n- `models`: the run config and the recorded life.\n- `metrics`: the entropy and churn readings of a run.\n- `crop`: the centred cropping and tiling of a run's frames.\n- `mask`: the design masks a rule reads and the lattice they generate.\n- `source`: the named sources of neighbor counts, and the counts they lay down.\n- `elementary`: the one-line automata and the card of one rule.\n- `render`: the frames and the visit heatmap of a run, as images.\n- `rule`: the canonical name of a rule.\n\nThe doors: [`next_grid`](crate::next_grid), [`animate`](crate::animate()),\n[`entropy`](crate::entropy), [`churn`](crate::churn),\n[`counts`](crate::counts), [`frames`](crate::frames),\n[`heatmap`](crate::heatmap), [`history`](crate::history) and\n[`Rule`](crate::Rule).")?;
+        m.setattr("__doc__", "The engine: a rule over a grid, stepped, recorded, measured and rendered.\n\n- `step`: one generation of a grid under birth and survive counts.\n- `animate`: a seed run until it fixes, loops or times out.\n- `models`: the run config and the recorded life.\n- `metrics`: the entropy and churn readings of a run.\n- `crop`: the centred cropping and tiling of a run's frames.\n- `mask`: the design masks a rule reads and the lattice they generate.\n- `source`: the named sources of neighbor counts, and the counts they lay down.\n- `elementary`: the one-line automata and the card of one rule.\n- `render`: the frames and the visit heatmap of a run, as images.\n- `rule`: the canonical name of a rule.\n\nThe doors: `next_grid`, `animate`,\n`entropy`, `churn`,\n`counts`, `frames`,\n`heatmap`, `history` and\n`Rule`.")?;
         m.add_class::<Config>()?;
         m.add_class::<Counts>()?;
         m.add_class::<Life>()?;
@@ -3997,8 +4067,7 @@ pub mod life {
     }
 }
 
-/// The designs in space: codes, cells, cubes, hexagons, their counts, graphs and names.
-/// The designs in space.
+/// The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.
 pub mod math {
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
@@ -4024,7 +4093,7 @@ pub mod math {
             ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
-        /// Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::bang::factory::create`], and level 0 is one filled cell.
+        /// Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by `crate::bang::factory::create`, and level 0 is one filled cell.
         #[pyfunction]
         #[pyo3(name = "draw", signature = (code, base, level))]
         pub fn draw<'py>(
@@ -4119,7 +4188,7 @@ pub mod math {
             (out).into_bound_py_any(py)
         }
 
-        /// Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.
+        /// Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of `paired` digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.
         #[pyfunction]
         #[pyo3(name = "law", signature = (generator, level))]
         pub fn law<'py>(
@@ -4626,7 +4695,7 @@ pub mod math {
                 let out = mrly::math::automaton::Automaton::new(&rule.0);
                 Ok(Self(ok(out)?))
             }
-            /// Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of [`crate::memory::perron`].
+            /// Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of `crate::memory::perron`.
             #[pyo3(name = "abscissa", signature = ())]
             pub fn abscissa<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrly::math::automaton::Automaton::abscissa(&self.0);
@@ -4660,7 +4729,7 @@ pub mod math {
                 let out = mrly::math::automaton::Automaton::denominator(&self.0);
                 (out).into_bound_py_any(py)
             }
-            /// Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of [`crate::memory::transfer`], entry `(u', u)` counting the letters carrying `u` to `u'`.
+            /// Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of `crate::memory::transfer`, entry `(u', u)` counting the letters carrying `u` to `u'`.
             #[pyo3(name = "matrix", signature = ())]
             pub fn matrix<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrly::math::automaton::Automaton::matrix(&self.0);
@@ -4766,7 +4835,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.automaton")?;
-            m.setattr("__doc__", "The matrix ladder: the Dirichlet series of a memory design continued through its transfer matrix, its determinant cofactor and the residues on its pole combs.\n\nA claim witness with no caller in the crate: it witnesses `research/claims/memory-dial.md`.")?;
+            m.setattr("__doc__", "The matrix ladder: the Dirichlet series of a memory design continued through its transfer matrix, its determinant cofactor and the residues on its pole combs.\n\nA claim witness with no caller in the crate: it witnesses the [memory dial claim](https://github.com/mrlyprod/mrlyprod/blob/main/research/beneath/claims/memory-dial.md).")?;
             m.add_class::<Automaton>()?;
             m.add("ROUNDING", mrly::math::automaton::ROUNDING)?;
             let names: Vec<&str> = vec!["Automaton", "ROUNDING"];
@@ -4777,7 +4846,6 @@ pub mod math {
         }
     }
 
-    /// The universe of design codes: corners, symmetries and their counts.
     /// The universe of design codes.
     pub mod bang {
         use crate::hand::{PyCode, PyRng, PySerde, PyTensor, ok};
@@ -6005,7 +6073,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.bang")?;
-            m.setattr("__doc__", "The universe of design codes: corners, symmetries and their counts.\nThe universe of design codes.\n\nA code is a bitmask over the residue corners of a hypercube; this folder packs corners into\ncodes, folds codes into symmetry classes, counts the classes and spells the magic words.")?;
+            m.setattr("__doc__", "The universe of design codes.\n\nA code is a bitmask over the residue corners of a hypercube; this folder packs corners into\ncodes, folds codes into symmetry classes, counts the classes and spells the magic words.")?;
             m.add_class::<Design>()?;
             m.add_class::<Universe>()?;
             m.add_class::<MagicLayer>()?;
@@ -6055,7 +6123,6 @@ pub mod math {
         }
     }
 
-    /// The dimension-generic cell and the pipeline the fixed dimensions share.
     /// The N-dimensional cell and the pipeline the fixed dimensions share.
     pub mod cell {
         use crate::hand::{PyCell2d, PyCell3d, PyCellNd, PyColor, PyRng, PySerde, PyTensor, ok};
@@ -7200,7 +7267,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.cell")?;
-            m.setattr("__doc__", "The dimension-generic cell and the pipeline the fixed dimensions share.\nThe N-dimensional cell and the pipeline the fixed dimensions share.\n\nA seed pattern grows into a fractal cell here, and `two`, `three` and `six` are that one\npipeline pinned to a dimension: census, geometry, graphs, painting, text and JSON.")?;
+            m.setattr("__doc__", "The N-dimensional cell and the pipeline the fixed dimensions share.\n\nA seed pattern grows into a fractal cell here, and `two`, `three` and `six` are that one\npipeline pinned to a dimension: census, geometry, graphs, painting, text and JSON.")?;
             m.add_function(wrap_pyfunction!(grow, &m)?)?;
             m.add_function(wrap_pyfunction!(paint, &m)?)?;
             let names: Vec<&str> = vec!["grow", "paint"];
@@ -7215,7 +7282,6 @@ pub mod math {
         }
     }
 
-    /// The closed-form counts: fills, surfaces, hex slices and the carry ladder, without rendering.
     /// The closed-form counts.
     pub mod counts {
         use crate::hand::{PyCode, PyTensor, ok};
@@ -7951,7 +8017,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.counts")?;
-            m.setattr("__doc__", "The closed-form counts: fills, surfaces, hex slices and the carry ladder, without rendering.\nThe closed-form counts.\n\nEvery number the censuses reach by walking a built cell, this folder reaches by formula:\nfills, grids, exposed surfaces, hex slices and the base-q carry ladder.")?;
+            m.setattr("__doc__", "The closed-form counts.\n\nEvery number the censuses reach by walking a built cell, this folder reaches by formula:\nfills, grids, exposed surfaces, hex slices and the base-q carry ladder.")?;
             m.add_class::<Exposure>()?;
             m.add_function(wrap_pyfunction!(centered_hexagonal, &m)?)?;
             m.add_function(wrap_pyfunction!(cut_fills, &m)?)?;
@@ -8149,7 +8215,7 @@ pub mod math {
             (out).into_bound_py_any(py)
         }
 
-        /// Returns the count of elements the design holds at the depth, the length [`elements`] returns without building them.
+        /// Returns the count of elements the design holds at the depth, the length `elements` returns without building them.
         #[pyfunction]
         #[pyo3(name = "size", signature = (digits, depth))]
         pub fn size<'py>(
@@ -8266,7 +8332,7 @@ pub mod math {
             (out).into_bound_py_any(py)
         }
 
-        /// Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive.
+        /// Returns the chain's wall, one past the last base up to `CAP_BASE` whose margin is not positive.
         #[pyfunction]
         #[pyo3(name = "chain_wall", signature = ())]
         pub fn chain_wall<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
@@ -8320,7 +8386,7 @@ pub mod math {
             (out).into_bound_py_any(py)
         }
 
-        /// Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere.
+        /// Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from `DIGIT_WALL` below it and at the `CERTIFIED` sets, `none` elsewhere.
         #[pyfunction]
         #[pyo3(name = "reach", signature = (base, missing))]
         pub fn reach<'py>(py: Python<'py>, base: u64, missing: u64) -> PyResult<Bound<'py, PyAny>> {
@@ -8341,7 +8407,7 @@ pub mod math {
             (out).into_bound_py_any(py)
         }
 
-        /// Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`].
+        /// Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by `fraction` at `cap`.
         #[pyfunction]
         #[pyo3(name = "regions", signature = (base, level, z))]
         pub fn regions<'py>(
@@ -8441,7 +8507,6 @@ pub mod math {
         }
     }
 
-    /// The spatial network: its nodes, branches, extraction and census.
     /// The spatial network.
     pub mod graph {
         use crate::hand::{PySerde, PyTensor, ok};
@@ -8782,7 +8847,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.graph")?;
-            m.setattr("__doc__", "The spatial network: its nodes, branches, extraction and census.\nThe spatial network.\n\nA grid lifts into nodes and branches, as a core, an edge or a tunnel network, and the census\nreads its roles, tips, junctions and components back.")?;
+            m.setattr("__doc__", "The spatial network.\n\nA grid lifts into nodes and branches, as a core, an edge or a tunnel network, and the census\nreads its roles, tips, junctions and components back.")?;
             m.add_class::<Layout>()?;
             m.add_class::<Network>()?;
             m.add_function(wrap_pyfunction!(census, &m)?)?;
@@ -8974,7 +9039,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.ladder")?;
-            m.setattr("__doc__", "The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.\n\nA claim witness with no caller in the crate: it witnesses `research/claims/zeros-of-the-design-zeta.md`.")?;
+            m.setattr("__doc__", "The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.\n\nA claim witness with no caller in the crate: it witnesses the [zeros of the design zeta claim](https://github.com/mrlyprod/mrlyprod/blob/main/research/zeta/claims/zeros-of-the-design-zeta.md).")?;
             m.add_class::<Design>()?;
             m.add_function(wrap_pyfunction!(cofactor, &m)?)?;
             m.add_function(wrap_pyfunction!(residue, &m)?)?;
@@ -9249,7 +9314,6 @@ pub mod math {
         }
     }
 
-    /// The moire fields layered from sampled designs.
     /// The moire fields.
     pub mod moire {
         use crate::hand::{PyImage, PySerde, PyTensor, ok};
@@ -9903,7 +9967,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.moire")?;
-            m.setattr("__doc__", "The moire fields layered from sampled designs.\nThe moire fields.\n\nOne design sampled at many scales and stacked makes an interference pattern; the layers, their\ncombination, the volume they cut and the image they render live here.")?;
+            m.setattr("__doc__", "The moire fields.\n\nOne design sampled at many scales and stacked makes an interference pattern; the layers, their\ncombination, the volume they cut and the image they render live here.")?;
             m.add_class::<Field>()?;
             m.add_class::<Preset>()?;
             m.add_class::<Volume>()?;
@@ -9941,8 +10005,7 @@ pub mod math {
         }
     }
 
-    /// The mrly names: one canonical JSON object for every mathematical thing.
-    /// The mrly names.
+    /// The design names: the bang, sequence and word kinds of the canonical JSON object.
     pub mod name {
         use crate::hand::{PyCode, PySerde, ok};
         use pyo3::IntoPyObjectExt;
@@ -10042,28 +10105,28 @@ pub mod math {
             #[pyo3(name = "checked", signature = ())]
             pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out =
-                    <mrly::math::name::Bang as mrly::math::name::Named>::checked(self.0.clone());
+                    <mrly::math::name::Bang as mrly::core::name::Named>::checked(self.0.clone());
                 (crate::doors::math::name::Bang(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a filename back into the value, or an error.
             #[staticmethod]
             #[pyo3(name = "from_file", signature = (text))]
             pub fn from_file<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Bang as mrly::math::name::Named>::from_file(text);
+                let out = <mrly::math::name::Bang as mrly::core::name::Named>::from_file(text);
                 (crate::doors::math::name::Bang(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a JSON object into its canonical value, or an error naming the broken key.
             #[staticmethod]
             #[pyo3(name = "from_json", signature = (text))]
             pub fn from_json<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Bang as mrly::math::name::Named>::from_json(text);
+                let out = <mrly::math::name::Bang as mrly::core::name::Named>::from_json(text);
                 (crate::doors::math::name::Bang(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a path and query string back into the value, or an error.
             #[staticmethod]
             #[pyo3(name = "from_url", signature = (text))]
             pub fn from_url<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Bang as mrly::math::name::Named>::from_url(text);
+                let out = <mrly::math::name::Bang as mrly::core::name::Named>::from_url(text);
                 (crate::doors::math::name::Bang(ok(out)?)).into_bound_py_any(py)
             }
             /// Pins a code to its dimension and base on the square lattice.
@@ -10081,31 +10144,31 @@ pub mod math {
             /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
             #[pyo3(name = "to_file", signature = ())]
             pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Bang as mrly::math::name::Named>::to_file(&self.0);
+                let out = <mrly::math::name::Bang as mrly::core::name::Named>::to_file(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the first eight hex digits of the sha256 of the canonical JSON.
             #[pyo3(name = "to_id", signature = ())]
             pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Bang as mrly::math::name::Named>::to_id(&self.0);
+                let out = <mrly::math::name::Bang as mrly::core::name::Named>::to_id(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the canonical JSON object.
             #[pyo3(name = "to_json", signature = ())]
             pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Bang as mrly::math::name::Named>::to_json(&self.0);
+                let out = <mrly::math::name::Bang as mrly::core::name::Named>::to_json(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
             #[pyo3(name = "to_prose", signature = ())]
             pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Bang as mrly::math::name::Named>::to_prose(&self.0);
+                let out = <mrly::math::name::Bang as mrly::core::name::Named>::to_prose(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
             #[pyo3(name = "to_url", signature = ())]
             pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Bang as mrly::math::name::Named>::to_url(&self.0);
+                let out = <mrly::math::name::Bang as mrly::core::name::Named>::to_url(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Reads plain data into the class.
@@ -10207,7 +10270,7 @@ pub mod math {
             /// Folds a decoded value to its canonical form, or an error for one outside the kind.
             #[pyo3(name = "checked", signature = ())]
             pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Sequence as mrly::math::name::Named>::checked(
+                let out = <mrly::math::name::Sequence as mrly::core::name::Named>::checked(
                     self.0.clone(),
                 );
                 (crate::doors::math::name::Sequence(ok(out)?)).into_bound_py_any(py)
@@ -10222,21 +10285,21 @@ pub mod math {
             #[staticmethod]
             #[pyo3(name = "from_file", signature = (text))]
             pub fn from_file<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Sequence as mrly::math::name::Named>::from_file(text);
+                let out = <mrly::math::name::Sequence as mrly::core::name::Named>::from_file(text);
                 (crate::doors::math::name::Sequence(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a JSON object into its canonical value, or an error naming the broken key.
             #[staticmethod]
             #[pyo3(name = "from_json", signature = (text))]
             pub fn from_json<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Sequence as mrly::math::name::Named>::from_json(text);
+                let out = <mrly::math::name::Sequence as mrly::core::name::Named>::from_json(text);
                 (crate::doors::math::name::Sequence(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a path and query string back into the value, or an error.
             #[staticmethod]
             #[pyo3(name = "from_url", signature = (text))]
             pub fn from_url<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Sequence as mrly::math::name::Named>::from_url(text);
+                let out = <mrly::math::name::Sequence as mrly::core::name::Named>::from_url(text);
                 (crate::doors::math::name::Sequence(ok(out)?)).into_bound_py_any(py)
             }
             /// Pins a design's reading to its measure and axis.
@@ -10256,32 +10319,32 @@ pub mod math {
             /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
             #[pyo3(name = "to_file", signature = ())]
             pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Sequence as mrly::math::name::Named>::to_file(&self.0);
+                let out = <mrly::math::name::Sequence as mrly::core::name::Named>::to_file(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the first eight hex digits of the sha256 of the canonical JSON.
             #[pyo3(name = "to_id", signature = ())]
             pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Sequence as mrly::math::name::Named>::to_id(&self.0);
+                let out = <mrly::math::name::Sequence as mrly::core::name::Named>::to_id(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the canonical JSON object.
             #[pyo3(name = "to_json", signature = ())]
             pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Sequence as mrly::math::name::Named>::to_json(&self.0);
+                let out = <mrly::math::name::Sequence as mrly::core::name::Named>::to_json(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
             #[pyo3(name = "to_prose", signature = ())]
             pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out =
-                    <mrly::math::name::Sequence as mrly::math::name::Named>::to_prose(&self.0);
+                    <mrly::math::name::Sequence as mrly::core::name::Named>::to_prose(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
             #[pyo3(name = "to_url", signature = ())]
             pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Sequence as mrly::math::name::Named>::to_url(&self.0);
+                let out = <mrly::math::name::Sequence as mrly::core::name::Named>::to_url(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Reads plain data into the class.
@@ -10371,28 +10434,28 @@ pub mod math {
             #[pyo3(name = "checked", signature = ())]
             pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out =
-                    <mrly::math::name::Word as mrly::math::name::Named>::checked(self.0.clone());
+                    <mrly::math::name::Word as mrly::core::name::Named>::checked(self.0.clone());
                 (crate::doors::math::name::Word(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a filename back into the value, or an error.
             #[staticmethod]
             #[pyo3(name = "from_file", signature = (text))]
             pub fn from_file<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Word as mrly::math::name::Named>::from_file(text);
+                let out = <mrly::math::name::Word as mrly::core::name::Named>::from_file(text);
                 (crate::doors::math::name::Word(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a JSON object into its canonical value, or an error naming the broken key.
             #[staticmethod]
             #[pyo3(name = "from_json", signature = (text))]
             pub fn from_json<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Word as mrly::math::name::Named>::from_json(text);
+                let out = <mrly::math::name::Word as mrly::core::name::Named>::from_json(text);
                 (crate::doors::math::name::Word(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a path and query string back into the value, or an error.
             #[staticmethod]
             #[pyo3(name = "from_url", signature = (text))]
             pub fn from_url<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Word as mrly::math::name::Named>::from_url(text);
+                let out = <mrly::math::name::Word as mrly::core::name::Named>::from_url(text);
                 (crate::doors::math::name::Word(ok(out)?)).into_bound_py_any(py)
             }
             /// Returns every letter as a design pinned to the word's dimension and its own base.
@@ -10419,31 +10482,31 @@ pub mod math {
             /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
             #[pyo3(name = "to_file", signature = ())]
             pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Word as mrly::math::name::Named>::to_file(&self.0);
+                let out = <mrly::math::name::Word as mrly::core::name::Named>::to_file(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the first eight hex digits of the sha256 of the canonical JSON.
             #[pyo3(name = "to_id", signature = ())]
             pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Word as mrly::math::name::Named>::to_id(&self.0);
+                let out = <mrly::math::name::Word as mrly::core::name::Named>::to_id(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the canonical JSON object.
             #[pyo3(name = "to_json", signature = ())]
             pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Word as mrly::math::name::Named>::to_json(&self.0);
+                let out = <mrly::math::name::Word as mrly::core::name::Named>::to_json(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
             #[pyo3(name = "to_prose", signature = ())]
             pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Word as mrly::math::name::Named>::to_prose(&self.0);
+                let out = <mrly::math::name::Word as mrly::core::name::Named>::to_prose(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
             #[pyo3(name = "to_url", signature = ())]
             pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::math::name::Word as mrly::math::name::Named>::to_url(&self.0);
+                let out = <mrly::math::name::Word as mrly::core::name::Named>::to_url(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Reads plain data into the class.
@@ -10522,7 +10585,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.name")?;
-            m.setattr("__doc__", "The mrly names: one canonical JSON object for every mathematical thing.\nThe mrly names.\n\nEvery mathematical thing prints one canonical JSON object, and the url, filename, prose and id\nviews are functions of that one string.")?;
+            m.setattr("__doc__", "The design names: the bang, sequence and word kinds of the canonical JSON object.\n\nThe `Named` trait, the `kind!` marker and the text views live in `mrly_core::name`.")?;
             m.add_class::<Bang>()?;
             m.add_class::<Sequence>()?;
             m.add_class::<Word>()?;
@@ -11720,7 +11783,7 @@ pub mod math {
             (PySerde(out)).into_bound_py_any(py)
         }
 
-        /// Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is.
+        /// Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so `regions`, `crop` and `census` read it on any lattice; a cube lattice keeps the shape as it is.
         #[pyfunction]
         #[pyo3(name = "fit", signature = (shape, extents))]
         pub fn fit<'py>(
@@ -11861,7 +11924,6 @@ pub mod math {
         }
     }
 
-    /// The hexagon world: cubes flattened to triangle-meshed hexes.
     /// The hexagon world, the projection of `three`.
     pub mod six {
         use crate::hand::{
@@ -12828,7 +12890,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.six")?;
-            m.setattr("__doc__", "The hexagon world: cubes flattened to triangle-meshed hexes.\nThe hexagon world, the projection of `three`.\n\nA coded cube flattened to an iso, pro or cut hexagon, meshed into triangles, then counted,\ngraphed, rastered and drawn like any other cell.")?;
+            m.setattr("__doc__", "The hexagon world, the projection of `three`.\n\nA coded cube flattened to an iso, pro or cut hexagon, meshed into triangles, then counted,\ngraphed, rastered and drawn like any other cell.")?;
             m.add_function(wrap_pyfunction!(anti, &m)?)?;
             m.add_function(wrap_pyfunction!(binarize, &m)?)?;
             m.add_function(wrap_pyfunction!(binarize_otsu, &m)?)?;
@@ -13682,7 +13744,7 @@ pub mod math {
                 let out = mrly::math::sumset::Pair::new(three, four);
                 (crate::doors::math::sumset::Pair(ok(out)?)).into_bound_py_any(py)
             }
-            /// The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz.
+            /// The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy `Pair::energy` returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz.
             #[pyo3(name = "ratio", signature = (energy))]
             pub fn ratio<'py>(&self, py: Python<'py>, energy: u128) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrly::math::sumset::Pair::ratio(&self.0, energy);
@@ -13817,7 +13879,6 @@ pub mod math {
         }
     }
 
-    /// The cube pipeline: designs, tiles, graphs and renderings in three dimensions.
     /// The cube pipeline.
     pub mod three {
         use crate::hand::{PyCell2d, PyCell3d, PyCellNd, PyCode, PyRng, PySerde, PyTensor, ok};
@@ -14739,7 +14800,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.three")?;
-            m.setattr("__doc__", "The cube pipeline: designs, tiles, graphs and renderings in three dimensions.\nThe cube pipeline.\n\nThe shared cell pipeline pinned to three dimensions: coded and carpet cubes, their censuses,\ntheir diagonal slices, their exposed quads and their JSON.")?;
+            m.setattr("__doc__", "The cube pipeline.\n\nThe shared cell pipeline pinned to three dimensions: coded and carpet cubes, their censuses,\ntheir diagonal slices, their exposed quads and their JSON.")?;
             m.add_class::<Vec3>()?;
             m.add_function(wrap_pyfunction!(carpet, &m)?)?;
             m.add_function(wrap_pyfunction!(census, &m)?)?;
@@ -14991,7 +15052,6 @@ pub mod math {
         }
     }
 
-    /// The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.
     /// The flat-cell pipeline.
     pub mod two {
         use crate::hand::{
@@ -15496,7 +15556,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.two")?;
-            m.setattr("__doc__", "The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.\nThe flat-cell pipeline.\n\nThe shared cell pipeline pinned to two dimensions: coded and carpet cells, their censuses,\ntheir payloads, their text, SVG and pixel renderings and their JSON.")?;
+            m.setattr("__doc__", "The flat-cell pipeline.\n\nThe shared cell pipeline pinned to two dimensions: coded and carpet cells, their censuses,\ntheir payloads, their text, SVG and pixel renderings and their JSON.")?;
             m.add_function(wrap_pyfunction!(capacity, &m)?)?;
             m.add_function(wrap_pyfunction!(carpet, &m)?)?;
             m.add_function(wrap_pyfunction!(census, &m)?)?;
@@ -15587,7 +15647,7 @@ pub mod math {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.math")?;
-        m.setattr("__doc__", "The designs in space: codes, cells, cubes, hexagons, their counts, graphs and names.\nThe designs in space.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level\ninto a fractal design, and the same code always unfolds into the same shape, so a design can be\nnamed, counted and drawn again from its number alone. Half the module generates and half\nmeasures; everything rests on the tensors and cells of [`crate::core`] and the sequences of\n[`crate::num`].\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.\n- `nodal` rings the plate a design cuts: its lowest modes, their nodal domains and Courant bounds, the Chladni figures of the design.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `spin` spins a raster about its centre; `tourbillon` stacks the turned parity carpets.\n- `spirograph` rolls a byte grid as a wheel; `roulette` counts where its curves cross.\n- `name` prints and parses the one canonical JSON object of every design, rule, tile and word.\n- `arrays`: a sparse sensor array, its difference coarray and weights, its essential sensors, and the fractal array a generator grows.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.\n\nThe doors are [`crate::atoms::carpet_2d`], [`crate::bang::bang`],\n[`crate::two::carpet`], [`crate::two::census()`], [`crate::two::to_json`],\n[`crate::counts::fill`], [`crate::three::census::surface`] and\n[`crate::spectrum::laplacian_spectrum`].")?;
+        m.setattr("__doc__", "The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level into a fractal design, and the same code always unfolds into the same shape, so a design can be named, counted and drawn again from its number alone. Everything rests on the tensors and cells of `mrly_core` and the sequences of `mrly_num`.\n\n# The design pipeline\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `name` holds the bang, sequence and word kinds of the canonical name.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches.\n- `spectrum` reads the Laplacian spectra off a network.\n- `nodal` rings the plate a design cuts: its lowest modes, nodal domains and Courant bounds.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `arcs` lays two quarter arcs in every cell and follows the loops they join into.\n\n# Line and Dirichlet designs\n\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation, their four regions and the chain certificate.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.\n\n# Wheels\n\n- `spin` spins a raster about its centre.\n- `tourbillon` stacks the turned parity carpets inside the inscribed disc.\n- `spirograph` rolls a byte grid as a wheel and draws the curves of its pencils.\n- `roulette` counts where those curves cross.\n\nThe doors are `crate::atoms::carpet_2d`, `crate::bang::bang`,\n`crate::two::carpet`, `crate::two::census()`, `crate::two::to_json`,\n`crate::counts::fill`, `crate::three::census::surface` and\n`crate::spectrum::laplacian_spectrum`.")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         arcs::init(py, &m, sys)?;
@@ -15624,8 +15684,7 @@ pub mod math {
     }
 }
 
-/// The integers: primes, divisors, series, lattices, spectra and networks.
-/// The instruments of number: primes, divisors, series, spectra and lattices.
+/// The integers: primes, divisors, series, sieves, lattices and spectra.
 pub mod num {
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
@@ -18883,7 +18942,7 @@ pub mod num {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.num")?;
-        m.setattr("__doc__", "The integers: primes, divisors, series, lattices, spectra and networks.\nThe instruments of number: primes, divisors, series, spectra and lattices.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.\n- `eigen`: the crate's symmetric eigensolvers: the dense Householder and QL pair with vectors, and the shift-invert block Lanczos on a banded Cholesky for the lowest pairs of a sparse matrix.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: [`gcd`](crate::factor::gcd), [`factorial`](crate::factor::factorial), [`divisors`](crate::factor::divisors), [`mobius`](crate::factor::mobius).\n- The primality test: [`is_prime`](crate::prime::is_prime).\n- The zeta value above one: [`zeta`](crate::series::zeta).")?;
+        m.setattr("__doc__", "The integers: primes, divisors, series, sieves, lattices and spectra.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: `gcd`, `factorial`, `divisors`, `mobius`.\n- The primality test: `is_prime`.\n- The zeta value above one: `zeta`.")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         apollonian::init(py, &m, sys)?;
@@ -18908,7 +18967,6 @@ pub mod num {
 }
 
 /// The tiles: the whole pipeline from a recipe to a file.
-/// The generator: the pipeline from a recipe to a file, for datasets, the automator, backgrounds.
 pub mod tile {
     use crate::hand::{PyImage, PyRng, PySerde, PyTensor, ok};
     use pyo3::IntoPyObjectExt;
@@ -19249,28 +19307,28 @@ pub mod tile {
             #[pyo3(name = "checked", signature = ())]
             pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out =
-                    <mrly::tile::name::Tile as mrly::math::name::Named>::checked(self.0.clone());
+                    <mrly::tile::name::Tile as mrly::core::name::Named>::checked(self.0.clone());
                 (crate::doors::tile::name::Tile(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a filename back into the value, or an error.
             #[staticmethod]
             #[pyo3(name = "from_file", signature = (text))]
             pub fn from_file<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::tile::name::Tile as mrly::math::name::Named>::from_file(text);
+                let out = <mrly::tile::name::Tile as mrly::core::name::Named>::from_file(text);
                 (crate::doors::tile::name::Tile(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a JSON object into its canonical value, or an error naming the broken key.
             #[staticmethod]
             #[pyo3(name = "from_json", signature = (text))]
             pub fn from_json<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::tile::name::Tile as mrly::math::name::Named>::from_json(text);
+                let out = <mrly::tile::name::Tile as mrly::core::name::Named>::from_json(text);
                 (crate::doors::tile::name::Tile(ok(out)?)).into_bound_py_any(py)
             }
             /// Reads a path and query string back into the value, or an error.
             #[staticmethod]
             #[pyo3(name = "from_url", signature = (text))]
             pub fn from_url<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::tile::name::Tile as mrly::math::name::Named>::from_url(text);
+                let out = <mrly::tile::name::Tile as mrly::core::name::Named>::from_url(text);
                 (crate::doors::tile::name::Tile(ok(out)?)).into_bound_py_any(py)
             }
             /// Folds a recipe to its name.
@@ -19292,31 +19350,31 @@ pub mod tile {
             /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
             #[pyo3(name = "to_file", signature = ())]
             pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::tile::name::Tile as mrly::math::name::Named>::to_file(&self.0);
+                let out = <mrly::tile::name::Tile as mrly::core::name::Named>::to_file(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the first eight hex digits of the sha256 of the canonical JSON.
             #[pyo3(name = "to_id", signature = ())]
             pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::tile::name::Tile as mrly::math::name::Named>::to_id(&self.0);
+                let out = <mrly::tile::name::Tile as mrly::core::name::Named>::to_id(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the canonical JSON object.
             #[pyo3(name = "to_json", signature = ())]
             pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::tile::name::Tile as mrly::math::name::Named>::to_json(&self.0);
+                let out = <mrly::tile::name::Tile as mrly::core::name::Named>::to_json(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
             #[pyo3(name = "to_prose", signature = ())]
             pub fn to_prose<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::tile::name::Tile as mrly::math::name::Named>::to_prose(&self.0);
+                let out = <mrly::tile::name::Tile as mrly::core::name::Named>::to_prose(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
             #[pyo3(name = "to_url", signature = ())]
             pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let out = <mrly::tile::name::Tile as mrly::math::name::Named>::to_url(&self.0);
+                let out = <mrly::tile::name::Tile as mrly::core::name::Named>::to_url(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Reads plain data into the class.
@@ -20198,7 +20256,7 @@ pub mod tile {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.tile")?;
-        m.setattr("__doc__", "The tiles: the whole pipeline from a recipe to a file.\nThe generator: the pipeline from a recipe to a file, for datasets, the automator, backgrounds.\n\n- `recipe`: the tile recipe, its families, groups, parities, catalog and size lists.\n- `draw`: one recipe drawn at random from a seeded stream under size constraints.\n- `build`: the recipe to cell builders, one per dimension.\n- `variation`: the seeded artwork, from recipe through paint to rendered files.\n- `name`: the canonical name of a recipe, and the recipe back out of it.\n\nThe doors: [`Tile::new`](crate::recipe::Tile::new),\n[`Tile::size`](crate::recipe::Tile::size),\n[`Tile::check`](crate::recipe::Tile::check),\n[`draw::create`](crate::draw::create), [`random_design`](crate::random_design),\n[`random_rotation`](crate::random_rotation), [`build_2d`](crate::build::build_2d),\n[`tree_mask`](crate::tree_mask), [`variation::create`](crate::variation::create),\n[`hex_key`](crate::hex_key), [`classic_code_nd`](crate::classic_code_nd),\n[`Tile::of`](crate::name::Tile::of) and [`background`](crate::background).")?;
+        m.setattr("__doc__", "The tiles: the whole pipeline from a recipe to a file.\n\n- `recipe`: the tile recipe, its families, groups, parities, catalog and size lists.\n- `draw`: one recipe drawn at random from a seeded stream under size constraints.\n- `build`: the recipe to cell builders, one per dimension.\n- `variation`: the seeded artwork, from recipe through paint to rendered files.\n- `name`: the canonical name of a recipe, and the recipe back out of it.\n\nThe doors: `Tile::new`,\n`Tile::size`,\n`Tile::check`,\n`draw::create`, `random_design`,\n`random_rotation`, `build_2d`,\n`tree_mask`, `variation::create`,\n`hex_key`, `classic_code_nd`,\n`Tile::of` and `background`.")?;
         m.add_class::<Tile>()?;
         m.add_class::<Group>()?;
         m.add_class::<Parity>()?;

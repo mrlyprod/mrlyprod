@@ -9,7 +9,7 @@ FIXTURES = pathlib.Path(__file__).resolve().parents[3] / "crates" / "mrly" / "fi
 
 @pytest.fixture
 def row(request):
-    module = request.module.__name__.removeprefix("test_")
+    module = pathlib.Path(request.module.__file__).stem.removeprefix("test_")
     rows = json.loads((FIXTURES / f"{module}.json").read_text())
 
     def pick(name):

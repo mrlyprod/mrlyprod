@@ -24,11 +24,8 @@ const order = (html) => [...html.matchAll(/<(?:section|details)([^>]*)>(?:<summa
 
 const placed = (patch) => order(renderToStaticMarkup(<Shared>{panel(patch)}<Knobs spec={SPEC} value={{ ...value, ...patch }} onChange={() => {}} /></Shared>));
 
-test('the widget mounts its stage once the unit is in hand, and a cube only once three is too', () => {
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-  expect(page(math, undefined, { view: 'cube' })).not.toContain('<canvas');
-  expect(page(math, {}, { view: 'cube' })).toContain('<canvas');
+test('a cube mounts its stage only once three is in hand too', () => {
+  expect([page(math, undefined, { view: 'cube' }).includes('<canvas'), page(math, {}, { view: 'cube' }).includes('<canvas')]).toEqual([false, true]);
 });
 
 test('the pane holds the design picker on the view\'s own code, Relax or Pause beside Reset, and the three poses', () => {

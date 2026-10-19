@@ -9,7 +9,7 @@
 //!
 //! The doors: [`glyph`](crate::glyph()), [`supported`](crate::supported()), [`map`](crate::map()), [`raster`](crate::raster()), [`path`](crate::path()), [`floor`](crate::floor()), [`animate`](crate::animate()), [`merge`](crate::merge()), [`cycle`](crate::cycle()) and [`name_of`](crate::name_of()).
 //!
-//! `cargo run -p mrly --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor.
+//! `cargo run -p mrly-font --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor.
 
 /// The stroke-order writing animations of text.
 pub mod animate;
@@ -70,6 +70,10 @@ pub fn supported() -> Vec<char> {
 pub fn map() -> BTreeMap<char, Vec<String>> {
     all().into_iter().map(|g| (g.char, g.rows)).collect()
 }
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct Readme;
 
 #[cfg(test)]
 mod tests {

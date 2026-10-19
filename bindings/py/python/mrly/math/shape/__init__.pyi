@@ -57,7 +57,7 @@ def crossing_tree(radius: int, number: int, keep: list[bool]) -> dict[str, Any]:
     """Builds the whole crossing tree of one radius, pruned by the seats the design keeps."""
 
 def fit(shape: Any, extents: list[int]) -> Any:
-    """Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is."""
+    """Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so `regions`, `crop` and `census` read it on any lattice; a cube lattice keeps the shape as it is."""
 
 def named(name: str, dimension: int, radius: Frac) -> Any:
     """Builds a named shape of the dimension, centered at one half on every axis."""

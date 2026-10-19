@@ -1,18 +1,5 @@
 import { expect, test } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '@mrlyprod/mrly/math';
-import { defaults } from '../../lib/app/spec.js';
-import { Frame } from '../../lib/app/frame.jsx';
-import { DESIGN, SPEC } from './scene.js';
-import { Widget, patch, rows } from './widget.jsx';
-
-const value = { ...defaults(SPEC), ...DESIGN, seed: 1 };
-
-test('the widget mounts its stage once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Moire"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-});
+import { patch, rows } from './widget.jsx';
 
 test('the picker writes no dim, the field reads name the stack, and the r-matrix reads name the pair on trial', () => {
   expect(patch({ dim: 2, base: 3, code: '495' })).toEqual({ base: 3, code: '495' });

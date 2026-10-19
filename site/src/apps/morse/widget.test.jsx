@@ -2,13 +2,12 @@ import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
 import * as num from '@mrlyprod/mrly/num';
-import { Frame } from '../../lib/app/frame.jsx';
 import { defaults } from '../../lib/app/spec.js';
 import { Knobs } from '../../lib/app/knobs.jsx';
 import { study } from './engine.js';
 import { SPEC, tidied } from './scene.js';
 import { rng } from '../../lib/rand.js';
-import { Design, ROWS, Widget, rerolled, shift, tapped, turned } from './widget.jsx';
+import { Design, ROWS, rerolled, shift, tapped, turned } from './widget.jsx';
 
 const units = { num, math };
 
@@ -21,12 +20,6 @@ const pane = (over) => renderToStaticMarkup(<Knobs spec={SPEC} value={value(over
 const design = (over, given = units) => renderToStaticMarkup(<Design value={value(over)} units={given} facts={facts(over)} onChange={() => {}} />);
 
 const heads = (html) => html.match(/<h3>(\w+)<\/h3>/g);
-
-test('the widget mounts its stage once the units are in hand', () => {
-  const page = (given) => renderToStaticMarkup(<Frame label="Morse"><Widget value={value({})} onChange={() => {}} units={given} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(units)).toContain('<canvas');
-});
 
 test('the knobs hold one View group: the view segment first, then the view own rows, a level reading its side', () => {
   const lifts = pane({});

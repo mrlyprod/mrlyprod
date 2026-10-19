@@ -1,7 +1,7 @@
 use crate::recipe::{Design, Group, Source, Tile as Recipe};
 use mrly_core::error::{Error, Result, value_error};
-use mrly_math::kind;
-use mrly_math::name::Named;
+use mrly_core::kind;
+use mrly_core::name::Named;
 use serde::{Deserialize, Serialize};
 
 kind!("tile");
@@ -129,7 +129,7 @@ impl Default for Slots {
 ///
 /// ```
 /// use mrly_tile::name::Tile;
-/// use mrly_math::name::Named;
+/// use mrly_core::name::Named;
 /// let carpet = Tile::from_json(r#"{"kind":"tile","code":7,"side":3,"level":2}"#).unwrap();
 /// assert_eq!(carpet.recipe().unwrap().width, 9);
 /// assert_eq!(Tile::of(&carpet.recipe().unwrap()).unwrap(), carpet);

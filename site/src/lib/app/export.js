@@ -40,3 +40,32 @@ export async function save(canvas, { name = 'mrly', kind = 'png', draw, scale = 
   if (!blob) throw new Error('the canvas gave no picture');
   return download(blob, `${name}.${ext(blob.type)}`);
 }
+
+export function wav(buffer) {
+  const channels = buffer.numberOfChannels;
+  const frames = buffer.length;
+  const rate = buffer.sampleRate;
+  const size = frames * channels * 2;
+  const bytes = new ArrayBuffer(44 + size);
+  const view = new DataView(bytes);
+  const word = (at, text) => [...text].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)));
+  word(0, 'RIFF');
+  view.setUint32(4, 36 + size, true);
+  word(8, 'WAVE');
+  word(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channels, true);
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * channels * 2, true);
+  view.setUint16(32, channels * 2, true);
+  view.setUint16(34, 16, true);
+  word(36, 'data');
+  view.setUint32(40, size, true);
+  const pcm = new Int16Array(bytes, 44);
+  const data = Array.from({ length: channels }, (_, c) => buffer.getChannelData(c));
+  for (let i = 0, at = 0; i < frames; i++) {
+    for (let c = 0; c < channels; c++) pcm[at++] = Math.max(-32768, Math.min(32767, Math.round(data[c][i] * 32767)));
+  }
+  return new Blob([bytes], { type: 'audio/wav' });
+}

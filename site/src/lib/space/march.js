@@ -440,9 +440,9 @@ const source = (look, budget, aux) => `#version 300 es\n#define ${look.toUpperCa
 
 const budget = (view, quality = '') => QUALITY[quality] ?? (tier(view) === 'phone' ? QUALITY.phone : QUALITY.desk);
 
-export function march(gl, view, design, { look = 'studio', quality = '', toFrame = null } = {}) {
+export function march(gl, view, design, { math, look = 'studio', quality = '', toFrame = null } = {}) {
   const { n } = design;
-  const made = boxes(cells(design.code, n), n);
+  const made = boxes(cells(math, design.code, n), n);
   const plan = budget(view, quality);
   const taa = hdr(gl);
   const lo = texture(gl, { w: n, h: n, d: n, data: made.lo, filter: 'nearest' });

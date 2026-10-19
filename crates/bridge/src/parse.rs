@@ -215,33 +215,16 @@ pub fn parse(files: &Files) -> Result<Tree> {
         public: true,
         docs: vec![],
     })?;
-    let outer = mount_docs(files)?;
     for unit in units {
         walker.file(At {
             path: vec![unit.clone()],
             file: format!("{unit}/lib.rs"),
-            docs: outer.get(&unit).cloned().unwrap_or_default(),
+            docs: vec![],
             dir: unit,
             public: true,
         })?;
     }
     Ok(walker.tree)
-}
-
-fn mount_docs(files: &Files) -> Result<BTreeMap<String, Vec<String>>> {
-    let mut out = BTreeMap::new();
-    let Some(text) = files.get("lib.rs") else {
-        return Ok(out);
-    };
-    let parsed = syn::parse_file(text).map_err(|e| format!("lib.rs: {e}"))?;
-    for item in &parsed.items {
-        if let syn::Item::Use(u) = item
-            && let syn::UseTree::Rename(r) = &u.tree
-        {
-            out.insert(r.rename.to_string(), docs_of(&u.attrs));
-        }
-    }
-    Ok(out)
 }
 
 struct Walker<'a> {
@@ -266,7 +249,10 @@ impl Walker<'_> {
             .ok_or_else(|| format!("missing file {file}"))?;
         let parsed =
             syn::parse_file(text).map_err(|e| format!("{file}:{}: {e}", e.span().start().line))?;
-        at.docs.extend(docs_of(&parsed.attrs));
+        let inner = docs_of(&parsed.attrs);
+        if !inner.is_empty() {
+            at.docs = inner;
+        }
         self.module(at, text, &parsed.items)
     }
 
@@ -736,7 +722,65 @@ pub fn docs_of(attrs: &[Attribute]) -> Vec<String> {
             _ => None,
         })
         .map(|s| s.strip_prefix(' ').unwrap_or(&s).to_string())
+        .scan(false, |fenced, line| {
+            let fence = line.trim_start().starts_with("```");
+            let code = *fenced || fence;
+            *fenced ^= fence;
+            Some((code, line))
+        })
+        .filter(|(code, line)| *code || !is_link_target(line))
+        .map(|(code, line)| if code { line } else { plain(&line) })
         .collect()
+}
+
+fn is_link_target(line: &str) -> bool {
+    line.starts_with('[')
+        && line
+            .find("]: ")
+            .is_some_and(|at| !line[1..at].contains(['[', ']']))
+}
+
+fn closing(text: &str) -> Option<usize> {
+    let mut depth = 0usize;
+    for (at, c) in text.char_indices() {
+        match c {
+            '(' => depth += 1,
+            ')' if depth == 0 => return Some(at),
+            ')' => depth -= 1,
+            _ => {}
+        }
+    }
+    None
+}
+
+pub fn plain(line: &str) -> String {
+    let mut out = String::new();
+    let mut rest = line;
+    while let Some(open) = rest.find('[') {
+        out.push_str(&rest[..open]);
+        let after = &rest[open + 1..];
+        let Some(close) = after.find(']') else {
+            out.push_str(&rest[open..]);
+            return out;
+        };
+        let text = &after[..close];
+        let tail = &after[close + 1..];
+        if let Some(target) = tail.strip_prefix('(')
+            && let Some(end) = closing(target)
+            && !target[..end].contains("://")
+        {
+            out.push_str(text);
+            rest = &target[end + 1..];
+        } else if text.len() > 2 && text.starts_with('`') && text.ends_with('`') {
+            out.push_str(text);
+            rest = tail;
+        } else {
+            out.push('[');
+            rest = after;
+        }
+    }
+    out.push_str(rest);
+    out
 }
 
 fn derives_of(attrs: &[Attribute]) -> Vec<String> {

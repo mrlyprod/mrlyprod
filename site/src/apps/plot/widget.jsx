@@ -11,7 +11,7 @@ import { DEEP, TERMS, csv, json, ledger, measureOf, parse, print } from '../../l
 import { facts, found, hit } from '../../lib/sequences/facts.js';
 import { title } from '../../lib/sequences/paint.js';
 import { Record } from '../../lib/sequences/parts.jsx';
-import { PAIRED, decimal, mix, named, rule } from './engine.js';
+import { PAIRED, combine, decimal, named, rule } from './engine.js';
 import { filed, make } from './scene.js';
 import { useUnits } from '../../lib/app/hooks.js';
 import { wasm } from '../../lib/units/index.js';
@@ -35,7 +35,7 @@ export function panels(num, a, b, value) {
   if (Number(value.mix) !== 1) return out;
   const paired = PAIRED.includes(value.op);
   const right = paired && b ? b.terms.slice(0, count) : [];
-  const made = mix(num, left, right, value.op, value.arg);
+  const made = combine(num, left, right, value.op, value.arg);
   const tag = paired ? (b ? `${b.label} ${measureOf(b.measure)?.label.toLowerCase()}` : 'no second row') : `argument ${value.arg}`;
   const row = { key: `mix-${value.op}-${value.arg}-${a.key}-${paired && b ? b.key : ''}`, title: `${named(value.op)} of ${a.label} ${measureOf(a.measure)?.label.toLowerCase()}${paired ? ` and ${tag}` : `, ${tag}`}`, terms: made.terms, start: 0, say: paired ? 'both sequences, index from 0' : 'the first sequence, index from 0', hit: found(made.terms) };
   const note = made.error ? `the mix failed: ${made.error}` : made.cut ? 'the mix stops where 128 bits do' : '';

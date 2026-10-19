@@ -1,6 +1,7 @@
-use super::{Bang, Named};
-use crate::kind;
+use super::Bang;
 use mrly_core::error::{Result, value_error};
+use mrly_core::kind;
+use mrly_core::name::Named;
 use serde::{Deserialize, Serialize};
 
 kind!("sequence");
@@ -33,7 +34,8 @@ fn is_two(base: &usize) -> bool {
 /// A design sequence's address: the design, the reading taken off it and the index it runs along.
 ///
 /// ```
-/// use mrly_math::name::{Named, Sequence};
+/// use mrly_core::name::Named;
+/// use mrly_math::name::Sequence;
 /// let carpet = Sequence::new(7, 2, 2, "fills", "side");
 /// assert_eq!(
 ///     carpet.to_json(),

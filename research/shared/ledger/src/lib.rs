@@ -16,8 +16,9 @@ pub use records::{identify, Record, RECORDS};
 pub use terms::{closed, fill_polynomial, terms};
 
 use mrly::core::error::{value_error, Result};
+use mrly::core::name::Named;
 use mrly::math::bang::baseq;
-use mrly::math::name::{Bang, Named, Sequence as SequenceName};
+use mrly::math::name::{Bang, Sequence as SequenceName};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 

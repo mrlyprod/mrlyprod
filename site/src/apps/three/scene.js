@@ -53,6 +53,7 @@ export const units = wasm('math');
 export const name = (value) => `three-${String(value.code ?? '').trim() || CARPET}-${value.source === 'field' ? 'field' : `l${value.level}`}${value.crop ? `-${value.crop}` : ''}`;
 
 export const PAGE = {
+  defaults: { base: 2, code: '23' },
   spec: SPEC,
   units,
   gestures: true,
@@ -105,7 +106,7 @@ function solid(math, value) {
     ['Name', title(made, math)],
     ['Side', cell.shape[0]],
     ['Filled', String(math.counts.fill(code, number, 3, level, base))],
-    ['Empty', String(math.counts.void(code, number, 3, level, base))],
+    ['Empty', String(math.counts.void_(code, number, 3, level, base))],
     ['Exposed', String(math.counts.surface(code, number, level, base))],
     ['Fill ratio', fixed(math.counts.ratio(code, number, 3, level, base), 4)],
     ['Dimension', fixed(math.counts.dimension(code, number, 3, base), 4)],

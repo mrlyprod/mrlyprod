@@ -28,6 +28,7 @@ export const units = wasm('math');
 export const name = (value) => `slices-${String(value.code ?? '').trim() || CARPET}-${tiled(value) ? `t${value.tile}-l${value.level}` : `k${value.k}`}`;
 
 export const PAGE = {
+  defaults: { base: 2, code: '23' },
   spec: SPEC,
   units,
   gestures: true,

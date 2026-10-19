@@ -1,4 +1,4 @@
-import { HUES, rgb } from '../color.js';
+import { HUES, blend, rgb } from '../color.js';
 import { grow } from './engine.js';
 import { THETA } from './mesh.js';
 import { PHI, camera, extent, solid, walk } from './solid.js';
@@ -16,12 +16,6 @@ const LOW = 0.1;
 export function hue(tint, degree) {
   if (tint !== 'degree') return HUES.includes(tint) ? tint : '';
   return degree >= 0 ? DEGREES[degree % DEGREES.length] : '';
-}
-
-export function mix(paper, accent, k) {
-  const a = rgb(paper);
-  const b = rgb(accent);
-  return `rgb(${a.map((one, i) => Math.round(one + (b[i] - one) * k)).join(', ')})`;
 }
 
 /* PAINT */
@@ -63,7 +57,7 @@ export function thumb(ctx, math, dim, base, code, side, { accent, paper }) {
   const n = cell.shape[0];
   const [w, h] = extent(n, PHI);
   const cam = camera(THETA, PHI, (FIT * side) / Math.max(w, h));
-  return cube(ctx, solid(math.three.quads(cell), n), cam, side / 2, side / 2, cam.tone.map((k) => mix(paper, accent, k)));
+  return cube(ctx, solid(math.three.quads(cell), n), cam, side / 2, side / 2, cam.tone.map((k) => blend(paper, accent, k)));
 }
 
 export function iso(math, cell, theta, phi, paper, accent) {
@@ -71,7 +65,7 @@ export function iso(math, cell, theta, phi, paper, accent) {
   const up = Math.max(LOW, phi);
   const [w, h] = extent(n, up);
   const cam = camera(theta, up, (FIT * ISO) / Math.max(w, h));
-  const tones = cam.tone.map((k) => mix(paper, accent, k));
+  const tones = cam.tone.map((k) => blend(paper, accent, k));
   const parts = [];
   let kind = -1;
   let d = '';

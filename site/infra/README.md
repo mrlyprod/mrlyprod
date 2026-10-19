@@ -9,7 +9,7 @@
 - `edge.ts` evaluates `edge.js` with `../redirects.json` pasted in, for dev and shots.
 - `mime.ts` is the one extension table: `kind(path)` answers a content type for push, shots and dev; `rawKind(path, text)` answers what `/raw/` serves: plain text for text and SVG, a passive type (image, audio, video, font, pdf, wasm, archive) as is, anything else as octet-stream.
 - `s3.ts` is the S3 client `push.ts`, `builder.ts` and `wasm.ts` share: names and credentials from the environment, no SDK.
-- `wasm.ts` fills an empty `../wasm/` from the S3 copy `../wasm.lock` pins (bucket prefix `pkg/<hash>/`) and prints its hash.
+- `wasm.ts` fills an empty `../wasm/` from the S3 copy `../wasm.lock` pins (bucket prefix `pkg/<hash>/`), prints its hash and exits 1 when it does not match the pin; `pin()` and `wasmHash()` serve `bun run check`, which only reports.
 
 ## PUSH
 

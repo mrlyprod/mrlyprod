@@ -51,7 +51,7 @@ export interface Cell6dData {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
-/** A seeded random stream, opened from a number or a bigint seed. */
+/** A seeded random stream, opened from a number or a bigint seed; each subpath has its own Rng, so pass it only to functions of the same subpath. */
 export class Rng {
     constructor(seed: number | bigint | string);
     free(): void;
@@ -75,7 +75,7 @@ export class Rng {
 export declare namespace arcs {
     /** Walks level `level` of `bang dim 2, base b, code c` in arcs into its curves: first the strands, from each boundary midpoint in turn, across edges before upright ones, then the loops, each from its first unwalked arc. */
     export function curves(code: string | number | bigint, base: number, level: number): arcs.Curve[];
-    /** Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::bang::factory::create`], and level 0 is one filled cell. */
+    /** Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by `crate::bang::factory::create`, and level 0 is one filled cell. */
     export function draw(code: string | number | bigint, base: number, level: number): arcs.Arcs;
     /** Returns the proved loop law of `bang dim 2, base b, code c` at the level, or none where no law is proved: the carpet, base 3 code 495, has `(8^n - 1)/7 - 3^n + n + 1` loops; at base 2 codes 7 and 14 have `3^(n-1) - 2^n + 1`, codes 11 and 13 have `3^(n-1) - 2^(n-1)`, both from level 1 on, code 9 has `2^n - 1`, and the other eleven codes never loop. */
     export function law(code: string | number | bigint, base: number, level: number): arcs.Law | undefined;
@@ -116,7 +116,7 @@ export declare namespace arrays {
     export function fractal(generator: ArrayLike<number | bigint>, base: number | bigint, level: number): BigUint64Array;
     /** Returns the holes of the coarray, ascending: the lags between `-span` and `span` that no pair of sensors makes. */
     export function holes(sensors: ArrayLike<number | bigint>): BigInt64Array;
-    /** Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole. */
+    /** Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of `paired` digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole. */
     export function law(generator: ArrayLike<number | bigint>, level: number): [bigint, bigint] | undefined;
     /** Returns the lags that removing the sensor deletes from the coarray, ascending: those every pair of which holds it; empty when the sensor is inessential or absent. */
     export function lost(sensors: ArrayLike<number | bigint>, sensor: number | bigint): BigInt64Array;
@@ -124,7 +124,7 @@ export declare namespace arrays {
     export function paired(sensors: ArrayLike<number | bigint>): BigUint64Array;
     /** Returns the coarray weights of the sensors, `w(t)` for every lag `t` from `-span` to `span` at index `t + span`, `span` the largest sensor less the least: the count of ordered pairs `(p, q)` of sensors with `p - q = t`. */
     export function weights(sensors: ArrayLike<number | bigint>): BigUint64Array;
-    /** The most sensors [`fractal`] builds, `2^20`. */
+    /** The most sensors `fractal` builds, `2^20`. */
     export function MOST(): bigint;
 }
 export declare namespace atoms {
@@ -214,7 +214,7 @@ export declare namespace automaton {
         static from(data: AutomatonData): Automaton;
         /** Writes the Automaton as plain data. */
         toJSON(): AutomatonData;
-        /** Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of [`crate::memory::perron`]. */
+        /** Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of `crate::memory::perron`. */
         abscissa(): number;
         /** Returns the base `q = 2^D`. */
         base(): bigint;
@@ -222,7 +222,7 @@ export declare namespace automaton {
         cofactor(s: num.zeta.Complex, tolerance: number): [num.zeta.Complex, number];
         /** Returns the coefficients `c_0 .. c_n` of `det(I - x T) = sum c_i x^i`, the ladder denominator read as a polynomial in `x = q^(-s)`. */
         denominator(): Float64Array;
-        /** Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of [`crate::memory::transfer`], entry `(u', u)` counting the letters carrying `u` to `u'`. */
+        /** Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of `crate::memory::transfer`, entry `(u', u)` counting the letters carrying `u` to `u'`. */
         matrix(): Float64Array[];
         /** Returns the peel depth `P`. */
         peel(): number;
@@ -741,7 +741,7 @@ export declare namespace design {
     export function resample(values: ArrayLike<number | bigint>, running: ArrayLike<number | bigint>, exponent: number, log_x: ArrayLike<number>): Float64Array;
     /** Returns the power over its local median floor, the score a peak is read against. */
     export function score(power: ArrayLike<number>, width: number): Float64Array;
-    /** Returns the count of elements the design holds at the depth, the length [`elements`] returns without building them. */
+    /** Returns the count of elements the design holds at the depth, the length `elements` returns without building them. */
     export function size(digits: ArrayLike<number | bigint>, depth: number): string;
     /** Returns the frequency axis and the power spectrum of the series: the mean removed, a Hann window laid on, a real transform taken, and bin j read as the ordinate 2 pi j over the log range. */
     export function spectrum(log_x: ArrayLike<number>, series: ArrayLike<number>): [Float64Array, Float64Array];
@@ -759,7 +759,7 @@ export declare namespace dissection {
     export function chain_margin(base: number | bigint): number;
     /** Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection. */
     export function chain_root(base: number | bigint): number;
-    /** Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive. */
+    /** Returns the chain's wall, one past the last base up to `CAP_BASE` whose margin is not positive. */
     export function chain_wall(): bigint;
     /** Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads. */
     export function consecutive(digits: ArrayLike<number | bigint>): boolean;
@@ -769,11 +769,11 @@ export declare namespace dissection {
     export function kappa(base: number | bigint, digits: ArrayLike<number | bigint>): [bigint, bigint];
     /** Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`. */
     export function masses(base: number | bigint, digits: ArrayLike<number | bigint>, level: number): Float64Array;
-    /** Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere. */
+    /** Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from `DIGIT_WALL` below it and at the `CERTIFIED` sets, `none` elsewhere. */
     export function reach(base: number | bigint, missing: number | bigint): string;
     /** Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate. */
     export function reading(base: number | bigint, fill: number, masses: ArrayLike<number>): number;
-    /** Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`]. */
+    /** Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by `fraction` at `cap`. */
     export function regions(base: number | bigint, level: number, z: number | bigint): dissection.Region[];
     /** Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span. */
     export function tally(base: number | bigint, digits: ArrayLike<number | bigint>, level: number, samples: number): dissection.Tally;
@@ -785,7 +785,7 @@ export declare namespace dissection {
     export function BAR_B(): number;
     /** The base the chain is scanned to; from here the closed-form cap `1 + sqrt(2 (2/pi) log base + 0.97)` keeps it below the bar. */
     export function CAP_BASE(): bigint;
-    /** The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`. */
+    /** The sets below `DIGIT_WALL` certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`. */
     export function CERTIFIED(): [bigint, bigint][];
     /** The least base whose every one-missing-digit set carries a per-digit shifted-grid certificate below `1/5`, `lab/py/digit-transform-norms`, verbs `fifth` and `fifthbelow`; base 114 missing 56 is certified above. */
     export function DIGIT_WALL(): bigint;
@@ -1695,7 +1695,7 @@ export declare namespace shape {
     export function crossing_shell(radius: number | bigint, number: number | bigint, level: number): [bigint, bigint][];
     /** Builds the whole crossing tree of one radius, pruned by the seats the design keeps. */
     export function crossing_tree(radius: number | bigint, number: number | bigint, keep: boolean[]): shape.Shell;
-    /** Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is. */
+    /** Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so `regions`, `crop` and `census` read it on any lattice; a cube lattice keeps the shape as it is. */
     export function fit(shape: shape.Shape, extents: ArrayLike<number>): shape.Shape;
     /** Builds a named shape of the dimension, centered at one half on every axis. */
     export function named(name: string, dimension: number, radius: shape.Frac): shape.Shape;
@@ -2215,9 +2215,9 @@ export declare namespace spirograph {
 export declare namespace sumset {
     /** Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`. */
     export function pairs(level: number): sumset.Pair[];
-    /** The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB. */
+    /** The deepest level a `Sumset` is built to: `S meet [0, 3^20]`, a bit array of `436` MB. */
     export function DEEPEST(): number;
-    /** The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer. */
+    /** The widest level a `Pair` names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer. */
     export function WIDEST(): number;
     export type PairData = Record<string, unknown>;
     /** A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` read by `three()` and `m` by `four()`. */
@@ -2241,7 +2241,7 @@ export declare namespace sumset {
         gap(): [bigint, bigint] | undefined;
         /** The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`. */
         largest(): bigint;
-        /** The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz. */
+        /** The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy `Pair::energy` returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz. */
         ratio(energy: string | number | bigint): number;
         /** The scaling `tau = 4^m/3^k`. */
         scale(): number;

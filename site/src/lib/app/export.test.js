@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, test } from 'bun:test';
-import { grown, save, text } from './export.js';
+import { grown, save, text, wav } from './export.js';
+import { audio } from '../../../test/fake.js';
 
 const real = { createObjectURL: URL.createObjectURL, revokeObjectURL: URL.revokeObjectURL, setTimeout: globalThis.setTimeout };
 let seen;
@@ -57,4 +58,18 @@ test('text downloads a string as a file of its kind with the matching mime, plai
   expect([text('<svg/>', 'two-7', 'svg'), text('{}', 'font-hi', 'json'), text('a,b', 'seq-1', 'csv'), text('v 0 0 0', 'three-2', 'obj'), text('hi', 'note', 'md')]).toEqual(['two-7.svg', 'font-hi.json', 'seq-1.csv', 'three-2.obj', 'note.md']);
   expect(seen.filter(([kind]) => kind === 'url').map(([, type]) => type.split(';')[0])).toEqual(['image/svg+xml', 'application/json', 'text/csv', 'model/obj', 'text/plain']);
   expect(seen).toContainEqual(['click', 'two-7.svg', 'blob:x']);
+});
+
+test('wav writes a 16-bit PCM header and the interleaved samples after it', async () => {
+  const buffer = audio().createBuffer(2, 3, 8000);
+  buffer.getChannelData(0).set([0, 1, -1]);
+  buffer.getChannelData(1).set([0.5, -0.5, 2]);
+  const blob = wav(buffer);
+  const bytes = new DataView(await blob.arrayBuffer());
+  const word = (at) => String.fromCharCode(...new Uint8Array(bytes.buffer, at, 4));
+  expect([blob.type, blob.size]).toEqual(['audio/wav', 44 + 3 * 2 * 2]);
+  const head = [word(0), bytes.getUint32(4, true), word(8), word(12), bytes.getUint32(16, true), bytes.getUint16(20, true), bytes.getUint16(22, true)];
+  const format = [bytes.getUint32(24, true), bytes.getUint32(28, true), bytes.getUint16(32, true), bytes.getUint16(34, true), word(36), bytes.getUint32(40, true)];
+  expect([...head, ...format]).toEqual(['RIFF', 48, 'WAVE', 'fmt ', 16, 1, 2, 8000, 32000, 4, 16, 'data', 12]);
+  expect([...new Int16Array(bytes.buffer, 44)]).toEqual([0, 16384, 32767, -16383, -32767, 32767]);
 });

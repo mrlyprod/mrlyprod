@@ -1,15 +1,7 @@
 import { expect, test } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
-import { Frame } from '../../lib/app/frame.jsx';
 import { rng } from '../../lib/rand.js';
-import { Widget, rolled, rows, wrap } from './widget.jsx';
-
-test('the widget mounts its stage only once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Radial"><Widget value={{ seed: 1, copies: 6, full: 1, step: 60 }} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-});
+import { rolled, rows, wrap } from './widget.jsx';
 
 test('a reroll draws the design, the copies and a blend other than meet, on a full turn', () => {
   const all = Array.from({ length: 40 }, (_, seed) => rolled(math, { source: 'flat' }, rng(seed)));

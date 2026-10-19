@@ -1,7 +1,6 @@
 #![allow(non_camel_case_types, non_snake_case, clippy::too_many_arguments)]
 
-mod hand;
-
+use mrly_js_hand as hand;
 use wasm_bindgen::prelude::*;
 
 /// Flips every type to one minus itself, same as invert.
@@ -464,6 +463,27 @@ pub fn core_image_scale(image: JsValue, scale: usize) -> Result<JsValue, JsValue
     let image = hand::image_from_js(&image)?;
     let value = image.scale(scale).map_err(hand::throw)?;
     hand::image_to_js(&value)
+}
+
+/// Returns the sha256 digest of `bytes` as 64 lowercase hex digits.
+#[wasm_bindgen]
+pub fn core_name_sha_hex(bytes: &[u8]) -> Result<String, JsValue> {
+    let value = mrly::core::name::sha::hex(bytes);
+    Ok(value)
+}
+
+/// Returns the 32-byte sha256 digest of `bytes`.
+#[wasm_bindgen]
+pub fn core_name_sha_sha256(bytes: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let value = mrly::core::name::sha::sha256(bytes);
+    Ok(value.to_vec())
+}
+
+/// Returns the first eight hex digits of the sha256 digest of `bytes`, the id a name prints.
+#[wasm_bindgen]
+pub fn core_name_sha_short(bytes: &[u8]) -> Result<String, JsValue> {
+    let value = mrly::core::name::sha::short(bytes);
+    Ok(value)
 }
 
 /// Colors the cell from the paint's inks under its edition mode, scattering the Random edition from the stream.
@@ -1002,7 +1022,7 @@ pub fn core_tensor_u32s(tensor: JsValue) -> Result<Vec<u32>, JsValue> {
     Ok(value.to_vec())
 }
 
-/// Wraps a u8 vector as a tensor of the shape, the same door as [`Tensor::of`].
+/// Wraps a u8 vector as a tensor of the shape, the same door as `Tensor::of`.
 #[wasm_bindgen]
 pub fn core_tensor_u8(data: Vec<u8>, shape: Vec<usize>) -> Result<JsValue, JsValue> {
     let value = mrly::core::Tensor::u8(data, shape).map_err(hand::throw)?;

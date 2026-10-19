@@ -4,17 +4,13 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "MrlyMath, the mathematics of designs: the substrate, the integers, the designs in space, the life engine and the pixel alphabet in one crate."
+description = "MrlyMath, the mathematics of designs: the substrate, the integers, the designs, the tiles, the life engine and the pixel alphabet in one crate."
 homepage.workspace = true
 readme = "README.md"
 rust-version.workspace = true
-keywords = ["mathematics", "fractal", "cellular-automata", "generative"]
-categories = ["mathematics", "science", "multimedia::images"]
-include = ["src/**", "README.md"]
-
-[[bin]]
-name = "mrly"
-path = "src/bin/mrly.rs"
+keywords.workspace = true
+categories.workspace = true
+include = ["src/**", "README.md", "LICENSE"]
 
 [dependencies]
 mrly-core.workspace = true
@@ -23,5 +19,9 @@ mrly-math.workspace = true
 mrly-tile.workspace = true
 mrly-life.workspace = true
 mrly-font.workspace = true
-serde.workspace = true
+
+[dev-dependencies]
 serde_json.workspace = true
+
+[lints]
+workspace = true

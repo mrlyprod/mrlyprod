@@ -1,11 +1,11 @@
-use super::Named;
 use crate::bang::Code;
 use crate::bang::catalog::{antis, classics};
 use crate::bang::factory::{corners_to_code, residue_corners, total_codes};
-use crate::kind;
 use crate::{three, two};
 use mrly_core::Tensor;
 use mrly_core::error::{Result, value_error};
+use mrly_core::kind;
+use mrly_core::name::Named;
 use serde::{Deserialize, Serialize};
 
 kind!("bang");
@@ -46,7 +46,8 @@ fn is_two(base: &usize) -> bool {
 /// A design code pinned to its dimension, lattice and base, with one unit index per filled digit when it twists.
 ///
 /// ```
-/// use mrly_math::name::{Bang, Named};
+/// use mrly_core::name::Named;
+/// use mrly_math::name::Bang;
 /// let carpet = Bang::new(7, 2, 2);
 /// assert_eq!(carpet.to_json(), r#"{"kind":"bang","dim":2,"code":7}"#);
 /// assert_eq!(Bang::from_json(&carpet.to_json()).unwrap(), carpet);

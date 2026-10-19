@@ -34,3 +34,7 @@ export function paints(canvas, tint = '') {
 }
 
 export const mix = (a, b, t) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(', ')})`;
+
+export const blend = (a, b, t) => mix(rgb(a), rgb(b), t);
+
+export const hex = (c) => `#${c.slice(0, 3).map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, '0')).join('')}`;

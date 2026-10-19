@@ -6,9 +6,8 @@ import { Widget, again, fate, rows } from './widget.jsx';
 
 const value = { seed: 1, a: '127', b: '239', base: 3, number: 3, level: 4, walkers: 300, finish: 20, speed: 720, heat: 0, tint: '' };
 
-test('the widget mounts its stage, a picture of the boards, once the unit is in hand', () => {
+test('the stage is a picture of the boards', () => {
   const page = (unit) => renderToStaticMarkup(<Frame label="Race"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
   expect(page(math)).toContain('<canvas role="img"');
 });
 

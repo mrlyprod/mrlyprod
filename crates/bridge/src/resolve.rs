@@ -388,7 +388,7 @@ impl Builder<'_> {
                 }
                 let (name, cross) = match item {
                     Item::Struct(s) => {
-                        let cross = if HAND.contains(&s.name.as_str()) {
+                        let cross = if hand(&s.name).is_some() {
                             *hand_seen.entry(s.name.clone()).or_default() += 1;
                             TypeCross::Hand {
                                 name: s.name.clone(),

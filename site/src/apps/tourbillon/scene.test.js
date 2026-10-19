@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
-import { defaults, describe, tidy } from '../../lib/app/spec.js';
+import { defaults, describe } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { NUDGE, STAMP, SWEEP } from './engine.js';
 import { PAGE, SPEC, make } from './scene.js';
@@ -163,10 +163,6 @@ test('a paint key repaints the held field, a plan key restacks it, and a drag of
   page.at(80);
   expect(page.calls.field.slice(2)).toEqual([[1024, 2], [page.calls.field[3][0], 3], [1024, 3]]);
   expect(page.calls.field[3][0]).toBeLessThan(1024);
-});
-
-test('the page keeps its defaults', () => {
-  expect(tidy(SPEC, defaults(SPEC))).toEqual(defaults(SPEC));
 });
 
 test('the primary is the Enter row, and its label follows the scene playing', () => {

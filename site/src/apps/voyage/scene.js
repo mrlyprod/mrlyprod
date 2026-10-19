@@ -5,10 +5,12 @@ import { look as aim, drift, ease, project } from '../../lib/gl/camera.js';
 import { blank, blend, context, fill, governor, program, tier } from '../../lib/gl/gl2.js';
 import { FILM, hyper } from '../../lib/space/hyper.js';
 import { GRADES, march, tone } from '../../lib/space/march.js';
-import { planet, world } from '../../lib/space/planet.js';
+import { planet } from '../../lib/space/planet.js';
+import { world } from '../../lib/space/worlds.js';
 import { ship } from './ship.js';
-import { add, basis, clamp, cross, dot, len, mat3, mix, mul, norm, rot, sub } from '../../lib/gl/vec.js';
+import { add, basis, clamp01, cross, dot, len, mat3, mix, mul, norm, rot, sub } from '../../lib/gl/vec.js';
 import { arrange, clock, cues, song } from './score.js';
+import { wasm } from '../../lib/units/index.js';
 
 const PLACES = [['', 'Random'], ['earth', 'Earth'], ['mars', 'Mars'], ['jupiter', 'Jupiter'], ['saturn', 'Saturn'], ['moon', 'Moon'], ['venus', 'Venus'], ['neptune', 'Neptune'], ['terran', 'Terran'], ['desert', 'Desert'], ['ice', 'Ice'], ['lava', 'Lava'], ['gas', 'Gas']];
 
@@ -22,8 +24,11 @@ export const SPEC = [
   { key: 'music', label: 'Music', kind: 'toggle', def: 1, group: 'Sound' },
 ];
 
+export const units = wasm('math');
+
 export const PAGE = {
   spec: SPEC,
+  units,
   keys: [
     { key: 'Enter', label: 'Again', does: 'Restart the film from the departure', act: 'again', button: true },
     { key: 'm', label: 'Sound', act: 'mute' },
@@ -173,11 +178,11 @@ function place(pick, seed, rand, skip) {
   return world('exo', Math.floor(rand() * 4294967296), { type: weigh(rand, skip) });
 }
 
-export function roll(value, seed, loop) {
+export function roll(math, value, seed, loop) {
   const rand = rng(((seed >>> 0) ^ SALT ^ Math.imul(loop + 1, GOLD)) >>> 0);
   const a = place(value.from, seed >>> 0, rand, '');
   const b = place(value.to, ((seed >>> 0) ^ OTHER) >>> 0, rand, a.kind);
-  const pool = codes(N);
+  const pool = codes(math, N);
   const code = value.ship > 0 ? value.ship : pool[Math.floor(rand() * pool.length)];
   const up = unit(rand);
   const head = across(rand, up);
@@ -288,7 +293,7 @@ export function come(rolled, a, t, view) {
   const cam = aim(pos, add(pos, F), V);
   cam.fov = SLANT;
   const dive = norm(sub(Q, P));
-  const pull = ease.in(clamp((a - LIGHT) / (SPAN - FADE - LIGHT)), PULL);
+  const pull = ease.in(clamp01((a - LIGHT) / (SPAN - FADE - LIGHT)), PULL);
   const at = add(add(P, shift), mul(sub(Q, P), pull));
   const fwd = norm(mix(along, dive, ease.smooth((a - LIGHT) / BEND)));
   const plume = a < 0 ? 1 : Math.max(1 - ease.smooth(a / DIE), ease.smooth((a - LIGHT) / BURN));
@@ -344,7 +349,7 @@ export function approach(rolled, door, a) {
   const { eye } = inside(leave(rolled, OPEN), door);
   const { state } = door;
   const cu = door.axes[1];
-  const s = clamp(a / INTO);
+  const s = clamp01(a / INTO);
   const k = ease.smooth(s);
   const bend = ((s ** 3 - s * s) * INTO) / 1000;
   const start = mul(cross(cu, eye.pos), -rolled.turn / 1000);
@@ -371,6 +376,8 @@ const dolly = (cam, k) => (k === 1 ? cam : { pos: mul(cam.pos, k), rot: cam.rot,
 const outer = (door) => ({ ...door.state, doors: [], outside: true, hull: 1, sun: 1, floor: N ** (1 - LEVELS), fog: 0 });
 
 export function make(canvas, view, opts = {}) {
+  const { math } = opts;
+  if (!math) throw new Error('voyage: the scene wants @mrlyprod/mrly/math as opts.math');
   const gl = context(canvas);
   if (!gl) return blank(canvas);
   const value = tidy(SPEC, opts);
@@ -400,7 +407,7 @@ export function make(canvas, view, opts = {}) {
     Object.assign(r, { start, span, fire: start + m.fire, open: start + m.open, enter: start + m.enter, out: start + m.out, arrive: start + m.arrive, end: start + m.end, next: start + m.next, score: arrange(span) });
   };
   const begin = (loop, start, held = false) => {
-    const r = { loop, rolled: roll(value, seed, loop), sent: new Set(), fired: false, exited: false, held, pending: false, blend: null, made: {}, tone: null, accent: null, song: null };
+    const r = { loop, rolled: roll(math, value, seed, loop), sent: new Set(), fired: false, exited: false, held, pending: false, blend: null, made: {}, tone: null, accent: null, song: null };
     timed(r, start, held ? Infinity : length);
     return r;
   };
@@ -447,10 +454,10 @@ export function make(canvas, view, opts = {}) {
   const there = (r, staged) => build(r, 'b', () => planet(gl, view, r.rolled.b, { staged }));
   const path = (r) =>
     build(r, 'route', () => {
-      const way = route({ code: r.rolled.code, n: N }, seed);
+      const way = route(math, { code: r.rolled.code, n: N }, seed);
       return { way, door: entry(way) };
     });
-  const inner = (r) => build(r, 'march', () => march(gl, view, { code: r.rolled.code, n: N }, { look: value.look, toFrame: path(r)?.way.toFrame }));
+  const inner = (r) => build(r, 'march', () => march(gl, view, { code: r.rolled.code, n: N }, { math, look: value.look, toFrame: path(r)?.way.toFrame }));
   const next = (loop, start, held = false) => {
     drop(run);
     prev = run;
@@ -635,7 +642,7 @@ export function make(canvas, view, opts = {}) {
     else if (t >= r.out) arrival(r, t);
     else departure(r, t);
     drawn = view.t;
-    shade(lifted ? 0 : 1 - Math.min(clamp((t - r.start) / FADE), clamp((r.end - t) / FADE)));
+    shade(lifted ? 0 : 1 - Math.min(clamp01((t - r.start) / FADE), clamp01((r.end - t) / FADE)));
   };
   const hold = () => {
     if (gone || view.still) return;

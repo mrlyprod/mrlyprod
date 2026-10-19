@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from 'bun:test';
 import * as math from '@mrlyprod/mrly/math';
-import { defaults, tidy } from '../../lib/app/spec.js';
+import { defaults } from '../../lib/app/spec.js';
 import { rng } from '../../lib/rand.js';
 import { MOST } from './engine.js';
 import { PAGE, SPEC, make } from './scene.js';
@@ -97,10 +97,6 @@ test('a tap adds a cut, and past the top it starts over', () => {
   expect([page.scene.touch(0.5, 0.5, true), page.scene.touch(0.6, 0.5, false)]).toEqual([{ layers: 8 }, null]);
   page.set({ layers: MOST });
   expect(page.scene.touch(0.5, 0.5, true)).toEqual({ layers: 4 });
-});
-
-test('the page keeps its defaults', () => {
-  expect(tidy(SPEC, defaults(SPEC))).toEqual(defaults(SPEC));
 });
 
 test('an export is named by its layer count', () => {

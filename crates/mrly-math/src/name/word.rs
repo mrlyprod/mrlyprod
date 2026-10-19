@@ -1,6 +1,7 @@
-use super::{Bang, Named};
-use crate::kind;
+use super::Bang;
 use mrly_core::error::{Result, value_error};
+use mrly_core::kind;
+use mrly_core::name::Named;
 use serde::{Deserialize, Serialize};
 
 kind!("word");
@@ -8,7 +9,8 @@ kind!("word");
 /// A magic word: an ordered list of design letters, first letter outermost, each at its own side.
 ///
 /// ```
-/// use mrly_math::name::{Named, Word};
+/// use mrly_core::name::Named;
+/// use mrly_math::name::Word;
 /// let word = Word::new(2, &[(7, 3), (14, 7), (9, 5)]).unwrap();
 /// assert_eq!(word.to_json(), r#"{"kind":"word","dim":2,"magic":[7,14,9],"side":[3,7,5]}"#);
 /// assert_eq!(Word::from_json(&word.to_json()).unwrap(), word);

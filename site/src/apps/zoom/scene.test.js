@@ -1,7 +1,8 @@
 import { expect, test } from 'bun:test';
+import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../../lib/rand.js';
 import { gl } from '../../../test/fake.js';
-import { PAGE, SPEC, make } from './scene.js';
+import { PAGE, SPEC, make, units } from './scene.js';
 
 const canvas = (fake) => ({ width: 1, height: 1, getContext: (kind) => (kind === 'webgl2' ? fake : null) });
 
@@ -9,7 +10,7 @@ const view = (t = 0) => ({ rand: rng(7), look: () => ({ paper: '#000000', accent
 
 const scene = (opts, t = 0, fake = gl()) => {
   const at = view(t);
-  const made = make(canvas(fake), at, { seed: 7, ...opts });
+  const made = make(canvas(fake), at, { seed: 7, math, ...opts });
   made.draw();
   return { made, at, fake };
 };
@@ -22,14 +23,14 @@ const play = (made, at, to, step = 100) => {
 };
 
 test('without WebGL2 the scene is the blank one and still draws', () => {
-  const made = make(canvas(null), view(), { seed: 1 });
+  const made = make(canvas(null), view(), { seed: 1, math });
   expect(() => made.draw()).not.toThrow();
   expect(made.phase()).toBe('cruise');
 });
 
 test('the value is ten knobs and the seed, studio by default, and the page keeps only the default keys', () => {
   expect(SPEC.map((one) => one.key)).toEqual(['code', 'n', 'pick', 'speed', 'path', 'pilot', 'look', 'palette', 'quality', 'hyper']);
-  expect([SPEC.find((one) => one.key === 'look').def, SPEC.find((one) => one.key === 'look').options.map(([key]) => key), PAGE]).toEqual(['studio', ['graphic', 'studio', 'haze'], { spec: SPEC, record: true }]);
+  expect([SPEC.find((one) => one.key === 'look').def, SPEC.find((one) => one.key === 'look').options.map(([key]) => key), PAGE]).toEqual(['studio', ['graphic', 'studio', 'haze'], { spec: SPEC, units, record: true }]);
 });
 
 test('the HUD teaches the code in five lines: name, level, bits and fill, dimension and class, and the mode', () => {

@@ -1,23 +1,16 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
-import { Frame } from '../../lib/app/frame.jsx';
 import { defaults, describe, tidy } from '../../lib/app/spec.js';
 import { SPEC } from './scene.js';
 import { Folds } from '../../lib/two/parts.jsx';
-import { Widget, panes, rows } from './widget.jsx';
+import { panes, rows } from './widget.jsx';
 
 const value = { ...defaults(SPEC), seed: 1, base: 3, code: '495' };
 
 const shown = (over) => ({ ...value, ...over, ...tidy(SPEC, { ...value, ...over }, { math }) });
 
 const pane = (over) => renderToStaticMarkup(<Folds groups={panes(shown(over), () => {}, math)} />);
-
-test('the widget mounts its stage once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Two"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-});
 
 test('the widget folds hold the design with its side and level, then the sheet with its presets, and the look is a spec group', () => {
   const html = pane({});

@@ -1,13 +1,11 @@
-import { afterAll, beforeAll, expect, test } from "bun:test";
-import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { beforeAll, expect, test } from "bun:test";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { figures as named } from "../src/lib/md/md.ts";
-import { build, plates, roster, state, type Built } from "./build.ts";
+import { plates, roster, state, type Built } from "./build.ts";
 import SITE from "../site.json";
 import { tintCss } from "../src/lib/theme/tint.js";
-
-const out = join(tmpdir(), `site-${process.pid}`);
+import { dist, out } from "../test/dist.ts";
 
 const repo = join(import.meta.dir, "..", "..");
 
@@ -17,10 +15,8 @@ const files = (dir: string, at = ""): string[] =>
 let made: Built;
 
 beforeAll(async () => {
-  made = await build(out);
+  made = await dist();
 }, 60_000);
-
-afterAll(() => rmSync(out, { recursive: true, force: true }));
 
 test("every row has a kind and a title, and a markdown row's source is under dist/raw", () => {
   const { rows } = JSON.parse(readFileSync(join(out, "routes.json"), "utf8")) as { rows: Built["rows"] };

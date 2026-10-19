@@ -153,11 +153,13 @@ pub enum Source {
 mod decimal {
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub fn serialize<S: Serializer>(code: &u128, serializer: S) -> Result<S::Ok, S::Error> {
+    pub(super) fn serialize<S: Serializer>(code: &u128, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_str(code)
     }
 
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u128, D::Error> {
+    pub(super) fn deserialize<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<u128, D::Error> {
         #[derive(Deserialize)]
         #[serde(untagged)]
         enum Code {

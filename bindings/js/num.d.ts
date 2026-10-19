@@ -51,7 +51,7 @@ export interface Cell6dData {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
-/** A seeded random stream, opened from a number or a bigint seed. */
+/** A seeded random stream, opened from a number or a bigint seed; each subpath has its own Rng, so pass it only to functions of the same subpath. */
 export class Rng {
     constructor(seed: number | bigint | string);
     free(): void;
@@ -105,7 +105,7 @@ export declare namespace apollonian {
     export function ORDER_CAP(): number;
     /** The root quadruples on offer: the strip first, then the bounded packings named by their curvatures. */
     export function ROOTS(): string[];
-    /** The numbers [`flat`] lays per circle: the centre's two coordinates, the radius and the curvature. */
+    /** The numbers `flat` lays per circle: the centre's two coordinates, the radius and the curvature. */
     export function STRIDE(): number;
     export interface CircleData {
         /** The curvature. */
@@ -417,7 +417,7 @@ export declare namespace kummer {
     export function witness(prime: number | bigint, top: number | bigint, bottom: number | bigint): [bigint, bigint] | undefined;
     /** The largest top `a` a Kummer set takes here, so an automaton holds at most `32 * 32` carry states. */
     export function MOST(): bigint;
-    /** The most moves a [`Carry`] table holds, its states times the prime, `2^24`. */
+    /** The most moves a `Carry` table holds, its states times the prime, `2^24`. */
     export function TABLE(): bigint;
     /** The carry automaton of the Kummer set `K_(a,b) = {k : p does not divide C(a k, b k)}` at a prime `p`. */
     export interface Carry {

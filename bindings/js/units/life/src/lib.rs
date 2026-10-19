@@ -1,7 +1,6 @@
 #![allow(non_camel_case_types, non_snake_case, clippy::too_many_arguments)]
 
-mod hand;
-
+use mrly_js_hand as hand;
 use wasm_bindgen::prelude::*;
 
 /// Returns whether a rule is affine, its algebraic degree at most one.
@@ -567,7 +566,7 @@ impl life_Rule {
     }
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<life_Rule, JsValue> {
-        let value = <mrly::life::Rule as mrly::math::name::Named>::checked(self.inner.clone())
+        let value = <mrly::life::Rule as mrly::core::name::Named>::checked(self.inner.clone())
             .map_err(hand::throw)?;
         Ok(life_Rule { inner: value })
     }
@@ -580,19 +579,19 @@ impl life_Rule {
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<life_Rule, JsValue> {
         let value =
-            <mrly::life::Rule as mrly::math::name::Named>::from_file(text).map_err(hand::throw)?;
+            <mrly::life::Rule as mrly::core::name::Named>::from_file(text).map_err(hand::throw)?;
         Ok(life_Rule { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<life_Rule, JsValue> {
         let value =
-            <mrly::life::Rule as mrly::math::name::Named>::from_json(text).map_err(hand::throw)?;
+            <mrly::life::Rule as mrly::core::name::Named>::from_json(text).map_err(hand::throw)?;
         Ok(life_Rule { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<life_Rule, JsValue> {
         let value =
-            <mrly::life::Rule as mrly::math::name::Named>::from_url(text).map_err(hand::throw)?;
+            <mrly::life::Rule as mrly::core::name::Named>::from_url(text).map_err(hand::throw)?;
         Ok(life_Rule { inner: value })
     }
     /// Builds a rule from its counts and edge policy, listed counts folded to a sorted set.
@@ -612,29 +611,29 @@ impl life_Rule {
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrly::life::Rule as mrly::math::name::Named>::to_file(&self.inner)
+        let value = <mrly::life::Rule as mrly::core::name::Named>::to_file(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
     pub fn to_id(&self) -> Result<String, JsValue> {
-        let value = <mrly::life::Rule as mrly::math::name::Named>::to_id(&self.inner);
+        let value = <mrly::life::Rule as mrly::core::name::Named>::to_id(&self.inner);
         Ok(value)
     }
     /// Prints the canonical JSON object.
     pub fn to_json(&self) -> Result<String, JsValue> {
-        let value = <mrly::life::Rule as mrly::math::name::Named>::to_json(&self.inner);
+        let value = <mrly::life::Rule as mrly::core::name::Named>::to_json(&self.inner);
         Ok(value)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_prose(&self) -> Result<String, JsValue> {
-        let value = <mrly::life::Rule as mrly::math::name::Named>::to_prose(&self.inner)
+        let value = <mrly::life::Rule as mrly::core::name::Named>::to_prose(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrly::life::Rule as mrly::math::name::Named>::to_url(&self.inner)
+        let value = <mrly::life::Rule as mrly::core::name::Named>::to_url(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }

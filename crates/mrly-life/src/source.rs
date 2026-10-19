@@ -175,7 +175,7 @@ impl Source {
             .filter(|seq| !seq.is_random())
             .collect();
         let names: Vec<String> = fixed.iter().map(|seq| seq.name()).collect();
-        let (i, rest) = mrly_math::name::longest(text, &names)?;
+        let (i, rest) = mrly_core::name::longest(text, &names)?;
         Some((fixed[i], rest))
     }
     /// Returns every fixed sequence, the seeded and coded families excluded.

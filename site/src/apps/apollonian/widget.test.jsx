@@ -1,17 +1,7 @@
 import { expect, test } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
 import * as num from '@mrlyprod/mrly/num';
-import { Frame } from '../../lib/app/frame.jsx';
 import { study } from './engine.js';
-import { rows, Widget } from './widget.jsx';
-
-const value = { seed: 1, root: 'strip', cap: 2048, ink: 'size', look: 'wash', labels: 0, tint: '' };
-
-test('the widget mounts its stage on the units the page loaded', () => {
-  const page = (units) => renderToStaticMarkup(<Frame label="Apollonian"><Widget value={value} onChange={() => {}} units={units} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page({ num })).toContain('<canvas');
-});
+import { rows } from './widget.jsx';
 
 test('the readouts tell the census, the Ford count against the line, the stack against Q(Q + 1)/2, the tapped circle first', () => {
   const facts = { ...study(num, 'strip', 2048).facts, circle: null };

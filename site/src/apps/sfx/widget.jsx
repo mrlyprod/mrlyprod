@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { download } from '../../lib/app/export.js';
+import { download, wav } from '../../lib/app/export.js';
 import { Bar } from '../../lib/app/frame.jsx';
 import { Btn, Icon } from '../../lib/app/controls.jsx';
 import { Scene } from '../../lib/app/page.jsx';
-import { bus, engine, render, wav } from '../../lib/audio/audio.js';
+import { bus, engine, render } from '../../lib/audio/audio.js';
 import { NAMES, make, score, seconds } from './scene.js';
 
 export function Widget({ value, onChange, onReady }) {

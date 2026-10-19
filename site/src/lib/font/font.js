@@ -5,9 +5,7 @@ const BLANK = ['000', '000', '000', '000', '000'];
 
 /* GLYPHS */
 
-function glyph(char) {
-  const rows = FONT[char]?.rows;
-  if (!rows) return BLANK;
+function trim(rows) {
   let from = Infinity;
   let to = 0;
   for (const row of rows) {
@@ -19,6 +17,8 @@ function glyph(char) {
   }
   return from === Infinity ? BLANK : rows.map((row) => row.slice(from, to));
 }
+
+export const glyph = (char) => trim(FONT[char]?.rows ?? BLANK);
 
 function layout(text) {
   const blocks = [];
@@ -34,18 +34,9 @@ function layout(text) {
   return { width: blocks.length ? col - 1 : 0, height, blocks };
 }
 
-const bridge = (name) => globalThis.mrly?.[name];
-
 /* RASTER */
 
-const cells = (row) => (typeof row === 'string' ? [...row].map((c) => (c === '1' ? 1 : 0)) : row);
-
 export function letters(text) {
-  const fast = bridge('font_raster');
-  if (fast) {
-    const raster = JSON.parse(fast(text));
-    return { rows: raster.rows, cols: raster.cols, grid: raster.grid.map(cells) };
-  }
   const { width, height, blocks } = layout(text);
   const grid = Array.from({ length: width ? height : 0 }, () => Array(width).fill(0));
   for (const block of blocks) {
@@ -65,8 +56,6 @@ const sequence = (char) => FONT[char]?.path ?? [];
 const board = (laid, pad) => (laid.blocks.length ? [laid.height + 2 * pad, laid.width + 2 * pad] : [0, 0]);
 
 export function animate(text, pad = 1) {
-  const fast = bridge('font_animate');
-  if (fast) return JSON.parse(fast(text, pad));
   const laid = layout(text);
   const [rows, cols] = board(laid, pad);
   const frames = [[]];

@@ -1,3 +1,4 @@
+import { hex } from '../color.js';
 import { settle } from '../designs/engine.js';
 
 export const DIM = 3;
@@ -181,8 +182,6 @@ export function field(math, made, value) {
 export function most(math, value) {
   return field(math, design(math, value), value).max;
 }
-
-const hex = (c) => `#${c.slice(0, 3).map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
 
 export function colorizer(ink, ramp, levels) {
   const line = (ink.Ramp[ramp] ?? ink.Ramp.fire)();

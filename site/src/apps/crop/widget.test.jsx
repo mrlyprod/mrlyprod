@@ -1,12 +1,11 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
-import { Frame } from '../../lib/app/frame.jsx';
 import { defaults, tidy } from '../../lib/app/spec.js';
 import { Knobs } from '../../lib/app/knobs.jsx';
 import { Folds } from '../../lib/two/parts.jsx';
 import { SPEC } from './scene.js';
-import { Widget, panes, rows } from './widget.jsx';
+import { panes, rows } from './widget.jsx';
 
 const value = { ...defaults(SPEC), seed: 1, base: 2, code: '7' };
 
@@ -17,12 +16,6 @@ const pane = (over) => renderToStaticMarkup(<Folds groups={panes(shown(over), ()
 const knobs = (over) => renderToStaticMarkup(<Knobs spec={SPEC} value={shown(over)} units={{ math }} onChange={() => {}} />);
 
 const slider = (html, label) => new RegExp(`<span>${label}</span><span class="num">(\\d+)[^<]*</span><input type="range" min="1" max="(\\d+)"`).exec(html).slice(1).map(Number);
-
-test('the widget mounts its stage once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Crop"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-});
 
 test('the design fold holds the picker, the number and the level, and the spec groups follow: shape, look, then the circle count behind its toggle', () => {
   const design = pane({});

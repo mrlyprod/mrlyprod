@@ -1,5 +1,5 @@
 import { rng } from '../rand.js';
-import { add, cross, dot, len, mix, mul, norm, rot, sub } from '../gl/vec.js';
+import { add, cross, dot, len, mix, mul, norm, rot, smooth, sub } from '../gl/vec.js';
 
 const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
 
@@ -62,11 +62,15 @@ export const PILOTS = {
 
 /* RULE */
 
-const kept = (code, i, j, k) => (code >> ((i & 1) * 4 + (j & 1) * 2 + (k & 1))) & 1;
+const grids = new Map();
 
-export function cells(code, n) {
+export function cells(math, code, n) {
+  const key = `${code}:${n}`;
+  if (grids.has(key)) return grids.get(key);
+  const { data } = math.bang.factory.create(code, n, 3, 2, 1);
   const out = new Uint8Array(n * n * n);
-  for (let z = 0; z < n; z++) for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) out[(z * n + y) * n + x] = kept(code, x, y, z);
+  for (let z = 0; z < n; z++) for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) out[(z * n + y) * n + x] = data[(x * n + y) * n + z];
+  grids.set(key, out);
   return out;
 }
 
@@ -143,8 +147,8 @@ function whole(all, n, full) {
   return seen.size === full;
 }
 
-export function gate(code, n) {
-  const all = cells(code, n);
+export function gate(math, code, n) {
+  const all = cells(math, code, n);
   let full = 0;
   let empty = 0;
   let walls = 0;
@@ -164,35 +168,30 @@ export function gate(code, n) {
 
 /* CLASSES */
 
-const SYMMETRIES = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]].flatMap((p) => Array.from({ length: 8 }, (_, f) => [p, f]));
+const tables = new WeakMap();
 
-const act = (code, [p, f]) => {
-  let out = 0;
-  for (let b = 0; b < 8; b++) {
-    if (!((code >> b) & 1)) continue;
-    const q = [0, 0, 0];
-    [(b >> 2) & 1, (b >> 1) & 1, b & 1].forEach((bit, i) => {
-      q[p[i]] = bit ^ ((f >> i) & 1);
-    });
-    out |= 1 << (q[0] * 4 + q[1] * 2 + q[2]);
+const table = (math) => {
+  if (!tables.has(math)) {
+    const all = math.bang.bang(3).all();
+    tables.set(math, { canon: all.map((one) => Number(one.class_rep)), classes: math.bang.universe_codes(3).map(Number).filter(Boolean) });
+    for (const one of all) one.free();
   }
-  return out;
+  return tables.get(math);
 };
 
-const CANON = Array.from({ length: 256 }, (_, code) => Math.min(...SYMMETRIES.map((one) => act(code, one))));
+export const canon = (math, code) => table(math).canon[code];
 
-export const canon = (code) => CANON[code];
+export const classes = (math) => table(math).classes;
 
-export const classes = () => [...new Set(CANON.slice(1))].sort((a, b) => a - b);
-
-export function name(code) {
-  const hit = NAMES.find(([one]) => one === code) ?? NAMES.find(([one]) => CANON[one] === CANON[code]);
-  return hit ? hit[1] : `class ${CANON[code]}`;
+export function name(math, code) {
+  const { canon: of } = table(math);
+  const hit = NAMES.find(([one]) => one === code) ?? NAMES.find(([one]) => of[one] === of[code]);
+  return hit ? hit[1] : `class ${of[code]}`;
 }
 
-export function teach(code, n) {
-  const count = cells(code, n).reduce((a, b) => a + b, 0);
-  return { bits: code.toString(2).padStart(8, '0'), kept: count, fill: count / n ** 3, dimension: count ? Math.log(count) / Math.log(n) : 0, class: CANON[code] };
+export function teach(math, code, n) {
+  const count = cells(math, code, n).reduce((a, b) => a + b, 0);
+  return { bits: code.toString(2).padStart(8, '0'), kept: count, fill: count / n ** 3, dimension: count ? Math.log(count) / Math.log(n) : 0, class: canon(math, code) };
 }
 
 const ALL = Array.from({ length: 255 }, (_, i) => i + 1);
@@ -201,21 +200,21 @@ const gated = new Map();
 
 const flyable = new Map();
 
-export function codes(n, pick) {
+export function codes(math, n, pick) {
   if (pick === 'all') return ALL;
-  if (pick === 'named') return classes();
+  if (pick === 'named') return classes(math);
   if (pick === 'family') return NAMES.map(([code]) => code);
   if (pick === 'flyable') {
-    if (!flyable.has(n)) flyable.set(n, ALL.filter((code) => net(code, n).doors.some((list) => list.length)));
+    if (!flyable.has(n)) flyable.set(n, ALL.filter((code) => net(math, code, n).doors.some((list) => list.length)));
     return flyable.get(n);
   }
-  if (!gated.has(n)) gated.set(n, Array.from({ length: 256 }, (_, code) => code).filter((code) => gate(code, n)));
+  if (!gated.has(n)) gated.set(n, Array.from({ length: 256 }, (_, code) => code).filter((code) => gate(math, code, n)));
   return gated.get(n);
 }
 
-export function pickCode(value, seed) {
+export function pickCode(math, value, seed) {
   if (value.code >= 0) return value.code;
-  const pool = codes(value.n, value.pick);
+  const pool = codes(math, value.n, value.pick);
   return pool.length ? pool[Math.floor(rng((seed ^ CHOICE) >>> 0)() * pool.length)] : 23;
 }
 
@@ -241,10 +240,10 @@ function face(n, g) {
 
 const lateral = (all, n, c, d) => DIRS.reduce((sum, e, g) => sum + (axis(g) !== axis(d) && read(all, n, add(c, e)) === 1 ? 1 : 0), 0);
 
-function net(code, n) {
+function net(math, code, n) {
   const key = `${code}:${n}`;
   if (nets.has(key)) return nets.get(key);
-  const all = cells(code, n);
+  const all = cells(math, code, n);
   const comp = new Int32Array(all.length).fill(-1);
   const leave = [];
   for (let k = 0; k < all.length; k++) {
@@ -360,11 +359,6 @@ function landing(web, n, dir, din) {
 
 /* ROUTE */
 
-const smooth = (x) => {
-  const p = Math.min(Math.max(x, 0), 1);
-  return p * p * (3 - 2 * p);
-};
-
 const flatten = (u, t) => {
   const v = sub(u, mul(t, dot(u, t)));
   return len(v) > 1e-6 ? norm(v) : norm(cross(t, Math.abs(t[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0]));
@@ -378,11 +372,11 @@ const weigh = (w, list) => list.reduce((acc, v, i) => add(acc, mul(v, w[i])), ZE
 
 const total = (w, list) => list.reduce((acc, v, i) => acc + v * w[i], 0);
 
-export function route(design, seed = 0, { pilot: style = 'steady' } = {}) {
+export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) {
   const { n } = design;
   const pilot = PILOTS[style] ?? PILOTS.steady;
   const behind = pilot.window + 2 * pilot.gap - pilot.lead;
-  const web = net(design.code, n);
+  const web = net(math, design.code, n);
   const { all } = web;
   if (!all.some(Boolean)) throw new Error(`bang: code ${design.code} is empty`);
   const dive = !web.doors.some((list) => list.length);

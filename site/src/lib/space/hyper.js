@@ -5,7 +5,7 @@ import { clock, flown } from '../gl/clock.js';
 import { blend, fill, governor, hdr, program, target, texture, tier } from '../gl/gl2.js';
 import { post } from '../gl/post.js';
 import { sky as field } from './sky.js';
-import { add, mul, norm } from '../gl/vec.js';
+import { add, mul, norm, smooth } from '../gl/vec.js';
 
 export const FILM = { wind: 300, stretch: 900, pile: 600, flash: 300, tunnel: 1200, bloom: 400, white: 200, decay: 900, snap: 200 };
 
@@ -118,8 +118,6 @@ function ramp(tint) {
 }
 
 /* NOISE */
-
-const smooth = (x) => x * x * (3 - 2 * x);
 
 function grain(seed) {
   const rand = rng((seed ^ GRAIN) >>> 0);

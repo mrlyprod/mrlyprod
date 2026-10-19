@@ -225,8 +225,8 @@ wheels = [
 ]
 
 [[package]]
-name = "mrlyprod"
-version = "0.3.0"
+name = "mrly-research"
+version = "0"
 source = { virtual = "." }
 dependencies = [
     { name = "mpmath" },

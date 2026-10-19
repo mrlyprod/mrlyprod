@@ -1,4 +1,5 @@
-import { rgb, veil } from '../color.js';
+import { blend, rgb, veil } from '../color.js';
+import { clamp01 } from '../gl/vec.js';
 import { decade, diffs, digits as expand, label, negative, ratios, scale, sums, ticks } from './chart.js';
 import { axisOf, measureOf } from './engine.js';
 
@@ -16,23 +17,15 @@ const RIBBON = 4;
 
 /* TONES */
 
-export function mix(a, b, t) {
-  const [x, y] = [rgb(a), rgb(b)];
-  const k = Math.max(0, Math.min(1, t));
-  return `rgb(${x.map((c, i) => Math.round(c + (y[i] - c) * k)).join(', ')})`;
-}
+export const shade = (accent, paper, i, m) => blend(accent, paper, m > 1 ? (i / (m - 1)) * FADE : 0);
 
-export const shade = (accent, paper, i, m) => mix(accent, paper, m > 1 ? (i / (m - 1)) * FADE : 0);
-
-export const clamp = (v) => Math.max(0, Math.min(1, v));
-
-export const ease = (v) => 1 - (1 - clamp(v)) ** 3;
+export const ease = (v) => 1 - (1 - clamp01(v)) ** 3;
 
 export function tones(view) {
   const { accent, paper } = view.look();
   const dpr = view.dpr;
   const px = Math.round(13 * dpr);
-  return { accent, paper, dim: mix(accent, paper, 0.5), hair: veil(accent, 0.14), px, dpr };
+  return { accent, paper, dim: blend(accent, paper, 0.5), hair: veil(accent, 0.14), px, dpr };
 }
 
 export const font = (tones, k = 1, weight = '') => `${weight ? `${weight} ` : ''}${Math.round(tones.px * k)}px "${FACE}", ui-monospace, monospace`;
@@ -230,7 +223,7 @@ function pins(ctx, box, rows, shades, tones, opts) {
     ctx.fillStyle = shades[i];
     ctx.lineWidth = width;
     row.terms.forEach((t, j) => {
-      const g = clamp(have - j);
+      const g = clamp01(have - j);
       if (g <= 0) return;
       const x = box.x + (j + 0.5) * slot + (i - (m - 1) / 2) * spread;
       const tall = Math.max(box.h * sc.at(t), head) * ease(g);
@@ -501,7 +494,7 @@ export function drawRibbon(ctx, laid, x, y, tones, at = -1, color = tones.accent
       ctx.fillStyle = tones.dim;
       ctx.fillText(one.head, x + one.x, top + px * 0.8);
       ctx.font = font(tones, 1, on ? '700' : '');
-      ctx.fillStyle = one.prime ? mix(color, '#f5b400', 0.85) : on ? color : mix(color, tones.paper, 0.15);
+      ctx.fillStyle = one.prime ? blend(color, '#f5b400', 0.85) : on ? color : blend(color, tones.paper, 0.15);
       ctx.fillText(one.text, x + one.x, top + px * 1.9);
     }
   });

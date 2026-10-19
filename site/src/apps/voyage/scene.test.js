@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../../lib/rand.js';
 import { codes, route } from '../../lib/space/bang.js';
 import { project } from '../../lib/gl/camera.js';
@@ -16,7 +17,7 @@ const open = (opts = {}, { still = false, webgl = true } = {}) => {
   const pen = [];
   const canvas = { width: 1280, height: 720, getContext: (kind) => (kind === 'webgl2' ? (webgl ? fake : null) : { fillRect: (...args) => pen.push(args) }) };
   const view = { rand: rng(3), look: () => ({ paper: '#000000', accent: '#008cff' }), still, fixed: false, w: 1280, h: 720, dpr: 1, t: 0 };
-  return { fake, pen, view, scene: make(canvas, view, { seed: 3, ...opts }) };
+  return { fake, pen, view, scene: make(canvas, view, { seed: 3, math, ...opts }) };
 };
 
 const play = (live, times) =>
@@ -70,42 +71,42 @@ test('the outro carries the arp to ARRIVE + 6 s, pad and sub alone to the end, a
 });
 
 test('a random destination is never the type of a random departure', () => {
-  const pairs = Array.from({ length: 20 }, (_, seed) => roll(RANDOM, seed, 0));
+  const pairs = Array.from({ length: 20 }, (_, seed) => roll(math, RANDOM, seed, 0));
   expect(pairs.filter(({ a, b }) => a.kind === b.kind)).toEqual([]);
 });
 
 test('a fixed from=earth stays the same world across three loops', () => {
-  const worlds = [0, 1, 2].map((loop) => roll({ ...RANDOM, from: 'earth' }, 7, loop).a);
+  const worlds = [0, 1, 2].map((loop) => roll(math, { ...RANDOM, from: 'earth' }, 7, loop).a);
   expect([worlds[0].name, new Set(worlds.map((one) => JSON.stringify(one))).size]).toEqual(['earth', 1]);
 });
 
 test('a ship of -1 or 0 is drawn from the gated corridor codes and a hand-set ship stays', () => {
-  const drawn = [-1, 0].flatMap((ship) => Array.from({ length: 6 }, (_, loop) => roll({ ...RANDOM, ship }, 5, loop).code));
-  expect([drawn.every((code) => codes(3).includes(code)), new Set(drawn).size > 1, roll({ ...RANDOM, ship: 23 }, 5, 4).code]).toEqual([true, true, 23]);
+  const drawn = [-1, 0].flatMap((ship) => Array.from({ length: 6 }, (_, loop) => roll(math, { ...RANDOM, ship }, 5, loop).code));
+  expect([drawn.every((code) => codes(math, 3).includes(code)), new Set(drawn).size > 1, roll(math, { ...RANDOM, ship: 23 }, 5, 4).code]).toEqual([true, true, 23]);
 });
 
 test('the departure sits at 1.1 R with the planet filling two thirds of the centre column and the sun 95 degrees off the view', () => {
-  const shot = leave(roll(RANDOM, 7, 0), 1000);
+  const shot = leave(roll(math, RANDOM, 7, 0), 1000);
   const fwd = [...shot.cam.rot.slice(6, 9)];
   expect([len(shot.cam.pos).toFixed(3), ground(shot.cam, VIEW.w / 2), ground(shot.cam, 0), Math.round((Math.acos(dot(shot.sun, fwd)) * 180) / Math.PI)]).toEqual(['1.100', 67, 52, 95]);
 });
 
 test('the ship rises into the frame from below and sits just right of the centre at the camera height at 8 s', () => {
-  const rolled = roll(RANDOM, 7, 0);
+  const rolled = roll(math, RANDOM, 7, 0);
   const [below, risen, passed] = [1400, 3600, 8000].map((u) => share(leave(rolled, u)));
   expect([below[1] > 1, risen[1] < 0.75, passed[0] > 0.5 && passed[0] < 0.55, len(leave(rolled, 8000).pose.at).toFixed(3)]).toEqual([true, true, true, '1.100']);
 });
 
 test('the chase settles behind the ship looking at the destination, a point within 2 degrees of the view at 9.9 s', () => {
-  const shot = leave(roll(RANDOM, 7, 0), 9900);
+  const shot = leave(roll(math, RANDOM, 7, 0), 9900);
   const angle = (Math.acos(Math.min(dot(shot.goal, [...shot.cam.rot.slice(6, 9)]), 1)) * 180) / Math.PI;
   const [x, y] = share(shot);
   expect([angle < 2, x > 0 && x < 1 && y > 0 && y < 1]).toEqual([true, true]);
 });
 
 test('the camera rides the chase into the jump, then one Hermite from 12 s takes it on into the entry key at 14 s with its position, heading and speed', () => {
-  const rolled = roll(RANDOM, 3, 0);
-  const door = entry(route({ code: rolled.code, n: 3 }, 3));
+  const rolled = roll(math, RANDOM, 3, 0);
+  const door = entry(route(math, { code: rolled.code, n: 3 }, 3));
   const { open: start, enter } = clock(L);
   const span = enter - start;
   const chase = (u) => inside(leave(rolled, u), door).eye;
@@ -134,15 +135,15 @@ test('the ship is marched at its true distance into the full target and laid uns
 });
 
 test('over the approach the haze sun, the door glow and the three-level floor ease into the route frame, so nothing steps at 14 s', () => {
-  const rolled = roll(RANDOM, 3, 0);
-  const door = entry(route({ code: rolled.code, n: 3 }, 3));
+  const rolled = roll(math, RANDOM, 3, 0);
+  const door = entry(route(math, { code: rolled.code, n: 3 }, 3));
   const [first, last] = [0, 2000 - 1e-3].map((a) => approach(rolled, door, a).frame);
   const glow = (frame) => frame.doors.reduce((sum, one) => sum + one.glow, 0);
   expect([first.sun, first.floor, glow(first), last.sun < 1e-6, last.floor < 1e-5, Math.abs(glow(last) - glow(door.state)) < 1e-6, glow(door.state) > 0]).toEqual([1, 1 / 9, 0, true, true, true, true]);
 });
 
 test('the arrival holds the ship 8% wide just right of the limb, then it pulls away to the lower left at 2% by the fade', () => {
-  const rolled = roll(RANDOM, 7, 0);
+  const rolled = roll(math, RANDOM, 7, 0);
   const [x, y, wide] = share(come(rolled, 0, 0, VIEW));
   const [x2, y2, small] = share(come(rolled, clock(L).end - 1200 - clock(L).arrive, 0, VIEW));
   const shot = come(rolled, 3000, 0, VIEW);

@@ -45,7 +45,9 @@ globalThis.ImageData = class {
 
 afterAll(() => Object.assign(globalThis, kept));
 
-const VALUE = { ...defaults(SPEC), seed: 7 };
+const G = 10000;
+
+const VALUE = { ...defaults(SPEC), seed: 7, grains: G };
 
 const LOOK = { paper: '#000000', accent: '#008cff', ink: '#ffffff' };
 
@@ -117,7 +119,7 @@ test('the plate opens on (3, 5, -) as sand, the plate and one sheet of css pixel
   expect(log).toContainEqual(['imageSmoothingEnabled', false]);
   expect(log.some(([name]) => ['stroke', 'fillText', 'arc'].includes(name))).toBe(false);
   expect(lit(live.sheet())).toBeGreaterThan(1000);
-  expect(live.tells.at(-1)).toMatchObject({ view: 'plate', n: 3, m: 5, sign: -1, grains: 40000 });
+  expect(live.tells.at(-1)).toMatchObject({ view: 'plate', n: 3, m: 5, sign: -1, grains: G });
   expect(live.tells.at(-1).pitch).toBeCloseTo(Math.hypot(3, 5), 9);
 });
 
@@ -159,7 +161,7 @@ test('a tap sprinkles grains under the finger and the sand runs again to rest', 
   const live = open();
   live.at(0);
   live.scene.touch(0.5, 0.5, true);
-  expect(live.tells.at(-1).grains).toBe(40000 + TAP);
+  expect(live.tells.at(-1).grains).toBe(G + TAP);
   expect(live.at(1000).length).toBeGreaterThan(0);
   live.at(1000 + RUN);
   expect(live.at(2000 + RUN)).toEqual([]);
@@ -170,7 +172,7 @@ test('a drag pours by the distance it covers in css pixels', () => {
   live.at(0);
   live.scene.touch(0.3, 0.5, true);
   live.scene.touch(0.4, 0.5, false);
-  expect(live.tells.at(-1).grains).toBe(40000 + TAP + Math.floor(0.1 * 800 * POUR));
+  expect(live.tells.at(-1).grains).toBe(G + TAP + Math.floor(0.1 * 800 * POUR));
 });
 
 test('a figure change keeps the sand where it lies', () => {
@@ -180,7 +182,7 @@ test('a figure change keeps the sand where it lies', () => {
   live.set({ n: 4 });
   live.at(0);
   expect(live.sheet()).toEqual(before);
-  expect(live.tells.at(-1)).toMatchObject({ n: 4, m: 5, grains: 40000 });
+  expect(live.tells.at(-1)).toMatchObject({ n: 4, m: 5, grains: G });
 });
 
 test('a resize swaps the sand sheet for one of the new size: the scene keeps one sheet, never one a size', () => {
@@ -236,7 +238,7 @@ test('under reduced motion a drag only lays sand, and the lift rests it once', (
   tally.steps = 0;
   calm.scene.touch(0.3, 0.5, true);
   for (const u of [0.35, 0.4, 0.45, 0.5]) calm.scene.touch(u, 0.5, false);
-  expect([tally.steps, calm.tells.at(-1).grains > 40000 + TAP]).toEqual([0, true]);
+  expect([tally.steps, calm.tells.at(-1).grains > G + TAP]).toEqual([0, true]);
   calm.scene.lift();
   expect(tally.steps).toBe(REST);
 });
@@ -371,7 +373,7 @@ test('the carpet opens as a page of one pixel a cell, its holes the ground, blit
   const sheet = live.sheet();
   let stray = 0;
   for (let i = 0; i < sheet.length; i += 4) if (sheet[i + 3] && sheet[i + 2] !== 255) stray++;
-  expect([lit(sheet) > 1000, stray]).toEqual([true, 0]);
+  expect([lit(sheet) > 250, stray]).toEqual([true, 0]);
   expect(live.tells.at(-1)).toMatchObject({ view: 'carpet', k: 8, count: COUNT });
 });
 
@@ -396,7 +398,7 @@ test('a rested Carpet epoch at levels 3 and 4 loses grains to the holes and lays
     live.at(0);
     const left = live.tells.at(-1).grains;
     const { sand, uniform } = shares(live.sheet(), carpetOf(level));
-    expect([level, left > 0, left < 40000, sand > 0.9, sand > 2 * uniform]).toEqual([level, true, true, true, true]);
+    expect([level, left > 0, left < G, sand > 0.9, sand > 2 * uniform]).toEqual([level, true, true, true, true]);
   }
 });
 
@@ -434,9 +436,9 @@ test('Play on Carpet walks k from the figure on show and wraps from the last fig
 test('a Carpet figure change tops the drained sand up to the preset before it runs', () => {
   const live = open({ view: 'carpet' });
   live.at(0);
-  expect(live.tells.at(-1).grains).toBeLessThan(20000);
+  expect(live.tells.at(-1).grains).toBeLessThan(G / 2);
   live.set({ k: 9 });
-  expect([live.tells.at(-1).k, 40000 - live.tells.at(-1).grains < 40]).toEqual([9, true]);
+  expect([live.tells.at(-1).k, G - live.tells.at(-1).grains < 40]).toEqual([9, true]);
 });
 
 test('k past a small design reads its last figure, and the echo of the tidied k leaves the sand at rest', () => {

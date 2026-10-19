@@ -1,33 +1,41 @@
-//! The designs in space.
+//! The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.
 //!
-//! A small integer code picks the filled corners of a hypercube, that seed grows level by level
-//! into a fractal design, and the same code always unfolds into the same shape, so a design can be
-//! named, counted and drawn again from its number alone. Half the module generates and half
-//! measures; everything rests on the tensors and cells of [`crate::core`] and the sequences of
-//! [`crate::num`].
+//! A small integer code picks the filled corners of a hypercube, that seed grows level by level into a fractal design, and the same code always unfolds into the same shape, so a design can be named, counted and drawn again from its number alone. Everything rests on the tensors and cells of `mrly_core` and the sequences of `mrly_num`.
+//!
+//! # The design pipeline
 //!
 //! - `atoms` fills a tensor with a carpet, a net, beams or noise.
 //! - `bang` enumerates the design codes, their symmetries and their counts.
+//! - `name` holds the bang, sequence and word kinds of the canonical name.
+//! - `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.
 //! - `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.
 //! - `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.
 //! - `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.
-//! - `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.
-//! - `nodal` rings the plate a design cuts: its lowest modes, their nodal domains and Courant bounds, the Chladni figures of the design.
+//! - `graph` lifts a grid into nodes and branches.
+//! - `spectrum` reads the Laplacian spectra off a network.
+//! - `nodal` rings the plate a design cuts: its lowest modes, nodal domains and Courant bounds.
 //! - `shape` crops a cell against a rational shape, cell by cell, with no floats.
-//! - `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.
 //! - `moire` layers one design at many scales into an interference field.
 //! - `press` weighs the integers a design's digit rule keeps.
-//! - `spin` spins a raster about its centre; `tourbillon` stacks the turned parity carpets.
-//! - `spirograph` rolls a byte grid as a wheel; `roulette` counts where its curves cross.
-//! - `name` prints and parses the one canonical JSON object of every design, rule, tile and word.
-//! - `arrays`: a sparse sensor array, its difference coarray and weights, its essential sensors, and the fractal array a generator grows.
-//! - `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.
+//! - `arcs` lays two quarter arcs in every cell and follows the loops they join into.
+//!
+//! # Line and Dirichlet designs
+//!
 //! - `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.
-//! - `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.
+//! - `dissection`: the missing-digit sets cut by Dirichlet approximation, their four regions and the chain certificate.
 //! - `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.
 //! - `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.
+//! - `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.
+//! - `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.
 //! - `radix`: a digit set inside the residues of a base in a ring, and where its words land.
-//! - `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.
+//! - `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.
+//!
+//! # Wheels
+//!
+//! - `spin` spins a raster about its centre.
+//! - `tourbillon` stacks the turned parity carpets inside the inscribed disc.
+//! - `spirograph` rolls a byte grid as a wheel and draws the curves of its pencils.
+//! - `roulette` counts where those curves cross.
 //!
 //! The doors are [`crate::atoms::carpet_2d`], [`crate::bang::bang`],
 //! [`crate::two::carpet`], [`crate::two::census()`], [`crate::two::to_json`],
@@ -42,7 +50,7 @@ pub mod arrays;
 pub mod atoms;
 /// The matrix ladder: the Dirichlet series of a memory design continued through its transfer matrix, its determinant cofactor and the residues on its pole combs.
 ///
-/// A claim witness with no caller in the crate: it witnesses `research/claims/memory-dial.md`.
+/// A claim witness with no caller in the crate: it witnesses the [memory dial claim](https://github.com/mrlyprod/mrlyprod/blob/main/research/beneath/claims/memory-dial.md).
 pub mod automaton;
 /// The universe of design codes: corners, symmetries and their counts.
 pub mod bang;
@@ -59,13 +67,13 @@ mod eigen;
 pub mod graph;
 /// The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.
 ///
-/// A claim witness with no caller in the crate: it witnesses `research/claims/zeros-of-the-design-zeta.md`.
+/// A claim witness with no caller in the crate: it witnesses the [zeros of the design zeta claim](https://github.com/mrlyprod/mrlyprod/blob/main/research/zeta/claims/zeros-of-the-design-zeta.md).
 pub mod ladder;
 /// The memory designs: a rule on `k` consecutive digits, its transfer matrix, the words it accepts and the Perron root that is their dimension.
 pub mod memory;
 /// The moire fields layered from sampled designs.
 pub mod moire;
-/// The mrly names: one canonical JSON object for every mathematical thing.
+/// The design names: the bang, sequence and word kinds of the canonical JSON object.
 pub mod name;
 /// The Chladni figures of a design: the lowest modes of the plate it cuts, in a canonical basis, with their nodal domains, Courant bounds and rasters.
 pub mod nodal;
@@ -106,6 +114,10 @@ where
     let text = serde_json::to_string(&value).unwrap();
     assert_eq!(serde_json::from_str::<T>(&text).unwrap(), value, "{text}");
 }
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct Readme;
 
 #[cfg(test)]
 mod tests {

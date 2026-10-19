@@ -1,7 +1,6 @@
 import { draw as hexes } from '#view/hex.js';
-import { veil } from '../color.js';
+import { blend, veil } from '../color.js';
 import { measureOf, spot } from './engine.js';
-import { mix } from './paint.js';
 
 export const BUDGET = { 2: 250000, 3: 600000, cut: 60000 };
 
@@ -50,10 +49,10 @@ export function inks(row, tones, on = tones.accent) {
   const voids = measureOf(row.measure)?.slug === 'voids' || row.measure === 'cutvoids' || row.measure === 'provoids';
   return {
     fill: voids ? veil(on, 0.28) : on,
-    void: voids ? mix(on, tones.paper, 0.15) : off,
+    void: voids ? blend(on, tones.paper, 0.15) : off,
     up: on,
-    left: mix(on, tones.paper, 0.32),
-    right: mix(on, tones.paper, 0.58),
+    left: blend(on, tones.paper, 0.32),
+    right: blend(on, tones.paper, 0.58),
   };
 }
 

@@ -6,10 +6,19 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
-description = "The tiles of MrlyMath: the whole pipeline from a recipe to a file."
+keywords.workspace = true
+categories.workspace = true
+description = "The tiles: the whole pipeline from a recipe to a file."
+readme = "README.md"
+include = ["src/**", "README.md", "LICENSE"]
+
+[lints]
+workspace = true
 
 [dependencies]
 serde.workspace = true
-serde_json.workspace = true
 mrly-core.workspace = true
 mrly-math.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

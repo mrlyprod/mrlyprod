@@ -1,24 +1,11 @@
-import FONT from '../lib/font/font.gen.json' with { type: 'json' };
+import { glyph } from '../lib/font/font.js';
 
 export const WORD = 'MRLYPROD';
-
-function trim(rows) {
-  let from = Infinity;
-  let to = 0;
-  for (const row of rows) {
-    for (let c = 0; c < row.length; c++) {
-      if (row[c] !== '1') continue;
-      from = Math.min(from, c);
-      to = Math.max(to, c + 1);
-    }
-  }
-  return rows.map((row) => row.slice(from, to));
-}
 
 const lit = (rows, left) => rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === '1' ? [[left + x, y]] : [])));
 
 export function welcome(word = WORD) {
-  const glyphs = [...word].map((char) => trim(FONT[char].rows));
+  const glyphs = [...word].map(glyph);
   const starts = [];
   let col = 0;
   for (const rows of glyphs) {
@@ -41,7 +28,7 @@ export function welcome(word = WORD) {
     return { track, cells: lit(rows, starts[i]) };
   });
   const left = (cols - 5) >> 1;
-  const x = lit(FONT.X.rows, left);
+  const x = lit(glyph('X'), left);
   const stacked = new Set(letters.flatMap(({ track, cells }) => cells.map(([cx, cy]) => `${cx + track.at(-1)},${cy}`)));
   const want = new Set(x.map(([cx, cy]) => `${cx},${cy}`));
   if (stacked.size !== want.size || [...want].some((cell) => !stacked.has(cell))) throw new Error(`welcome: ${word} does not fold into the X`);

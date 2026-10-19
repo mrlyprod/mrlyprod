@@ -53,3 +53,9 @@ test('the kit matches the crate frame for frame', () => {
     expect(animate(text, 1)).toEqual(JSON.parse(JSON.stringify(crate.animate(text, 1))));
   }
 });
+
+test('font.gen.json is the crate: every glyph, its rows and its path', () => {
+  const all = crate.all();
+  expect(Object.keys(FONT).sort()).toEqual(all.map((one) => one.char).sort());
+  for (const one of all) expect([one.char, FONT[one.char]]).toEqual([one.char, { rows: one.rows, path: crate.path(one.char) }]);
+});

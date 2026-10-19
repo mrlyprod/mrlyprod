@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { assets, changes, GONE, headers, IMMUTABLE, keep, mine, SHORT, spread, staged, sweep, typing, type Lister, type Manifest } from "./push.ts";
 
-const GUARD = ["cdn/", "art/", "automator/automator.json", "stats/stats.json"];
+const GUARD = ["cdn/", "art/", "stats/stats.json"];
 
 const MANIFEST: Manifest = {
   "/": { hash: "a", at: "2026-09-21", outputs: ["index.html", "props.json"], types: { "props.json": "application/json" } },
-  "/shop/": { hash: "b", at: "2026-09-21", outputs: ["shop/index.html"] },
-  "@ui/tokens-8a0bcf6d.css": { hash: "c", at: "2026-09-21", outputs: ["ui/tokens-8a0bcf6d.css"] },
+  "/about/": { hash: "b", at: "2026-09-21", outputs: ["about/index.html"] },
+  "@fonts/sans-8a0bcf6d.woff2": { hash: "c", at: "2026-09-21", outputs: ["fonts/sans-8a0bcf6d.woff2"] },
 };
 
 const page = (contents: string[], prefixes: string[]) => ({
@@ -17,9 +17,9 @@ const page = (contents: string[], prefixes: string[]) => ({
 });
 
 const TREE: Record<string, ReturnType<typeof page>> = {
-  "site/": page(["site/index.html"], ["site/art/", "site/cdn/", "site/shop/", "site/ui/"]),
-  "site/shop/": page(["site/shop/index.html"], []),
-  "site/ui/": page(["site/ui/tokens-8a0bcf6d.css"], []),
+  "site/": page(["site/index.html"], ["site/art/", "site/cdn/", "site/about/", "site/fonts/"]),
+  "site/about/": page(["site/about/index.html"], []),
+  "site/fonts/": page(["site/fonts/sans-8a0bcf6d.woff2"], []),
   "site/art/": page(["site/art/never.png"], []),
   "site/cdn/": page(["site/cdn/never.js"], []),
 };
@@ -52,8 +52,8 @@ describe("push", () => {
     expect([...spread(MANIFEST)]).toEqual([
       ["index.html", "/"],
       ["props.json", "/"],
-      ["shop/index.html", "/shop/"],
-      ["ui/tokens-8a0bcf6d.css", "@ui/tokens-8a0bcf6d.css"],
+      ["about/index.html", "/about/"],
+      ["fonts/sans-8a0bcf6d.woff2", "@fonts/sans-8a0bcf6d.woff2"],
     ]);
   });
 
@@ -88,22 +88,22 @@ describe("push", () => {
 
   test("every removed file, a page of the old route manifest too, is kept a week from the day it left", () => {
     const first = keep(MANIFEST, new Map(), "2026-10-08");
-    expect(Object.keys(first).sort()).toEqual([GONE + "index.html", GONE + "props.json", GONE + "shop/index.html", GONE + "ui/tokens-8a0bcf6d.css"]);
-    expect(first[GONE + "shop/index.html"]).toEqual({ hash: "b", at: "2026-10-08", outputs: ["shop/index.html"] });
+    expect(Object.keys(first).sort()).toEqual([GONE + "about/index.html", GONE + "fonts/sans-8a0bcf6d.woff2", GONE + "index.html", GONE + "props.json"]);
+    expect(first[GONE + "about/index.html"]).toEqual({ hash: "b", at: "2026-10-08", outputs: ["about/index.html"] });
     expect(keep(first, new Map(), "2026-10-14")).toEqual(first);
     expect(keep(first, new Map(), "2026-10-15")).toEqual({});
     expect(keep(first, spread(MANIFEST), "2026-10-09")).toEqual({});
   });
 
   test("the guard owns a prefix and a single key alike", () => {
-    expect(mine("shop/index.html", GUARD)).toBe(true);
+    expect(mine("about/index.html", GUARD)).toBe(true);
     expect(mine("cdn/reel.js", GUARD)).toBe(false);
     expect(mine("stats/stats.json", GUARD)).toBe(false);
     expect(mine("stats/index.html", GUARD)).toBe(true);
   });
 
   test("a sweep strips the prefix and never descends into a guarded folder", async () => {
-    expect(await sweep(fake, "site/", GUARD)).toEqual(["index.html", "shop/index.html", "ui/tokens-8a0bcf6d.css"]);
+    expect(await sweep(fake, "site/", GUARD)).toEqual(["index.html", "about/index.html", "fonts/sans-8a0bcf6d.woff2"]);
   });
 
   test("a sweep at the bucket root walks from the empty prefix", async () => {

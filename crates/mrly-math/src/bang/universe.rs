@@ -212,7 +212,7 @@ impl Design {
     ///
     /// Errors when the design's name does not read back.
     pub fn name(&self) -> Result<String> {
-        crate::name::Named::to_prose(&crate::name::Bang::new(self.i.get(), self.dimension, 2))
+        mrly_core::name::Named::to_prose(&crate::name::Bang::new(self.i.get(), self.dimension, 2))
     }
     /// Returns the design's filled corners in sorted order.
     pub fn rule(&self) -> Vec<Vec<u8>> {

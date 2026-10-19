@@ -56,7 +56,7 @@ const SHEETS = ["chrome.css", "base.css", "pages.css", "../lib/app/mrly.css"];
 
 const bare = (name: string) => readFileSync(join(import.meta.dir, name), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
-const values = (css: string, prop: RegExp) => [...css.matchAll(/(?:^|[{;])\s*([a-z-]+)\s*:\s*([^;{}]+)/g)].filter(([, name]) => prop.test(name)).map(([, , value]) => value.trim());
+const values = (css: string, prop: RegExp) => [...css.matchAll(/(?:^|[{;])\s*([a-z-]+)\s*:\s*([^;{}]+)/g)].filter(([, name]) => prop.test(name!)).map(([, , value]) => value!.trim());
 
 test("the site css and the demo css set no font size in px", () => {
   for (const name of SHEETS) {

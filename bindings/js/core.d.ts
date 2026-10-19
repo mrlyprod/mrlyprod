@@ -51,7 +51,7 @@ export interface Cell6dData {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
-/** A seeded random stream, opened from a number or a bigint seed. */
+/** A seeded random stream, opened from a number or a bigint seed; each subpath has its own Rng, so pass it only to functions of the same subpath. */
 export class Rng {
     constructor(seed: number | bigint | string);
     free(): void;
@@ -375,6 +375,16 @@ export declare namespace image {
     /** Draws every pixel as a scale by scale block, growing both sides by scale. */
     export function scale(image: Image, scale: number): Image;
 }
+export declare namespace name {
+    export namespace sha {
+        /** Returns the sha256 digest of `bytes` as 64 lowercase hex digits. */
+        export function hex(bytes: ArrayLike<number>): string;
+        /** Returns the 32-byte sha256 digest of `bytes`. */
+        export function sha256(bytes: ArrayLike<number>): Uint8Array;
+        /** Returns the first eight hex digits of the sha256 digest of `bytes`, the id a name prints. */
+        export function short(bytes: ArrayLike<number>): string;
+    }
+}
 export declare namespace paint {
     /** Colors the cell from the paint's inks under its edition mode, scattering the Random edition from the stream. */
     export function apply(paint: paint.Paint, cell: Cell, rng: Rng): void;
@@ -577,6 +587,6 @@ export declare namespace tensor {
     export function u32(data: ArrayLike<number>, shape: ArrayLike<number>): Tensor;
     /** Returns the elements as u32s. */
     export function u32s(tensor: Tensor): Uint32Array;
-    /** Wraps a u8 vector as a tensor of the shape, the same door as [`Tensor::of`]. */
+    /** Wraps a u8 vector as a tensor of the shape, the same door as `Tensor::of`. */
     export function u8(data: ArrayLike<number>, shape: ArrayLike<number>): Tensor;
 }

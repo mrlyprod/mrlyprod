@@ -51,7 +51,7 @@ export interface Cell6dData {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
-/** A seeded random stream, opened from a number or a bigint seed. */
+/** A seeded random stream, opened from a number or a bigint seed; each subpath has its own Rng, so pass it only to functions of the same subpath. */
 export class Rng {
     constructor(seed: number | bigint | string);
     free(): void;

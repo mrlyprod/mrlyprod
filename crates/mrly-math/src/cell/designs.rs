@@ -6,7 +6,7 @@ use mrly_core::tensor::Tensor;
 ///
 /// # Errors
 ///
-/// Errors when the pattern's rank is not N, or the level is below one.
+/// Errors when the pattern's rank is not N.
 pub fn grow<const N: usize>(pattern: Tensor, level: usize) -> Result<CellNd<N>> {
     let mut cell = CellNd::<N>::new(pattern)?;
     if level > 1 {

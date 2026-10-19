@@ -33,6 +33,7 @@ export const name = (value) => `crop-${String(value.code ?? '').trim() || value.
 export const units = wasm('math');
 
 export const PAGE = {
+  defaults: { base: 2, code: '7' },
   spec: SPEC,
   units,
   gestures: true,

@@ -9,7 +9,7 @@ class Automaton:
     """A memory design read as a matrix ladder: the rule, the transfer matrix on its `(k-1)`-window states, and the peel depth its Dirichlet series is continued from."""
     def __init__(self, rule: mrly.math.memory.Rule) -> None: ...
     def abscissa(self) -> float:
-        """Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of [`crate::memory::perron`]."""
+        """Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of `crate::memory::perron`."""
     def base(self) -> int:
         """Returns the base `q = 2^D`."""
     def cofactor(self, s: dict[str, Any], tolerance: float) -> tuple[dict[str, Any], float]:
@@ -17,7 +17,7 @@ class Automaton:
     def denominator(self) -> list[float]:
         """Returns the coefficients `c_0 .. c_n` of `det(I - x T) = sum c_i x^i`, the ladder denominator read as a polynomial in `x = q^(-s)`."""
     def matrix(self) -> list[list[float]]:
-        """Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of [`crate::memory::transfer`], entry `(u', u)` counting the letters carrying `u` to `u'`."""
+        """Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of `crate::memory::transfer`, entry `(u', u)` counting the letters carrying `u` to `u'`."""
     @staticmethod
     def new(rule: mrly.math.memory.Rule) -> Automaton:
         """Builds the ladder of a rule, choosing the peel depth."""

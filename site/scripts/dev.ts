@@ -11,7 +11,7 @@ if (process.cwd() !== org) throw new Error("dev: run from site/ (bun run --cwd s
 const made = await ready();
 const files = new Map([...made.assets, ...globals(made)].map((one) => [`/${one.path}`, one]));
 files.set("/boot.js", files.get(made.boot)!);
-const reply = (body: BodyInit, type: string) => new Response(body, { headers: { "content-type": type } });
+const reply = (body: string | Uint8Array, type: string) => new Response(body as BodyInit, { headers: { "content-type": type } });
 const SHELL = "/_shell";
 
 const server = Bun.serve({
@@ -19,7 +19,7 @@ const server = Bun.serve({
   hostname: "127.0.0.1",
   development: { hmr: true },
   routes: { [SHELL]: shell },
-  async fetch(request) {
+  async fetch(request): Promise<Response> {
     const url = new URL(request.url);
     const step = decide(decode(url.pathname));
     if (step.redirect) return Response.redirect(`${step.redirect}${url.search}`, 301);

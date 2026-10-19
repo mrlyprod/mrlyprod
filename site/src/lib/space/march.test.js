@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import * as math from '@mrlyprod/mrly/math';
 import { rgb } from '../color.js';
 import { rng } from '../rand.js';
 import { cells } from './bang.js';
@@ -20,7 +21,7 @@ const marched = (fake) => fake.draws().filter((one) => 'uLo' in one.uniforms);
 
 const resolved = (fake) => fake.draws().filter((one) => 'uPast' in one.uniforms);
 
-const run = (opts = {}, at = view(), fake = gl()) => ({ fake, at, one: march(fake, at, SUNG, opts) });
+const run = (opts = {}, at = view(), fake = gl()) => ({ fake, at, one: march(fake, at, SUNG, { math, ...opts }) });
 
 test('each of the three looks compiles its own define into the march, and an unknown look falls back to studio', () => {
   const heads = [...LOOKS, 'hyper'].map((look) => {
@@ -48,7 +49,7 @@ test('with TAA cells under 1.5 px of the pinned target are solid, without it und
   const taa = run();
   taa.one.draw(CAM, FRAME, TONE);
   const raw = gl({ ext: ['WEBGL_lose_context'] });
-  march(raw, view(), SUNG).draw(CAM, FRAME, TONE);
+  march(raw, view(), SUNG, { math }).draw(CAM, FRAME, TONE);
   expect([lod(taa.fake), lod(raw)[0]]).toEqual([['1.5', marched(taa.fake)[0].viewport.slice(2)], '3.5']);
 });
 
@@ -60,7 +61,7 @@ const PIX = (2 * Math.tan(1.25 / 2)) / 822;
 const HAZE = 5.5 / (0.24 * 0.25);
 
 function trace(ro, rd, { scale = 1, steps = 200, lod = 1.5, near = ALL, edge = null, hull = 0, floor = 0 } = {}) {
-  const { lo, hi } = boxes(cells(23, N), N);
+  const { lo, hi } = boxes(cells(math, 23, N), N);
   const [low, high] = edge ?? [[1e6, 1e6, 1e6], [1e6, 1e6, 1e6]];
   const sides = rd.map((v, i) => {
     const d = Math.abs(v) < 1e-6 ? 1e-6 : v;
@@ -240,7 +241,7 @@ test('across a rebase the previous camera is carried into the new frame by toFra
 test('without a float colour buffer the march draws one pass with no history, no second attachment and no depth', () => {
   const fake = gl({ ext: ['WEBGL_lose_context'] });
   const at = view();
-  const one = march(fake, at, SUNG);
+  const one = march(fake, at, SUNG, { math });
   for (const t of [0, 16, 32]) {
     at.t = t;
     one.draw(CAM, FRAME, TONE);

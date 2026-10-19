@@ -1,7 +1,6 @@
 #![allow(non_camel_case_types, non_snake_case, clippy::too_many_arguments)]
 
-mod hand;
-
+use mrly_js_hand as hand;
 use wasm_bindgen::prelude::*;
 
 /// Builds every glyph in font order: uppers, lowers, digits, extras, specials.

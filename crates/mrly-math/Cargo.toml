@@ -6,10 +6,19 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
-description = "The designs in space of MrlyMath: codes, cells, cubes, hexagons, their counts, graphs and names."
+keywords.workspace = true
+categories.workspace = true
+description = "The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels."
+readme = "README.md"
+include = ["src/**", "README.md", "LICENSE"]
+
+[lints]
+workspace = true
 
 [dependencies]
 serde.workspace = true
-serde_json.workspace = true
 mrly-core.workspace = true
 mrly-num.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

@@ -132,7 +132,14 @@ dependencies = [
  "mrly-math",
  "mrly-num",
  "mrly-tile",
- "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrly-cli"
+version = "0.2.0"
+dependencies = [
+ "mrly",
  "serde_json",
 ]
 
@@ -150,18 +157,6 @@ version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "mrly-js-all"
-version = "0.2.0"
-dependencies = [
- "mrly-js-core",
- "mrly-js-font",
- "mrly-js-life",
- "mrly-js-math",
- "mrly-js-num",
- "mrly-js-tile",
 ]
 
 [[package]]

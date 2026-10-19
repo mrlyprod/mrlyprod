@@ -12,19 +12,21 @@
       "path": "core",
       "file": "core/lib.rs",
       "docs": [
-        "The substrate: tensors, cells, colors, images, resampling and seeded chance.",
-        "The substrate: the road from a grid of bytes to pixels, with nothing mrly on it.",
+        "The substrate: tensors, cells, colors, images, resampling, seeded chance and the canonical names.",
+        "",
+        "The road from a grid of bytes to pixels, and the one JSON object every mrly thing is named by.",
         "",
         "- `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.",
         "- `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.",
         "- `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.",
         "- `image` holds the rgba pixels a renderer returns; encoding them into a file is the caller's.",
         "- `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.",
-        "- `error` holds the one error, its Result and the json parser; `named` names an enum.",
+        "- `error` holds the one error, its Result and the json parser.",
+        "- `name` holds the `Named` trait, the `kind!` marker, the text views and the sha256 a name's id is cut from; `named_enum!` names an enum.",
         "",
         "The json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.",
         "",
-        "The doors: [`Tensor::of`](crate::tensor::Tensor::of), [`Tensor::rot90`](crate::tensor::Tensor::rot90), [`Color::from_hex`](crate::colors::Color::from_hex), [`Color::to_hex`](crate::colors::Color::to_hex), [`Image::scale`](crate::image::Image::scale) and [`Colorizer::color`](crate::ramp::Colorizer::color)."
+        "The doors: `Tensor::of`, `Tensor::rot90`, `Color::from_hex`, `Color::to_hex`, `Image::scale` and `ramp::color`."
       ],
       "items": 21
     },
@@ -61,6 +63,22 @@
       "items": 4
     },
     {
+      "path": "core::name",
+      "file": "core/name/mod.rs",
+      "docs": [
+        "The canonical names: one JSON object per thing, its views and its id."
+      ],
+      "items": 1
+    },
+    {
+      "path": "core::name::sha",
+      "file": "core/name/sha.rs",
+      "docs": [
+        "The sha256 digest the ids are cut from."
+      ],
+      "items": 3
+    },
+    {
       "path": "core::paint",
       "file": "core/paint.rs",
       "docs": [
@@ -94,7 +112,7 @@
     },
     {
       "path": "core::tensor",
-      "file": "core/tensor.rs",
+      "file": "core/tensor/mod.rs",
       "docs": [
         "The tensor and its dtypes."
       ],
@@ -104,7 +122,6 @@
       "path": "font",
       "file": "font/lib.rs",
       "docs": [
-        "The alphabet: the stroked pixel glyphs, their rasters and their writing animations.",
         "The alphabet: a stroked pixel font of 108 characters, painted whole or written stroke by stroke.",
         "",
         "- `bitmaps` holds the raw on/off rows; `glyph` builds them into glyphs and trims them.",
@@ -114,9 +131,9 @@
         "",
         "The font is the uppers, their corner-rounded lowers, the digits, the punctuation and arrows, and four specials; most glyphs are five rows of five, the ten that dip below the baseline are seven.",
         "",
-        "The doors: [`glyph`](crate::glyph()), [`supported`](crate::supported()), [`map`](crate::map()), [`raster`](crate::raster()), [`path`](crate::path()), [`floor`](crate::floor()), [`animate`](crate::animate()), [`merge`](crate::merge()), [`cycle`](crate::cycle()) and [`name_of`](crate::name_of()).",
+        "The doors: `glyph`, `supported`, `map`, `raster`, `path`, `floor`, `animate`, `merge`, `cycle` and `name_of`.",
         "",
-        "`cargo run -p mrly --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor."
+        "`cargo run -p mrly-font --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor."
       ],
       "items": 27
     },
@@ -181,7 +198,6 @@
       "file": "life/lib.rs",
       "docs": [
         "The engine: a rule over a grid, stepped, recorded, measured and rendered.",
-        "The engine: a rule over a grid, stepped, recorded, measured and rendered.",
         "",
         "- `step`: one generation of a grid under birth and survive counts.",
         "- `animate`: a seed run until it fixes, loops or times out.",
@@ -194,11 +210,11 @@
         "- `render`: the frames and the visit heatmap of a run, as images.",
         "- `rule`: the canonical name of a rule.",
         "",
-        "The doors: [`next_grid`](crate::next_grid), [`animate`](crate::animate()),",
-        "[`entropy`](crate::entropy), [`churn`](crate::churn),",
-        "[`counts`](crate::counts), [`frames`](crate::frames),",
-        "[`heatmap`](crate::heatmap), [`history`](crate::history) and",
-        "[`Rule`](crate::Rule)."
+        "The doors: `next_grid`, `animate`,",
+        "`entropy`, `churn`,",
+        "`counts`, `frames`,",
+        "`heatmap`, `history` and",
+        "`Rule`."
       ],
       "items": 70
     },
@@ -286,42 +302,49 @@
       "path": "math",
       "file": "math/lib.rs",
       "docs": [
-        "The designs in space: codes, cells, cubes, hexagons, their counts, graphs and names.",
-        "The designs in space.",
+        "The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.",
         "",
-        "A small integer code picks the filled corners of a hypercube, that seed grows level by level",
-        "into a fractal design, and the same code always unfolds into the same shape, so a design can be",
-        "named, counted and drawn again from its number alone. Half the module generates and half",
-        "measures; everything rests on the tensors and cells of [`crate::core`] and the sequences of",
-        "[`crate::num`].",
+        "A small integer code picks the filled corners of a hypercube, that seed grows level by level into a fractal design, and the same code always unfolds into the same shape, so a design can be named, counted and drawn again from its number alone. Everything rests on the tensors and cells of `mrly_core` and the sequences of `mrly_num`.",
+        "",
+        "# The design pipeline",
         "",
         "- `atoms` fills a tensor with a carpet, a net, beams or noise.",
         "- `bang` enumerates the design codes, their symmetries and their counts.",
+        "- `name` holds the bang, sequence and word kinds of the canonical name.",
+        "- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.",
         "- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.",
         "- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.",
         "- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.",
-        "- `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.",
-        "- `nodal` rings the plate a design cuts: its lowest modes, their nodal domains and Courant bounds, the Chladni figures of the design.",
+        "- `graph` lifts a grid into nodes and branches.",
+        "- `spectrum` reads the Laplacian spectra off a network.",
+        "- `nodal` rings the plate a design cuts: its lowest modes, nodal domains and Courant bounds.",
         "- `shape` crops a cell against a rational shape, cell by cell, with no floats.",
-        "- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.",
         "- `moire` layers one design at many scales into an interference field.",
         "- `press` weighs the integers a design's digit rule keeps.",
-        "- `spin` spins a raster about its centre; `tourbillon` stacks the turned parity carpets.",
-        "- `spirograph` rolls a byte grid as a wheel; `roulette` counts where its curves cross.",
-        "- `name` prints and parses the one canonical JSON object of every design, rule, tile and word.",
-        "- `arrays`: a sparse sensor array, its difference coarray and weights, its essential sensors, and the fractal array a generator grows.",
-        "- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.",
+        "- `arcs` lays two quarter arcs in every cell and follows the loops they join into.",
+        "",
+        "# Line and Dirichlet designs",
+        "",
         "- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.",
-        "- `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.",
+        "- `dissection`: the missing-digit sets cut by Dirichlet approximation, their four regions and the chain certificate.",
         "- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.",
         "- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.",
+        "- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.",
+        "- `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.",
         "- `radix`: a digit set inside the residues of a base in a ring, and where its words land.",
-        "- `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.",
+        "- `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.",
         "",
-        "The doors are [`crate::atoms::carpet_2d`], [`crate::bang::bang`],",
-        "[`crate::two::carpet`], [`crate::two::census()`], [`crate::two::to_json`],",
-        "[`crate::counts::fill`], [`crate::three::census::surface`] and",
-        "[`crate::spectrum::laplacian_spectrum`]."
+        "# Wheels",
+        "",
+        "- `spin` spins a raster about its centre.",
+        "- `tourbillon` stacks the turned parity carpets inside the inscribed disc.",
+        "- `spirograph` rolls a byte grid as a wheel and draws the curves of its pencils.",
+        "- `roulette` counts where those curves cross.",
+        "",
+        "The doors are `crate::atoms::carpet_2d`, `crate::bang::bang`,",
+        "`crate::two::carpet`, `crate::two::census()`, `crate::two::to_json`,",
+        "`crate::counts::fill`, `crate::three::census::surface` and",
+        "`crate::spectrum::laplacian_spectrum`."
       ],
       "items": 0
     },
@@ -355,7 +378,7 @@
       "docs": [
         "The matrix ladder: the Dirichlet series of a memory design continued through its transfer matrix, its determinant cofactor and the residues on its pole combs.",
         "",
-        "A claim witness with no caller in the crate: it witnesses `research/claims/memory-dial.md`."
+        "A claim witness with no caller in the crate: it witnesses the [memory dial claim](https://github.com/mrlyprod/mrlyprod/blob/main/research/beneath/claims/memory-dial.md)."
       ],
       "items": 16
     },
@@ -363,7 +386,6 @@
       "path": "math::bang",
       "file": "math/bang/mod.rs",
       "docs": [
-        "The universe of design codes: corners, symmetries and their counts.",
         "The universe of design codes.",
         "",
         "A code is a bitmask over the residue corners of a hypercube; this folder packs corners into",
@@ -423,7 +445,6 @@
       "path": "math::cell",
       "file": "math/cell/mod.rs",
       "docs": [
-        "The dimension-generic cell and the pipeline the fixed dimensions share.",
         "The N-dimensional cell and the pipeline the fixed dimensions share.",
         "",
         "A seed pattern grows into a fractal cell here, and `two`, `three` and `six` are that one",
@@ -499,7 +520,6 @@
       "path": "math::counts",
       "file": "math/counts/mod.rs",
       "docs": [
-        "The closed-form counts: fills, surfaces, hex slices and the carry ladder, without rendering.",
         "The closed-form counts.",
         "",
         "Every number the censuses reach by walking a built cell, this folder reaches by formula:",
@@ -567,7 +587,6 @@
       "path": "math::graph",
       "file": "math/graph/mod.rs",
       "docs": [
-        "The spatial network: its nodes, branches, extraction and census.",
         "The spatial network.",
         "",
         "A grid lifts into nodes and branches, as a core, an edge or a tunnel network, and the census",
@@ -613,7 +632,7 @@
       "docs": [
         "The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.",
         "",
-        "A claim witness with no caller in the crate: it witnesses `research/claims/zeros-of-the-design-zeta.md`."
+        "A claim witness with no caller in the crate: it witnesses the [zeros of the design zeta claim](https://github.com/mrlyprod/mrlyprod/blob/main/research/zeta/claims/zeros-of-the-design-zeta.md)."
       ],
       "items": 13
     },
@@ -629,7 +648,6 @@
       "path": "math::moire",
       "file": "math/moire/mod.rs",
       "docs": [
-        "The moire fields layered from sampled designs.",
         "The moire fields.",
         "",
         "One design sampled at many scales and stacked makes an interference pattern; the layers, their",
@@ -705,11 +723,9 @@
       "path": "math::name",
       "file": "math/name/mod.rs",
       "docs": [
-        "The mrly names: one canonical JSON object for every mathematical thing.",
-        "The mrly names.",
+        "The design names: the bang, sequence and word kinds of the canonical JSON object.",
         "",
-        "Every mathematical thing prints one canonical JSON object, and the url, filename, prose and id",
-        "views are functions of that one string."
+        "The `Named` trait, the `kind!` marker and the text views live in `mrly_core::name`."
       ],
       "items": 43
     },
@@ -789,7 +805,6 @@
       "path": "math::six",
       "file": "math/six/mod.rs",
       "docs": [
-        "The hexagon world: cubes flattened to triangle-meshed hexes.",
         "The hexagon world, the projection of `three`.",
         "",
         "A coded cube flattened to an iso, pro or cut hexagon, meshed into triangles, then counted,",
@@ -913,7 +928,6 @@
       "path": "math::three",
       "file": "math/three/mod.rs",
       "docs": [
-        "The cube pipeline: designs, tiles, graphs and renderings in three dimensions.",
         "The cube pipeline.",
         "",
         "The shared cell pipeline pinned to three dimensions: coded and carpet cubes, their censuses,",
@@ -997,7 +1011,6 @@
       "path": "math::two",
       "file": "math/two/mod.rs",
       "docs": [
-        "The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.",
         "The flat-cell pipeline.",
         "",
         "The shared cell pipeline pinned to two dimensions: coded and carpet cells, their censuses,",
@@ -1057,8 +1070,7 @@
       "path": "num",
       "file": "num/lib.rs",
       "docs": [
-        "The integers: primes, divisors, series, lattices, spectra and networks.",
-        "The instruments of number: primes, divisors, series, spectra and lattices.",
+        "The integers: primes, divisors, series, sieves, lattices and spectra.",
         "",
         "Plain numbers and byte grids go in; counts, fractions, rates and measurements come out.",
         "Every answer is exact where the integers allow and a stated approximation where they do not.",
@@ -1069,7 +1081,6 @@
         "- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.",
         "- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.",
         "- `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.",
-        "- `eigen`: the crate's symmetric eigensolvers: the dense Householder and QL pair with vectors, and the shift-invert block Lanczos on a banded Cholesky for the lowest pairs of a sparse matrix.",
         "- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.",
         "- `fft`: the fast Fourier transform in one and two dimensions.",
         "- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.",
@@ -1084,9 +1095,9 @@
         "",
         "# Doors",
         "",
-        "- The divisor arithmetic: [`gcd`](crate::factor::gcd), [`factorial`](crate::factor::factorial), [`divisors`](crate::factor::divisors), [`mobius`](crate::factor::mobius).",
-        "- The primality test: [`is_prime`](crate::prime::is_prime).",
-        "- The zeta value above one: [`zeta`](crate::series::zeta)."
+        "- The divisor arithmetic: `gcd`, `factorial`, `divisors`, `mobius`.",
+        "- The primality test: `is_prime`.",
+        "- The zeta value above one: `zeta`."
       ],
       "items": 0
     },
@@ -1188,7 +1199,7 @@
     },
     {
       "path": "num::sieve",
-      "file": "num/sieve.rs",
+      "file": "num/sieve/mod.rs",
       "docs": [
         "The punctured schedules: the Wallis sieve and its kin, their words, rasters, punctures and limits."
       ],
@@ -1215,7 +1226,6 @@
       "file": "tile/lib.rs",
       "docs": [
         "The tiles: the whole pipeline from a recipe to a file.",
-        "The generator: the pipeline from a recipe to a file, for datasets, the automator, backgrounds.",
         "",
         "- `recipe`: the tile recipe, its families, groups, parities, catalog and size lists.",
         "- `draw`: one recipe drawn at random from a seeded stream under size constraints.",
@@ -1223,14 +1233,14 @@
         "- `variation`: the seeded artwork, from recipe through paint to rendered files.",
         "- `name`: the canonical name of a recipe, and the recipe back out of it.",
         "",
-        "The doors: [`Tile::new`](crate::recipe::Tile::new),",
-        "[`Tile::size`](crate::recipe::Tile::size),",
-        "[`Tile::check`](crate::recipe::Tile::check),",
-        "[`draw::create`](crate::draw::create), [`random_design`](crate::random_design),",
-        "[`random_rotation`](crate::random_rotation), [`build_2d`](crate::build::build_2d),",
-        "[`tree_mask`](crate::tree_mask), [`variation::create`](crate::variation::create),",
-        "[`hex_key`](crate::hex_key), [`classic_code_nd`](crate::classic_code_nd),",
-        "[`Tile::of`](crate::name::Tile::of) and [`background`](crate::background)."
+        "The doors: `Tile::new`,",
+        "`Tile::size`,",
+        "`Tile::check`,",
+        "`draw::create`, `random_design`,",
+        "`random_rotation`, `build_2d`,",
+        "`tree_mask`, `variation::create`,",
+        "`hex_key`, `classic_code_nd`,",
+        "`Tile::of` and `background`."
       ],
       "items": 21
     },
@@ -1629,7 +1639,7 @@
     {
       "path": "core::Dtype",
       "name": "Dtype",
-      "defined_at": "core/tensor.rs:6",
+      "defined_at": "core/tensor/mod.rs:9",
       "docs": [
         "The element widths a tensor can hold."
       ],
@@ -1825,7 +1835,7 @@
     {
       "path": "core::Map",
       "name": "Map",
-      "defined_at": "core/lib.rs:47",
+      "defined_at": "core/lib.rs:57",
       "docs": [
         "An object's entries, kept in insertion order."
       ],
@@ -1986,7 +1996,7 @@
     {
       "path": "core::Tensor",
       "name": "Tensor",
-      "defined_at": "core/tensor.rs:119",
+      "defined_at": "core/tensor/mod.rs:122",
       "docs": [
         "An n-dimensional grid of small integers."
       ],
@@ -2948,7 +2958,7 @@
     {
       "path": "core::tensor::Buf",
       "name": "Buf",
-      "defined_at": "core/tensor.rs:31",
+      "defined_at": "core/tensor/mod.rs:34",
       "docs": [
         "The typed storage behind a tensor."
       ],
@@ -3216,7 +3226,7 @@
         "- One stroke per string, cells in drawing order, each 4-adjacent to the one before it.",
         "- Long strokes: start where a hand starts the shape and lift only where a hand lifts.",
         "- The tables follow `bitmaps.rs` order: UPPERS, LOWERS, DIGITS, EXTRAS, SPECIALS.",
-        "- Draft a glyph with `cargo run -p mrly --example pen -- X`, then edit it by hand.",
+        "- Draft a glyph with `cargo run -p mrly-font --example pen -- X`, then edit it by hand.",
         "- The mechanical rules are tests in `paths.rs`; taste is not, so P keeps its one-cell stroke."
       ],
       "kind": "alias",
@@ -3679,13 +3689,13 @@
     {
       "path": "life::Rule",
       "name": "Rule",
-      "defined_at": "life/rule.rs:110",
+      "defined_at": "life/rule.rs:115",
       "docs": [
         "A life rule: the birth and survival counts and whether the edge wraps.",
         "",
         "```",
         "use mrly_life::Rule;",
-        "use mrly_math::name::Named;",
+        "use mrly_core::name::Named;",
         "let conway = Rule::new(vec![3].into(), vec![2, 3].into(), false);",
         "assert_eq!(conway.to_json(), r#\"{\"kind\":\"rule\",\"birth\":[3],\"survive\":[2,3]}\"#);",
         "Rule::from_json(&conway.to_json())?;",
@@ -4283,9 +4293,9 @@
         "A memory design read as a matrix ladder: the rule, the transfer matrix on its `(k-1)`-window states, and the peel depth its Dirichlet series is continued from.",
         "",
         "The elements are the positive integers whose minimal base-`q` string, `q = 2^D`, is accepted by the rule, and the object is `zeta_W(s) = sum n^(-s)` over them.",
-        "[`crate::memory::Rule::accepts`] holds a word shorter than the width `k` to be accepted, there being no window in it, so every integer below `q^(k-1)` with a nonzero leading digit sits in `S_W` for every rule of that width, and the head polynomial carries them.",
-        "With `E_j(w)` the vector whose entry `u` sums `n^(-w)` over accepted words of exactly `j` digits ending in state `u`, and `G_P = sum_(j >= P) E_j`, splitting a word on its last digit gives `(I - q^(-w) T) G_P(w) = E_P(w) + sum_(l >= 1) binom(-w, l) q^(-w-l) Gamma_l G_P(w+l)`, where `Gamma_l(u', u) = sum a^l` over the letters `a` with the window `(u, a)` allowed and `u' = shift(u, a)`, and `T = Gamma_0` is [`crate::memory::transfer`] transposed.",
-        "Then `zeta_W(w) = 1^T D_(P-1)(w) + 1^T G_P(w)` with `D_(P-1)` the Dirichlet polynomial over the accepted words of at most `P-1` digits, and the scalar ladder of [`crate::ladder`] is the width one case with `card F` where `T` stands."
+        "`crate::memory::Rule::accepts` holds a word shorter than the width `k` to be accepted, there being no window in it, so every integer below `q^(k-1)` with a nonzero leading digit sits in `S_W` for every rule of that width, and the head polynomial carries them.",
+        "With `E_j(w)` the vector whose entry `u` sums `n^(-w)` over accepted words of exactly `j` digits ending in state `u`, and `G_P = sum_(j >= P) E_j`, splitting a word on its last digit gives `(I - q^(-w) T) G_P(w) = E_P(w) + sum_(l >= 1) binom(-w, l) q^(-w-l) Gamma_l G_P(w+l)`, where `Gamma_l(u', u) = sum a^l` over the letters `a` with the window `(u, a)` allowed and `u' = shift(u, a)`, and `T = Gamma_0` is `crate::memory::transfer` transposed.",
+        "Then `zeta_W(w) = 1^T D_(P-1)(w) + 1^T G_P(w)` with `D_(P-1)` the Dirichlet polynomial over the accepted words of at most `P-1` digits, and the scalar ladder of `crate::ladder` is the width one case with `card F` where `T` stands."
       ],
       "kind": "struct",
       "cross": {
@@ -4662,7 +4672,7 @@
     {
       "path": "math::bang::MagicLayer",
       "name": "MagicLayer",
-      "defined_at": "math/bang/factory.rs:12",
+      "defined_at": "math/bang/factory.rs:13",
       "docs": [
         "One ordered layer of a magic composition: a coded design at its own side number."
       ],
@@ -6730,12 +6740,13 @@
     {
       "path": "math::name::Bang",
       "name": "Bang",
-      "defined_at": "math/name/bang.rs:56",
+      "defined_at": "math/name/bang.rs:57",
       "docs": [
         "A design code pinned to its dimension, lattice and base, with one unit index per filled digit when it twists.",
         "",
         "```",
-        "use mrly_math::name::{Bang, Named};",
+        "use mrly_core::name::Named;",
+        "use mrly_math::name::Bang;",
         "let carpet = Bang::new(7, 2, 2);",
         "assert_eq!(carpet.to_json(), r#\"{\"kind\":\"bang\",\"dim\":2,\"code\":7}\"#);",
         "assert_eq!(Bang::from_json(&carpet.to_json()).unwrap(), carpet);",
@@ -6906,12 +6917,13 @@
     {
       "path": "math::name::Sequence",
       "name": "Sequence",
-      "defined_at": "math/name/sequence.rs:46",
+      "defined_at": "math/name/sequence.rs:48",
       "docs": [
         "A design sequence's address: the design, the reading taken off it and the index it runs along.",
         "",
         "```",
-        "use mrly_math::name::{Named, Sequence};",
+        "use mrly_core::name::Named;",
+        "use mrly_math::name::Sequence;",
         "let carpet = Sequence::new(7, 2, 2, \"fills\", \"side\");",
         "assert_eq!(",
         "    carpet.to_json(),",
@@ -7022,12 +7034,13 @@
     {
       "path": "math::name::Word",
       "name": "Word",
-      "defined_at": "math/name/word.rs:18",
+      "defined_at": "math/name/word.rs:20",
       "docs": [
         "A magic word: an ordered list of design letters, first letter outermost, each at its own side.",
         "",
         "```",
-        "use mrly_math::name::{Named, Word};",
+        "use mrly_core::name::Named;",
+        "use mrly_math::name::Word;",
         "let word = Word::new(2, &[(7, 3), (14, 7), (9, 5)]).unwrap();",
         "assert_eq!(word.to_json(), r#\"{\"kind\":\"word\",\"dim\":2,\"magic\":[7,14,9],\"side\":[3,7,5]}\"#);",
         "assert_eq!(Word::from_json(&word.to_json()).unwrap(), word);",
@@ -12382,7 +12395,7 @@
     {
       "path": "num::sieve::Row",
       "name": "Row",
-      "defined_at": "num/sieve.rs:363",
+      "defined_at": "num/sieve/row.rs:24",
       "docs": [
         "One base-2 design read along the row word of odd sides `3, 5, ..., 2L+1`, out of its fill polynomial `P_F(n) = sum_j a_j n^(dim-j) (n-1)^j`.",
         "",
@@ -13837,7 +13850,7 @@
         "",
         "```",
         "use mrly_tile::name::Tile;",
-        "use mrly_math::name::Named;",
+        "use mrly_core::name::Named;",
         "let carpet = Tile::from_json(r#\"{\"kind\":\"tile\",\"code\":7,\"side\":3,\"level\":2}\"#).unwrap();",
         "assert_eq!(carpet.recipe().unwrap().width, 9);",
         "assert_eq!(Tile::of(&carpet.recipe().unwrap()).unwrap(), carpet);",
@@ -15296,7 +15309,7 @@
       "name": "MOST",
       "defined_at": "math/arrays.rs:5",
       "docs": [
-        "The most sensors [`fractal`] builds, `2^20`."
+        "The most sensors `fractal` builds, `2^20`."
       ],
       "ty": {
         "t": "scalar",
@@ -15460,7 +15473,7 @@
       "name": "CERTIFIED",
       "defined_at": "math/dissection.rs:22",
       "docs": [
-        "The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`."
+        "The sets below `DIGIT_WALL` certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`."
       ],
       "ty": {
         "t": "array",
@@ -15844,7 +15857,7 @@
       "name": "DEEPEST",
       "defined_at": "math/sumset.rs:6",
       "docs": [
-        "The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB."
+        "The deepest level a `Sumset` is built to: `S meet [0, 3^20]`, a bit array of `436` MB."
       ],
       "ty": {
         "t": "scalar",
@@ -15859,7 +15872,7 @@
       "name": "WIDEST",
       "defined_at": "math/sumset.rs:9",
       "docs": [
-        "The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer."
+        "The widest level a `Pair` names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer."
       ],
       "ty": {
         "t": "scalar",
@@ -15967,7 +15980,7 @@
       "name": "STRIDE",
       "defined_at": "num/apollonian.rs:15",
       "docs": [
-        "The numbers [`flat`] lays per circle: the centre's two coordinates, the radius and the curvature."
+        "The numbers `flat` lays per circle: the centre's two coordinates, the radius and the curvature."
       ],
       "ty": {
         "t": "scalar",
@@ -15997,7 +16010,7 @@
       "name": "TABLE",
       "defined_at": "num/kummer.rs:9",
       "docs": [
-        "The most moves a [`Carry`] table holds, its states times the prime, `2^24`."
+        "The most moves a `Carry` table holds, its states times the prime, `2^24`."
       ],
       "ty": {
         "t": "scalar",
@@ -16104,7 +16117,7 @@
     {
       "path": "num::sieve::PLANE_LIMIT",
       "name": "PLANE_LIMIT",
-      "defined_at": "num/sieve.rs:7",
+      "defined_at": "num/sieve/mod.rs:11",
       "docs": [
         "The limit of the plane Wallis sieve's surviving area, pi over four."
       ],
@@ -16385,7 +16398,7 @@
       "path": "core::Dtype::max",
       "name": "max",
       "module": "core",
-      "defined_at": "core/tensor.rs:19",
+      "defined_at": "core/tensor/mod.rs:22",
       "docs": [
         "Returns the largest value the width can hold."
       ],
@@ -18943,6 +18956,183 @@
       }
     },
     {
+      "path": "core::name::longest",
+      "name": "longest",
+      "module": "core::name",
+      "defined_at": "core/name/text.rs:286",
+      "docs": [
+        "Returns the index of the longest of `names` that `text` starts with, and the rest of `text`, or `None` when none matches.",
+        "",
+        "A prefix reader takes the longest match, not the first, so `evens` never cuts `evens_zeros` short.",
+        "",
+        "```",
+        "let names = vec![\"evens\".to_string(), \"evens_zeros\".to_string()];",
+        "assert_eq!(mrly_core::name::longest(\"evens_zeros_ones\", &names), Some((1, \"_ones\")));",
+        "assert_eq!(mrly_core::name::longest(\"odds\", &names), None);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": "'a",
+            "item": {
+              "t": "str"
+            }
+          }
+        },
+        {
+          "name": "names",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'a",
+              "item": {
+                "t": "str"
+              }
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "lifetime-bearing return"
+      }
+    },
+    {
+      "path": "core::name::sha::hex",
+      "name": "hex",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:75",
+      "docs": [
+        "Returns the sha256 digest of `bytes` as 64 lowercase hex digits."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::name::sha::sha256",
+      "name": "sha256",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:56",
+      "docs": [
+        "Returns the 32-byte sha256 digest of `bytes`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 32
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::name::sha::short",
+      "name": "short",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:80",
+      "docs": [
+        "Returns the first eight hex digits of the sha256 digest of `bytes`, the id a name prints."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "core::paint::Config::default",
       "name": "default",
       "module": "core::paint",
@@ -20370,7 +20560,7 @@
       "path": "core::tensor::at",
       "name": "at",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:395",
+      "defined_at": "core/tensor/mod.rs:300",
       "docs": [
         "Returns the element at a flat index, which must be below the size like a slice index."
       ],
@@ -20401,7 +20591,7 @@
       "path": "core::tensor::binarize",
       "name": "binarize",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:674",
+      "defined_at": "core/tensor/filter.rs:154",
       "docs": [
         "Maps every element to one at or above the threshold, zero below."
       ],
@@ -20433,7 +20623,7 @@
       "path": "core::tensor::binarize_otsu",
       "name": "binarize_otsu",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:723",
+      "defined_at": "core/tensor/filter.rs:203",
       "docs": [
         "Binarizes at one above the Otsu threshold."
       ],
@@ -20457,7 +20647,7 @@
       "path": "core::tensor::blur",
       "name": "blur",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:731",
+      "defined_at": "core/tensor/filter.rs:211",
       "docs": [
         "Averages every position over its masked neighborhood, rounded.",
         "",
@@ -20509,7 +20699,7 @@
       "path": "core::tensor::bytes",
       "name": "bytes",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:344",
+      "defined_at": "core/tensor/mod.rs:249",
       "docs": [
         "Returns the elements as bytes.",
         "",
@@ -20543,7 +20733,7 @@
       "path": "core::tensor::bytes_mut",
       "name": "bytes_mut",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:355",
+      "defined_at": "core/tensor/mod.rs:260",
       "docs": [
         "Returns the elements as mutable bytes.",
         "",
@@ -20578,7 +20768,7 @@
       "path": "core::tensor::count",
       "name": "count",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:818",
+      "defined_at": "core/tensor/filter.rs:298",
       "docs": [
         "Counts the cells holding one value."
       ],
@@ -20609,7 +20799,7 @@
       "path": "core::tensor::dtype",
       "name": "dtype",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:332",
+      "defined_at": "core/tensor/mod.rs:237",
       "docs": [
         "Returns the element width."
       ],
@@ -20632,7 +20822,7 @@
       "path": "core::tensor::exposed",
       "name": "exposed",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:824",
+      "defined_at": "core/tensor/filter.rs:304",
       "docs": [
         "Counts the faces where filled cells meet empty cells or the boundary: perimeter in 2d, surface in 3d."
       ],
@@ -20654,7 +20844,7 @@
       "path": "core::tensor::filled",
       "name": "filled",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:261",
+      "defined_at": "core/tensor/mod.rs:166",
       "docs": [
         "Builds a tensor of the shape and width filled with one value."
       ],
@@ -20703,7 +20893,7 @@
       "path": "core::tensor::flip",
       "name": "flip",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:522",
+      "defined_at": "core/tensor/shape.rs:69",
       "docs": [
         "Reverses the tensor along one axis.",
         "",
@@ -20742,7 +20932,7 @@
       "path": "core::tensor::fractal",
       "name": "fractal",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:489",
+      "defined_at": "core/tensor/shape.rs:39",
       "docs": [
         "Folds the tensor into its level-fold Kronecker power.",
         "",
@@ -20781,7 +20971,7 @@
       "path": "core::tensor::full",
       "name": "full",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:249",
+      "defined_at": "core/tensor/mod.rs:154",
       "docs": [
         "Builds a u8 tensor filled with one value."
       ],
@@ -20823,7 +21013,7 @@
       "path": "core::tensor::get",
       "name": "get",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:441",
+      "defined_at": "core/tensor/mod.rs:349",
       "docs": [
         "Returns the byte at a multi-index.",
         "",
@@ -20865,7 +21055,7 @@
       "path": "core::tensor::i32",
       "name": "i32",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:328",
+      "defined_at": "core/tensor/mod.rs:233",
       "docs": [
         "Wraps an i32 vector as a tensor of the shape.",
         "",
@@ -20917,7 +21107,7 @@
       "path": "core::tensor::i32s",
       "name": "i32s",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:388",
+      "defined_at": "core/tensor/mod.rs:293",
       "docs": [
         "Returns the elements as i32s.",
         "",
@@ -20951,7 +21141,7 @@
       "path": "core::tensor::index",
       "name": "index",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:407",
+      "defined_at": "core/tensor/mod.rs:312",
       "docs": [
         "Folds a multi-index into its flat index."
       ],
@@ -20986,7 +21176,7 @@
       "path": "core::tensor::invert",
       "name": "invert",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:510",
+      "defined_at": "core/tensor/shape.rs:57",
       "docs": [
         "Flips every element between zero and one."
       ],
@@ -21010,7 +21200,7 @@
       "path": "core::tensor::kron",
       "name": "kron",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:456",
+      "defined_at": "core/tensor/shape.rs:6",
       "docs": [
         "Builds the Kronecker product of the two tensors."
       ],
@@ -21048,7 +21238,7 @@
       "path": "core::tensor::layers",
       "name": "layers",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:624",
+      "defined_at": "core/tensor/filter.rs:104",
       "docs": [
         "Numbers every position by its concentric ring out from the center."
       ],
@@ -21080,7 +21270,7 @@
       "path": "core::tensor::neighbors",
       "name": "neighbors",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:647",
+      "defined_at": "core/tensor/filter.rs:127",
       "docs": [
         "Counts each position's masked neighbors holding the target bit.",
         "",
@@ -21146,7 +21336,7 @@
       "path": "core::tensor::new",
       "name": "new",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:245",
+      "defined_at": "core/tensor/mod.rs:150",
       "docs": [
         "Builds a zeroed u8 tensor of the shape."
       ],
@@ -21181,7 +21371,7 @@
       "path": "core::tensor::of",
       "name": "of",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:279",
+      "defined_at": "core/tensor/mod.rs:184",
       "docs": [
         "Wraps a byte vector as a tensor of the shape.",
         "",
@@ -21239,7 +21429,7 @@
       "path": "core::tensor::otsu_threshold",
       "name": "otsu_threshold",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:683",
+      "defined_at": "core/tensor/filter.rs:163",
       "docs": [
         "Returns the Otsu threshold splitting the histogram at greatest variance."
       ],
@@ -21262,7 +21452,7 @@
       "path": "core::tensor::pad",
       "name": "pad",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:593",
+      "defined_at": "core/tensor/shape.rs:140",
       "docs": [
         "Wraps the tensor in a count-thick border of one value."
       ],
@@ -21301,7 +21491,7 @@
       "path": "core::tensor::perforate",
       "name": "perforate",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:792",
+      "defined_at": "core/tensor/filter.rs:272",
       "docs": [
         "Stamps the value wherever the tiled mask is nonzero.",
         "",
@@ -21353,7 +21543,7 @@
       "path": "core::tensor::put",
       "name": "put",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:399",
+      "defined_at": "core/tensor/mod.rs:304",
       "docs": [
         "Writes the element at a flat index, which must be below the size like a slice index."
       ],
@@ -21390,7 +21580,7 @@
       "path": "core::tensor::rot90",
       "name": "rot90",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:581",
+      "defined_at": "core/tensor/shape.rs:128",
       "docs": [
         "Rotates the tensor k quarter turns in the plane of two axes.",
         "",
@@ -21452,7 +21642,7 @@
       "path": "core::tensor::set",
       "name": "set",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:450",
+      "defined_at": "core/tensor/mod.rs:358",
       "docs": [
         "Writes the byte at a multi-index.",
         "",
@@ -21500,7 +21690,7 @@
       "path": "core::tensor::size",
       "name": "size",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:336",
+      "defined_at": "core/tensor/mod.rs:241",
       "docs": [
         "Returns the number of elements."
       ],
@@ -21523,7 +21713,7 @@
       "path": "core::tensor::slice",
       "name": "slice",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:554",
+      "defined_at": "core/tensor/shape.rs:101",
       "docs": [
         "Drops one axis by fixing it at an index.",
         "",
@@ -21574,7 +21764,7 @@
       "path": "core::tensor::sum",
       "name": "sum",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:403",
+      "defined_at": "core/tensor/mod.rs:308",
       "docs": [
         "Returns the sum of all elements."
       ],
@@ -21597,7 +21787,7 @@
       "path": "core::tensor::tile",
       "name": "tile",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:609",
+      "defined_at": "core/tensor/shape.rs:156",
       "docs": [
         "Repeats the tensor the given number of times along each axis.",
         "",
@@ -21640,7 +21830,7 @@
       "path": "core::tensor::transpose",
       "name": "transpose",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:535",
+      "defined_at": "core/tensor/shape.rs:82",
       "docs": [
         "Swaps two axes.",
         "",
@@ -21686,7 +21876,7 @@
       "path": "core::tensor::typed",
       "name": "typed",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:253",
+      "defined_at": "core/tensor/mod.rs:158",
       "docs": [
         "Builds a zeroed tensor of the shape and width."
       ],
@@ -21728,7 +21918,7 @@
       "path": "core::tensor::u16",
       "name": "u16",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:312",
+      "defined_at": "core/tensor/mod.rs:217",
       "docs": [
         "Wraps a u16 vector as a tensor of the shape.",
         "",
@@ -21787,7 +21977,7 @@
       "path": "core::tensor::u16s",
       "name": "u16s",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:366",
+      "defined_at": "core/tensor/mod.rs:271",
       "docs": [
         "Returns the elements as u16s.",
         "",
@@ -21821,7 +22011,7 @@
       "path": "core::tensor::u32",
       "name": "u32",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:320",
+      "defined_at": "core/tensor/mod.rs:225",
       "docs": [
         "Wraps a u32 vector as a tensor of the shape.",
         "",
@@ -21873,7 +22063,7 @@
       "path": "core::tensor::u32s",
       "name": "u32s",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:377",
+      "defined_at": "core/tensor/mod.rs:282",
       "docs": [
         "Returns the elements as u32s.",
         "",
@@ -21907,9 +22097,9 @@
       "path": "core::tensor::u8",
       "name": "u8",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:297",
+      "defined_at": "core/tensor/mod.rs:202",
       "docs": [
-        "Wraps a u8 vector as a tensor of the shape, the same door as [`Tensor::of`].",
+        "Wraps a u8 vector as a tensor of the shape, the same door as `Tensor::of`.",
         "",
         "# Errors",
         "",
@@ -22690,29 +22880,6 @@
       }
     },
     {
-      "path": "font::raster::Block::width",
-      "name": "width",
-      "module": "font::raster::Block",
-      "defined_at": "font/raster.rs:17",
-      "docs": [
-        "Reports the block width in columns."
-      ],
-      "owner": null,
-      "self_kind": "ref",
-      "params": [],
-      "ret": {
-        "t": "scalar",
-        "name": "usize"
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "private"
-      }
-    },
-    {
       "path": "font::specials",
       "name": "specials",
       "module": "font",
@@ -23288,7 +23455,7 @@
       "path": "life::Rule::boundary",
       "name": "boundary",
       "module": "life",
-      "defined_at": "life/rule.rs:143",
+      "defined_at": "life/rule.rs:148",
       "docs": [
         "Returns the edge policy the rule runs under."
       ],
@@ -23311,7 +23478,7 @@
       "path": "life::Rule::checked",
       "name": "checked",
       "module": "life",
-      "defined_at": "math/name/mod.rs:35",
+      "defined_at": "core/name/mod.rs:28",
       "docs": [
         "Folds a decoded value to its canonical form, or an error for one outside the kind."
       ],
@@ -23327,7 +23494,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23338,7 +23505,7 @@
       "path": "life::Rule::config",
       "name": "config",
       "module": "life",
-      "defined_at": "life/rule.rs:151",
+      "defined_at": "life/rule.rs:156",
       "docs": [
         "Builds a life config running this rule over a neighborhood mask."
       ],
@@ -23371,7 +23538,7 @@
       "path": "life::Rule::from_file",
       "name": "from_file",
       "module": "life",
-      "defined_at": "math/name/mod.rs:62",
+      "defined_at": "core/name/mod.rs:55",
       "docs": [
         "Reads a filename back into the value, or an error."
       ],
@@ -23394,7 +23561,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23405,7 +23572,7 @@
       "path": "life::Rule::from_json",
       "name": "from_json",
       "module": "life",
-      "defined_at": "math/name/mod.rs:41",
+      "defined_at": "core/name/mod.rs:34",
       "docs": [
         "Reads a JSON object into its canonical value, or an error naming the broken key."
       ],
@@ -23428,7 +23595,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23439,7 +23606,7 @@
       "path": "life::Rule::from_url",
       "name": "from_url",
       "module": "life",
-      "defined_at": "math/name/mod.rs:54",
+      "defined_at": "core/name/mod.rs:47",
       "docs": [
         "Reads a path and query string back into the value, or an error."
       ],
@@ -23462,7 +23629,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23473,7 +23640,7 @@
       "path": "life::Rule::new",
       "name": "new",
       "module": "life",
-      "defined_at": "life/rule.rs:126",
+      "defined_at": "life/rule.rs:131",
       "docs": [
         "Builds a rule from its counts and edge policy, listed counts folded to a sorted set."
       ],
@@ -23521,7 +23688,7 @@
       "path": "life::Rule::of",
       "name": "of",
       "module": "life",
-      "defined_at": "life/rule.rs:135",
+      "defined_at": "life/rule.rs:140",
       "docs": [
         "Reads the rule out of a life config."
       ],
@@ -23559,7 +23726,7 @@
       "path": "life::Rule::to_file",
       "name": "to_file",
       "module": "life",
-      "defined_at": "math/name/mod.rs:58",
+      "defined_at": "core/name/mod.rs:51",
       "docs": [
         "Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back."
       ],
@@ -23573,7 +23740,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23584,7 +23751,7 @@
       "path": "life::Rule::to_id",
       "name": "to_id",
       "module": "life",
-      "defined_at": "math/name/mod.rs:46",
+      "defined_at": "core/name/mod.rs:39",
       "docs": [
         "Prints the first eight hex digits of the sha256 of the canonical JSON."
       ],
@@ -23595,7 +23762,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23606,7 +23773,7 @@
       "path": "life::Rule::to_json",
       "name": "to_json",
       "module": "life",
-      "defined_at": "math/name/mod.rs:37",
+      "defined_at": "core/name/mod.rs:30",
       "docs": [
         "Prints the canonical JSON object."
       ],
@@ -23617,7 +23784,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23628,7 +23795,7 @@
       "path": "life::Rule::to_prose",
       "name": "to_prose",
       "module": "life",
-      "defined_at": "math/name/mod.rs:66",
+      "defined_at": "core/name/mod.rs:59",
       "docs": [
         "Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back."
       ],
@@ -23642,7 +23809,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23653,7 +23820,7 @@
       "path": "life::Rule::to_url",
       "name": "to_url",
       "module": "life",
-      "defined_at": "math/name/mod.rs:50",
+      "defined_at": "core/name/mod.rs:43",
       "docs": [
         "Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back."
       ],
@@ -23667,7 +23834,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -23912,7 +24079,7 @@
       "path": "life::affine",
       "name": "affine",
       "module": "life",
-      "defined_at": "life/elementary.rs:112",
+      "defined_at": "life/elementary.rs:113",
       "docs": [
         "Returns whether a rule is affine, its algebraic degree at most one."
       ],
@@ -24057,7 +24224,7 @@
       "path": "life::corner_bits",
       "name": "corner_bits",
       "module": "life",
-      "defined_at": "life/elementary.rs:92",
+      "defined_at": "life/elementary.rs:93",
       "docs": [
         "Returns the eight output bits of a rule, corner `i` at index `i = 4 x0 + 2 x1 + x2`."
       ],
@@ -24207,7 +24374,7 @@
       "path": "life::cube_orbit",
       "name": "cube_orbit",
       "module": "life",
-      "defined_at": "life/elementary.rs:137",
+      "defined_at": "life/elementary.rs:138",
       "docs": [
         "Returns the rules a rule reaches under the signed axis permutations of the cube, in ascending order."
       ],
@@ -24302,7 +24469,7 @@
       "path": "life::elementary::output",
       "name": "output",
       "module": "life::elementary",
-      "defined_at": "life/elementary.rs:9",
+      "defined_at": "life/elementary.rs:10",
       "docs": [
         "Returns the bit a rule sends the neighbourhood to, reading bit `4l + 2c + r` in Wolfram's numbering off the low bit of each cell."
       ],
@@ -24463,7 +24630,7 @@
       "path": "life::gasket",
       "name": "gasket",
       "module": "life",
-      "defined_at": "life/elementary.rs:303",
+      "defined_at": "life/elementary.rs:304",
       "docs": [
         "Returns the base-2 plane design a rule's single seed draws, or None when it draws none."
       ],
@@ -24496,7 +24663,7 @@
       "path": "life::genus",
       "name": "genus",
       "module": "life",
-      "defined_at": "life/elementary.rs:198",
+      "defined_at": "life/elementary.rs:199",
       "docs": [
         "Returns the genus of a rule's cube class: `iso` when it meets a level set, `axis` when it meets an axis-pinned block, else `comp`."
       ],
@@ -24589,7 +24756,7 @@
       "path": "life::history",
       "name": "history",
       "module": "life",
-      "defined_at": "life/elementary.rs:60",
+      "defined_at": "life/elementary.rs:61",
       "docs": [
         "Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation.",
         "",
@@ -24659,7 +24826,7 @@
       "path": "life::lambda",
       "name": "lambda",
       "module": "life",
-      "defined_at": "life/elementary.rs:102",
+      "defined_at": "life/elementary.rs:103",
       "docs": [
         "Returns Langton's lambda, the popcount over eight."
       ],
@@ -24899,7 +25066,7 @@
       "path": "life::npn_class",
       "name": "npn_class",
       "module": "life",
-      "defined_at": "life/elementary.rs:157",
+      "defined_at": "life/elementary.rs:158",
       "docs": [
         "Returns the rules a rule reaches under the cube group together with the output complement, its NPN class, in ascending order."
       ],
@@ -24933,7 +25100,7 @@
       "path": "life::outer_totalistic",
       "name": "outer_totalistic",
       "module": "life",
-      "defined_at": "life/elementary.rs:283",
+      "defined_at": "life/elementary.rs:284",
       "docs": [
         "Returns the birth and survive counts of a rule read outer-totalistically on its two outer cells, or None when it does not read them by count alone."
       ],
@@ -24982,7 +25149,7 @@
       "path": "life::popcount",
       "name": "popcount",
       "module": "life",
-      "defined_at": "life/elementary.rs:97",
+      "defined_at": "life/elementary.rs:98",
       "docs": [
         "Returns the count of neighbourhoods a rule sends to one."
       ],
@@ -25065,7 +25232,7 @@
       "path": "life::reversible",
       "name": "reversible",
       "module": "life",
-      "defined_at": "life/elementary.rs:252",
+      "defined_at": "life/elementary.rs:253",
       "docs": [
         "Returns whether a rule is reversible, by the pair graph on the de Bruijn nodes pruned to its bi-infinite core."
       ],
@@ -25093,113 +25260,10 @@
       }
     },
     {
-      "path": "life::rule::counts::deserialize",
-      "name": "deserialize",
-      "module": "life::rule::counts",
-      "defined_at": "life/rule.rs:93",
-      "docs": [],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "deserializer",
-          "ty": {
-            "t": "unknown",
-            "text": "generic D"
-          }
-        }
-      ],
-      "ret": {
-        "t": "unknown",
-        "text": "Result < Counts , D :: Error >"
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "private"
-      }
-    },
-    {
-      "path": "life::rule::counts::read",
-      "name": "read",
-      "module": "life::rule::counts",
-      "defined_at": "life/rule.rs:45",
-      "docs": [],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "text",
-          "ty": {
-            "t": "str"
-          }
-        }
-      ],
-      "ret": {
-        "t": "option",
-        "item": {
-          "t": "class",
-          "path": "life::Counts",
-          "dim": null
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "private"
-      }
-    },
-    {
-      "path": "life::rule::counts::serialize",
-      "name": "serialize",
-      "module": "life::rule::counts",
-      "defined_at": "life/rule.rs:58",
-      "docs": [],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "counts",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "class",
-              "path": "life::Counts",
-              "dim": null
-            }
-          }
-        },
-        {
-          "name": "serializer",
-          "ty": {
-            "t": "unknown",
-            "text": "generic S"
-          }
-        }
-      ],
-      "ret": {
-        "t": "unknown",
-        "text": "Result < S :: Ok , S :: Error >"
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "private"
-      }
-    },
-    {
       "path": "life::rule_degree",
       "name": "rule_degree",
       "module": "life",
-      "defined_at": "life/elementary.rs:107",
+      "defined_at": "life/elementary.rs:108",
       "docs": [
         "Returns the GF(2) algebraic degree of a rule, minus one for the zero rule."
       ],
@@ -25230,7 +25294,7 @@
       "path": "life::rule_name",
       "name": "rule_name",
       "module": "life",
-      "defined_at": "life/elementary.rs:121",
+      "defined_at": "life/elementary.rs:122",
       "docs": [
         "Returns the design name a rule carries, `bang dim 3, code <rule>`.",
         "",
@@ -25267,7 +25331,7 @@
       "path": "life::single_seed",
       "name": "single_seed",
       "module": "life",
-      "defined_at": "life/elementary.rs:78",
+      "defined_at": "life/elementary.rs:79",
       "docs": [
         "Returns the single-seed diagram: one live cell run the given generations on a line padded by `steps` cells beyond the `2 steps + 1` window on each side, cropped back to that window.",
         "",
@@ -25362,7 +25426,7 @@
       "path": "life::step",
       "name": "step",
       "module": "life",
-      "defined_at": "life/elementary.rs:25",
+      "defined_at": "life/elementary.rs:26",
       "docs": [
         "Advances one row one generation, a constant-0 boundary unless the edges wrap.",
         "",
@@ -25421,7 +25485,7 @@
       "path": "life::surjective",
       "name": "surjective",
       "module": "life",
-      "defined_at": "life/elementary.rs:227",
+      "defined_at": "life/elementary.rs:228",
       "docs": [
         "Returns whether a rule is surjective on bi-infinite lines, by the de Bruijn subset walk from the full node set."
       ],
@@ -25506,7 +25570,7 @@
       "path": "life::wolfram_class",
       "name": "wolfram_class",
       "module": "life",
-      "defined_at": "life/elementary.rs:145",
+      "defined_at": "life/elementary.rs:146",
       "docs": [
         "Returns the rules a rule reaches under left-right reflection and conjugation, Wolfram's equivalence, in ascending order."
       ],
@@ -25544,7 +25608,7 @@
       "docs": [
         "Walks level `level` of `bang dim 2, base b, code c` in arcs into its curves: first the strands, from each boundary midpoint in turn, across edges before upright ones, then the loops, each from its first unwalked arc.",
         "",
-        "The corner of an arc is its cell's lower-left or upper-right for a filled cell, lower-right or upper-left for a deleted one, as in [`draw`].",
+        "The corner of an arc is its cell's lower-left or upper-right for a filled cell, lower-right or upper-left for a deleted one, as in `draw`.",
         "",
         "# Errors",
         "",
@@ -25598,7 +25662,7 @@
       "module": "math::arcs",
       "defined_at": "math/arcs.rs:112",
       "docs": [
-        "Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::bang::factory::create`], and level 0 is one filled cell.",
+        "Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by `crate::bang::factory::create`, and level 0 is one filled cell.",
         "",
         "# Errors",
         "",
@@ -25805,7 +25869,7 @@
         "",
         "# Errors",
         "",
-        "Errs when the generator is empty, misses `0`, repeats a digit or holds one at or above the base, or when the array passes [`MOST`] sensors."
+        "Errs when the generator is empty, misses `0`, repeats a digit or holds one at or above the base, or when the array passes `MOST` sensors."
       ],
       "owner": null,
       "self_kind": null,
@@ -25902,7 +25966,7 @@
       "module": "math::arrays",
       "defined_at": "math/arrays.rs:46",
       "docs": [
-        "Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.",
+        "Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of `paired` digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.",
         "",
         "```",
         "assert_eq!(mrly_math::arrays::law(&[0, 1, 2, 4], 4), Some((81, 256)));",
@@ -27361,9 +27425,9 @@
       "module": "math::automaton",
       "defined_at": "math/automaton.rs:283",
       "docs": [
-        "Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of [`crate::memory::perron`].",
+        "Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of `crate::memory::perron`.",
         "",
-        "The series converges absolutely on `Re s > alpha`. The bracket of [`Automaton::perron`] is a bound and not the root, so it is not read here.",
+        "The series converges absolutely on `Re s > alpha`. The bracket of `Automaton::perron` is a bound and not the root, so it is not read here.",
         "",
         "```",
         "let jordan = mrly_math::memory::Rule::new(1, 2, 13).unwrap();",
@@ -27506,7 +27570,7 @@
       "module": "math::automaton",
       "defined_at": "math/automaton.rs:258",
       "docs": [
-        "Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of [`crate::memory::transfer`], entry `(u', u)` counting the letters carrying `u` to `u'`.",
+        "Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of `crate::memory::transfer`, entry `(u', u)` counting the letters carrying `u` to `u'`.",
         "",
         "```",
         "let golden = mrly_math::memory::Rule::new(1, 2, 7).unwrap();",
@@ -27642,7 +27706,7 @@
         "Returns the Collatz-Wielandt bracket `(low, high)` of the Perron root of the transfer matrix, the ratios the ladder divides with.",
         "",
         "For any nonnegative `T` and any `v > 0`, `min_u (T v)_u / v_u <= rho <= max_u (T v)_u / v_u`, so the pair brackets the root with no primitivity hypothesis; the guide is `v = (I + T)^m 1` for `m` sixty, or fewer when the entries would overrun the exponent range.",
-        "The ends carry a relative `1e-14` allowance of the same measured kind as [`ROUNDING`] and are not a rounding-certified interval, and the bracket is loose exactly when `T` is defective: at code `13` and `k = 2`, a Jordan block of root `1`, the upper end is `64/62`. Only the upper end is load bearing, as the `theta < 1` test that opens the Neumann branch; the root itself is [`crate::memory::perron`]."
+        "The ends carry a relative `1e-14` allowance of the same measured kind as `ROUNDING` and are not a rounding-certified interval, and the bracket is loose exactly when `T` is defective: at code `13` and `k = 2`, a Jordan block of root `1`, the upper end is `64/62`. Only the upper end is load bearing, as the `theta < 1` test that opens the Neumann branch; the root itself is `crate::memory::perron`."
       ],
       "owner": "math::automaton::Automaton",
       "self_kind": "ref",
@@ -27839,7 +27903,7 @@
       "docs": [
         "Returns `zeta_W(s)` and the bound it is known to.",
         "",
-        "The bound is the propagated truncation bound, carried entrywise as a nonnegative vector through `(I - q^(-w) T)^(-1)`, plus [`ROUNDING`] times the scale the ladder carries, which is a measured allowance and not a proof.",
+        "The bound is the propagated truncation bound, carried entrywise as a nonnegative vector through `(I - q^(-w) T)^(-1)`, plus `ROUNDING` times the scale the ladder carries, which is a measured allowance and not a proof.",
         "Right of the abscissa the inverse is majorised by its Neumann series, `sum_i (q^(-Re w) T)^i`, which is entrywise nonnegative and needs no norm and no primitivity; left of it the bound runs through the computed inverse certified by its own residual, `abs(C) (y + norm(y) r/(1-r) 1)` with `r = norm(I - (I - q^(-w) T) C)`, and the module raises rather than return when `r >= 1`.",
         "",
         "```",
@@ -28003,7 +28067,7 @@
       "path": "math::bang::MagicLayer::new",
       "name": "new",
       "module": "math::bang",
-      "defined_at": "math/bang/factory.rs:21",
+      "defined_at": "math/bang/factory.rs:22",
       "docs": [
         "Pins a design to the side number it renders at."
       ],
@@ -28934,7 +28998,7 @@
       "path": "math::bang::catalog::antis",
       "name": "antis",
       "module": "math::bang::catalog",
-      "defined_at": "math/bang/catalog.rs:183",
+      "defined_at": "math/bang/catalog.rs:185",
       "docs": [
         "Returns the anti designs for a dimension."
       ],
@@ -28965,75 +29029,6 @@
       }
     },
     {
-      "path": "math::bang::catalog::decimal::deserialize",
-      "name": "deserialize",
-      "module": "math::bang::catalog::decimal",
-      "defined_at": "math/bang/catalog.rs:160",
-      "docs": [],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "deserializer",
-          "ty": {
-            "t": "unknown",
-            "text": "generic D"
-          }
-        }
-      ],
-      "ret": {
-        "t": "unknown",
-        "text": "Result < u128 , D :: Error >"
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "private"
-      }
-    },
-    {
-      "path": "math::bang::catalog::decimal::serialize",
-      "name": "serialize",
-      "module": "math::bang::catalog::decimal",
-      "defined_at": "math/bang/catalog.rs:156",
-      "docs": [],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "code",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "u128"
-            }
-          }
-        },
-        {
-          "name": "serializer",
-          "ty": {
-            "t": "unknown",
-            "text": "generic S"
-          }
-        }
-      ],
-      "ret": {
-        "t": "unknown",
-        "text": "Result < S :: Ok , S :: Error >"
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "private"
-      }
-    },
-    {
       "path": "math::bang::code::get",
       "name": "get",
       "module": "math::bang::code",
@@ -29059,7 +29054,7 @@
       "path": "math::bang::code_to_corners",
       "name": "code_to_corners",
       "module": "math::bang",
-      "defined_at": "math/bang/factory.rs:58",
+      "defined_at": "math/bang/factory.rs:59",
       "docs": [
         "Unpacks a code into its filled residue corners.",
         "",
@@ -29153,7 +29148,7 @@
       "path": "math::bang::corners_to_code",
       "name": "corners_to_code",
       "module": "math::bang",
-      "defined_at": "math/bang/factory.rs:96",
+      "defined_at": "math/bang/factory.rs:97",
       "docs": [
         "Packs filled residue corners back into their code."
       ],
@@ -29204,7 +29199,7 @@
       "path": "math::bang::factory::create",
       "name": "create",
       "module": "math::bang::factory",
-      "defined_at": "math/bang/factory.rs:135",
+      "defined_at": "math/bang/factory.rs:136",
       "docs": [
         "Renders a coded design to a tensor at its side number, dimension, base and fractal level.",
         "",
@@ -29277,7 +29272,7 @@
       "path": "math::bang::factory::create_from_corners",
       "name": "create_from_corners",
       "module": "math::bang::factory",
-      "defined_at": "math/bang/factory.rs:215",
+      "defined_at": "math/bang/factory.rs:216",
       "docs": [
         "Renders a design straight from its filled residue corners.",
         "",
@@ -29351,7 +29346,7 @@
       "path": "math::bang::factory::create_named",
       "name": "create_named",
       "module": "math::bang::factory",
-      "defined_at": "math/bang/factory.rs:151",
+      "defined_at": "math/bang/factory.rs:152",
       "docs": [
         "Renders a design from its canonical JSON name.",
         "",
@@ -29403,7 +29398,7 @@
       "path": "math::bang::factory::residue_corners",
       "name": "residue_corners",
       "module": "math::bang::factory",
-      "defined_at": "math/bang/factory.rs:27",
+      "defined_at": "math/bang/factory.rs:28",
       "docs": [
         "Returns every base-q residue corner of a dimension in row-major order."
       ],
@@ -29447,7 +29442,7 @@
       "path": "math::bang::factory::total_codes",
       "name": "total_codes",
       "module": "math::bang::factory",
-      "defined_at": "math/bang/factory.rs:43",
+      "defined_at": "math/bang/factory.rs:44",
       "docs": [
         "Returns the code count of a dimension and base, two to the number of corners.",
         "",
@@ -29491,7 +29486,7 @@
       "path": "math::bang::level_cap",
       "name": "level_cap",
       "module": "math::bang",
-      "defined_at": "math/bang/factory.rs:230",
+      "defined_at": "math/bang/factory.rs:231",
       "docs": [
         "Returns the deepest level, never below one, whose grid of number to the dimension per level stays within the cell budget.",
         "",
@@ -29540,7 +29535,7 @@
       "path": "math::bang::levels_code",
       "name": "levels_code",
       "module": "math::bang",
-      "defined_at": "math/bang/factory.rs:87",
+      "defined_at": "math/bang/factory.rs:88",
       "docs": [
         "Returns the code of the design filled wherever a corner's residue sum lands in the levels.",
         "",
@@ -29593,7 +29588,7 @@
       "path": "math::bang::magic",
       "name": "magic",
       "module": "math::bang",
-      "defined_at": "math/bang/factory.rs:172",
+      "defined_at": "math/bang/factory.rs:173",
       "docs": [
         "Composes the layers into one mixed-design cell by the ordered Kronecker product, first layer outermost.",
         "",
@@ -29647,7 +29642,7 @@
       "path": "math::bang::magic_named",
       "name": "magic_named",
       "module": "math::bang",
-      "defined_at": "math/bang/factory.rs:202",
+      "defined_at": "math/bang/factory.rs:203",
       "docs": [
         "Composes JSON-named layers in order.",
         "",
@@ -29698,7 +29693,7 @@
       "path": "math::bang::random_code",
       "name": "random_code",
       "module": "math::bang",
-      "defined_at": "math/bang/factory.rs:251",
+      "defined_at": "math/bang/factory.rs:252",
       "docs": [
         "Rolls a code uniformly from the nonempty codes of a dimension and base that fill at least min_fills corners.",
         "",
@@ -31408,7 +31403,7 @@
         "",
         "# Errors",
         "",
-        "Errors when the pattern's rank is not N, or the level is below one."
+        "Errors when the pattern's rank is not N."
       ],
       "owner": null,
       "self_kind": null,
@@ -35745,7 +35740,7 @@
       "module": "math::design",
       "defined_at": "math/design.rs:63",
       "docs": [
-        "Returns the count of elements the design holds at the depth, the length [`elements`] returns without building them.",
+        "Returns the count of elements the design holds at the depth, the length `elements` returns without building them.",
         "",
         "```",
         "assert_eq!(mrly_math::design::size(&[0, 1], 20), 1048575);",
@@ -36021,7 +36016,7 @@
       "module": "math::dissection",
       "defined_at": "math/dissection.rs:215",
       "docs": [
-        "Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive."
+        "Returns the chain's wall, one past the last base up to `CAP_BASE` whose margin is not positive."
       ],
       "owner": null,
       "self_kind": null,
@@ -36244,7 +36239,7 @@
       "module": "math::dissection",
       "defined_at": "math/dissection.rs:228",
       "docs": [
-        "Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere.",
+        "Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from `DIGIT_WALL` below it and at the `CERTIFIED` sets, `none` elsewhere.",
         "",
         "```",
         "use mrly_math::dissection::reach;",
@@ -36340,7 +36335,7 @@
       "module": "math::dissection",
       "defined_at": "math/dissection.rs:89",
       "docs": [
-        "Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`]."
+        "Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by `fraction` at `cap`."
       ],
       "owner": null,
       "self_kind": null,
@@ -37955,7 +37950,7 @@
       "docs": [
         "Returns `zeta_F(s)` and the bound it is known to.",
         "",
-        "The bound is the propagated truncation bound, which is proved, plus [`ROUNDING`] times the scale the ladder carries, which is a measured allowance; the acceptance test charges every term the returned bound carries, the Dirichlet polynomial's own scale included, so the returned bound is never above the tolerance asked.",
+        "The bound is the propagated truncation bound, which is proved, plus `ROUNDING` times the scale the ladder carries, which is a measured allowance; the acceptance test charges every term the returned bound carries, the Dirichlet polynomial's own scale included, so the returned bound is never above the tolerance asked.",
         "The recursion walks `w = s + j` upward and divides by `1 - k q^(-w)`, so it cannot read `s = alpha - m + 2 pi i j / log q` for a whole `m >= 0`: at those points it raises and names the pole. On a full digit set that lattice is `s = 1, 0, -1, -2, ...`, where `zeta_F` is `zeta` and only `s = 1` is singular.",
         "",
         "```",
@@ -40265,7 +40260,7 @@
       "path": "math::name::Bang::cells",
       "name": "cells",
       "module": "math::name",
-      "defined_at": "math/name/bang.rs:91",
+      "defined_at": "math/name/bang.rs:92",
       "docs": [
         "Returns the number of digits the code addresses.",
         "",
@@ -40295,7 +40290,7 @@
       "path": "math::name::Bang::checked",
       "name": "checked",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:35",
+      "defined_at": "core/name/mod.rs:28",
       "docs": [
         "Folds a decoded value to its canonical form, or an error for one outside the kind."
       ],
@@ -40311,7 +40306,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40322,7 +40317,7 @@
       "path": "math::name::Bang::from_file",
       "name": "from_file",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:62",
+      "defined_at": "core/name/mod.rs:55",
       "docs": [
         "Reads a filename back into the value, or an error."
       ],
@@ -40345,7 +40340,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40356,7 +40351,7 @@
       "path": "math::name::Bang::from_json",
       "name": "from_json",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:41",
+      "defined_at": "core/name/mod.rs:34",
       "docs": [
         "Reads a JSON object into its canonical value, or an error naming the broken key."
       ],
@@ -40379,7 +40374,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40390,7 +40385,7 @@
       "path": "math::name::Bang::from_url",
       "name": "from_url",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:54",
+      "defined_at": "core/name/mod.rs:47",
       "docs": [
         "Reads a path and query string back into the value, or an error."
       ],
@@ -40413,7 +40408,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40424,7 +40419,7 @@
       "path": "math::name::Bang::new",
       "name": "new",
       "module": "math::name",
-      "defined_at": "math/name/bang.rs:76",
+      "defined_at": "math/name/bang.rs:77",
       "docs": [
         "Pins a code to its dimension and base on the square lattice."
       ],
@@ -40469,7 +40464,7 @@
       "path": "math::name::Bang::to_file",
       "name": "to_file",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:58",
+      "defined_at": "core/name/mod.rs:51",
       "docs": [
         "Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back."
       ],
@@ -40483,7 +40478,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40494,7 +40489,7 @@
       "path": "math::name::Bang::to_id",
       "name": "to_id",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:46",
+      "defined_at": "core/name/mod.rs:39",
       "docs": [
         "Prints the first eight hex digits of the sha256 of the canonical JSON."
       ],
@@ -40505,7 +40500,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40516,7 +40511,7 @@
       "path": "math::name::Bang::to_json",
       "name": "to_json",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:37",
+      "defined_at": "core/name/mod.rs:30",
       "docs": [
         "Prints the canonical JSON object."
       ],
@@ -40527,7 +40522,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40538,7 +40533,7 @@
       "path": "math::name::Bang::to_prose",
       "name": "to_prose",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:66",
+      "defined_at": "core/name/mod.rs:59",
       "docs": [
         "Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back."
       ],
@@ -40552,7 +40547,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40563,7 +40558,7 @@
       "path": "math::name::Bang::to_url",
       "name": "to_url",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:50",
+      "defined_at": "core/name/mod.rs:43",
       "docs": [
         "Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back."
       ],
@@ -40577,7 +40572,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40657,7 +40652,7 @@
       "path": "math::name::Sequence::checked",
       "name": "checked",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:35",
+      "defined_at": "core/name/mod.rs:28",
       "docs": [
         "Folds a decoded value to its canonical form, or an error for one outside the kind."
       ],
@@ -40673,7 +40668,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40684,7 +40679,7 @@
       "path": "math::name::Sequence::design",
       "name": "design",
       "module": "math::name",
-      "defined_at": "math/name/sequence.rs:75",
+      "defined_at": "math/name/sequence.rs:77",
       "docs": [
         "Returns the design pinned to its dimension and base."
       ],
@@ -40708,7 +40703,7 @@
       "path": "math::name::Sequence::from_file",
       "name": "from_file",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:62",
+      "defined_at": "core/name/mod.rs:55",
       "docs": [
         "Reads a filename back into the value, or an error."
       ],
@@ -40731,7 +40726,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40742,7 +40737,7 @@
       "path": "math::name::Sequence::from_json",
       "name": "from_json",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:41",
+      "defined_at": "core/name/mod.rs:34",
       "docs": [
         "Reads a JSON object into its canonical value, or an error naming the broken key."
       ],
@@ -40765,7 +40760,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40776,7 +40771,7 @@
       "path": "math::name::Sequence::from_url",
       "name": "from_url",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:54",
+      "defined_at": "core/name/mod.rs:47",
       "docs": [
         "Reads a path and query string back into the value, or an error."
       ],
@@ -40799,7 +40794,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40810,7 +40805,7 @@
       "path": "math::name::Sequence::new",
       "name": "new",
       "module": "math::name",
-      "defined_at": "math/name/sequence.rs:64",
+      "defined_at": "math/name/sequence.rs:66",
       "docs": [
         "Pins a design's reading to its measure and axis."
       ],
@@ -40867,7 +40862,7 @@
       "path": "math::name::Sequence::to_file",
       "name": "to_file",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:58",
+      "defined_at": "core/name/mod.rs:51",
       "docs": [
         "Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back."
       ],
@@ -40881,7 +40876,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40892,7 +40887,7 @@
       "path": "math::name::Sequence::to_id",
       "name": "to_id",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:46",
+      "defined_at": "core/name/mod.rs:39",
       "docs": [
         "Prints the first eight hex digits of the sha256 of the canonical JSON."
       ],
@@ -40903,7 +40898,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40914,7 +40909,7 @@
       "path": "math::name::Sequence::to_json",
       "name": "to_json",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:37",
+      "defined_at": "core/name/mod.rs:30",
       "docs": [
         "Prints the canonical JSON object."
       ],
@@ -40925,7 +40920,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40936,7 +40931,7 @@
       "path": "math::name::Sequence::to_prose",
       "name": "to_prose",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:66",
+      "defined_at": "core/name/mod.rs:59",
       "docs": [
         "Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back."
       ],
@@ -40950,7 +40945,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40961,7 +40956,7 @@
       "path": "math::name::Sequence::to_url",
       "name": "to_url",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:50",
+      "defined_at": "core/name/mod.rs:43",
       "docs": [
         "Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back."
       ],
@@ -40975,7 +40970,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -40986,7 +40981,7 @@
       "path": "math::name::Word::bases",
       "name": "bases",
       "module": "math::name",
-      "defined_at": "math/name/word.rs:49",
+      "defined_at": "math/name/word.rs:51",
       "docs": [
         "Returns the base of every letter, 2 where the name says nothing."
       ],
@@ -41012,7 +41007,7 @@
       "path": "math::name::Word::checked",
       "name": "checked",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:35",
+      "defined_at": "core/name/mod.rs:28",
       "docs": [
         "Folds a decoded value to its canonical form, or an error for one outside the kind."
       ],
@@ -41028,7 +41023,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41039,7 +41034,7 @@
       "path": "math::name::Word::from_file",
       "name": "from_file",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:62",
+      "defined_at": "core/name/mod.rs:55",
       "docs": [
         "Reads a filename back into the value, or an error."
       ],
@@ -41062,7 +41057,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41073,7 +41068,7 @@
       "path": "math::name::Word::from_json",
       "name": "from_json",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:41",
+      "defined_at": "core/name/mod.rs:34",
       "docs": [
         "Reads a JSON object into its canonical value, or an error naming the broken key."
       ],
@@ -41096,7 +41091,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41107,7 +41102,7 @@
       "path": "math::name::Word::from_url",
       "name": "from_url",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:54",
+      "defined_at": "core/name/mod.rs:47",
       "docs": [
         "Reads a path and query string back into the value, or an error."
       ],
@@ -41130,7 +41125,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41141,7 +41136,7 @@
       "path": "math::name::Word::letters",
       "name": "letters",
       "module": "math::name",
-      "defined_at": "math/name/word.rs:55",
+      "defined_at": "math/name/word.rs:57",
       "docs": [
         "Returns every letter as a design pinned to the word's dimension and its own base."
       ],
@@ -41168,7 +41163,7 @@
       "path": "math::name::Word::new",
       "name": "new",
       "module": "math::name",
-      "defined_at": "math/name/word.rs:38",
+      "defined_at": "math/name/word.rs:40",
       "docs": [
         "Pins an ordered letter list at base 2.",
         "",
@@ -41226,7 +41221,7 @@
       "path": "math::name::Word::to_file",
       "name": "to_file",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:58",
+      "defined_at": "core/name/mod.rs:51",
       "docs": [
         "Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back."
       ],
@@ -41240,7 +41235,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41251,7 +41246,7 @@
       "path": "math::name::Word::to_id",
       "name": "to_id",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:46",
+      "defined_at": "core/name/mod.rs:39",
       "docs": [
         "Prints the first eight hex digits of the sha256 of the canonical JSON."
       ],
@@ -41262,7 +41257,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41273,7 +41268,7 @@
       "path": "math::name::Word::to_json",
       "name": "to_json",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:37",
+      "defined_at": "core/name/mod.rs:30",
       "docs": [
         "Prints the canonical JSON object."
       ],
@@ -41284,7 +41279,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41295,7 +41290,7 @@
       "path": "math::name::Word::to_prose",
       "name": "to_prose",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:66",
+      "defined_at": "core/name/mod.rs:59",
       "docs": [
         "Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back."
       ],
@@ -41309,7 +41304,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41320,7 +41315,7 @@
       "path": "math::name::Word::to_url",
       "name": "to_url",
       "module": "math::name",
-      "defined_at": "math/name/mod.rs:50",
+      "defined_at": "core/name/mod.rs:43",
       "docs": [
         "Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back."
       ],
@@ -41334,7 +41329,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -41345,7 +41340,7 @@
       "path": "math::name::of",
       "name": "of",
       "module": "math::name",
-      "defined_at": "math/name/bang.rs:186",
+      "defined_at": "math/name/bang.rs:187",
       "docs": [
         "Returns the word of the first named design a code draws in the plane or the cube, or None for a code no named design draws.",
         "",
@@ -41396,7 +41391,7 @@
       "path": "math::name::words",
       "name": "words",
       "module": "math::name",
-      "defined_at": "math/name/bang.rs:153",
+      "defined_at": "math/name/bang.rs:154",
       "docs": [
         "Lists every classic then anti design of the plane or the cube as its decimal code and its word, empty for any other dimension.",
         "",
@@ -44562,7 +44557,7 @@
       "module": "math::shape",
       "defined_at": "math/shape.rs:450",
       "docs": [
-        "Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is.",
+        "Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so `regions`, `crop` and `census` read it on any lattice; a cube lattice keeps the shape as it is.",
         "",
         "The cube sits half the spare cells in, rounded down, on each long axis.",
         "",
@@ -47437,7 +47432,7 @@
         "The exact ink share of the band of half-width `W` cells about the arm `x = y` at odd `n`.",
         "",
         "At `W = 0` the band is the arm itself, the `2n` cells of the diameter, whose share is the",
-        "closed form of [`arm_law`].",
+        "closed form of `arm_law`.",
         "",
         "```",
         "use mrly_math::six::star::{arm_law, Star};",
@@ -50619,7 +50614,7 @@
         "",
         "# Errors",
         "",
-        "Errs when either level is zero or past [`WIDEST`]."
+        "Errs when either level is zero or past `WIDEST`."
       ],
       "owner": "math::sumset::Pair",
       "self_kind": null,
@@ -50661,7 +50656,7 @@
       "module": "math::sumset",
       "defined_at": "math/sumset.rs:291",
       "docs": [
-        "The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz."
+        "The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy `Pair::energy` returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz."
       ],
       "owner": "math::sumset::Pair",
       "self_kind": "ref",
@@ -50985,7 +50980,7 @@
         "",
         "# Errors",
         "",
-        "Errs when the level is zero or past [`DEEPEST`]."
+        "Errs when the level is zero or past `DEEPEST`."
       ],
       "owner": "math::sumset::Sumset",
       "self_kind": null,
@@ -51047,7 +51042,7 @@
         "",
         "# Errors",
         "",
-        "Errs when the level is zero or past [`WIDEST`]."
+        "Errs when the level is zero or past `WIDEST`."
       ],
       "owner": null,
       "self_kind": null,
@@ -51243,7 +51238,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -51387,7 +51382,7 @@
         "",
         "# Errors",
         "",
-        "Errors when the code is out of range, or the level is below one."
+        "Errors when the code is out of range."
       ],
       "owner": null,
       "self_kind": null,
@@ -51601,7 +51596,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -51954,7 +51949,7 @@
         "",
         "# Errors",
         "",
-        "Errors when a corner does not fit the dimension and base, or the level is below one."
+        "Errors when a corner does not fit the dimension and base."
       ],
       "owner": null,
       "self_kind": null,
@@ -52153,7 +52148,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -52477,7 +52472,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -52523,7 +52518,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -52589,7 +52584,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -52674,7 +52669,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -53334,7 +53329,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -53707,7 +53702,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -53872,7 +53867,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -53918,7 +53913,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -53964,7 +53959,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -54010,7 +54005,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -54056,7 +54051,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -54102,7 +54097,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -54148,7 +54143,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a cube."
       ],
       "owner": null,
       "self_kind": null,
@@ -54698,7 +54693,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -54795,7 +54790,7 @@
         "",
         "# Errors",
         "",
-        "Errors when the code is out of range, or the level is below one."
+        "Errors when the code is out of range."
       ],
       "owner": null,
       "self_kind": null,
@@ -54861,7 +54856,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -55111,7 +55106,7 @@
         "",
         "# Errors",
         "",
-        "Errors when a corner does not fit the dimension and base, or the level is below one."
+        "Errors when a corner does not fit the dimension and base."
       ],
       "owner": null,
       "self_kind": null,
@@ -55265,7 +55260,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -55311,7 +55306,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -55449,7 +55444,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -55694,7 +55689,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -55740,7 +55735,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -55806,7 +55801,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -55912,7 +55907,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -56136,7 +56131,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -56407,7 +56402,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -56453,7 +56448,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -56536,7 +56531,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -56582,7 +56577,7 @@
         "",
         "# Errors",
         "",
-        "Errors below level one."
+        "Errors when the seed is not a plane."
       ],
       "owner": null,
       "self_kind": null,
@@ -56712,7 +56707,7 @@
         "",
         "# Errors",
         "",
-        "Errs as [`grow`] does."
+        "Errs as `grow` does."
       ],
       "owner": null,
       "self_kind": null,
@@ -56850,7 +56845,7 @@
         "",
         "# Errors",
         "",
-        "Errs at a name outside [`ROOTS`], and at a curvature cap outside two through [`CURVATURE_CAP`]."
+        "Errs at a name outside `ROOTS`, and at a curvature cap outside two through `CURVATURE_CAP`."
       ],
       "owner": null,
       "self_kind": null,
@@ -57014,7 +57009,7 @@
         "",
         "# Errors",
         "",
-        "Errs at a name outside [`ROOTS`]."
+        "Errs at a name outside `ROOTS`."
       ],
       "owner": null,
       "self_kind": null,
@@ -57056,7 +57051,7 @@
         "",
         "# Errors",
         "",
-        "Errs at an order outside one through [`ORDER_CAP`]."
+        "Errs at an order outside one through `ORDER_CAP`."
       ],
       "owner": null,
       "self_kind": null,
@@ -60758,7 +60753,7 @@
         "",
         "# Errors",
         "",
-        "Errs when `p` is not a prime, when `1 <= b < a <= MOST` fails, or when the table passes [`TABLE`] moves."
+        "Errs when `p` is not a prime, when `1 <= b < a <= MOST` fails, or when the table passes `TABLE` moves."
       ],
       "owner": null,
       "self_kind": null,
@@ -60816,7 +60811,7 @@
         "",
         "# Errors",
         "",
-        "Errs as [`carry`] does on the prime and the pair."
+        "Errs as `carry` does on the prime and the pair."
       ],
       "owner": null,
       "self_kind": null,
@@ -60886,7 +60881,7 @@
         "",
         "# Errors",
         "",
-        "Errs as [`carry`] does, and when `p^level` passes a `u128`."
+        "Errs as `carry` does, and when `p^level` passes a `u128`."
       ],
       "owner": null,
       "self_kind": null,
@@ -60950,7 +60945,7 @@
         "",
         "# Errors",
         "",
-        "Errs as [`carry`] does on the prime and the pair."
+        "Errs as `carry` does on the prime and the pair."
       ],
       "owner": null,
       "self_kind": null,
@@ -61013,7 +61008,7 @@
         "",
         "# Errors",
         "",
-        "Errs as [`carry`] does on the prime and the pair."
+        "Errs as `carry` does on the prime and the pair."
       ],
       "owner": null,
       "self_kind": null,
@@ -61078,7 +61073,7 @@
         "",
         "# Errors",
         "",
-        "Errs as [`carry`] does."
+        "Errs as `carry` does."
       ],
       "owner": null,
       "self_kind": null,
@@ -63887,7 +63882,7 @@
       "path": "num::sieve::cells",
       "name": "cells",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:63",
+      "defined_at": "num/sieve/mod.rs:67",
       "docs": [
         "Returns the cells the word leaves, the product of its letters' fills, one punctured tile a letter.",
         "",
@@ -63939,7 +63934,7 @@
       "path": "num::sieve::exponent",
       "name": "exponent",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:122",
+      "defined_at": "num/sieve/mod.rs:126",
       "docs": [
         "Returns the box exponent the word reads at its own scale, the logarithm of its cells over the logarithm of its side, which walks up to the dimension on a schedule of distinct growing letters and stands still on any schedule that reuses its letters.",
         "",
@@ -63995,7 +63990,7 @@
       "path": "num::sieve::flat_word",
       "name": "flat_word",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:23",
+      "defined_at": "num/sieve/mod.rs:27",
       "docs": [
         "Returns the constant schedule, one odd side repeated to the count of levels, whose limit set is the fixed-ratio carpet.",
         "",
@@ -64040,7 +64035,7 @@
       "path": "num::sieve::holes",
       "name": "holes",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:84",
+      "defined_at": "num/sieve/mod.rs:88",
       "docs": [
         "Returns the punctures the word makes, one per surviving cell at every level.",
         "",
@@ -64092,7 +64087,7 @@
       "path": "num::sieve::limit",
       "name": "limit",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:283",
+      "defined_at": "num/sieve/limit.rs:54",
       "docs": [
         "Returns the limit the word's schedule walks to in the given dimension, when the word names a schedule at all.",
         "",
@@ -64153,7 +64148,7 @@
       "path": "num::sieve::odd_word",
       "name": "odd_word",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:14",
+      "defined_at": "num/sieve/mod.rs:18",
       "docs": [
         "Returns the classical Wallis schedule, the odd sides three, five, seven and on, to the count of levels.",
         "",
@@ -64191,7 +64186,7 @@
       "path": "num::sieve::parity_product",
       "name": "parity_product",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:323",
+      "defined_at": "num/sieve/limit.rs:94",
       "docs": [
         "Returns the Wallis sieve product of a parity design, `prod_(N odd >= 3) (1 - N^-dim)` for the corners with an odd count of odd coordinates and `prod (1 + N^-dim)` for the even count, at `dim >= 2`.",
         "",
@@ -64243,7 +64238,7 @@
       "path": "num::sieve::punctures",
       "name": "punctures",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:187",
+      "defined_at": "num/sieve/mod.rs:191",
       "docs": [
         "Lists every puncture the word makes in the given dimension: its corner along each axis and then its side, all in units of the word's finest cell, so a level-one hole is the widest block in the list.",
         "",
@@ -64301,7 +64296,7 @@
       "path": "num::sieve::raster",
       "name": "raster",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:147",
+      "defined_at": "num/sieve/mod.rs:151",
       "docs": [
         "Builds the plane sieve the word spells as a raster: its side, then one byte a site, row by row, one where the site survives and zero where a level punched it out.",
         "",
@@ -64361,7 +64356,7 @@
       "path": "num::sieve::ratio",
       "name": "ratio",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:102",
+      "defined_at": "num/sieve/mod.rs:106",
       "docs": [
         "Returns the share of the whole the word leaves, the product of one minus the inverse of each letter's site count, exact as a product of the letters' fills.",
         "",
@@ -64415,7 +64410,7 @@
       "path": "num::sieve::row_fill",
       "name": "row_fill",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:863",
+      "defined_at": "num/sieve/row.rs:524",
       "docs": [
         "Returns the cells a design of this profile fills at one side, `sum_j a_j E^(dim-j) O^j` with `E` and `O` the even and the odd positions an axis holds: `P_F(n)` at side `2n - 1` and `w n^dim` at side `2n`.",
         "",
@@ -64463,7 +64458,7 @@
       "path": "num::sieve::row_law",
       "name": "row_law",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:898",
+      "defined_at": "num/sieve/row.rs:559",
       "docs": [
         "Reads the design of this profile along the row word: its drift, its first correction, the roots of its fill polynomial, its constant from the Gamma form, the constant spelled, and the constant again by reflection, against the mirror and as a Wallis sieve product wherever those apply.",
         "",
@@ -64513,7 +64508,7 @@
       "path": "num::sieve::row_profile",
       "name": "row_profile",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:838",
+      "defined_at": "num/sieve/row.rs:499",
       "docs": [
         "Counts a base-2 design's corners by how many odd coordinates each holds, the profile the row word reads: the code is a bitmask over the corners, corner `i` is the binary digits of `i` as `math::bang::code_to_corners` reads it, so its odd coordinates are the ones of `i`.",
         "",
@@ -64564,7 +64559,7 @@
       "path": "num::sieve::row_settle",
       "name": "row_settle",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:951",
+      "defined_at": "num/sieve/row.rs:612",
       "docs": [
         "Walks the renormalised fill `R_L (2^dim/w)^L / L^drift` of the design of this profile to every stop, `R_L` the product of the letters' fill ratios, on the odd sides `3, 5, ..., 2L+1` or on the even sides `2, 4, ..., 2L`.",
         "",
@@ -64629,7 +64624,7 @@
       "path": "num::sieve::side",
       "name": "side",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:43",
+      "defined_at": "num/sieve/mod.rs:47",
       "docs": [
         "Returns the side of the word, the product of its letters' sides.",
         "",
@@ -64674,7 +64669,7 @@
       "path": "num::sieve::solid_limit",
       "name": "solid_limit",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:256",
+      "defined_at": "num/sieve/limit.rs:27",
       "docs": [
         "Returns the limit of the solid Wallis sieve's surviving volume, the product of one minus n to the minus three over the odd n from three, in closed form.",
         "",
@@ -67666,7 +67661,7 @@
       "path": "tile::name::Tile::checked",
       "name": "checked",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:35",
+      "defined_at": "core/name/mod.rs:28",
       "docs": [
         "Folds a decoded value to its canonical form, or an error for one outside the kind."
       ],
@@ -67682,7 +67677,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -67693,7 +67688,7 @@
       "path": "tile::name::Tile::from_file",
       "name": "from_file",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:62",
+      "defined_at": "core/name/mod.rs:55",
       "docs": [
         "Reads a filename back into the value, or an error."
       ],
@@ -67716,7 +67711,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -67727,7 +67722,7 @@
       "path": "tile::name::Tile::from_json",
       "name": "from_json",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:41",
+      "defined_at": "core/name/mod.rs:34",
       "docs": [
         "Reads a JSON object into its canonical value, or an error naming the broken key."
       ],
@@ -67750,7 +67745,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -67761,7 +67756,7 @@
       "path": "tile::name::Tile::from_url",
       "name": "from_url",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:54",
+      "defined_at": "core/name/mod.rs:47",
       "docs": [
         "Reads a path and query string back into the value, or an error."
       ],
@@ -67784,7 +67779,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -67871,7 +67866,7 @@
       "path": "tile::name::Tile::to_file",
       "name": "to_file",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:58",
+      "defined_at": "core/name/mod.rs:51",
       "docs": [
         "Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back."
       ],
@@ -67885,7 +67880,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -67896,7 +67891,7 @@
       "path": "tile::name::Tile::to_id",
       "name": "to_id",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:46",
+      "defined_at": "core/name/mod.rs:39",
       "docs": [
         "Prints the first eight hex digits of the sha256 of the canonical JSON."
       ],
@@ -67907,7 +67902,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -67918,7 +67913,7 @@
       "path": "tile::name::Tile::to_json",
       "name": "to_json",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:37",
+      "defined_at": "core/name/mod.rs:30",
       "docs": [
         "Prints the canonical JSON object."
       ],
@@ -67929,7 +67924,7 @@
         "t": "string"
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -67940,7 +67935,7 @@
       "path": "tile::name::Tile::to_prose",
       "name": "to_prose",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:66",
+      "defined_at": "core/name/mod.rs:59",
       "docs": [
         "Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back."
       ],
@@ -67954,7 +67949,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -67965,7 +67960,7 @@
       "path": "tile::name::Tile::to_url",
       "name": "to_url",
       "module": "tile::name",
-      "defined_at": "math/name/mod.rs:50",
+      "defined_at": "core/name/mod.rs:43",
       "docs": [
         "Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back."
       ],
@@ -67979,7 +67974,7 @@
         }
       },
       "dims": [],
-      "trait": "math::name::Named",
+      "trait": "core::name::Named",
       "source": "trait",
       "constant": false,
       "cross": {
@@ -68126,7 +68121,7 @@
       "path": "tile::recipe::classics",
       "name": "classics",
       "module": "tile::recipe",
-      "defined_at": "math/bang/catalog.rs:175",
+      "defined_at": "math/bang/catalog.rs:177",
       "docs": [
         "Returns the classic designs for a dimension."
       ],

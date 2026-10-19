@@ -1,7 +1,7 @@
 import { rng } from '../rand.js';
 import { uniforms } from '../gl/camera.js';
 import { bake, blend, fill, program, quads, tier } from '../gl/gl2.js';
-import { clamp, norm } from '../gl/vec.js';
+import { clamp01, norm, smooth } from '../gl/vec.js';
 
 const TAU = Math.PI * 2;
 const DESK = 6000;
@@ -18,11 +18,6 @@ const FACE = 256;
 const SALT = 0x68e31da4;
 const UNSET = [-1, -1, -1];
 const WHITE = [1, 1, 1];
-
-const smooth = (x) => {
-  const p = clamp(x);
-  return p * p * (3 - 2 * p);
-};
 
 export function stars(seed, count) {
   const rand = rng(seed >>> 0);
@@ -153,7 +148,7 @@ export function sky(gl, view, { seed = 0, density = 1, dust = 1 } = {}) {
       haze.set({ ...uniforms({ w, h }, cam), uDust: cube, uK: dust * gain });
       fill(gl);
     }
-    const away = clamp(flow.far ?? 0);
+    const away = clamp01(flow.far ?? 0);
     const s = (flow.s ?? 0) * (1 - away);
     const back = Math.max(0, flow.shutter ?? 0);
     const [ax, ay, az] = norm(flow.axis ?? [0, 0, 1]);

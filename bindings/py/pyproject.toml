@@ -4,12 +4,22 @@ dynamic = ["version"]
 description = "MrlyMath, the mathematics of designs, bridged into Python."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.13"
+license-files = ["LICENSE"]
+authors = [{ name = "MrlyProd, Inc." }]
+keywords = ["mathematics", "fractal", "cellular-automata", "generative"]
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Typing :: Typed",
+]
+requires-python = ">=3.10"
 dependencies = ["numpy>=2"]
 
 [project.urls]
 Homepage = "https://mrly.net"
 Repository = "https://github.com/mrlyprod/mrlyprod"
+Issues = "https://github.com/mrlyprod/mrlyprod/issues"
 
 [build-system]
 requires = ["maturin>=1.15,<2"]
@@ -18,7 +28,8 @@ build-backend = "maturin"
 [tool.maturin]
 module-name = "mrly._mrly"
 python-source = "python"
-exclude = ["**/__pycache__/**"]
+config = ["profile.release.strip = false"]
+exclude = ["**/__pycache__/**", { path = "tests/**/*", format = "sdist" }]
 
 [tool.uv]
 cache-keys = [{ file = "pyproject.toml" }, { file = "Cargo.toml" }, { file = "src/**/*.rs" }, { file = "../../Cargo.toml" }, { file = "../../crates/*/src/**/*.rs" }]

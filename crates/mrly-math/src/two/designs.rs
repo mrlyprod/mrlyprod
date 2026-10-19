@@ -21,7 +21,7 @@ fn build(pattern: Tensor, level: usize, rotation: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors when the code is out of range, or the level is below one.
+/// Errors when the code is out of range.
 pub fn create(
     code: Code,
     number: usize,
@@ -36,7 +36,7 @@ pub fn create(
 ///
 /// # Errors
 ///
-/// Errors when a corner does not fit the dimension and base, or the level is below one.
+/// Errors when a corner does not fit the dimension and base.
 pub fn from_corners(
     corners: &[Vec<u8>],
     number: usize,
@@ -63,7 +63,7 @@ pub fn from_corners(
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn level_set(
     number: usize,
     levels: &[usize],
@@ -100,7 +100,7 @@ pub fn named(design: Design, number: usize, level: usize, rotation: usize) -> Re
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn zeros(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::zeros_2d(number), level, 0)
 }
@@ -109,7 +109,7 @@ pub fn zeros(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn ones(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::ones_2d(number), level, 0)
 }
@@ -118,7 +118,7 @@ pub fn ones(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn noise(number: usize, level: usize, density: f64, rng: &mut Rng) -> Result<Cell2d> {
     build(atoms::noise_2d(number, density, rng), level, 0)
 }
@@ -132,7 +132,7 @@ pub fn noise(number: usize, level: usize, density: f64, rng: &mut Rng) -> Result
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn carpet(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::carpet_2d(number), level, 0)
 }
@@ -141,7 +141,7 @@ pub fn carpet(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn net(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::net_2d(number), level, 0)
 }
@@ -150,7 +150,7 @@ pub fn net(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn htree(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::htree_2d(number), level, 0)
 }
@@ -159,7 +159,7 @@ pub fn htree(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn vtree(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::vtree_2d(number), level, 0)
 }
@@ -168,7 +168,7 @@ pub fn vtree(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn void(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::void_2d(number), level, 0)
 }
@@ -177,7 +177,7 @@ pub fn void(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn point(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::point_2d(number), level, 0)
 }
@@ -186,7 +186,7 @@ pub fn point(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn dust(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::dust_2d(number), level, 0)
 }
@@ -195,7 +195,7 @@ pub fn dust(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn hline(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::hline_2d(number), level, 0)
 }
@@ -204,7 +204,7 @@ pub fn hline(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn vline(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::vline_2d(number), level, 0)
 }
@@ -213,7 +213,7 @@ pub fn vline(number: usize, level: usize) -> Result<Cell2d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a plane.
 pub fn star(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::star_2d(number), level, 0)
 }

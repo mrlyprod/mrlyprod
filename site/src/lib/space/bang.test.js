@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import * as math from '@mrlyprod/mrly/math';
 import { rng } from '../rand.js';
 import { PILOTS, canon, cells, classes, codes, doors, gate, name, pickCode, route, teach } from './bang.js';
 
@@ -6,58 +7,65 @@ const at = (n, x, y, z) => (z * n + y) * n + x;
 
 const DIVE = [15, 51, 63, 85, 95, 119, 127, 255];
 
-test('cells keep a cell by the bit of its parities, x the slowest', () => {
-  const sponge = cells(23, 3);
-  expect([[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1], [2, 2, 2]].map(([x, y, z]) => sponge[at(3, x, y, z)])).toEqual([1, 1, 1, 1, 0, 0, 0, 1]);
-  expect([cells(16, 3)[at(3, 1, 0, 0)], cells(16, 3)[at(3, 0, 0, 1)], cells(2, 3)[at(3, 0, 0, 1)], cells(2, 3)[at(3, 1, 0, 0)]]).toEqual([1, 0, 1, 0]);
-  expect(cells(23, 3).reduce((a, b) => a + b, 0)).toBe(20);
-});
-
 test('the sponge passes the gate at n 3; the empty, the single cell and the full cube fail', () => {
-  expect([23, 0, 128, 255].map((code) => gate(code, 3))).toEqual([true, false, false, false]);
+  expect([23, 0, 128, 255].map((code) => gate(math, code, 3))).toEqual([true, false, false, false]);
 });
 
 test('every pruned exit has an onward exit', () => {
   for (const n of [3, 5]) {
     for (let code = 0; code < 256; code++) {
-      const table = doors(cells(code, n), n);
+      const table = doors(cells(math, code, n), n);
       for (const one of table.filter(Boolean)) for (const exit of one.exits) expect([code, n, table[exit.dir]?.exits.length > 0]).toEqual([code, n, true]);
     }
   }
 });
 
+test('for all 256 codes the door lays cell (x, y, z) out x fastest, kept by bit 4(x & 1) + 2(y & 1) + (z & 1)', () => {
+  for (const n of [3, 5])
+    for (let code = 0; code < 256; code++) {
+      const all = cells(math, code, n);
+      const bad = Array.from({ length: n ** 3 }, (_, k) => [k % n, Math.floor(k / n) % n, Math.floor(k / n / n)]).filter(([x, y, z]) => all[at(n, x, y, z)] !== ((code >> ((x & 1) * 4 + (y & 1) * 2 + (z & 1))) & 1));
+      expect([code, n, bad]).toEqual([code, n, []]);
+    }
+});
+
+test('for all 256 codes the class is the least code of the orbit under the 48 symmetries', () => {
+  expect(math.bang.symmetries(3).length).toBe(48);
+  for (let code = 0; code < 256; code++) expect([code, canon(math, code)]).toEqual([code, Math.min(...math.bang.universe.orbit(code, 3).map(Number))]);
+});
+
 test('the 48 signed permutations of the parity bits cut the 256 codes into 22 classes', () => {
-  expect(new Set(Array.from({ length: 256 }, (_, code) => canon(code))).size).toBe(22);
-  expect(classes().length).toBe(21);
-  expect([canon(0), canon(255), canon(232), classes()[0], classes().includes(0)]).toEqual([0, 255, 23, 1, false]);
+  expect(new Set(Array.from({ length: 256 }, (_, code) => canon(math, code))).size).toBe(22);
+  expect(classes(math).length).toBe(21);
+  expect([canon(math, 0), canon(math, 255), canon(math, 232), classes(math)[0], classes(math).includes(0)]).toEqual([0, 255, 23, 1, false]);
 });
 
 test('a code reads its own name, else its class mate in list order, else its class', () => {
-  const mate = Array.from({ length: 256 }, (_, code) => code).find((code) => canon(code) === 23 && ![23, 232].includes(code));
-  expect([name(232), name(3), name(17), name(5), name(mate), name(60)]).toEqual(['net', 'ztree', 'xtree', 'ytree', 'carpet', `class ${canon(60)}`]);
+  const mate = Array.from({ length: 256 }, (_, code) => code).find((code) => canon(math, code) === 23 && ![23, 232].includes(code));
+  expect([name(math, 232), name(math, 3), name(math, 17), name(math, 5), name(math, mate), name(math, 60)]).toEqual(['net', 'ztree', 'xtree', 'ytree', 'carpet', `class ${canon(math, 60)}`]);
 });
 
 test('teach gives the bits, the kept cells, the fill, the dimension and the class', () => {
-  const sponge = teach(23, 3);
+  const sponge = teach(math, 23, 3);
   expect([sponge.bits, sponge.kept, sponge.fill, sponge.class]).toEqual(['00010111', 20, 20 / 27, 23]);
   expect(Math.abs(sponge.dimension - 2.7268)).toBeLessThan(1e-3);
 });
 
 test('codes picks all, the flyable, the named classes, the family, and the gated list with no pick', () => {
-  expect([codes(3, 'all').length, codes(3, 'flyable').length, codes(5, 'flyable').length, codes(3, 'named'), codes(3, 'family'), codes(3).length]).toEqual([255, 247, 247, classes(), [23, 232, 22, 129, 17, 5, 3], 61]);
-  expect(codes(3, 'all').filter((code) => !codes(3, 'flyable').includes(code))).toEqual(DIVE);
-  expect(codes(5).filter((code) => code & 1)).toEqual([]);
+  expect([codes(math, 3, 'all').length, codes(math, 3, 'flyable').length, codes(math, 5, 'flyable').length, codes(math, 3, 'named'), codes(math, 3, 'family'), codes(math, 3).length]).toEqual([255, 247, 247, classes(math), [23, 232, 22, 129, 17, 5, 3], 61]);
+  expect(codes(math, 3, 'all').filter((code) => !codes(math, 3, 'flyable').includes(code))).toEqual(DIVE);
+  expect(codes(math, 5).filter((code) => code & 1)).toEqual([]);
 });
 
 test('pickCode keeps a set code and draws -1 from the pick by the seed', () => {
-  const one = pickCode({ code: -1, n: 3, pick: 'named' }, 5);
-  expect([classes().includes(one), pickCode({ code: -1, n: 3, pick: 'named' }, 5), pickCode({ code: 129, n: 3, pick: 'named' }, 5), codes(3).includes(pickCode({ code: -1, n: 3 }, 5))]).toEqual([true, one, 129, true]);
+  const one = pickCode(math, { code: -1, n: 3, pick: 'named' }, 5);
+  expect([classes(math).includes(one), pickCode(math, { code: -1, n: 3, pick: 'named' }, 5), pickCode(math, { code: 129, n: 3, pick: 'named' }, 5), codes(math, 3).includes(pickCode(math, { code: -1, n: 3 }, 5))]).toEqual([true, one, 129, true]);
 });
 
 test('every code flies 120 s at n 3, the dive codes and 128 at n 5, with a finite camera within n of the frame centre', () => {
-  for (const [n, list] of [[3, codes(3, 'all')], [5, [...DIVE, 128]]]) {
+  for (const [n, list] of [[3, codes(math, 3, 'all')], [5, [...DIVE, 128]]]) {
     for (const code of list) {
-      const path = route({ code, n }, code);
+      const path = route(math, { code, n }, code);
       let ok = true;
       for (let tau = 0; tau <= 120; tau += 1) {
         const state = path.at(tau);
@@ -70,15 +78,15 @@ test('every code flies 120 s at n 3, the dive codes and 128 at n 5, with a finit
 
 test('the eight codes with no way in skim outside over a face, every other code flies inside', () => {
   for (const n of [3, 5]) {
-    const outside = codes(n, 'all').filter((code) => route({ code, n }, 7).at(10).outside);
+    const outside = codes(math, n, 'all').filter((code) => route(math, { code, n }, 7).at(10).outside);
     expect(outside).toEqual(DIVE);
   }
-  expect(route({ code: 255, n: 3 }, 7).at(10).mode).toBe('skim');
+  expect(route(math, { code: 255, n: 3 }, 7).at(10).mode).toBe('skim');
 });
 
 test('the mode is read on the path flown: the sponge a corridor, dust and rods pillars, walls with windows a trench', () => {
   const most = (code) => {
-    const path = route({ code, n: 3 }, 7);
+    const path = route(math, { code, n: 3 }, 7);
     const count = {};
     for (let tau = 0; tau <= 60; tau += 0.5) count[path.at(tau).mode] = (count[path.at(tau).mode] ?? 0) + 1;
     return Object.entries(count).sort((a, b) => b[1] - a[1])[0][0];
@@ -88,8 +96,8 @@ test('the mode is read on the path flown: the sponge a corridor, dust and rods p
 
 test('the sponge camera keeps 0.4 cells from every kept cell at its own level', () => {
   const n = 3;
-  const path = route({ code: 23, n }, 7);
-  const sponge = cells(23, n);
+  const path = route(math, { code: 23, n }, 7);
+  const sponge = cells(math, 23, n);
   const solid = (level, c, depth = 0) => {
     if (c.every((v) => v >= 0 && v < n)) return sponge[at(n, ...c)];
     if (level <= 0) return 0;
@@ -111,7 +119,7 @@ test('the sponge camera keeps 0.4 cells from every kept cell at its own level', 
 });
 
 test('before the entry face there is no camera; on the straight after it the speed holds 1.15 cells a second within 1%', () => {
-  const path = route({ code: 24, n: 5 }, 2);
+  const path = route(math, { code: 24, n: 5 }, 2);
   let tau = -10;
   while (!Number.isFinite(path.at(tau).pos[0])) tau += 0.05;
   const speeds = [];
@@ -124,7 +132,7 @@ test('before the entry face there is no camera; on the straight after it the spe
 });
 
 test('across a rebase toFrame carries the camera on without a jump', () => {
-  const path = route({ code: 23, n: 3 }, 7);
+  const path = route(math, { code: 23, n: 3 }, 7);
   let prev = path.at(0);
   let rebases = 0;
   for (let tau = 0.02; tau <= 30; tau += 0.02) {
@@ -142,7 +150,7 @@ test('across a rebase toFrame carries the camera on without a jump', () => {
 test('the route is a pure function of seed and pilot: play, a jump and any order of taus agree', () => {
   const read = (state) => [state.level, state.frame, state.mode, ...state.pos, ...state.fwd, ...state.up, state.roll];
   for (const pilot of Object.keys(PILOTS)) {
-    const make = () => route({ code: 23, n: 3 }, 9, { pilot });
+    const make = () => route(math, { code: 23, n: 3 }, 9, { pilot });
     const taus = Array.from({ length: 50 }, (_, i) => 3 + i * 2.3);
     const played = make();
     for (let tau = 0; tau <= taus.at(-1); tau += 1 / 60) played.at(tau);
@@ -153,13 +161,13 @@ test('the route is a pure function of seed and pilot: play, a jump and any order
     for (const tau of [...taus].sort(() => rand() - 0.5)) expect([pilot, tau, ...read(jumped.at(tau))]).toEqual([pilot, tau, ...want.get(tau)]);
     expect(read(played.at(taus.at(-1)))).toEqual(want.get(taus.at(-1)));
   }
-  expect(route({ code: 23, n: 3 }, 10).at(120).pos).not.toEqual(route({ code: 23, n: 3 }, 9).at(120).pos);
+  expect(route(math, { code: 23, n: 3 }, 10).at(120).pos).not.toEqual(route(math, { code: 23, n: 3 }, 9).at(120).pos);
 });
 
 test('path samples the camera ahead: sample k is the camera at tau + k dt carried into the frame at tau, across rebases', () => {
   const span = 8;
-  const ahead = route({ code: 23, n: 3 }, 7);
-  const flown = route({ code: 23, n: 3 }, 7);
+  const ahead = route(math, { code: 23, n: 3 }, 7);
+  const flown = route(math, { code: 23, n: 3 }, 7);
   let crossed = 0;
   for (const tau of [5, 17.3, 40]) {
     const line = ahead.path(tau, span);
@@ -178,7 +186,7 @@ test('path samples the camera ahead: sample k is the camera at tau + k dt carrie
 test('the fighter and the coaster fly the sponge and a trench 120 s with a finite camera and rail', () => {
   for (const pilot of ['fighter', 'coaster']) {
     for (const code of [23, 7]) {
-      const path = route({ code, n: 3 }, 7, { pilot });
+      const path = route(math, { code, n: 3 }, 7, { pilot });
       let ok = true;
       for (let tau = 0; tau <= 120; tau += 0.25) {
         const state = path.at(tau);
@@ -190,7 +198,7 @@ test('the fighter and the coaster fly the sponge and a trench 120 s with a finit
 });
 
 test('near marks the 5x5x5 blocks around the frame block, and edge counts the blocks from it to the root faces', () => {
-  const path = route({ code: 23, n: 3 }, 7);
+  const path = route(math, { code: 23, n: 3 }, 7);
   const bit = (words, q) => {
     const i = (q[0] + 2) * 25 + (q[1] + 2) * 5 + q[2] + 2;
     return (words[i >> 5] >> (i & 31)) & 1;
@@ -205,7 +213,7 @@ test('near marks the 5x5x5 blocks around the frame block, and edge counts the bl
 
 test('the fighter barrel-rolls a full turn on a straight, the steady pilot never', () => {
   const most = (pilot) => {
-    const path = route({ code: 23, n: 3 }, 7, { pilot });
+    const path = route(math, { code: 23, n: 3 }, 7, { pilot });
     return Math.max(...Array.from({ length: 1200 }, (_, i) => Math.abs(path.at(i * 0.05).roll)));
   };
   expect([most('fighter') > 6, most('steady') < 0.5]).toEqual([true, true]);

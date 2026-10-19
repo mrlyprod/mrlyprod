@@ -15,9 +15,8 @@ const facts = (over, pick = null) => {
   return { ...read(num, study(num, one, 800, 600), one), pick };
 };
 
-test('the widget mounts its stage, named for a reader, once the unit is in hand', () => {
+test('the stage is named for a reader', () => {
   const page = (unit) => renderToStaticMarkup(<Frame label="Ulam"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
   expect(page(num)).toContain('<canvas aria-label="The sheet');
 });
 

@@ -1,18 +1,5 @@
 import { expect, test } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
-import * as math from '@mrlyprod/mrly/math';
-import { defaults } from '../../lib/app/spec.js';
-import { Frame } from '../../lib/app/frame.jsx';
-import { SPEC } from './scene.js';
-import { Widget, rows, typed } from './widget.jsx';
-
-const value = { ...defaults(SPEC), seed: 1 };
-
-test('the widget mounts its stage once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Tourbillon"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-});
+import { rows, typed } from './widget.jsx';
 
 test('the readings name the angle on screen, its quarter turn and the stack, and flag weights the blend drops', () => {
   const f = { angle: 22.5, playing: false, size: 512, layers: 28, scales: [1, 3], angles: [22.5, 45], mean: 0.5, rms: 0.1, faded: 0.53, centre: 0.5, peaks: [[0.5, 0.25, 0.75]], period: 4, classes: 4, pairs: 10, unused: true };

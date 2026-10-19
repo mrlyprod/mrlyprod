@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { rng } from '../../lib/rand.js';
 import { project } from '../../lib/gl/camera.js';
 import { gl } from '../../../test/fake.js';
-import { world } from '../../lib/space/planet.js';
+import { world } from '../../lib/space/worlds.js';
 import { dot, len, norm } from '../../lib/gl/vec.js';
 import { CAMS, PAGE, make, next, shot } from './scene.js';
 

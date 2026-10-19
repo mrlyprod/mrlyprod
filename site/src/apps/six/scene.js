@@ -36,6 +36,7 @@ export function name(value, units) {
 }
 
 export const PAGE = {
+  defaults: { base: 2, code: '23' },
   spec: SPEC,
   units,
   about: ABOUT,

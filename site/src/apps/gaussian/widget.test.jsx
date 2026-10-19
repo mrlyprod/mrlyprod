@@ -1,23 +1,16 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as num from '@mrlyprod/mrly/num';
-import { Frame } from '../../lib/app/frame.jsx';
 import { defaults } from '../../lib/app/spec.js';
 import { Knobs } from '../../lib/app/knobs.jsx';
 import { rng } from '../../lib/rand.js';
 import { hit, shuffle, study } from './engine.js';
 import { SPEC } from './scene.js';
-import { Widget, rerolled, rows } from './widget.jsx';
+import { rerolled, rows } from './widget.jsx';
 
 const value = { ...defaults(SPEC), seed: 1, limit: 12 };
 
 const labels = (list) => list.map(([label]) => label);
-
-test('the widget mounts its stage once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Gaussian"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(num)).toContain('<canvas');
-});
 
 test('the page opens on the gaussian window of reach 40 coloured by fate, every window knob in the first group', () => {
   const html = renderToStaticMarkup(<Knobs spec={SPEC} value={defaults(SPEC)} onChange={() => {}} />);

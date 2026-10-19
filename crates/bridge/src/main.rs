@@ -46,7 +46,11 @@ fn check(root: &Path) -> Result<()> {
         .map(|path| path.strip_prefix(root).unwrap_or(path))
         .map(|path| format!("stale: {}", path.display()))
         .collect();
-    for path in owned_orphans(root) {
+    let orphans = match done {
+        Ok(()) => disk::orphans(root, &listed(root)),
+        Err(_) => Vec::new(),
+    };
+    for path in orphans {
         let path = path
             .strip_prefix(root)
             .unwrap_or(&path)
@@ -63,6 +67,10 @@ fn check(root: &Path) -> Result<()> {
     } else {
         Err(lines.join("\n"))
     }
+}
+
+fn listed(root: &Path) -> String {
+    std::fs::read_to_string(root.join(disk::ATTRIBUTES)).unwrap_or_default()
 }
 
 fn run(root: &Path) -> Result<()> {
@@ -86,32 +94,26 @@ fn run(root: &Path) -> Result<()> {
     for (name, write) in BACKENDS {
         write(&built.manifest, root).map_err(|e| format!("{name}: {e}"))?;
     }
-    if !disk::watching() {
-        for path in owned_orphans(root) {
-            std::fs::remove_file(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-            for dir in path
-                .ancestors()
-                .skip(1)
-                .take_while(|dir| !OWNED.iter().any(|own| root.join(own) == *dir))
-            {
-                if std::fs::remove_dir(dir).is_err() {
-                    break;
-                }
+    let before = listed(root);
+    let orphans = disk::orphans(root, &before);
+    disk::save(
+        &root.join(disk::ATTRIBUTES),
+        &disk::attributes(root, &before),
+    )?;
+    if disk::watching() {
+        return Ok(());
+    }
+    for path in orphans {
+        std::fs::remove_file(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+        for dir in path.ancestors().skip(1).take_while(|dir| *dir != root) {
+            if std::fs::remove_dir(dir).is_err() {
+                break;
             }
-            println!(
-                "removed orphan {}",
-                path.strip_prefix(root).unwrap_or(&path).display()
-            );
         }
+        println!(
+            "removed orphan {}",
+            path.strip_prefix(root).unwrap_or(&path).display()
+        );
     }
     Ok(())
-}
-
-const OWNED: &[&str] = &["bindings/js/units", "bindings/py/python/mrly"];
-
-fn owned_orphans(root: &Path) -> Vec<PathBuf> {
-    OWNED
-        .iter()
-        .flat_map(|dir| disk::orphans(&root.join(dir)))
-        .collect()
 }

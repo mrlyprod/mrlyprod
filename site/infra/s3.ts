@@ -77,7 +77,7 @@ export async function putBytes(
   const headers: Record<string, string> = { "Content-Type": opts.type };
   if (opts.cacheControl) headers["Cache-Control"] = opts.cacheControl;
   await retry(async () => {
-    const res = await fetch(url, { method: "PUT", body, headers });
+    const res = await fetch(url, { method: "PUT", body: body as BodyInit, headers });
     if (!res.ok) throw new Error(`s3: put ${key} failed ${res.status} ${(await res.text()).slice(0, 200)}`);
   });
 }

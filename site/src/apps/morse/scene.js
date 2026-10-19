@@ -35,6 +35,7 @@ export function file(value) {
 }
 
 export const PAGE = {
+  defaults: { base: 2, code: '9' },
   spec: SPEC,
   name: file,
   about: [

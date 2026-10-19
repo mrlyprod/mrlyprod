@@ -8,7 +8,7 @@
 - `index.html`: head (title, description, canonical, og tags, icons, manifest), `boot.js` as a blocking classic script, `../styles/page.css`, the empty `<style id="tint">` the build and dev fill with `tintCss(site.tint)`, then the static chrome: header, subheader with crumbs and the two pane openers, `.welcome`, `#left`, `#main`, `#right`, scrim, footer.
 - The header was rendered once by hand: the `+` to the menu, the fold of the wordmark in the middle (home's welcome needs it before any script), the cart ring.
 - `boot.js` imports nothing: it adds `js`, replays theme, font and tint from localStorage, marks `/` with `data-desk` and opens the welcome hall there.
-- `chrome.js` and `router.js` are the two module scripts; Bun merges them into one entry chunk.
+- `chrome.js` and `router.js` are the two module scripts; Bun merges them, with what they import, into one entry chunk.
 - `lock.js` runs a saver for the desk and the lock screen: it picks a scene from `apps:scenes`, awaits its `units` and runs it with `../lib/app/run.js`.
 - `crumbs.js` draws the subheader trail; `figures.js` loads `../lib/figure.js` with `site:figures` once, for the router and the research page.
 
@@ -40,13 +40,17 @@
 
 ## CHROME
 
-- `chrome.js` owns the drawers, theme, font, tint, saver, cart dots, contents highlight, the git tree's lazy folders, the wordmark (`word.js`, the fold on home) and the welcome hall, all by delegated listeners.
+- The chrome is four files, wired by delegated listeners.
+- `chrome.js`: the drawers, the cart dots, the contents highlight, the scroll spot, and `wire`, which runs the rest on every route.
+- `prefs.js`: localStorage (`KEY`, `read`, `write`), theme, tint, font and the saver pick.
+- `desk.js`: the wordmark (`word.js`, the fold on home), the welcome hall, the desk and its lock screen; `visit(detail)` hands it the route.
+- `tree.js`: the git tree's lazy folders (`branch`, `turns`, `expand`).
 - `theme` fires only when the theme or the tint really changes.
-- The desk is home: the header and one full-screen saver canvas, no scroll, no subheader, no footer (`data-desk`). `chrome.js` appends it on `/` and drops it on leaving; it loads the saver through the `lock` thunk of `site:apps`.
+- The desk is home: the header and one full-screen saver canvas, no scroll, no subheader, no footer (`data-desk`). `desk.js` appends it on `/` and drops it on leaving; it loads the saver through the `lock` thunk of `site:apps`.
 - The pick is the Settings Saver, unset meaning the desk saver of `site.json`; the lock rolls a seed and names what it ran (`stop.as`), and the chrome reuses that while the pick stands, so the desk is the same picture all visit.
 - First visit (the welcome hall open) is the lock screen: the saver plays under the big wordmark, which fades after 3 s of no mouse. Unlocking leaves the scene (`leave`), glides the wordmark into the X and coasts the saver to a standstill over 3 s (`stop.coast`): the screensaver becomes the desktop picture.
 - A later visit plays the desk 3 s, then coasts. Tapping the X replays the lock: the frozen desk resumes and the wordmark unfolds over it.
 
 ## TESTS
 
-- `route.test.js`, `shells.test.js`, `search.test.js`, `word.test.js`, `welcome.test.js`, `chrome.test.js`, `lock.test.js`, and `../lib/figure.test.js`.
+- `route.test.js`, `router.test.js`, `shells.test.js`, `search.test.js`, `word.test.js`, `welcome.test.js`, `tree.test.js`, `lock.test.js`, and `../lib/figure.test.js`.

@@ -1,4 +1,4 @@
-import { tidy } from '../../lib/app/spec.js';
+import { defaults, tidy } from '../../lib/app/spec.js';
 import { rgb } from '../../lib/color.js';
 import { BEAT, NEEDLES, RPM, cells, edge, key, layout, pace, paint, rings, seen, spun, step, stops, study } from '../../lib/spin/engine.js';
 import { LOOK, PAD, SOURCE, TAU, place, rim, sheet, tag } from '../../lib/spin/scene.js';
@@ -29,6 +29,7 @@ const ABOUT = [
 export const name = (value) => `spin-${tag(value)}-${value.view}`;
 
 export const PAGE = {
+  defaults: defaults(SOURCE),
   spec: SPEC,
   record: true,
   about: ABOUT,

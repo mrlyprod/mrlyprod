@@ -6,26 +6,22 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 [ -n "${CARGO_LOCK:-}" ] || exec "$HERE/cargo.sh" "$HERE/wasm.sh" "$@"
 cd "$HERE/.."
 
-font=$(mktemp)
-trap 'rm -f "$font"' EXIT
-
+[ -d bindings/js/units ] || { echo "wasm.sh: no bindings/js/units; run scripts/bridge.sh" >&2; exit 1; }
 units=$(ls bindings/js/units)
-used=$(grep -hoE '(@mrlyprod/mrly/|mrly_js_)[a-z]+' $(bun -e 'for (const one of (await import("./site/scripts/build.ts")).roster()) console.log(one.file)') $(find site/src -name '*.js' -o -name '*.jsx' -o -name '*.ts' | grep -v '\.test\.') | sed -E 's/^(@mrlyprod\/mrly\/|mrly_js_)//' | sort -u)
-live=$(for unit in $units; do if grep -qx "$unit" <<< "$used"; then echo "$unit"; fi; done)
-built=target/wasm32-unknown-unknown/release
+target=$(cargo metadata --format-version 1 --no-deps | sed -n 's/.*"target_directory":"\([^"]*\)".*/\1/p')
+built="$target/wasm32-unknown-unknown/wasm"
+locked=$(grep -A1 '^name = "wasm-bindgen"$' Cargo.lock | sed -n 's/^version = "\(.*\)"$/\1/p')
+install="cargo install wasm-bindgen-cli --version $locked --locked"
+command -v wasm-bindgen > /dev/null || { echo "wasm.sh: wasm-bindgen is not installed; $install" >&2; exit 1; }
+cli=$(wasm-bindgen --version | awk '{print $2}')
+[ "$cli" = "$locked" ] || { echo "wasm.sh: wasm-bindgen $cli is installed but Cargo.lock wants $locked; $install" >&2; exit 1; }
 
-cargo build --release --target wasm32-unknown-unknown --lib $(printf -- '-p mrly-js-%s ' $units)
+cargo build --profile wasm --target wasm32-unknown-unknown --lib $(printf -- '-p mrly-js-%s ' $units)
 
-rm -rf bindings/js/pkg site/wasm
+rm -rf bindings/js/pkg
 for unit in $units; do
   wasm-bindgen "$built/mrly_js_$unit.wasm" --target web --out-dir "bindings/js/pkg/$unit"
 done
-for unit in $live; do
-  mkdir -p "site/wasm/$unit"
-  cp "bindings/js/pkg/$unit/mrly_js_$unit.js" "bindings/js/pkg/$unit/mrly_js_${unit}_bg.wasm" "site/wasm/$unit/"
-done
-cargo run -q -p mrly --example book > "$font"
-install -m 644 "$font" site/src/lib/font/font.gen.json
 
 echo "unit bytes"
 for unit in $units; do

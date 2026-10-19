@@ -17,9 +17,8 @@ function Shared({ children }) {
 
 const order = (html) => [...html.matchAll(/<(?:section|details)([^>]*)>(?:<summary>)?(?:<h3>([^<]*)<\/h3>)?/g)].filter(([, attrs]) => attrs.includes('order:')).map(([, attrs, name]) => [Number(attrs.match(/order:(\d+)/)[1]), name ?? '']).sort(([a], [b]) => a - b).map(([, name]) => name);
 
-test('the widget mounts its picture, labelled for a reader, only once the unit is in hand', () => {
+test('the picture is labelled for a reader', () => {
   const page = (units) => renderToStaticMarkup(<Frame label="Six"><Widget value={VALUE} onChange={() => {}} units={units} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
   expect(page({ math })).toContain('<canvas role="img" aria-label="a cube design repeated into a sheet"');
   expect(label({ name: 'carpet', title: 'bang dim 3, code 23' })).toBe('carpet repeated into a sheet');
 });

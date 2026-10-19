@@ -3,11 +3,12 @@
 - Every `bun run` verb of the site, Bun only, run from `site/`.
 - `build.ts` (`build`): the build and its Bun plugin, `mrly` for research figures, `withTint` for the shell; `../README.md` has it.
 - `dev.ts` (`dev`): the dev server on 127.0.0.1:3000.
-- `check.ts` (`check`): the source and dist checks; `../README.md` lists them.
+- `check.ts` (`check`): reports the wasm pin and runs the content gate, `../test/content.test.ts`; `../README.md` lists its checks.
+- `wasm.ts` (`wasm`): `../../scripts/wasm.sh`, then the live units into `../wasm/` and the font book into `../src/lib/font/font.gen.json`.
 - `shots.ts` (`shots`), `film.ts` (`film`): Chrome, below.
 - `time.ts` (`time`): every figure drawn cold and warm in a worker; `../README.md` has the gate.
 - `vendor.ts` (`vendor`): the fonts and the icons, below.
-- Modules of the build beside them: `git.ts` (the raw list and `git.json`), `llms.ts` (`llms.txt`), `links.ts` (the links of a built `dist/`, for `check.ts`); `film/page.js` is the page `film.ts` drives.
+- Modules of the build beside them: `git.ts` (the raw list and `git.json`), `llms.ts` (`llms.txt`), `links.ts` (the links of a built `dist/`, for the content gate); `film/page.js` is the page `film.ts` drives.
 
 ## SHOTS
 

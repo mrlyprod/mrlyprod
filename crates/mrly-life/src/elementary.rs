@@ -1,8 +1,9 @@
 use mrly_core::error::{Result, value_error};
+use mrly_core::name::Named;
 use mrly_core::tensor::Tensor;
 use mrly_math::bang::Code;
 use mrly_math::bang::universe::{apply, corner_index, corners, degree, orbit, symmetries};
-use mrly_math::name::{Bang, Named};
+use mrly_math::name::Bang;
 use std::collections::BTreeSet;
 
 /// Returns the bit a rule sends the neighbourhood to, reading bit `4l + 2c + r` in Wolfram's numbering off the low bit of each cell.

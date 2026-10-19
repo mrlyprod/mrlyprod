@@ -2,8 +2,9 @@ import { expect, test } from 'bun:test';
 import * as num from '@mrlyprod/mrly/num';
 import { palette as hues } from '../../lib/theme/palette.gen.js';
 import { defaults, tidy } from '../../lib/app/spec.js';
+import { blend } from '../../lib/color.js';
 import { rng } from '../../lib/rand.js';
-import { DIM, GROUND, HIT, LEAD, LEAST, LIT, MISS, MOST, SIDES, SOIL, factors, fitted, formula, ink, landed, lay, mix, palette, picture, read, share, shuffle, span, step, study, table, wind } from './engine.js';
+import { DIM, GROUND, HIT, LEAD, LEAST, LIT, MISS, MOST, SIDES, SOIL, factors, fitted, formula, ink, landed, lay, palette, picture, read, share, shuffle, span, step, study, table, wind } from './engine.js';
 import { SPEC } from './scene.js';
 
 const value = (over) => ({ ...defaults(SPEC), ...over });
@@ -131,10 +132,9 @@ test('a at zero draws no line and reads no line', () => {
 });
 
 test('the colours are the tint for the mark, pink, orange for a hit, blue for a miss, and a neutral ground', () => {
-  expect(mix('#000000', '#ffffff', 0.5)).toBe('rgb(128, 128, 128)');
   expect([ink('#000000'), ink('#ffffff')]).toEqual(['#ffffff', '#000000']);
   const tones = palette('#ffd100', '#000000');
-  expect([tones[LIT], tones[DIM], tones[HIT], tones[MISS], tones[SOIL]]).toEqual(['#ffd100', hues.pink, hues.orange, hues.blue, mix('#000000', '#ffffff', GROUND)]);
+  expect([tones[LIT], tones[DIM], tones[HIT], tones[MISS], tones[SOIL]]).toEqual(['#ffd100', hues.pink, hues.orange, hues.blue, blend('#000000', '#ffffff', GROUND)]);
 });
 
 test('the svg holds every tone as rects on the square and as hexagons used on the hexagon, the line in orange and blue over them', () => {

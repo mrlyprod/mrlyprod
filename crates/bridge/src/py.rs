@@ -1,5 +1,6 @@
 use crate::disk::save;
 use crate::model::*;
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
@@ -21,15 +22,8 @@ const RUST_KEYWORDS: &[&str] = &[
     "usize", "i8", "i16", "i32", "i64", "i128", "isize", "f32", "f64", "bool", "char", "str",
 ];
 
-const HAND_SELF: &[(&str, &str)] = &[
-    ("Tensor", "tensor"),
-    ("Cell", "cell"),
-    ("CellNd", "cell"),
-    ("Cell6d", "cell"),
-    ("Image", "image"),
-    ("Color", "color"),
-    ("Code", "code"),
-    ("Rng", "rng"),
+const BUILTINS: &[&str] = &[
+    "bool", "bytes", "dict", "float", "int", "list", "str", "tuple",
 ];
 
 const HEADER: &str = "#![allow(clippy::too_many_arguments)]\n";
@@ -112,6 +106,7 @@ fn indent(depth: usize) -> String {
 struct Cx<'a> {
     manifest: &'a Manifest,
     types: BTreeMap<&'a str, &'a Type>,
+    shadow: RefCell<Vec<String>>,
 }
 
 impl<'a> Cx<'a> {
@@ -121,7 +116,11 @@ impl<'a> Cx<'a> {
             .iter()
             .map(|t| (t.path.as_str(), t))
             .collect();
-        Cx { manifest, types }
+        Cx {
+            manifest,
+            types,
+            shadow: RefCell::new(Vec::new()),
+        }
     }
 
     fn ty(&self, path: &str) -> Result<&'a Type> {
@@ -474,36 +473,16 @@ fn has_tensor(ty: &Ty) -> bool {
 }
 
 fn hand_decl(name: &str, dim: Option<u8>) -> Result<String> {
-    Ok(match name {
-        "Tensor" => "PyTensor",
-        "Cell" => "PyCell",
-        "CellNd" => match dim {
-            Some(2) => "PyCell2d",
-            Some(3) => "PyCell3d",
-            _ => return Err("a cell of undecided dimension".into()),
-        },
-        "Cell6d" => "PyCell6d",
-        "Image" => "PyImage",
-        "Color" => "PyColor",
-        "Code" => "PyCode",
-        "Rng" => "PyRng",
-        other => return Err(format!("no hand crossing for {other}")),
-    }
-    .to_string())
+    let row = hand(name).ok_or_else(|| format!("no hand crossing for {name}"))?;
+    by_dim(row.py, dim)
+        .map(str::to_string)
+        .ok_or_else(|| "a cell of undecided dimension".into())
 }
 
 fn hand_into(name: &str) -> Result<&'static str> {
-    Ok(match name {
-        "Tensor" => "PyTensor",
-        "Cell" => "PyCell",
-        "CellNd" => "PyCellNd",
-        "Cell6d" => "PyCell6d",
-        "Image" => "PyImage",
-        "Color" => "PyColor",
-        "Code" => "PyCode",
-        "Rng" => "PyRng",
-        other => return Err(format!("no hand crossing for {other}")),
-    })
+    hand(name)
+        .map(|row| row.py_into)
+        .ok_or_else(|| format!("no hand crossing for {name}"))
 }
 
 fn decl(cx: &Cx, ty: &Ty) -> Result<String> {
@@ -948,11 +927,9 @@ fn self_name(cx: &Cx, f: &Function) -> Result<String> {
     let owner = f.owner.as_deref().ok_or("no owner")?;
     let ty = cx.ty(owner)?;
     let base = match &ty.cross {
-        TypeCross::Hand { name } => HAND_SELF
-            .iter()
-            .find(|(hand, _)| hand == name)
-            .map(|(_, word)| word.to_string())
-            .unwrap_or_else(|| snake(name)),
+        TypeCross::Hand { name } => {
+            hand(name).map_or_else(|| snake(name), |row| row.word.to_string())
+        }
         _ => snake(&ty.name),
     };
     let base = py_name(&base);
@@ -1692,6 +1669,42 @@ fn rust_file(cx: &Cx, root: &Node) -> Result<String> {
 // PYTHON
 
 fn py_type(cx: &Cx, ty: &Ty, here: &str) -> String {
+    let hint = bare_type(cx, ty, here);
+    let shadow = cx.shadow.borrow();
+    if !BUILTINS.iter().any(|name| shadow.iter().any(|s| s == name)) {
+        return hint;
+    }
+    let mut out = String::new();
+    let mut word = String::new();
+    let mut quoted = false;
+    for c in hint.chars().chain(std::iter::once(' ')) {
+        if !quoted && (c.is_alphanumeric() || c == '_' || c == '.') {
+            word.push(c);
+            continue;
+        }
+        if BUILTINS.contains(&word.as_str()) && shadow.contains(&word) {
+            out.push_str("builtins.");
+        }
+        out.push_str(&word);
+        word.clear();
+        if c == '"' {
+            quoted = !quoted;
+        }
+        out.push(c);
+    }
+    out.pop();
+    out
+}
+
+fn shadowing<T>(cx: &Cx, names: Vec<String>, emit: impl FnOnce() -> T) -> T {
+    let depth = cx.shadow.borrow().len();
+    cx.shadow.borrow_mut().extend(names);
+    let done = emit();
+    cx.shadow.borrow_mut().truncate(depth);
+    done
+}
+
+fn bare_type(cx: &Cx, ty: &Ty, here: &str) -> String {
     match ty {
         Ty::Unit => "None".into(),
         Ty::Scalar { name } => match name.as_str() {
@@ -1709,15 +1722,15 @@ fn py_type(cx: &Cx, ty: &Ty, here: &str) -> String {
             } else if is_rgba(item) {
                 "NDArray[Any]".into()
             } else {
-                format!("list[{}]", py_type(cx, item, here))
+                format!("list[{}]", bare_type(cx, item, here))
             }
         }
-        Ty::Option { item } => format!("{} | None", py_type(cx, item, here)),
+        Ty::Option { item } => format!("{} | None", bare_type(cx, item, here)),
         Ty::Tuple { items } => format!(
             "tuple[{}]",
             items
                 .iter()
-                .map(|t| py_type(cx, t, here))
+                .map(|t| bare_type(cx, t, here))
                 .collect::<Vec<_>>()
                 .join(", ")
         ),
@@ -1727,22 +1740,17 @@ fn py_type(cx: &Cx, ty: &Ty, here: &str) -> String {
             } else if is_u8(item) {
                 "bytes".into()
             } else {
-                format!("list[{}]", py_type(cx, item, here))
+                format!("list[{}]", bare_type(cx, item, here))
             }
         }
-        Ty::Ref { item, .. } | Ty::Result { item } => py_type(cx, item, here),
+        Ty::Ref { item, .. } | Ty::Result { item } => bare_type(cx, item, here),
         Ty::Map { key, value } => format!(
             "dict[{}, {}]",
-            py_type(cx, key, here),
-            py_type(cx, value, here)
+            bare_type(cx, key, here),
+            bare_type(cx, value, here)
         ),
-        Ty::Hand { name, .. } => match name.as_str() {
-            "Tensor" | "Image" => "NDArray[Any]".into(),
-            "Color" => "tuple[int, int, int, int]".into(),
-            "Code" => "int".into(),
-            "Rng" => qualified("core", "Rng", here),
-            _ => "dict[str, Any]".into(),
-        },
+        Ty::Hand { name, .. } if name == "Rng" => qualified("core", "Rng", here),
+        Ty::Hand { name, .. } => hand(name).map_or("dict[str, Any]", |row| row.pyi).into(),
         Ty::Plain { path } => match cx.types.get(path.as_str()).map(|t| t.kind) {
             Some(TypeKind::Enum) => "Any".into(),
             _ => "dict[str, Any]".into(),
@@ -1866,7 +1874,17 @@ fn subst_opt(ty: &Ty, dim: Option<u8>) -> Ty {
     }
 }
 
+fn members(class: &Owned) -> Vec<String> {
+    let mut names: Vec<String> = class.ty.fields.iter().map(|f| py_name(&f.name)).collect();
+    names.extend(class.fns.iter().map(|f| py_name(&f.name)));
+    names
+}
+
 fn stub_class(cx: &Cx, out: &mut String, class: &Owned, here: &str) -> Result<()> {
+    shadowing(cx, members(class), || stub_members(cx, out, class, here))
+}
+
+fn stub_members(cx: &Cx, out: &mut String, class: &Owned, here: &str) -> Result<()> {
     let ty = class.ty;
     out.push_str(&format!("class {}:\n", ty.name));
     docstring(out, 1, &summary(&ty.docs));
@@ -1937,6 +1955,10 @@ fn stub_class(cx: &Cx, out: &mut String, class: &Owned, here: &str) -> Result<()
 }
 
 fn stub_holder(cx: &Cx, out: &mut String, holder: &Owned, here: &str) -> Result<()> {
+    shadowing(cx, members(holder), || stub_statics(cx, out, holder, here))
+}
+
+fn stub_statics(cx: &Cx, out: &mut String, holder: &Owned, here: &str) -> Result<()> {
     let ty = holder.ty;
     out.push_str(&format!("class {}:\n", ty.name));
     docstring(out, 1, &summary(&ty.docs));
@@ -1991,7 +2013,23 @@ fn stub_rng(cx: &Cx, out: &mut String, here: &str) -> Result<()> {
 
 fn stub_file(cx: &Cx, node: &Node) -> Result<String> {
     let here = node.path.as_str();
-    let mut out = String::new();
+    let mut names: Vec<String> = node.children.keys().cloned().collect();
+    names.extend(node.consts.iter().map(|c| c.name.clone()));
+    names.extend(
+        node.classes
+            .iter()
+            .chain(&node.holders)
+            .map(|c| c.ty.name.clone()),
+    );
+    names.extend(node.exports.iter().map(|e| py_name(&e.name)));
+    if here == "core" {
+        names.push("Rng".to_string());
+    }
+    let body = shadowing(cx, names, || stub_body(cx, node, here))?;
+    Ok(stub_head(node, &body))
+}
+
+fn stub_body(cx: &Cx, node: &Node, here: &str) -> Result<String> {
     let mut body = String::new();
     for c in &node.consts {
         body.push_str(&format!("{}: {}\n", c.name, py_type(cx, &c.ty, here)));
@@ -2012,6 +2050,11 @@ fn stub_file(cx: &Cx, node: &Node) -> Result<String> {
         stub_fn(cx, &mut body, 0, export, Place::Free, here)?;
         body.push('\n');
     }
+    Ok(body)
+}
+
+fn stub_head(node: &Node, body: &str) -> String {
+    let mut out = String::new();
     let mut packages: Vec<String> = Vec::new();
     for word in body.split(|c: char| !(c.is_alphanumeric() || c == '_' || c == '.')) {
         if let Some(rest) = word.strip_prefix("mrly.") {
@@ -2023,6 +2066,9 @@ fn stub_file(cx: &Cx, node: &Node) -> Result<String> {
         }
     }
     packages.sort();
+    if body.contains("builtins.") {
+        out.push_str("import builtins\n");
+    }
     out.push_str("from typing import Any, Literal\n\nfrom numpy.typing import NDArray\n");
     for pkg in &packages {
         out.push_str(&format!("import {pkg}\n"));
@@ -2034,7 +2080,7 @@ fn stub_file(cx: &Cx, node: &Node) -> Result<String> {
     out.push('\n');
     out.push_str(body.trim_end());
     out.push('\n');
-    Ok(out)
+    out
 }
 
 fn init_file(node: &Node) -> String {

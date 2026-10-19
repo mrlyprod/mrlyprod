@@ -51,7 +51,7 @@ test("the router takes a page and leaves another origin, a file, a fragment of t
     ['/404.html', '/menu/', ''],
     ['/index.html', '/menu/', ''],
     ['/stats/stats.json', '/stats/', ''],
-    ['/raw/site/ui/chrome.js', '/git/site/ui/chrome.js', ''],
+    ['/raw/site/src/shell/chrome.js', '/git/site/src/shell/chrome.js', ''],
   ];
   for (const [to, from, want] of rows) expect([to, from, kind(to, from)]).toEqual([to, from, want]);
 });

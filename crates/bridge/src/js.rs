@@ -1,6 +1,7 @@
 use crate::disk::save;
 use crate::model::{
-    Const, Cross, Function, Manifest, Result, SelfKind, Ty, Type, TypeCross, TypeKind,
+    Const, Cross, Function, Hand, Manifest, Result, SelfKind, Ty, Type, TypeCross, TypeKind,
+    by_dim, hand,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
@@ -152,8 +153,6 @@ const JS_RESERVED: &[&str] = &[
     "extends",
 ];
 
-const HAND_RS: &str = "pub use mrly_js_hand::*;\n";
-
 const ALLOWS: &str = "#![allow(non_camel_case_types, non_snake_case, clippy::too_many_arguments)]";
 
 // FILES
@@ -164,17 +163,20 @@ pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     for name in names.iter().map(String::as_str) {
         let unit = Unit::new(manifest, name);
         let dir = js.join("units").join(name);
-        save(&dir.join("Cargo.toml"), &cargo_toml(name, &names))?;
-        if name == "all" {
-            save(&dir.join("src/lib.rs"), &bundle_rs(&names))?;
-        } else {
-            save(&dir.join("src/hand.rs"), HAND_RS)?;
-            save(&dir.join("src/lib.rs"), &unit.lib_rs()?)?;
-        }
+        save(&dir.join("Cargo.toml"), &cargo_toml(name))?;
+        save(&dir.join("src/lib.rs"), &unit.lib_rs()?)?;
         save(&js.join(format!("{name}.js")), &unit.wrapper_js())?;
+        save(&js.join(format!("{name}.node.js")), &node_js(name))?;
         save(&js.join(format!("{name}.d.ts")), &unit.types_dts()?)?;
     }
-    save(&js.join("manifest.test.js"), MANIFEST_TEST)?;
+    save(&js.join("index.js"), &index_js(&names, ""))?;
+    save(&js.join("index.node.js"), &index_js(&names, ".node"))?;
+    save(&js.join("index.d.ts"), &index_dts(&names))?;
+    save(
+        &js.join("package.json"),
+        &package_json(&names, &manifest.version),
+    )?;
+    save(&js.join("manifest.test.js"), &manifest_test())?;
     Ok(())
 }
 
@@ -187,27 +189,111 @@ pub fn units(manifest: &Manifest) -> Vec<String> {
         .collect();
     names.sort();
     names.dedup();
-    names.push("all".to_string());
     names
 }
 
-fn cargo_toml(name: &str, names: &[String]) -> String {
+fn cargo_toml(name: &str) -> String {
     let head = format!(
         "[package]\nname = \"mrly-js-{name}\"\nversion.workspace = true\nedition.workspace = true\nlicense.workspace = true\nrepository.workspace = true\n"
     );
-    if name == "all" {
-        let deps: String = names
-            .iter()
-            .filter(|unit| *unit != "all")
-            .map(|unit| format!("mrly-js-{unit} = {{ path = \"../{unit}\" }}\n"))
-            .collect();
-        return format!(
-            "{head}description = \"The root wasm of @mrlyprod/mrly: every unit in one instance, so class objects cross between modules.\"\npublish = false\n\n[lib]\ncrate-type = [\"cdylib\"]\n\n[dependencies]\n{deps}"
-        );
-    }
     format!(
         "{head}description = \"The {name} wasm unit of @mrlyprod/mrly: the {name} module of mrly in a browser.\"\npublish = false\n\n[lib]\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[dependencies]\nmrly.workspace = true\nmrly-js-hand.workspace = true\nwasm-bindgen.workspace = true\nserde-wasm-bindgen.workspace = true\njs-sys.workspace = true\nserde.workspace = true\nserde_json.workspace = true\n"
     )
+}
+
+fn node_js(name: &str) -> String {
+    format!(
+        "import {{ readFileSync }} from \"node:fs\";\nimport {{ initSync }} from \"./{name}.js\";\n\ninitSync({{ module: readFileSync(new URL(\"./pkg/{name}/mrly_js_{name}_bg.wasm\", import.meta.url)) }});\n\nexport * from \"./{name}.js\";\nexport {{ default }} from \"./{name}.js\";\n"
+    )
+}
+
+fn index_js(names: &[String], flavor: &str) -> String {
+    let mut out = String::new();
+    for name in names {
+        writeln!(out, "import * as {name} from \"./{name}{flavor}.js\";").ok();
+    }
+    let list = names.join(", ");
+    let inits: Vec<String> = names
+        .iter()
+        .map(|name| format!("{name}.default()"))
+        .collect();
+    write!(
+        out,
+        "\nexport {{ {list} }};\n\nexport async function init() {{\n    await Promise.all([{}]);\n}}\n\nexport default init;\n",
+        inits.join(", ")
+    )
+    .ok();
+    out
+}
+
+fn index_dts(names: &[String]) -> String {
+    let mut out = String::new();
+    for name in names {
+        writeln!(out, "export * as {name} from \"./{name}.js\";").ok();
+    }
+    out.push_str("\n/** Loads every unit's wasm; each unit also loads on its own with its default export. */\nexport declare function init(): Promise<void>;\n\nexport default init;\n");
+    out
+}
+
+const DESCRIPTION: &str =
+    "MrlyMath, the mathematics of designs, compiled to WebAssembly for the browser and Node.";
+
+const KEYWORDS: &[&str] = &[
+    "mathematics",
+    "fractal",
+    "cellular-automata",
+    "generative",
+    "wasm",
+    "webassembly",
+];
+
+fn package_json(names: &[String], version: &str) -> String {
+    let entry = |stem: &str| {
+        serde_json::json!({
+            "types": format!("./{stem}.d.ts"),
+            "node": format!("./{stem}.node.js"),
+            "default": format!("./{stem}.js"),
+        })
+    };
+    let mut exports = serde_json::Map::new();
+    exports.insert(".".into(), entry("index"));
+    for name in names {
+        exports.insert(format!("./{name}"), entry(name));
+    }
+    exports.insert("./pkg/*".into(), "./pkg/*".into());
+    exports.insert("./package.json".into(), "./package.json".into());
+    let mut files = vec![
+        "LICENSE".to_string(),
+        "README.md".to_string(),
+        "pkg/".to_string(),
+    ];
+    for stem in std::iter::once("index").chain(names.iter().map(String::as_str)) {
+        for ext in ["js", "node.js", "d.ts"] {
+            files.push(format!("{stem}.{ext}"));
+        }
+    }
+    let package = serde_json::json!({
+        "name": "@mrlyprod/mrly",
+        "version": version,
+        "description": DESCRIPTION,
+        "keywords": KEYWORDS,
+        "author": "MrlyProd, Inc.",
+        "license": "MIT",
+        "homepage": "https://mrly.net",
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/mrlyprod/mrlyprod",
+            "directory": "bindings/js",
+        },
+        "bugs": { "url": "https://github.com/mrlyprod/mrlyprod/issues" },
+        "type": "module",
+        "sideEffects": ["./*.node.js"],
+        "publishConfig": { "access": "public" },
+        "exports": exports,
+        "files": files,
+        "scripts": { "test": "bun test" },
+    });
+    serde_json::to_string_pretty(&package).unwrap_or_default() + "\n"
 }
 
 pub fn field_skips(manifest: &Manifest) -> Vec<(String, String)> {
@@ -234,14 +320,6 @@ pub fn field_skips(manifest: &Manifest) -> Vec<(String, String)> {
         }
     }
     out
-}
-
-fn bundle_rs(names: &[String]) -> String {
-    names
-        .iter()
-        .filter(|unit| *unit != "all")
-        .map(|unit| format!("pub use mrly_js_{unit};\n"))
-        .collect()
 }
 
 // UNIT
@@ -324,13 +402,10 @@ impl<'a> Unit<'a> {
     }
 
     fn holds(&self, path: &str) -> bool {
-        self.name == "all" || path.split("::").next() == Some(self.name)
+        path.split("::").next() == Some(self.name)
     }
 
     fn rel<'p>(&self, path: &'p str) -> &'p str {
-        if self.name == "all" {
-            return path;
-        }
         match path.strip_prefix(self.name) {
             Some("") => "",
             Some(rest) => rest.strip_prefix("::").unwrap_or(path),
@@ -412,18 +487,21 @@ impl<'a> Unit<'a> {
 
     fn hand_name(&self, t: &Type) -> &'static str {
         match &t.cross {
-            TypeCross::Hand { name } => match name.as_str() {
-                "Tensor" => "Tensor",
-                "Cell" => "Cell",
-                "CellNd" => "CellNd",
-                "Cell6d" => "Cell6d",
-                "Image" => "Image",
-                "Color" => "Color",
-                "Code" => "Code",
-                _ => "Rng",
-            },
+            TypeCross::Hand { name } => hand(name).map_or("Rng", |hand| hand.name),
             _ => "Rng",
         }
+    }
+
+    fn hand_pick(
+        &self,
+        name: &str,
+        dim: Option<u8>,
+        cx: Cx,
+        pick: fn(&Hand) -> &'static [&'static str],
+    ) -> Result<&'static str> {
+        let row = hand(name).ok_or_else(|| format!("{}: unknown hand type {name}", cx.fname))?;
+        by_dim(pick(row), dim.or(cx.dim))
+            .ok_or_else(|| format!("{}: a cell without a dimension", cx.fname))
     }
 
     // RUST TYPES
@@ -435,7 +513,7 @@ impl<'a> Unit<'a> {
             Ty::Str | Ty::String => "String".into(),
             Ty::U128 => "u128".into(),
             Ty::I128 => "i128".into(),
-            Ty::Code => "mrly::math::bang::Code".into(),
+            Ty::Code => self.hand_pick("Code", None, cx, |row| row.rust)?.into(),
             Ty::Json => "mrly::core::Json".into(),
             Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Set { item } => {
                 format!("Vec<{}>", self.rust_ty(item, cx)?)
@@ -453,21 +531,7 @@ impl<'a> Unit<'a> {
                 self.rust_ty(key, cx)?,
                 self.rust_ty(value, cx)?
             ),
-            Ty::Hand { name, dim } => match name.as_str() {
-                "Tensor" => "mrly::core::Tensor".into(),
-                "Cell" => "mrly::core::Cell".into(),
-                "CellNd" => match dim.or(cx.dim) {
-                    Some(2) => "mrly::math::two::Cell2d".into(),
-                    Some(3) => "mrly::math::three::Cell3d".into(),
-                    _ => return Err(format!("{}: a cell without a dimension", cx.fname)),
-                },
-                "Cell6d" => "mrly::math::six::Cell6d".into(),
-                "Image" => "mrly::core::Image".into(),
-                "Color" => "mrly::core::Color".into(),
-                "Code" => "mrly::math::bang::Code".into(),
-                "Rng" => "mrly::core::Rng".into(),
-                other => return Err(format!("{}: unknown hand type {other}", cx.fname)),
-            },
+            Ty::Hand { name, dim } => self.hand_pick(name, *dim, cx, |row| row.rust)?.into(),
             Ty::Plain { path } => {
                 let generic = self.ty(path).is_some_and(|t| t.const_generic);
                 if generic {
@@ -545,20 +609,13 @@ impl<'a> Unit<'a> {
                 self.rust_ty(key, cx)?,
                 closure(&x, ok(self.cross_in(value, &x, cx, depth + 1)?))
             ),
-            Ty::Hand { name, dim } => match name.as_str() {
-                "Tensor" => format!("hand::tensor_from_js({e})?"),
-                "Cell" => format!("hand::cell_from_js({e})?"),
-                "CellNd" => match dim.or(cx.dim) {
-                    Some(2) => format!("hand::cell2d_from_js({e})?"),
-                    Some(3) => format!("hand::cell3d_from_js({e})?"),
-                    _ => return Err(format!("{}: a cell without a dimension", cx.fname)),
-                },
-                "Cell6d" => format!("hand::cell6d_from_js({e})?"),
-                "Image" => format!("hand::image_from_js({e})?"),
-                "Color" => format!("hand::color_from_js({e})?"),
-                "Code" => format!("hand::code_from_js({e})?"),
-                other => return Err(format!("{}: {other} cannot cross in by value", cx.fname)),
-            },
+            Ty::Hand { name, .. } if name == "Rng" => {
+                return Err(format!("{}: {name} cannot cross in by value", cx.fname));
+            }
+            Ty::Hand { name, dim } => {
+                let stem = self.hand_pick(name, *dim, cx, |row| row.js)?;
+                format!("hand::{stem}_from_js({e})?")
+            }
             Ty::Class { .. } => format!(
                 "hand::from_js::<{}>(&hand::plain({e})?)?",
                 self.rust_ty(ty, cx)?
@@ -631,18 +688,13 @@ impl<'a> Unit<'a> {
                 closure(&x, ok(self.cross_out(value, &x, cx, depth + 1)?))
             ),
             Ty::Hand { name, dim } => match name.as_str() {
-                "Tensor" => format!("hand::tensor_to_js({e})?"),
-                "Cell" => format!("hand::cell_to_js({e})?"),
-                "CellNd" => match dim.or(cx.dim) {
-                    Some(2) => format!("hand::cell2d_to_js({e})?"),
-                    Some(3) => format!("hand::cell3d_to_js({e})?"),
-                    _ => return Err(format!("{}: a cell without a dimension", cx.fname)),
-                },
-                "Cell6d" => format!("hand::cell6d_to_js({e})?"),
-                "Image" => format!("hand::image_to_js({e})?"),
                 "Color" => format!("hand::color_to_js({})", deref(e)),
                 "Code" => format!("JsValue::from_str(&hand::code_to_js({}))", deref(e)),
-                _ => format!("JsValue::from(hand::Rng::wrap({}.clone()))", place(e)),
+                "Rng" => format!("JsValue::from(hand::Rng::wrap({}.clone()))", place(e)),
+                _ => {
+                    let stem = self.hand_pick(name, *dim, cx, |row| row.js)?;
+                    format!("hand::{stem}_to_js({e})?")
+                }
             },
             Ty::Class { path, .. } if self.holds(path) => {
                 let inner = if self.is_copy(ty) {
@@ -1380,7 +1432,7 @@ impl<'a> Unit<'a> {
         let mut out = String::new();
         writeln!(
             out,
-            "{ALLOWS}\n\nmod hand;\n\nuse wasm_bindgen::prelude::*;\n"
+            "{ALLOWS}\n\nuse mrly_js_hand as hand;\nuse wasm_bindgen::prelude::*;\n"
         )
         .ok();
         let groups = self.groups();
@@ -1435,10 +1487,7 @@ impl<'a> Unit<'a> {
                     Owner::Free | Owner::Hand(_) => self.export(&self.local(&f.path)),
                     Owner::Class(t) | Owner::Holder(t) => self.local(&t.path),
                 };
-                if JS_RESERVED.contains(&leaf.as_str()) {
-                    tree.insert(self.rel(&home), format!("{leaf}_"), export.clone());
-                }
-                tree.insert(self.rel(&home), leaf, export);
+                tree.insert(self.rel(&home), ts_leaf(&leaf), export);
             }
         }
         for t in self.classes() {
@@ -1528,16 +1577,8 @@ impl<'a> Unit<'a> {
             ),
             Ty::Ref { item, .. } | Ty::Result { item } => self.ts_direct(item, ret),
             Ty::Map { value, .. } => format!("Record<string, {}>", self.ts_direct(value, ret)),
-            Ty::Hand { name, .. } => match name.as_str() {
-                "Tensor" => "Tensor".into(),
-                "Cell" | "CellNd" => "Cell".into(),
-                "Cell6d" => "Cell6d".into(),
-                "Image" => "Image".into(),
-                "Color" => "Color".into(),
-                "Code" if ret => "string".into(),
-                "Code" => "string | number | bigint".into(),
-                _ => "Rng".into(),
-            },
+            Ty::Hand { name, .. } if name == "Code" && ret => "string".into(),
+            Ty::Hand { name, .. } => hand(name).map_or("Rng", |row| row.ts).into(),
             Ty::Plain { path } | Ty::Enum { path } | Ty::Class { path, .. } => self.ts_ref(path),
             Ty::Opaque { .. } | Ty::Unknown { .. } => "unknown".into(),
         }
@@ -1579,16 +1620,7 @@ impl<'a> Unit<'a> {
             ),
             Ty::Ref { item, .. } | Ty::Result { item } => self.ts_serde(item),
             Ty::Map { value, .. } => format!("Record<string, {}>", self.ts_serde(value)),
-            Ty::Hand { name, .. } => match name.as_str() {
-                "Tensor" => "TensorData".into(),
-                "Cell" => "CellData".into(),
-                "CellNd" => "{ cell: CellData }".into(),
-                "Cell6d" => "Cell6dData".into(),
-                "Image" => "{ width: number; height: number; colors: number[][] }".into(),
-                "Color" => "ColorData".into(),
-                "Code" => "bigint".into(),
-                _ => "unknown".into(),
-            },
+            Ty::Hand { name, .. } => hand(name).map_or("unknown", |row| row.ts_data).into(),
             Ty::Plain { path } | Ty::Enum { path } => self.ts_ref(path),
             Ty::Class { path, .. } => format!("{}Data", self.ts_ref(path)),
             Ty::Opaque { .. } | Ty::Unknown { .. } => "string".into(),
@@ -1962,7 +1994,7 @@ impl<'a> Unit<'a> {
         writeln!(out, "export interface Cell6dData {{\n    cell: {{ cell: CellData }};\n    projection: {projection};\n    orientation: {orientation};\n    start: number;\n}}").ok();
         writeln!(
             out,
-            "/** A seeded random stream, opened from a number or a bigint seed. */"
+            "/** A seeded random stream, opened from a number or a bigint seed; each subpath has its own Rng, so pass it only to functions of the same subpath. */"
         )
         .ok();
         writeln!(out, "export class Rng {{\n    constructor(seed: number | bigint | string);\n    free(): void;\n    /** Draws a float at or above zero and below one. */\n    unit(): number;\n    /** Draws an integer below n, or zero when n is zero. */\n    below(n: number): number;\n    /** Draws an integer between lo and hi inclusive, or lo when hi is not above lo. */\n    range(lo: number, hi: number): number;\n    /** Draws a fair coin flip. */\n    boolean(): boolean;\n    /** Returns true with probability p. */\n    chance(p: number): boolean;\n    /** Draws amount distinct indices below length, or every index when amount is larger. */\n    sample_indices(length: number, amount: number): Uint32Array;\n    /** Draws one item of the array, the same draw as Rust's choice. */\n    choice<T>(items: ArrayLike<T>): T;\n    /** Shuffles the array in place, the same permutation as Rust's shuffle. */\n    shuffle<T>(items: T[]): void;\n}}").ok();
@@ -2201,14 +2233,7 @@ fn plain_ty(t: &Type) -> Ty {
 }
 
 fn hand_self(name: &str) -> &'static str {
-    match name {
-        "Tensor" => "tensor",
-        "Image" => "image",
-        "Color" => "color",
-        "Code" => "code",
-        "Rng" => "rng",
-        _ => "cell",
-    }
+    hand(name).map_or("cell", |row| row.word)
 }
 
 fn suffix_dim(fname: &str) -> u8 {
@@ -2302,13 +2327,19 @@ fn rename_all(name: &str, rule: &str) -> String {
 
 // TEST
 
+fn manifest_test() -> String {
+    let reserved: Vec<String> = JS_RESERVED.iter().map(|word| format!("{word:?}")).collect();
+    MANIFEST_TEST.replace("RESERVED_WORDS", &reserved.join(", "))
+}
+
 const MANIFEST_TEST: &str = r#"import { expect, test } from "bun:test";
-import { readdirSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 
 const manifest = await Bun.file(new URL("../../crates/bridge/manifest.json", import.meta.url)).json();
 const units = readdirSync(new URL("./units", import.meta.url)).sort();
 const pkg = await Bun.file(new URL("./package.json", import.meta.url)).json();
 const kinds = new Map(manifest.types.map((t) => [t.path, t.cross.kind]));
+const reserved = new Set([RESERVED_WORDS]);
 
 function parent(path) {
     const at = path.lastIndexOf("::");
@@ -2316,20 +2347,21 @@ function parent(path) {
 }
 
 function relative(unit, path) {
-    return unit === "all" ? path : path.slice(unit.length + 2);
+    return path.slice(unit.length + 2);
 }
 
 function walk(mod, path) {
     let node = mod;
-    for (const seg of path.split("::").filter(Boolean)) {
+    const segs = path.split("::").filter(Boolean);
+    for (const [at, seg] of segs.entries()) {
         if (node === undefined || node === null) return undefined;
-        node = node[seg];
+        node = node[at === segs.length - 1 && reserved.has(seg) ? `${seg}_` : seg];
     }
     return node;
 }
 
 function holds(unit, path) {
-    return unit === "all" || path.split("::")[0] === unit;
+    return path.split("::")[0] === unit;
 }
 
 function check(mod, unit, f) {
@@ -2348,9 +2380,31 @@ function check(mod, unit, f) {
     return typeof walk(mod, relative(unit, f.path)) === "function";
 }
 
+test("every export ships in files and exists", () => {
+    const listed = new Set(pkg.files);
+    for (const file of ["LICENSE", "README.md"]) {
+        expect(listed.has(file)).toBe(true);
+        expect(existsSync(new URL(`./${file}`, import.meta.url))).toBe(true);
+    }
+    const license = new URL("./LICENSE", import.meta.url);
+    expect(lstatSync(license).isSymbolicLink()).toBe(false);
+    expect(readFileSync(license, "utf8")).toBe(readFileSync(new URL("../../LICENSE", import.meta.url), "utf8"));
+    const loose = new Set(["./pkg/*", "./package.json"]);
+    expect(pkg.exports["./package.json"]).toBe("./package.json");
+    for (const [key, entry] of Object.entries(pkg.exports)) {
+        if (loose.has(key)) continue;
+        for (const file of Object.values(entry)) {
+            expect(listed.has(file.slice(2))).toBe(true);
+            expect(existsSync(new URL(file, import.meta.url))).toBe(true);
+        }
+    }
+    const subpaths = Object.keys(pkg.exports).filter((key) => key.startsWith("./") && !loose.has(key));
+    expect(subpaths.map((key) => key.slice(2)).sort()).toEqual(units);
+});
+
 for (const unit of units) {
     test(`${unit} exports every ok name`, async () => {
-        expect(pkg.exports[unit === "all" ? "." : `./${unit}`]).toBeDefined();
+        expect(pkg.exports[`./${unit}`]).toEqual({ types: `./${unit}.d.ts`, node: `./${unit}.node.js`, default: `./${unit}.js` });
         const mod = await import(`./${unit}.js`);
         const bytes = await Bun.file(new URL(`./pkg/${unit}/mrly_js_${unit}_bg.wasm`, import.meta.url)).arrayBuffer();
         mod.initSync({ module: bytes });

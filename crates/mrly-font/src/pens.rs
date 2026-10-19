@@ -4,7 +4,7 @@
 /// - One stroke per string, cells in drawing order, each 4-adjacent to the one before it.
 /// - Long strokes: start where a hand starts the shape and lift only where a hand lifts.
 /// - The tables follow `bitmaps.rs` order: UPPERS, LOWERS, DIGITS, EXTRAS, SPECIALS.
-/// - Draft a glyph with `cargo run -p mrly --example pen -- X`, then edit it by hand.
+/// - Draft a glyph with `cargo run -p mrly-font --example pen -- X`, then edit it by hand.
 /// - The mechanical rules are tests in `paths.rs`; taste is not, so P keeps its one-cell stroke.
 pub type Pen = (char, &'static [&'static str]);
 

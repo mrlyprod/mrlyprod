@@ -6,9 +6,18 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
-description = "The integers of MrlyMath: primes, divisors, series, lattices, spectra and networks."
+keywords.workspace = true
+categories.workspace = true
+description = "The integers: primes, divisors, series, sieves, lattices and spectra."
+readme = "README.md"
+include = ["src/**", "README.md", "LICENSE"]
+
+[lints]
+workspace = true
 
 [dependencies]
 serde.workspace = true
-serde_json.workspace = true
 mrly-core.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

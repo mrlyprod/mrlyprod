@@ -2,17 +2,19 @@
   "name": "mrlynet",
   "private": true,
   "type": "module",
+  "packageManager": "bun@1.4.3",
   "imports": {
     "#view": "./src/lib/view/index.js",
     "#view/*": "./src/lib/view/*"
   },
   "scripts": {
-    "wasm": "bash ../scripts/wasm.sh",
+    "wasm": "bun scripts/wasm.ts",
     "dev": "bun install && bun scripts/dev.ts",
     "build": "bun scripts/build.ts",
     "push": "bun infra/push.ts",
     "check": "bun scripts/check.ts",
     "test": "bun test",
+    "types": "tsc -p tsconfig.json",
     "shots": "bun scripts/shots.ts",
     "film": "bun scripts/film.ts",
     "time": "bun scripts/time.ts",
@@ -33,5 +35,9 @@
     "three": "^0.185.1",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.3",
+    "typescript": "^7.0.2"
   }
 }

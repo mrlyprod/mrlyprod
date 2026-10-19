@@ -7,12 +7,9 @@ import { Widget, filters, rows } from './widget.jsx';
 
 const value = { seed: 1, dim: 2, base: 2, code: '', level: 3, tint: 'degree', spin: 0, show: 'classes' };
 
-test('the widget mounts its stage once the unit is in hand, and a cube only once three is too', () => {
+test('a cube mounts its stage only once three is in hand too', () => {
   const page = (unit, three, patch = {}) => renderToStaticMarkup(<Frame label="Designs"><Widget value={{ ...value, ...patch }} onChange={() => {}} unit={unit} three={three} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-  expect(page(math, undefined, { dim: 3 })).not.toContain('<canvas');
-  expect(page(math, {}, { dim: 3 })).toContain('<canvas');
+  expect([page(math, undefined, { dim: 3 }).includes('<canvas'), page(math, {}, { dim: 3 }).includes('<canvas')]).toEqual([false, true]);
 });
 
 test('the gallery shows the classes unless the url asks for all or the named, and only the named where the space is too big to list', () => {

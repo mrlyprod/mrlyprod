@@ -5,9 +5,9 @@
 
 ## UNIT
 
-- `app.json`, `icon.js` (the menu figure, a plate by `../lib/plate.js`) and its page, `index.jsx`.
-- A scene app adds `scene.js` (`SPEC`, `PAGE`, `make`; no React, no DOM beyond its canvas), `widget.jsx` (the React around it) and `index.jsx`.
-- `index.jsx` is one line, `export const { mount, unmount } = page(Widget, defaults, PAGE)`; `defaults` holds `seed` and any url key outside the spec.
+- A new app is 4 files: `app.json`, `icon.js` (the menu figure, a plate by `../lib/plate.js`), `scene.js` (`SPEC`, `PAGE`, `make`; no React, no DOM beyond its canvas) and `widget.jsx` (the React around it).
+- No app holds an `index.jsx`: the build writes each entry as the virtual module `app:<id>`, `page(Widget, { seed: 0, ...PAGE.defaults }, PAGE)` (`entry` in `../../scripts/build.ts`).
+- `PAGE.defaults` holds any url key outside the spec (`base`, `code`, a design); the seed is always 0.
 - `scene.js` names its wasm units with `export const units = wasm('math', ...)` from `../lib/units/`; a widget that needs one before the page hands it over takes it with `useUnit(name, given)` from `../lib/app/hooks.js`; no scene, engine or widget imports a unit, a figure names its own, and the test preload initialises them.
 - A family shares its code through `../lib/<family>/`, the head app included: two (crop), three (cuts, slices), sequences (plot, tour), spin (radial), moire (star, tourbillon), life (wolfram); no app imports another (`../../test/imports.test.js`).
 - `../lib/designs/` is the shared design kit: the rules and `DESIGN` in `engine.js`, the picker (`Pick`, `Picker`, `Thumbs`) in `pick.jsx`.
@@ -39,7 +39,7 @@
 
 ## PAGE
 
-- `PAGE` in `scene.js` holds the `page()` options: `spec` (`SPEC`), `units` (the `wasm()` thunk), `keys`, `actions` (an `act` to `(handle, event)`), `gestures`, `record`, `about`, `still`, `name`.
+- `PAGE` in `scene.js` holds the `page()` options: `defaults`, `spec` (`SPEC`), `units` (the `wasm()` thunk), `keys`, `actions` (an `act` to `(handle, event)`), `gestures`, `record`, `about`, `still`, `name`.
 - `gestures: true` hands touch to the canvas; `record: true` adds the Video exports, `v` and Stop.
 - `about`: plain paragraphs at the top of Info; `[text](/route/)` is a link.
 - `name(value, units)` names the PNG, WebP and video exports; the default is `<id>-<seed>`.
@@ -79,54 +79,11 @@
 - One view at a time: several pictures of one thing are a `view` segment, never side by side.
 - Charts only in chart-first or explainer apps (`sequences`, `plot`, `tour`), or as a view of its own when the chart is the app's whole point; no chart, profile, spectrum, trace or strip beside a picture.
 - Readouts are numbers in `onStatus` and Info.
-- Rust is the only maths: every number comes through an `@mrlyprod/mrly` door; a missing door is a door gap, left out, never typed in JS.
+- A design and its numbers come through an `@mrlyprod/mrly` door; a missing door is a door gap, left out, never typed in JS.
+- Two exceptions are drawn in JS: the deep zoom of julia and mandelbrot (`lib/fractal/`) and the flight paths of zoom and voyage (`lib/space/`), which take their cells and classes from the math door.
 - A saver is what a good app turns out to be: never built as one, `saver: true` only when it is pretty with no hands at a random seed; one that needs a hand is an instrument.
 - On the page the picture waits for a hand; loops, reseeds and holds run only under `view.lock`.
 - Live: a slider moves the picture as it moves, a tap does something.
 - An app opens on its canonical picture (the carpet, the glider), never a random one; Reroll rolls.
 - A knob never has a key.
 - `line` is one plain sentence of at most 90 characters; `about` is two to four plain paragraphs.
-
-## MAP
-
-- `apollonian`: tangent circles in exact integers; on the strip the line circles are Ford circles.
-- `arcs`: quarter arcs in every cell join into strands and loops, counted against the law.
-- `chladni`: sand on a ringing plate or a design runs to the nodal lines, as sand, field or lines.
-- `crop`: a shape keeps only the cells of a design it reaches: in, cut and out.
-- `cuts`: the diagonal cuts of the gasket cube, all one size, as points or a section.
-- `designs`: the gallery of every design, one a class, in the plane or the cube.
-- `font`: the 108 pens of MrlyFont writing themselves, as a wall of pens or your own text.
-- `gaussian`: the Gaussian and Eisenstein primes, split, inert and ramified; tap a point.
-- `graphs`: a design as a network in 2D, 3D or 6D: count tips and pieces, relax the lattice.
-- `julia`: an endless dive into Julia sets, c from six presets.
-- `life`: Life on any design mask, in a plane or on a line: paint, play, step, run to fate.
-- `lightspeed`: a WebGL2 starfield and the jump to hyperspace.
-- `mandelbrot`: an endless dive into the Mandelbrot set, steered toward minibrots.
-- `matrix`: MrlyFont rain.
-- `moire`: one design stacked over its odd scales, and its r-matrix as a second view.
-- `morse`: the Thue-Morse word in four views: the word, its lifts, a design's sign power and filter.
-- `planets`: one world lit per pixel: oceans, clouds, city lights, air, rings and moons.
-- `plot`: one design sequence drawn large with its rule, and a second one to mix in.
-- `polygons`: the desk: a mosaic of tilings coloured by a drifting field and swept by waves.
-- `race`: walkers race on two designs of one mass, and the shape alone decides who wins.
-- `radial`: a design stacked in turned copies about its centre.
-- `radix`: a base of the plane and its digits, twisted into a curve, a dragon or a blob.
-- `sequences`: the ledger of every count a design writes, searched by terms, name, record or code.
-- `sfx`: an instrument: the voyage's sounds, synthesised from a seed, to play and save as WAV.
-- `six`: a cube design tiled into a sheet of hexagons in three views, its buried edges counted.
-- `sleep`: one mrlytile bouncing off the walls, its design rolled anew at each.
-- `slices`: the middle plane of a cube, a hexagon of triangles; slide the side, count the pieces.
-- `snake`: Snake with mrlytile pieces, played by hand or by a smart or silly player.
-- `spin`: a design on a turntable strobed by the screen, and its infinite-speed wheel.
-- `spirograph`: a design as the wheel: every cell holds a pencil that draws its own rolling curve.
-- `star`: the hexagonal cuts of the carpet cube stacked, a ghost star fading at the centre.
-- `techno`: an instrument: an acid loop grown from a seed on a step grid, to play and save as WAV.
-- `three`: a cube design as a solid to orbit, crop, count and cut, from the sponge to a field.
-- `tour`: the explainer: thirteen cards of mrlymath, each a live design beside its sequence.
-- `tourbillon`: the carpet at every odd scale, each layer turned by its own angle.
-- `two`: one design repeated into a sheet: the fills multiply, the exposed edges do not.
-- `ulam`: the whole numbers wound in a spiral from one, the primes and a quadratic's line lit.
-- `voyage`: a film from a seed: leave a world, jump, fly the ship's corridors, arrive at another.
-- `wolfram`: the 256 elementary rules as the 256 cube designs: a light cone and its card.
-- `zeta`: zeta walked up the critical line through its zeros, then folded into the primes.
-- `zoom`: an endless flight into a 3D mrlybang code: corridor, trench, pillars or skim.

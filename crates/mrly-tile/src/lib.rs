@@ -1,4 +1,4 @@
-//! The generator: the pipeline from a recipe to a file, for datasets, the automator, backgrounds.
+//! The tiles: the whole pipeline from a recipe to a file.
 //!
 //! - `recipe`: the tile recipe, its families, groups, parities, catalog and size lists.
 //! - `draw`: one recipe drawn at random from a seeded stream under size constraints.
@@ -9,11 +9,11 @@
 //! The doors: [`Tile::new`](crate::recipe::Tile::new),
 //! [`Tile::size`](crate::recipe::Tile::size),
 //! [`Tile::check`](crate::recipe::Tile::check),
-//! [`draw::create`](crate::draw::create), [`random_design`](crate::random_design),
-//! [`random_rotation`](crate::random_rotation), [`build_2d`](crate::build::build_2d),
-//! [`tree_mask`](crate::tree_mask), [`variation::create`](crate::variation::create),
-//! [`hex_key`](crate::hex_key), [`classic_code_nd`](crate::classic_code_nd),
-//! [`Tile::of`](crate::name::Tile::of) and [`background`](crate::background).
+//! [`draw::create`], [`random_design`],
+//! [`random_rotation`], [`build_2d`](crate::build::build_2d),
+//! [`tree_mask`], [`variation::create`],
+//! [`hex_key`], [`classic_code_nd`],
+//! [`Tile::of`](crate::name::Tile::of) and [`background`].
 
 /// The recipe to cell builders, one per dimension, and the random draws that feed them.
 pub mod build;
@@ -73,6 +73,10 @@ pub fn background(seed: u64, width: usize, height: usize) -> Result<Image> {
         None => value_error("the background rendered no file."),
     }
 }
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct Readme;
 
 #[cfg(test)]
 mod tests {

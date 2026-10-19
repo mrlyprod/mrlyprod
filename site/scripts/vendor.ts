@@ -42,11 +42,12 @@ type Face = { url: string; range: string | null };
 
 function faces(css: string): Face[] {
   const out: Face[] = [];
-  for (const [, body] of css.matchAll(/@font-face\s*\{([^}]+)\}/g)) {
+  for (const hit of css.matchAll(/@font-face\s*\{([^}]+)\}/g)) {
+    const body = hit[1]!;
     const url = /url\((\S+?)\)\s*format/.exec(body);
     if (!url) continue;
     const range = /unicode-range:\s*([^;]+);/.exec(body);
-    out.push({ url: url[1], range: range ? range[1].trim() : null });
+    out.push({ url: url[1]!, range: range ? range[1]!.trim() : null });
   }
   return out;
 }
@@ -55,7 +56,7 @@ function symbol(svg: string): { box: string; d: string } {
   const box = /viewBox="([^"]+)"/.exec(svg);
   const paths = [...svg.matchAll(/<path d="([^"]+)"\/>/g)];
   if (!box || paths.length !== 1) throw new Error("vendor: expected one viewBox and one path");
-  return { box: box[1], d: paths[0][1] };
+  return { box: box[1]!, d: paths[0]![1]! };
 }
 
 function source(box: string, icons: [string, string][]): string {
@@ -96,7 +97,7 @@ export async function main(root: string) {
   };
   const font = async (name: string, url: string) => {
     const data = await get(url);
-    const tag = String.fromCharCode(data[0], data[1], data[2], data[3]);
+    const tag = String.fromCharCode(...data.subarray(0, 4));
     if (tag !== "wOF2") throw new Error(`${name}: expected wOF2 magic, got ${JSON.stringify(tag)}`);
     await save(join(out, name), data);
   };

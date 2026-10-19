@@ -1,10 +1,14 @@
-import { expect, test } from "bun:test";
+import { afterAll, expect, spyOn, test } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { lambda, modules, type Get, type Head, type Wake } from "./builder.ts";
 
 /* FIXTURES */
+
+const quiet = spyOn(console, "log").mockImplementation(() => {});
+
+afterAll(() => quiet.mockRestore());
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
 
@@ -15,14 +19,14 @@ const net = lambda({
   agent: "net-builder",
   bucket: "NET_BUCKET",
   folder: "site",
-  sources: ["push", "schedule", "automator", "manual"],
+  sources: ["push", "schedule", "hook", "manual"],
 });
 
-const shop = lambda({
-  source: "owner/shop",
+const docs = lambda({
+  source: "owner/docs",
   head: "data/build/head",
-  dir: "/tmp/shop",
-  agent: "shop-builder",
+  dir: "/tmp/docs",
+  agent: "docs-builder",
   bucket: "SHOP_BUCKET",
   folder: "site",
 });
@@ -56,7 +60,7 @@ test("the payload parser survives junk, an unknown source and a source word the 
   expect(net.readEvent("")).toEqual({ source: "", on: "", sha: "", force: false });
   expect(net.readEvent("not json")).toEqual({ source: "", on: "", sha: "", force: false });
   expect(net.readEvent(JSON.stringify({ source: "nonsense", repo: "owner/net" }))).toEqual({ source: "", on: "source", sha: "", force: false });
-  expect(shop.readEvent(JSON.stringify({ source: "automator", repo: "owner/shop" }))).toEqual({ source: "", on: "source", sha: "", force: false });
+  expect(docs.readEvent(JSON.stringify({ source: "hook", repo: "owner/docs" }))).toEqual({ source: "", on: "source", sha: "", force: false });
 });
 
 test("the payload parser keeps a good sha, lowercases it and drops a malformed one", () => {
@@ -140,7 +144,7 @@ test("the head file is the sha and the etag, and a longer head reads as its firs
   const text = net.headText({ sha: SHA, etag: "e" });
   expect(text).toBe(`${SHA}\ne\n`);
   expect(net.parseHead(text)).toEqual({ sha: SHA, etag: "e" });
-  expect(shop.parseHead(`${SHA}\ne\nold\nlines\n`)).toEqual({ sha: SHA, etag: "e" });
+  expect(docs.parseHead(`${SHA}\ne\nold\nlines\n`)).toEqual({ sha: SHA, etag: "e" });
 });
 
 /* MODULES */

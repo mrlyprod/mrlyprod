@@ -24,7 +24,6 @@ export const cell = {
     moore: wasm.core_cell_moore,
     mosaic: wasm.core_cell_mosaic,
     neighbors: wasm.core_cell_neighbors,
-    new: wasm.core_cell_new,
     new_: wasm.core_cell_new,
     pad: wasm.core_cell_pad,
     paint: wasm.core_cell_paint,
@@ -83,10 +82,16 @@ export const error = {
 };
 export const image = {
     blur: wasm.core_image_blur,
-    new: wasm.core_image_new,
     new_: wasm.core_image_new,
     resample: wasm.core_image_resample,
     scale: wasm.core_image_scale,
+};
+export const name = {
+    sha: {
+        hex: wasm.core_name_sha_hex,
+        sha256: wasm.core_name_sha_sha256,
+        short: wasm.core_name_sha_short,
+    },
 };
 export const paint = {
     Config: wasm.core_paint_Config,
@@ -112,7 +117,6 @@ export const rng = {
     below: wasm.core_rng_below,
     boolean: wasm.core_rng_boolean,
     chance: wasm.core_rng_chance,
-    new: wasm.core_rng_new,
     new_: wasm.core_rng_new,
     range: wasm.core_rng_range,
     sample_indices: wasm.core_rng_sample_indices,
@@ -139,7 +143,6 @@ export const tensor = {
     kron: wasm.core_tensor_kron,
     layers: wasm.core_tensor_layers,
     neighbors: wasm.core_tensor_neighbors,
-    new: wasm.core_tensor_new,
     new_: wasm.core_tensor_new,
     of: wasm.core_tensor_of,
     otsu_threshold: wasm.core_tensor_otsu_threshold,

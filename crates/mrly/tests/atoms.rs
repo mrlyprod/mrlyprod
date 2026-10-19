@@ -1,3 +1,5 @@
+//! The ready-made atoms against the design codes their residue rules spell.
+
 mod tests {
     use mrly::core::tensor::Tensor;
     use mrly::math::atoms::*;

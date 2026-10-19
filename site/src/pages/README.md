@@ -19,7 +19,7 @@
 - `menu`: Play, Read and Tools from each app's `menu`, then the site tree.
 - `method`: prose: Carlo directs, Claude writes and computes, every number names its generator.
 - `missing`: hidden: the 404 page, "Nothing here".
-- `mrlymath`: prose from `crates/mrly-math/NAMES.md`: a design as one string.
+- `mrlymath`: prose from `crates/mrly-core/src/name/NAMES.md`: a design as one string.
 - `redirects`: hidden: the moved urls of `redirects.json`.
 - `research`: the topic grid; `/research/<slug>/` opens a topic's README over it.
 - `settings`: theme, font, tint and saver, kept in this browser.

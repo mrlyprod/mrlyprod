@@ -1,3 +1,5 @@
+//! Prints one seeded tile per paint edition, painted, as the rows the paint tests read.
+
 use mrly::core::paint::{self, Config as PaintConfig, Edition, Paint};
 use mrly::core::{Image, Json, Rng, json};
 use mrly::tile::build::{Config2d, build_2d, create_2d};

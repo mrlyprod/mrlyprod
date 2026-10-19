@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { paints } from './color.js';
+import { blend, hex, paints } from './color.js';
 import { palette } from './theme/palette.gen.js';
 import { light } from './theme/theme.js';
 
@@ -17,4 +17,9 @@ test('look hands the theme foreground as ink beside paper and accent, from --fg 
   const read = paints({}).ink;
   delete globalThis.getComputedStyle;
   expect([read, paints({}).ink]).toEqual(['#123456', light.fg]);
+});
+
+test('blend mixes two colour strings into an rgb string, and hex writes rgb bytes clamped and rounded', () => {
+  expect([blend('#000000', '#ffffff', 0.5), blend('rgb(10, 20, 30)', '#000', 0)]).toEqual(['rgb(128, 128, 128)', 'rgb(10, 20, 30)']);
+  expect([hex([255, 0, 128]), hex([300, -4, 12.6, 9])]).toEqual(['#ff0080', '#ff000d']);
 });

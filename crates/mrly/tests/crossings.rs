@@ -1,6 +1,9 @@
+//! The values that cross units: letters into rows, and every name kind into one canonical string.
+
+use mrly::core::name::Named;
 use mrly::life::{Counts, Rule};
 use mrly::math;
-use mrly::math::name::{Bang, Named, Sequence, Word};
+use mrly::math::name::{Bang, Sequence, Word};
 use mrly::num::sieve;
 use mrly::tile::name::Tile;
 
@@ -66,7 +69,7 @@ fn every_kind_has_one_canonical_string_and_one_id() {
 
 #[test]
 fn every_example_on_names_md_round_trips() {
-    let doc = include_str!("../../mrly-math/NAMES.md");
+    let doc = include_str!("../../mrly-core/src/name/NAMES.md");
     let mut seen = 0;
     for piece in doc.split('`') {
         let Some(rest) = piece.strip_prefix("{\"kind\":\"") else {

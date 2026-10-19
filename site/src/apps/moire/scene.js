@@ -33,6 +33,7 @@ export const DESIGN = { base: 2, code: '9', level: 1 };
 const named = (value) => (value.view === 'matrix' ? `moire-matrix-${value.limit}` : `moire-${value.code}-${value.limit}`);
 
 export const PAGE = {
+  defaults: DESIGN,
   spec: SPEC,
   record: true,
   gestures: true,

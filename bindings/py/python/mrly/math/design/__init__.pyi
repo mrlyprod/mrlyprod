@@ -38,7 +38,7 @@ def score(power: list[float], width: int) -> list[float]:
     """Returns the power over its local median floor, the score a peak is read against."""
 
 def size(digits: list[int], depth: int) -> int:
-    """Returns the count of elements the design holds at the depth, the length [`elements`] returns without building them."""
+    """Returns the count of elements the design holds at the depth, the length `elements` returns without building them."""
 
 def spectrum(log_x: list[float], series: list[float]) -> tuple[list[float], list[float]]:
     """Returns the frequency axis and the power spectrum of the series: the mean removed, a Hann window laid on, a real transform taken, and bin j read as the ordinate 2 pi j over the log range."""

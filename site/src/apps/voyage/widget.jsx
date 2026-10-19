@@ -6,7 +6,7 @@ import { engine } from '../../lib/audio/audio.js';
 import { make, quiet } from './scene.js';
 import { levels, mixer } from './score.js';
 
-export function Widget({ value, onChange, onReady }) {
+export function Widget({ value, onChange, onReady, units }) {
   const box = useRef(null);
   const heard = useRef(0);
   const now = useRef(value);
@@ -15,7 +15,7 @@ export function Widget({ value, onChange, onReady }) {
   tell.current = onChange;
   const line = useMemo(() => mixer(() => now.current), []);
   const [broken, setBroken] = useState(false);
-  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, audio: line }), [line]);
+  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, ...units, audio: line }), [units, line]);
   const wake = () => {
     try {
       const seed = now.current.seed >>> 0;
@@ -60,6 +60,7 @@ export function Widget({ value, onChange, onReady }) {
   const ready = (handle) => {
     onReady?.(handle && { ...handle, again: () => (hear(), handle.again()), mute: () => flip('sound'), sound: () => (hear(), box.current?.stream() ?? null) });
   };
+  if (!units?.math) return null;
   return (
     <>
       <Scene make={scene} value={quiet(value)} onReady={ready} onPointerDown={hear} />

@@ -1,7 +1,7 @@
 from typing import Any, Literal
 
 from numpy.typing import NDArray
-from . import cell, colors, error, image, paint, ramp, rng, tensor
+from . import cell, colors, error, image, name, paint, ramp, rng, tensor
 
 HEX_RATIO: float
 

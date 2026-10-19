@@ -1,6 +1,6 @@
-import { veil } from '../../lib/color.js';
+import { blend, veil } from '../../lib/color.js';
 import { draw as art, inks } from '../../lib/sequences/design.js';
-import { FACE, caption, chart, clear, drawRibbon, fit, font, growth, mix, ribbon, tones, wrap } from '../../lib/sequences/paint.js';
+import { FACE, caption, chart, clear, drawRibbon, fit, font, growth, ribbon, tones, wrap } from '../../lib/sequences/paint.js';
 import { CARDS, pick, shown } from './cards.js';
 
 const at = (value) => CARDS[pick(value).card];
@@ -54,8 +54,8 @@ export function forms(line) {
 /* ART */
 
 function ink(kind, t) {
-  if (kind === 'voids') return { fill: mix(t.accent, t.paper, 0.55), void: mix('#ff8a00', t.paper, 0.1) };
-  if (kind === 'edges') return { fill: mix(PRIME, t.paper, 0.1), void: veil(PRIME, 0.1) };
+  if (kind === 'voids') return { fill: blend(t.accent, t.paper, 0.55), void: blend('#ff8a00', t.paper, 0.1) };
+  if (kind === 'edges') return { fill: blend(PRIME, t.paper, 0.1), void: veil(PRIME, 0.1) };
   return null;
 }
 
@@ -172,7 +172,7 @@ export function make(canvas, view, opts = {}) {
     picture(ctx, pic, made.art, t, (row) => grown.shown(row));
     let y = wide ? top + px : top + px;
     ctx.font = font(t, 0.95);
-    ctx.fillStyle = mix(t.accent, t.paper, 0.3);
+    ctx.fillStyle = blend(t.accent, t.paper, 0.3);
     story.forEach((line) => {
       ctx.fillText(line, text.x, y);
       y += px * 1.45;

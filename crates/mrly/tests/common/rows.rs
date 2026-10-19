@@ -1,3 +1,4 @@
+use mrly::core::name::{Named, sha};
 use mrly::core::rng::Rng;
 use mrly::core::tensor::Tensor;
 use mrly::core::{Color, Colorizer, Image};
@@ -5,23 +6,17 @@ use mrly::font;
 use mrly::life::{self, Config, Source};
 use mrly::math::bang::Code;
 use mrly::math::graph::Network;
-use mrly::math::name::Named;
 use mrly::math::two::Cell2d;
 use mrly::math::{atoms, bang, counts, spectrum, three, two};
 use mrly::num::{factor, prime, series};
 use mrly::tile;
 use serde_json::{Map, Value, json};
 
-#[path = "sha256.rs"]
-pub mod sha256;
-
-pub const MODULES: [&str; 6] = ["core", "num", "math", "tile", "life", "font"];
-
 const SEED: u64 = 2026;
 
 const CARPET_NAME: &str = r#"{"kind":"tile","code":7,"side":3,"level":2}"#;
 
-pub fn rows(module: &str) -> Vec<Value> {
+pub(crate) fn rows(module: &str) -> Vec<Value> {
     match module {
         "core" => core_rows(),
         "num" => num_rows(),
@@ -63,7 +58,7 @@ fn f12(value: f64) -> Value {
 fn pixels(image: &Image) -> Value {
     json!({
         "shape": [image.height, image.width],
-        "sha256": sha256::hex(&image.colors.concat()),
+        "sha256": sha::hex(&image.colors.concat()),
     })
 }
 
@@ -446,7 +441,7 @@ fn font_rows() -> Vec<Value> {
         row(
             "font::map",
             json!({}),
-            json!({"sha256": sha256::hex(text.as_bytes()), "len": book.len()}),
+            json!({"sha256": sha::hex(text.as_bytes()), "len": book.len()}),
             "sha256 of serde's json of the whole table, which pins all 108 glyphs",
         ),
     ]

@@ -9,7 +9,7 @@ const net = lambda({
   agent: "mrlynet-site-builder",
   bucket: "MRLYDEV_BUCKET",
   folder: "site",
-  sources: ["push", "schedule", "automator", "manual"],
+  sources: ["push", "schedule", "hook", "manual"],
   prepare: async (site, run) => {
     const out = await run([process.execPath, "infra/wasm.ts"], site);
     return `wasm ${(out.trim().split(/\s+/)[0] ?? "").slice(0, 12)}`;

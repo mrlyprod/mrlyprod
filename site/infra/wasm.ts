@@ -8,7 +8,7 @@ function wasmFiles(dir: string): string[] {
   return (readdirSync(dir, { recursive: true }) as string[]).filter((rel) => statSync(join(dir, rel)).isFile()).sort((a, b) => Buffer.compare(Buffer.from(a, "utf8"), Buffer.from(b, "utf8")));
 }
 
-function wasmHash(dir: string): string {
+export function wasmHash(dir: string): string {
   const manifest = new Bun.CryptoHasher("sha256");
   for (const rel of wasmFiles(dir)) {
     const one = new Bun.CryptoHasher("sha256");
@@ -16,6 +16,16 @@ function wasmHash(dir: string): string {
     manifest.update(`${one.digest("hex")}  ${rel}\n`);
   }
   return manifest.digest("hex");
+}
+
+/* PIN */
+
+export type Pin = { lock: string; local: string | null };
+
+export function pin(root = resolve(import.meta.dir, "..")): Pin {
+  const dir = join(root, "wasm");
+  const lock = readFileSync(join(root, "wasm.lock"), "utf8").trim();
+  return { lock, local: existsSync(dir) && wasmFiles(dir).length > 0 ? wasmHash(dir) : null };
 }
 
 /* FETCH */
@@ -48,5 +58,10 @@ export async function ensureWasm(root = resolve(import.meta.dir, "..")): Promise
 
 if (import.meta.main) {
   const dir = await ensureWasm();
-  console.log(`${wasmHash(dir)} ${wasmFiles(dir).length} ${dir}`);
+  const { lock, local } = pin();
+  console.log(`${local} ${wasmFiles(dir).length} ${dir}`);
+  if (local !== lock) {
+    console.error(`wasm: ${dir} hashes to ${local}, and wasm.lock pins ${lock}; the deploy ships only the pinned copy`);
+    process.exit(1);
+  }
 }

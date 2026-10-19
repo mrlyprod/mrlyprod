@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { DESIGNS, kron, seed, tile } from './tiles.js';
+import * as math from '@mrlyprod/mrly/math';
+import { DESIGNS, LEVELS, NUMBERS, kron, seed, tile } from './tiles.js';
 
 const lit = (t) => t.cells.reduce((a, b) => a + b, 0);
 
@@ -13,4 +14,14 @@ test('every design fills its known cells at n=3 and squares them one level up', 
   }
   expect([...tile('carpet', 3, 1).cells]).toEqual([1, 1, 1, 1, 0, 1, 1, 1, 1]);
   expect(kron(seed('void', 5), 2).size).toBe(25);
+});
+
+test('every design is the bang door design of its name, cell for cell, at every number and level', () => {
+  const codes = new Map(math.name.words(2, 2).map(([code, name]) => [name, Number(code)]));
+  for (const design of DESIGNS)
+    for (const n of NUMBERS)
+      for (const level of LEVELS) {
+        const door = math.bang.factory.create(codes.get(design), n, 2, 2, level);
+        expect([design, n, level, [...tile(design, n, level).cells]]).toEqual([design, n, level, [...door.data]]);
+      }
 });

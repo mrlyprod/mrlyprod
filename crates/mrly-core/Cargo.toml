@@ -6,7 +6,14 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
-description = "The substrate of MrlyMath: tensors, cells, colors, images, resampling and seeded chance."
+keywords.workspace = true
+categories.workspace = true
+description = "The substrate: tensors, cells, colors, images, resampling, seeded chance and the canonical names."
+readme = "README.md"
+include = ["src/**", "README.md", "LICENSE"]
+
+[lints]
+workspace = true
 
 [dependencies]
 serde.workspace = true

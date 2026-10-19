@@ -24,7 +24,7 @@ def chain_root(base: int) -> float:
     """Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection."""
 
 def chain_wall() -> int:
-    """Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive."""
+    """Returns the chain's wall, one past the last base up to `CAP_BASE` whose margin is not positive."""
 
 def consecutive(digits: list[int]) -> bool:
     """Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads."""
@@ -39,13 +39,13 @@ def masses(base: int, digits: list[int], level: int) -> list[float]:
     """Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`."""
 
 def reach(base: int, missing: int) -> str:
-    """Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere."""
+    """Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from `DIGIT_WALL` below it and at the `CERTIFIED` sets, `none` elsewhere."""
 
 def reading(base: int, fill: int, masses: list[float]) -> float:
     """Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate."""
 
 def regions(base: int, level: int, z: int) -> list[Literal["A", "B", "C1", "C2"]]:
-    """Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`]."""
+    """Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by `fraction` at `cap`."""
 
 def tally(base: int, digits: list[int], level: int, samples: int) -> dict[str, Any]:
     """Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span."""

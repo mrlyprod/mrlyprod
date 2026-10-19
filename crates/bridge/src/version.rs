@@ -1,4 +1,4 @@
-use crate::disk::save;
+use crate::disk::edit;
 use crate::model::{Manifest, Result};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -9,9 +9,9 @@ pub const MANIFEST: &str = "crates/bridge/manifest.json";
 
 const SOURCE: &str = "Cargo.toml";
 
-const STAMPS: &[(&str, &str)] = &[("bindings/js/package.json", "\"version\": \"")];
-
 const PIN: &str = "version = \"=";
+
+const PATH: &str = "path = \"";
 
 pub type Semver = (u64, u64, u64);
 
@@ -31,33 +31,23 @@ pub fn read(root: &Path) -> Result<String> {
 }
 
 pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
-    for (file, key) in STAMPS {
-        let path = root.join(file);
-        let text = load(&path)?;
-        let stamped = stamp(&text, key, &manifest.version).map_err(|e| format!("{file}: {e}"))?;
-        save(&path, &stamped)?;
-    }
     let path = root.join(SOURCE);
-    save(&path, &pin(&load(&path)?, &manifest.version))
+    edit(&path, &pin(&load(&path)?, &manifest.version))
 }
 
 pub fn pin(text: &str, version: &str) -> String {
-    let mut out = String::new();
-    let mut rest = text;
-    while let Some(at) = rest.find(PIN) {
-        let start = at + PIN.len();
-        let end = start + rest[start..].find('"').unwrap_or(0);
-        out.push_str(&rest[..start]);
-        out.push_str(version);
-        rest = &rest[end..];
-    }
-    out.push_str(rest);
-    out
-}
-
-pub fn stamp(text: &str, key: &str, version: &str) -> Result<String> {
-    let (start, end) = find(text, key).ok_or_else(|| format!("no line starting {key}"))?;
-    Ok(format!("{}{version}{}", &text[..start], &text[end..]))
+    text.split_inclusive('\n')
+        .map(|line| {
+            let Some(at) = line.find(PIN).filter(|_| line.contains(PATH)) else {
+                return line.to_string();
+            };
+            let start = at + PIN.len();
+            match line[start..].find('"') {
+                Some(len) => format!("{}{version}{}", &line[..start], &line[start + len..]),
+                None => line.to_string(),
+            }
+        })
+        .collect()
 }
 
 fn find(text: &str, key: &str) -> Option<(usize, usize)> {

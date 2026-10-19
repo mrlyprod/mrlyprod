@@ -25,6 +25,7 @@ export const named = (value) => {
 };
 
 export const PAGE = {
+  defaults: { show: 'classes' },
   spec: SPEC,
   units,
   name: named,

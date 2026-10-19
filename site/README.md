@@ -1,9 +1,9 @@
 # SITE
 
 - mrly.net: one static shell, one router, one table of routes; every page is drawn in the browser.
-- Rust is the only math; the browser only draws.
+- The designs and their numbers come from the Rust crates through `@mrlyprod/mrly`; the deep zoom (`src/lib/fractal/`) and the space flights (`src/lib/space/`) are drawn in JS.
 - Browser floor: iOS 16.4 / Safari 16.4 (remark-gfm's lookbehind regex in the prose chunk, OffscreenCanvas in the figure pen).
-- Dependencies: React, KaTeX, Shiki, the unified markdown chain and Three.js (the 3D stages of designs, three and graphs, loaded lazily); `bun install` fetches them.
+- Dependencies: React, KaTeX, Shiki, the unified markdown chain and Three.js (the 3D stages of designs, three and graphs, loaded lazily); `bun install` fetches them, with `typescript` and `@types/bun` for `bun run types`.
 - Each folder has one README: `src/shell/`, `src/styles/`, `src/lib/`, `src/pages/`, `src/apps/`, `scripts/`, `infra/`, `test/`.
 
 ## SHAPE
@@ -11,7 +11,7 @@
 ```
 site/
   package.json  bun.lock  bunfig.toml       deps, the bun run verbs, the dev plugin, the test preload
-  tsconfig.json                             paths only: @mrlyprod/mrly/* -> ../bindings/js
+  tsconfig.json                             tsc over every .ts file; paths: @mrlyprod/mrly/* -> ../bindings/js, #view -> its index.d.ts
   site.json  redirects.json  wasm.lock      identity and tool blocks; moved urls; the wasm pin
   public/                                   copied to the site root
   src/                                      everything that ships to the browser
@@ -27,7 +27,7 @@ site/
 request /about/
   edge   infra/edge.js: no dot in the last segment -> /index.html
   shell  src/shell/index.html: boot.js, page.css, the tint style, the static chrome, chrome.js + router.js
-  router the site:routes row -> src/shell/app.jsx (src/{pages,apps}/<id>/index.jsx) or src/shell/prose.jsx + /raw/<source> -> #main
+  router the site:routes row -> src/shell/app.jsx (a page's index.jsx or an app's app:<id>) or src/shell/prose.jsx + /raw/<source> -> #main
   figure src/lib/figure.js draws each host from an intersection queue
 ```
 
@@ -37,20 +37,20 @@ request /about/
 
 - A route is the only unit: one folder, `/<id>/`, under `src/pages/` for a site page or `src/apps/` for an app; an id is taken once across both; `home` is `/`.
 - `app.json`: `title`, `line` (the lead), `menu` (`play`, `read` or `tool`), and `saver`, `hidden`, `deep` (each `true` or absent), `source` (a repo path of a markdown page), `route` (`/404.html` for `missing`). No other field; nothing else is configured.
-- The page is exactly one of `index.jsx`, `index.md` or `source`.
+- The page is exactly one of `index.jsx`, `index.md` or `source`; a folder with none of them and both `scene.js` and `widget.jsx` is an app whose entry the build writes (`app:<id>`, `src/apps/README.md`).
 - `index.jsx` exports `mount(at)` and `unmount(at)`, an island under the still (title, figure, `<noscript>`), wide, bare and wearing `src/lib/app/mrly.css`; or `render(row, site, host, { text, rows, url, left, right })`, `unmount(host)`, optional `mount(host)`, a page drawn before the swap; an optional `layout` (`left`, `right`, `wide`, `bare`, `sheet`) overrides the island's.
 - `index.md` and `source` are prose, rendered by `src/shell/prose.jsx` from `/raw/<source>`; front matter `opener: true` (draws the route's icon above the lede), `button` and `link`.
 - `icon.js` is the route's figure, named by the id; a hidden route may omit it, a shown one may not.
-- `scene.js` and `widget.jsx`: required of a saver; `src/apps/README.md` has the app contract.
+- `scene.js` and `widget.jsx`: every app has them, a saver must; `src/apps/README.md` has the app contract.
 - Blog posts: `src/pages/blog/<slug>/index.md` is `/blog/<slug>/` (front matter `title`, `date` YYYY-MM-DD, `lead`), with its `icon.js`, the figure `blog-<slug>`.
 - `site.json` `desk` names the saver home plays and the Settings pick offers first.
 
 ## ROUTES
 
 - `scripts/build.ts` collects the rows from `src/pages/*/app.json` and `src/apps/*/app.json`, home first, then by id: `{ route, kind, title, source, date, lead, figure, hidden, meta }`.
-- `kind` is `app` (an `index.jsx`) or `prose` (a markdown source); `meta` holds `id`, `menu`, `saver`, `deep`, and `prose` (`page`, `post` or `source`).
+- `kind` is `app` (an `index.jsx` or a written entry) or `prose` (a markdown source); `meta` holds `id`, `menu`, `saver`, `deep`, and `prose` (`page`, `post` or `source`).
 - `source` is the repo path served at `/raw/<source>` for a prose row, null otherwise; no row carries a body.
-- `/mrlymath/` renders `crates/mrly-math/NAMES.md`, so the page and the crate never disagree.
+- `/mrlymath/` renders `crates/mrly-core/src/name/NAMES.md`, so the page and the crate never disagree.
 - `research.json` is built from `../research/*/README.md` (a folder with a front matter `title`; `shared/` never): `{ topics: [{ slug, title, figure, figures }] }`, `figure` the README's, `figures` every figure of `<topic>/figures/`.
 - A hidden route (`redirects`, `missing`, `figures`) has no sitemap entry, no `llms.txt` line, no search row and no menu card; it sets no `menu`.
 - A missing url renders "Nothing here" with `noindex`, status 200 by design.
@@ -79,7 +79,7 @@ request /about/
 - `bun run build` runs `scripts/build.ts` into `dist/`, or into `MRLY_DIST`; pure Bun, no Chrome, no cargo.
 - Prime: bundle `src/shell/boot.js`, `src/styles/git.css` and `src/lib/app/mrly.css`; each woff2 ships as `/fonts/<stem>-<sha8>.woff2`.
 - Collect: the routes, the rows, the figure roster, the wasm units, the kept redirects, the raw list (`git ls-files`), the research topics.
-- Bundle: one `Bun.build` with splitting over `src/shell/index.html`, `src/shell/app.jsx`, `src/shell/prose.jsx`, `src/pages/git/git.js`, every live figure, every `src/{pages,apps}/<id>/index.jsx` and `src/shell/lock.js`.
+- Bundle: one `Bun.build` with splitting over `src/shell/index.html`, `src/shell/app.jsx`, `src/shell/prose.jsx`, `src/pages/git/git.js`, every live figure, every `src/pages/<id>/index.jsx` and `src/shell/lock.js`; each `app:<id>` is a chunk of the `site:apps` thunks.
 - Names: entries `[name]-[hash]`, chunks `lib-[hash]`; the build refuses a bundled file with no hash.
 - Shell: the bundled `index.html` with the hashed boot script swapped in for `/boot.js` and its empty `<style id="tint">` filled with `tintCss(site.tint)` (`withTint`, which dev uses too); `404.html` is its copy.
 - Copy: `raw/<path>` for every listed file, `public/`, the font licences.
@@ -92,15 +92,17 @@ request /about/
 - `site:routes`: `{ site, rows }`.
 - `site:figures`: name to figure chunk, the wasm urls of the live units, and the plates.
 - `site:apps`: id to route chunk, `own` (the routes whose index.jsx exports `render`), plus `lock`, the desk and its lock screen.
+- `app:<id>`: an app's entry, `entry(dir)`: `page(Widget, { seed: 0, ...PAGE.defaults }, PAGE)` from its `scene.js` and `widget.jsx`.
 - `site:css`: the `git` and `mrly` sheet urls.
 - `apps:scenes`: the saver scenes, the desk first, then by title.
 - `@mrlyprod/mrly/<door>` resolves through `tsconfig.json` paths onto `../bindings/js` and `#view` through the `imports` of `package.json`; the `mrly` plugin, also used by the figure test and `time`, maps both for research figures outside `site/`; `wasm/<unit>/mrly_js_<unit>*` resolves to `site/wasm/`.
 
 ## WASM
 
-- `bun run wasm` runs `../scripts/wasm.sh`: it builds every unit under `../bindings/js/units/` and copies the live units into `wasm/<unit>/`.
-- A unit is live when a figure or anything under `src/` names it; `src/lib/units/` holds one loader a unit, so its files decide. Live today: core, font, life, math, num.
+- `bun run wasm` runs `scripts/wasm.ts`: `../scripts/wasm.sh` builds every unit under `../bindings/js/units/` into `../bindings/js/pkg/`, then it copies the live units into `wasm/<unit>/` and writes `src/lib/font/font.gen.json`; `--no-build` skips the build.
+- A unit is live when a figure or anything under `src/` names it (`live()` in `scripts/build.ts`); `src/lib/units/` holds a loader for `font`, `life`, `math` and `num`; `core` is live through the figures. Live today: core, font, life, math, num.
 - `wasm.lock` pins the copy in S3 the builder Lambda pulls through `infra/wasm.ts`; the deploy uploads `wasm/` and re-pins it.
+- A pin that trails a fresh local `wasm/` is normal between deploys: `bun run check` reports it; `infra/wasm.ts` fails the build when the fetched copy does not hash to the pin.
 - The build stops when a live unit is missing from `wasm/`.
 
 ## DEV
@@ -113,8 +115,10 @@ request /about/
 
 ## CHECK AND TEST
 
-- `bun run check` runs `scripts/check.ts`: the rows collect; every markdown link in a page, a post or a source lands, a rooted one on a route; every research link lands; the house rules over pages, posts and notes (no two blank lines, no em or en dash, a blank line after a heading); over a built `dist/`, every url in the shell is a route or a file and every redirect goes from a gone path to a route.
 - `bun run test` runs `bun test`: every test beside the file it covers, plus `test/`; `bunfig.toml` ignores `dist/`, whose `raw/` holds copies.
+- A fresh clone runs, in order: `../scripts/wasm.sh` (cargo and wasm-bindgen build `../bindings/js/pkg/`), `bun install`, `bun test`; `package.json` pins bun.
+- `bun run check` runs `scripts/check.ts`: it reports the wasm pin, then runs `test/content.test.ts`, the content gate: every markdown link in a page, a post or a source lands, a rooted one on a route; every research link lands; the house rules over pages, posts and notes (no two blank lines, no em or en dash, a blank line after a heading); over a fresh build in a temp dir, every link on a built page lands and every redirect goes from a gone path to a route.
+- `bun run types` runs `tsc` over every `.ts` file of `site/`; the `.js` and `.jsx` files are not type-checked.
 - `bun run shots` and `bun run film` drive Chrome; `scripts/README.md` has them.
 
 ## PUBLIC
@@ -124,6 +128,6 @@ request /about/
 
 ## GENERATED
 
-- A committed file a tool writes carries `.gen.` in its name: `src/styles/palette.gen.css` and `src/lib/theme/palette.gen.js` (the palette, written outside this repo), `src/lib/icons.gen.js` (`bun run vendor`), `src/lib/font/font.gen.json` (`bun run wasm`).
+- A committed file a tool writes carries `.gen.` in its name: `src/styles/palette.gen.css` and `src/lib/theme/palette.gen.js` (the palette, written outside this repo), `src/lib/icons.gen.js` (`bun run vendor`), `src/lib/font/font.gen.json` (`bun run wasm`, checked glyph by glyph against the font door by `src/lib/font/font.test.js`).
 - `src/styles/fonts/` is written whole by `bun run vendor`, `keep.css` aside.
 - `wasm/`, `dist/` and `node_modules/` are build output and stay out of git.

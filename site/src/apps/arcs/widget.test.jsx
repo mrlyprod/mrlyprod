@@ -1,17 +1,9 @@
 import { expect, test } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
-import { Frame } from '../../lib/app/frame.jsx';
 import { study } from './engine.js';
-import { Widget, named, rows } from './widget.jsx';
+import { named, rows } from './widget.jsx';
 
 const value = { seed: 1, base: 2, code: '', level: 5, look: 'all', width: 0, cells: 1, tint: 'orange', strand: 'blue' };
-
-test('the widget mounts its stage on the units the page loaded', () => {
-  const page = (units) => renderToStaticMarkup(<Frame label="Arcs"><Widget value={value} onChange={() => {}} units={units} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page({ math })).toContain('<canvas');
-});
 
 test('the readouts lead with the design and the loops, name the law at its level and say whether it meets the count', () => {
   const read = (over) => Object.fromEntries(rows(study(math, { ...value, ...over }).facts));

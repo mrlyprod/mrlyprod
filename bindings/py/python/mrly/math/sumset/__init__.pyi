@@ -24,7 +24,7 @@ class Pair:
     def new(three: int, four: int) -> Pair:
         """Names the pair `(k, m)`."""
     def ratio(self, energy: int) -> float:
-        """The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz."""
+        """The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy `Pair::energy` returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz."""
     def scale(self) -> float:
         """The scaling `tau = 4^m/3^k`."""
     def three(self) -> int:

@@ -1,8 +1,7 @@
 import { expect, test } from "bun:test";
-import { Rng, core, tile, initSync, life, math, num } from "./index.js";
+import { core, init, life, math, num, tile } from "./index.js";
 
-const bytes = await Bun.file(new URL("./pkg/all/mrly_js_all_bg.wasm", import.meta.url)).arrayBuffer();
-initSync({ module: bytes });
+await init();
 
 test("a cell crosses out as a shape and a typed array of types", () => {
   const cell = math.two.carpet(3, 1);
@@ -77,22 +76,23 @@ test("a rust error is thrown as a JS Error carrying its message", () => {
 
 test("one seed replays one stream through the Rng class", () => {
   const draw = (rng) => [rng.unit(), rng.below(100), rng.range(1, 6), rng.boolean()];
-  expect(draw(new Rng(2026))).toEqual(draw(new Rng(2026)));
-  expect(draw(new Rng(2026))).not.toEqual(draw(new Rng(2027)));
-  expect(draw(new Rng(2026n))).toEqual(draw(new Rng("2026")));
+  expect(draw(new core.Rng(2026))).toEqual(draw(new core.Rng(2026)));
+  expect(draw(new core.Rng(2026))).not.toEqual(draw(new core.Rng(2027)));
+  expect(draw(new core.Rng(2026n))).toEqual(draw(new core.Rng("2026")));
 });
 
 test("an Rng is passed where rust takes a mutable stream, required or optional", () => {
-  const rng = new Rng(7);
+  const rng = new core.Rng(7);
   const color = core.colors.random(false, rng);
   expect(color).toHaveLength(4);
   expect(color[3]).toBe(255);
-  expect(core.colors.random(false, new Rng(7))).toEqual(color);
+  expect(core.colors.random(false, new core.Rng(7))).toEqual(color);
+  expect(core.colors.random(false, rng)).not.toEqual(color);
   const mapping = { 0: [core.colors.WHITE()], 1: [core.colors.RED(), core.colors.BLUE()] };
-  const painted = math.cell.paint(math.two.carpet(3, 1), mapping, "Random", rng);
+  const painted = math.cell.paint(math.two.carpet(3, 1), mapping, "Random", new math.Rng(7));
   expect(painted.colors).toBeInstanceOf(Uint8Array);
   expect(painted.colors.length).toBe(36);
-  expect(core.colors.random(false, rng)).not.toEqual(core.colors.random(false, new Rng(7)));
+  expect(math.cell.paint(math.two.carpet(3, 1), mapping, "Random", new math.Rng(7))).toEqual(painted);
 });
 
 test("a class holds its value, reads its fields and crosses as plain data", () => {
@@ -109,16 +109,16 @@ test("a class field is set, a default crosses, and the Rng chooses and shuffles 
   expect(config.boundary).toBe("Wrap");
   expect(config.toJSON().boundary).toBe("Wrap");
   expect(() => { config.boundary = "Nope"; }).toThrow("unknown variant");
-  const made = tile.build.create_2d(tile.build.Config2d.default(), new Rng(1));
+  const made = tile.build.create_2d(tile.build.Config2d.default(), new tile.Rng(1));
   expect([made.group, made.width]).toEqual(["Special", 9]);
   const items = ["a", "b", "c", "d", "e", "f", "g"];
-  expect(new Rng(5).choice(items)).toBe("c");
-  expect(new Rng(5).choice(items)).toBe(items[new Rng(5).below(items.length)]);
-  expect(() => new Rng(1).choice([])).toThrow("a choice wants at least one item.");
+  expect(new core.Rng(5).choice(items)).toBe("c");
+  expect(new core.Rng(5).choice(items)).toBe(items[new core.Rng(5).below(items.length)]);
+  expect(() => new core.Rng(1).choice([])).toThrow("a choice wants at least one item.");
   const once = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   const again = [...once];
-  new Rng(9).shuffle(once);
-  new Rng(9).shuffle(again);
+  new core.Rng(9).shuffle(once);
+  new core.Rng(9).shuffle(again);
   expect(once).toEqual([2, 8, 4, 7, 9, 0, 6, 1, 3, 5]);
   expect(again).toEqual(once);
 });

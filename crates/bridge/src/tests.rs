@@ -243,10 +243,8 @@ fn an_image_crosses_by_hand_as_one_shaped_array_and_a_list_of_them() {
     ));
     assert!(dts.contains("export function frame(scale: number): Image;"));
     assert!(dts.contains("export function frames(scale: number): Image[];"));
-    let cli: String = read(&root, "crates/mrly/src/bin/mrly.rs")
-        .split_whitespace()
-        .collect();
-    assert!(cli.contains("(\"life.frames\",\"(scale:usize)->[Image]\""));
+    let cli: String = read(&root, cli::DOORS).split_whitespace().collect();
+    assert!(cli.contains("name:\"life.frames\",signature:\"(scale:usize)->[Image]\""));
     std::fs::remove_dir_all(root).ok();
 }
 
@@ -693,10 +691,8 @@ fn default_crosses_as_a_static_on_the_type_and_an_alias_fixes_n() {
             .contains("class Config2d:\n    @staticmethod\n    def default() -> dict[str, Any]:")
     );
     assert!(read(&root, "bindings/js/tile.d.ts").contains("static default(): Field;"));
-    let cli: String = read(&root, "crates/mrly/src/bin/mrly.rs")
-        .split_whitespace()
-        .collect();
-    assert!(cli.contains("(\"tile.Config2d.default\",\"()->tile.ConfigNd\""));
+    let cli: String = read(&root, cli::DOORS).split_whitespace().collect();
+    assert!(cli.contains("name:\"tile.Config2d.default\",signature:\"()->tile.ConfigNd\""));
     std::fs::remove_dir_all(root).ok();
 }
 
@@ -719,8 +715,10 @@ fn the_hand_rng_declares_choice_and_shuffle_in_both_bridges() {
 fn a_nested_type_without_serde_shuts_its_cli_door() {
     let lib = "pub mod num { #[derive(Clone)] pub struct Pair { pub n: u8 } impl Pair { pub fn size(&self) -> u8 { 0 } } pub fn pairs() -> Vec<Pair> { vec![] } }";
     let root = scratch("nested", lib);
-    let cli = read(&root, "crates/mrly/src/bin/mrly.rs");
-    assert!(cli.contains("\"() -> [num.Pair] # uncallable: num::Pair has no Serialize\""));
+    let cli: String = read(&root, cli::DOORS).split_whitespace().collect();
+    assert!(cli.contains(
+        "signature:\"()->[num.Pair]\",docs:\"\",uncallable:Some(\"num::PairhasnoSerialize\"),door:None"
+    ));
     std::fs::remove_dir_all(root).ok();
 }
 
@@ -746,7 +744,7 @@ fn generated_rust_is_saved_formatted() {
     let lib = "pub mod core { pub fn add(a: u8, b: u8) -> u8 { a + b } }";
     let root = scratch("fmt", lib);
     for file in [
-        "crates/mrly/src/bin/mrly.rs",
+        cli::DOORS,
         "bindings/py/src/doors.rs",
         "bindings/js/units/core/src/lib.rs",
     ] {
@@ -760,22 +758,24 @@ fn generated_rust_is_saved_formatted() {
 fn every_copy_takes_the_manifest_version() {
     let lib = "pub mod core { pub fn f() {} }";
     let root = scratch("version", lib);
-    let cargo = "[workspace.package]\nversion = \"0.1.0\"\n\n[workspace.dependencies]\nmrly-core = { path = \"crates/mrly-core\", version = \"=0.1.0\" }\nmrly-num = { path = \"crates/mrly-num\", version = \"=0.1.0\" }\n";
-    let js = "{\n  \"name\": \"@mrlyprod/mrly\",\n  \"version\": \"0.1.0\",\n  \"type\": \"module\"\n}\n";
+    let pins = "[workspace.package]\nversion = \"0.1.0\"\n\n[workspace.dependencies]\nmrly-core = { path = \"crates/mrly-core\", version = \"=0.1.0\" }\nmrly-num = { path = \"crates/mrly-num\", version = \"=0.1.0\" }\n";
+    let other = "other = { version = \"=0.1.0\" }\n";
+    let cargo = format!("{pins}{other}");
     std::fs::write(root.join("Cargo.toml"), cargo).expect("a workspace");
-    std::fs::write(root.join("bindings/js/package.json"), js).expect("a package");
     let mut m = manifest(lib);
     m.version = "1.2.3".into();
     js::write(&m, &root).expect("the js bridge writes");
-    version::write(&m, &root).expect("the stamps write");
+    version::write(&m, &root).expect("the pins write");
     assert!(
         read(&root, "bindings/js/units/core/Cargo.toml").contains("\nversion.workspace = true\n")
     );
-    assert_eq!(read(&root, "Cargo.toml"), cargo.replace("=0.1.0", "=1.2.3"));
     assert_eq!(
-        read(&root, "bindings/js/package.json"),
-        js.replace("0.1.0", "1.2.3")
+        read(&root, "Cargo.toml"),
+        format!("{}{other}", pins.replace("=0.1.0", "=1.2.3"))
     );
+    let package: Value =
+        serde_json::from_str(&read(&root, "bindings/js/package.json")).expect("a package");
+    assert_eq!(package["version"], "1.2.3");
     std::fs::remove_dir_all(root).ok();
 }
 
@@ -895,7 +895,10 @@ fn function_entries_match_the_pub_fn_grep() {
     let generated = fns.iter().filter(|f| f.source == Source::NamedEnum).count();
     let traits = fns.iter().filter(|f| f.source == Source::Trait).count();
     let defaults = fns.iter().filter(|f| f.source == Source::Default).count();
-    let text = &files["math/name/mod.rs"];
+    let text = files
+        .values()
+        .find(|text| text.contains("pub trait Named"))
+        .expect("the trait");
     let start = text.find("pub trait Named").expect("the trait");
     let end = start + text[start..].find("\n}\n").expect("its end");
     let trait_fns = text[start..end]
@@ -1012,4 +1015,169 @@ fn a_class_field_of_another_units_class_is_a_js_skip() {
             "field type is a class of another unit".to_string()
         )]
     );
+}
+
+#[test]
+fn no_two_crossing_types_print_the_same_name() {
+    let m = resolve::build(&crate_files(), "0")
+        .expect("the crate builds")
+        .manifest;
+    let mut seen: std::collections::BTreeMap<String, String> = Default::default();
+    let mut clashes = vec![];
+    for f in &m.functions {
+        let dim = match f.dims.as_slice() {
+            [one] => Some(*one),
+            _ => None,
+        };
+        for ty in f.params.iter().map(|p| &p.ty).chain([&f.ret]) {
+            ty.walk(&mut |part| {
+                let held = match part {
+                    Ty::Hand { name, dim: own } => format!("hand {name} {:?}", own.or(dim)),
+                    Ty::Plain { path }
+                    | Ty::Enum { path }
+                    | Ty::Class { path, .. }
+                    | Ty::Opaque { path } => path.clone(),
+                    _ => return,
+                };
+                let name = cli::show(part, dim);
+                match seen.get(&name) {
+                    Some(other) if *other != held => {
+                        clashes.push(format!("{name}: {other} and {held}"))
+                    }
+                    Some(_) => {}
+                    None => {
+                        seen.insert(name, held);
+                    }
+                }
+            });
+        }
+    }
+    clashes.sort();
+    clashes.dedup();
+    assert!(clashes.is_empty(), "{clashes:#?}");
+}
+
+#[test]
+fn doc_links_cross_as_plain_text() {
+    assert_eq!(
+        parse::plain(
+            "See [`Tile::new`](crate::recipe::Tile::new), [`animate`](crate::animate()) and [`Rule`]."
+        ),
+        "See `Tile::new`, `animate` and `Rule`."
+    );
+    assert_eq!(
+        parse::plain("A [site](https://mrly.net) and a list [1, 2] stay."),
+        "A [site](https://mrly.net) and a list [1, 2] stay."
+    );
+}
+
+#[test]
+fn a_module_takes_its_docs_from_its_own_file_first() {
+    let m = mounted(&[
+        ("lib.rs", "/// The facade line.\npub use mrly_core as core;"),
+        (
+            "core/lib.rs",
+            "//! The crate line.\n/// The outer line.\npub mod tensor;\npub mod ramp;",
+        ),
+        ("core/tensor.rs", "//! The inner line.\npub fn f() {}"),
+        ("core/ramp.rs", "pub fn g() {}"),
+    ]);
+    let docs = |path: &str| {
+        m.modules
+            .iter()
+            .find(|module| module.path == path)
+            .map(|module| module.docs.clone())
+            .unwrap_or_else(|| panic!("no module {path}"))
+    };
+    assert_eq!(docs("core"), ["The crate line."]);
+    assert_eq!(docs("core::tensor"), ["The inner line."]);
+    assert_eq!(docs("core::ramp"), Vec::<String>::new());
+}
+
+#[test]
+fn the_bridge_marks_every_file_it_writes_as_generated_and_keeps_other_lines() {
+    let root = scratch("made", "pub mod core { pub fn f() {} }");
+    let before = "*.sh text eol=lf\ngone.js linguist-generated=true\n";
+    let made = disk::attributes(&root, before);
+    assert!(made.starts_with("*.sh text eol=lf\n"));
+    assert!(!made.contains("gone.js"));
+    for file in [
+        cli::DOORS,
+        "bindings/js/core.js",
+        "bindings/js/package.json",
+        "bindings/py/src/doors.rs",
+    ] {
+        assert!(
+            made.contains(&format!("\n{file} linguist-generated=true\n")),
+            "{file}"
+        );
+    }
+    assert!(!made.contains("\nCargo.toml "));
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn an_orphan_is_a_listed_file_the_run_did_not_write_and_nothing_else() {
+    let root = scratch("gone", "pub mod core { pub fn f() {} }");
+    let js = root.join("bindings/js");
+    for file in ["gone.d.ts", "gone.js", "hand.js", "hand.d.ts"] {
+        std::fs::write(js.join(file), "").expect("a file");
+    }
+    let before = [
+        "bindings/js/core.js",
+        "bindings/js/gone.d.ts",
+        "bindings/js/gone.js",
+        "bindings/js/missing.js",
+        "bindings/js/*.d.ts",
+        "../bindings/js/hand.js",
+    ]
+    .map(|path| format!("{path} linguist-generated=true\n"))
+    .concat();
+    assert_eq!(
+        disk::orphans(&root, &before),
+        [js.join("gone.d.ts"), js.join("gone.js")]
+    );
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_stub_name_that_shadows_a_builtin_type_qualifies_the_builtin() {
+    let root = scratch(
+        "shadow",
+        "pub mod core { pub fn bytes(data: Vec<u8>) -> Vec<u8> { data } pub fn sum(data: Vec<u8>) -> u8 { 0 } }",
+    );
+    let stub = read(&root, "bindings/py/python/mrly/core/__init__.pyi");
+    assert!(stub.starts_with("import builtins\n"), "{stub}");
+    assert!(
+        stub.contains("def bytes(data: builtins.bytes) -> builtins.bytes:"),
+        "{stub}"
+    );
+    assert!(
+        stub.contains("def sum(data: builtins.bytes) -> int:"),
+        "{stub}"
+    );
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn every_hand_row_names_a_hand_type_of_the_crate() {
+    let m = resolve::build(&crate_files(), "0")
+        .expect("the crate builds")
+        .manifest;
+    for row in HAND {
+        for rust in row.rust {
+            let path = rust.strip_prefix("mrly::").expect("a mrly path");
+            assert!(
+                m.types.iter().any(|t| t.path == path
+                    && matches!(&t.cross, TypeCross::Hand { name } if name == row.name)),
+                "{} names {rust}, not a hand type of the crate",
+                row.name
+            );
+        }
+    }
+    for t in &m.types {
+        if let TypeCross::Hand { name } = &t.cross {
+            assert!(hand(name).is_some(), "{} has no HAND row", t.path);
+        }
+    }
 }

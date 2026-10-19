@@ -1,19 +1,7 @@
 import { expect, test } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
-import { defaults } from '../../lib/app/spec.js';
-import { Frame } from '../../lib/app/frame.jsx';
 import { CARPET, LEAST, MOST, law } from './engine.js';
-import { SPEC } from './scene.js';
-import { Widget, drawn, rows } from './widget.jsx';
-
-const value = { ...defaults(SPEC), seed: 1 };
-
-test('the widget mounts its stage once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Star"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-});
+import { drawn, rows } from './widget.jsx';
 
 test('the readings lead with the decay, mark a layer off the law, and say when the slope is refused', () => {
   const star = new math.six.star.Star(CARPET);

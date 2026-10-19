@@ -1,6 +1,7 @@
 import { tidy } from '../../lib/app/spec.js';
 import { veil } from '../../lib/color.js';
-import { EFFECTS, render } from '../../lib/audio/audio.js';
+import { render } from '../../lib/audio/audio.js';
+import { EFFECTS } from '../../lib/audio/voices.js';
 
 const named = (word) => word[0].toUpperCase() + word.slice(1);
 

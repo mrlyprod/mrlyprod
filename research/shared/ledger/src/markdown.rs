@@ -2,7 +2,8 @@ use super::records::record_by_id;
 use super::{
     keys, sequence, Axis, Key, Measure, Record, Sequence, Tier, BUDGET, RECORDS, SPACES, TERMS,
 };
-use mrly::math::name::{Named, Sequence as SequenceName};
+use mrly::core::name::Named;
+use mrly::math::name::Sequence as SequenceName;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fs;
 use std::path::Path;

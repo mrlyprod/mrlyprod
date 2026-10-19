@@ -1,47 +1,60 @@
 use crate::model::Result;
 use std::cell::RefCell;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Stdio};
 
 const EDITION: &str = "2024";
 
 thread_local! {
     static STALE: RefCell<Option<Vec<PathBuf>>> = const { RefCell::new(None) };
-    static SAVED: RefCell<Vec<PathBuf>> = const { RefCell::new(Vec::new()) };
+    static MADE: RefCell<Vec<PathBuf>> = const { RefCell::new(Vec::new()) };
+}
+
+pub const ATTRIBUTES: &str = ".gitattributes";
+
+const MARK: &str = " linguist-generated=true";
+
+pub fn attributes(root: &Path, before: &str) -> String {
+    let mut paths: Vec<String> = MADE.with(|made| {
+        made.borrow()
+            .iter()
+            .filter_map(|path| path.strip_prefix(root).ok())
+            .map(|path| path.display().to_string())
+            .collect()
+    });
+    paths.sort();
+    paths.dedup();
+    let kept = before
+        .lines()
+        .filter(|line| !line.ends_with(MARK))
+        .map(|line| format!("{line}\n"));
+    kept.chain(paths.iter().map(|path| format!("{path}{MARK}\n")))
+        .collect()
+}
+
+pub fn orphans(root: &Path, before: &str) -> Vec<PathBuf> {
+    let made = MADE.with(|made| made.borrow().clone());
+    let mut out: Vec<PathBuf> = before
+        .lines()
+        .filter_map(|line| line.strip_suffix(MARK))
+        .filter(|path| {
+            let plain = !path.contains(['*', '?', '[', '\\', ' ']);
+            plain
+                && Path::new(path)
+                    .components()
+                    .all(|part| matches!(part, Component::Normal(_)))
+        })
+        .map(|path| root.join(path))
+        .filter(|path| !made.contains(path) && path.is_file())
+        .collect();
+    out.sort();
+    out.dedup();
+    out
 }
 
 pub fn watching() -> bool {
     STALE.with(|stale| stale.borrow().is_some())
-}
-
-pub fn orphans(dir: &Path) -> Vec<PathBuf> {
-    let saved = SAVED.with(|saved| saved.borrow().clone());
-    let mut out = vec![];
-    walk(dir, &mut out);
-    out.retain(|path| !saved.contains(path));
-    out.sort();
-    out
-}
-
-fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    for path in entries.filter_map(|e| e.ok()).map(|e| e.path()) {
-        let name = path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or_default();
-        if name == "__pycache__" || name.ends_with(".so") || name == ".DS_Store" {
-            continue;
-        }
-        if path.is_dir() {
-            walk(&path, out);
-        } else {
-            out.push(path);
-        }
-    }
 }
 
 pub fn watch() {
@@ -53,7 +66,11 @@ pub fn stale() -> Vec<PathBuf> {
 }
 
 pub fn save(path: &Path, text: &str) -> Result<()> {
-    SAVED.with(|saved| saved.borrow_mut().push(path.to_path_buf()));
+    MADE.with(|made| made.borrow_mut().push(path.to_path_buf()));
+    edit(path, text)
+}
+
+pub fn edit(path: &Path, text: &str) -> Result<()> {
     let at = |e: String| format!("{}: {e}", path.display());
     let text = if path.extension().is_some_and(|e| e == "rs") {
         rustfmt(text).map_err(at)?

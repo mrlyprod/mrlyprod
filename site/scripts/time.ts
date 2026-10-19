@@ -10,7 +10,7 @@ import { mrly, roster } from "./build.ts";
 const REPO = resolve(import.meta.dir, "..", "..");
 const MRLY = join(REPO, "bindings", "js");
 const OUT = join(tmpdir(), "mrly-time");
-const SIZE = [1024, 1024];
+const SIZE: [number, number] = [1024, 1024];
 const WARM = 3;
 const GATE = { warm: 150, cold: 500 };
 const FREE = new Set(["about"]);
@@ -29,7 +29,7 @@ async function draw({ file, theme }: Job): Promise<Done> {
     const figure: Figure = await import(file);
     const units = Object.entries(figure.units ?? {});
     for (const [unit, door] of units) door.initSync({ module: readFileSync(join(MRLY, "pkg", unit, `mrly_js_${unit}_bg.wasm`)) });
-    const [width, height] = figure.size ?? SIZE;
+    const [width, height] = (figure.size ?? SIZE) as [number, number];
     const tint = ink(THEMES[theme]);
     const once = () => {
       const pen = raster(width, height, tint.ground);
@@ -38,10 +38,10 @@ async function draw({ file, theme }: Job): Promise<Done> {
       return performance.now() - start;
     };
     const cold = once();
-    const warm = Array.from({ length: WARM }, once).sort((a, b) => a - b)[WARM >> 1];
+    const warm = Array.from({ length: WARM }, once).sort((a, b) => a - b)[WARM >> 1]!;
     return { cold, warm, units: units.map(([unit]) => unit) };
   } catch (error) {
-    return { error: (error instanceof Error ? error.message : String(error)).split("\n")[0] };
+    return { error: (error instanceof Error ? error.message : String(error)).split("\n")[0]! };
   }
 }
 
@@ -74,7 +74,7 @@ async function main() {
   rmSync(OUT, { recursive: true, force: true });
   const built = await Bun.build({ entrypoints: list.map((one) => one.file), root: REPO, outdir: OUT, target: "bun", plugins: [mrly] });
   if (!built.success) throw new Error(`time: the figures failed to bundle\n${built.logs.join("\n")}`);
-  const rows = [];
+  const rows: { name: string; cold: number; warm: number; units: string[]; error: string; research: boolean }[] = [];
   for (const { name, file } of list) {
     const row = { name, cold: 0, warm: 0, units: [] as string[], error: "", research: relative(REPO, file).startsWith("research/") };
     for (const theme of Object.keys(THEMES) as Theme[]) {

@@ -14,7 +14,7 @@ def holes(sensors: list[int]) -> list[int]:
     """Returns the holes of the coarray, ascending: the lags between `-span` and `span` that no pair of sensors makes."""
 
 def law(generator: list[int], level: int) -> tuple[int, int] | None:
-    """Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole."""
+    """Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of `paired` digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole."""
 
 def lost(sensors: list[int], sensor: int) -> list[int]:
     """Returns the lags that removing the sensor deletes from the coarray, ascending: those every pair of which holds it; empty when the sensor is inessential or absent."""

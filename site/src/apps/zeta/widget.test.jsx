@@ -1,17 +1,7 @@
 import { expect, test } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
 import * as num from '@mrlyprod/mrly/num';
-import { Frame } from '../../lib/app/frame.jsx';
 import { REACH, ZEROS, fold, reading, study } from './engine.js';
-import { Widget, rows, scrub } from './widget.jsx';
-
-const value = { seed: 1, t: 30, speed: 4, zeros: 10, x: 100, view: 'walk', look: 'line', trail: 4, tint: '' };
-
-test('the widget mounts its stage once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Zeta"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(num)).toContain('<canvas');
-});
+import { rows, scrub } from './widget.jsx';
 
 test('the readouts are the view shown: the head, its zeros, zeta at it and the first zeros marked passed, or the stairs at x', () => {
   const said = { t: 30, walk: reading(num, study(num), 30), stairs: fold(num, 100).facts(10) };

@@ -1,6 +1,9 @@
+//! Every public function fed a bad input returns an error instead of panicking.
+
 use mrly::core::Image;
 use mrly::core::cell::{Cell, magic, merge, mosaic, remap, rot90_map, tile_map};
 use mrly::core::colors::Color;
+use mrly::core::name::Named;
 use mrly::core::ramp::Colorizer;
 use mrly::core::resample::{Filter, block, resample};
 use mrly::core::rng::Rng;
@@ -12,7 +15,7 @@ use mrly::math::bang::factory::MagicLayer;
 use mrly::math::cell::models::{Cell2d, Cell3d, CellNd};
 use mrly::math::graph::models::{Branch, Network};
 use mrly::math::name::Bang;
-use mrly::math::name::{Named, Word};
+use mrly::math::name::Word;
 use mrly::math::shape::{Frac, Shape};
 use mrly::math::six::{Orientation, Projection};
 use mrly::tile::draw::ConfigNd;

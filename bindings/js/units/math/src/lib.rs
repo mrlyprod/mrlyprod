@@ -1,7 +1,6 @@
 #![allow(non_camel_case_types, non_snake_case, clippy::too_many_arguments)]
 
-mod hand;
-
+use mrly_js_hand as hand;
 use wasm_bindgen::prelude::*;
 
 /// Walks level `level` of `bang dim 2, base b, code c` in arcs into its curves: first the strands, from each boundary midpoint in turn, across edges before upright ones, then the loops, each from its first unwalked arc.
@@ -12,7 +11,7 @@ pub fn math_arcs_curves(code: JsValue, base: usize, level: usize) -> Result<JsVa
     hand::to_js(&value)
 }
 
-/// Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::bang::factory::create`], and level 0 is one filled cell.
+/// Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by `crate::bang::factory::create`, and level 0 is one filled cell.
 #[wasm_bindgen]
 pub fn math_arcs_draw(code: JsValue, base: usize, level: usize) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
@@ -65,7 +64,7 @@ pub fn math_arrays_holes(sensors: JsValue) -> Result<Vec<i64>, JsValue> {
     Ok(value)
 }
 
-/// Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.
+/// Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of `paired` digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.
 #[wasm_bindgen]
 pub fn math_arrays_law(generator: JsValue, level: u32) -> Result<JsValue, JsValue> {
     let generator = hand::list_from_js(&generator, hand::u64_from_js)?;
@@ -2127,7 +2126,7 @@ pub fn math_design_score(power: &[f64], width: usize) -> Result<Vec<f64>, JsValu
     Ok(value)
 }
 
-/// Returns the count of elements the design holds at the depth, the length [`elements`] returns without building them.
+/// Returns the count of elements the design holds at the depth, the length `elements` returns without building them.
 #[wasm_bindgen]
 pub fn math_design_size(digits: JsValue, depth: usize) -> Result<JsValue, JsValue> {
     let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
@@ -2184,7 +2183,7 @@ pub fn math_dissection_chain_root(base: JsValue) -> Result<f64, JsValue> {
     Ok(value)
 }
 
-/// Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive.
+/// Returns the chain's wall, one past the last base up to `CAP_BASE` whose margin is not positive.
 #[wasm_bindgen]
 pub fn math_dissection_chain_wall() -> Result<u64, JsValue> {
     let value = mrly::math::dissection::chain_wall();
@@ -2237,7 +2236,7 @@ pub fn math_dissection_masses(
     Ok(value)
 }
 
-/// Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere.
+/// Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from `DIGIT_WALL` below it and at the `CERTIFIED` sets, `none` elsewhere.
 #[wasm_bindgen]
 pub fn math_dissection_reach(base: JsValue, missing: JsValue) -> Result<String, JsValue> {
     let base = hand::u64_from_js(&base)?;
@@ -2254,7 +2253,7 @@ pub fn math_dissection_reading(base: JsValue, fill: usize, masses: &[f64]) -> Re
     Ok(value)
 }
 
-/// Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`].
+/// Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by `fraction` at `cap`.
 #[wasm_bindgen]
 pub fn math_dissection_regions(base: JsValue, level: u32, z: JsValue) -> Result<JsValue, JsValue> {
     let base = hand::u64_from_js(&base)?;
@@ -2965,7 +2964,7 @@ pub fn math_shape_crossing_tree(
     hand::to_js(&value)
 }
 
-/// Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so [`regions`], [`crop`] and [`census`] read it on any lattice; a cube lattice keeps the shape as it is.
+/// Centres a unit-box shape on the short side of a lattice of the extents and keeps it to that centred cube, so `regions`, `crop` and `census` read it on any lattice; a cube lattice keeps the shape as it is.
 #[wasm_bindgen]
 pub fn math_shape_fit(shape: JsValue, extents: &[usize]) -> Result<JsValue, JsValue> {
     let shape = hand::from_js::<mrly::math::shape::Shape>(&shape)?;
@@ -4997,7 +4996,7 @@ pub fn math_two_zeros(number: usize, level: usize) -> Result<JsValue, JsValue> {
     hand::cell2d_to_js(&value)
 }
 
-/// The most sensors [`fractal`] builds, `2^20`.
+/// The most sensors `fractal` builds, `2^20`.
 #[wasm_bindgen]
 pub fn math_arrays_MOST() -> Result<u64, JsValue> {
     let value = mrly::math::arrays::MOST;
@@ -5067,7 +5066,7 @@ pub fn math_dissection_CAP_BASE() -> Result<u64, JsValue> {
     Ok(value)
 }
 
-/// The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`.
+/// The sets below `DIGIT_WALL` certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`.
 #[wasm_bindgen]
 pub fn math_dissection_CERTIFIED() -> Result<JsValue, JsValue> {
     let value = mrly::math::dissection::CERTIFIED;
@@ -5240,14 +5239,14 @@ pub fn math_spirograph_SIDES() -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
-/// The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB.
+/// The deepest level a `Sumset` is built to: `S meet [0, 3^20]`, a bit array of `436` MB.
 #[wasm_bindgen]
 pub fn math_sumset_DEEPEST() -> Result<u32, JsValue> {
     let value = mrly::math::sumset::DEEPEST;
     Ok(value)
 }
 
-/// The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer.
+/// The widest level a `Pair` names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer.
 #[wasm_bindgen]
 pub fn math_sumset_WIDEST() -> Result<u32, JsValue> {
     let value = mrly::math::sumset::WIDEST;
@@ -5288,7 +5287,7 @@ impl math_automaton_Automaton {
     pub fn to_plain(&self) -> Result<JsValue, JsValue> {
         hand::to_js(&self.inner)
     }
-    /// Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of [`crate::memory::perron`].
+    /// Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of `crate::memory::perron`.
     pub fn abscissa(&self) -> Result<f64, JsValue> {
         let value = self.inner.abscissa();
         Ok(value)
@@ -5309,7 +5308,7 @@ impl math_automaton_Automaton {
         let value = self.inner.denominator();
         Ok(value)
     }
-    /// Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of [`crate::memory::transfer`], entry `(u', u)` counting the letters carrying `u` to `u'`.
+    /// Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of `crate::memory::transfer`, entry `(u', u)` counting the letters carrying `u` to `u'`.
     pub fn matrix(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.matrix();
         hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
@@ -6337,25 +6336,25 @@ impl math_name_Bang {
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<math_name_Bang, JsValue> {
         let value =
-            <mrly::math::name::Bang as mrly::math::name::Named>::checked(self.inner.clone())
+            <mrly::math::name::Bang as mrly::core::name::Named>::checked(self.inner.clone())
                 .map_err(hand::throw)?;
         Ok(math_name_Bang { inner: value })
     }
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<math_name_Bang, JsValue> {
-        let value = <mrly::math::name::Bang as mrly::math::name::Named>::from_file(text)
+        let value = <mrly::math::name::Bang as mrly::core::name::Named>::from_file(text)
             .map_err(hand::throw)?;
         Ok(math_name_Bang { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<math_name_Bang, JsValue> {
-        let value = <mrly::math::name::Bang as mrly::math::name::Named>::from_json(text)
+        let value = <mrly::math::name::Bang as mrly::core::name::Named>::from_json(text)
             .map_err(hand::throw)?;
         Ok(math_name_Bang { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<math_name_Bang, JsValue> {
-        let value = <mrly::math::name::Bang as mrly::math::name::Named>::from_url(text)
+        let value = <mrly::math::name::Bang as mrly::core::name::Named>::from_url(text)
             .map_err(hand::throw)?;
         Ok(math_name_Bang { inner: value })
     }
@@ -6368,29 +6367,29 @@ impl math_name_Bang {
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Bang as mrly::math::name::Named>::to_file(&self.inner)
+        let value = <mrly::math::name::Bang as mrly::core::name::Named>::to_file(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
     pub fn to_id(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Bang as mrly::math::name::Named>::to_id(&self.inner);
+        let value = <mrly::math::name::Bang as mrly::core::name::Named>::to_id(&self.inner);
         Ok(value)
     }
     /// Prints the canonical JSON object.
     pub fn to_json(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Bang as mrly::math::name::Named>::to_json(&self.inner);
+        let value = <mrly::math::name::Bang as mrly::core::name::Named>::to_json(&self.inner);
         Ok(value)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_prose(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Bang as mrly::math::name::Named>::to_prose(&self.inner)
+        let value = <mrly::math::name::Bang as mrly::core::name::Named>::to_prose(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Bang as mrly::math::name::Named>::to_url(&self.inner)
+        let value = <mrly::math::name::Bang as mrly::core::name::Named>::to_url(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
@@ -6475,7 +6474,7 @@ impl math_name_Sequence {
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<math_name_Sequence, JsValue> {
         let value =
-            <mrly::math::name::Sequence as mrly::math::name::Named>::checked(self.inner.clone())
+            <mrly::math::name::Sequence as mrly::core::name::Named>::checked(self.inner.clone())
                 .map_err(hand::throw)?;
         Ok(math_name_Sequence { inner: value })
     }
@@ -6486,19 +6485,19 @@ impl math_name_Sequence {
     }
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<math_name_Sequence, JsValue> {
-        let value = <mrly::math::name::Sequence as mrly::math::name::Named>::from_file(text)
+        let value = <mrly::math::name::Sequence as mrly::core::name::Named>::from_file(text)
             .map_err(hand::throw)?;
         Ok(math_name_Sequence { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<math_name_Sequence, JsValue> {
-        let value = <mrly::math::name::Sequence as mrly::math::name::Named>::from_json(text)
+        let value = <mrly::math::name::Sequence as mrly::core::name::Named>::from_json(text)
             .map_err(hand::throw)?;
         Ok(math_name_Sequence { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<math_name_Sequence, JsValue> {
-        let value = <mrly::math::name::Sequence as mrly::math::name::Named>::from_url(text)
+        let value = <mrly::math::name::Sequence as mrly::core::name::Named>::from_url(text)
             .map_err(hand::throw)?;
         Ok(math_name_Sequence { inner: value })
     }
@@ -6517,29 +6516,29 @@ impl math_name_Sequence {
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Sequence as mrly::math::name::Named>::to_file(&self.inner)
+        let value = <mrly::math::name::Sequence as mrly::core::name::Named>::to_file(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
     pub fn to_id(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Sequence as mrly::math::name::Named>::to_id(&self.inner);
+        let value = <mrly::math::name::Sequence as mrly::core::name::Named>::to_id(&self.inner);
         Ok(value)
     }
     /// Prints the canonical JSON object.
     pub fn to_json(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Sequence as mrly::math::name::Named>::to_json(&self.inner);
+        let value = <mrly::math::name::Sequence as mrly::core::name::Named>::to_json(&self.inner);
         Ok(value)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_prose(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Sequence as mrly::math::name::Named>::to_prose(&self.inner)
+        let value = <mrly::math::name::Sequence as mrly::core::name::Named>::to_prose(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Sequence as mrly::math::name::Named>::to_url(&self.inner)
+        let value = <mrly::math::name::Sequence as mrly::core::name::Named>::to_url(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
@@ -6619,25 +6618,25 @@ impl math_name_Word {
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<math_name_Word, JsValue> {
         let value =
-            <mrly::math::name::Word as mrly::math::name::Named>::checked(self.inner.clone())
+            <mrly::math::name::Word as mrly::core::name::Named>::checked(self.inner.clone())
                 .map_err(hand::throw)?;
         Ok(math_name_Word { inner: value })
     }
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<math_name_Word, JsValue> {
-        let value = <mrly::math::name::Word as mrly::math::name::Named>::from_file(text)
+        let value = <mrly::math::name::Word as mrly::core::name::Named>::from_file(text)
             .map_err(hand::throw)?;
         Ok(math_name_Word { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<math_name_Word, JsValue> {
-        let value = <mrly::math::name::Word as mrly::math::name::Named>::from_json(text)
+        let value = <mrly::math::name::Word as mrly::core::name::Named>::from_json(text)
             .map_err(hand::throw)?;
         Ok(math_name_Word { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<math_name_Word, JsValue> {
-        let value = <mrly::math::name::Word as mrly::math::name::Named>::from_url(text)
+        let value = <mrly::math::name::Word as mrly::core::name::Named>::from_url(text)
             .map_err(hand::throw)?;
         Ok(math_name_Word { inner: value })
     }
@@ -6662,29 +6661,29 @@ impl math_name_Word {
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Word as mrly::math::name::Named>::to_file(&self.inner)
+        let value = <mrly::math::name::Word as mrly::core::name::Named>::to_file(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
     pub fn to_id(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Word as mrly::math::name::Named>::to_id(&self.inner);
+        let value = <mrly::math::name::Word as mrly::core::name::Named>::to_id(&self.inner);
         Ok(value)
     }
     /// Prints the canonical JSON object.
     pub fn to_json(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Word as mrly::math::name::Named>::to_json(&self.inner);
+        let value = <mrly::math::name::Word as mrly::core::name::Named>::to_json(&self.inner);
         Ok(value)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_prose(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Word as mrly::math::name::Named>::to_prose(&self.inner)
+        let value = <mrly::math::name::Word as mrly::core::name::Named>::to_prose(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrly::math::name::Word as mrly::math::name::Named>::to_url(&self.inner)
+        let value = <mrly::math::name::Word as mrly::core::name::Named>::to_url(&self.inner)
             .map_err(hand::throw)?;
         Ok(value)
     }
@@ -7372,7 +7371,7 @@ impl math_sumset_Pair {
         let value = mrly::math::sumset::Pair::new(three, four).map_err(hand::throw)?;
         Ok(math_sumset_Pair { inner: value })
     }
-    /// The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz.
+    /// The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy `Pair::energy` returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz.
     pub fn ratio(&self, energy: JsValue) -> Result<f64, JsValue> {
         let energy = hand::u128_from_js(&energy)?;
         let value = self.inner.ratio(energy);

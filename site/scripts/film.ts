@@ -57,7 +57,7 @@ const html = (name: string, config: unknown) =>
 
 async function pack(scene: string, out: string) {
   const entry = join(out, "entry.js");
-  writeFileSync(entry, `import { make } from ${JSON.stringify(scene)};\nimport { film } from ${JSON.stringify(PAGE)};\nwindow.film = film(make);\n`);
+  writeFileSync(entry, `import * as scene from ${JSON.stringify(scene)};\nimport { film } from ${JSON.stringify(PAGE)};\nwindow.film = film(scene.make, scene.units);\n`);
   const built = await Bun.build({ entrypoints: [entry], target: "browser", minify: true });
   if (!built.success) throw new Error(`film: the page failed to bundle\n${built.logs.join("\n")}`);
   await Bun.write(join(out, "film.js"), built.outputs[0]!);
@@ -92,5 +92,5 @@ if (import.meta.main) {
   });
   process.argv = [process.argv[0]!, process.argv[1]!, "--motion"];
   const routes = [`/${run.name}/@window.film`];
-  await main(root, { shots: { routes, sizes: run.video ? { video: [SIZE[0], SIZE[1], false] } : { film: [w, Math.min(h, TALL), false] } } }, films);
+  await main(root, { shots: { routes, sizes: run.video ? { video: [SIZE[0]!, SIZE[1]!, false] } : { film: [w!, Math.min(h!, TALL), false] } } }, films);
 }

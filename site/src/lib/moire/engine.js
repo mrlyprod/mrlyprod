@@ -1,5 +1,5 @@
 import { dark, light } from '../theme/theme.js';
-import { rgb } from '../color.js';
+import { hex, rgb } from '../color.js';
 import { rng } from '../rand.js';
 import { ink } from '#view';
 import { settle } from '../designs/engine.js';
@@ -29,8 +29,6 @@ export function climb(from, beats) {
 }
 
 /* COLOUR */
-
-const hex = (c) => `#${c.slice(0, 3).map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, '0')).join('')}`;
 
 const bright = ([r, g, b]) => (r * 299 + g * 587 + b * 114) / 255000 > 0.5;
 

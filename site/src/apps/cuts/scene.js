@@ -25,6 +25,7 @@ export const units = wasm('math');
 export const name = (value) => `cuts-${String(value.code ?? '').trim() || GASKET}-l${value.level}-${value.view}`;
 
 export const PAGE = {
+  defaults: { base: 2, code: '126', height: '' },
   spec: SPEC,
   units,
   gestures: true,

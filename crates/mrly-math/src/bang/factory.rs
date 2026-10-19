@@ -1,8 +1,9 @@
 use super::code::Code;
-use crate::name::{Bang, Named};
+use crate::name::Bang;
 use crate::rules;
 use mrly_core::Tensor;
 use mrly_core::error::{Result, overflow_error, value_error};
+use mrly_core::name::Named;
 use mrly_core::rng::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;

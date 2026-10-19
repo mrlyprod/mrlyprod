@@ -1,5 +1,5 @@
 import { rng } from '../rand.js';
-import { basis, clamp, dot, mat3, rot, sub } from './vec.js';
+import { basis, clamp01, dot, mat3, rot, sub } from './vec.js';
 
 const TAU = Math.PI * 2;
 const FOV = 1;
@@ -7,12 +7,12 @@ const NEAR = 1e-6;
 
 export const ease = {
   smooth: (p) => {
-    const x = clamp(p);
+    const x = clamp01(p);
     return x * x * (3 - 2 * x);
   },
-  in: (p, k = 2) => clamp(p) ** k,
-  out: (p, k = 2) => 1 - (1 - clamp(p)) ** k,
-  expo: (p) => (2 ** (10 * clamp(p)) - 1) / 1023,
+  in: (p, k = 2) => clamp01(p) ** k,
+  out: (p, k = 2) => 1 - (1 - clamp01(p)) ** k,
+  expo: (p) => (2 ** (10 * clamp01(p)) - 1) / 1023,
 };
 
 /* VIEW */

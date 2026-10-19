@@ -1,7 +1,6 @@
 #![allow(non_camel_case_types, non_snake_case, clippy::too_many_arguments)]
 
-mod hand;
-
+use mrly_js_hand as hand;
 use wasm_bindgen::prelude::*;
 
 /// Grows the named packing and lays every circle of positive curvature as `x, y, r, k` in one flat run: the root's own circles first in root order, then the grown ones in curvature order.
@@ -1371,7 +1370,7 @@ pub fn num_apollonian_ROOTS() -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
-/// The numbers [`flat`] lays per circle: the centre's two coordinates, the radius and the curvature.
+/// The numbers `flat` lays per circle: the centre's two coordinates, the radius and the curvature.
 #[wasm_bindgen]
 pub fn num_apollonian_STRIDE() -> Result<usize, JsValue> {
     let value = mrly::num::apollonian::STRIDE;
@@ -1385,7 +1384,7 @@ pub fn num_kummer_MOST() -> Result<u64, JsValue> {
     Ok(value)
 }
 
-/// The most moves a [`Carry`] table holds, its states times the prime, `2^24`.
+/// The most moves a `Carry` table holds, its states times the prime, `2^24`.
 #[wasm_bindgen]
 pub fn num_kummer_TABLE() -> Result<u64, JsValue> {
     let value = mrly::num::kummer::TABLE;

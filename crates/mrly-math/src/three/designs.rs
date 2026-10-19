@@ -17,7 +17,7 @@ fn build(pattern: Tensor, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors when the code is out of range, or the level is below one.
+/// Errors when the code is out of range.
 pub fn create(code: Code, number: usize, level: usize, base: usize) -> Result<Cell3d> {
     build(factory::create(code, number, 3, base, 1)?, level)
 }
@@ -26,7 +26,7 @@ pub fn create(code: Code, number: usize, level: usize, base: usize) -> Result<Ce
 ///
 /// # Errors
 ///
-/// Errors when a corner does not fit the dimension and base, or the level is below one.
+/// Errors when a corner does not fit the dimension and base.
 pub fn from_corners(
     corners: &[Vec<u8>],
     number: usize,
@@ -43,7 +43,7 @@ pub fn from_corners(
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn zeros(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::zeros_3d(number), level)
 }
@@ -52,7 +52,7 @@ pub fn zeros(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn ones(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::ones_3d(number), level)
 }
@@ -61,7 +61,7 @@ pub fn ones(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn noise(number: usize, level: usize, density: f64, rng: &mut Rng) -> Result<Cell3d> {
     build(atoms::noise_3d(number, density, rng), level)
 }
@@ -75,7 +75,7 @@ pub fn noise(number: usize, level: usize, density: f64, rng: &mut Rng) -> Result
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn carpet(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::carpet_3d(number), level)
 }
@@ -84,7 +84,7 @@ pub fn carpet(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn net(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::net_3d(number), level)
 }
@@ -93,7 +93,7 @@ pub fn net(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn xtree(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::xtree_3d(number), level)
 }
@@ -102,7 +102,7 @@ pub fn xtree(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn ytree(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::ytree_3d(number), level)
 }
@@ -111,7 +111,7 @@ pub fn ytree(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn ztree(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::ztree_3d(number), level)
 }
@@ -120,7 +120,7 @@ pub fn ztree(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn void(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::void_3d(number), level)
 }
@@ -129,7 +129,7 @@ pub fn void(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn point(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::point_3d(number), level)
 }
@@ -138,7 +138,7 @@ pub fn point(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn dust(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::dust_3d(number), level)
 }
@@ -147,7 +147,7 @@ pub fn dust(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn xline(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::xline_3d(number), level)
 }
@@ -156,7 +156,7 @@ pub fn xline(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn yline(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::yline_3d(number), level)
 }
@@ -165,7 +165,7 @@ pub fn yline(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn zline(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::zline_3d(number), level)
 }
@@ -174,7 +174,7 @@ pub fn zline(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn star(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::star_3d(number), level)
 }
@@ -193,7 +193,7 @@ pub fn star(number: usize, level: usize) -> Result<Cell3d> {
 ///
 /// # Errors
 ///
-/// Errors below level one.
+/// Errors when the seed is not a cube.
 pub fn level_set(number: usize, levels: &[usize], level: usize, base: usize) -> Result<Cell3d> {
     create(levels_code(3, base, levels), number, level, base)
 }

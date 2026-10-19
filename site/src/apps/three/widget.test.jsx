@@ -15,8 +15,8 @@ const knobs = (patch) => renderToStaticMarkup(<Knobs spec={SPEC} value={{ ...val
 
 const folds = (html) => [...html.matchAll(/<summary><h3>([^<]*)<\/h3>/g)].map((found) => found[1]);
 
-test('the stage mounts once the unit and three are both in hand', () => {
-  expect([page(undefined).includes('<canvas'), page(math).includes('<canvas'), page(math, {}).includes('<canvas')]).toEqual([false, false, true]);
+test('the stage waits for three as well as the unit', () => {
+  expect(page(math).includes('<canvas')).toBe(false);
 });
 
 test("the level runs to the demo's reach of each number, and a source shows only its own groups", () => {

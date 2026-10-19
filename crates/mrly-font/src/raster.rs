@@ -14,7 +14,7 @@ pub(crate) struct Block {
 
 impl Block {
     /// Reports the block width in columns.
-    pub fn width(&self) -> usize {
+    pub(crate) fn width(&self) -> usize {
         self.rows.first().map_or(0, String::len)
     }
 }

@@ -1,3 +1,4 @@
+import builtins
 from typing import Any, Literal
 
 from numpy.typing import NDArray
@@ -14,7 +15,7 @@ def binarize_otsu(tensor: NDArray[Any]) -> NDArray[Any]:
 def blur(tensor: NDArray[Any], mask: NDArray[Any], wrap: bool) -> NDArray[Any]:
     """Averages every position over its masked neighborhood, rounded."""
 
-def bytes(tensor: NDArray[Any]) -> bytes:
+def bytes(tensor: NDArray[Any]) -> builtins.bytes:
     """Returns the elements as bytes."""
 
 def count(tensor: NDArray[Any], value: int) -> int:
@@ -65,7 +66,7 @@ def neighbors(tensor: NDArray[Any], mask: NDArray[Any], target: int, wrap: bool,
 def new(shape: list[int]) -> NDArray[Any]:
     """Builds a zeroed u8 tensor of the shape."""
 
-def of(data: bytes, shape: list[int]) -> NDArray[Any]:
+def of(data: builtins.bytes, shape: list[int]) -> NDArray[Any]:
     """Wraps a byte vector as a tensor of the shape."""
 
 def otsu_threshold(tensor: NDArray[Any]) -> int:
@@ -116,5 +117,5 @@ def u32(data: list[int], shape: list[int]) -> NDArray[Any]:
 def u32s(tensor: NDArray[Any]) -> list[int]:
     """Returns the elements as u32s."""
 
-def u8(data: bytes, shape: list[int]) -> NDArray[Any]:
-    """Wraps a u8 vector as a tensor of the shape, the same door as [`Tensor::of`]."""
+def u8(data: builtins.bytes, shape: list[int]) -> NDArray[Any]:
+    """Wraps a u8 vector as a tensor of the shape, the same door as `Tensor::of`."""

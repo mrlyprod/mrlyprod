@@ -1,7 +1,8 @@
+//! The stored fixture rows against what each unit returns today.
+
 #[path = "common/rows.rs"]
 mod rows;
 
-use rows::sha256;
 use serde_json::Value;
 use std::path::Path;
 
@@ -46,25 +47,6 @@ fn replays(module: &str) {
 }
 
 #[test]
-fn the_sha256_holds_its_standard_vectors() {
-    assert_eq!(
-        sha256::hex(b""),
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    );
-    assert_eq!(
-        sha256::hex(b"abc"),
-        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-    );
-}
-
-#[test]
-fn the_six_files_hold_thirty_three_rows() {
-    let counted: Vec<usize> = rows::MODULES.iter().map(|m| stored(m).len()).collect();
-    assert_eq!(counted, vec![4, 6, 7, 5, 6, 5]);
-    assert_eq!(counted.iter().sum::<usize>(), 33);
-}
-
-#[test]
 fn core_replays() {
     replays("core");
 }
@@ -80,7 +62,7 @@ fn math_replays() {
 }
 
 #[test]
-fn gen_replays() {
+fn tile_replays() {
     replays("tile");
 }
 

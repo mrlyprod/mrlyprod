@@ -1,5 +1,5 @@
 import { palette as hues } from '../../lib/theme/palette.gen.js';
-import { rgb } from '../../lib/color.js';
+import { blend, rgb } from '../../lib/color.js';
 import { pick } from '../../lib/rand.js';
 import { grid, num as fmt, runs, sheet } from '../../lib/app/svg.js';
 
@@ -35,16 +35,10 @@ export const HEX = Array.from({ length: 6 }, (_, i) => [Math.cos(Math.PI / 6 + (
 
 /* COLOUR */
 
-export function mix(a, b, t) {
-  const p = rgb(a);
-  const q = rgb(b);
-  return `rgb(${p.map((v, i) => Math.round(v + (q[i] - v) * t)).join(', ')})`;
-}
-
 export const ink = (paper) => (rgb(paper).reduce((sum, v) => sum + v, 0) > BRIGHT ? '#000000' : '#ffffff');
 
 export function palette(accent, paper) {
-  return [null, accent, hues.pink, hues.orange, hues.blue, mix(paper, ink(paper), GROUND)];
+  return [null, accent, hues.pink, hues.orange, hues.blue, blend(paper, ink(paper), GROUND)];
 }
 
 /* LATTICE */

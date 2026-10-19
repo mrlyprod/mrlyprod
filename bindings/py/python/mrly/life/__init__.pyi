@@ -1,3 +1,4 @@
+import builtins
 from typing import Any, Literal
 
 from numpy.typing import NDArray
@@ -60,9 +61,9 @@ class Counts:
     def drawn(seq: Source, zeros: bool, ones: bool) -> Counts:
         """Builds the counts a sequence lays down, keeping zeros and ones on request."""
     @staticmethod
-    def list(counts: list[int]) -> Counts:
+    def list(counts: builtins.list[int]) -> Counts:
         """Spells the counts outright."""
-    def values(self, budget: int) -> list[int]:
+    def values(self, budget: int) -> builtins.list[int]:
         """Returns the counts, a drawn side resolved against the mask's neighbor budget."""
     @staticmethod
     def from_dict(data: Any) -> Counts:

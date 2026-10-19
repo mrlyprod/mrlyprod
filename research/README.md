@@ -44,6 +44,6 @@
 - [Weighted designs](weights/README.md): Weighted designs: what weights move on the mass side, what they never move on the length side, and the pressure that closes both.
 - [Windows of a design](windows/README.md): The infinite design of a plane code as a subshift: its `k x k` windows counted exactly through the substitution, the carpet's count, conjecturally piecewise quadratic with `p(k)/k^2` of lower limit `8` and upper limit `9.6`, every code at bases 2 and 3 of growth `1`, `k` or `k^2`, of finite type only when empty, full or on the boundary, and sofic always.
 - [The zeta function of a digit design](zeta/README.md): The design's own zeta function: an explicit zero-free half plane and the census it closes, a residue comb whose teeth are Rouche-certified one by one, a second family that is no critical line and obeys no counting, symmetry, contraction or gain law, the ordinate shadow as a constant-free Newton step from each zeta zero, the multiplicativity wall with the three products that stand where the Euler product does not, and the identity zeta_F N_F = 1 whose Mertens function runs the wrong way.
-- [Shared](shared/README.md): the sequence ledger, the claims checker, the life atlas and the figure census every topic leans on
+- [Shared](shared/README.md): The sequence ledger, the claims checker, the life atlas and the figure census every topic leans on.
 
 Text and figures [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); code [MIT](https://opensource.org/license/mit). The sequences themselves belong to the OEIS and its contributors.

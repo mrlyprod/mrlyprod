@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import * as num from '@mrlyprod/mrly/num';
-import { held, mix, polynomial, recurrence, room, rule } from './engine.js';
+import { combine, held, polynomial, recurrence, room, rule } from './engine.js';
 
 const PERIMETER = ['16', '80', '496', '3536', '26992', '212048', '1684720', '13442768'];
 
@@ -26,14 +26,14 @@ test('the rule reads only the terms that fit 128 bits, and a mix stops where 128
   expect(held(wide)).toHaveLength(28);
   expect(rule(num, wide)).toMatchObject({ order: 1, growth: 20, read: 28 });
   expect(room('hadamard', wide, wide, 0)).toBe(13);
-  const made = mix(num, wide, wide, 'hadamard', 0);
+  const made = combine(num, wide, wide, 'hadamard', 0);
   expect([made.terms.length, made.cut, made.terms[12]]).toEqual([13, true, String((20n ** 13n) ** 2n)]);
 });
 
 test('the mix runs every operation on the pair or on the first alone', () => {
   const a = ['1', '2', '3', '4', '5'];
   const b = ['1', '1', '1', '1', '1'];
-  const run = (op, arg = 2) => mix(num, a, b, op, arg).terms;
+  const run = (op, arg = 2) => combine(num, a, b, op, arg).terms;
   expect(run('add')).toEqual(['2', '3', '4', '5', '6']);
   expect(run('sub')).toEqual(['0', '1', '2', '3', '4']);
   expect(run('hadamard')).toEqual(a);
@@ -43,5 +43,5 @@ test('the mix runs every operation on the pair or on the first alone', () => {
   expect(run('delta')).toEqual(['1', '1', '1', '1']);
   expect(run('sigma')).toEqual(['1', '3', '6', '10', '15']);
   expect(run('scale', -3)).toEqual(['-3', '-6', '-9', '-12', '-15']);
-  expect(mix(num, a, b, 'nope', 0).error).toBe('no operation nope');
+  expect(combine(num, a, b, 'nope', 0).error).toBe('no operation nope');
 });

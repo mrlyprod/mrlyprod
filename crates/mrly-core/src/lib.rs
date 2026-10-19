@@ -1,15 +1,18 @@
-//! The substrate: the road from a grid of bytes to pixels, with nothing mrly on it.
+//! The substrate: tensors, cells, colors, images, resampling, seeded chance and the canonical names.
+//!
+//! The road from a grid of bytes to pixels, and the one JSON object every mrly thing is named by.
 //!
 //! - `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.
 //! - `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.
 //! - `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.
 //! - `image` holds the rgba pixels a renderer returns; encoding them into a file is the caller's.
 //! - `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.
-//! - `error` holds the one error, its Result and the json parser; `named` names an enum.
+//! - `error` holds the one error, its Result and the json parser.
+//! - `name` holds the `Named` trait, the `kind!` marker, the text views and the sha256 a name's id is cut from; `named_enum!` names an enum.
 //!
 //! The json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.
 //!
-//! The doors: [`Tensor::of`](crate::tensor::Tensor::of), [`Tensor::rot90`](crate::tensor::Tensor::rot90), [`Color::from_hex`](crate::colors::Color::from_hex), [`Color::to_hex`](crate::colors::Color::to_hex), [`Image::scale`](crate::image::Image::scale) and [`Colorizer::color`](crate::ramp::Colorizer::color).
+//! The doors: [`Tensor::of`](crate::tensor::Tensor::of), [`Tensor::rot90`](crate::tensor::Tensor::rot90), [`Color::from_hex`](crate::colors::Color::from_hex), [`Color::to_hex`](crate::colors::Color::to_hex), [`Image::scale`](crate::image::Image::scale) and [`ramp::color`].
 
 /// The cell grid: type bytes with optional per-cell colors and tags.
 pub mod cell;
@@ -19,6 +22,8 @@ pub mod colors;
 pub mod error;
 /// The image a renderer returns: its size and its rgba pixels.
 pub mod image;
+/// The canonical names: one JSON object per thing, its views and its id.
+pub mod name;
 mod named;
 /// The editions that distribute a palette over a cell.
 pub mod paint;
@@ -33,6 +38,11 @@ mod seeds;
 /// The tensor and its dtypes.
 pub mod tensor;
 
+#[doc(hidden)]
+pub mod __private {
+    pub use serde;
+}
+
 pub use cell::{Cell, Mode};
 pub use colors::Color;
 pub use error::{Error, Result};
@@ -45,6 +55,10 @@ pub use tensor::{Dtype, Tensor};
 
 /// An object's entries, kept in insertion order.
 pub type Map = serde_json::Map<String, Json>;
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct Readme;
 
 #[cfg(test)]
 mod tests {

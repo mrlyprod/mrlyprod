@@ -1,7 +1,23 @@
 {
   "compilerOptions": {
+    "target": "esnext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["bun"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": false,
     "paths": {
-      "@mrlyprod/mrly/*": ["../bindings/js/*.js"]
+      "@mrlyprod/mrly/*": ["../bindings/js/*.js"],
+      "#view": ["./src/lib/view/index.d.ts"],
+      "#view/*": ["./src/lib/view/*"]
     }
-  }
+  },
+  "include": ["scripts/**/*.ts", "infra/**/*.ts", "src/**/*.ts", "test/**/*.ts"]
 }

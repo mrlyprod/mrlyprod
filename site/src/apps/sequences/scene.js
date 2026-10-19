@@ -1,7 +1,7 @@
 import { tidy } from '../../lib/app/spec.js';
 import { KINDS } from '../../lib/sequences/chart.js';
 import { picture, draw as art, inks, said } from '../../lib/sequences/design.js';
-import { AXES, MEASURES, TERMS, picks } from '../../lib/sequences/engine.js';
+import { AXES, CANON, MEASURES, TERMS, picks } from '../../lib/sequences/engine.js';
 import { FACE, caption, chart, clear, drawRibbon, growth, legend, ribbon, shade, slotAt, tones } from '../../lib/sequences/paint.js';
 
 export const SPEC = [
@@ -17,6 +17,7 @@ export const SPEC = [
 export const named = (value) => ['sequences', picks(value.pick)[0] ?? value.seed, value.chart].join('-');
 
 export const PAGE = {
+  defaults: { q: '', pick: CANON },
   spec: SPEC,
   name: named,
   about: [

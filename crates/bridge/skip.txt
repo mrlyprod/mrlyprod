@@ -2,6 +2,7 @@ core::block generic over the element type; core::image::scale crosses for rgba p
 core::error::overflow_error an error constructor, generic over the Ok type
 core::error::shape_error an error constructor, generic over the Ok type
 core::error::value_error an error constructor, generic over the Ok type
+core::name::longest returns a borrow of its text; the name parsers use it inside the crates
 core::rng::choice generic over the item type; crossed by hand on the Rng class
 core::rng::shuffle generic over the item type; crossed by hand on the Rng class
 core::tensor::bytes_mut a mutable borrow into the buffer; put writes one value

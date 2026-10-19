@@ -1,7 +1,7 @@
 use crate::{Boundary, Config, Counts};
 use mrly_core::error::Result;
-use mrly_math::kind;
-use mrly_math::name::Named;
+use mrly_core::kind;
+use mrly_core::name::Named;
 use mrly_math::two::Cell2d;
 use serde::{Deserialize, Serialize};
 
@@ -42,7 +42,7 @@ mod counts {
         out
     }
 
-    pub fn read(text: &str) -> Option<Counts> {
+    pub(super) fn read(text: &str) -> Option<Counts> {
         let (seq, tail) = Source::read(text)?;
         let (zeros, tail) = match tail.strip_prefix("_zeros") {
             Some(rest) => (true, rest),
@@ -55,7 +55,10 @@ mod counts {
         tail.is_empty().then(|| Counts::drawn(seq, zeros, ones))
     }
 
-    pub fn serialize<S: Serializer>(counts: &Counts, serializer: S) -> Result<S::Ok, S::Error> {
+    pub(super) fn serialize<S: Serializer>(
+        counts: &Counts,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
         match counts {
             Counts::List(list) => {
                 let folded = super::sorted(list.clone());
@@ -90,7 +93,9 @@ mod counts {
         }
     }
 
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Counts, D::Error> {
+    pub(super) fn deserialize<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Counts, D::Error> {
         deserializer.deserialize_any(Side)
     }
 }
@@ -99,7 +104,7 @@ mod counts {
 ///
 /// ```
 /// use mrly_life::Rule;
-/// use mrly_math::name::Named;
+/// use mrly_core::name::Named;
 /// let conway = Rule::new(vec![3].into(), vec![2, 3].into(), false);
 /// assert_eq!(conway.to_json(), r#"{"kind":"rule","birth":[3],"survive":[2,3]}"#);
 /// Rule::from_json(&conway.to_json())?;

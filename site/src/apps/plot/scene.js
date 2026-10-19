@@ -28,6 +28,7 @@ export const filed = (value) => {
 };
 
 export const PAGE = {
+  defaults: { dim: 2, base: 2, code: '7' },
   spec: SPEC,
   name: filed,
   about: [

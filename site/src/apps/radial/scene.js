@@ -1,4 +1,4 @@
-import { tidy } from '../../lib/app/spec.js';
+import { defaults, tidy } from '../../lib/app/spec.js';
 import { BLENDS, COPIES, OUT, degrees, edge, key, layout, paint, petals, rosette, stops, study } from '../../lib/spin/engine.js';
 import { LOOK, PAD, SOURCE, place, sheet, tag } from '../../lib/spin/scene.js';
 
@@ -24,6 +24,7 @@ const ABOUT = [
 export const name = (value) => `radial-${tag(value)}-${value.copies}`;
 
 export const PAGE = {
+  defaults: defaults(SOURCE),
   spec: SPEC,
   about: ABOUT,
   name,

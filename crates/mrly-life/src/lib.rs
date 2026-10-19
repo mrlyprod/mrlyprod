@@ -11,11 +11,11 @@
 //! - `render`: the frames and the visit heatmap of a run, as images.
 //! - `rule`: the canonical name of a rule.
 //!
-//! The doors: [`next_grid`](crate::next_grid), [`animate`](crate::animate()),
-//! [`entropy`](crate::entropy), [`churn`](crate::churn),
-//! [`counts`](crate::counts), [`frames`](crate::frames),
-//! [`heatmap`](crate::heatmap), [`history`](crate::history) and
-//! [`Rule`](crate::Rule).
+//! The doors: [`next_grid`], [`animate`](crate::animate()),
+//! [`entropy`], [`churn`],
+//! [`counts`], [`frames`],
+//! [`heatmap`], [`history`] and
+//! [`Rule`].
 
 /// The run of a seed until it fixes, loops or times out.
 pub mod animate;
@@ -107,6 +107,10 @@ pub(crate) fn blinker() -> Cell2d {
     t.set(&[3, 2], 1).unwrap();
     Cell2d::new(t).unwrap()
 }
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct Readme;
 
 #[cfg(test)]
 mod tests {

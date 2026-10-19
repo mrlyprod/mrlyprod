@@ -56,7 +56,7 @@ const pinned = (math, dim, base, code) => (code !== '' && Number.isFinite(Number
 export function bound(math, space, base, code, number, level, graph) {
   if (space === 'hex') return Number(graph === 'edge' ? math.counts.six.solid_slice_vertices(number ** level) : math.counts.six.grid_triangles(number, level));
   const dim = space === 'cube' ? 3 : 2;
-  if (graph === 'tunnel') return Number(math.counts.void(code, number, dim, level, base));
+  if (graph === 'tunnel') return Number(math.counts.void_(code, number, dim, level, base));
   return Number(math.counts.fill(code, number, dim, level, base)) * (graph === 'edge' ? 2 ** dim : 1);
 }
 

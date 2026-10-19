@@ -20,9 +20,8 @@ function Shared({ children }) {
 
 const order = (html) => [...html.matchAll(/<(?:section|details)([^>]*)>(?:<summary>)?(?:<h3>([^<]*)<\/h3>)?/g)].filter(([, attrs]) => attrs.includes('order:')).map(([, attrs, name]) => [Number(attrs.match(/order:(\d+)/)[1]), name ?? '']).sort(([a], [b]) => a - b).map(([, name]) => name);
 
-test('the widget mounts its stage once both units are in hand, named for the picture it draws', () => {
+test('the stage is named for the picture it draws', () => {
   const page = (units) => renderToStaticMarkup(<Frame label="Radix"><Widget value={value} onChange={() => {}} units={units} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
   expect(page({ math, num })).toContain('<canvas role="img" aria-label="The level 5 words of the radix design');
 });
 

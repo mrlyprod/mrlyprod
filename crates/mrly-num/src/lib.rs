@@ -1,4 +1,4 @@
-//! The instruments of number: primes, divisors, series, spectra and lattices.
+//! The integers: primes, divisors, series, sieves, lattices and spectra.
 //!
 //! Plain numbers and byte grids go in; counts, fractions, rates and measurements come out.
 //! Every answer is exact where the integers allow and a stated approximation where they do not.
@@ -9,7 +9,6 @@
 //! - `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.
 //! - `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.
 //! - `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.
-//! - `eigen`: the crate's symmetric eigensolvers: the dense Householder and QL pair with vectors, and the shift-invert block Lanczos on a banded Cholesky for the lowest pairs of a sparse matrix.
 //! - `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.
 //! - `fft`: the fast Fourier transform in one and two dimensions.
 //! - `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.
@@ -58,6 +57,10 @@ pub mod sieve;
 pub mod spiral;
 /// The critical line: zeta at one half plus i t and off it, its zeros, the prime staircase they rebuild and the novelty meter their waves predict.
 pub mod zeta;
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct Readme;
 
 #[cfg(test)]
 mod tests {

@@ -57,7 +57,7 @@ const MARK = 2;
 const TOLD = 100;
 const BOARD = ['a', 'b', 'base', 'number', 'level'];
 
-const mix = (h) => TOP * Math.min(1, h / HOT);
+const glow = (h) => TOP * Math.min(1, h / HOT);
 
 const won = (over, s) => over?.how === 'goal' && over.winner === s;
 
@@ -174,7 +174,7 @@ export function make(canvas, view, opts = {}) {
     const hot = level(s);
     for (let i = 0; i < hot.length; i++) {
       const [br, bg, bb] = ground[filled[i]];
-      const k = filled[i] ? mix(hot[i]) : 0;
+      const k = filled[i] ? glow(hot[i]) : 0;
       const o = i * 4;
       data[o] = br + (r - br) * k;
       data[o + 1] = bg + (g - bg) * k;
@@ -289,7 +289,7 @@ export function make(canvas, view, opts = {}) {
       const hot = level(s);
       const base = runs({ shape: [n, n], types: filled }).map(([row, col, len]) => `<rect x="${col}" y="${row}" width="${len}" height="1"/>`);
       const warm = [];
-      for (let i = 0; i < hot.length; i++) if (hot[i] > 0) warm.push(`<rect x="${i % n}" y="${Math.floor(i / n)}" width="1" height="1" fill-opacity="${num(mix(hot[i]), 3)}"/>`);
+      for (let i = 0; i < hot.length; i++) if (hot[i] > 0) warm.push(`<rect x="${i % n}" y="${Math.floor(i / n)}" width="1" height="1" fill-opacity="${num(glow(hot[i]), 3)}"/>`);
       const dots = Array.from(state.at[s], (i) => `<rect x="${i % n}" y="${Math.floor(i / n)}" width="1" height="1"/>`);
       const cells = `<g transform="translate(${num(x)} ${num(y)}) scale(${num(c, 4)})" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="${ink.deep}"/><g fill="${ink.line}">${base.join('')}</g><g fill="${colours[s]}">${warm.join('')}${dots.join('')}</g></g>`;
       if (home < 0) return cells;

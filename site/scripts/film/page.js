@@ -67,8 +67,12 @@ function tape(make, canvas, { name, seed, opts = {}, cues = [], from = 0, fps, f
   return take.done.finally(stop).then((file) => new Promise((r) => setTimeout(() => r(file), 2000)));
 }
 
-export async function film(make) {
-  const config = JSON.parse(document.getElementById('film').textContent);
+export async function film(make, units) {
+  const read = JSON.parse(document.getElementById('film').textContent);
+  const held = units ? await units() : {};
+  await held.ready;
+  const { ready, ...doors } = held;
+  const config = { ...read, opts: { ...read.opts, ...doors } };
   const canvas = document.createElement('canvas');
   document.body.setAttribute('aria-busy', 'true');
   try {

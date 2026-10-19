@@ -126,11 +126,11 @@ function posts(): Post[] {
   return folders(BLOG)
     .map((slug) => {
       const file = join(BLOG, slug, "index.md");
-      if (!SLUG.test(slug)) throw new Error(`site: apps/blog/${slug} is not a slug; use lowercase words and digits joined by hyphens`);
-      if (!existsSync(file)) throw new Error(`site: apps/blog/${slug} has no index.md`);
+      if (!SLUG.test(slug)) throw new Error(`site: src/pages/blog/${slug} is not a slug; use lowercase words and digits joined by hyphens`);
+      if (!existsSync(file)) throw new Error(`site: src/pages/blog/${slug} has no index.md`);
       const { data } = front(read(file));
-      for (const key of ["title", "date", "lead"]) if (!data[key]) throw new Error(`site: apps/blog/${slug} names no ${key} in its front matter`);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date!)) throw new Error(`site: apps/blog/${slug} dates itself ${data.date}; a date is YYYY-MM-DD`);
+      for (const key of ["title", "date", "lead"]) if (!data[key]) throw new Error(`site: src/pages/blog/${slug} names no ${key} in its front matter`);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date!)) throw new Error(`site: src/pages/blog/${slug} dates itself ${data.date}; a date is YYYY-MM-DD`);
       return { slug, route: `/blog/${slug}/`, title: data.title!, date: data.date!, lead: lede(plain(data.lead!)), source: rel(file) };
     })
     .sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
@@ -157,11 +157,15 @@ const FIELDS = new Set(["title", "line", "menu", "saver", "hidden", "deep", "sou
 
 const PAGES = ["index.jsx", "index.md"];
 
+const PARTS = ["scene.js", "widget.jsx"];
+
+const PAGER = join(org, "src", "lib", "app", "page.jsx");
+
 function apps(): App[] {
   const list = places().map(({ id, dir }): App => {
     const at = (...parts: string[]) => join(dir, ...parts);
     if (!existsSync(at("app.json"))) throw new Error(`site: ${rel(dir)}/ holds no app.json; every folder of src/pages/ and src/apps/ is a route`);
-    const one = JSON.parse(read(at("app.json"))) as Omit<App, "id" | "page" | "icon">;
+    const one = JSON.parse(read(at("app.json"))) as Omit<App, "id" | "dir" | "page" | "icon">;
     const say = (text: string) => new Error(`site: ${rel(dir)}/app.json ${text}`);
     if (!/^[a-z][a-z0-9]*$/.test(id)) throw say("sits in a folder that is no root word; an id is lowercase letters and digits");
     const extra = Object.keys(one).find((key) => !FIELDS.has(key));
@@ -172,8 +176,10 @@ function apps(): App[] {
     for (const key of ["saver", "hidden", "deep"] as const) if (one[key] !== undefined && one[key] !== true) throw say(`sets ${key} to ${one[key]}; it is true or absent`);
     if (one.route !== undefined && !one.route.startsWith("/")) throw say(`routes to ${one.route}, which is not rooted`);
     if (one.source !== undefined && !existsSync(join(repo, one.source))) throw say(`reads ${one.source}, which does not exist`);
-    const pages = [...PAGES.filter((name) => existsSync(at(name))), ...(one.source ? ["source"] : [])];
-    if (pages.length !== 1) throw say(`needs exactly one page of index.jsx, index.md or a source, and has ${pages.length ? pages.join(" and ") : "none"}`);
+    const parts = PARTS.every((name) => existsSync(at(name)));
+    const given = [...PAGES.filter((name) => existsSync(at(name))), ...(one.source ? ["source"] : [])];
+    const pages = given.length || !parts ? given : [PARTS[0]!];
+    if (pages.length !== 1) throw say(`needs exactly one page of index.jsx, index.md, a source, or scene.js with widget.jsx, and has ${pages.length ? pages.join(" and ") : "none"}`);
     const lost = one.saver ? ["scene.js", "widget.jsx"].find((name) => !existsSync(at(name))) : undefined;
     if (lost) throw say(`is a saver, and ${rel(at(lost))} is missing`);
     const icon = existsSync(at("icon.js"));
@@ -196,10 +202,18 @@ function rows(list: App[], blog: Post[]): Row[] {
     const route = app.route ?? (app.id === "home" ? "/" : `/${app.id}/`);
     const source = app.page === "index.md" ? rel(join(app.dir, "index.md")) : (app.source ?? null);
     const meta = { id: app.id, ...(app.menu ? { menu: app.menu } : {}), ...(app.saver ? { saver: true } : {}), ...(app.deep ? { deep: true } : {}), ...(source ? { prose: app.source ? "source" : "page" } : {}) };
-    out.push({ route, kind: app.page === "index.jsx" ? "app" : "prose", title: app.title, source, date: null, lead: lede(plain(app.line)), figure: app.icon ? app.id : null, hidden: Boolean(app.hidden), meta });
+    out.push({ route, kind: app.page === "index.jsx" || app.page === PARTS[0] ? "app" : "prose", title: app.title, source, date: null, lead: lede(plain(app.line)), figure: app.icon ? app.id : null, hidden: Boolean(app.hidden), meta });
     if (app.id === "blog") for (const post of blog) out.push({ route: post.route, kind: "prose", title: post.title, source: post.source, date: post.date, lead: post.lead, figure: `blog-${post.slug}`, hidden: false, meta: { prose: "post", date: post.date } });
   }
   return out;
+}
+
+/* LIVE */
+
+export function live(figures: Figure[] = roster()): string[] {
+  const code = [...figures.map((one) => one.file), ...walk(join(org, "src")).filter((file) => /\.[jt]sx?$/.test(file) && !/\.test\./.test(file))];
+  const used = new Set(code.flatMap((file) => [...read(file).matchAll(UNIT)].map((hit) => hit[1]!)));
+  return UNITS.filter((unit) => used.has(unit));
 }
 
 /* STATE */
@@ -224,10 +238,8 @@ export function state(): State {
     if (!existsSync(join(repo, row.source))) throw new Error(`site: ${row.route} reads ${row.source}, which does not exist`);
     for (const name of named(read(join(repo, row.source)))) if (!known.has(name)) throw new Error(`site: ${row.source} shows the figure ${name}, which no roster file draws`);
   }
-  const code = [...figures.map((one) => one.file), ...walk(join(org, "src")).filter((file) => /\.[jt]sx?$/.test(file) && !/\.test\./.test(file))];
-  const used = new Set(code.flatMap((file) => [...read(file).matchAll(UNIT)].map((hit) => hit[1]!)));
-  const units = UNITS.filter((unit) => used.has(unit)).sort();
-  for (const unit of units) if (!existsSync(unitWasm(unit))) throw new Error(`site: a live figure or app imports @mrlyprod/mrly/${unit}, and site/wasm/${unit}/ does not hold it; scripts/wasm.sh copies the live units there`);
+  const units = live(figures);
+  for (const unit of units) if (!existsSync(unitWasm(unit))) throw new Error(`site: a live figure or app imports @mrlyprod/mrly/${unit}, and site/wasm/${unit}/ does not hold it; bun run wasm copies the live units there`);
   const moves = JSON.parse(read(join(org, "redirects.json"))) as Record<string, { to: string; since: string }>;
   const kept = Object.fromEntries(Object.entries(moves).filter(([, row]) => seen.has(row.to)));
   const site = {
@@ -247,7 +259,9 @@ export function state(): State {
 
 const thunks = (list: [string, string][]) => `{ ${list.map(([key, file]) => `${JSON.stringify(key)}: () => import(${JSON.stringify(file)})`).join(", ")} }`;
 
-const appFiles = (list: App[]): [string, string][] => list.flatMap((one) => (one.page === "index.jsx" ? [[one.id, join(one.dir, "index.jsx")] as [string, string]] : []));
+const appFiles = (list: App[]): [string, string][] => list.flatMap((one): [string, string][] => (one.page === "index.jsx" ? [[one.id, join(one.dir, "index.jsx")]] : one.page === PARTS[0] ? [[one.id, `app:${one.id}`]] : []));
+
+export const entry = (dir: string) => [`import { page } from ${JSON.stringify(PAGER)};`, `import { PAGE } from ${JSON.stringify(join(dir, PARTS[0]!))};`, `import { Widget } from ${JSON.stringify(join(dir, PARTS[1]!))};`, "export const { mount, unmount } = page(Widget, { seed: 0, ...PAGE.defaults }, PAGE);"].join("\n");
 
 export const own = (list: App[]) => list.filter((one) => one.page === "index.jsx" && jsx.scan(read(join(one.dir, "index.jsx"))).exports.includes("render")).map((one) => one.id);
 
@@ -258,6 +272,7 @@ export function modules(ready: Ready): Record<string, string> {
     "site:apps": `export const apps = ${thunks(appFiles(ready.apps))};\nexport const own = new Set(${JSON.stringify(own(ready.apps))});\nexport const lock = () => import(${JSON.stringify(LOCK)});`,
     "site:css": `export const css = ${JSON.stringify(ready.css)};`,
     "apps:scenes": `export const scenes = ${thunks(savers(ready.apps).map((one) => [one.id, join(one.dir, "scene.js")]))};`,
+    ...Object.fromEntries(ready.apps.filter((one) => one.page === PARTS[0]).map((one) => [`app:${one.id}`, entry(one.dir)])),
   };
 }
 
@@ -267,7 +282,7 @@ export const plugin = (get: () => Ready): BunPlugin => ({
     mrly.setup(build);
     build.onResolve({ filter: /(?:^|\/)wasm\/[a-z]+\/mrly_js_[a-z]+(?:_bg\.wasm|\.js)$/ }, ({ path }) => ({ path: join(org, "wasm", ...path.split("/").slice(-2)) }));
     build.onResolve({ filter: /^\// }, ({ path }) => (existsSync(path) ? undefined : { path, external: true }));
-    build.onResolve({ filter: /^(site|apps):/ }, ({ path }) => ({ path, namespace: "site" }));
+    build.onResolve({ filter: /^(site|apps?):/ }, ({ path }) => ({ path, namespace: "site" }));
     build.onLoad({ filter: /.*/, namespace: "site" }, ({ path }) => {
       const text = modules(get())[path];
       if (text === undefined) throw new Error(`site: no virtual module ${path}`);
@@ -398,7 +413,7 @@ export async function build(out = DIST): Promise<Built> {
   const seen = new Map<string, string>();
   const made = await prime(seen);
   const ready: Ready = { ...state(), ...made };
-  const entries = [join(org, "src", "shell", "index.html"), ...SHELLS, join(org, "src", "pages", "git", "git.js"), ...ready.figures.map((one) => one.file), ...appFiles(ready.apps).map(([, file]) => file), LOCK];
+  const entries = [join(org, "src", "shell", "index.html"), ...SHELLS, join(org, "src", "pages", "git", "git.js"), ...ready.figures.map((one) => one.file), ...appFiles(ready.apps).flatMap(([, file]) => (file.startsWith("/") ? [file] : [])), LOCK];
   const built = await Bun.build({ entrypoints: entries, splitting: true, minify: true, publicPath: "/", naming: NAMING, define: { "process.env.NODE_ENV": '"production"' }, plugins: [plugin(() => ready), fonts(seen)] });
   if (!built.success) throw new Error(`site: the bundle failed\n${built.logs.join("\n")}`);
   const bundle = await outs(built.outputs);

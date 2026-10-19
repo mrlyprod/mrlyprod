@@ -8,6 +8,7 @@ import { GRADES, march, tone } from '../../lib/space/march.js';
 import { post } from '../../lib/gl/post.js';
 import { trails } from './trails.js';
 import { add } from '../../lib/gl/vec.js';
+import { wasm } from '../../lib/units/index.js';
 
 export const SPEC = [
   { key: 'code', label: 'Code', kind: 'slider', def: 23, min: -1, max: 255, step: 1, group: 'Shape' },
@@ -22,7 +23,9 @@ export const SPEC = [
   { key: 'hyper', label: 'Hyper', kind: 'toggle', def: 0, group: 'Look' },
 ];
 
-export const PAGE = { spec: SPEC, record: true };
+export const units = wasm('math');
+
+export const PAGE = { spec: SPEC, units, record: true };
 
 const FOV = 1.25;
 const OPEN = -4000;
@@ -33,15 +36,17 @@ const DROP = 0.2;
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
+  const { math } = opts;
+  if (!math) throw new Error('zoom: the scene wants @mrlyprod/mrly/math as opts.math');
   const gl = context(canvas);
   if (!gl) return blank(canvas);
   const value = tidy(SPEC, opts);
   const seed = Number.isFinite(Number(opts.seed)) ? Number(opts.seed) >>> 0 : 0;
   const { n } = value;
-  const code = pickCode(value, seed);
+  const code = pickCode(math, value, seed);
   const design = { code, n };
-  const info = teach(code, n);
-  const path = info.kept ? route(design, seed, { pilot: value.pilot }) : null;
+  const info = teach(math, code, n);
+  const path = info.kept ? route(math, design, seed, { pilot: value.pilot }) : null;
   const made = [];
   let film = null;
   let trip = null;
@@ -52,7 +57,7 @@ export function make(canvas, view, opts = {}) {
     face = hud(gl, view);
     made.push(face);
     if (path) {
-      world = march(gl, view, design, { look: value.look, quality: value.quality, toFrame: path.toFrame });
+      world = march(gl, view, design, { math, look: value.look, quality: value.quality, toFrame: path.toFrame });
       made.push(world);
       if (value.path) {
         lines = trails(gl, view);
@@ -79,7 +84,7 @@ export function make(canvas, view, opts = {}) {
     trip.hold();
   }
   const grade = GRADES[value.look];
-  const title = `${NAMES.some(([one]) => canon(one) === canon(code)) ? name(code) : 'bang'} ${code}`;
+  const title = `${NAMES.some(([one]) => canon(math, one) === canon(math, code)) ? name(math, code) : 'bang'} ${code}`;
   let tint = null;
   let paints = null;
   let rail = [];

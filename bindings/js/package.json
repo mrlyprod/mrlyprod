@@ -1,7 +1,16 @@
 {
   "name": "@mrlyprod/mrly",
   "version": "0.2.0",
-  "description": "MrlyProd; or, Marley Productions",
+  "description": "MrlyMath, the mathematics of designs, compiled to WebAssembly for the browser and Node.",
+  "keywords": [
+    "mathematics",
+    "fractal",
+    "cellular-automata",
+    "generative",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "MrlyProd, Inc.",
   "license": "MIT",
   "homepage": "https://mrly.net",
   "repository": {
@@ -9,59 +18,80 @@
     "url": "https://github.com/mrlyprod/mrlyprod",
     "directory": "bindings/js"
   },
+  "bugs": {
+    "url": "https://github.com/mrlyprod/mrlyprod/issues"
+  },
   "type": "module",
+  "sideEffects": [
+    "./*.node.js"
+  ],
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "types": "./all.d.ts",
+      "types": "./index.d.ts",
+      "node": "./index.node.js",
       "default": "./index.js"
     },
     "./core": {
       "types": "./core.d.ts",
+      "node": "./core.node.js",
       "default": "./core.js"
-    },
-    "./num": {
-      "types": "./num.d.ts",
-      "default": "./num.js"
-    },
-    "./math": {
-      "types": "./math.d.ts",
-      "default": "./math.js"
-    },
-    "./tile": {
-      "types": "./tile.d.ts",
-      "default": "./tile.js"
-    },
-    "./life": {
-      "types": "./life.d.ts",
-      "default": "./life.js"
     },
     "./font": {
       "types": "./font.d.ts",
+      "node": "./font.node.js",
       "default": "./font.js"
     },
-    "./pkg/*": "./pkg/*"
+    "./life": {
+      "types": "./life.d.ts",
+      "node": "./life.node.js",
+      "default": "./life.js"
+    },
+    "./math": {
+      "types": "./math.d.ts",
+      "node": "./math.node.js",
+      "default": "./math.js"
+    },
+    "./num": {
+      "types": "./num.d.ts",
+      "node": "./num.node.js",
+      "default": "./num.js"
+    },
+    "./tile": {
+      "types": "./tile.d.ts",
+      "node": "./tile.node.js",
+      "default": "./tile.js"
+    },
+    "./pkg/*": "./pkg/*",
+    "./package.json": "./package.json"
   },
   "files": [
+    "LICENSE",
+    "README.md",
     "pkg/",
     "index.js",
+    "index.node.js",
+    "index.d.ts",
     "core.js",
-    "num.js",
-    "math.js",
-    "tile.js",
-    "life.js",
-    "font.js",
-    "all.js",
+    "core.node.js",
     "core.d.ts",
-    "num.d.ts",
-    "math.d.ts",
-    "tile.d.ts",
-    "life.d.ts",
+    "font.js",
+    "font.node.js",
     "font.d.ts",
-    "all.d.ts",
-    "README.md"
+    "life.js",
+    "life.node.js",
+    "life.d.ts",
+    "math.js",
+    "math.node.js",
+    "math.d.ts",
+    "num.js",
+    "num.node.js",
+    "num.d.ts",
+    "tile.js",
+    "tile.node.js",
+    "tile.d.ts"
   ],
   "scripts": {
     "test": "bun test"

@@ -25,6 +25,7 @@ export const name = (value) => `two-${String(value.code ?? '').trim() || value.s
 export const units = wasm('math');
 
 export const PAGE = {
+  defaults: { base: 3, code: '495' },
   spec: SPEC,
   units,
   about: [

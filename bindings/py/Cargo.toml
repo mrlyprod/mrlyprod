@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 mrly = { workspace = true }
-pyo3 = { version = "0.29", features = ["extension-module", "abi3-py313"] }
+pyo3 = { version = "0.29", features = ["extension-module", "abi3-py310"] }
 numpy = "0.29"
 pythonize = "0.29"
 serde = { version = "1", features = ["derive"] }

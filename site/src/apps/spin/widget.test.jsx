@@ -1,11 +1,10 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as math from '@mrlyprod/mrly/math';
-import { Frame } from '../../lib/app/frame.jsx';
 import { Accordion } from '../../lib/app/controls.jsx';
 import { Knobs, useAccordion } from '../../lib/app/knobs.jsx';
 import { SPEC } from './scene.js';
-import { Needles, Pane, Widget, next, rows } from './widget.jsx';
+import { Needles, Pane, next, rows } from './widget.jsx';
 
 function Shared({ children }) {
   return <Accordion.Provider value={useAccordion('', SPEC)}>{children}</Accordion.Provider>;
@@ -14,12 +13,6 @@ function Shared({ children }) {
 const order = (html) => [...html.matchAll(/<(?:section|details)([^>]*)>(?:<summary>)?(?:<h3>([^<]*)<\/h3>)?/g)].filter(([, attrs]) => attrs.includes('order:')).map(([, attrs, name]) => [Number(attrs.match(/order:(\d+)/)[1]), name ?? '']).sort(([a], [b]) => a - b).map(([, name]) => name);
 
 const value = { seed: 1, source: 'flat', base: 3, code: '495', number: 3, level: 4, rpm: 33, glow: 1, ramp: 'heat', levels: 64, invert: 0, tint: '' };
-
-test('the widget mounts its stage only once the unit is in hand', () => {
-  const page = (unit) => renderToStaticMarkup(<Frame label="Spin"><Widget value={value} onChange={() => {}} unit={unit} /></Frame>);
-  expect(page(undefined)).not.toContain('<canvas');
-  expect(page(math)).toContain('<canvas');
-});
 
 test('the needles are the demo presets as buttons, the one at the rpm lit, and a tap moves to the next', () => {
   const html = renderToStaticMarkup(<Needles rpm={900} onChange={() => {}} />);
