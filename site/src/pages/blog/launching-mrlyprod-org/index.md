@@ -12,4 +12,4 @@ There are three things to read. The demos are 28 browser pages that draw a desig
 
 Everything is open source at [github.com/mrlyprod/mrlyprod](https://github.com/mrlyprod/mrlyprod) under MIT, and the papers live in a second public repository with their text and figures under CC BY 4.0. A paper's claims are meant to be rerun rather than trusted: `python3 scripts/verify.py` in a paper's folder reproduces its computational facts, and `cargo test --workspace` runs the crates underneath.
 
-What comes next is more of the same. More papers are in draft, and the demos grow whenever a crate learns something worth drawing. A shop is planned for the physical side of the mark - the objects the designs turn into once they leave the screen. No dates are promised for either; when something lands it will be posted here.
+What comes next is more of the same. More papers are in draft, and the demos grow whenever a crate learns something worth drawing. No dates are promised; when something lands it will be posted here.
