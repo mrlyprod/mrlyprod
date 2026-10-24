@@ -13,17 +13,24 @@ describe("md", () => {
   });
 
   test("a lone image naming a figure is a figure host with its caption", () => {
-    expect(render("![the *walk*](walks-fig)", { link })).toBe('<figure data-figure="walks-fig"><canvas role="img" aria-label="the walk"></canvas><figcaption>the <em>walk</em></figcaption></figure>');
+    expect(render("![the *walk*](walks-fig)", { link })).toBe(
+      '<figure data-figure="walks-fig"><canvas role="img" aria-label="the walk"></canvas><figcaption>the <em>walk</em></figcaption></figure>',
+    );
   });
 
   test("a lone image of a file is a figure around the resolved image, an inline image stays an image", () => {
-    expect(render("![the *walk*](walk.png)", { link })).toBe('<figure><img src="/L/walk.png" alt="the walk"><figcaption>the <em>walk</em></figcaption></figure>');
+    expect(render("![the *walk*](walk.png)", { link })).toBe(
+      '<figure><img src="/L/walk.png" alt="the walk"><figcaption>the <em>walk</em></figcaption></figure>',
+    );
     expect(render("see ![walk](walks-fig) here", { link })).toBe('<p>see <img src="/L/walks-fig" alt="walk"> here</p>');
   });
 
   test("the resolver is told which targets are images, a lone line, an inline one and a reference included", () => {
     const seen: string[] = [];
-    const spy = (url: string, image?: boolean) => (seen.push(`${url}:${image ? "image" : "link"}`), url);
+    const spy = (url: string, image?: boolean) => {
+      seen.push(`${url}:${image ? "image" : "link"}`);
+      return url;
+    };
     render("![a](one.png)\n\nsee ![b](two) and [c](three) and ![d][four]\n\n[four]: four\n[five]: five", { link: spy });
     expect(seen.sort()).toEqual(["five:link", "four:image", "one.png:image", "three:link", "two:image"]);
   });
@@ -36,12 +43,19 @@ describe("md", () => {
       '<img src="/L/three" alt="c" loading="lazy" decoding="async">',
       '<img src="/L/four.png" alt="d" loading="lazy" decoding="async">',
     ]);
-    expect(render("![a](one) ![b][two]\n\n[two]: two", { link })).toContain('<img src="/L/two" alt="b" loading="lazy" decoding="async">');
-    expect(render("![a](one.png)", { link, lazy: true })).toContain('<img src="/L/one.png" alt="a" loading="lazy" decoding="async">');
+    expect(render("![a](one) ![b][two]\n\n[two]: two", { link })).toContain(
+      '<img src="/L/two" alt="b" loading="lazy" decoding="async">',
+    );
+    expect(render("![a](one.png)", { link, lazy: true })).toContain(
+      '<img src="/L/one.png" alt="a" loading="lazy" decoding="async">',
+    );
   });
 
   test("figures lists the lone images that name a figure, not a file, an inline image or code", () => {
-    expect(figures("![a](home)\n\nsee ![b](x) here\n\n![c](pic.png)\n\n```\n![d](y)\n```\n\n![e](blog-x)")).toEqual(["home", "blog-x"]);
+    expect(figures("![a](home)\n\nsee ![b](x) here\n\n![c](pic.png)\n\n```\n![d](y)\n```\n\n![e](blog-x)")).toEqual([
+      "home",
+      "blog-x",
+    ]);
   });
 
   test("math is inline at $, display at $$ on its own line or block, with escaped braces unescaped", () => {
@@ -54,15 +68,21 @@ describe("md", () => {
 
   test("a table is wrapped, aligned by class and one row per line", () => {
     const html = render("| a | b | c |\n|:--|:-:|--:|\n| 1 | 2 | 3 |");
-    expect(html).toBe('<div class="table"><table><thead><tr><th>a</th><th class="center">b</th><th class="right">c</th></tr></thead><tbody>\n<tr><td>1</td><td class="center">2</td><td class="right">3</td></tr>\n</tbody></table></div>');
+    expect(html).toBe(
+      '<div class="table"><table><thead><tr><th>a</th><th class="center">b</th><th class="right">c</th></tr></thead><tbody>\n<tr><td>1</td><td class="center">2</td><td class="right">3</td></tr>\n</tbody></table></div>',
+    );
   });
 
   test("an asterisk between two word characters is literal, around words it is emphasis, in code it is untouched", () => {
-    expect(render("3*n*(n+1) and *\"2*20^n + 4*8^n\"* and `a*b*c`")).toBe('<p>3*n*(n+1) and <em>"2*20^n + 4*8^n"</em> and <code>a*b*c</code></p>');
+    expect(render('3*n*(n+1) and *"2*20^n + 4*8^n"* and `a*b*c`')).toBe(
+      '<p>3*n*(n+1) and <em>"2*20^n + 4*8^n"</em> and <code>a*b*c</code></p>',
+    );
   });
 
   test("every link and bare url goes through the resolver", () => {
-    expect(render("[a](x.md) and https://oeis.org/A1", { link })).toBe('<p><a href="/L/x.md">a</a> and <a href="https://oeis.org/A1">https://oeis.org/A1</a></p>');
+    expect(render("[a](x.md) and https://oeis.org/A1", { link })).toBe(
+      '<p><a href="/L/x.md">a</a> and <a href="https://oeis.org/A1">https://oeis.org/A1</a></p>',
+    );
   });
 
   test("raw html is shown as text", () => {
@@ -70,7 +90,9 @@ describe("md", () => {
   });
 
   test("lists are tight, so a dated claim line starts its item", () => {
-    expect(render("- 2026-09-19 [Proved] one\n- two\n\n1. a\n2. b")).toBe("<ul>\n<li>2026-09-19 [Proved] one</li>\n<li>two</li>\n</ul>\n<ol>\n<li>a</li>\n<li>b</li>\n</ol>");
+    expect(render("- 2026-09-19 [Proved] one\n- two\n\n1. a\n2. b")).toBe(
+      "<ul>\n<li>2026-09-19 [Proved] one</li>\n<li>two</li>\n</ul>\n<ol>\n<li>a</li>\n<li>b</li>\n</ol>",
+    );
   });
 
   test("inline drops the paragraph", () => {

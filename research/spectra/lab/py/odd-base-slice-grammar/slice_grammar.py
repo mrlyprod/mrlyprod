@@ -1,8 +1,8 @@
 from fractions import Fraction
 
 import numpy as np
-from mpmath import mp, mpf
 from mpmath import log as mlog
+from mpmath import mp, mpf
 from mpmath import sqrt as msqrt
 
 mp.dps = 40
@@ -32,9 +32,17 @@ def at(c, i):
 
 
 def transfer(b, c):
-    row_mid = (at(c, (3 * b - 3) // 2), at(c, (3 * b - 1) // 2), at(c, (3 * b - 5) // 2))
+    row_mid = (
+        at(c, (3 * b - 3) // 2),
+        at(c, (3 * b - 1) // 2),
+        at(c, (3 * b - 5) // 2),
+    )
     row_low = (at(c, (b - 3) // 2), at(c, (b - 1) // 2), at(c, (b - 5) // 2))
-    row_high = (at(c, (5 * b - 3) // 2), at(c, (5 * b - 1) // 2), at(c, (5 * b - 5) // 2))
+    row_high = (
+        at(c, (5 * b - 3) // 2),
+        at(c, (5 * b - 1) // 2),
+        at(c, (5 * b - 5) // 2),
+    )
     return row_mid, row_low, row_high
 
 
@@ -58,14 +66,14 @@ def layer_counts(b, c, level):
     dist = {0: 1}
     nz = [(s, v) for s, v in enumerate(c) if v]
     for k in range(level):
-        shift = b ** k
+        shift = b**k
         nxt = {}
         for s0, v0 in dist.items():
             for s1, v1 in nz:
                 key = s0 + s1 * shift
                 nxt[key] = nxt.get(key, 0) + v0 * v1
         dist = nxt
-    m = (3 * b ** level - 1) // 2
+    m = (3 * b**level - 1) // 2
     return dist.get(m - 1, 0), dist.get(m, 0) + dist.get(m - 2, 0)
 
 
@@ -131,7 +139,7 @@ def report(b, rule, levels=9):
         "b": b,
         "rule": rule,
         "fill": fill,
-        "cells": b ** 3,
+        "cells": b**3,
         "matrix": mat,
         "closes": ok,
         "trace": tr,
@@ -166,25 +174,17 @@ def main():
                 float(r["minus_one"]),
             )
         )
-    print(
-        "four rules: %s"
-        % " / ".join(rows[b]["recurrence"] for b in bases)
-    )
-    print(
-        "dimensions: %s"
-        % " / ".join("%.4f" % float(rows[b]["dim"]) for b in bases)
-    )
-    print(
-        "d-1: %s" % " / ".join("%.4f" % float(rows[b]["minus_one"]) for b in bases)
-    )
+    print("four rules: %s" % " / ".join(rows[b]["recurrence"] for b in bases))
+    print("dimensions: %s" % " / ".join("%.4f" % float(rows[b]["dim"]) for b in bases))
+    print("d-1: %s" % " / ".join("%.4f" % float(rows[b]["minus_one"]) for b in bases))
 
-    print("")
+    print()
     print("BASE THREE EXTERNAL TARGET")
     print("matrix %s" % rows[3]["matrix"])
     print("hexagons %s" % ", ".join(str(v) for v in rows[3]["hexes"][:7]))
     print("triangles %s" % ", ".join(str(v) for v in rows[3]["tris"][:7]))
 
-    print("")
+    print()
     print("INDEPENDENT LAYER CENSUS, NO TILE REDUCTION")
     for b, top in ((3, 6), (5, 5), (7, 4), (9, 4)):
         c = digit_sums(b, "odd")
@@ -196,7 +196,7 @@ def main():
                 agree = False
         print("b=%d levels 0..%d agree=%s" % (b, top, agree))
 
-    print("")
+    print()
     print("CLOSED FORM AGAINST CENSUS")
     bad = []
     for b in range(3, 22, 2):
@@ -207,7 +207,7 @@ def main():
             bad.append(b)
     print("odd bases 3..21 matched=%d mismatched=%s" % (10 - len(bad), bad))
 
-    print("")
+    print()
     print("MOD FOUR SPLIT")
     wrong = []
     tested = 0
@@ -219,7 +219,7 @@ def main():
             wrong.append(b)
     print("odd bases 3..401 tested=%d exceptions=%s" % (tested, wrong))
 
-    print("")
+    print()
     print("BASE FIVE, THE TWO DIGIT RULES")
     odd5 = rows[5]
     mid5 = report(5, "middle")

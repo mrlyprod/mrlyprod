@@ -23,7 +23,8 @@ export function copy(units = live(), from = PKG, to = WASM): string[] {
   rmSync(to, { recursive: true, force: true });
   for (const unit of units) {
     mkdirSync(join(to, unit), { recursive: true });
-    for (const name of [`mrly_js_${unit}.js`, `mrly_js_${unit}_bg.wasm`]) copyFileSync(join(from, unit, name), join(to, unit, name));
+    for (const name of [`mrly_js_${unit}.js`, `mrly_js_${unit}_bg.wasm`])
+      copyFileSync(join(from, unit, name), join(to, unit, name));
   }
   return units;
 }
@@ -31,7 +32,10 @@ export function copy(units = live(), from = PKG, to = WASM): string[] {
 /* FONT */
 
 export function font(out = FONT) {
-  const done = Bun.spawnSync(["bash", join(repo, "scripts", "cargo.sh"), "cargo", "run", "-q", "-p", "mrly-font", "--example", "book"], { cwd: repo, stderr: "inherit" });
+  const done = Bun.spawnSync(
+    ["bash", join(repo, "scripts", "cargo.sh"), "cargo", "run", "-q", "-p", "mrly-font", "--example", "book"],
+    { cwd: repo, stderr: "inherit" },
+  );
   if (done.exitCode !== 0) throw new Error(`wasm: the font book exited ${done.exitCode}`);
   const text = done.stdout.toString();
   JSON.parse(text);

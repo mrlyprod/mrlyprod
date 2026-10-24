@@ -1,8 +1,8 @@
 import { readFileSync, rmSync } from "node:fs";
 import { cpus, tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
-import { ink, raster, type Ink, type Pen } from "../src/lib/view/index.js";
 import { dark, light } from "../src/lib/theme/theme.js";
+import { type Ink, ink, type Pen, raster } from "../src/lib/view/index.js";
 import { mrly, roster } from "./build.ts";
 
 /* RECIPE */
@@ -18,7 +18,12 @@ const THEMES = { dark, light };
 
 type Theme = keyof typeof THEMES;
 type Unit = { initSync: (options: { module: Uint8Array }) => unknown };
-type Figure = { default: (pen: Pen, ink: Ink, t: number) => void; size?: number[]; still?: number; units?: Record<string, Unit> };
+type Figure = {
+  default: (pen: Pen, ink: Ink, t: number) => void;
+  size?: number[];
+  still?: number;
+  units?: Record<string, Unit>;
+};
 type Job = { name: string; file: string; theme: Theme };
 type Done = { cold: number; warm: number; units: string[] } | { error: string };
 
@@ -28,7 +33,8 @@ async function draw({ file, theme }: Job): Promise<Done> {
   try {
     const figure: Figure = await import(file);
     const units = Object.entries(figure.units ?? {});
-    for (const [unit, door] of units) door.initSync({ module: readFileSync(join(MRLY, "pkg", unit, `mrly_js_${unit}_bg.wasm`)) });
+    for (const [unit, door] of units)
+      door.initSync({ module: readFileSync(join(MRLY, "pkg", unit, `mrly_js_${unit}_bg.wasm`)) });
     const [width, height] = (figure.size ?? SIZE) as [number, number];
     const tint = ink(THEMES[theme]);
     const once = () => {
@@ -72,11 +78,24 @@ async function main() {
   const wanted = process.argv.slice(2);
   const list = roster().filter((one) => !wanted.length || wanted.includes(one.name));
   rmSync(OUT, { recursive: true, force: true });
-  const built = await Bun.build({ entrypoints: list.map((one) => one.file), root: REPO, outdir: OUT, target: "bun", plugins: [mrly] });
+  const built = await Bun.build({
+    entrypoints: list.map((one) => one.file),
+    root: REPO,
+    outdir: OUT,
+    target: "bun",
+    plugins: [mrly],
+  });
   if (!built.success) throw new Error(`time: the figures failed to bundle\n${built.logs.join("\n")}`);
   const rows: { name: string; cold: number; warm: number; units: string[]; error: string; research: boolean }[] = [];
   for (const { name, file } of list) {
-    const row = { name, cold: 0, warm: 0, units: [] as string[], error: "", research: relative(REPO, file).startsWith("research/") };
+    const row = {
+      name,
+      cold: 0,
+      warm: 0,
+      units: [] as string[],
+      error: "",
+      research: relative(REPO, file).startsWith("research/"),
+    };
     for (const theme of Object.keys(THEMES) as Theme[]) {
       const done = await run({ name, file: join(OUT, relative(REPO, file).replace(/\.ts$/, ".js")), theme });
       if ("error" in done) row.error ||= `${theme}: ${done.error}`;
@@ -89,8 +108,16 @@ async function main() {
     rows.push(row);
   }
   rows.sort((a, b) => b.warm - a.warm || a.name.localeCompare(b.name));
-  const slow = (row: (typeof rows)[number]) => [row.warm > GATE.warm && "over warm", row.cold > GATE.cold && "over cold"].filter(Boolean).join(", ");
-  const flag = (row: (typeof rows)[number]) => (row.error ? `FAILED ${row.error}` : FREE.has(row.name) ? "excluded" : row.research && slow(row) ? `warning, ${slow(row)}` : slow(row));
+  const slow = (row: (typeof rows)[number]) =>
+    [row.warm > GATE.warm && "over warm", row.cold > GATE.cold && "over cold"].filter(Boolean).join(", ");
+  const flag = (row: (typeof rows)[number]) =>
+    row.error
+      ? `FAILED ${row.error}`
+      : FREE.has(row.name)
+        ? "excluded"
+        : row.research && slow(row)
+          ? `warning, ${slow(row)}`
+          : slow(row);
   const width = Math.max(...rows.map((row) => row.name.length));
   const over = rows.filter((row) => !FREE.has(row.name) && (row.error || (!row.research && slow(row))));
   const warned = rows.filter((row) => !row.error && row.research && slow(row));
@@ -101,7 +128,9 @@ async function main() {
     `- gate: ${GATE.warm} ms warm, ${GATE.cold} ms cold on the icons; a research figure over it is a warning, judged with its topic; ${[...FREE].join(", ")} excluded.`,
     "",
     `${"name".padEnd(width)}  ${"cold ms".padStart(9)}  ${"warm ms".padStart(9)}  ${"units".padEnd(6)}  flag`,
-    ...rows.map((row) => `${row.name.padEnd(width)}  ${ms(row.cold)}  ${ms(row.warm)}  ${(row.units.join(",") || "-").padEnd(6)}  ${flag(row)}`.trimEnd()),
+    ...rows.map((row) =>
+      `${row.name.padEnd(width)}  ${ms(row.cold)}  ${ms(row.warm)}  ${(row.units.join(",") || "-").padEnd(6)}  ${flag(row)}`.trimEnd(),
+    ),
     "",
     `${rows.length} figures, ${over.length} over the gate, ${warned.length} research warnings${warned.length ? `: ${warned.map((row) => row.name).join(", ")}` : ""}`,
   ];

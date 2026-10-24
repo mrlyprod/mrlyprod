@@ -25,15 +25,22 @@ function facts() {
     const [x, y] = num.spiral.Lattice.xy("Square", n);
     xs[n] = Number(x);
     ys[n] = Number(y);
-    if (n > 1 && Math.abs(xs[n] - xs[n - 1]) + Math.abs(ys[n] - ys[n - 1]) !== 1) throw new Error(`ulam: the winding jumps at ${n}`);
+    if (n > 1 && Math.abs(xs[n] - xs[n - 1]) + Math.abs(ys[n] - ys[n - 1]) !== 1)
+      throw new Error(`ulam: the winding jumps at ${n}`);
     if (marks[n] !== 1) continue;
     lit++;
     const sum = xs[n] + ys[n];
     sums.set(sum, [...(sums.get(sum) ?? []), n]);
   }
-  if (top !== WANT.top || lit !== WANT.primes || lit !== num.prime.prime_count(top)) throw new Error(`ulam: a sheet of ${SIDE} holds ${top} numbers and ${lit} primes, want ${WANT.top} and ${WANT.primes}`);
+  if (top !== WANT.top || lit !== WANT.primes || lit !== num.prime.prime_count(top))
+    throw new Error(
+      `ulam: a sheet of ${SIDE} holds ${top} numbers and ${lit} primes, want ${WANT.top} and ${WANT.primes}`,
+    );
   const [sum, line] = [...sums].reduce((best, next) => (next[1].length > best[1].length ? next : best));
-  if (sum !== WANT.sum || line.length !== WANT.line) throw new Error(`ulam: the richest diagonal is x + y = ${sum} with ${line.length} primes, want ${WANT.sum} and ${WANT.line}`);
+  if (sum !== WANT.sum || line.length !== WANT.line)
+    throw new Error(
+      `ulam: the richest diagonal is x + y = ${sum} with ${line.length} primes, want ${WANT.sum} and ${WANT.line}`,
+    );
   sheet = { xs, ys, marks, line };
   return sheet;
 }

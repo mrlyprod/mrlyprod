@@ -1,6 +1,6 @@
-import { veil } from '../../lib/color.js';
+import { veil } from "../../lib/color.js";
 
-export const PATH = '/stats/stats.json';
+export const PATH = "/stats/stats.json";
 const EVERY = 60 * 1000;
 const HOUR = 3600;
 const TICK = 6;
@@ -9,8 +9,8 @@ const STEPS = [1, 2, 5, 10];
 /* FORMAT */
 
 export function ago(at, now = Date.now() / 1000) {
-  const seconds = typeof at === 'string' ? Date.parse(at) / 1000 : at;
-  if (!seconds) return 'never';
+  const seconds = typeof at === "string" ? Date.parse(at) / 1000 : at;
+  if (!seconds) return "never";
   const gap = Math.max(0, Math.floor(now - seconds));
   if (gap < 90) return `${gap} s ago`;
   if (gap < 5400) return `${Math.round(gap / 60)} min ago`;
@@ -18,17 +18,24 @@ export function ago(at, now = Date.now() / 1000) {
   return `${Math.round(gap / 86400)} d ago`;
 }
 
-export const size = (n) => (n == null ? '' : n < 1e6 ? `${(n / 1e3).toFixed(0)} kB` : n < 1e9 ? `${(n / 1e6).toFixed(1)} MB` : `${(n / 1e9).toFixed(2)} GB`);
+export const size = (n) =>
+  n == null
+    ? ""
+    : n < 1e6
+      ? `${(n / 1e3).toFixed(0)} kB`
+      : n < 1e9
+        ? `${(n / 1e6).toFixed(1)} MB`
+        : `${(n / 1e9).toFixed(2)} GB`;
 
-export const count = (n) => Math.round(n ?? 0).toLocaleString('en-US');
+export const count = (n) => Math.round(n ?? 0).toLocaleString("en-US");
 
-const plural = (n, word) => `${count(n)} ${word}${Math.round(n) === 1 ? '' : 's'}`;
+const plural = (n, word) => `${count(n)} ${word}${Math.round(n) === 1 ? "" : "s"}`;
 
 const head = (label) => label.charAt(0).toUpperCase() + label.slice(1);
 
 const clock = (at) => {
   const d = new Date(at * 1000);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 };
 
 /* MODEL */
@@ -36,53 +43,68 @@ const clock = (at) => {
 export const errors = (data) =>
   Object.entries(data?.errors ?? {})
     .flatMap(([name, list]) => list.map((one) => ({ name, ...one })))
-    .sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')));
+    .sort((a, b) => String(b.at ?? "").localeCompare(String(a.at ?? "")));
 
 export function views(data) {
-  const lambdas = Object.entries(data?.lambdas ?? {}).map(([name, one]) => ({ id: name, label: name, head: plural(one.invocations, 'invocation') }));
+  const lambdas = Object.entries(data?.lambdas ?? {}).map(([name, one]) => ({
+    id: name,
+    label: name,
+    head: plural(one.invocations, "invocation"),
+  }));
   const cdn = data?.cdn?.requests;
   const site = data?.bucket?.site_objects;
   return [
-    { id: 'cdn', label: 'CDN', head: cdn == null ? undefined : plural(cdn, 'request') },
+    { id: "cdn", label: "CDN", head: cdn == null ? undefined : plural(cdn, "request") },
     ...lambdas,
-    { id: 'bucket', label: 'Bucket', head: site == null ? undefined : plural(site, 'object') },
-    { id: 'errors', label: 'Errors', head: data ? plural(errors(data).length, 'error') : undefined },
+    { id: "bucket", label: "Bucket", head: site == null ? undefined : plural(site, "object") },
+    { id: "errors", label: "Errors", head: data ? plural(errors(data).length, "error") : undefined },
   ];
 }
 
-const NONE = { kind: 'note', text: 'No data yet.' };
+const NONE = { kind: "note", text: "No data yet." };
 
-const line = (label, hourly, key) => (hourly?.length ? { kind: 'line', label, points: hourly.map((one) => ({ at: one.at, value: one[key] })) } : NONE);
+const line = (label, hourly, key) =>
+  hourly?.length ? { kind: "line", label, points: hourly.map((one) => ({ at: one.at, value: one[key] })) } : NONE;
 
 export function series(data, view) {
   if (!data) return NONE;
-  if (view === 'cdn') return line('Requests per hour', data.cdn?.hourly, 'requests');
-  if (view === 'bucket') {
+  if (view === "cdn") return line("Requests per hour", data.cdn?.hourly, "requests");
+  if (view === "bucket") {
     const bars = Object.entries(data.bucket ?? {})
-      .filter(([key]) => !key.endsWith('_bytes'))
-      .map(([key, value]) => ({ label: head(key.replace(/_objects$/, '')), value }))
+      .filter(([key]) => !key.endsWith("_bytes"))
+      .map(([key, value]) => ({ label: head(key.replace(/_objects$/, "")), value }))
       .sort((a, b) => b.value - a.value);
-    return bars.length ? { kind: 'bars', label: 'Objects by kind', bars } : NONE;
+    return bars.length ? { kind: "bars", label: "Objects by kind", bars } : NONE;
   }
-  if (view === 'errors') {
+  if (view === "errors") {
     const n = errors(data).length;
-    return { kind: 'note', text: n ? `${plural(n, 'error')} in the window` : 'No errors in the window' };
+    return { kind: "note", text: n ? `${plural(n, "error")} in the window` : "No errors in the window" };
   }
-  return line('Invocations per hour', data.lambdas?.[view]?.hourly, 'invocations');
+  return line("Invocations per hour", data.lambdas?.[view]?.hourly, "invocations");
 }
 
 export function facts(data, view) {
   if (!data) return [];
-  if (view === 'cdn') {
+  if (view === "cdn") {
     const cdn = data.cdn;
-    if (cdn?.requests == null) return ['no distribution'];
-    return [plural(cdn.requests, 'request'), size(cdn.bytes), `${cdn.error_4xx.toFixed(1)}% 4xx`, `${cdn.error_5xx.toFixed(1)}% 5xx`];
+    if (cdn?.requests == null) return ["no distribution"];
+    return [
+      plural(cdn.requests, "request"),
+      size(cdn.bytes),
+      `${cdn.error_4xx.toFixed(1)}% 4xx`,
+      `${cdn.error_5xx.toFixed(1)}% 5xx`,
+    ];
   }
-  if (view === 'bucket') return [`site ${size(data.bucket?.site_bytes)}`];
-  if (view === 'errors') return [plural(errors(data).length, 'error')];
+  if (view === "bucket") return [`site ${size(data.bucket?.site_bytes)}`];
+  if (view === "errors") return [plural(errors(data).length, "error")];
   const one = data.lambdas?.[view];
   if (!one) return [];
-  return [plural(one.invocations, 'invocation'), plural(one.errors, 'error'), plural(one.throttles, 'throttle'), `${Math.round(one.duration_ms)} ms avg`];
+  return [
+    plural(one.invocations, "invocation"),
+    plural(one.errors, "error"),
+    plural(one.throttles, "throttle"),
+    `${Math.round(one.duration_ms)} ms avg`,
+  ];
 }
 
 /* DRAW */
@@ -105,7 +127,7 @@ export function ticks(from, to) {
   return out;
 }
 
-const type = (ctx, look, dpr, px, color, align = 'left', base = 'alphabetic', weight = '') => {
+const type = (ctx, look, dpr, px, color, align = "left", base = "alphabetic", weight = "") => {
   ctx.font = `${weight}${px * dpr}px ${look.font}`;
   ctx.fillStyle = color;
   ctx.textAlign = align;
@@ -113,7 +135,7 @@ const type = (ctx, look, dpr, px, color, align = 'left', base = 'alphabetic', we
 };
 
 function note(ctx, w, h, dpr, text, look) {
-  type(ctx, look, dpr, 16, look.dim, 'center', 'middle');
+  type(ctx, look, dpr, 16, look.dim, "center", "middle");
   ctx.fillText(text, w / 2, h / 2);
 }
 
@@ -121,7 +143,7 @@ function chart(ctx, w, h, dpr, model, look, hover) {
   const { points } = model;
   const pad = 24 * dpr;
   const { step, top, n } = scale(Math.max(...points.map((one) => one.value)));
-  type(ctx, look, dpr, 12, look.dim, 'right', 'middle');
+  type(ctx, look, dpr, 12, look.dim, "right", "middle");
   const gutter = Math.max(...Array.from({ length: n + 1 }, (_, i) => ctx.measureText(count(i * step)).width));
   const l = pad + gutter + 8 * dpr;
   const r = w - pad;
@@ -134,12 +156,12 @@ function chart(ctx, w, h, dpr, model, look, hover) {
   for (let i = 0; i <= n; i++) {
     ctx.fillStyle = look.line;
     ctx.fillRect(l, Math.round(y(i * step)), r - l, dpr);
-    type(ctx, look, dpr, 12, look.dim, 'right', 'middle');
+    type(ctx, look, dpr, 12, look.dim, "right", "middle");
     ctx.fillText(count(i * step), l - 8 * dpr, y(i * step));
   }
-  type(ctx, look, dpr, 12, look.dim, 'center', 'top');
+  type(ctx, look, dpr, 12, look.dim, "center", "top");
   for (const at of ticks(from, to)) ctx.fillText(clock(at), x(at), b + 8 * dpr);
-  type(ctx, look, dpr, 12, look.dim, 'left', 'alphabetic');
+  type(ctx, look, dpr, 12, look.dim, "left", "alphabetic");
   ctx.fillText(model.label, l, pad + 12 * dpr);
   ctx.beginPath();
   ctx.moveTo(x(from), b);
@@ -149,14 +171,17 @@ function chart(ctx, w, h, dpr, model, look, hover) {
   ctx.fillStyle = veil(look.accent, 0.16);
   ctx.fill();
   ctx.beginPath();
-  points.forEach((one, i) => (i ? ctx.lineTo(x(one.at), y(one.value)) : ctx.moveTo(x(one.at), y(one.value))));
+  points.forEach((one, i) => {
+    if (i) ctx.lineTo(x(one.at), y(one.value));
+    else ctx.moveTo(x(one.at), y(one.value));
+  });
   ctx.strokeStyle = look.accent;
   ctx.lineWidth = 2 * dpr;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
   ctx.stroke();
   const peak = points.reduce((best, one) => (one.value > best.value ? one : best));
-  type(ctx, look, dpr, 12, look.ink, 'center', 'bottom', '600 ');
+  type(ctx, look, dpr, 12, look.ink, "center", "bottom", "600 ");
   const half = ctx.measureText(count(peak.value)).width / 2;
   ctx.fillText(count(peak.value), Math.min(r - half, Math.max(l + half, x(peak.at))), y(peak.value) - 8 * dpr);
   if (hover == null || hover < l - pad || hover > r + pad) return;
@@ -172,7 +197,7 @@ function chart(ctx, w, h, dpr, model, look, hover) {
   ctx.strokeStyle = look.paper;
   ctx.lineWidth = 2 * dpr;
   ctx.stroke();
-  type(ctx, look, dpr, 12, look.ink, 'left', 'top', '600 ');
+  type(ctx, look, dpr, 12, look.ink, "left", "top", "600 ");
   const lines = [clock(near.at), count(near.value)];
   const tw = Math.max(...lines.map((one) => ctx.measureText(one).width)) + 16 * dpr;
   const th = 44 * dpr;
@@ -185,16 +210,16 @@ function chart(ctx, w, h, dpr, model, look, hover) {
   ctx.strokeStyle = look.line;
   ctx.lineWidth = dpr;
   ctx.stroke();
-  type(ctx, look, dpr, 12, look.dim, 'left', 'top');
+  type(ctx, look, dpr, 12, look.dim, "left", "top");
   ctx.fillText(lines[0], tx + 8 * dpr, ty + 6 * dpr);
-  type(ctx, look, dpr, 12, look.ink, 'left', 'top', '600 ');
+  type(ctx, look, dpr, 12, look.ink, "left", "top", "600 ");
   ctx.fillText(lines[1], tx + 8 * dpr, ty + 24 * dpr);
 }
 
 function bars(ctx, w, h, dpr, model, look) {
   const pad = 24 * dpr;
   const gap = 2 * dpr;
-  type(ctx, look, dpr, 12, look.dim, 'right', 'middle');
+  type(ctx, look, dpr, 12, look.dim, "right", "middle");
   const gutter = Math.max(...model.bars.map((one) => ctx.measureText(one.label).width));
   const tail = Math.max(...model.bars.map((one) => ctx.measureText(count(one.value)).width));
   const l = pad + gutter + 12 * dpr;
@@ -205,7 +230,7 @@ function bars(ctx, w, h, dpr, model, look) {
   const thick = Math.max(dpr, Math.min(28 * dpr, (room - gap * (n - 1)) / n));
   const top = t + (room - (thick * n + gap * (n - 1))) / 2;
   const max = Math.max(1, ...model.bars.map((one) => one.value));
-  type(ctx, look, dpr, 12, look.dim, 'left', 'alphabetic');
+  type(ctx, look, dpr, 12, look.dim, "left", "alphabetic");
   ctx.fillText(model.label, pad, pad + 12 * dpr);
   model.bars.forEach((one, i) => {
     const y = top + i * (thick + gap);
@@ -214,9 +239,9 @@ function bars(ctx, w, h, dpr, model, look) {
     ctx.roundRect(l, y, long, thick, [0, 4 * dpr, 4 * dpr, 0]);
     ctx.fillStyle = look.accent;
     ctx.fill();
-    type(ctx, look, dpr, 12, look.dim, 'right', 'middle');
+    type(ctx, look, dpr, 12, look.dim, "right", "middle");
     ctx.fillText(one.label, l - 12 * dpr, y + thick / 2);
-    type(ctx, look, dpr, 12, look.ink, 'left', 'middle');
+    type(ctx, look, dpr, 12, look.ink, "left", "middle");
     ctx.fillText(count(one.value), l + long + 8 * dpr, y + thick / 2);
   });
 }
@@ -225,8 +250,8 @@ export function draw(ctx, w, h, dpr, model, look, hover = null) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = look.paper;
   ctx.fillRect(0, 0, w, h);
-  if (model.kind === 'line') chart(ctx, w, h, dpr, model, look, hover);
-  else if (model.kind === 'bars') bars(ctx, w, h, dpr, model, look);
+  if (model.kind === "line") chart(ctx, w, h, dpr, model, look, hover);
+  else if (model.kind === "bars") bars(ctx, w, h, dpr, model, look);
   else note(ctx, w, h, dpr, model.text, look);
 }
 
@@ -234,7 +259,7 @@ export function draw(ctx, w, h, dpr, model, look, hover = null) {
 
 async function grab() {
   try {
-    const reply = await fetch(PATH, { cache: 'no-store' });
+    const reply = await fetch(PATH, { cache: "no-store" });
     return reply.ok ? await reply.json() : null;
   } catch {
     return null;
@@ -254,11 +279,11 @@ export function poll(take) {
     void refresh();
     timer = setInterval(refresh, EVERY);
   };
-  document.addEventListener('visibilitychange', run);
+  document.addEventListener("visibilitychange", run);
   run();
   return () => {
     on = false;
     clearInterval(timer);
-    document.removeEventListener('visibilitychange', run);
+    document.removeEventListener("visibilitychange", run);
   };
 }

@@ -1,4 +1,4 @@
-import { blend } from '../lib/color.js';
+import { blend } from "../lib/color.js";
 
 const N = 5;
 
@@ -16,7 +16,7 @@ const ACROSS = 72;
 
 const SOFT = 0.5;
 
-const PLAIN = '#.#.# .#.#. #.#.# .#.#. #.#.#';
+const PLAIN = "#.#.# .#.#. #.#.# .#.#. #.#.#";
 
 const FLIPS = [
   [(r, c) => [r, N - 1 - c]],
@@ -52,9 +52,9 @@ const GROUPS = FLIPS.map(orbits);
 
 const fair = (cells) => {
   const count = cells.filter(Boolean).length;
-  const rows = Array.from({ length: N }, (_, r) => cells.slice(r * N, r * N + N).join(''));
-  const cols = Array.from({ length: N }, (_, c) => cells.filter((_, i) => i % N === c).join(''));
-  const edges = [rows[0], rows[N - 1], cols[0], cols[N - 1]].every((line) => line.includes('1'));
+  const rows = Array.from({ length: N }, (_, r) => cells.slice(r * N, r * N + N).join(""));
+  const cols = Array.from({ length: N }, (_, c) => cells.filter((_, i) => i % N === c).join(""));
+  const edges = [rows[0], rows[N - 1], cols[0], cols[N - 1]].every((line) => line.includes("1"));
   return count >= FEW && count <= MANY && edges && new Set(rows).size > 1 && new Set(cols).size > 1;
 };
 
@@ -63,20 +63,21 @@ const swap = (cells) => cells.map((_, i) => cells[(i % N) * N + Math.floor(i / N
 export function tile(rand) {
   for (let n = 0; n < TRIES; n++) {
     const cells = new Array(N * N).fill(0);
-    for (const orbit of GROUPS[Math.floor(rand() * GROUPS.length)]) if (rand() < 0.5) for (const i of orbit) cells[i] = 1;
+    for (const orbit of GROUPS[Math.floor(rand() * GROUPS.length)])
+      if (rand() < 0.5) for (const i of orbit) cells[i] = 1;
     if (fair(cells)) return rand() < 0.5 ? cells : swap(cells);
   }
-  return [...PLAIN.replaceAll(' ', '')].map((c) => (c === '#' ? 1 : 0));
+  return [...PLAIN.replaceAll(" ", "")].map((c) => (c === "#" ? 1 : 0));
 }
 
 /* SCENE */
 
-export const SAVERS = [{ id: 'tiles', title: 'Tiles', pick: () => ({}) }];
+export const SAVERS = [{ id: "tiles", title: "Tiles", pick: () => ({}) }];
 
 export const PAGE = { still: true };
 
 export function make(canvas, view) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const cells = tile(view.rand);
   let cell = 1;
   let inks = null;

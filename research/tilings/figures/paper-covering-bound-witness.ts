@@ -4,9 +4,33 @@ export const units = {};
 
 const F = [0, 10, 11, 20, 23, 35, 45, 47, 50, 55, 59];
 const RINGS: { m: number; fibres: number[][] }[] = [
-  { m: 15, fibres: [[2, 5, 8, 11, 14], [0, 5, 10], [0, 5, 10]] },
-  { m: 18, fibres: [[5, 11, 17], [0, 9], [1, 10], [2, 11], [5, 14]] },
-  { m: 20, fibres: [[3, 7, 11, 15, 19], [0, 10], [0, 10], [5, 15]] },
+  {
+    m: 15,
+    fibres: [
+      [2, 5, 8, 11, 14],
+      [0, 5, 10],
+      [0, 5, 10],
+    ],
+  },
+  {
+    m: 18,
+    fibres: [
+      [5, 11, 17],
+      [0, 9],
+      [1, 10],
+      [2, 11],
+      [5, 14],
+    ],
+  },
+  {
+    m: 20,
+    fibres: [
+      [3, 7, 11, 15, 19],
+      [0, 10],
+      [0, 10],
+      [5, 15],
+    ],
+  },
 ];
 const CENTERS: Point[] = [
   [0.27, 0.3],
@@ -35,12 +59,15 @@ function check({ m, fibres }: { m: number; fibres: number[][] }) {
   if (!vanishes(residues, m)) throw new Error(`paper-covering-bound-witness: the residues mod ${m} do not vanish`);
   const want = multiset(residues);
   const got = multiset(fibres.flat());
-  for (const [r, n] of want) if (got.get(r) !== n) throw new Error(`paper-covering-bound-witness: residue ${r} mod ${m} drawn ${got.get(r) ?? 0} times, want ${n}`);
+  for (const [r, n] of want)
+    if (got.get(r) !== n)
+      throw new Error(`paper-covering-bound-witness: residue ${r} mod ${m} drawn ${got.get(r) ?? 0} times, want ${n}`);
   if (got.size !== want.size) throw new Error(`paper-covering-bound-witness: stray residue mod ${m}`);
   for (const fibre of fibres) {
     const p = fibre.length;
     const step = m / p;
-    if (m % p !== 0 || fibre.some((r, i) => (r - fibre[0] - i * step) % m !== 0)) throw new Error(`paper-covering-bound-witness: ${fibre} is no ${p}-fibre mod ${m}`);
+    if (m % p !== 0 || fibre.some((r, i) => (r - fibre[0] - i * step) % m !== 0))
+      throw new Error(`paper-covering-bound-witness: ${fibre} is no ${p}-fibre mod ${m}`);
   }
   return want;
 }

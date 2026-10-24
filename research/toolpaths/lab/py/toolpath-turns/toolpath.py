@@ -1,20 +1,24 @@
 import sys
 import time
+from itertools import pairwise
 
 U = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)]
 F, R, M, MR = 0, 1, 2, 3
 REV = [R, F, MR, M]
 MIR = [M, MR, F, R]
-NAMES = "F R M MR".split()
+NAMES = ["F", "R", "M", "MR"]
+
 
 def norm(c):
     a, b = c
     return a * a + a * b + b * b
 
+
 def mul(p, q):
     x, y = p
     s, t = q
     return (x * s - y * t, x * t + y * s + y * t)
+
 
 def mirror_index(c):
     c2 = mul(c, c)
@@ -24,13 +28,16 @@ def mirror_index(c):
             return m
     return None
 
+
 def turn(d1, d2):
     t = (d2 - d1) % 6
     return t - 6 if t > 3 else t
 
+
 def walks(n, c, gentle):
     out = []
     ta, tb = c
+
     def dfs(path, seen, a, b, d):
         k = len(path)
         if k == n:
@@ -54,8 +61,10 @@ def walks(n, c, gentle):
             dfs(path, seen, x, y, nd)
             path.pop()
             seen.discard((x, y))
+
     dfs([], {(0, 0)}, 0, 0, None)
     return out
+
 
 def copy(d, f, g, fl, m):
     n = len(g)
@@ -67,11 +76,13 @@ def copy(d, f, g, fl, m):
         return [((d + m - g[j]) % 6, MIR[fl[j]]) for j in range(n)]
     return [((d + m - g[n - 1 - j]) % 6, REV[MIR[fl[n - 1 - j]]]) for j in range(n)]
 
+
 def expand(seq, g, fl, m):
     out = []
     for d, f in seq:
         out.extend(copy(d, f, g, fl, m))
     return out
+
 
 def points(seq):
     a = b = 0
@@ -80,6 +91,7 @@ def points(seq):
         a, b = a + U[d][0], b + U[d][1]
         P.append((a, b))
     return P
+
 
 def avoids(seq):
     a = b = 0
@@ -91,11 +103,13 @@ def avoids(seq):
         seen.add((a, b))
     return True
 
+
 def counts(seq):
     c = [0, 0, 0, 0]
-    for (d1, _), (d2, _) in zip(seq, seq[1:]):
+    for (d1, _), (d2, _) in pairwise(seq):
         c[abs(turn(d1, d2))] += 1
     return c
+
 
 def ends(g, fl, m):
     out = {}
@@ -105,6 +119,7 @@ def ends(g, fl, m):
         s = copy(0, f, g, fl, m)
         out[f] = (s[0][0], s[0][1], s[-1][0], s[-1][1])
     return out
+
 
 def orbit(t, f, h, E):
     seen = set()
@@ -116,6 +131,7 @@ def orbit(t, f, h, E):
         t, f, h = x
         x = ((t + E[h][0] - E[f][2]) % 6, E[f][3], E[h][1])
     return worst, seen
+
 
 def closure(g, fl, m):
     E = ends(g, fl, m)
@@ -136,8 +152,9 @@ def closure(g, fl, m):
             fdone.add(f)
             s = copy(0, f, g, fl, m)
             flags.update(x[1] for x in s)
-            todo.extend((b[0] - a[0], a[1], b[1]) for a, b in zip(s, s[1:]))
+            todo.extend((b[0] - a[0], a[1], b[1]) for a, b in pairwise(s))
     return max(abs(turn(0, t)) for t, _, _ in types)
+
 
 def flag_search(g, flags, m, gentle=True):
     n = len(g)
@@ -152,7 +169,13 @@ def flag_search(g, flags, m, gentle=True):
         for fz in flags:
             proto = [f0] + [F] * (n - 2) + [fz]
             E = ends(g, proto, m)
-            good = {(t, f, h): not gentle or orbit(t, f, h, E)[0] <= 1 for t in range(6) for f in flags for h in flags}
+            good = {
+                (t, f, h): not gentle or orbit(t, f, h, E)[0] <= 1
+                for t in range(6)
+                for f in flags
+                for h in flags
+            }
+
             def dfs(j, fl, used, o, last):
                 if j == n:
                     res.append(tuple(fl))
@@ -162,7 +185,9 @@ def flag_search(g, flags, m, gentle=True):
                     if j and not good[(tj[j - 1], fl[-1], f)]:
                         continue
                     K, first, end = shapes[(g[j], f)]
-                    if last is not None and abs(turn(last, first)) > (1 if gentle else 2):
+                    if last is not None and abs(turn(last, first)) > (
+                        1 if gentle else 2
+                    ):
                         continue
                     P = [(o[0] + p[0], o[1] + p[1]) for p in K]
                     if any(p in used for p in P):
@@ -172,8 +197,10 @@ def flag_search(g, flags, m, gentle=True):
                     dfs(j + 1, fl, used, P[-1], end)
                     fl.pop()
                     used.difference_update(P)
+
             dfs(0, [], {(0, 0)}, (0, 0), None)
     return res
+
 
 def canon(g, fl, mm):
     orb = [(g, fl), (g[::-1], fl[::-1])]
@@ -182,9 +209,70 @@ def canon(g, fl, mm):
         orb += [(h, fl), (h[::-1], fl[::-1])]
     return min(orb)
 
-A229214 = (1, 2, -1, 3, 1, 1, -3, 1, 2, 2, -1, -2, 3, 2, 3, -1, -1, -3, 1, -2, -1, 3, -1, -3, -2, 3, 3, 2, 1, 2, -1, 3, 1, 1, -3, 1, 2, -1, 3, 1, 1, -3, -2, -3, -3, 2, 3, 1, -3)
 
-CHORDS = [(3, (1, 1)), (4, (2, 0)), (7, (2, 1)), (9, (3, 0)), (12, (2, 2)), (13, (3, 1)), (16, (4, 0)), (19, (3, 2))]
+A229214 = (
+    1,
+    2,
+    -1,
+    3,
+    1,
+    1,
+    -3,
+    1,
+    2,
+    2,
+    -1,
+    -2,
+    3,
+    2,
+    3,
+    -1,
+    -1,
+    -3,
+    1,
+    -2,
+    -1,
+    3,
+    -1,
+    -3,
+    -2,
+    3,
+    3,
+    2,
+    1,
+    2,
+    -1,
+    3,
+    1,
+    1,
+    -3,
+    1,
+    2,
+    -1,
+    3,
+    1,
+    1,
+    -3,
+    -2,
+    -3,
+    -3,
+    2,
+    3,
+    1,
+    -3,
+)
+
+CHORDS = [
+    (3, (1, 1)),
+    (4, (2, 0)),
+    (7, (2, 1)),
+    (9, (3, 0)),
+    (12, (2, 2)),
+    (13, (3, 1)),
+    (16, (4, 0)),
+    (19, (3, 2)),
+]
+
 
 def census(orders, top, stop, mirrors=True):
     for n, c in CHORDS:
@@ -223,10 +311,13 @@ def census(orders, top, stop, mirrors=True):
             tail = f"classes up to {sym} {len(kept)}, exhausted"
         else:
             tail = f"CUT after walk {len(W)} of {len(G)}"
-        print(f"order {n} chord {c} flags {mir}: gentle walks {len(G)}, (generator, flags) pairs gentle and point-avoiding at level 2 by the typed search {lv2}, sharp at a later level by the junction closure {sharp}, gentle at every level {lv2 - sharp}, first crossing level {sorted(cross.items())}, alive at level {top} {len(alive)}, {tail}, {time.time() - t0:.1f}s")
+        print(
+            f"order {n} chord {c} flags {mir}: gentle walks {len(G)}, (generator, flags) pairs gentle and point-avoiding at level 2 by the typed search {lv2}, sharp at a later level by the junction closure {sharp}, gentle at every level {lv2 - sharp}, first crossing level {sorted(cross.items())}, alive at level {top} {len(alive)}, {tail}, {time.time() - t0:.1f}s"
+        )
         for g, fl in alive[:4]:
             print("  alive", g, [NAMES[f] for f in fl])
         sys.stdout.flush()
+
 
 def curve(g, fl, m, k):
     seq = [(0, F)]
@@ -234,11 +325,15 @@ def curve(g, fl, m, k):
         seq = expand(seq, g, fl, m)
     return seq
 
+
 def harmonic(seq):
     c = [0, 0, 0]
     for d, _ in seq:
         c[d % 3] += 1
-    return c, c[0] ** 2 + c[1] ** 2 + c[2] ** 2 - c[0] * c[1] - c[1] * c[2] - c[0] * c[2]
+    return c, c[0] ** 2 + c[1] ** 2 + c[2] ** 2 - c[0] * c[1] - c[1] * c[2] - c[0] * c[
+        2
+    ]
+
 
 def gosper():
     g, fl = (0, 5, 3, 4, 0, 0, 1), (F, R, R, F, F, F, R)
@@ -249,16 +344,22 @@ def gosper():
         assert tc == want, (k, tc, want)
         assert k > 5 or avoids(seq)
         ax, h2 = harmonic(seq)
-        assert h2 == 7 ** k
+        assert h2 == 7**k
         if k == 2:
-            assert [(-d) % 6 for d, _ in seq] == [x - 1 if x > 0 else 2 - x for x in A229214]
-        print(f"gosper level {k}: steps {len(seq)}, turns 0/60/120 {tc[:3]}, axis counts {ax}, |h2|^2 {h2}")
+            assert [(-d) % 6 for d, _ in seq] == [
+                x - 1 if x > 0 else 2 - x for x in A229214
+            ]
+        print(
+            f"gosper level {k}: steps {len(seq)}, turns 0/60/120 {tc[:3]}, axis counts {ax}, |h2|^2 {h2}"
+        )
+
 
 def lsys(rules, axiom, k):
     s = axiom
     for _ in range(k):
         s = "".join(rules.get(ch, ch) for ch in s)
     return s
+
 
 def square(rules, axiom, k):
     d = 0
@@ -280,6 +381,7 @@ def square(rules, axiom, k):
                 h += 1
     return h, v, tc
 
+
 def rate(orders):
     for n, c in CHORDS:
         if n not in orders:
@@ -298,22 +400,32 @@ def rate(orders):
                 s = [counts(curve(g, fl, m, k))[2] for k in range(1, 6)]
                 rows[canon(g, fl, m)] = s
         sym = "reversal" if m is None else "reversal and mirror"
-        print(f"order {n} chord {c}: (generator, flags) pairs avoiding points through level 4 {pairs}, classes up to {sym} {len(rows)}, {time.time() - t0:.1f}s")
+        print(
+            f"order {n} chord {c}: (generator, flags) pairs avoiding points through level 4 {pairs}, classes up to {sym} {len(rows)}, {time.time() - t0:.1f}s"
+        )
         for (g, fl), s in sorted(rows.items(), key=lambda x: (x[1], x[0])):
-            print(f"  {g} {[NAMES[f] for f in fl]}: 120-degree turns at levels 1..5 {s}, per unit step at level 5 {s[-1]}/{n ** 5}")
+            print(
+                f"  {g} {[NAMES[f] for f in fl]}: 120-degree turns at levels 1..5 {s}, per unit step at level 5 {s[-1]}/{n**5}"
+            )
         sys.stdout.flush()
+
 
 def bead():
     hil = {"A": "+BF-AFA-FB+", "B": "-AF+BFB+FA-"}
     pea = {"X": "XFYFX+F+YFXFY-F-XFYFX", "Y": "YFXFY-F-XFYFX+F+YFXFY"}
     for k in range(1, 7):
         h, v, tc = square(hil, "A", k)
-        assert h + v == 4 ** k - 1
-        print(f"hilbert level {k}: steps {h + v}, horizontal {h}, vertical {v}, h2 {h - v}, turns 0/90 {tc[:2]}")
+        assert h + v == 4**k - 1
+        print(
+            f"hilbert level {k}: steps {h + v}, horizontal {h}, vertical {v}, h2 {h - v}, turns 0/90 {tc[:2]}"
+        )
     for k in range(1, 5):
         h, v, tc = square(pea, "X", k)
-        assert h + v == 9 ** k - 1
-        print(f"peano level {k}: steps {h + v}, horizontal {h}, vertical {v}, h2 {h - v}, turns 0/90 {tc[:2]}")
+        assert h + v == 9**k - 1
+        print(
+            f"peano level {k}: steps {h + v}, horizontal {h}, vertical {v}, h2 {h - v}, turns 0/90 {tc[:2]}"
+        )
+
 
 if __name__ == "__main__":
     verb = sys.argv[1] if len(sys.argv) > 1 else "census"

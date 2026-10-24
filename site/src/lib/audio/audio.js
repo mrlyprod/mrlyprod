@@ -1,8 +1,24 @@
-import { rng } from '../rand.js';
-import { KEYS, SONG, STEPS, tempo } from './tempo.js';
-import { ARP_LEVEL, CUT, EFFECTS, SALT, VOICES, acid, arp, bass, clap, curve, filter, hat, impulse, kick, pad } from './voices.js';
+import { rng } from "../rand.js";
+import { KEYS, SONG, STEPS, tempo } from "./tempo.js";
+import {
+  ARP_LEVEL,
+  acid,
+  arp,
+  bass,
+  CUT,
+  clap,
+  curve,
+  EFFECTS,
+  filter,
+  hat,
+  impulse,
+  kick,
+  pad,
+  SALT,
+  VOICES,
+} from "./voices.js";
 
-export { KEYS, SONG, bus, tempo } from './tempo.js';
+export { bus, KEYS, SONG, tempo } from "./tempo.js";
 
 /* NUMBERS */
 
@@ -30,7 +46,14 @@ const OCTAVE = 12;
 
 const SCALES = { minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10] };
 
-const PROGRESSIONS = [[0, 5, 3, 4], [0, 3, 5, 4], [0, 6, 5, 3], [0, 2, 5, 4], [5, 3, 0, 4], [0, 0, 5, 6]];
+const PROGRESSIONS = [
+  [0, 5, 3, 4],
+  [0, 3, 5, 4],
+  [0, 6, 5, 3],
+  [0, 2, 5, 4],
+  [5, 3, 0, 4],
+  [0, 0, 5, 6],
+];
 
 const DEGREES = [0, 0, 0, 0, 7, 2, 4, 5, 7, 0];
 
@@ -83,14 +106,25 @@ export function pattern(seed, knobs = {}, bar = 0) {
     out.hat.push(out.open[s] || (s % 2 === 1 ? b < 0.3 + 0.6 * density : s % 4 === 0 && b < 0.5 * density));
     out.clap.push(s === 4 || s === 12 || (fill && s > 12 && density > 0.3) || (s % 4 === 3 && c < 0.15 * density));
     const on = s % 4 === 2 || (s % 4 !== 0 && d < 0.15 + 0.55 * density);
-    out.bass.push(on ? { note: tone(degree + DEGREES[Math.floor(c * DEGREES.length)]) - (degree >= 4 ? 12 : 0), accent: e < 0.3, slide: e > 0.82 } : null);
+    out.bass.push(
+      on
+        ? {
+            note: tone(degree + DEGREES[Math.floor(c * DEGREES.length)]) - (degree >= 4 ? 12 : 0),
+            accent: e < 0.3,
+            slide: e > 0.82,
+          }
+        : null,
+    );
   });
   return out;
 }
 
 /* PLAYER */
 
-const section = (part) => (part.name === 'outro' ? { ...FILM.outro, kick: part.kick ? 1 : 0, hat: part.hat ? 1 : 0, arp: part.arp ? FILM.outro.arp : 0 } : FILM[part.name]);
+const section = (part) =>
+  part.name === "outro"
+    ? { ...FILM.outro, kick: part.kick ? 1 : 0, hat: part.hat ? 1 : 0, arp: part.arp ? FILM.outro.arp : 0 }
+    : FILM[part.name];
 
 function edge(inside, a, b) {
   for (let n = 0; n < BISECT; n++) {
@@ -123,7 +157,7 @@ function graph(ctx, seed) {
   const gate = gain(1);
   const duck = gain(1);
   const grit = ctx.createWaveShaper();
-  grit.oversample = '2x';
+  grit.oversample = "2x";
   const music = gain(0.7);
   const drums = gain(0.9);
   const sfx = gain(1);
@@ -138,7 +172,7 @@ function graph(ctx, seed) {
   dub.connect(echo);
   const delay = ctx.createDelay(2);
   const loop = gain(0.45);
-  const dull = filter(ctx, 'lowpass', 2800);
+  const dull = filter(ctx, "lowpass", 2800);
   grit.connect(music);
   music.connect(duck).connect(gate);
   drums.connect(gate);
@@ -164,7 +198,7 @@ function ramp(param, to, now, over) {
   param.linearRampToValueAtTime(to, now + over);
 }
 
-const named = (mood) => (typeof mood === 'string' ? mood : (mood?.name ?? null));
+const named = (mood) => (typeof mood === "string" ? mood : (mood?.name ?? null));
 
 function player(ctx, seed) {
   const g = graph(ctx, seed);
@@ -224,34 +258,68 @@ function player(ctx, seed) {
     const at = ((i * GOLD) % 1) * 1.6;
     const cutoff = OPEN_HZ + SWELL_HZ * (part?.swell ?? 0);
     if (parts.kick && p.kick[s]) kick(ctx, g.drums, when, { ...base, duck: g.duck.gain, at });
-    if (parts.hat && p.hat[s]) hat(ctx, g.drums, when, { ...base, open: p.open[s], level: (p.open[s] ? 0.11 : 0.06) * parts.hat, at });
+    if (parts.hat && p.hat[s])
+      hat(ctx, g.drums, when, { ...base, open: p.open[s], level: (p.open[s] ? 0.11 : 0.06) * parts.hat, at });
     if (parts.clap && p.clap[s]) clap(ctx, g.drums, when, { ...base, space: 0.2, at });
-    if (parts.roll && s % (s < 8 ? 4 : s < 12 ? 2 : 1) === 0) clap(ctx, g.drums, when, { ...base, level: 0.1 + 0.25 * (s / STEPS), space: 0.25, at });
+    if (parts.roll && s % (s < 8 ? 4 : s < 12 ? 2 : 1) === 0)
+      clap(ctx, g.drums, when, { ...base, level: 0.1 + 0.25 * (s / STEPS), space: 0.25, at });
     const note = p.bass[s];
     if (parts.acid && note) {
       const sweep = 0.5 + 0.5 * Math.sin((2 * Math.PI * ((b % 8) * STEPS + s)) / 128);
       const from = note.slide ? p.bass[s - 1]?.note : undefined;
-      acid(ctx, g.grit, when, { ...base, note: note.note, from, accent: note.accent, dur: (time.six / 1000) * (note.slide ? 1 : 0.8), cutoff: 220 + (300 + 900 * song.drive) * sweep, q: 8 + 4 * song.drive, echoes: 0.22 });
+      acid(ctx, g.grit, when, {
+        ...base,
+        note: note.note,
+        from,
+        accent: note.accent,
+        dur: (time.six / 1000) * (note.slide ? 1 : 0.8),
+        cutoff: 220 + (300 + 900 * song.drive) * sweep,
+        q: 8 + 4 * song.drive,
+        echoes: 0.22,
+      });
     }
-    if (parts.sub && s === 0) acid(ctx, g.music, when, { ...base, note: p.chord[0] - 24, wave: 'sine', dur: (time.bar / 1000) * 0.9, cutoff: 220, q: 0, level: 0.35 });
+    if (parts.sub && s === 0)
+      acid(ctx, g.music, when, {
+        ...base,
+        note: p.chord[0] - 24,
+        wave: "sine",
+        dur: (time.bar / 1000) * 0.9,
+        cutoff: 220,
+        q: 0,
+        level: 0.35,
+      });
     const [c0, c1, c2] = p.chord;
     if (parts.pad && s === 0) {
-      const mix = part ? { notes: [c0, c1, c2, c0 + OCTAVE] } : { notes: p.chord, level: 0.035, attack: 0.3, release: 0.8 };
+      const mix = part
+        ? { notes: [c0, c1, c2, c0 + OCTAVE] }
+        : { notes: p.chord, level: 0.035, attack: 0.3, release: 0.8 };
       pad(ctx, g.music, when, { ...base, ...mix, dur: time.bar / 1000 - 0.05, space: 0.35 });
     }
-    if (parts.bass && p.bass[s]) bass(ctx, g.music, when, { ...base, note: c0 - OCTAVE + p.octave[s], dur: (time.six / 1000) * 0.85, cutoff: cutoff * BASS_SHARE });
-    if (parts.arp && s % parts.arp === 0 && !p.skip[s]) arp(ctx, g.music, when, { ...base, note: p.chord[p.arp[s]] + OCTAVE + (s % 8 === 7 ? OCTAVE : 0), cutoff, level: parts.arpLevel ?? ARP_LEVEL });
+    if (parts.bass && p.bass[s])
+      bass(ctx, g.music, when, {
+        ...base,
+        note: c0 - OCTAVE + p.octave[s],
+        dur: (time.six / 1000) * 0.85,
+        cutoff: cutoff * BASS_SHARE,
+      });
+    if (parts.arp && s % parts.arp === 0 && !p.skip[s])
+      arp(ctx, g.music, when, {
+        ...base,
+        note: p.chord[p.arp[s]] + OCTAVE + (s % 8 === 7 ? OCTAVE : 0),
+        cutoff,
+        level: parts.arpLevel ?? ARP_LEVEL,
+      });
   };
   const cue = (name, when, args = {}) => {
     const a = { length: 1, ...base, verb: g.wet, echo: g.dub, ...args };
     const effect = EFFECTS[name];
     const voice = VOICES[name];
     if (!effect && !voice) return;
-    let out = name === 'drone' || name === 'tunnel' ? g.hum : g.sfx;
+    let out = name === "drone" || name === "tunnel" ? g.hum : g.sfx;
     if (a.drive > 0) {
       const shaper = ctx.createWaveShaper();
       shaper.curve = curve(a.drive);
-      shaper.oversample = '2x';
+      shaper.oversample = "2x";
       shaper.connect(out);
       out = shaper;
     }
@@ -260,7 +328,7 @@ function player(ctx, seed) {
   };
   const feel = (m, now) => {
     want = named(m);
-    arranged = typeof m?.arrange === 'function' ? m.arrange : null;
+    arranged = typeof m?.arrange === "function" ? m.arrange : null;
     if (!Number.isFinite(m?.flicker)) return;
     const target = 1 + 0.35 * m.flicker;
     if (Math.abs(target - lit) <= 0.01) return;
@@ -278,7 +346,7 @@ function player(ctx, seed) {
 
 /* ENGINE */
 
-const live = () => new (globalThis.AudioContext ?? globalThis.webkitAudioContext)({ latencyHint: 'interactive' });
+const live = () => new (globalThis.AudioContext ?? globalThis.webkitAudioContext)({ latencyHint: "interactive" });
 
 const offline = (channels, length, rate) => new OfflineAudioContext(channels, length, rate);
 
@@ -303,17 +371,17 @@ export function engine({ seed = 1, make = live } = {}) {
       ctx = make();
       p = player(ctx, seed);
       p.level(sound, music, ctx.currentTime, false);
-      if (typeof document !== 'undefined') document.addEventListener('visibilitychange', hidden);
+      if (typeof document !== "undefined") document.addEventListener("visibilitychange", hidden);
       try {
-        if (globalThis.navigator?.audioSession) globalThis.navigator.audioSession.type = 'playback';
+        if (globalThis.navigator?.audioSession) globalThis.navigator.audioSession.type = "playback";
       } catch {}
     }
-    if (ctx.state === 'suspended') ctx.resume?.();
+    if (ctx.state === "suspended") ctx.resume?.();
   };
   const set = (value = {}) => {
     const was = [sound, music];
-    if ('sound' in value) sound = value.sound ? 1 : 0;
-    if ('music' in value) music = value.music ? 1 : 0;
+    if ("sound" in value) sound = value.sound ? 1 : 0;
+    if ("music" in value) music = value.music ? 1 : 0;
     if (p && (sound !== was[0] || music !== was[1])) p.level(sound, music, ctx.currentTime, true);
   };
   const at = (t, mood) => {
@@ -332,7 +400,8 @@ export function engine({ seed = 1, make = live } = {}) {
     last = t;
     p.feel(mood, now);
     const time = p.time();
-    for (let when = map(time.time(next)); when <= now + AHEAD; when = map(time.time(next))) p.step(next++, when, when >= now);
+    for (let when = map(time.time(next)); when <= now + AHEAD; when = map(time.time(next)))
+      p.step(next++, when, when >= now);
   };
   const cue = (name, t, args) => {
     if (!p) return;
@@ -342,7 +411,7 @@ export function engine({ seed = 1, make = live } = {}) {
   };
   const stop = () => {
     gone = true;
-    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', hidden);
+    if (typeof document !== "undefined") document.removeEventListener("visibilitychange", hidden);
     ctx?.close?.();
     ctx = null;
     p = null;

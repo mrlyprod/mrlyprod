@@ -11,7 +11,8 @@ const ROUND = 0.2;
 
 export default function draw(pen) {
   const { box, paint } = plate(pen, "green", 0.18);
-  for (const h of HEIGHTS) if (!Number.isInteger(h) || h < 1 || h > SCALE) throw new Error(`stats: bar ${h} is not 1 to ${SCALE}`);
+  for (const h of HEIGHTS)
+    if (!Number.isInteger(h) || h < 1 || h > SCALE) throw new Error(`stats: bar ${h} is not 1 to ${SCALE}`);
   const tallest = HEIGHTS.indexOf(Math.max(...HEIGHTS));
   const t = box.w * AXIS;
   const g = box.w * GAP;
@@ -26,5 +27,13 @@ export default function draw(pen) {
     const x = left + i * bar * (1 + SPACE);
     pen.round_rect(x, base - h * unit, bar, h * unit, bar * ROUND, i === tallest ? paint.light : paint.white);
   });
-  pen.polyline([[box.x + t / 2, box.y + t / 2], [box.x + t / 2, floor], [right, floor]], t, paint.white);
+  pen.polyline(
+    [
+      [box.x + t / 2, box.y + t / 2],
+      [box.x + t / 2, floor],
+      [right, floor],
+    ],
+    t,
+    paint.white,
+  );
 }

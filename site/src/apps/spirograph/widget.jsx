@@ -1,21 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { text } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Fold } from '../../lib/app/controls.jsx';
-import { Knob, gist } from '../../lib/app/knobs.jsx';
-import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { rng } from '../../lib/rand.js';
-import { Scene } from '../../lib/app/page.jsx';
-import { paints } from '../../lib/color.js';
-import { useTheme } from '../../lib/designs/pick.jsx';
-import { TRACKS, fit, glance, resolve, roll } from './engine.js';
-import { SPEC, file, make, parked, scrub, status } from './scene.js';
-import { useReroll } from '../../lib/app/hooks.js';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Fold } from "../../lib/app/controls.jsx";
+import { text } from "../../lib/app/export.js";
+import { Bar } from "../../lib/app/frame.jsx";
+import { useReroll } from "../../lib/app/hooks.js";
+import { gist, Knob } from "../../lib/app/knobs.jsx";
+import { Art, Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { paints } from "../../lib/color.js";
+import { useTheme } from "../../lib/designs/pick.jsx";
+import { rng } from "../../lib/rand.js";
+import { fit, glance, resolve, roll, TRACKS } from "./engine.js";
+import { file, make, parked, SPEC, scrub, status } from "./scene.js";
 
 export const FOLDS = [
-  ['Track', ['kind', 'sides', 'ring', 'wheel', 'laps']],
-  ['Draw', ['at', 'ink', 'fill']],
-  ['Wheel', ['number', 'level', 'mode', 'reach', 'jitter']],
+  ["Track", ["kind", "sides", "ring", "wheel", "laps"]],
+  ["Draw", ["at", "ink", "fill"]],
+  ["Wheel", ["number", "level", "mode", "reach", "jitter"]],
 ];
 
 const SLOP = 6;
@@ -26,15 +26,19 @@ const rowOf = (key) => SPEC.find((row) => row.key === key);
 
 export const shown = (keys, value) => keys.map(rowOf).filter((row) => !row.need || row.need(value));
 
-export const lit = (value, patch) => Object.keys(patch).filter((key) => rowOf(key).need?.(patch) ?? true).every((key) => value[key] === patch[key]);
+export const lit = (value, patch) =>
+  Object.keys(patch)
+    .filter((key) => rowOf(key).need?.(patch) ?? true)
+    .every((key) => value[key] === patch[key]);
 
-export const sub = ({ kind, ring, wheel, sides }) => (kind === 'in' || kind === 'out' ? `R/r = ${ring}/${wheel}` : kind === 'line' ? 'on a line' : `${sides} sides`);
+export const sub = ({ kind, ring, wheel, sides }) =>
+  kind === "in" || kind === "out" ? `R/r = ${ring}/${wheel}` : kind === "line" ? "on a line" : `${sides} sides`;
 
 export function etch(ctx, { count, samples, trace, frame }, w, h, dpr) {
   const box = fit(frame, w, h, 4 * dpr);
   ctx.strokeStyle = paints(ctx.canvas).accent;
   ctx.lineWidth = LINE * dpr;
-  ctx.lineJoin = 'round';
+  ctx.lineJoin = "round";
   ctx.beginPath();
   for (let k = 0; k < count; k++) {
     for (let i = 0; i < samples; i++) {
@@ -53,12 +57,36 @@ export function Tracks({ value, math, onChange }) {
   const glimpse = (patch) => (
     <Art
       paint={(ctx, w, h, dpr) => etch(ctx, glance(math, value, resolve(math, value), patch), w, h, dpr)}
-      deps={[math, patch.kind, patch.ring, patch.wheel, patch.sides, patch.laps, value.base, value.code, value.number, value.mode, value.reach, value.jitter, value.seed, tick]}
+      deps={[
+        math,
+        patch.kind,
+        patch.ring,
+        patch.wheel,
+        patch.sides,
+        patch.laps,
+        value.base,
+        value.code,
+        value.number,
+        value.mode,
+        value.reach,
+        value.jitter,
+        value.seed,
+        tick,
+      ]}
     />
   );
   return (
     <Shelf name="Tracks" grid>
-      {TRACKS.map(([name, patch]) => <Item key={name} label={name} sub={sub(patch)} on={lit(value, patch)} onPick={() => onChange(patch)} art={math ? glimpse(patch) : undefined} />)}
+      {TRACKS.map(([name, patch]) => (
+        <Item
+          key={name}
+          label={name}
+          sub={sub(patch)}
+          on={lit(value, patch)}
+          onPick={() => onChange(patch)}
+          art={math ? glimpse(patch) : undefined}
+        />
+      ))}
     </Shelf>
   );
 }
@@ -72,7 +100,9 @@ export function Pane({ value, at, math, onChange }) {
         const rows = shown(keys, value);
         return (
           <Fold key={fold} name={fold} live={gist(rows, values)}>
-            {rows.map((row) => <Knob key={row.key} row={row} value={values[row.key]} values={values} units={units} onChange={onChange} />)}
+            {rows.map((row) => (
+              <Knob key={row.key} row={row} value={values[row.key]} values={values} units={units} onChange={onChange} />
+            ))}
           </Fold>
         );
       })}
@@ -111,10 +141,10 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
   const toggle = () => live.current?.toggle();
   const keep = () => {
     const picture = live.current?.svg?.();
-    if (picture) text(picture, file(now.current, units), 'svg');
+    if (picture) text(picture, file(now.current, units), "svg");
   };
   const have = Boolean(stat);
-  useEffect(() => onExport?.(have ? [['SVG', keep]] : []), [have]);
+  useEffect(() => onExport?.(have ? [["SVG", keep]] : []), [have]);
   const rows = status(stat);
   const told = JSON.stringify(rows);
   useEffect(() => onStatus?.(rows), [told]);
@@ -142,7 +172,17 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
   };
   return (
     <>
-      {unit && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={cancel} />}
+      {unit && (
+        <Scene
+          make={scene}
+          value={value}
+          onReady={ready}
+          onPointerDown={down}
+          onPointerMove={move}
+          onPointerUp={up}
+          onPointerCancel={cancel}
+        />
+      )}
       <Library>
         <Tracks value={value} math={unit} onChange={onChange} />
       </Library>

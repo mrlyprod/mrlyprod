@@ -29,6 +29,7 @@ export default function draw(pen: Pen, ink: Ink) {
       }
     }
   }
-  if (total !== num.gauss.Ring.count(ring, RADIUS)) throw new Error(`research-bases: ${total} points, want ${num.gauss.Ring.count(ring, RADIUS)}`);
+  if (total !== num.gauss.Ring.count(ring, RADIUS))
+    throw new Error(`research-bases: ${total} points, want ${num.gauss.Ring.count(ring, RADIUS)}`);
   if (visible !== VISIBLE) throw new Error(`research-bases: ${visible} visible, want ${VISIBLE}`);
 }

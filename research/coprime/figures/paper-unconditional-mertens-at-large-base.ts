@@ -1,5 +1,5 @@
-import * as num from "@mrlyprod/mrly/num";
 import * as math from "@mrlyprod/mrly/math";
+import * as num from "@mrlyprod/mrly/num";
 import type { Color, Ink, Pen, Point } from "#view";
 
 export const units = { num, math };
@@ -18,16 +18,21 @@ function regions() {
   if (memo) return memo;
   const y = BASE ** LEVEL;
   const found = math.dissection.regions(BASE, LEVEL, Z).map((name) => NAMES.indexOf(name));
-  if (found.length !== y || found.includes(-1)) throw new Error(`paper-unconditional-mertens-at-large-base: ${found.length} regions, want ${y} named ${NAMES}`);
+  if (found.length !== y || found.includes(-1))
+    throw new Error(`paper-unconditional-mertens-at-large-base: ${found.length} regions, want ${y} named ${NAMES}`);
   const cap = math.dissection.cap(y);
   for (let a = 0; a < y; a++) {
     const [l, d] = math.dissection.fraction(a, y, cap);
     const h = BigInt(a) * d - l * BigInt(y);
-    if (d > cap || (h < 0n ? -h : h) * cap > BigInt(y) || num.factor.gcd(l, d) !== "1") throw new Error(`paper-unconditional-mertens-at-large-base: frequency ${a} has fraction ${l}/${d} off the Dirichlet bound`);
+    if (d > cap || (h < 0n ? -h : h) * cap > BigInt(y) || num.factor.gcd(l, d) !== "1")
+      throw new Error(
+        `paper-unconditional-mertens-at-large-base: frequency ${a} has fraction ${l}/${d} off the Dirichlet bound`,
+      );
   }
   const counts = [0, 0, 0, 0];
   for (const r of found) counts[r]++;
-  if (counts.some((count, r) => count !== COUNTS[r])) throw new Error(`paper-unconditional-mertens-at-large-base: counts ${counts}, want ${COUNTS}`);
+  if (counts.some((count, r) => count !== COUNTS[r]))
+    throw new Error(`paper-unconditional-mertens-at-large-base: counts ${counts}, want ${COUNTS}`);
   memo = found;
   return memo;
 }
@@ -80,6 +85,7 @@ export default function draw(pen: Pen, ink: Ink) {
       held += end - first;
       band(pen, center, [mid - width / 2, mid + width / 2], [(first - 0.5) * slot, (end - 0.5) * slot], inks[pass]);
     }
-    if (held !== COUNTS[pass]) throw new Error(`paper-unconditional-mertens-at-large-base: pass ${pass} holds ${held}, want ${COUNTS[pass]}`);
+    if (held !== COUNTS[pass])
+      throw new Error(`paper-unconditional-mertens-at-large-base: pass ${pass} holds ${held}, want ${COUNTS[pass]}`);
   }
 }

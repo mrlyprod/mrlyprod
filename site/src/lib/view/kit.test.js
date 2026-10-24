@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { dark, light } from "../theme/theme.js";
-import { Grid, fade, field, frame, grid, hex, ink, iso, mix, plot, raster } from "./index.js";
+import { fade, field, frame, Grid, grid, hex, ink, iso, mix, plot, raster } from "./index.js";
 
 const HUES = {
   red: [255, 61, 64],
@@ -18,23 +18,49 @@ const HUES = {
   gray: [142, 142, 147],
 };
 const RUST = {
-  dark: { ground: [0, 0, 0], panel: [17, 17, 18], line: [31, 31, 32], fg: [255, 255, 255], dim: [142, 142, 147], ...HUES },
-  light: { ground: [255, 255, 255], panel: [241, 241, 242], line: [221, 221, 223], fg: [0, 0, 0], dim: [85, 85, 88], ...HUES },
+  dark: {
+    ground: [0, 0, 0],
+    panel: [17, 17, 18],
+    line: [31, 31, 32],
+    fg: [255, 255, 255],
+    dim: [142, 142, 147],
+    ...HUES,
+  },
+  light: {
+    ground: [255, 255, 255],
+    panel: [241, 241, 242],
+    line: [221, 221, 223],
+    fg: [0, 0, 0],
+    dim: [85, 85, 88],
+    ...HUES,
+  },
 };
 const theme = ink(dark);
 
 function recorder() {
   const calls = [];
-  const pen = new Proxy({}, { get: (_, key) => (...args) => calls.push([key, ...args]) });
+  const pen = new Proxy(
+    {},
+    {
+      get:
+        (_, key) =>
+        (...args) =>
+          calls.push([key, ...args]),
+    },
+  );
   return { pen, calls };
 }
 
 /* INK */
 
 test("the dark and light inks are ink.rs's", () => {
-  for (const [name, palette] of [["dark", dark], ["light", light]]) {
+  for (const [name, palette] of [
+    ["dark", dark],
+    ["light", light],
+  ]) {
     const read = ink(palette);
-    for (const [key, rgb] of Object.entries(RUST[name])) expect([name, key, read[key]]).toEqual([name, key, [...rgb, 255]]);
+    for (const [key, rgb] of Object.entries(RUST[name]))
+      expect([name, key, read[key]]).toEqual([name, key, [...rgb, 255]]);
   }
 });
 
@@ -114,8 +140,14 @@ test("at gap zero a carpet leaves no seam on the raster", () => {
 test("paint fills the cells whose type the ink maps", () => {
   const { pen, calls } = recorder();
   const cells = { shape: [2, 3], types: Uint8Array.from([1, 0, 1, 0, 2, 0]) };
-  new Grid(frame(0, 0, 30, 20), 3, 2, 0).paint(pen, cells, (t) => (t === 1 ? theme.blue : t === 2 ? theme.orange : null));
-  expect(calls).toEqual([["rect", 0, 0, 10, 10, theme.blue], ["rect", 20, 0, 10, 10, theme.blue], ["rect", 10, 10, 10, 10, theme.orange]]);
+  new Grid(frame(0, 0, 30, 20), 3, 2, 0).paint(pen, cells, (t) =>
+    t === 1 ? theme.blue : t === 2 ? theme.orange : null,
+  );
+  expect(calls).toEqual([
+    ["rect", 0, 0, 10, 10, theme.blue],
+    ["rect", 20, 0, 10, 10, theme.blue],
+    ["rect", 10, 10, 10, 10, theme.orange],
+  ]);
 });
 
 test("paint reads a tensor's data as it reads a cell's types", () => {
@@ -123,7 +155,11 @@ test("paint reads a tensor's data as it reads a cell's types", () => {
   const ink = (t) => (t === 1 ? theme.blue : null);
   const lattice = new Grid(frame(0, 0, 30, 20), 3, 2, 0);
   lattice.paint(pen, { shape: [2, 3], data: Uint8Array.from([1, 0, 1, 0, 1, 0]) }, ink);
-  expect(calls).toEqual([["rect", 0, 0, 10, 10, theme.blue], ["rect", 20, 0, 10, 10, theme.blue], ["rect", 10, 10, 10, 10, theme.blue]]);
+  expect(calls).toEqual([
+    ["rect", 0, 0, 10, 10, theme.blue],
+    ["rect", 20, 0, 10, 10, theme.blue],
+    ["rect", 10, 10, 10, 10, theme.blue],
+  ]);
 });
 
 /* HEX */
@@ -154,7 +190,9 @@ test("a hex slice draws one triangle per inked site and wants a hexagon", () => 
   const cell = { cell: { shape: [2, 3], types: Uint8Array.from([1, 1, 0, 1, 0, 1]) }, start: 0 };
   hex.draw(pen, frame(0, 0, 100, 100), cell, 1, (t) => (t ? theme.fg : null));
   expect(calls.map(([key]) => key)).toEqual(["triangle", "triangle", "triangle", "triangle"]);
-  expect(() => hex.draw(pen, frame(0, 0, 100, 100), { cell: { shape: [2, 2], types: [1, 1, 1, 1] }, start: 0 }, 0, () => theme.fg)).toThrow("hexagon");
+  expect(() =>
+    hex.draw(pen, frame(0, 0, 100, 100), { cell: { shape: [2, 2], types: [1, 1, 1, 1] }, start: 0 }, 0, () => theme.fg),
+  ).toThrow("hexagon");
 });
 
 /* ISO */
@@ -168,12 +206,29 @@ test("the projection lifts z straight up the screen", () => {
 
 test("iso drops faces turned away and paints back to front in three tones", () => {
   const { pen, calls } = recorder();
-  const face = (normal, z) => ({ normal, verts: [{ x: 0, y: 0, z }, { x: 1, y: 0, z }, { x: 1, y: 1, z }, { x: 0, y: 1, z }] });
-  const quads = [face({ x: 0, y: 0, z: 1 }, 1), face({ x: 0, y: 0, z: -1 }, 0), face({ x: 0, y: 1, z: 0 }, 0.5), face({ x: 1, y: 0, z: 0 }, -1)];
+  const face = (normal, z) => ({
+    normal,
+    verts: [
+      { x: 0, y: 0, z },
+      { x: 1, y: 0, z },
+      { x: 1, y: 1, z },
+      { x: 0, y: 1, z },
+    ],
+  });
+  const quads = [
+    face({ x: 0, y: 0, z: 1 }, 1),
+    face({ x: 0, y: 0, z: -1 }, 0),
+    face({ x: 0, y: 1, z: 0 }, 0.5),
+    face({ x: 1, y: 0, z: 0 }, -1),
+  ];
   const shade = [theme.fg, theme.blue, theme.dim];
   iso.draw(pen, frame(0, 0, 400, 400), quads, shade, theme.line);
   expect(calls.filter(([key]) => key === "polygon").map((call) => call[2])).toEqual([theme.dim, theme.blue, theme.fg]);
-  expect(calls.filter(([key]) => key === "polyline").map((call) => [call[1].length, call[2]])).toEqual([[5, 1], [5, 1], [5, 1]]);
+  expect(calls.filter(([key]) => key === "polyline").map((call) => [call[1].length, call[2]])).toEqual([
+    [5, 1],
+    [5, 1],
+    [5, 1],
+  ]);
 });
 
 test("the cube's twelve edges join corners one bit apart, low to high", () => {
@@ -184,38 +239,94 @@ test("the cube's twelve edges join corners one bit apart, low to high", () => {
 });
 
 test("faces drops the faces turned away and sorts the rest back to front", () => {
-  const face = (normal, z) => ({ normal, verts: [{ x: 0, y: 0, z }, { x: 1, y: 0, z }, { x: 1, y: 1, z }, { x: 0, y: 1, z }] });
-  const list = iso.faces([face({ x: 0, y: 0, z: 1 }, 1), face({ x: 0, y: 0, z: -1 }, 0), face({ x: 0, y: 1, z: 0 }, 0.5), face({ x: 1, y: 0, z: 0 }, -1)]);
+  const face = (normal, z) => ({
+    normal,
+    verts: [
+      { x: 0, y: 0, z },
+      { x: 1, y: 0, z },
+      { x: 1, y: 1, z },
+      { x: 0, y: 1, z },
+    ],
+  });
+  const list = iso.faces([
+    face({ x: 0, y: 0, z: 1 }, 1),
+    face({ x: 0, y: 0, z: -1 }, 0),
+    face({ x: 0, y: 1, z: 0 }, 0.5),
+    face({ x: 1, y: 0, z: 0 }, -1),
+  ]);
   expect(list.map((f) => f.tone)).toEqual([2, 1, 0]);
   expect(list.map((f) => f.depth)).toEqual([0, 1.5, 2]);
   expect(list[2].quad[0]).toEqual(iso.project(0, 0, 1));
 });
 
 test("fit centres the faces in the frame and keeps their proportions", () => {
-  const list = iso.faces([{ normal: { x: 0, y: 0, z: 1 }, verts: [{ x: 0, y: 0, z: 0 }, { x: 2, y: 0, z: 0 }, { x: 2, y: 1, z: 0 }, { x: 0, y: 1, z: 0 }] }]);
+  const list = iso.faces([
+    {
+      normal: { x: 0, y: 0, z: 1 },
+      verts: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 },
+        { x: 2, y: 1, z: 0 },
+        { x: 0, y: 1, z: 0 },
+      ],
+    },
+  ]);
   const place = iso.fit(list, frame(10, 20, 200, 100));
   const pts = list[0].quad.map(place);
   const xs = pts.map((p) => p[0]);
   const ys = pts.map((p) => p[1]);
   expect([Math.min(...xs) + Math.max(...xs), Math.min(...ys) + Math.max(...ys)].map(Math.round)).toEqual([220, 140]);
-  expect([Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)]).toEqual([expect.closeTo(100 * Math.sqrt(3), 6), expect.closeTo(100, 6)]);
+  expect([Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)]).toEqual([
+    expect.closeTo(100 * Math.sqrt(3), 6),
+    expect.closeTo(100, 6),
+  ]);
 });
 
 test("stamp paints faces back to front about a point and rings each in the edge", () => {
   const { pen, calls } = recorder();
-  const face = (normal, z) => ({ normal, verts: [{ x: 0, y: 0, z }, { x: 1, y: 0, z }, { x: 1, y: 1, z }, { x: 0, y: 1, z }] });
+  const face = (normal, z) => ({
+    normal,
+    verts: [
+      { x: 0, y: 0, z },
+      { x: 1, y: 0, z },
+      { x: 1, y: 1, z },
+      { x: 0, y: 1, z },
+    ],
+  });
   const quads = [face({ x: 0, y: 0, z: 1 }, 1), face({ x: 0, y: 1, z: 0 }, 0.5), face({ x: 0, y: 0, z: -1 }, 0)];
   const shade = [theme.fg, theme.blue, theme.dim];
   iso.stamp(pen, quads, 100, 50, 10, shade, theme.line, 3);
   const polygons = calls.filter(([key]) => key === "polygon");
   expect(polygons.map((call) => call[2])).toEqual([theme.blue, theme.fg]);
   expect(polygons[1][1][2]).toEqual([100 + iso.project(1, 1, 1)[0] * 10, 50 + iso.project(1, 1, 1)[1] * 10]);
-  expect(calls.filter(([key]) => key === "polyline").map((call) => [call[1].length, call[2], call[3]])).toEqual([[5, 3, theme.line], [5, 3, theme.line]]);
+  expect(calls.filter(([key]) => key === "polyline").map((call) => [call[1].length, call[2], call[3]])).toEqual([
+    [5, 3, theme.line],
+    [5, 3, theme.line],
+  ]);
 });
 
 test("stamp without an edge only fills", () => {
   const { pen, calls } = recorder();
-  iso.stamp(pen, [{ normal: { x: 0, y: 0, z: 1 }, verts: [{ x: 0, y: 0, z: 1 }, { x: 1, y: 0, z: 1 }, { x: 1, y: 1, z: 1 }, { x: 0, y: 1, z: 1 }] }], 0, 0, 5, [theme.fg], null, 0);
+  iso.stamp(
+    pen,
+    [
+      {
+        normal: { x: 0, y: 0, z: 1 },
+        verts: [
+          { x: 0, y: 0, z: 1 },
+          { x: 1, y: 0, z: 1 },
+          { x: 1, y: 1, z: 1 },
+          { x: 0, y: 1, z: 1 },
+        ],
+      },
+    ],
+    0,
+    0,
+    5,
+    [theme.fg],
+    null,
+    0,
+  );
   expect(calls.map(([key]) => key)).toEqual(["polygon"]);
 });
 
@@ -250,7 +361,13 @@ test("a patch holds a color and a cover a pixel and paints them as one image", (
 });
 
 test("a patch wants a box of whole pixels", () => {
-  for (const box of [[1.5, 0, 2, 2], [0, 0, 2, NaN], [0, 0, -1, 2], [0, 0, Infinity, 2]]) expect(() => field.patch(...box)).toThrow("whole pixels");
+  for (const box of [
+    [1.5, 0, 2, 2],
+    [0, 0, 2, NaN],
+    [0, 0, -1, 2],
+    [0, 0, Infinity, 2],
+  ])
+    expect(() => field.patch(...box)).toThrow("whole pixels");
   expect(() => field.patch(-3, -2, 0, 0)).not.toThrow();
 });
 
@@ -264,7 +381,13 @@ test("a patch reaches the raster as Board.blend reaches the board", () => {
   patch.paint(pen);
   const { colors } = pen.pixels();
   const at = (x, y) => Array.from(colors.slice((y * 8 + x) * 4, (y * 8 + x) * 4 + 4));
-  expect([at(2, 1), at(3, 1), at(4, 1), at(5, 1), at(2, 2)]).toEqual([[128, 128, 128, 255], [255, 255, 255, 255], [0, 0, 0, 255], [0, 0, 0, 255], [64, 64, 64, 255]]);
+  expect([at(2, 1), at(3, 1), at(4, 1), at(5, 1), at(2, 2)]).toEqual([
+    [128, 128, 128, 255],
+    [255, 255, 255, 255],
+    [0, 0, 0, 255],
+    [0, 0, 0, 255],
+    [64, 64, 64, 255],
+  ]);
 });
 
 /* PLOT */
@@ -272,7 +395,12 @@ test("a patch reaches the raster as Board.blend reaches the board", () => {
 test("bars stand on the foot of the frame, the tallest filling it", () => {
   const { pen, calls } = recorder();
   plot.bars(pen, frame(0, 0, 40, 100), [1, -4, 2, 0], 0.5, theme.blue);
-  expect(calls.map((call) => call.slice(1, 5))).toEqual([[2.5, 75, 5, 25], [12.5, 0, 5, 100], [22.5, 50, 5, 50], [32.5, 100, 5, 0]]);
+  expect(calls.map((call) => call.slice(1, 5))).toEqual([
+    [2.5, 75, 5, 25],
+    [12.5, 0, 5, 100],
+    [22.5, 50, 5, 50],
+    [32.5, 100, 5, 0],
+  ]);
 });
 
 test("a curve and a staircase span their frame", () => {
@@ -280,8 +408,17 @@ test("a curve and a staircase span their frame", () => {
   const box = frame(10, 10, 100, 50);
   plot.curve(pen, box, [0, 1, 2], [5, 9, 7], 2, theme.fg);
   plot.staircase(pen, box, [3, 1], 2, theme.fg);
-  expect(calls[0][1]).toEqual([[10, 60], [60, 10], [110, 35]]);
-  expect(calls[1][1]).toEqual([[10, 10], [60, 10], [60, 60], [110, 60]]);
+  expect(calls[0][1]).toEqual([
+    [10, 60],
+    [60, 10],
+    [110, 35],
+  ]);
+  expect(calls[1][1]).toEqual([
+    [10, 10],
+    [60, 10],
+    [60, 60],
+    [110, 60],
+  ]);
 });
 
 test("a dashed rule lays forty eight dashes along one height", () => {

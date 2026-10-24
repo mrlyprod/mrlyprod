@@ -1,4 +1,4 @@
-import { IMAGE, decode, dirRoute, ext, fileRoute, rawPath } from "../git/view.ts";
+import { decode, dirRoute, ext, fileRoute, IMAGE, rawPath } from "../git/view.ts";
 
 /* INDEX */
 
@@ -31,7 +31,7 @@ function walk(dir: string, head: string): string | null {
 }
 
 export function resolve(source: string, href: string, idx: Index): string {
-  if (DENY.test(href.replace(/[\u0000- ]/g, ""))) return "#";
+  if (DENY.test(href.replace(/[\p{Cc} ]/gu, ""))) return "#";
   if (OUT.test(href)) return href;
   const cut = href.search(/[#?]/);
   const head = cut < 0 ? href : href.slice(0, cut);
@@ -39,7 +39,9 @@ export function resolve(source: string, href: string, idx: Index): string {
   const path = head ? walk(source.slice(0, Math.max(source.lastIndexOf("/"), 0)), head) : null;
   if (path === null) return href;
   const plain = decode(path);
-  const hit = keys(plain).map((key) => idx.routes.get(key)).find(Boolean);
+  const hit = keys(plain)
+    .map((key) => idx.routes.get(key))
+    .find(Boolean);
   if (hit) return hit + tail;
   if (!path || head.endsWith("/")) return dirRoute(path) + tail;
   if (IMAGE.has(ext(path)) || ext(path) === "pdf") return `/${rawPath(path)}${tail}`;

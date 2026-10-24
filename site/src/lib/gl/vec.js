@@ -15,7 +15,7 @@ export const norm = (a) => {
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
-export const mix = (a, b, k) => (typeof a === 'number' ? a + (b - a) * k : a.map((v, i) => v + (b[i] - v) * k));
+export const mix = (a, b, k) => (typeof a === "number" ? a + (b - a) * k : a.map((v, i) => v + (b[i] - v) * k));
 
 export function basis(fwd, up = [0, 1, 0]) {
   const f = norm(fwd);

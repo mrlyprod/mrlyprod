@@ -2,7 +2,6 @@ import argparse
 import json
 import math
 import os
-import sys
 import time
 from fractions import Fraction
 
@@ -15,14 +14,19 @@ T0 = time.time()
 
 # GRID
 
+
 class Grid:
     def __init__(self, m, k):
         self.m, self.k, self.n = m, k, m**k
         idx = np.arange(self.n)
-        self.coords = np.stack([(idx // m**(k - 1 - i)) % m for i in range(k)], axis=1)
+        self.coords = np.stack(
+            [(idx // m ** (k - 1 - i)) % m for i in range(k)], axis=1
+        )
         half = m // 2
         cls_key = (2 * self.coords) % m
-        self.cls = np.unique(cls_key @ (m ** np.arange(k)[::-1]), return_inverse=True)[1]
+        self.cls = np.unique(cls_key @ (m ** np.arange(k)[::-1]), return_inverse=True)[
+            1
+        ]
         self.ncls = self.cls.max() + 1
         x, z = np.triu_indices(self.n, 1)
         s = self.coords[x] + self.coords[z]
@@ -91,7 +95,10 @@ class Grid:
         return level, r
 
     def peelable(self, mask, mode):
-        if mode == "point" and np.bincount(self.cls[mask], minlength=self.ncls).max() > 1:
+        if (
+            mode == "point"
+            and np.bincount(self.cls[mask], minlength=self.ncls).max() > 1
+        ):
             return False
         return not self.core(mask, mode).any()
 
@@ -152,12 +159,23 @@ class Grid:
         A = coo_matrix((vals_m, (rows_m, cols_m)), shape=(i + nv, nv + 1)).tocsr()
         c = np.zeros(nv + 1)
         c[nv] = 1.0
-        res = linprog(c, A_ub=A, b_ub=np.array(rhs), bounds=[(0, None)] * (nv + 1), method="highs")
+        res = linprog(
+            c, A_ub=A, b_ub=np.array(rhs), bounds=[(0, None)] * (nv + 1), method="highs"
+        )
         if res.status != 0:
             return None
         f = res.x[:nv]
-        slack = f[loc[rx]] + f[loc[rz]] - 2 * f[loc[ry]] - (rd / self.m**2 if margin else 1.0)
-        return {int(v): float(fv) for v, fv in zip(pts, f)}, float(res.x[nv]), float(slack.min()) if len(slack) else 0.0
+        slack = (
+            f[loc[rx]]
+            + f[loc[rz]]
+            - 2 * f[loc[ry]]
+            - (rd / self.m**2 if margin else 1.0)
+        )
+        return (
+            {int(v): float(fv) for v, fv in zip(pts, f)},
+            float(res.x[nv]),
+            float(slack.min()) if len(slack) else 0.0,
+        )
 
     def farkas(self, mask, mode):
         pts = np.flatnonzero(mask)
@@ -186,12 +204,20 @@ class Grid:
         A = coo_matrix((vals, (rows, cols)), shape=(nr + len(extra), nv + 1)).tocsr()
         c = np.zeros(nv + 1)
         c[nv] = -1.0
-        res = linprog(c, A_ub=A, b_ub=np.zeros(nr + len(extra)), bounds=[(0, 1)] * nv + [(None, None)], method="highs")
+        res = linprog(
+            c,
+            A_ub=A,
+            b_ub=np.zeros(nr + len(extra)),
+            bounds=[(0, 1)] * nv + [(None, None)],
+            method="highs",
+        )
         t = -res.fun
         lam = -res.ineqlin.marginals
         return t, lam[:nr], lam[nr:], (rx, rz, ry, rd), extra
 
+
 # BLOCKS
+
 
 def ehps(a, b, eps):
     one, half = Fraction(1), Fraction(1, 2)
@@ -200,13 +226,19 @@ def ehps(a, b, eps):
         return 1
     if half <= a < one and b < half and Fraction(7, 6) + eps <= s <= Fraction(17, 12):
         return 2
-    if a < half and half <= b < one and Fraction(7, 6) + eps <= s <= Fraction(17, 12) and 2 * a + b >= Fraction(3, 2) + eps:
+    if (
+        a < half <= b < one
+        and Fraction(7, 6) + eps <= s <= Fraction(17, 12)
+        and 2 * a + b >= Fraction(3, 2) + eps
+    ):
         return 3
     return 0
+
 
 def ehps_f(a, b, eps):
     g = a * a if a < Fraction(1, 2) else (a - Fraction(1, 2)) ** 2
     return 24 / eps**2 * (a + b) ** 2 + 6 * g
+
 
 def rasterise(grid, eps, shift):
     m = grid.m
@@ -218,6 +250,7 @@ def rasterise(grid, eps, shift):
         which[v] = ehps(a, b, eps)
     mask = which > 0
     return mask, which
+
 
 def bitmap(grid, mask, which=None):
     m = grid.m
@@ -233,13 +266,17 @@ def bitmap(grid, mask, which=None):
         lines.append(row)
     return "\n".join(lines)
 
+
 def C(alpha, k):
     return 2 * math.sqrt((2 / k) * math.log2(1 / alpha))
+
 
 def stamp(msg):
     print(f"{msg}  [{time.time() - T0:.1f}s]")
 
+
 # CONTROLS
+
 
 def controls(args):
     print("CONTROL 1: the EHPS block rasterised, EHPS form (classes), k = 2")
@@ -262,22 +299,38 @@ def controls(args):
             b = Fraction(int(grid.coords[v, 1]), m) + shift[1]
             fx[int(v)] = ehps_f(a, b, eps)
         rx, rz, ry, rd = grid.rows(mask)
-        worst = min((fx[x] + fx[z] - 2 * fx[y] - Fraction(int(d), m * m) for x, z, y, d in zip(rx.tolist(), rz.tolist(), ry.tolist(), rd.tolist())), default=Fraction(0))
-        print(f"  m = {m}: {cnt} points, density {cnt / m**2:.5f} against 7/24 = {7 / 24:.5f}, eps = {eps}, shift = ({shift[0]}, {shift[1]}), {len(rx)} triples; peelable {peel}; LP {'feasible, max f = %.1f, min slack = %.2e' % (lp[1], lp[2]) if lp else 'infeasible'}; EHPS f worst slack {float(worst):.3e} {'>= 0 ok' if worst >= 0 else 'NEGATIVE'}")
+        worst = min(
+            (
+                fx[x] + fx[z] - 2 * fx[y] - Fraction(int(d), m * m)
+                for x, z, y, d in zip(
+                    rx.tolist(), rz.tolist(), ry.tolist(), rd.tolist()
+                )
+            ),
+            default=Fraction(0),
+        )
+        print(
+            f"  m = {m}: {cnt} points, density {cnt / m**2:.5f} against 7/24 = {7 / 24:.5f}, eps = {eps}, shift = ({shift[0]}, {shift[1]}), {len(rx)} triples; peelable {peel}; LP {'feasible, max f = %.1f, min slack = %.2e' % (lp[1], lp[2]) if lp else 'infeasible'}; EHPS f worst slack {float(worst):.3e} {'>= 0 ok' if worst >= 0 else 'NEGATIVE'}"
+        )
         assert peel and lp is not None and worst >= 0
         if m == 12:
             print(bitmap(grid, mask, which))
     stamp("control 1 passed")
-    print("CONTROL 2: k = 1, exact optimum by the lazy-core solver against (m + 1)/2 at odd m, m/2 + 1 at even m in EHPS form, m/2 in HS form")
+    print(
+        "CONTROL 2: k = 1, exact optimum by the lazy-core solver against (m + 1)/2 at odd m, m/2 + 1 at even m in EHPS form, m/2 in HS form"
+    )
     for m in range(2, 21):
         grid = Grid(m, 1)
         for mode in ("class", "point"):
             if mode == "point" and m % 2:
                 continue
             size, mask, bound, done = exact(grid, mode, 20)
-            want = (m + 1) // 2 if m % 2 else (m // 2 + 1 if mode == "class" else m // 2)
+            want = (
+                (m + 1) // 2 if m % 2 else (m // 2 + 1 if mode == "class" else m // 2)
+            )
             lp = grid.lp(mask, mode)
-            print(f"  m = {m} {mode}: optimum {size} of {m}, formula {want}, {'exact' if done else 'bound ' + str(bound)}, T = {sorted(np.flatnonzero(mask).tolist())}, LP {'ok' if lp else 'FAIL'}")
+            print(
+                f"  m = {m} {mode}: optimum {size} of {m}, formula {want}, {'exact' if done else 'bound ' + str(bound)}, T = {sorted(np.flatnonzero(mask).tolist())}, LP {'ok' if lp else 'FAIL'}"
+            )
             assert done and size == want and lp is not None
     stamp("control 2 passed")
     print("CONTROL 3: peel oracle against the LP oracle on random sets, k = 2")
@@ -294,11 +347,13 @@ def controls(args):
                         mask[mem[1:]] = False
                 p = grid.peelable(mask, mode)
                 lp = grid.lp(mask, mode)
-                t, lam, lam2, rows, extra = grid.farkas(mask, mode)
+                t, lam, lam2, _rows, extra = grid.farkas(mask, mode)
                 ok = (lp is not None) == p and ((t > 1e-9) == p)
                 agree += ok
                 if not ok:
-                    print(f"  DISAGREE m = {m} {mode}: peel {p}, lp {lp is not None}, margin t = {t:.3e}, |T| = {mask.sum()}")
+                    print(
+                        f"  DISAGREE m = {m} {mode}: peel {p}, lp {lp is not None}, margin t = {t:.3e}, |T| = {mask.sum()}"
+                    )
                 if p:
                     g = grid.certificate(mask, mode)
                     assert g is not None
@@ -320,11 +375,15 @@ def controls(args):
     for (a, b), l in zip(extra, lam2):
         bal[a] += l
         bal[b] -= l
-    print(f"  witness at m = 6: |T| = {mask.sum()}, minimal core {sorted(np.flatnonzero(core).tolist())} ({core.sum()} points), max margin t = {t:.3e}, Farkas weights on {int((lam > 1e-9).sum())} triples, balance max |.| = {np.abs(bal).max():.2e}, weighted distance = {float(np.dot(lam, rd)) / 36:.4f}")
+    print(
+        f"  witness at m = 6: |T| = {mask.sum()}, minimal core {sorted(np.flatnonzero(core).tolist())} ({core.sum()} points), max margin t = {t:.3e}, Farkas weights on {int((lam > 1e-9).sum())} triples, balance max |.| = {np.abs(bal).max():.2e}, weighted distance = {float(np.dot(lam, rd)) / 36:.4f}"
+    )
     print(bitmap(grid, core))
     stamp("control 3 passed")
 
+
 # EXACT
+
 
 def symmetries(grid):
     m, k = grid.m, grid.k
@@ -340,6 +399,7 @@ def symmetries(grid):
                 sh = (img + co[t]) % m
                 maps.append(sh @ (m ** np.arange(k)[::-1]))
     return np.unique(np.stack(maps), axis=0)
+
 
 def exact(grid, mode, cap, seed_cores=None, verbose=False):
     n = grid.n
@@ -362,15 +422,28 @@ def exact(grid, mode, cap, seed_cores=None, verbose=False):
                 rows += [r] * len(cut)
                 cols += list(cut)
                 rhs.append(len(cut) - 1)
-            A = coo_matrix((np.ones(len(rows)), (rows, cols)), shape=(len(cuts), n)).tocsr()
+            A = coo_matrix(
+                (np.ones(len(rows)), (rows, cols)), shape=(len(cuts), n)
+            ).tocsr()
             cons = [LinearConstraint(A, -np.inf, np.array(rhs, dtype=float))]
         else:
             cons = []
-        res = milp(-np.ones(n), constraints=cons, integrality=np.ones(n), bounds=Bounds(0, 1), options={"time_limit": max(1.0, cap - (time.time() - start))})
+        res = milp(
+            -np.ones(n),
+            constraints=cons,
+            integrality=np.ones(n),
+            bounds=Bounds(0, 1),
+            options={"time_limit": max(1.0, cap - (time.time() - start))},
+        )
         if res.x is None:
-            return (int(best_mask.sum()) if best_mask is not None else 0), best_mask, bound, False
+            return (
+                (int(best_mask.sum()) if best_mask is not None else 0),
+                best_mask,
+                bound,
+                False,
+            )
         mask = res.x > 0.5
-        bound = min(bound, int(round(-res.fun)))
+        bound = min(bound, round(-res.fun))
         if grid.peelable(mask, mode):
             return int(mask.sum()), mask, int(mask.sum()), True
         core = grid.minimal_core(mask, mode)
@@ -378,9 +451,12 @@ def exact(grid, mode, cap, seed_cores=None, verbose=False):
         for s in syms:
             cuts.add(tuple(sorted(int(x) for x in s[cv])))
         if verbose and it % 20 == 0:
-            stamp(f"    iteration {it}: {len(cuts)} cuts, bound {bound}, last core {len(cv)} points")
+            stamp(
+                f"    iteration {it}: {len(cuts)} cuts, bound {bound}, last core {len(cv)} points"
+            )
         if time.time() - start > cap:
             return 0, None, bound, False
+
 
 def exact_cmd(args):
     k = args.k
@@ -393,14 +469,20 @@ def exact_cmd(args):
             label = "EHPS form" if mode == "class" else "HS form"
             if done:
                 alpha = size / m**k
-                print(f"m = {m} k = {k} {label}: exact optimum {size} of {m**k}, alpha = {alpha:.5f} = {size}/{m**k}, 7/24 = {7 / 24:.5f}, C = {C(alpha, k):.4f}")
+                print(
+                    f"m = {m} k = {k} {label}: exact optimum {size} of {m**k}, alpha = {alpha:.5f} = {size}/{m**k}, 7/24 = {7 / 24:.5f}, C = {C(alpha, k):.4f}"
+                )
                 if k == 2:
                     print(bitmap(grid, mask))
             else:
-                print(f"m = {m} k = {k} {label}: not closed in {args.cap}s, upper bound {bound} of {m**k}, alpha <= {bound / m**k:.5f}")
+                print(
+                    f"m = {m} k = {k} {label}: not closed in {args.cap}s, upper bound {bound} of {m**k}, alpha <= {bound / m**k:.5f}"
+                )
         stamp(f"m = {m} done")
 
+
 # SEARCH
+
 
 def strip(grid, mask, mode):
     mask = mask.copy()
@@ -412,9 +494,10 @@ def strip(grid, mask, mode):
         core = grid.core(mask, mode)
         if not core.any():
             return mask
-        rx, rz, ry, _ = grid.rows(core)
+        _rx, _rz, ry, _ = grid.rows(core)
         cnt = np.bincount(ry, minlength=grid.n)
         mask[int(np.argmax(cnt))] = False
+
 
 def extend(grid, mask, mode, rng, deadline, ok=None):
     ok = ok or (lambda mk: grid.peelable(mk, mode))
@@ -430,6 +513,7 @@ def extend(grid, mask, mode, rng, deadline, ok=None):
         if not ok(mask):
             mask[v] = False
     return mask
+
 
 def perturb(grid, mask, mode, rng, kick, core_fn=None):
     core_fn = core_fn or (lambda mk: grid.core(mk, mode))
@@ -451,6 +535,7 @@ def perturb(grid, mask, mode, rng, kick, core_fn=None):
             mask[rng.choice(cand)] = False
     return mask
 
+
 def greedy(grid, mode, order, rng):
     m, k, n = grid.m, grid.k, grid.n
     mask = np.zeros(n, dtype=bool)
@@ -458,8 +543,16 @@ def greedy(grid, mode, order, rng):
     co = grid.coords
     weights = m ** np.arange(k)[::-1]
     half = m // 2
-    shifts = [np.array([(e >> (k - 1 - i)) & 1 for i in range(k)]) * half for e in range(2**k)] if m % 2 == 0 else [np.zeros(k, dtype=int)]
+    shifts = (
+        [
+            np.array([(e >> (k - 1 - i)) & 1 for i in range(k)]) * half
+            for e in range(2**k)
+        ]
+        if m % 2 == 0
+        else [np.zeros(k, dtype=int)]
+    )
     inv2 = pow(2, -1, m) if m % 2 else None
+
     def midpoints(p, q):
         s = co[p] + co[q]
         if m % 2:
@@ -467,13 +560,14 @@ def greedy(grid, mode, order, rng):
         if np.any(s % 2):
             return []
         return [int((((s // 2) + sh) % m) @ weights) for sh in shifts]
+
     def add(p):
         for q in np.flatnonzero(mask):
             for y in midpoints(p, q):
                 mids[y] += 1
         mask[p] = True
+
     def addable(S):
-        built = np.flatnonzero(mask)
         for y in S:
             if mids[y]:
                 return False
@@ -483,13 +577,17 @@ def greedy(grid, mode, order, rng):
                     if mask[x] or x in S:
                         return False
         return True
+
     for c in order:
         mem = [int(v) for v in np.flatnonzero(grid.cls == c)]
         if mode == "point":
             rng.shuffle(mem)
             subsets = [[v] for v in mem]
         else:
-            subsets = [[mem[i] for i in range(len(mem)) if (b >> i) & 1] for b in range(1, 2 ** len(mem))]
+            subsets = [
+                [mem[i] for i in range(len(mem)) if (b >> i) & 1]
+                for b in range(1, 2 ** len(mem))
+            ]
             rng.shuffle(subsets)
             subsets.sort(key=len, reverse=True)
         for S in subsets:
@@ -499,6 +597,7 @@ def greedy(grid, mode, order, rng):
                 break
     return mask
 
+
 def ehps_seed(grid):
     m = grid.m
     best = None
@@ -506,10 +605,13 @@ def ehps_seed(grid):
         eps = Fraction(1, den * m)
         for i in range(den):
             for j in range(den):
-                mask, _ = rasterise(grid, eps, (Fraction(i, den * m), Fraction(j, den * m)))
+                mask, _ = rasterise(
+                    grid, eps, (Fraction(i, den * m), Fraction(j, den * m))
+                )
                 if best is None or mask.sum() > best.sum():
                     best = mask
     return best
+
 
 def search(grid, mode, seconds, rng, seeds, log=None):
     deadline = time.time() + seconds
@@ -532,7 +634,13 @@ def search(grid, mode, seconds, rng, seeds, log=None):
         local_best = mask.copy()
         stale = 0
         while time.time() < deadline and stale < 30:
-            cand = extend(grid, perturb(grid, mask, mode, rng, 1 + int(rng.integers(3))), mode, rng, deadline)
+            cand = extend(
+                grid,
+                perturb(grid, mask, mode, rng, 1 + int(rng.integers(3))),
+                mode,
+                rng,
+                deadline,
+            )
             if cand.sum() >= mask.sum():
                 stale = stale + 1 if cand.sum() == mask.sum() else 0
                 mask = cand
@@ -547,6 +655,7 @@ def search(grid, mode, seconds, rng, seeds, log=None):
         elif log and n_rand % 25 == 0:
             log(f"    {n_rand} random seeds, best {int(best[1].sum())}")
     return best
+
 
 def search_cmd(args):
     k = args.k
@@ -564,7 +673,14 @@ def search_cmd(args):
             seeds = []
             if k == 2 and mode == "class":
                 seeds.append(("EHPS rasterised", ehps_seed(grid)))
-            name, mask = search(grid, mode, args.seconds, rng, seeds, log=stamp if args.verbose else None)
+            name, mask = search(
+                grid,
+                mode,
+                args.seconds,
+                rng,
+                seeds,
+                log=stamp if args.verbose else None,
+            )
             size = int(mask.sum())
             alpha = size / m**k
             assert grid.peelable(mask, mode)
@@ -572,10 +688,27 @@ def search_cmd(args):
             lp = grid.lp(mask, mode)
             assert g is not None and lp is not None
             levels = max(int(math.log(v, 3)) for v in g.values()) + 1
-            print(f"m = {m} k = {k} {label}: best {size} of {m**k}, alpha = {alpha:.5f}, 7 m^2/24 = {7 * m**k / 24:.2f}, EHPS raster {int(ehps_seed(grid).sum()) if k == 2 and mode == 'class' else '-'}, C = {C(alpha, k):.4f}, c = alpha^(1/k) = {alpha ** (1 / k):.4f}, peel levels {levels}, LP max f = {lp[1]:.2f}, from {name}")
+            print(
+                f"m = {m} k = {k} {label}: best {size} of {m**k}, alpha = {alpha:.5f}, 7 m^2/24 = {7 * m**k / 24:.2f}, EHPS raster {int(ehps_seed(grid).sum()) if k == 2 and mode == 'class' else '-'}, C = {C(alpha, k):.4f}, c = alpha^(1/k) = {alpha ** (1 / k):.4f}, peel levels {levels}, LP max f = {lp[1]:.2f}, from {name}"
+            )
             if k == 2:
                 print(bitmap(grid, mask))
-            results[f"{m}-{mode}"] = {"m": m, "k": k, "form": label, "size": size, "alpha": alpha, "T": sorted(int(v) for v in np.flatnonzero(mask)), "coords": [[int(c) for c in grid.coords[v]] for v in np.flatnonzero(mask)], "f_lp": {str(v): fv for v, fv in lp[0].items()}, "lp_max_f": lp[1], "peel_levels": levels, "g_peel": {str(v): str(gv) for v, gv in g.items()}, "seed": name}
+            results[f"{m}-{mode}"] = {
+                "m": m,
+                "k": k,
+                "form": label,
+                "size": size,
+                "alpha": alpha,
+                "T": sorted(int(v) for v in np.flatnonzero(mask)),
+                "coords": [
+                    [int(c) for c in grid.coords[v]] for v in np.flatnonzero(mask)
+                ],
+                "f_lp": {str(v): fv for v, fv in lp[0].items()},
+                "lp_max_f": lp[1],
+                "peel_levels": levels,
+                "g_peel": {str(v): str(gv) for v, gv in g.items()},
+                "seed": name,
+            }
         stamp(f"m = {m} done")
     if args.save:
         path = os.path.join(HERE, args.save)
@@ -583,7 +716,9 @@ def search_cmd(args):
             json.dump(results, fh, indent=1)
         stamp(f"saved {path}")
 
+
 # REFINE
+
 
 def dilate(grid, mask, j):
     big = Grid(grid.m * j, grid.k)
@@ -591,15 +726,16 @@ def dilate(grid, mask, j):
     for v in np.flatnonzero(mask):
         base = grid.coords[v] * j
         for e in range(j**grid.k):
-            off = np.array([(e // j**(grid.k - 1 - i)) % j for i in range(grid.k)])
+            off = np.array([(e // j ** (grid.k - 1 - i)) % j for i in range(grid.k)])
             out[big.point(base + off)] = True
     return big, out
+
 
 def refine_cmd(args):
     with open(os.path.join(HERE, args.load)) as fh:
         saved = json.load(fh)
     rng = np.random.default_rng(args.seed)
-    for key, rec in saved.items():
+    for rec in saved.values():
         if rec["form"] != "EHPS form" or rec["k"] != 2:
             continue
         m = rec["m"]
@@ -607,7 +743,9 @@ def refine_cmd(args):
         mask = np.zeros(grid.n, dtype=bool)
         mask[rec["T"]] = True
         assert grid.peelable(mask, "class")
-        print(f"m = {m}: saved set of {int(mask.sum())} points, alpha = {mask.sum() / m**2:.5f}")
+        print(
+            f"m = {m}: saved set of {int(mask.sum())} points, alpha = {mask.sum() / m**2:.5f}"
+        )
         for j in args.factors:
             big, dil = dilate(grid, mask, j)
             ok = big.peelable(dil, "class")
@@ -621,15 +759,21 @@ def refine_cmd(args):
                 rep = extend(big, strip(big, dil, "class"), "class", rng, deadline)
                 local = rep.copy()
                 while time.time() < deadline:
-                    cand = extend(big, perturb(big, rep, "class", rng, 2), "class", rng, deadline)
+                    cand = extend(
+                        big, perturb(big, rep, "class", rng, 2), "class", rng, deadline
+                    )
                     if cand.sum() >= rep.sum():
                         rep = cand
                         if rep.sum() > local.sum():
                             local = rep.copy()
-                print(f"    repaired at m = {m * j} in {args.repair}s: {int(local.sum())} points, density {local.sum() / big.n:.5f}")
+                print(
+                    f"    repaired at m = {m * j} in {args.repair}s: {int(local.sum())} points, density {local.sum() / big.n:.5f}"
+                )
         stamp(f"m = {m} refined")
 
+
 # STABLE
+
 
 class Stable:
     def __init__(self, grid, factors):
@@ -640,14 +784,20 @@ class Stable:
         out = np.zeros(big.n, dtype=bool)
         pts = np.flatnonzero(mask)
         for e in range(j**self.grid.k):
-            off = np.array([(e // j**(self.grid.k - 1 - i)) % j for i in range(self.grid.k)])
-            out[((self.grid.coords[pts] * j + off) @ (big.m ** np.arange(big.k)[::-1]))] = True
+            off = np.array(
+                [(e // j ** (self.grid.k - 1 - i)) % j for i in range(self.grid.k)]
+            )
+            out[
+                ((self.grid.coords[pts] * j + off) @ (big.m ** np.arange(big.k)[::-1]))
+            ] = True
         return out
 
     def ok(self, mask):
         if not self.grid.peelable(mask, "class"):
             return False
-        return all(big.peelable(self.lift(mask, j, big), "class") for j, big in self.levels)
+        return all(
+            big.peelable(self.lift(mask, j, big), "class") for j, big in self.levels
+        )
 
     def core(self, mask):
         core = self.grid.core(mask, "class")
@@ -657,7 +807,10 @@ class Stable:
             c = big.core(self.lift(mask, j, big), "class")
             if c.any():
                 base = np.zeros(self.grid.n, dtype=bool)
-                base[(big.coords[np.flatnonzero(c)] // j) @ (self.grid.m ** np.arange(self.grid.k)[::-1])] = True
+                base[
+                    (big.coords[np.flatnonzero(c)] // j)
+                    @ (self.grid.m ** np.arange(self.grid.k)[::-1])
+                ] = True
                 return base
         return core
 
@@ -667,7 +820,10 @@ class Stable:
             core = self.core(mask)
             if not core.any():
                 return mask
-            mask[np.random.default_rng(int(mask.sum())).choice(np.flatnonzero(core))] = False
+            mask[
+                np.random.default_rng(int(mask.sum())).choice(np.flatnonzero(core))
+            ] = False
+
 
 def stable_cmd(args):
     rng = np.random.default_rng(args.seed)
@@ -688,12 +844,29 @@ def stable_cmd(args):
                 n_rand += 1
                 order = np.arange(grid.ncls)
                 rng.shuffle(order)
-                name, mask = f"random greedy {n_rand}", greedy(grid, "class", order, rng)
+                name, mask = (
+                    f"random greedy {n_rand}",
+                    greedy(grid, "class", order, rng),
+                )
             mask = extend(grid, st.strip(mask), "class", rng, deadline, ok=st.ok)
             local = mask.copy()
             stale = 0
             while time.time() < deadline and stale < 20:
-                cand = extend(grid, perturb(grid, mask, "class", rng, 1 + int(rng.integers(3)), core_fn=st.core), "class", rng, deadline, ok=st.ok)
+                cand = extend(
+                    grid,
+                    perturb(
+                        grid,
+                        mask,
+                        "class",
+                        rng,
+                        1 + int(rng.integers(3)),
+                        core_fn=st.core,
+                    ),
+                    "class",
+                    rng,
+                    deadline,
+                    ok=st.ok,
+                )
                 if cand.sum() >= mask.sum():
                     stale = stale + 1 if cand.sum() == mask.sum() else 0
                     mask = cand
@@ -708,7 +881,9 @@ def stable_cmd(args):
         assert st.ok(mask)
         size = int(mask.sum())
         lp = grid.lp(mask, "class")
-        print(f"m = {m} stable under dilation by {args.factors}: best {size} of {m**2}, alpha = {size / m**2:.5f}, 7 m^2/24 = {7 * m**2 / 24:.2f}, C = {C(size / m**2, 2):.4f}, LP max f = {lp[1]:.2f}, from {name}")
+        print(
+            f"m = {m} stable under dilation by {args.factors}: best {size} of {m**2}, alpha = {size / m**2:.5f}, 7 m^2/24 = {7 * m**2 / 24:.2f}, C = {C(size / m**2, 2):.4f}, LP max f = {lp[1]:.2f}, from {name}"
+        )
         print(bitmap(grid, mask))
         for j in args.test:
             big = Grid(m * j, 2)
@@ -719,7 +894,17 @@ def stable_cmd(args):
                 core = big.minimal_core(dil, "class")
                 line += f", minimal core of {int(core.sum())} points at {[tuple(int(c) for c in big.coords[v]) for v in np.flatnonzero(core)]}"
             print(line)
-        results[str(m)] = {"m": m, "factors": args.factors, "size": size, "alpha": size / m**2, "T": sorted(int(v) for v in np.flatnonzero(mask)), "coords": [[int(c) for c in grid.coords[v]] for v in np.flatnonzero(mask)], "f_lp": {str(v): fv for v, fv in lp[0].items()}, "lp_max_f": lp[1], "seed": name}
+        results[str(m)] = {
+            "m": m,
+            "factors": args.factors,
+            "size": size,
+            "alpha": size / m**2,
+            "T": sorted(int(v) for v in np.flatnonzero(mask)),
+            "coords": [[int(c) for c in grid.coords[v]] for v in np.flatnonzero(mask)],
+            "f_lp": {str(v): fv for v, fv in lp[0].items()},
+            "lp_max_f": lp[1],
+            "seed": name,
+        }
         stamp(f"m = {m} done")
     if args.save:
         path = os.path.join(HERE, args.save)
@@ -727,10 +912,13 @@ def stable_cmd(args):
             json.dump(results, fh, indent=1)
         stamp(f"saved {path}")
 
+
 # LIFT
+
 
 def lift_cmd(args):
     import itertools
+
     for m in args.m:
         grid = Grid(m, 2)
         saved = None
@@ -738,7 +926,7 @@ def lift_cmd(args):
             with open(os.path.join(HERE, args.load)) as fh:
                 saved = json.load(fh).get(f"{m}-class")
         if m <= 6:
-            size, mask, bound, done = exact(grid, "class", args.cap)
+            _size, mask, _bound, done = exact(grid, "class", args.cap)
             assert done
             origin = "exact optimum"
         elif saved:
@@ -755,7 +943,9 @@ def lift_cmd(args):
         G = {v: 2 * g[v] for v in pts}
         maxG = max(G.values())
         t = len(pts)
-        print(f"m = {m}: block of {t} points, {origin}, certificate levels {max(g.values())} = 3^{int(math.log(max(g.values()), 3) + 0.5)}, bound r_3(Z_{m}^n) >= {t}^(n/2) / ({maxG // 2} n + 1) = {math.sqrt(t):.4f}^n / O(n) against the product base (m + 1)/2 = {(m + 1) / 2}")
+        print(
+            f"m = {m}: block of {t} points, {origin}, certificate levels {max(g.values())} = 3^{int(math.log(max(g.values()), 3) + 0.5)}, bound r_3(Z_{m}^n) >= {t}^(n/2) / ({maxG // 2} n + 1) = {math.sqrt(t):.4f}^n / O(n) against the product base (m + 1)/2 = {(m + 1) / 2}"
+        )
         for n in args.n:
             blocks = n // 2
             tot = {}
@@ -764,7 +954,9 @@ def lift_cmd(args):
                 tot.setdefault(s, []).append(combo)
             s_best = max(tot, key=lambda s: len(tot[s]))
             S = tot[s_best]
-            vecs = np.array([[int(c) for v in combo for c in grid.coords[v]] for combo in S])
+            vecs = np.array(
+                [[int(c) for v in combo for c in grid.coords[v]] for combo in S]
+            )
             key = {tuple(row): i for i, row in enumerate(vecs.tolist())}
             aps = 0
             for i in range(len(S)):
@@ -773,11 +965,15 @@ def lift_cmd(args):
                     if y in key:
                         aps += 1
             floor = t**blocks / ((maxG // 2) * n + 1)
-            print(f"  n = {n}: {t**blocks} lifted points in {len(tot)} slices, largest slice {len(S)} points at level {s_best}, progressions found by brute force {aps}, guaranteed slice size {floor:.1f}, ((m + 1)/2)^n = {((m + 1) // 2)**n}")
+            print(
+                f"  n = {n}: {t**blocks} lifted points in {len(tot)} slices, largest slice {len(S)} points at level {s_best}, progressions found by brute force {aps}, guaranteed slice size {floor:.1f}, ((m + 1)/2)^n = {((m + 1) // 2) ** n}"
+            )
             assert aps == 0 and len(S) >= floor
         stamp(f"m = {m} lifted")
 
+
 # BRUTE
+
 
 def brute_cmd(args):
     for m in args.m:
@@ -787,6 +983,7 @@ def brute_cmd(args):
         for x, z, y in zip(grid.X.tolist(), grid.Z.tolist(), grid.Y.tolist()):
             mids.setdefault((x, z), []).append(y)
         cls = grid.cls.tolist()
+
         def peelable(T):
             alive = set(T)
             while alive:
@@ -803,7 +1000,9 @@ def brute_cmd(args):
                     return False
                 alive.difference_update(rem)
             return True
+
         best, count = [0], [0]
+
         def dfs(T, start):
             count[0] += 1
             if len(T) > len(best):
@@ -813,11 +1012,16 @@ def brute_cmd(args):
                 if peelable(T):
                     dfs(T, v + 1)
                 T.pop()
+
         dfs([0], 1)
-        print(f"m = {m}: every peelable set containing the origin enumerated by depth-first search with hereditary pruning, {count[0]} sets, largest {len(best)} of {n}, alpha = {len(best) / n:.5f}, witness {sorted(best)}")
+        print(
+            f"m = {m}: every peelable set containing the origin enumerated by depth-first search with hereditary pruning, {count[0]} sets, largest {len(best)} of {n}, alpha = {len(best) / n:.5f}, witness {sorted(best)}"
+        )
         stamp(f"m = {m} brute")
 
+
 # PROGRESSION-FREE
+
 
 def r3_cmd(args):
     for m in args.m:
@@ -825,14 +1029,25 @@ def r3_cmd(args):
         n = grid.n
         rows = np.repeat(np.arange(len(grid.X)), 3)
         cols = np.stack([grid.X, grid.Y, grid.Z], axis=1).ravel()
-        A = coo_matrix((np.ones(len(rows)), (rows, cols)), shape=(len(grid.X), n)).tocsr()
-        res = milp(-np.ones(n), constraints=[LinearConstraint(A, -np.inf, 2)], integrality=np.ones(n), bounds=Bounds(0, 1), options={"time_limit": args.cap})
+        A = coo_matrix(
+            (np.ones(len(rows)), (rows, cols)), shape=(len(grid.X), n)
+        ).tocsr()
+        res = milp(
+            -np.ones(n),
+            constraints=[LinearConstraint(A, -np.inf, 2)],
+            integrality=np.ones(n),
+            bounds=Bounds(0, 1),
+            options={"time_limit": args.cap},
+        )
         mask = res.x > 0.5
         assert not np.any(mask[grid.X] & mask[grid.Y] & mask[grid.Z])
         size = int(mask.sum())
         closed = res.status == 0
         tail = "" if closed else f", <= {int(np.floor(-res.mip_dual_bound + 1e-6))}"
-        print(f"m = {m} k = {args.k}: r_3(Z_{m}^{args.k}) {'=' if closed else '>='} {size}{tail}, {len(grid.X)} triples, the set checked progression-free, constant {size ** (1 / args.k):.4f}")
+        print(
+            f"m = {m} k = {args.k}: r_3(Z_{m}^{args.k}) {'=' if closed else '>='} {size}{tail}, {len(grid.X)} triples, the set checked progression-free, constant {size ** (1 / args.k):.4f}"
+        )
+
 
 def eps_def34(a, b):
     half = Fraction(1, 2)
@@ -841,7 +1056,13 @@ def eps_def34(a, b):
         return True
     if a < half and b < half and s > Fraction(5, 6):
         return True
-    return a >= half and b < half and Fraction(7, 12) <= s < Fraction(5, 6) and 2 * a + b < Fraction(3, 2)
+    return (
+        a >= half
+        and b < half
+        and Fraction(7, 12) <= s < Fraction(5, 6)
+        and 2 * a + b < Fraction(3, 2)
+    )
+
 
 def region_mask(grid, region, c, n, i, j):
     m = grid.m
@@ -855,17 +1076,32 @@ def region_mask(grid, region, c, n, i, j):
         b_lo = b < half
         t1 = a_lo & ~b_lo & (12 * s >= 7 * scale) & (3 * s <= 4 * scale)
         t1b = a_lo & b_lo & (6 * s > 5 * scale)
-        t2 = ~a_lo & b_lo & (12 * s >= 7 * scale) & (6 * s < 5 * scale) & (2 * (2 * a + b) < 3 * scale)
+        t2 = (
+            ~a_lo
+            & b_lo
+            & (12 * s >= 7 * scale)
+            & (6 * s < 5 * scale)
+            & (2 * (2 * a + b) < 3 * scale)
+        )
         return t1 | t1b | t2
     e = 12 * n
     r1 = (a >= half) & (3 * s > 2 * one) & (6 * s <= 7 * one)
     r2 = (a >= half) & (b < half) & (6 * s >= 7 * one + 6 * e) & (12 * s <= 17 * one)
-    r3 = (a < half) & (b >= half) & (6 * s >= 7 * one + 6 * e) & (12 * s <= 17 * one) & (2 * (2 * a + b) >= 3 * one + 2 * e)
+    r3 = (
+        (a < half)
+        & (b >= half)
+        & (6 * s >= 7 * one + 6 * e)
+        & (12 * s <= 17 * one)
+        & (2 * (2 * a + b) >= 3 * one + 2 * e)
+    )
     return r1 | r2 | r3
+
 
 def raster_cmd(args):
     n = args.grid
-    print(f"RASTER: the published blocks counted on the grid, k = 2, EHPS form: EHPS Definition 4.1 at eps = 1/(4m), 1/(16m), 1/(64m) and EPS Definition 3.4, at the {n} x {n} shifts (i, j)/({n} m), i, j < {n}, first maximiser in that order")
+    print(
+        f"RASTER: the published blocks counted on the grid, k = 2, EHPS form: EHPS Definition 4.1 at eps = 1/(4m), 1/(16m), 1/(64m) and EPS Definition 3.4, at the {n} x {n} shifts (i, j)/({n} m), i, j < {n}, first maximiser in that order"
+    )
     for m in args.m:
         grid = Grid(m, 2)
         found = []
@@ -881,7 +1117,14 @@ def raster_cmd(args):
         mask = region_mask(grid, region, c, n, i, j)
         shift = (Fraction(i, n * m), Fraction(j, n * m))
         if region == "EPS":
-            oracle = np.array([eps_def34(Fraction(int(x), m) + shift[0], Fraction(int(y), m) + shift[1]) for x, y in grid.coords])
+            oracle = np.array(
+                [
+                    eps_def34(
+                        Fraction(int(x), m) + shift[0], Fraction(int(y), m) + shift[1]
+                    )
+                    for x, y in grid.coords
+                ]
+            )
         else:
             oracle = rasterise(grid, Fraction(1, c * m), shift)[0]
         assert (oracle == mask).all()
@@ -894,14 +1137,35 @@ def raster_cmd(args):
         root = math.floor(math.sqrt(cnt) * 1e4) / 1e4
         ehps = max(f[0] for f in found if f[1] == "EHPS")
         eps = max(f[0] for f in found if f[1] == "EPS")
-        which = "EPS Definition 3.4" if region == "EPS" else f"EHPS Definition 4.1, eps = 1/({c} m)"
-        print(f"  m = {m}: {cnt} points, {which}, shift ({i}, {j})/({n} m), ceil(7 m^2/24) = {bound}, excess {cnt - bound}; best EHPS {ehps}, best EPS {eps}; peelable, {rounds} peel rounds, certificate g <= {max(g.values())} checked on every triple, sqrt(card T) = {root:.4f}..")
+        which = (
+            "EPS Definition 3.4"
+            if region == "EPS"
+            else f"EHPS Definition 4.1, eps = 1/({c} m)"
+        )
+        print(
+            f"  m = {m}: {cnt} points, {which}, shift ({i}, {j})/({n} m), ceil(7 m^2/24) = {bound}, excess {cnt - bound}; best EHPS {ehps}, best EPS {eps}; peelable, {rounds} peel rounds, certificate g <= {max(g.values())} checked on every triple, sqrt(card T) = {root:.4f}.."
+        )
+
 
 # MAIN
 
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("verb", choices=["controls", "exact", "search", "refine", "stable", "lift", "brute", "r3", "raster"])
+    ap.add_argument(
+        "verb",
+        choices=[
+            "controls",
+            "exact",
+            "search",
+            "refine",
+            "stable",
+            "lift",
+            "brute",
+            "r3",
+            "raster",
+        ],
+    )
     ap.add_argument("--k", type=int, default=2)
     ap.add_argument("--lo", type=int, default=2)
     ap.add_argument("--hi", type=int, default=8)
@@ -920,8 +1184,19 @@ def main():
     ap.add_argument("--n", type=int, nargs="+", default=[4, 6])
     ap.add_argument("--grid", type=int, default=12)
     args = ap.parse_args()
-    {"controls": controls, "exact": exact_cmd, "search": search_cmd, "refine": refine_cmd, "stable": stable_cmd, "lift": lift_cmd, "brute": brute_cmd, "r3": r3_cmd, "raster": raster_cmd}[args.verb](args)
+    {
+        "controls": controls,
+        "exact": exact_cmd,
+        "search": search_cmd,
+        "refine": refine_cmd,
+        "stable": stable_cmd,
+        "lift": lift_cmd,
+        "brute": brute_cmd,
+        "r3": r3_cmd,
+        "raster": raster_cmd,
+    }[args.verb](args)
     stamp("done")
+
 
 if __name__ == "__main__":
     main()

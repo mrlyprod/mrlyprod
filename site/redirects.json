@@ -1,6 +1,6 @@
 {
-  "/julia/": {"to": "/fractals/?kind=julia", "since": "2026-10-19"},
-  "/mandelbrot/": {"to": "/fractals/?kind=mandelbrot", "since": "2026-10-19"},
-  "/math/": {"to": "/mrlymath/", "since": "2026-10-09"},
-  "/stack/": {"to": "/moire/", "since": "2026-10-12"}
+  "/julia/": { "to": "/fractals/?kind=julia", "since": "2026-10-19" },
+  "/mandelbrot/": { "to": "/fractals/?kind=mandelbrot", "since": "2026-10-19" },
+  "/math/": { "to": "/mrlymath/", "since": "2026-10-09" },
+  "/stack/": { "to": "/moire/", "since": "2026-10-12" }
 }

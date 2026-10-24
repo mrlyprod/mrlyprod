@@ -1,26 +1,60 @@
-import { tidy } from '../../lib/app/spec.js';
-import { TINTS } from '../../lib/color.js';
-import { pick } from '../../lib/rand.js';
-import { RAMPS, colorizer, paint } from '../../lib/moire/engine.js';
-import { fit, shell } from '../../lib/moire/sheet.js';
-import { BLENDS, BUDGET, DRAG, HUSH, LEAN, MODES, NUDGE, READ, REEL, SCHEDULES, SETS, SIZES, SLOP, STAMP, SWEEP, WEIGHTS, angle, live, reading, settle, shade, spin, trim } from './engine.js';
-import { wasm } from '../../lib/units/index.js';
+import { tidy } from "../../lib/app/spec.js";
+import { TINTS } from "../../lib/color.js";
+import { colorizer, paint, RAMPS } from "../../lib/moire/engine.js";
+import { fit, shell } from "../../lib/moire/sheet.js";
+import { pick } from "../../lib/rand.js";
+import { wasm } from "../../lib/units/index.js";
+import {
+  angle,
+  BLENDS,
+  BUDGET,
+  DRAG,
+  HUSH,
+  LEAN,
+  live,
+  MODES,
+  NUDGE,
+  READ,
+  REEL,
+  reading,
+  SCHEDULES,
+  SETS,
+  SIZES,
+  SLOP,
+  STAMP,
+  SWEEP,
+  settle,
+  shade,
+  spin,
+  trim,
+  WEIGHTS,
+} from "./engine.js";
 
 const OWN = () => false;
 
 export const SPEC = [
-  { key: 'increment', label: 'Increment', kind: 'slider', def: 1, min: 0, max: 360, unit: 'deg', group: 'Spin', when: OWN },
-  { key: 'sched', label: 'Schedule', kind: 'pick', def: 'degrees', options: SCHEDULES, group: 'Spin', when: OWN },
-  { key: 'limit', label: 'Scales up to', kind: 'slider', def: 55, min: 3, max: 99, step: 2, group: 'Stack' },
-  { key: 'set', label: 'Layers', kind: 'pick', def: 'odd', options: SETS, group: 'Stack' },
-  { key: 'weights', label: 'Weights', kind: 'pick', def: 'plain', options: WEIGHTS, group: 'Stack' },
-  { key: 'size', label: 'Size', kind: 'segment', def: 512, options: SIZES.map((n) => [n, String(n)]), group: 'Stack' },
-  { key: 'mode', label: 'Mode', kind: 'pick', def: 'cells', options: MODES, group: 'Draw' },
-  { key: 'blend', label: 'Blend', kind: 'pick', def: 'mean', options: BLENDS, group: 'Draw' },
-  { key: 'ramp', label: 'Ramp', kind: 'pick', def: 'auto', options: [['auto', 'Auto'], ...RAMPS], group: 'Look' },
-  { key: 'levels', label: 'Levels', kind: 'slider', def: 0, min: 0, max: 64, step: 1, zero: 'Auto', group: 'Look' },
-  { key: 'invert', label: 'Invert', kind: 'toggle', def: 0, group: 'Look' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  {
+    key: "increment",
+    label: "Increment",
+    kind: "slider",
+    def: 1,
+    min: 0,
+    max: 360,
+    unit: "deg",
+    group: "Spin",
+    when: OWN,
+  },
+  { key: "sched", label: "Schedule", kind: "pick", def: "degrees", options: SCHEDULES, group: "Spin", when: OWN },
+  { key: "limit", label: "Scales up to", kind: "slider", def: 55, min: 3, max: 99, step: 2, group: "Stack" },
+  { key: "set", label: "Layers", kind: "pick", def: "odd", options: SETS, group: "Stack" },
+  { key: "weights", label: "Weights", kind: "pick", def: "plain", options: WEIGHTS, group: "Stack" },
+  { key: "size", label: "Size", kind: "segment", def: 512, options: SIZES.map((n) => [n, String(n)]), group: "Stack" },
+  { key: "mode", label: "Mode", kind: "pick", def: "cells", options: MODES, group: "Draw" },
+  { key: "blend", label: "Blend", kind: "pick", def: "mean", options: BLENDS, group: "Draw" },
+  { key: "ramp", label: "Ramp", kind: "pick", def: "auto", options: [["auto", "Auto"], ...RAMPS], group: "Look" },
+  { key: "levels", label: "Levels", kind: "slider", def: 0, min: 0, max: 64, step: 1, zero: "Auto", group: "Look" },
+  { key: "invert", label: "Invert", kind: "toggle", def: 0, group: "Look" },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
 export const PAGE = {
@@ -29,16 +63,22 @@ export const PAGE = {
   gestures: true,
   name: (value) => `tourbillon-${trim(value.increment)}`,
   about: [
-    'The odd parity carpet at the scales 1, 3, 5 and on, every layer turned about the centre by its own angle and masked to the inscribed disc, so every pixel sees every layer.',
-    'The centre is the one point every rotation fixes, so its value never moves. The carpet is unchanged by a quarter turn, so at an increment of 90a/q the layers fall into q angle classes and the spin goes dead: pick a quarter turn and watch it lock.',
-    'Play sweeps the increment at 6 degrees a second and Stop lands the angle in the knobs and the link. Drag across the picture to turn it by hand, tap it to play or stop; the arrows nudge the angle by 0.05 degrees.',
-    'Unspun, the stack is the one [Moire](/moire/) shows; spinning it breaks the shared grid, and the exact nodes that survive a turn are the Gaussian-integer angles. What a stack is lives in [the stack note](/research/stack/).',
+    "The odd parity carpet at the scales 1, 3, 5 and on, every layer turned about the centre by its own angle and masked to the inscribed disc, so every pixel sees every layer.",
+    "The centre is the one point every rotation fixes, so its value never moves. The carpet is unchanged by a quarter turn, so at an increment of 90a/q the layers fall into q angle classes and the spin goes dead: pick a quarter turn and watch it lock.",
+    "Play sweeps the increment at 6 degrees a second and Stop lands the angle in the knobs and the link. Drag across the picture to turn it by hand, tap it to play or stop; the arrows nudge the angle by 0.05 degrees.",
+    "Unspun, the stack is the one [Moire](/moire/) shows; spinning it breaks the shared grid, and the exact nodes that survive a turn are the Gaussian-integer angles. What a stack is lives in [the stack note](/research/stack/).",
   ],
   keys: [
-    { key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Stop' : 'Play'), act: 'play', button: true, menu: 'Edit' },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Nudge', act: 'nudge' },
+    {
+      key: "Enter",
+      label: (_value, scene) => (scene?.playing?.() ? "Stop" : "Play"),
+      act: "play",
+      button: true,
+      menu: "Edit",
+    },
+    { key: ["ArrowLeft", "ArrowRight"], label: "Nudge", act: "nudge" },
   ],
-  actions: { play: (scene) => scene.toggle?.(), nudge: (scene, e) => scene.nudge?.(e.key === 'ArrowLeft' ? -1 : 1) },
+  actions: { play: (scene) => scene.toggle?.(), nudge: (scene, e) => scene.nudge?.(e.key === "ArrowLeft" ? -1 : 1) },
 };
 
 /* SAVERS */
@@ -47,15 +87,30 @@ const dial = (rand) => Math.round(rand() * 36000) / 100;
 
 const odd = (rand, from, to) => from + 2 * Math.floor(rand() * ((to - from) / 2 + 1));
 
-const stack = (rand, from, to, over) => ({ increment: dial(rand), limit: odd(rand, from, to), set: 'odd', weights: 'plain', mode: 'cells', blend: 'mean', ramp: pick(rand, ['ink', 'tint']), levels: 0, size: 512, ...over });
+const stack = (rand, from, to, over) => ({
+  increment: dial(rand),
+  limit: odd(rand, from, to),
+  set: "odd",
+  weights: "plain",
+  mode: "cells",
+  blend: "mean",
+  ramp: pick(rand, ["ink", "tint"]),
+  levels: 0,
+  size: 512,
+  ...over,
+});
 
 export const SAVERS = [
-  { id: 'swirl', title: 'Swirl', pick: (rand) => stack(rand, 25, 41, { weights: 'harmonic' }) },
-  { id: 'lattices', title: 'Lattices', pick: (rand) => stack(rand, 21, 41, { set: pick(rand, ['primes', 'primes', 'prime powers']) }) },
-  { id: 'lace', title: 'Lace', pick: (rand) => stack(rand, 21, 35, { weights: 'harmonic', mode: 'edges' }) },
+  { id: "swirl", title: "Swirl", pick: (rand) => stack(rand, 25, 41, { weights: "harmonic" }) },
+  {
+    id: "lattices",
+    title: "Lattices",
+    pick: (rand) => stack(rand, 21, 41, { set: pick(rand, ["primes", "primes", "prime powers"]) }),
+  },
+  { id: "lace", title: "Lace", pick: (rand) => stack(rand, 21, 35, { weights: "harmonic", mode: "edges" }) },
 ];
 
-export const units = wasm('math');
+export const units = wasm("math");
 
 const read = (opts) => ({ ...tidy(SPEC, opts), seed: opts.seed >>> 0 });
 
@@ -67,32 +122,49 @@ export function make(canvas, view, opts = {}) {
   const pad = shell(canvas, view);
   let value = read(opts);
   let playing = Boolean(view.lock);
-  if (playing) value = { ...value, sched: 'degrees' };
+  if (playing) value = { ...value, sched: "degrees" };
   let from = value.increment;
   let origin = 0;
   let held = null;
   let stats = null;
   let made = 0;
-  let painted = '';
+  let painted = "";
   let dirty = true;
-  let error = '';
-  let failed = '';
+  let error = "";
+  let failed = "";
   let tone = 0;
   let sets = 0;
   let streak = 0;
   let stamped = null;
   let stampAt = 0;
   let readAt = -Infinity;
-  let told = '';
+  let told = "";
   let grab = null;
   let gone = false;
-  const planKey = () => [value.limit, value.sched, value.set, value.weights, value.mode, value.blend, value.seed].join(' ');
+  const planKey = () =>
+    [value.limit, value.sched, value.set, value.weights, value.mode, value.blend, value.seed].join(" ");
   const shown = () => (playing ? angle(from, view.t - origin, view.lock ? HUSH : SWEEP) : value.increment);
   const facts = () => {
     if (error) return { error };
     if (!stats) return null;
     const { layers, scales, angles, mean, rms, faded, centre, weighted, peaks, period, classes, pairs } = stats;
-    return { angle: held.at, playing, size: held.size, layers, scales, angles, mean, rms, faded, centre, peaks, period: period ?? null, classes, pairs, unused: !weighted && value.weights !== 'plain' };
+    return {
+      angle: held.at,
+      playing,
+      size: held.size,
+      layers,
+      scales,
+      angles,
+      mean,
+      rms,
+      faded,
+      centre,
+      peaks,
+      period: period ?? null,
+      classes,
+      pairs,
+      unused: !weighted && value.weights !== "plain",
+    };
   };
   const tell = (now) => {
     if (gone || !opts.onFacts) return;
@@ -105,7 +177,7 @@ export function make(canvas, view, opts = {}) {
     opts.onFacts(next);
   };
   const turn = (patch) => {
-    if ('increment' in patch) stamped = patch.increment;
+    if ("increment" in patch) stamped = patch.increment;
     opts.onTurn?.(patch);
   };
   const compute = (at, size) => {
@@ -126,14 +198,17 @@ export function make(canvas, view, opts = {}) {
       if (!held || held.key !== planKey() || held.at !== at) compute(at, busy ? quick : fine);
       else if (!busy && held.size !== fine) compute(at, fine);
       const how = shade(value, stats);
-      const key = [made, how.ramp, how.levels, how.signed, value.invert, value.tint, tone].join(' ');
+      const key = [made, how.ramp, how.levels, how.signed, value.invert, value.tint, tone].join(" ");
       if (key !== painted) {
-        pad.put(paint(math, held, colorizer(how.ramp, how.levels, view.look()), how.levels, value.invert, how.signed), held.size);
+        pad.put(
+          paint(math, held, colorizer(how.ramp, how.levels, view.look()), how.levels, value.invert, how.signed),
+          held.size,
+        );
         painted = key;
         dirty = true;
       }
-      error = '';
-      failed = '';
+      error = "";
+      failed = "";
     } catch (fault) {
       error = String(fault?.message ?? fault);
       failed = want;
@@ -172,9 +247,9 @@ export function make(canvas, view, opts = {}) {
     from = value.increment;
     origin = view.t;
     stampAt = view.t;
-    if (value.sched !== 'degrees') {
-      value = { ...value, sched: 'degrees' };
-      turn({ sched: 'degrees' });
+    if (value.sched !== "degrees") {
+      value = { ...value, sched: "degrees" };
+      turn({ sched: "degrees" });
     }
     view.wake?.();
     tell(true);
@@ -186,11 +261,11 @@ export function make(canvas, view, opts = {}) {
     value = read(next);
     sets += 1;
     if (value.increment !== was.increment && value.increment !== stamped) playing = false;
-    if (value.sched !== 'degrees') playing = false;
+    if (value.sched !== "degrees") playing = false;
     if (!playing) from = value.increment;
     dirty = true;
   };
-  const touch = (u, v, start) => {
+  const touch = (u, _v, start) => {
     if (start) {
       grab = { u, at: shown(), moved: false };
       return null;
@@ -218,5 +293,18 @@ export function make(canvas, view, opts = {}) {
     held?.field.free();
     held = null;
   };
-  return { draw, set, toggle, nudge, touch, lift, theme, size, stop, playing: () => playing, angle: shown, every: view.lock ? REEL : 0 };
+  return {
+    draw,
+    set,
+    toggle,
+    nudge,
+    touch,
+    lift,
+    theme,
+    size,
+    stop,
+    playing: () => playing,
+    angle: shown,
+    every: view.lock ? REEL : 0,
+  };
 }

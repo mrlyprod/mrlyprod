@@ -1,6 +1,6 @@
-import * as num from "@mrlyprod/mrly/num";
 import * as math from "@mrlyprod/mrly/math";
-import { frame, plot, type Frame, type Color, type Ink, type Pen, type Point } from "#view";
+import * as num from "@mrlyprod/mrly/num";
+import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "#view";
 import census from "./paper-franel-converse.json" with { type: "json" };
 
 const BASE = 3;
@@ -19,12 +19,20 @@ function nodes() {
   if (memo) return memo;
   const design = Array.from(math.design.elements(BASE, DIGITS, 5), Number).filter((n) => n <= ORDER);
   if (design.length !== 16) throw new Error(`paper-franel-converse: ${design.length} design elements, want 16`);
-  if (design.slice(0, 5).join() !== "1,3,4,9,10") throw new Error(`paper-franel-converse: design starts ${design.slice(0, 5)}, want 1,3,4,9,10`);
+  if (design.slice(0, 5).join() !== "1,3,4,9,10")
+    throw new Error(`paper-franel-converse: design starts ${design.slice(0, 5)}, want 1,3,4,9,10`);
   const held = new Set(design);
-  const full: Node[] = num.lattice.farey(ORDER).filter((n) => n.num > 0).map((n) => [n.num, n.den]);
+  const full: Node[] = num.lattice
+    .farey(ORDER)
+    .filter((n) => n.num > 0)
+    .map((n) => [n.num, n.den]);
   const thin = full.filter(([, b]) => held.has(b));
-  if (thin.length !== 241 || census.thin.length !== 241) throw new Error(`paper-franel-converse: ${thin.length} thin nodes and ${census.thin.length} thin deltas, want 241`);
-  if (full.length !== 2020 || census.full.length !== 2020) throw new Error(`paper-franel-converse: ${full.length} full nodes and ${census.full.length} full deltas, want 2020`);
+  if (thin.length !== 241 || census.thin.length !== 241)
+    throw new Error(`paper-franel-converse: ${thin.length} thin nodes and ${census.thin.length} thin deltas, want 241`);
+  if (full.length !== 2020 || census.full.length !== 2020)
+    throw new Error(
+      `paper-franel-converse: ${full.length} full nodes and ${census.full.length} full deltas, want 2020`,
+    );
   memo = { thin, full };
   return memo;
 }

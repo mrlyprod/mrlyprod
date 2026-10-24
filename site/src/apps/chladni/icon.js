@@ -24,14 +24,19 @@ function settle() {
     grains[2 * i] = ((i % ROWS) + 0.5) / ROWS;
     grains[2 * i + 1] = (Math.floor(i / ROWS) + 0.5) / ROWS;
   }
-  for (let k = 0; k < STEPS; k += CHUNK) grains = num.chladni.shake(field, SIDE, grains, k, Math.min(CHUNK, STEPS - k), SEED);
+  for (let k = 0; k < STEPS; k += CHUNK)
+    grains = num.chladni.shake(field, SIDE, grains, k, Math.min(CHUNK, STEPS - k), SEED);
   const counts = new Uint16Array(DOTS * DOTS);
   for (let i = 0; i < grains.length; i += 2) {
-    if (grains[i] !== grains[i]) continue;
-    counts[Math.min(DOTS - 1, Math.floor(grains[i + 1] * DOTS)) * DOTS + Math.min(DOTS - 1, Math.floor(grains[i] * DOTS))]++;
+    if (Number.isNaN(grains[i])) continue;
+    counts[
+      Math.min(DOTS - 1, Math.floor(grains[i + 1] * DOTS)) * DOTS + Math.min(DOTS - 1, Math.floor(grains[i] * DOTS))
+    ]++;
   }
   sand = new Uint8ClampedArray(DOTS * DOTS * 4);
-  counts.forEach((n, i) => sand.set([255, 255, 255, n * GAIN], 4 * i));
+  counts.forEach((n, i) => {
+    sand.set([255, 255, 255, n * GAIN], 4 * i);
+  });
   return sand;
 }
 

@@ -26,16 +26,27 @@ export default function draw(pen) {
   const tall = rows * GLYPH + (rows - 1) * DOWN;
   const cell = Math.min(box.w / wide, box.h / tall);
   const [cx, cy] = box.center();
-  const cells = new Grid(frame(cx - (cell * wide) / 2, cy - (cell * tall) / 2, cell * wide, cell * tall), wide, tall, 0);
+  const cells = new Grid(
+    frame(cx - (cell * wide) / 2, cy - (cell * tall) / 2, cell * wide, cell * tall),
+    wide,
+    tall,
+    0,
+  );
   for (const [col, head, length] of DROPS) {
     for (let d = 0; d < length; d++) {
       const row = head - d;
       if (row < 0 || row >= rows) continue;
       const c = RAIN[row][col];
       const bits = glyphs[c];
-      if (!bits || bits.length !== GLYPH || bits.some((one) => one.length !== GLYPH)) throw new Error(`matrix: ${c} is not a ${GLYPH} by ${GLYPH} glyph`);
-      const tone = d === 0 ? paint.white : length < 3 ? paint.light : mix(paint.light, paint.deep, (d - 1) / (length - 2));
-      bits.forEach((one, y) => [...one].forEach((bit, x) => bit === "1" && cells.fill(pen, col * (GLYPH + ACROSS) + x, row * (GLYPH + DOWN) + y, tone)));
+      if (!bits || bits.length !== GLYPH || bits.some((one) => one.length !== GLYPH))
+        throw new Error(`matrix: ${c} is not a ${GLYPH} by ${GLYPH} glyph`);
+      const tone =
+        d === 0 ? paint.white : length < 3 ? paint.light : mix(paint.light, paint.deep, (d - 1) / (length - 2));
+      bits.forEach((one, y) => {
+        [...one].forEach((bit, x) => {
+          if (bit === "1") cells.fill(pen, col * (GLYPH + ACROSS) + x, row * (GLYPH + DOWN) + y, tone);
+        });
+      });
     }
   }
 }

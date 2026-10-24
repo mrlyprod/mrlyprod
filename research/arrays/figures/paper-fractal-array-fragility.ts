@@ -16,7 +16,8 @@ type Cell = { x: number; w: number; essential: boolean; digits: number[] };
 function flags(order: number): Map<number, boolean> {
   const sensors = Array.from(math.arrays.fractal(GENERATOR, BASE, order), Number);
   const essential = math.arrays.essential(sensors);
-  if (sensors.length !== GENERATOR.length ** order) throw new Error(`paper-fractal-array-fragility: ${sensors.length} sensors at order ${order}`);
+  if (sensors.length !== GENERATOR.length ** order)
+    throw new Error(`paper-fractal-array-fragility: ${sensors.length} sensors at order ${order}`);
   return new Map(sensors.map((s, i) => [s, essential[i]]));
 }
 
@@ -35,14 +36,19 @@ function rows(width: number): Cell[][] {
         const digits = [...parent.digits, digit];
         const sensor = digits.reduce((sum, d, i) => sum + d * BASE ** i, 0);
         const essential = flag.get(sensor);
-        if (essential === undefined) throw new Error(`paper-fractal-array-fragility: ${sensor} is no sensor of order ${order}`);
+        if (essential === undefined)
+          throw new Error(`paper-fractal-array-fragility: ${sensor} is no sensor of order ${order}`);
         const rule = order === 1 || digits.every((d) => paired.includes(d));
-        if (essential !== rule) throw new Error(`paper-fractal-array-fragility: sensor ${sensor} essential ${essential}, Theorem A says ${rule}`);
+        if (essential !== rule)
+          throw new Error(
+            `paper-fractal-array-fragility: sensor ${sensor} essential ${essential}, Theorem A says ${rule}`,
+          );
         row.push({ x: parent.x + k * (w + gap), w, essential, digits });
       });
     }
     const count = row.filter((c) => c.essential).length;
-    if (count !== WANT[order - 1]) throw new Error(`paper-fractal-array-fragility: ${count} essential at order ${order}, want ${WANT[order - 1]}`);
+    if (count !== WANT[order - 1])
+      throw new Error(`paper-fractal-array-fragility: ${count} essential at order ${order}, want ${WANT[order - 1]}`);
     out.push(row);
     parents = row;
   }

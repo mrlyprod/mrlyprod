@@ -41,7 +41,10 @@ function layers() {
     const side = number * BASE ** (LEVEL - 1);
     const mask = math.moire.layer({ spec, number, level: LEVEL, lattice: "Square", size: side, slices: [] });
     const fills = mask.reduce((n, on) => n + (on ? 1 : 0), 0);
-    if (mask.length !== side * side || fills !== WANT[i]) throw new Error(`moire: the carpet at scale ${number} lights ${fills} of ${mask.length} cells, want ${WANT[i]} of ${side * side}`);
+    if (mask.length !== side * side || fills !== WANT[i])
+      throw new Error(
+        `moire: the carpet at scale ${number} lights ${fills} of ${mask.length} cells, want ${WANT[i]} of ${side * side}`,
+      );
     return { side, runs: runs(mask, side) };
   });
   return held;

@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { download, wav } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Icon } from '../../lib/app/controls.jsx';
-import { Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { Scene } from '../../lib/app/page.jsx';
-import { bus, engine, render } from '../../lib/audio/audio.js';
-import { NAMES, PRESETS, facts, lasts, make, named, preset, score, seconds } from './scene.js';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Btn, Icon } from "../../lib/app/controls.jsx";
+import { download, wav } from "../../lib/app/export.js";
+import { Bar } from "../../lib/app/frame.jsx";
+import { Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { bus, engine, render } from "../../lib/audio/audio.js";
+import { facts, lasts, make, NAMES, named, PRESETS, preset, score, seconds } from "./scene.js";
 
 export function Widget({ value, onChange, onReady, onExport, onStatus }) {
   const line = useMemo(bus, []);
@@ -67,7 +67,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
     } catch {}
     working.current = false;
   };
-  useEffect(() => onExport?.([['WAV', save]]), []);
+  useEffect(() => onExport?.([["WAV", save]]), []);
   const kept = preset(value);
   useEffect(() => onStatus?.(facts(value)), [value.effect, value.length, kept]);
   return (
@@ -76,12 +76,24 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }) {
       <Library name="Sounds">
         <Shelf name="Effects">
           {NAMES.map((name) => (
-            <Item key={name} label={named(name)} sub={lasts(name)} on={value.effect === name} onPick={() => onChange({ effect: name })} />
+            <Item
+              key={name}
+              label={named(name)}
+              sub={lasts(name)}
+              on={value.effect === name}
+              onPick={() => onChange({ effect: name })}
+            />
           ))}
         </Shelf>
         <Shelf name="Presets">
           {PRESETS.map((one) => (
-            <Item key={one.id} label={one.name} sub={one.set.effect} on={kept === one.id} onPick={() => onChange(one.set)} />
+            <Item
+              key={one.id}
+              label={one.name}
+              sub={one.set.effect}
+              on={kept === one.id}
+              onPick={() => onChange(one.set)}
+            />
           ))}
         </Shelf>
       </Library>

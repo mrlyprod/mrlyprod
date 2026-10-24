@@ -1,11 +1,33 @@
 /* HOME */
 
-.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* PLATE */
 
-.plate h1 { margin: var(--s5) 0 0; }
-.plate .by { color: var(--dim); font: var(--t3)/var(--lh3) var(--mono); margin: var(--s2) 0 0; }
-.plate .by + .by { margin-top: 0; }
-.plate .by + .lead { margin-top: var(--s3); }
-.plate > :last-child { margin-bottom: var(--s6); }
+.plate h1 {
+  margin: var(--s5) 0 0;
+}
+.plate .by {
+  color: var(--dim);
+  font: var(--t3) / var(--lh3) var(--mono);
+  margin: var(--s2) 0 0;
+}
+.plate .by + .by {
+  margin-top: 0;
+}
+.plate .by + .lead {
+  margin-top: var(--s3);
+}
+.plate > :last-child {
+  margin-bottom: var(--s6);
+}

@@ -3,10 +3,18 @@ import { expect, test } from "bun:test";
 const MARK = "/*MOVED*/{}";
 const TABLE = JSON.stringify({ "/math/": "/mrlymath/", "/julia/": "/fractals/?kind=julia" });
 
+type Answer = {
+  uri?: string;
+  querystring?: unknown;
+  statusCode?: number;
+  statusDescription?: string;
+  headers: { location: { value: string } };
+};
+
 const text = await Bun.file(new URL("./edge.js", import.meta.url)).text();
-const edge = new Function(text.replace(MARK, TABLE) + "; return { decide, handler }")() as {
+const edge = new Function(`${text.replace(MARK, TABLE)}; return { decide, handler }`)() as {
   decide: (uri: string) => { uri?: string; redirect?: string };
-  handler: (event: unknown) => any;
+  handler: (event: unknown) => Answer;
 };
 
 const pass = (uri: string) => expect(edge.decide(uri)).toEqual({ uri });
@@ -34,7 +42,10 @@ test("the 301 keeps the query string", () => {
 });
 
 test("a move that carries a query joins the asked query after it", () => {
-  expect([ask("/julia/").headers.location.value, ask("/julia/", { seed: { value: "1" } }).headers.location.value]).toEqual(["/fractals/?kind=julia", "/fractals/?kind=julia&seed=1"]);
+  expect([
+    ask("/julia/").headers.location.value,
+    ask("/julia/", { seed: { value: "1" } }).headers.location.value,
+  ]).toEqual(["/fractals/?kind=julia", "/fractals/?kind=julia&seed=1"]);
 });
 
 test("the 301 keeps a repeated key", () => {

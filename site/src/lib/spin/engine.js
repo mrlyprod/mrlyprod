@@ -1,16 +1,36 @@
-import { palette } from '../theme/palette.gen.js';
-import { rgb } from '../color.js';
-import { pick } from '../rand.js';
-import { canon, roll } from '../designs/engine.js';
+import { rgb } from "../color.js";
+import { canon, roll } from "../designs/engine.js";
+import { pick } from "../rand.js";
+import { palette } from "../theme/palette.gen.js";
 
-export const SOURCES = [['design', 'Design'], ['moire', 'Moire']];
-export const DIMS = [[2, '2D'], [3, '3D']];
-export const BASES = [[2, '2'], [3, '3']];
+export const SOURCES = [
+  ["design", "Design"],
+  ["moire", "Moire"],
+];
+export const DIMS = [
+  [2, "2D"],
+  [3, "3D"],
+];
+export const BASES = [
+  [2, "2"],
+  [3, "3"],
+];
 export const NUMBERS = [3, 5, 7, 9];
 export const TILES = [3, 5];
-export const PRESETS = ['heatmap', 'weave', 'hive', 'carpet'];
-export const BLENDS = [['mean', 'Mean'], ['sum', 'Sum'], ['union', 'Union'], ['meet', 'Meet'], ['parity', 'Parity'], ['difference', 'Difference']];
-export const RAMPS = [['heat', 'Heat'], ['fire', 'Fire'], ['tint', 'Tint']];
+export const PRESETS = ["heatmap", "weave", "hive", "carpet"];
+export const BLENDS = [
+  ["mean", "Mean"],
+  ["sum", "Sum"],
+  ["union", "Union"],
+  ["meet", "Meet"],
+  ["parity", "Parity"],
+  ["difference", "Difference"],
+];
+export const RAMPS = [
+  ["heat", "Heat"],
+  ["fire", "Fire"],
+  ["tint", "Tint"],
+];
 export const SIDE = 256;
 export const CUT = 27;
 export const FIELD = 256;
@@ -44,8 +64,10 @@ export function cap(number, budget = SIDE) {
 export const cube = (value) => Number(value.dim) === 3;
 
 export function key(value) {
-  if (value.source === 'moire') return ['moire', value.preset, value.limit].join(':');
-  return cube(value) ? ['slice', value.base, value.code, value.tile, value.slevel].join(':') : ['flat', value.base, value.code, value.number, value.level].join(':');
+  if (value.source === "moire") return ["moire", value.preset, value.limit].join(":");
+  return cube(value)
+    ? ["slice", value.base, value.code, value.tile, value.slevel].join(":")
+    : ["flat", value.base, value.code, value.number, value.level].join(":");
 }
 
 export function field(math, name, limit, side) {
@@ -58,19 +80,45 @@ export function field(math, name, limit, side) {
 }
 
 export function source(math, value) {
-  if (value.source === 'moire') return { kind: 'moire', code: value.preset, name: value.preset, side: FIELD, data: field(math, value.preset, value.limit, FIELD), fills: null, binary: false };
+  if (value.source === "moire")
+    return {
+      kind: "moire",
+      code: value.preset,
+      name: value.preset,
+      side: FIELD,
+      data: field(math, value.preset, value.limit, FIELD),
+      fills: null,
+      binary: false,
+    };
   if (cube(value)) {
     const code = canon(math, 3, value.base, value.code);
     const cut = math.six.cut_design(code, value.tile, Math.min(value.slevel, cap(value.tile, CUT)), value.base);
-    return { kind: 'slice', code, name: math.name.of(code, 3, value.base) ?? '', side: HEX, data: math.six.raster(cut, HEX), fills: math.six.fills(cut), binary: true };
+    return {
+      kind: "slice",
+      code,
+      name: math.name.of(code, 3, value.base) ?? "",
+      side: HEX,
+      data: math.six.raster(cut, HEX),
+      fills: math.six.fills(cut),
+      binary: true,
+    };
   }
   const code = canon(math, 2, value.base, value.code);
   const cell = math.two.create(code, value.number, Math.min(value.level, cap(value.number)), ROTATION, value.base);
-  return { kind: 'flat', code, name: math.name.of(code, 2, value.base) ?? '', side: cell.shape[0], data: Float32Array.from(cell.types), fills: math.two.fills(cell), binary: true };
+  return {
+    kind: "flat",
+    code,
+    name: math.name.of(code, 2, value.base) ?? "",
+    side: cell.shape[0],
+    data: Float32Array.from(cell.types),
+    fills: math.two.fills(cell),
+    binary: true,
+  };
 }
 
 export function drawn(math, value, rand) {
-  if (value.source === 'moire') return { preset: pick(rand, PRESETS), limit: 2 * Math.floor(rand() * ((LIMIT + 1) / 2)) + 1 };
+  if (value.source === "moire")
+    return { preset: pick(rand, PRESETS), limit: 2 * Math.floor(rand() * ((LIMIT + 1) / 2)) + 1 };
   return { code: roll(math, cube(value) ? 3 : 2, value.base, rand) };
 }
 
@@ -110,15 +158,28 @@ export function study(math, value) {
   const profile = math.spin.profile(data, side, STEPS);
   const power = math.spin.harmonics(data, side, RINGS, ORDERS);
   const reach = math.spin.reach(side);
-  const plan = { ...made, profile, power, reach, top: peak(data) || 1, order: math.spin.turns(power), mass: math.spin.mass(profile, side), disc: disc(profile, reach), peak: peak(profile), share: shares(power), leading: leading(power) };
+  const plan = {
+    ...made,
+    profile,
+    power,
+    reach,
+    top: peak(data) || 1,
+    order: math.spin.turns(power),
+    mass: math.spin.mass(profile, side),
+    disc: disc(profile, reach),
+    peak: peak(profile),
+    share: shares(power),
+    leading: leading(power),
+  };
   kept = { at, plan };
   return plan;
 }
 
-export const title = ({ name, code, kind }) => (kind === 'moire' || !name ? code : `${name} ${code}`);
+export const title = ({ name, code, kind }) => (kind === "moire" || !name ? code : `${name} ${code}`);
 
 export function rings(math, plan) {
-  if (bull?.plan !== plan) bull = { plan, values: math.spin.wheel(plan.profile, WHEEL), top: plan.peak || 1, side: WHEEL };
+  if (bull?.plan !== plan)
+    bull = { plan, values: math.spin.wheel(plan.profile, WHEEL), top: plan.peak || 1, side: WHEEL };
   return bull;
 }
 
@@ -129,17 +190,25 @@ export const turn = (value) => (Number(value.full) === 1 ? 1 / value.copies : va
 export const degrees = (value) => +(turn(value) * 360).toFixed(3);
 
 export function petals(math, plan, value) {
-  if (Number(value.full) !== 1) return 'partial orbit';
-  return plan.order ? math.spin.petals(value.copies, plan.order) : 'none';
+  if (Number(value.full) !== 1) return "partial orbit";
+  return plan.order ? math.spin.petals(value.copies, plan.order) : "none";
 }
 
 export function sketch(math, plan, value, side) {
-  const values = math.spin.radial(plan.data, plan.side, side, value.copies, turn(value), math.spin.Blend.named(value.blend), value.samples);
+  const values = math.spin.radial(
+    plan.data,
+    plan.side,
+    side,
+    value.copies,
+    turn(value),
+    math.spin.Blend.named(value.blend),
+    value.samples,
+  );
   return { values, top: peak(values) || 1, side };
 }
 
 export function rosette(math, plan, value) {
-  const at = [value.copies, turn(value), value.blend, value.samples].join(':');
+  const at = [value.copies, turn(value), value.blend, value.samples].join(":");
   if (rose?.plan !== plan || rose.at !== at) rose = { plan, at, ...sketch(math, plan, value, OUT) };
   return rose;
 }
@@ -148,13 +217,13 @@ export function rosette(math, plan, value) {
 
 const contrast = ([r, g, b]) => ((r * 299 + g * 587 + b * 114) / 255000 > 0.5 ? [0, 0, 0] : [255, 255, 255]);
 
-export const edge = ({ paper }) => `rgba(${contrast(rgb(paper)).join(', ')}, 0.2)`;
+export const edge = ({ paper }) => `rgba(${contrast(rgb(paper)).join(", ")}, 0.2)`;
 
 export function stops(ramp, { paper, accent }) {
   const ground = rgb(paper);
   const top = contrast(ground);
-  if (ramp === 'tint') return [ground, rgb(accent)];
-  if (ramp === 'fire') return [ground, rgb(palette.orange), rgb(palette.yellow), top];
+  if (ramp === "tint") return [ground, rgb(accent)];
+  if (ramp === "fire") return [ground, rgb(palette.orange), rgb(palette.yellow), top];
   return [ground, rgb(accent), top];
 }
 

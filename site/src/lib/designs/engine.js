@@ -1,16 +1,36 @@
-import { pick, rng } from '../rand.js';
+import { pick, rng } from "../rand.js";
 
 export const DESIGN = [
-  { key: 'dim', label: 'Dim', kind: 'segment', def: 2, options: [[2, '2D'], [3, '3D']], group: 'Design' },
-  { key: 'base', label: 'Base', kind: 'segment', def: 2, options: [[2, '2'], [3, '3']], group: 'Design' },
-  { key: 'code', label: 'Code', kind: 'text', def: '', group: 'Design' },
+  {
+    key: "dim",
+    label: "Dim",
+    kind: "segment",
+    def: 2,
+    options: [
+      [2, "2D"],
+      [3, "3D"],
+    ],
+    group: "Design",
+  },
+  {
+    key: "base",
+    label: "Base",
+    kind: "segment",
+    def: 2,
+    options: [
+      [2, "2"],
+      [3, "3"],
+    ],
+    group: "Design",
+  },
+  { key: "code", label: "Code", kind: "text", def: "", group: "Design" },
 ];
 
 export const SIDE = 3;
 export const LIMIT = 512;
 const BUDGET = 60000;
 const ROTATION = 0;
-const HOME = 'carpet';
+const HOME = "carpet";
 const UPTO = { 2: 4, 3: 2 };
 
 const worlds = new Map();
@@ -40,20 +60,20 @@ export function roll(math, dim, base, rand = Math.random) {
 }
 
 export function settle(math, dim, base, code, rand) {
-  const text = String(code ?? '').trim();
-  if (text === '' || !Number.isFinite(Number(text))) return roll(math, dim, base, rand);
+  const text = String(code ?? "").trim();
+  if (text === "" || !Number.isFinite(Number(text))) return roll(math, dim, base, rand);
   const count = total(math, dim, base);
   return String(((Math.floor(Number(text)) % count) + count) % count);
 }
 
 export function home(math, dim, base) {
   const words = math.name.words(dim, base);
-  return (words.find(([, name]) => name === HOME) ?? words[0])?.[0] ?? '0';
+  return (words.find(([, name]) => name === HOME) ?? words[0])?.[0] ?? "0";
 }
 
 export function canon(math, dim, base, code) {
-  const text = String(code ?? '').trim();
-  return text === '' || !Number.isFinite(Number(text)) ? home(math, dim, base) : settle(math, dim, base, text);
+  const text = String(code ?? "").trim();
+  return text === "" || !Number.isFinite(Number(text)) ? home(math, dim, base) : settle(math, dim, base, text);
 }
 
 export function drawn(math, dim, base, list, code, seed) {
@@ -63,7 +83,8 @@ export function drawn(math, dim, base, list, code, seed) {
 }
 
 export function sequence(math, base) {
-  if (!runs.has(base)) runs.set(base, { upto: UPTO[base], terms: math.bang.baseq.sequence(base, UPTO[base]).map(String) });
+  if (!runs.has(base))
+    runs.set(base, { upto: UPTO[base], terms: math.bang.baseq.sequence(base, UPTO[base]).map(String) });
   return runs.get(base);
 }
 
@@ -106,7 +127,12 @@ export function facts(math, dim, base, code) {
   }
   const maps = group(math, dim, base);
   const two = base === 2;
-  return { rep: math.bang.baseq.canonical(maps, code), orbit: math.bang.baseq.orbit(maps, code).length, anf: two ? math.bang.universe.anf_string(code, dim) : '', degree: two ? math.bang.universe.degree(code, dim) : -1 };
+  return {
+    rep: math.bang.baseq.canonical(maps, code),
+    orbit: math.bang.baseq.orbit(maps, code).length,
+    anf: two ? math.bang.universe.anf_string(code, dim) : "",
+    degree: two ? math.bang.universe.degree(code, dim) : -1,
+  };
 }
 
 export function title(math, dim, base, code) {
@@ -138,8 +164,8 @@ export function dimension(math, dim, base, code) {
 /* LISTS */
 
 export function gallery(math, dim, base, filter) {
-  if (filter === 'named') return math.name.words(dim, base).map(([code]) => code);
-  if (filter === 'classes') return classes(math, dim, base)?.map((one) => one.code) ?? null;
+  if (filter === "named") return math.name.words(dim, base).map(([code]) => code);
+  if (filter === "classes") return classes(math, dim, base)?.map((one) => one.code) ?? null;
   return codes(math, dim, base);
 }
 

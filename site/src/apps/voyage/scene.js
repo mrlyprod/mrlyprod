@@ -1,40 +1,72 @@
-import { tidy } from '../../lib/app/spec.js';
-import { pick, rng } from '../../lib/rand.js';
-import { codes, route } from '../../lib/space/bang.js';
-import { look as aim, drift, ease, project } from '../../lib/gl/camera.js';
-import { blank, blend, context, fill, governor, program, tier } from '../../lib/gl/gl2.js';
-import { FILM, hyper } from '../../lib/space/hyper.js';
-import { GRADES, march, tone } from '../../lib/space/march.js';
-import { planet } from '../../lib/space/planet.js';
-import { world } from '../../lib/space/worlds.js';
-import { ship } from './ship.js';
-import { add, basis, clamp01, cross, dot, len, mat3, mix, mul, norm, rot, sub } from '../../lib/gl/vec.js';
-import { arrange, clock, cues, song } from './score.js';
-import { wasm } from '../../lib/units/index.js';
+import { tidy } from "../../lib/app/spec.js";
+import { look as aim, drift, ease, project } from "../../lib/gl/camera.js";
+import { blank, blend, context, fill, governor, program, tier } from "../../lib/gl/gl2.js";
+import { add, basis, clamp01, cross, dot, len, mat3, mix, mul, norm, rot, sub } from "../../lib/gl/vec.js";
+import { pick, rng } from "../../lib/rand.js";
+import { codes, route } from "../../lib/space/bang.js";
+import { FILM, hyper } from "../../lib/space/hyper.js";
+import { GRADES, march, tone } from "../../lib/space/march.js";
+import { planet } from "../../lib/space/planet.js";
+import { world } from "../../lib/space/worlds.js";
+import { wasm } from "../../lib/units/index.js";
+import { arrange, clock, cues, song } from "./score.js";
+import { ship } from "./ship.js";
 
 const HIDE = () => false;
 
-export const PLACES = [['', 'Random'], ['earth', 'Earth'], ['mars', 'Mars'], ['jupiter', 'Jupiter'], ['saturn', 'Saturn'], ['moon', 'Moon'], ['venus', 'Venus'], ['neptune', 'Neptune'], ['terran', 'Terran'], ['desert', 'Desert'], ['ice', 'Ice'], ['lava', 'Lava'], ['gas', 'Gas']];
-
-export const SPEC = [
-  { key: 'from', label: 'From', kind: 'pick', def: '', options: PLACES, group: 'Trip', when: HIDE },
-  { key: 'to', label: 'To', kind: 'pick', def: '', options: PLACES, group: 'Trip', when: HIDE },
-  { key: 'ship', label: 'Ship', kind: 'text', def: '', group: 'Trip', when: HIDE },
-  { key: 'length', label: 'Length', kind: 'slider', def: 60, min: 30, max: 180, step: 15, group: 'Film' },
-  { key: 'look', label: 'Look', kind: 'segment', def: 'studio', options: [['graphic', 'Graphic'], ['studio', 'Studio'], ['haze', 'Haze']], group: 'Look' },
-  { key: 'sound', label: 'Sound', kind: 'toggle', def: 0, group: 'Sound' },
-  { key: 'music', label: 'Music', kind: 'toggle', def: 1, group: 'Sound' },
+export const PLACES = [
+  ["", "Random"],
+  ["earth", "Earth"],
+  ["mars", "Mars"],
+  ["jupiter", "Jupiter"],
+  ["saturn", "Saturn"],
+  ["moon", "Moon"],
+  ["venus", "Venus"],
+  ["neptune", "Neptune"],
+  ["terran", "Terran"],
+  ["desert", "Desert"],
+  ["ice", "Ice"],
+  ["lava", "Lava"],
+  ["gas", "Gas"],
 ];
 
-export const units = wasm('math');
+export const SPEC = [
+  { key: "from", label: "From", kind: "pick", def: "", options: PLACES, group: "Trip", when: HIDE },
+  { key: "to", label: "To", kind: "pick", def: "", options: PLACES, group: "Trip", when: HIDE },
+  { key: "ship", label: "Ship", kind: "text", def: "", group: "Trip", when: HIDE },
+  { key: "length", label: "Length", kind: "slider", def: 60, min: 30, max: 180, step: 15, group: "Film" },
+  {
+    key: "look",
+    label: "Look",
+    kind: "segment",
+    def: "studio",
+    options: [
+      ["graphic", "Graphic"],
+      ["studio", "Studio"],
+      ["haze", "Haze"],
+    ],
+    group: "Look",
+  },
+  { key: "sound", label: "Sound", kind: "toggle", def: 0, group: "Sound" },
+  { key: "music", label: "Music", kind: "toggle", def: 1, group: "Sound" },
+];
+
+export const units = wasm("math");
 
 export const PAGE = {
   spec: SPEC,
   units,
-  design: { dim: 3, base: 2, code: 'ship', blank: 'Random' },
+  design: { dim: 3, base: 2, code: "ship", blank: "Random" },
   keys: [
-    { key: 'Enter', label: 'Again', does: 'Restart the film from the departure', act: 'again', button: true, menu: 'Edit' },
-    { key: 'm', label: 'Sound', act: 'mute' },
+    {
+      key: "Enter",
+      label: "Again",
+      does: "Restart the film from the departure",
+      act: "again",
+      button: true,
+      menu: "Edit",
+    },
+    { key: "m", label: "Sound", act: "mute" },
   ],
   actions: { again: (scene) => scene.again?.(), mute: (scene) => scene.mute?.() },
   record: true,
@@ -42,23 +74,31 @@ export const PAGE = {
 
 export const SAVERS = [
   {
-    id: 'solar',
-    title: 'Solar system',
+    id: "solar",
+    title: "Solar system",
     pick: (rand) => {
       const from = pick(rand, SOLAR);
-      return { from, to: pick(rand, SOLAR.filter((one) => one !== from)), look: 'studio', length: REEL };
+      return {
+        from,
+        to: pick(
+          rand,
+          SOLAR.filter((one) => one !== from),
+        ),
+        look: "studio",
+        length: REEL,
+      };
     },
   },
-  { id: 'strange', title: 'Strange worlds', pick: (rand) => ({ look: pick(rand, MOODS), length: REEL }) },
+  { id: "strange", title: "Strange worlds", pick: (rand) => ({ look: pick(rand, MOODS), length: REEL }) },
 ];
 
 export const quiet = ({ sound, music, ...rest }) => rest;
 
-const NAMED = ['earth', 'mars', 'jupiter', 'saturn', 'moon', 'venus', 'neptune'];
-const SOLAR = ['earth', 'mars', 'jupiter', 'saturn', 'neptune'];
-const MOODS = ['haze', 'graphic'];
+const NAMED = ["earth", "mars", "jupiter", "saturn", "moon", "venus", "neptune"];
+const SOLAR = ["earth", "mars", "jupiter", "saturn", "neptune"];
+const MOODS = ["haze", "graphic"];
 const REEL = 90;
-const TYPES = ['terran', 'desert', 'ice', 'lava', 'gas'];
+const TYPES = ["terran", "desert", "ice", "lava", "gas"];
 const WEIGHTS = [0.42, 0.16, 0.14, 0.1, 0.18];
 const SALT = 0x2a9f53c1;
 const GOLD = 0x9e3779b1;
@@ -66,7 +106,7 @@ const OTHER = 0x68e31da4;
 const N = 3;
 const SKY = { density: 0.8, dust: 0.4 };
 const NOTCHES = { phone: [0.75, 0.6, 0.5], desk: [1, 0.85, 0.7, 0.5], big: [0.75, 0.6, 0.5] };
-const BUSY = ['flash', 'tunnel', 'bloom'];
+const BUSY = ["flash", "tunnel", "bloom"];
 const LEAVE = FILM.bloom + FILM.white + FILM.decay + FILM.snap;
 const VEIL = FILM.bloom + FILM.white;
 const AFTER = -clock(0).out;
@@ -82,7 +122,12 @@ const HELD = 9500;
 const RUSH = 400;
 const LOOPS = 100000;
 const DEG = Math.PI / 180;
-const FIRES = [[0.4, 0.8, 1.6], [1.5, 0.7, 0.3], [0.8, 0.5, 1.5], [0.5, 1.4, 0.9]];
+const FIRES = [
+  [0.4, 0.8, 1.6],
+  [1.5, 0.7, 0.3],
+  [0.8, 0.5, 1.5],
+  [0.5, 1.4, 0.9],
+];
 const YAW = 0.3;
 const PROTO = 0.085;
 const DEEP = 1.25;
@@ -145,7 +190,11 @@ const HALVES = 60;
 const ORIGIN = [0, 0, 0];
 const FORWARD = [0, 0, 1];
 const UP = [0, 1, 0];
-const SQUARE = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+const SQUARE = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+];
 
 const SHADE = `#version 300 es
 precision highp float;
@@ -192,15 +241,16 @@ function weigh(rand, skip) {
 
 export function stand(pick, seed) {
   if (NAMED.includes(pick)) return world(pick, seed);
-  if (TYPES.includes(pick)) return world('exo', seed, { type: pick });
+  if (TYPES.includes(pick)) return world("exo", seed, { type: pick });
   return null;
 }
 
-const place = (pick, seed, rand, skip) => stand(pick, seed) ?? world('exo', Math.floor(rand() * 4294967296), { type: weigh(rand, skip) });
+const place = (pick, seed, rand, skip) =>
+  stand(pick, seed) ?? world("exo", Math.floor(rand() * 4294967296), { type: weigh(rand, skip) });
 
 export function roll(math, value, seed, loop) {
   const rand = rng(((seed >>> 0) ^ SALT ^ Math.imul(loop + 1, GOLD)) >>> 0);
-  const a = place(value.from, seed >>> 0, rand, '');
+  const a = place(value.from, seed >>> 0, rand, "");
   const b = place(value.to, ((seed >>> 0) ^ OTHER) >>> 0, rand, a.kind);
   const pool = codes(math, N);
   const hand = Number.parseInt(value.ship, 10);
@@ -208,7 +258,20 @@ export function roll(math, value, seed, loop) {
   const up = unit(rand);
   const head = across(rand, up);
   const toward = unit(rand);
-  return { loop, a, b, code, up, head, toward, tilt: across(rand, toward), fire: FIRES[Math.floor(rand() * FIRES.length)], turn: rand() < 0.5 ? -YAW : YAW, paint: Math.floor(rand() * 4294967296), depart: setting(up, head) };
+  return {
+    loop,
+    a,
+    b,
+    code,
+    up,
+    head,
+    toward,
+    tilt: across(rand, toward),
+    fire: FIRES[Math.floor(rand() * FIRES.length)],
+    turn: rand() < 0.5 ? -YAW : YAW,
+    paint: Math.floor(rand() * 4294967296),
+    depart: setting(up, head),
+  };
 }
 
 /* DEPARTURE */
@@ -245,7 +308,10 @@ function hermite(keys, u) {
   const s = (u - a.t) / span;
   const [s2, s3] = [s * s, s * s * s];
   const sum = (w) => add(add(mul(a.p, w[0]), mul(a.v, span * w[1])), add(mul(b.p, w[2]), mul(b.v, span * w[3])));
-  return { p: sum([2 * s3 - 3 * s2 + 1, s3 - 2 * s2 + s, -2 * s3 + 3 * s2, s3 - s2]), v: mul(sum([6 * s2 - 6 * s, 3 * s2 - 4 * s + 1, -6 * s2 + 6 * s, 3 * s2 - 2 * s]), 1 / span) };
+  return {
+    p: sum([2 * s3 - 3 * s2 + 1, s3 - 2 * s2 + s, -2 * s3 + 3 * s2, s3 - s2]),
+    v: mul(sum([6 * s2 - 6 * s, 3 * s2 - 4 * s + 1, -6 * s2 + 6 * s, 3 * s2 - 2 * s]), 1 / span),
+  };
 }
 
 const within = (u, [a, b]) => ease.smooth((u - a) / (b - a));
@@ -272,7 +338,16 @@ export function leave(rolled, u) {
   const ahead = norm(mix(follow, fwd, chase));
   const cam = aim(pos, add(pos, ahead), U);
   cam.fov = WIDE[0] + (WIDE[1] - WIDE[0]) * within(u, ZOOM);
-  const pose = { at, fwd, up: U, turn: twist(rolled.turn, u), size: SMALL, heat: HEAT[0] * (1 - within(u, [EMERGE, HEAT[1]])), plume: within(u, ENGINE), fire: rolled.fire };
+  const pose = {
+    at,
+    fwd,
+    up: U,
+    turn: twist(rolled.turn, u),
+    size: SMALL,
+    heat: HEAT[0] * (1 - within(u, [EMERGE, HEAT[1]])),
+    plume: within(u, ENGINE),
+    fire: rolled.fire,
+  };
   return { cam, sun, pose, goal, shown: u >= SHOW };
 }
 
@@ -318,8 +393,19 @@ export function come(rolled, a, t, view) {
   const at = add(add(P, shift), mul(sub(Q, P), pull));
   const fwd = norm(mix(along, dive, ease.smooth((a - LIGHT) / BEND)));
   const plume = a < 0 ? 1 : Math.max(1 - ease.smooth(a / DIE), ease.smooth((a - LIGHT) / BURN));
-  const sun = norm(add(mul(n, Math.cos(PHASE)), mul(norm(add(mul(side, -Math.cos(RAISE)), mul(V, Math.sin(RAISE)))), Math.sin(PHASE))));
-  const pose = { at, fwd, up: V, turn: (rolled.turn * a) / 1000, size, plume, heat: ease.smooth((a - HOT) / (SPAN - COOL - HOT)), fire: rolled.fire };
+  const sun = norm(
+    add(mul(n, Math.cos(PHASE)), mul(norm(add(mul(side, -Math.cos(RAISE)), mul(V, Math.sin(RAISE)))), Math.sin(PHASE))),
+  );
+  const pose = {
+    at,
+    fwd,
+    up: V,
+    turn: (rolled.turn * a) / 1000,
+    size,
+    plume,
+    heat: ease.smooth((a - HOT) / (SPAN - COOL - HOT)),
+    fire: rolled.fire,
+  };
   return { cam, sun, pose, shown: true };
 }
 
@@ -340,7 +426,11 @@ export function inside(shot, door) {
   const local = (w) => axes.map((a) => dot(a, w));
   const m = cam.rot;
   const rot3 = mat3(local([m[0], m[1], m[2]]), local([m[3], m[4], m[5]]), local([m[6], m[7], m[8]]));
-  return { eye: { pos: mul(local(sub(cam.pos, pose.at)), N / pose.size), rot: rot3, fov: cam.fov }, heading: local(pose.fwd), below: local(norm(mul(pose.at, -1))) };
+  return {
+    eye: { pos: mul(local(sub(cam.pos, pose.at)), N / pose.size), rot: rot3, fov: cam.fov },
+    heading: local(pose.fwd),
+    below: local(norm(mul(pose.at, -1))),
+  };
 }
 
 export function shine(globe, at, sun) {
@@ -363,7 +453,15 @@ export function entry(way) {
   const state = { ...way.at(hi) };
   const probe = way.at(hi + PROBE);
   const rate = (a, b) => mul(sub(a, b), 1 / PROBE);
-  return { tau: hi, state, speed: rate(probe.pos, state.pos), turn: rate(probe.fwd, state.fwd), tilt: rate(probe.up, state.up), bank: (probe.roll - state.roll) / PROBE, axes: basis(state.fwd, state.up) };
+  return {
+    tau: hi,
+    state,
+    speed: rate(probe.pos, state.pos),
+    turn: rate(probe.fwd, state.fwd),
+    tilt: rate(probe.up, state.up),
+    bank: (probe.roll - state.roll) / PROBE,
+    axes: basis(state.fwd, state.up),
+  };
 }
 
 export function approach(rolled, door, a) {
@@ -374,13 +472,32 @@ export function approach(rolled, door, a) {
   const k = ease.smooth(s);
   const bend = ((s ** 3 - s * s) * INTO) / 1000;
   const start = mul(cross(cu, eye.pos), -rolled.turn / 1000);
-  const { p: pos } = hermite([{ t: 0, p: eye.pos, v: start }, { t: INTO, p: state.pos, v: mul(door.speed, 1 / 1000) }], a);
+  const { p: pos } = hermite(
+    [
+      { t: 0, p: eye.pos, v: start },
+      { t: INTO, p: state.pos, v: mul(door.speed, 1 / 1000) },
+    ],
+    a,
+  );
   const heading = rot(door.axes[2], cu, -twist(rolled.turn, OPEN + a));
   const roll = k * state.roll + bend * door.bank;
   const cam = aim(pos, add(pos, add(heading, mul(door.turn, bend))), add(cu, mul(door.tilt, bend)), roll);
   cam.fov = WIDE[1] + (DEEP - WIDE[1]) * k;
   const doors = (state.doors ?? []).map((one) => ({ ...one, glow: one.glow * k }));
-  return { cam, roll, heading, frame: { ...state, doors, outside: true, hull: 1, sun: 1 - k, floor: N ** (1 - LEVELS - REVEAL * k), fog: (state.fog ?? 0) * k } };
+  return {
+    cam,
+    roll,
+    heading,
+    frame: {
+      ...state,
+      doors,
+      outside: true,
+      hull: 1,
+      sun: 1 - k,
+      floor: N ** (1 - LEVELS - REVEAL * k),
+      fog: (state.fog ?? 0) * k,
+    },
+  };
 }
 
 const flying = (way, tau) => {
@@ -394,11 +511,19 @@ const flying = (way, tau) => {
 
 const dolly = (cam, k) => (k === 1 ? cam : { pos: mul(cam.pos, k), rot: cam.rot, fov: cam.fov });
 
-const outer = (door) => ({ ...door.state, doors: [], outside: true, hull: 1, sun: 1, floor: N ** (1 - LEVELS), fog: 0 });
+const outer = (door) => ({
+  ...door.state,
+  doors: [],
+  outside: true,
+  hull: 1,
+  sun: 1,
+  floor: N ** (1 - LEVELS),
+  fog: 0,
+});
 
 export function make(canvas, view, opts = {}) {
   const { math } = opts;
-  if (!math) throw new Error('voyage: the scene wants @mrlyprod/mrly/math as opts.math');
+  if (!math) throw new Error("voyage: the scene wants @mrlyprod/mrly/math as opts.math");
   const gl = context(canvas);
   if (!gl) return blank(canvas);
   const value = tidy(SPEC, opts);
@@ -411,7 +536,16 @@ export function make(canvas, view, opts = {}) {
   let point = null;
   let glow = null;
   try {
-    trip = hyper(gl, view, { seed, sky: SKY, look: 'cloud', idle: 0, far: true, audio: null, mode: null, floor: 'cloud' });
+    trip = hyper(gl, view, {
+      seed,
+      sky: SKY,
+      look: "cloud",
+      idle: 0,
+      far: true,
+      audio: null,
+      mode: null,
+      floor: "cloud",
+    });
     veil = program(gl, SHADE);
     point = program(gl, POINT);
     glow = ship(gl, view);
@@ -422,13 +556,37 @@ export function make(canvas, view, opts = {}) {
     console.error(error);
     return blank(canvas);
   }
-  const gov = governor(view, NOTCHES[view.lock ? 'big' : tier(view)]);
+  const gov = governor(view, NOTCHES[view.lock ? "big" : tier(view)]);
   const timed = (r, start, span) => {
     const m = clock(span);
-    Object.assign(r, { start, span, fire: start + m.fire, open: start + m.open, enter: start + m.enter, out: start + m.out, arrive: start + m.arrive, end: start + m.end, next: start + m.next, score: arrange(span) });
+    Object.assign(r, {
+      start,
+      span,
+      fire: start + m.fire,
+      open: start + m.open,
+      enter: start + m.enter,
+      out: start + m.out,
+      arrive: start + m.arrive,
+      end: start + m.end,
+      next: start + m.next,
+      score: arrange(span),
+    });
   };
   const begin = (loop, start, held = false) => {
-    const r = { loop, rolled: roll(math, value, seed, loop), sent: new Set(), fired: false, exited: false, held, pending: false, blend: null, made: {}, tone: null, accent: null, song: null };
+    const r = {
+      loop,
+      rolled: roll(math, value, seed, loop),
+      sent: new Set(),
+      fired: false,
+      exited: false,
+      held,
+      pending: false,
+      blend: null,
+      made: {},
+      tone: null,
+      accent: null,
+      song: null,
+    };
     timed(r, start, held ? Infinity : length);
     return r;
   };
@@ -471,14 +629,27 @@ export function make(canvas, view, opts = {}) {
       r.made[key] = null;
     }
   };
-  const home = (r) => build(r, 'a', () => planet(gl, view, r.rolled.a));
-  const there = (r, staged) => build(r, 'b', () => planet(gl, view, r.rolled.b, { staged }));
+  const home = (r) => build(r, "a", () => planet(gl, view, r.rolled.a));
+  const there = (r, staged) => build(r, "b", () => planet(gl, view, r.rolled.b, { staged }));
   const path = (r) =>
-    build(r, 'route', () => {
+    build(r, "route", () => {
       const way = route(math, { code: r.rolled.code, n: N }, seed);
       return { way, door: entry(way) };
     });
-  const inner = (r) => build(r, 'march', () => march(gl, view, { code: r.rolled.code, n: N }, { math, look: value.look, quality: view.lock && tier(view) !== 'phone' ? 'low' : '', toFrame: path(r)?.way.toFrame }));
+  const inner = (r) =>
+    build(r, "march", () =>
+      march(
+        gl,
+        view,
+        { code: r.rolled.code, n: N },
+        {
+          math,
+          look: value.look,
+          quality: view.lock && tier(view) !== "phone" ? "low" : "",
+          toFrame: path(r)?.way.toFrame,
+        },
+      ),
+    );
   const next = (loop, start, held = false) => {
     drop(run);
     prev = run;
@@ -512,13 +683,13 @@ export function make(canvas, view, opts = {}) {
     }
   };
   const act = (t, r = run) => {
-    if (t < r.fire) return 'depart';
-    if (t < r.open) return 'jump';
-    if (t < r.enter) return 'approach';
-    if (t < r.out) return 'tunnel';
-    if (t < r.arrive) return 'exit';
-    if (t < r.end) return 'arrive';
-    return 'black';
+    if (t < r.fire) return "depart";
+    if (t < r.open) return "jump";
+    if (t < r.enter) return "approach";
+    if (t < r.out) return "tunnel";
+    if (t < r.arrive) return "exit";
+    if (t < r.end) return "arrive";
+    return "black";
   };
   const arranged = (ms) => {
     const r = ms >= run.start || !prev ? run : prev;
@@ -543,7 +714,7 @@ export function make(canvas, view, opts = {}) {
     const accent = view.look().accent;
     if (accent !== r.accent) {
       r.accent = accent;
-      r.tone = tone(view.lock ? 'accent' : '', r.rolled.paint, accent);
+      r.tone = tone(view.lock ? "accent" : "", r.rolled.paint, accent);
     }
     return r.tone;
   };
@@ -555,7 +726,15 @@ export function make(canvas, view, opts = {}) {
   };
   const body = (r, flight, eye, frame, lit) => {
     flight.draw(eye, frame, paints(r));
-    const pose = { at: ORIGIN, axes: SQUARE, size: N, fwd: norm(lit.heading), plume: lit.plume, heat: lit.heat, fire: r.rolled.fire };
+    const pose = {
+      at: ORIGIN,
+      axes: SQUARE,
+      size: N,
+      fwd: norm(lit.heading),
+      plume: lit.plume,
+      heat: lit.heat,
+      fire: r.rolled.fire,
+    };
     return () => {
       glow.draw(eye, { ...pose, plume: 0 });
       flight.layer(1);
@@ -568,11 +747,18 @@ export function make(canvas, view, opts = {}) {
     if (b && t < b.at + RUSH) {
       const k = ease.smooth((t - b.at) / RUSH);
       const pos = mix(b.cam.pos, shot.cam.pos, k);
-      const fwd = norm(mix([b.cam.rot[6], b.cam.rot[7], b.cam.rot[8]], [shot.cam.rot[6], shot.cam.rot[7], shot.cam.rot[8]], k));
+      const fwd = norm(
+        mix([b.cam.rot[6], b.cam.rot[7], b.cam.rot[8]], [shot.cam.rot[6], shot.cam.rot[7], shot.cam.rot[8]], k),
+      );
       const fov = shot.cam.fov;
       shot.cam = aim(pos, add(pos, fwd), r.rolled.up);
       shot.cam.fov = mix(b.cam.fov, fov, k);
-      shot.pose = { ...shot.pose, at: mix(b.ship, shot.pose.at, k), fwd: norm(mix(b.fwd, shot.pose.fwd, k)), turn: mix(b.turn, shot.pose.turn, k) };
+      shot.pose = {
+        ...shot.pose,
+        at: mix(b.ship, shot.pose.at, k),
+        fwd: norm(mix(b.fwd, shot.pose.fwd, k)),
+        turn: mix(b.turn, shot.pose.turn, k),
+      };
     }
     last = { run: r, cam: shot.cam, ship: shot.pose.at, fwd: shot.pose.fwd, turn: shot.pose.turn };
     home(r);
@@ -583,10 +769,16 @@ export function make(canvas, view, opts = {}) {
     let over = null;
     if (way && flight && shot.shown) {
       const { eye, heading, below } = inside(shot, way.door);
-      over = body(r, flight, eye, { ...outer(way.door), shine: { color: shine(r.rolled.a, shot.pose.at, shot.sun), dir: below } }, { heading, plume: shot.pose.plume, heat: shot.pose.heat });
+      over = body(
+        r,
+        flight,
+        eye,
+        { ...outer(way.door), shine: { color: shine(r.rolled.a, shot.pose.at, shot.sun), dir: below } },
+        { heading, plume: shot.pose.plume, heat: shot.pose.heat },
+      );
     }
     const beneath = (k, approach) => {
-      guard(r, 'a', (globe) => globe.draw(dolly(shot.cam, approach), shot.sun, t, k));
+      guard(r, "a", (globe) => globe.draw(dolly(shot.cam, approach), shot.sun, t, k));
       beacon(shot.cam, shot.goal, mul(r.rolled.b.light, BEACON), k);
     };
     trip.draw(shot.cam, beneath, over, px);
@@ -614,9 +806,15 @@ export function make(canvas, view, opts = {}) {
     let over = null;
     if (way && flight) {
       const { eye, heading, below } = inside(shot, way.door);
-      over = body(r, flight, eye, { ...outer(way.door), shine: { color: shine(r.rolled.b, shot.pose.at, shot.sun), dir: below } }, { heading, plume: shot.pose.plume, heat: shot.pose.heat });
+      over = body(
+        r,
+        flight,
+        eye,
+        { ...outer(way.door), shine: { color: shine(r.rolled.b, shot.pose.at, shot.sun), dir: below } },
+        { heading, plume: shot.pose.plume, heat: shot.pose.heat },
+      );
     }
-    const beneath = (k, approach) => guard(r, 'b', (globe) => globe.draw(dolly(shot.cam, approach), shot.sun, t, k));
+    const beneath = (k, approach) => guard(r, "b", (globe) => globe.draw(dolly(shot.cam, approach), shot.sun, t, k));
     trip.draw(shot.cam, beneath, over, px);
   };
   const beacon = (cam, dir, color, k) => {
@@ -629,7 +827,7 @@ export function make(canvas, view, opts = {}) {
     const pad = Math.ceil(DOT * (view.dpr || 1) * sx) + 2;
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(Math.floor(at[0]) - pad, Math.floor(at[1]) - pad, 2 * pad, 2 * pad);
-    blend(gl, 'alpha');
+    blend(gl, "alpha");
     point.set({ uAt: at, uR: (DOT * (view.dpr || 1) * sx) / 2, uColor: color, uK: k });
     fill(gl);
     blend(gl, null);
@@ -645,7 +843,7 @@ export function make(canvas, view, opts = {}) {
     if (k <= 0) return;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, view.w, view.h);
-    blend(gl, 'alpha');
+    blend(gl, "alpha");
     veil.set({ uK: Math.min(k, 1) });
     fill(gl);
     blend(gl, null);
@@ -697,7 +895,16 @@ export function make(canvas, view, opts = {}) {
     const t = view.t;
     const r = run;
     if (t < r.open) {
-      Object.assign(r, { fired: true, exited: true, open: Infinity, enter: Infinity, out: Infinity, arrive: Infinity, end: Infinity, next: t + LEAVE });
+      Object.assign(r, {
+        fired: true,
+        exited: true,
+        open: Infinity,
+        enter: Infinity,
+        out: Infinity,
+        arrive: Infinity,
+        end: Infinity,
+        next: t + LEAVE,
+      });
     } else if (t < r.out) {
       timed(r, r.start, t - r.start + AFTER);
       r.exited = true;
@@ -709,7 +916,7 @@ export function make(canvas, view, opts = {}) {
   const again = () => {
     if (gone) return;
     const t = view.t;
-    if (trip.stage() !== 'cruise') {
+    if (trip.stage() !== "cruise") {
       trip.windDown();
       busy = t + LEAVE;
     }
@@ -726,7 +933,19 @@ export function make(canvas, view, opts = {}) {
     veil.drop();
     point.drop();
     glow.drop();
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
   };
-  return { draw, stop, hold, windDown, again, phase: trip.phase, stage: trip.stage, state: () => act(view.still ? run.start + STILL : view.t), loop: () => run.loop, rolled: () => run.rolled, section: () => arranged(view.t).name };
+  return {
+    draw,
+    stop,
+    hold,
+    windDown,
+    again,
+    phase: trip.phase,
+    stage: trip.stage,
+    state: () => act(view.still ? run.start + STILL : view.t),
+    loop: () => run.loop,
+    rolled: () => run.rolled,
+    section: () => arranged(view.t).name,
+  };
 }

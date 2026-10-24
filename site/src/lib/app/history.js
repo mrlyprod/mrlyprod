@@ -12,7 +12,10 @@ export function record(was, before, now) {
 
 export function undo(was, current) {
   if (!was.past.length) return null;
-  return { stack: { past: was.past.slice(0, -1), future: [current, ...was.future], at: -Infinity }, to: was.past.at(-1) };
+  return {
+    stack: { past: was.past.slice(0, -1), future: [current, ...was.future], at: -Infinity },
+    to: was.past.at(-1),
+  };
 }
 
 export function redo(was, current) {

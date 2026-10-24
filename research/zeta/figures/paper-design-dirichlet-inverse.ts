@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { frame as box, plot, type Color, type Frame, type Ink, type Pen, type Point } from "#view";
+import { frame as box, type Color, type Frame, type Ink, type Pen, type Point, plot } from "#view";
 
 const RE_WIDTH = 1;
 const IM_REACH = 60;
@@ -28,17 +28,24 @@ function comb(design: math.ladder.Design): Point[] {
 }
 
 function check(alpha: number, period: number, poles: Point[]) {
-  if (Math.floor(IM_REACH / period) !== 10) throw new Error(`paper-design-dirichlet-inverse: ${Math.floor(IM_REACH / period)} periods in reach, want 10`);
+  if (Math.floor(IM_REACH / period) !== 10)
+    throw new Error(`paper-design-dirichlet-inverse: ${Math.floor(IM_REACH / period)} periods in reach, want 10`);
   if (poles.length !== 11) throw new Error(`paper-design-dirichlet-inverse: ${poles.length} poles, want 11`);
   if (BANDS.length !== 2) throw new Error(`paper-design-dirichlet-inverse: ${BANDS.length} bands, want 2`);
   if (!poles.every((p) => p[0] === alpha)) throw new Error("paper-design-dirichlet-inverse: a pole off the abscissa");
-  if (!(RHO[0] > alpha && RHO[0] < alpha + RE_WIDTH)) throw new Error(`paper-design-dirichlet-inverse: rho ${RHO[0]} off the strip`);
-  if (!(RHO[0] > BOX_RE[0] && RHO[0] < BOX_RE[1])) throw new Error(`paper-design-dirichlet-inverse: rho ${RHO[0]} outside its box`);
-  if (!(RHO[1] > BOX_IM[0] && RHO[1] < BOX_IM[1])) throw new Error(`paper-design-dirichlet-inverse: rho ${RHO[1]} outside its box`);
-  if (!BANDS.every((b) => b[1] > b[0] && b[0] > 0 && b[1] < IM_REACH)) throw new Error("paper-design-dirichlet-inverse: a band off the reach");
+  if (!(RHO[0] > alpha && RHO[0] < alpha + RE_WIDTH))
+    throw new Error(`paper-design-dirichlet-inverse: rho ${RHO[0]} off the strip`);
+  if (!(RHO[0] > BOX_RE[0] && RHO[0] < BOX_RE[1]))
+    throw new Error(`paper-design-dirichlet-inverse: rho ${RHO[0]} outside its box`);
+  if (!(RHO[1] > BOX_IM[0] && RHO[1] < BOX_IM[1]))
+    throw new Error(`paper-design-dirichlet-inverse: rho ${RHO[1]} outside its box`);
+  if (!BANDS.every((b) => b[1] > b[0] && b[0] > 0 && b[1] < IM_REACH))
+    throw new Error("paper-design-dirichlet-inverse: a band off the reach");
   if (!(BAND_RE > RE_WIDTH)) throw new Error(`paper-design-dirichlet-inverse: band reach ${BAND_RE} under ${RE_WIDTH}`);
-  if (!(Math.abs(alpha - 0.6309297536) < 1e-9)) throw new Error(`paper-design-dirichlet-inverse: abscissa ${alpha}, want 0.6309297536`);
-  if (!(Math.abs(period - 5.7192017348) < 1e-9)) throw new Error(`paper-design-dirichlet-inverse: period ${period}, want 5.7192017348`);
+  if (!(Math.abs(alpha - 0.6309297536) < 1e-9))
+    throw new Error(`paper-design-dirichlet-inverse: abscissa ${alpha}, want 0.6309297536`);
+  if (!(Math.abs(period - 5.7192017348) < 1e-9))
+    throw new Error(`paper-design-dirichlet-inverse: period ${period}, want 5.7192017348`);
 }
 
 // PLANE

@@ -12,7 +12,13 @@ export type Store = { bucket: string; prefix: string };
 
 export type Block = { prefix: string; guard: string[]; bucket: string; store: Store };
 
-export type Record_ = { hash: string; at: string; outputs: string[]; types?: Record<string, string>; sums?: Record<string, string> };
+export type Record_ = {
+  hash: string;
+  at: string;
+  outputs: string[];
+  types?: Record<string, string>;
+  sums?: Record<string, string>;
+};
 
 export type Manifest = Record<string, Record_>;
 
@@ -29,7 +35,8 @@ export const GONE = "~";
 
 export const today = () => new Date().toISOString().slice(0, 10);
 
-const digest = (...parts: (string | Uint8Array)[]) => parts.reduce((h, part) => h.update(part), createHash("sha256")).digest("hex");
+const digest = (...parts: (string | Uint8Array)[]) =>
+  parts.reduce((h, part) => h.update(part), createHash("sha256")).digest("hex");
 
 export function block(root: string): Block {
   const found = (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as { push?: Block }).push;
@@ -57,11 +64,29 @@ const SHELL = new Set(["index.html", "404.html"]);
 
 export const mine = (path: string, guard: string[]) => !guard.some((one) => path.startsWith(one));
 
-type Page = { contents?: { key: string }[]; commonPrefixes?: ({ prefix: string } | string)[]; isTruncated?: boolean; nextContinuationToken?: string | null };
+type Page = {
+  contents?: { key: string }[];
+  commonPrefixes?: ({ prefix: string } | string)[];
+  isTruncated?: boolean;
+  nextContinuationToken?: string | null;
+};
 
-export type Lister = { list: (options: { prefix: string; delimiter: string; maxKeys: number; continuationToken?: string }) => Promise<Page | null> };
+export type Lister = {
+  list: (options: {
+    prefix: string;
+    delimiter: string;
+    maxKeys: number;
+    continuationToken?: string;
+  }) => Promise<Page | null>;
+};
 
-export async function sweep(s3: Lister, root: string, guard: string[], at = root, out: string[] = []): Promise<string[]> {
+export async function sweep(
+  s3: Lister,
+  root: string,
+  guard: string[],
+  at = root,
+  out: string[] = [],
+): Promise<string[]> {
   let token: string | undefined;
   do {
     const page = await s3.list({ prefix: at, delimiter: "/", maxKeys: 1000, continuationToken: token });
@@ -81,22 +106,34 @@ export function assets(files: File[], old: Manifest, now = today()): Manifest {
   const out: Manifest = {};
   for (const one of files) {
     const was = old[ASSET + one.path];
-    out[ASSET + one.path] = { ...(was && was.hash === one.hash ? was : { hash: one.hash, at: now, outputs: [one.path] }), types: one.type ? { [one.path]: one.type } : undefined };
+    out[ASSET + one.path] = {
+      ...(was && was.hash === one.hash ? was : { hash: one.hash, at: now, outputs: [one.path] }),
+      types: one.type ? { [one.path]: one.type } : undefined,
+    };
   }
   return out;
 }
 
-const each = <T>(manifest: Manifest, pick: (record: Record_) => Record<string, T> | undefined) => new Map(Object.values(manifest).flatMap((record) => Object.entries(pick(record) ?? {})));
+const each = <T>(manifest: Manifest, pick: (record: Record_) => Record<string, T> | undefined) =>
+  new Map(Object.values(manifest).flatMap((record) => Object.entries(pick(record) ?? {})));
 
 export const typing = (manifest: Manifest) => each(manifest, (record) => record.types);
 
 export const sums = (manifest: Manifest) => each(manifest, (record) => record.sums);
 
-export const spread = (manifest: Manifest) => new Map(Object.entries(manifest).flatMap(([key, record]) => record.outputs.map((path) => [path, key] as const)));
+export const spread = (manifest: Manifest) =>
+  new Map(Object.entries(manifest).flatMap(([key, record]) => record.outputs.map((path) => [path, key] as const)));
 
-export const seal = (bytes: string | Uint8Array, type: string, control: string) => digest(bytes, type, control).slice(0, 16);
+export const seal = (bytes: string | Uint8Array, type: string, control: string) =>
+  digest(bytes, type, control).slice(0, 16);
 
-export function changes(old: Manifest, next: Manifest, guard: string[], sealed: (path: string) => string, force = false): string[] {
+export function changes(
+  old: Manifest,
+  next: Manifest,
+  guard: string[],
+  sealed: (path: string) => string,
+  force = false,
+): string[] {
   const had = spread(old);
   const before = sums(old);
   const out: string[] = [];
@@ -112,7 +149,8 @@ export function changes(old: Manifest, next: Manifest, guard: string[], sealed: 
   return out;
 }
 
-export const staged = (paths: string[], header: (path: string) => string) => [0, 1, 2].map((tier) => paths.filter((path) => (SHELL.has(path) ? 2 : header(path) === IMMUTABLE ? 0 : 1) === tier));
+export const staged = (paths: string[], header: (path: string) => string) =>
+  [0, 1, 2].map((tier) => paths.filter((path) => (SHELL.has(path) ? 2 : header(path) === IMMUTABLE ? 0 : 1) === tier));
 
 const days = (from: string, to: string) => (Date.parse(to) - Date.parse(from)) / 86_400_000;
 
@@ -122,7 +160,8 @@ export function keep(old: Manifest, want: Map<string, string>, now = today()): M
     if (want.has(path)) continue;
     const was = old[name]!;
     const parked = name.startsWith(GONE);
-    if (!parked || days(was.at, now) < WEEK) out[GONE + path] = { hash: was.hash, at: parked ? was.at : now, outputs: [path] };
+    if (!parked || days(was.at, now) < WEEK)
+      out[GONE + path] = { hash: was.hash, at: parked ? was.at : now, outputs: [path] };
   }
   return out;
 }
@@ -135,13 +174,21 @@ const where = (store: Store) => join(process.env.DRY_DIR ?? join(tmpdir(), "push
 
 /* PUSH */
 
-export async function push(root: string, build: () => Promise<Built>, options: { dry?: boolean; force?: boolean } = {}) {
+export async function push(
+  root: string,
+  build: () => Promise<Built>,
+  options: { dry?: boolean; force?: boolean } = {},
+) {
   const conf = block(root);
   const local = holding();
   const site = local ? null : client(need(conf.bucket));
   const store = local ? null : conf.store.bucket === conf.bucket ? site : client(need(conf.store.bucket));
   const key = `${conf.store.prefix}/manifest.json`;
-  const found = store ? await getText(store, key) : existsSync(where(conf.store)) ? readFileSync(where(conf.store), "utf8") : null;
+  const found = store
+    ? await getText(store, key)
+    : existsSync(where(conf.store))
+      ? readFileSync(where(conf.store), "utf8")
+      : null;
   const old: Manifest = found ? JSON.parse(found) : {};
   const done = await build();
   const next = assets(done.files, old);
@@ -149,7 +196,16 @@ export async function push(root: string, build: () => Promise<Built>, options: {
   const types = typing(next);
   const type = (path: string) => types.get(path) ?? kind(path);
   const cache = headers(done.files);
-  const tiers = staged(changes(old, next, conf.guard, (path) => seal(readFileSync(join(done.out, path)), type(path), cache(path)), options.force), cache);
+  const tiers = staged(
+    changes(
+      old,
+      next,
+      conf.guard,
+      (path) => seal(readFileSync(join(done.out, path)), type(path), cache(path)),
+      options.force,
+    ),
+    cache,
+  );
   const upload = tiers.flat();
   const seen = found || !site ? [...spread(old).keys()] : await sweep(site, conf.prefix, conf.guard);
   const parked = keep(old, want);
@@ -157,21 +213,35 @@ export async function push(root: string, build: () => Promise<Built>, options: {
   const text = `${JSON.stringify({ ...next, ...parked }, null, 2)}\n`;
   if (options.dry) {
     for (const path of tiers[0]!) console.log(`immutable ${conf.prefix + path}`);
-    console.log(`tiers: ${tiers[0]!.length} immutable first, ${tiers[1]!.length} at max-age 0, then the shell ${tiers[2]!.join(" ") || "unchanged"}; ${remove.length} to delete, ${Object.keys(parked).length} kept a week`);
+    console.log(
+      `tiers: ${tiers[0]!.length} immutable first, ${tiers[1]!.length} at max-age 0, then the shell ${tiers[2]!.join(" ") || "unchanged"}; ${remove.length} to delete, ${Object.keys(parked).length} kept a week`,
+    );
   } else if (site && store) {
     let sent = 0;
     for (const tier of tiers) {
       for (let i = 0; i < tier.length; i += BATCH) {
         const batch = tier.slice(i, i + BATCH);
-        await Promise.all(batch.map((path) => putBytes(site, conf.prefix + path, new Uint8Array(readFileSync(join(done.out, path))), { type: type(path), cacheControl: cache(path) })));
+        await Promise.all(
+          batch.map((path) =>
+            putBytes(site, conf.prefix + path, new Uint8Array(readFileSync(join(done.out, path))), {
+              type: type(path),
+              cacheControl: cache(path),
+            }),
+          ),
+        );
         const was = sent;
         sent += batch.length;
-        if (Math.floor(sent / TICK) > Math.floor(was / TICK) || sent === upload.length) console.log(`upload ${sent}/${upload.length}`);
+        if (Math.floor(sent / TICK) > Math.floor(was / TICK) || sent === upload.length)
+          console.log(`upload ${sent}/${upload.length}`);
       }
     }
     if (remove.length) {
       console.log(`delete ${remove.length}`);
-      await del(site, remove.map((path) => conf.prefix + path), BATCH);
+      await del(
+        site,
+        remove.map((path) => conf.prefix + path),
+        BATCH,
+      );
     }
     await putBytes(store, key, text, { type: "application/json", cacheControl: SHORT });
   } else {
@@ -186,7 +256,9 @@ export async function push(root: string, build: () => Promise<Built>, options: {
 export async function main(root: string, build: () => Promise<Built>): Promise<void> {
   const dry = process.argv.includes("--dry");
   const done = await push(root, build, { dry, force: process.argv.includes("--force") });
-  console.log(`push${dry ? " --dry" : ""}${holding() ? " --local" : ""}: ${done.rows} rows, ${done.uploaded} uploaded, ${done.deleted} deleted, ${done.kept} kept a week, ${block(root).guard.join(", ")} guarded`);
+  console.log(
+    `push${dry ? " --dry" : ""}${holding() ? " --local" : ""}: ${done.rows} rows, ${done.uploaded} uploaded, ${done.deleted} deleted, ${done.kept} kept a week, ${block(root).guard.join(", ")} guarded`,
+  );
 }
 
 if (import.meta.main) await main(resolve(import.meta.dir, ".."), () => build());

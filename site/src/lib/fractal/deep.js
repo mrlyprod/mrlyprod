@@ -1,10 +1,10 @@
-import { rng } from '../rand.js';
-import { blend, fill, program, quads, target, texture, tier } from '../gl/gl2.js';
-import { smooth } from '../gl/vec.js';
-import { FLOOR, MIX, TILE, WIDE } from './consts.js';
-import { LIMIT, WORD, apart, ball, exact, fixed, float, nucleus, orbit, shift, size, slice } from './orbit.js';
-import { edge, prefer, score, spread } from './probe.js';
-import { COPY, INK, LINE, shader, tones, unit } from './shader.js';
+import { blend, fill, program, quads, target, texture, tier } from "../gl/gl2.js";
+import { smooth } from "../gl/vec.js";
+import { rng } from "../rand.js";
+import { FLOOR, MIX, TILE, WIDE } from "./consts.js";
+import { apart, ball, exact, fixed, float, LIMIT, nucleus, orbit, shift, size, slice, WORD } from "./orbit.js";
+import { edge, prefer, score, spread } from "./probe.js";
+import { COPY, INK, LINE, shader, tones, unit } from "./shader.js";
 
 const RATE = 0.5;
 const GLIDE = 1500;
@@ -74,11 +74,25 @@ const tangent = (a, b) => {
   return la + lb > 0 ? [(lb * a[0] + la * b[0]) / (la + lb), (lb * a[1] + la * b[1]) / (la + lb)] : [0, 0];
 };
 
-export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1, presets, home = null, path = 0, bottom = FLOOR, still = null } = {}) {
-  const julia = kind === 'julia';
-  if (julia && !presets?.length) throw new Error('deep: a julia dive needs presets');
-  const classic = palette === 'classic';
-  const plan = TIERS[tier(view) === 'phone' ? 'phone' : 'desk'];
+export function deep(
+  gl,
+  view,
+  {
+    kind = "set",
+    seed = 0,
+    palette = "",
+    speed = 1,
+    presets,
+    home = null,
+    path = 0,
+    bottom = FLOOR,
+    still = null,
+  } = {},
+) {
+  const julia = kind === "julia";
+  if (julia && !presets?.length) throw new Error("deep: a julia dive needs presets");
+  const classic = palette === "classic";
+  const plan = TIERS[tier(view) === "phone" ? "phone" : "desk"];
   const rate = (RATE * speed) / 1000;
   const deepest = Math.log2(SPAN / bottom);
   const side = plan.probe;
@@ -108,7 +122,7 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
   let nib = null;
   const spin = (t) => (way * TURN * t) / FRAME;
   const tone = tones(palette, seed);
-  const rest = HOME[julia ? 'julia' : 'set'].map((v) => fixed(v));
+  const rest = HOME[julia ? "julia" : "set"].map((v) => fixed(v));
   const origin = home ? [fixed((home.xMin + home.xMax) / 2), fixed((home.yMin + home.yMax) / 2)] : rest;
   const opening = () => (home ? across(home, view.w, view.h) : SPAN);
   const way = rng((seed ^ SPIN) >>> 0)() < 0.5 ? 1 : -1;
@@ -126,7 +140,7 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
       data.set(a);
       data.set(ref.o.crit.data, a.length);
     }
-    ref.tex = texture(gl, { w: WIDE, h: julia ? ref.o.rows * 2 : ref.o.rows, format: 'rg32f', data });
+    ref.tex = texture(gl, { w: WIDE, h: julia ? ref.o.rows * 2 : ref.o.rows, format: "rg32f", data });
     return ref;
   };
   const release = (ref) => {
@@ -150,12 +164,36 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     if (!julia) return { j, c: null, cf: null, crit: null, base: settled };
     const made = upcoming?.j === j ? upcoming : crit(j);
     made.o.step();
-    return { j, c: made.c, cf: made.cf, crit: made.o, base: upload({ at: [0n, 0n], o: made.o, tex: null, keep: false }) };
+    return {
+      j,
+      c: made.c,
+      cf: made.cf,
+      crit: made.o,
+      base: upload({ at: [0n, 0n], o: made.o, tex: null, keep: false }),
+    };
   };
   const begin = (prep, t0, from = null, ref = prep.base) => {
     for (const one of [cur, next, dive?.base]) if (one !== prep.base && one !== ref) release(one);
     const span = from ? from.span : opening();
-    dive = { ...prep, t0, opening: span, tilt: from ? from.angle - spin(t0) : 0, phase: 'dive', stops: [{ at: from ? from.centre : origin, v: [0, 0] }], k: 0, pending: null, scan: null, goal: null, land: Infinity, arrive: null, rim: null, floor: t0 + Math.max(0, Math.log2(span / bottom)) / rate, frozen: null, heir: null, fade: 0 };
+    dive = {
+      ...prep,
+      t0,
+      opening: span,
+      tilt: from ? from.angle - spin(t0) : 0,
+      phase: "dive",
+      stops: [{ at: from ? from.centre : origin, v: [0, 0] }],
+      k: 0,
+      pending: null,
+      scan: null,
+      goal: null,
+      land: Infinity,
+      arrive: null,
+      rim: null,
+      floor: t0 + Math.max(0, Math.log2(span / bottom)) / rate,
+      frozen: null,
+      heir: null,
+      fade: 0,
+    };
     cur = ref;
     next = null;
     upcoming = julia && !still ? crit(prep.j + 1) : null;
@@ -212,7 +250,8 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     if (!a || t <= a.t) return 0;
     return a.angle * smooth((t - a.t) / (a.end - a.t));
   };
-  const viewAt = (dv, t) => (dv.phase === 'fade' ? dv.frozen : { centre: centreAt(dv, t), span: spanAt(dv, t), angle: angleAt(dv, t) });
+  const viewAt = (dv, t) =>
+    dv.phase === "fade" ? dv.frozen : { centre: centreAt(dv, t), span: spanAt(dv, t), angle: angleAt(dv, t) };
   const homeView = () => ({ centre: origin, span: opening(), angle: 0 });
   const iterations = (v) => Math.min(plan.cap, Math.round(BASE + MORE * Math.max(0, Math.log2(SPAN / v.span))));
   const spans = (v) => {
@@ -257,7 +296,8 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     const rough = shift(cur.at, n[0], n[1]);
     return { at: fine ? polish(rough, q, dv) : rough, n, p: q };
   };
-  const anchor = (at, radius, dv, fine = true) => settle(at, ball(cur.o, apart(at, cur.at), radius, plan.cap), dv, REACH * radius, fine);
+  const anchor = (at, radius, dv, fine = true) =>
+    settle(at, ball(cur.o, apart(at, cur.at), radius, plan.cap), dv, REACH * radius, fine);
   const renew = (at, radius, dv) => {
     const found = anchor(at, radius, dv);
     if (found) next = reference(found.at, dv);
@@ -366,7 +406,7 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     let best = null;
     for (const at of [v.centre, to, ...picks.map((one) => one.at)]) {
       const found = anchor(at, v.span * reach * SEEK, dv, false);
-      if (found && found.p <= plan.cap * HEAVY[julia ? 'julia' : 'set']) {
+      if (found && found.p <= plan.cap * HEAVY[julia ? "julia" : "set"]) {
         const [dx, dy] = apart(found.at, v.centre);
         const far = Math.hypot(dx, dy) / v.span;
         const hit = far <= reach ? framing(v, found) : null;
@@ -378,7 +418,7 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     return best;
   }
   const arrive = (dv, t, hit) => {
-    const [hr, hi] = HOME[julia ? 'julia' : 'set'];
+    const [hr, hi] = HOME[julia ? "julia" : "set"];
     const [sr, si] = hit.s;
     const to = shift(hit.at, sr * hr - si * hi, sr * hi + si * hr);
     const span = spanAt(dv, t);
@@ -388,11 +428,23 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     const cruise = go > 1 ? (go - 1) / rate : 0;
     const end = t + (go <= 0 ? GLIDE : cruise + (2 * Math.min(go, 1)) / rate);
     const { at, vel } = glideAt(dv, t);
-    dv.arrive = { t, la, le, go, cruise, end, angle: Math.atan2(si, sr), p: hit.p, to, gap: apart(at, to), push: vel.map((one) => one * span * GLIDE) };
+    dv.arrive = {
+      t,
+      la,
+      le,
+      go,
+      cruise,
+      end,
+      angle: Math.atan2(si, sr),
+      p: hit.p,
+      to,
+      gap: apart(at, to),
+      push: vel.map((one) => one * span * GLIDE),
+    };
     next = reference(hit.at, dv);
     dv.scan = null;
     forget(dv);
-    dv.phase = 'arrive';
+    dv.phase = "arrive";
   };
   const put = (dv, k, at, exact = false) => {
     dv.stops.length = k + 1;
@@ -423,8 +475,8 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     const depth = Math.log2(SPAN / v.span) - ahead;
     const picks = spread(list, plan.picks).map((one) => ({ ...one, at: locate(v, one.x, one.y) }));
     for (const one of picks) {
-      if (one.kind !== 'island' || resolve(v, one)) continue;
-      one.kind = 'edge';
+      if (one.kind !== "island" || resolve(v, one)) continue;
+      one.kind = "edge";
       one.at = locate(v, one.ex, one.ey);
     }
     const rim = edge(probe, side, side);
@@ -473,11 +525,11 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     if (next && next !== cur) release(next);
     next = null;
     dive.scan = null;
-    dive.phase = 'rest';
+    dive.phase = "rest";
     dive.frozen = v;
   };
   const shown = (t) => {
-    if (dive.phase === 'rest') return dive.frozen;
+    if (dive.phase === "rest") return dive.frozen;
     const v = viewAt(dive, t);
     return { ...v, angle: v.angle + dive.tilt + spin(t) };
   };
@@ -486,22 +538,22 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     dv.frozen = viewAt(dv, t);
     dv.scan = null;
     forget(dv);
-    dv.phase = 'fade';
+    dv.phase = "fade";
     dv.fade = t;
     dv.heir = prepare(dv.j + 1);
   };
   const advance = (t) => {
     for (;;) {
       const dv = dive;
-      if (dv.phase === 'rest') return;
-      if (dv.phase === 'dive') {
+      if (dv.phase === "rest") return;
+      if (dv.phase === "dive") {
         schedule(dv, Math.min(t, dv.floor, dv.land));
         if (Math.min(dv.floor, dv.land) > t) return;
         if (dv.land < dv.floor) arrive(dv, dv.land, dv.goal);
         else end(dv, dv.floor);
         continue;
       }
-      if (dv.phase === 'arrive') {
+      if (dv.phase === "arrive") {
         const out = dv.arrive.end + (still ? 0 : HOLD);
         if (out > t) return;
         end(dv, out);
@@ -531,7 +583,7 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     shades = tone(ink.accent, ink.paper);
   };
   const trace = (dv, t, v) => {
-    if (dv.phase === 'fade' || dv.phase === 'rest') return;
+    if (dv.phase === "fade" || dv.phase === "rest") return;
     const end = dv.arrive ? dv.arrive.t + GLIDE : Math.min(knot(dv, known(dv)), dv.floor, dv.land);
     if (!(end > t)) return;
     pen ??= quads(gl, { aA: 2, aB: 2, aShape: 4, aInk: 4 }, 2 * (TRAIL + DOTS));
@@ -550,8 +602,13 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     const ground = inked(ink.paper);
     const px = view.dpr || 1;
     let n = 0;
-    const add = (a, b, r, w, inside, colour) => pen.data.set([...a, ...b, r * px, (w * px) / 2, inside, 0, ...colour], n++ * pen.stride);
-    for (const [w, colour] of [[PEN + HALO, ground], [PEN, accent]]) for (let i = 1; i < TRAIL; i++) add(trail[i - 1], trail[i], 0, w, 0, colour);
+    const add = (a, b, r, w, inside, colour) =>
+      pen.data.set([...a, ...b, r * px, (w * px) / 2, inside, 0, ...colour], n++ * pen.stride);
+    for (const [w, colour] of [
+      [PEN + HALO, ground],
+      [PEN, accent],
+    ])
+      for (let i = 1; i < TRAIL; i++) add(trail[i - 1], trail[i], 0, w, 0, colour);
     const live = dv.arrive ? [dv.arrive.to] : dv.stops.slice(segment(dv, t) + 1, known(dv) + 1).map((one) => one.at);
     const rings = [[[W / 2, H / 2], HUB, 0], ...live.slice(0, DOTS).map((at, i) => [screen(at), MARK, i ? 0 : SHADE])];
     for (const [at, [r, w], inside] of rings) {
@@ -559,7 +616,7 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
       add(at, at, r, w, inside, accent);
     }
     nib.set({ uRes: [W, H] });
-    pen.draw(nib, n, 'alpha');
+    pen.draw(nib, n, "alpha");
     blend(gl, null);
   };
   const draw = () => {
@@ -582,9 +639,9 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     const turn = dive.tilt + spin(t);
     const colour = { ...shades, uFreq: 1, uDrift: t * DRIFT, uTime: frames * CYCLE };
     shade(paint, upload(cur), v, w, h, { ...colour, uAlpha: 1 });
-    if (dive.phase === 'fade') {
+    if (dive.phase === "fade") {
       const mix = smooth((t - dive.fade) / FADE);
-      blend(gl, 'alpha');
+      blend(gl, "alpha");
       shade(paint, dive.heir.base, { ...homeView(), angle: turn }, w, h, { ...colour, uAlpha: mix });
       blend(gl, null);
     }
@@ -613,11 +670,16 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     nib?.drop();
   };
   const fly = (from = dive.frozen) => {
-    if (dive.phase !== 'rest') return;
-    begin({ j: dive.j, c: dive.c, cf: dive.cf, crit: dive.crit, base: dive.base }, view.t, from, from === dive.frozen ? cur : dive.base);
+    if (dive.phase !== "rest") return;
+    begin(
+      { j: dive.j, c: dive.c, cf: dive.cf, crit: dive.crit, base: dive.base },
+      view.t,
+      from,
+      from === dive.frozen ? cur : dive.base,
+    );
   };
   const halt = () => {
-    if (dive.phase !== 'rest') park(shown(view.t));
+    if (dive.phase !== "rest") park(shown(view.t));
     return dive.frozen;
   };
   const look = (v, c = null) => {
@@ -631,5 +693,5 @@ export function deep(gl, view, { kind = 'set', seed = 0, palette = '', speed = 1
     begin(prepare(0), view.t, still);
     park(still);
   } else begin(prepare(0), 0);
-  return { draw, theme, drop, fly, halt, look, flying: () => dive.phase !== 'rest', at: () => shown(view.t) };
+  return { draw, theme, drop, fly, halt, look, flying: () => dive.phase !== "rest", at: () => shown(view.t) };
 }

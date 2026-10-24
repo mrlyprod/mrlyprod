@@ -2,7 +2,19 @@ import type { Ink, Pen } from "#view";
 import census from "./paper-spectral-tiling-levels.json" with { type: "json" };
 
 type Column = [number[], number[]];
-type Census = { base: number; digits: number[]; depth: number; low: number; high: number; points: number; columns: number; gap: number; thin: number; heights: number[]; stacks: Column[][] };
+type Census = {
+  base: number;
+  digits: number[];
+  depth: number;
+  low: number;
+  high: number;
+  points: number;
+  columns: number;
+  gap: number;
+  thin: number;
+  heights: number[];
+  stacks: Column[][];
+};
 
 export const units = {};
 
@@ -16,21 +28,35 @@ const GAP = 4;
 // FACTS
 
 function check(c: Census, cols: number, side: number) {
-  if (c.base !== BASE || c.digits.join() !== DIGITS.join() || c.depth !== DEPTH || c.low !== LOW || c.high !== HIGH) throw new Error("paper-spectral-tiling-levels: the census draws another measure");
-  if (c.points !== 4 ** DEPTH) throw new Error(`paper-spectral-tiling-levels: ${c.points} lattice points, want ${4 ** DEPTH}`);
-  if (c.columns !== cols || c.heights.length !== cols || c.stacks.length !== 2 || c.stacks.some((s) => s.length !== cols)) throw new Error(`paper-spectral-tiling-levels: the census holds ${c.columns} columns, the frame ${cols}`);
-  if (c.gap !== GAP || Math.abs(c.thin * side - GAP) > 1e-9) throw new Error(`paper-spectral-tiling-levels: bands thinner than ${c.thin * side} px merged, want ${GAP}`);
+  if (c.base !== BASE || c.digits.join() !== DIGITS.join() || c.depth !== DEPTH || c.low !== LOW || c.high !== HIGH)
+    throw new Error("paper-spectral-tiling-levels: the census draws another measure");
+  if (c.points !== 4 ** DEPTH)
+    throw new Error(`paper-spectral-tiling-levels: ${c.points} lattice points, want ${4 ** DEPTH}`);
+  if (
+    c.columns !== cols ||
+    c.heights.length !== cols ||
+    c.stacks.length !== 2 ||
+    c.stacks.some((s) => s.length !== cols)
+  )
+    throw new Error(`paper-spectral-tiling-levels: the census holds ${c.columns} columns, the frame ${cols}`);
+  if (c.gap !== GAP || Math.abs(c.thin * side - GAP) > 1e-9)
+    throw new Error(`paper-spectral-tiling-levels: bands thinner than ${c.thin * side} px merged, want ${GAP}`);
   const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
   for (let k = 0; k < cols; k++) {
     const q = c.heights[k];
     if (!(q <= 1 + 1e-9 && q > 1 - 1e-2)) throw new Error(`paper-spectral-tiling-levels: Q at column ${k} = ${q}`);
     let total = 0;
     for (const [bands, runs] of c.stacks.map((s) => s[k])) {
-      if (runs.length !== bands.length + 1) throw new Error(`paper-spectral-tiling-levels: column ${k} holds ${bands.length} bands and ${runs.length} runs`);
-      if (bands.some((b) => b < c.thin) || runs.some((r) => r < 0)) throw new Error(`paper-spectral-tiling-levels: column ${k} holds a thin band or a negative run`);
+      if (runs.length !== bands.length + 1)
+        throw new Error(
+          `paper-spectral-tiling-levels: column ${k} holds ${bands.length} bands and ${runs.length} runs`,
+        );
+      if (bands.some((b) => b < c.thin) || runs.some((r) => r < 0))
+        throw new Error(`paper-spectral-tiling-levels: column ${k} holds a thin band or a negative run`);
       total += sum(bands) + sum(runs);
     }
-    if (Math.abs(total - q) > 1e-6) throw new Error(`paper-spectral-tiling-levels: column ${k} stacks to ${total}, Q = ${q}`);
+    if (Math.abs(total - q) > 1e-6)
+      throw new Error(`paper-spectral-tiling-levels: column ${k} stacks to ${total}, Q = ${q}`);
   }
 }
 

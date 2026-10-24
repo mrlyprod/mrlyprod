@@ -26,12 +26,22 @@ function facts() {
   if (slice) return slice;
   const cut = math.six.cut(math.three.create(CODE, SIDE, 1, 2));
   const tally = math.six.census(cut, false);
-  if (tally.triangles !== hex.count(SIDE)) throw new Error(`slices: the cut holds ${tally.triangles} triangles, want ${hex.count(SIDE)}`);
+  if (tally.triangles !== hex.count(SIDE))
+    throw new Error(`slices: the cut holds ${tally.triangles} triangles, want ${hex.count(SIDE)}`);
   const read = { fills: tally.fills, pieces: math.six.components(cut), holes: math.six.holes(cut) };
-  if (read.fills !== WANT.fills || read.pieces !== WANT.pieces || read.holes !== WANT.holes) throw new Error(`slices: the carpet's middle hexagon of side ${SIDE} reads ${JSON.stringify(read)}, want ${JSON.stringify(WANT)}`);
+  if (read.fills !== WANT.fills || read.pieces !== WANT.pieces || read.holes !== WANT.holes)
+    throw new Error(
+      `slices: the carpet's middle hexagon of side ${SIDE} reads ${JSON.stringify(read)}, want ${JSON.stringify(WANT)}`,
+    );
   const tones = { [math.six.FILL()]: "fill", [math.six.VOID()]: "void" };
   const tris = [];
-  hex.draw({ triangle: (a, b, c, tone) => tris.push([[a, b, c], tone]) }, frame(-FLAT, -FLAT, 2 * FLAT, 2 * FLAT), cut, GAP, (type) => tones[type] ?? null);
+  hex.draw(
+    { triangle: (a, b, c, tone) => tris.push([[a, b, c], tone]) },
+    frame(-FLAT, -FLAT, 2 * FLAT, 2 * FLAT),
+    cut,
+    GAP,
+    (type) => tones[type] ?? null,
+  );
   slice = tris;
   return slice;
 }
@@ -43,7 +53,11 @@ const LOOK = [Math.cos(PITCH) * Math.cos(YAW), Math.cos(PITCH) * Math.sin(YAW), 
 const RIGHT = [-Math.sin(YAW), Math.cos(YAW), 0];
 const UP = cross(LOOK, RIGHT);
 const CORNERS = Array.from({ length: 8 }, (_, i) => [(i & 1) * 2 - 1, ((i >> 1) & 1) * 2 - 1, ((i >> 2) & 1) * 2 - 1]);
-const EDGES = CORNERS.flatMap((a, i) => CORNERS.slice(i + 1).filter((b) => dot(a, b) === 1).map((b) => [a, b]));
+const EDGES = CORNERS.flatMap((a, i) =>
+  CORNERS.slice(i + 1)
+    .filter((b) => dot(a, b) === 1)
+    .map((b) => [a, b]),
+);
 const NEAR = CORNERS.reduce((best, p) => (dot(p, LOOK) > dot(best, LOOK) ? p : best));
 const FAR = CORNERS.reduce((best, p) => (dot(p, LOOK) < dot(best, LOOK) ? p : best));
 
@@ -53,7 +67,12 @@ function faces() {
     for (const sign of [-1, 1]) {
       const normal = [0, 0, 0];
       normal[axis] = sign;
-      const quad = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => {
+      const quad = [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ].map(([u, v]) => {
         const p = [0, 0, 0];
         p[axis] = sign;
         p[(axis + 1) % 3] = u;
@@ -79,9 +98,12 @@ export default function draw(pen) {
     const [x, y] = view(p);
     return [cx + (x - (lx + hx) / 2) * scale, cy + (y - (ly + hy) / 2) * scale];
   };
-  const meets = (corner) => ([a, b]) => a === corner || b === corner;
+  const meets =
+    (corner) =>
+    ([a, b]) =>
+      a === corner || b === corner;
   const line = ([a, b], thick, color) => pen.segment(place(a), place(b), size * thick, color);
-  faces().forEach((f, i) => pen.polygon(f.quad.map(place), [255, 255, 255, GLASS[i]]));
+  for (const [i, f] of faces().entries()) pen.polygon(f.quad.map(place), [255, 255, 255, GLASS[i]]);
   for (const edge of EDGES.filter(meets(FAR))) line(edge, EDGE * 0.6, [255, 255, 255, BACK]);
   const n = unit(NORMAL);
   const e1 = unit([Math.sign(NORMAL[0]), -Math.sign(NORMAL[1]), 0]);

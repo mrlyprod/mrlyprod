@@ -1,11 +1,11 @@
-import { HUES, blend, rgb } from '../color.js';
-import { grow } from './engine.js';
-import { THETA } from './mesh.js';
-import { PHI, camera, extent, solid, walk } from './solid.js';
-import { path, runs, sheet } from '../app/svg.js';
+import { path, runs, sheet } from "../app/svg.js";
+import { blend, HUES } from "../color.js";
+import { grow } from "./engine.js";
+import { THETA } from "./mesh.js";
+import { camera, extent, PHI, solid, walk } from "./solid.js";
 
 export const LEVEL = 2;
-export const DEGREES = ['blue', 'orange', 'yellow', 'green', 'pink'];
+export const DEGREES = ["blue", "orange", "yellow", "green", "pink"];
 const FIT = 0.9;
 const SLICE = 8;
 const ISO = 1024;
@@ -14,8 +14,8 @@ const LOW = 0.1;
 /* COLOUR */
 
 export function hue(tint, degree) {
-  if (tint !== 'degree') return HUES.includes(tint) ? tint : '';
-  return degree >= 0 ? DEGREES[degree % DEGREES.length] : '';
+  if (tint !== "degree") return HUES.includes(tint) ? tint : "";
+  return degree >= 0 ? DEGREES[degree % DEGREES.length] : "";
 }
 
 /* PAINT */
@@ -57,7 +57,14 @@ export function thumb(ctx, math, dim, base, code, side, { accent, paper }, level
   const n = cell.shape[0];
   const [w, h] = extent(n, PHI);
   const cam = camera(THETA, PHI, (FIT * side) / Math.max(w, h));
-  return cube(ctx, solid(math.three.quads(cell), n), cam, side / 2, side / 2, cam.tone.map((k) => blend(paper, accent, k)));
+  return cube(
+    ctx,
+    solid(math.three.quads(cell), n),
+    cam,
+    side / 2,
+    side / 2,
+    cam.tone.map((k) => blend(paper, accent, k)),
+  );
 }
 
 export function iso(math, cell, theta, phi, paper, accent) {
@@ -68,10 +75,10 @@ export function iso(math, cell, theta, phi, paper, accent) {
   const tones = cam.tone.map((k) => blend(paper, accent, k));
   const parts = [];
   let kind = -1;
-  let d = '';
+  let d = "";
   const flush = () => {
     if (d) parts.push(`<path fill="${tones[kind]}" d="${d}"/>`);
-    d = '';
+    d = "";
   };
   walk(solid(math.three.quads(cell), n), cam, ISO / 2, ISO / 2, (face, ...points) => {
     if (face !== kind) {
@@ -81,7 +88,7 @@ export function iso(math, cell, theta, phi, paper, accent) {
     d += path(points, true);
   });
   flush();
-  return sheet(ISO, ISO, `<rect width="${ISO}" height="${ISO}" fill="${paper}"/>${parts.join('')}`);
+  return sheet(ISO, ISO, `<rect width="${ISO}" height="${ISO}" fill="${paper}"/>${parts.join("")}`);
 }
 
 /* QUEUE */

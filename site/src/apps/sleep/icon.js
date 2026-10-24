@@ -18,7 +18,8 @@ function study() {
   if ([...tile.data].join("") !== grid.LOGO.join("")) throw new Error(`sleep: the carpet of ${TILE} is not the mark`);
   const spots = ALPHA.map((_, k) => [k * STEP, SIDE - TILE - k * STEP]);
   const far = spots[spots.length - 1];
-  if (far[0] + TILE !== SIDE || far[1] !== 0) throw new Error(`sleep: the trail ends at ${far}, not in the far corner of ${SIDE}`);
+  if (far[0] + TILE !== SIDE || far[1] !== 0)
+    throw new Error(`sleep: the trail ends at ${far}, not in the far corner of ${SIDE}`);
   const owner = new Int8Array(SIDE * SIDE).fill(-1);
   const types = new Uint8Array(SIDE * SIDE);
   spots.forEach(([top, left], k) => {
@@ -32,7 +33,8 @@ function study() {
     }
   });
   const shown = ALPHA.map((_, k) => types.filter((t) => t === k + 1).length);
-  if (shown[0] !== LIT || shown.some((n) => n === 0)) throw new Error(`sleep: the layers show ${shown} cells, want ${LIT} for the tile and some for every ghost`);
+  if (shown[0] !== LIT || shown.some((n) => n === 0))
+    throw new Error(`sleep: the layers show ${shown} cells, want ${LIT} for the tile and some for every ghost`);
   memo = { shape: [SIDE, SIDE], types };
   return memo;
 }

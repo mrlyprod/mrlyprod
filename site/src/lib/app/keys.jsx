@@ -1,27 +1,29 @@
-import { useEffect, useRef } from 'react';
-import { Modal } from './controls.jsx';
-import { label } from './menus.js';
+import { useEffect, useRef } from "react";
+import { Modal } from "./controls.jsx";
+import { label } from "./menus.js";
 
 export { label };
 
-const KEPT = '.controls, .library, .chooser, .browser, .pulldown, .trio .menus, textarea, select, [contenteditable]:not([contenteditable=false]), input:not([type=range], [type=checkbox], [type=radio], [type=button], [type=submit], [type=reset])';
+const KEPT =
+  ".controls, .library, .chooser, .browser, .pulldown, .trio .menus, textarea, select, [contenteditable]:not([contenteditable=false]), input:not([type=range], [type=checkbox], [type=radio], [type=button], [type=submit], [type=reset])";
 
-const PRESSED = 'button, a[href], summary, [role=button], [role=link]';
+const PRESSED = "button, a[href], summary, [role=button], [role=link]";
 
-const tag = (key) => (key === ' ' || key === 'Spacebar' ? 'Space' : key === 'Esc' ? 'Escape' : key?.length === 1 ? key.toLowerCase() : key);
+const tag = (key) =>
+  key === " " || key === "Spacebar" ? "Space" : key === "Esc" ? "Escape" : key?.length === 1 ? key.toLowerCase() : key;
 
-const within = (e, selector) => typeof e.target?.closest === 'function' && !!e.target.closest(selector);
+const within = (e, selector) => typeof e.target?.closest === "function" && !!e.target.closest(selector);
 
 export function hit(map, e, open = () => false) {
   if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return null;
   const key = tag(e.key);
   const row = map.find((one) => [].concat(one.key).some((k) => tag(k) === key));
   if (!row || within(e, KEPT) || open(e)) return null;
-  if ((key === 'Space' || key === 'Enter') && within(e, PRESSED)) return null;
+  if ((key === "Space" || key === "Enter") && within(e, PRESSED)) return null;
   return row;
 }
 
-const LIGHT = ['keys', 'info'];
+const LIGHT = ["keys", "info"];
 
 export function flip(selector) {
   const at = document.querySelector(selector);
@@ -30,12 +32,13 @@ export function flip(selector) {
   else at.showModal();
 }
 
-const open = () => [...document.querySelectorAll('dialog[open]')].some((one) => !LIGHT.some((name) => one.classList.contains(name)));
+const open = () =>
+  [...document.querySelectorAll("dialog[open]")].some((one) => !LIGHT.some((name) => one.classList.contains(name)));
 
 const BASE = {
-  keys: () => flip('dialog.keys'),
-  info: () => flip('dialog.info'),
-  export: () => flip('dialog.export'),
+  keys: () => flip("dialog.keys"),
+  info: () => flip("dialog.info"),
+  export: () => flip("dialog.export"),
 };
 
 const caps = (keys) => [...new Set(keys)].map((key) => <kbd key={key}>{label(key)}</kbd>);
@@ -64,19 +67,22 @@ export function useKeys(map, acts) {
       e.preventDefault();
       run(e);
     };
-    addEventListener('keydown', press);
-    return () => removeEventListener('keydown', press);
+    addEventListener("keydown", press);
+    return () => removeEventListener("keydown", press);
   }, [map]);
 }
 
-export function Keys({ map, title = 'Keys' }) {
+export function Keys({ map, title = "Keys" }) {
   return (
     <Modal className="keys" title={title}>
       <dl>
         {fused(map).map((row) => (
           <div key={row.act ?? row.label}>
             <dt>{caps(row.keys.flat())}</dt>
-            <dd>{row.label}{row.does && <span>{row.does}</span>}</dd>
+            <dd>
+              {row.label}
+              {row.does && <span>{row.does}</span>}
+            </dd>
           </div>
         ))}
       </dl>
@@ -91,17 +97,23 @@ function linked(text) {
   let at = 0;
   for (const found of text.matchAll(LINK)) {
     out.push(text.slice(at, found.index));
-    out.push(<a key={found.index} href={found[2]}>{found[1]}</a>);
+    out.push(
+      <a key={found.index} href={found[2]}>
+        {found[1]}
+      </a>,
+    );
     at = found.index + found[0].length;
   }
   out.push(text.slice(at));
-  return out.filter((part) => part !== '');
+  return out.filter((part) => part !== "");
 }
 
-export function Info({ about = [], rows = [], title = 'Info' }) {
+export function Info({ about = [], rows = [], title = "Info" }) {
   return (
     <Modal className="info" title={title}>
-      {about.map((line) => <p key={line}>{linked(line)}</p>)}
+      {about.map((line) => (
+        <p key={line}>{linked(line)}</p>
+      ))}
       {rows.length > 0 && (
         <dl>
           {rows.map(([name, value]) => (
@@ -117,10 +129,12 @@ export function Info({ about = [], rows = [], title = 'Info' }) {
 }
 
 export function Hints({ map, count = 3 }) {
-  return fused(map).slice(0, count).map((row) => (
-    <span key={row.act ?? row.label}>
-      {caps(row.keys.map((keys) => keys[0]))}
-      {row.label}
-    </span>
-  ));
+  return fused(map)
+    .slice(0, count)
+    .map((row) => (
+      <span key={row.act ?? row.label}>
+        {caps(row.keys.map((keys) => keys[0]))}
+        {row.label}
+      </span>
+    ));
 }

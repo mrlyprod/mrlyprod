@@ -23,5 +23,6 @@ export default function draw(pen: Pen, ink: Ink) {
       }
     }
   }
-  if (BigInt(visible) !== num.lattice.coprime_pairs(N)) throw new Error(`research-pi: ${visible} visible, want ${num.lattice.coprime_pairs(N)}`);
+  if (BigInt(visible) !== num.lattice.coprime_pairs(N))
+    throw new Error(`research-pi: ${visible} visible, want ${num.lattice.coprime_pairs(N)}`);
 }

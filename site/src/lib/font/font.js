@@ -1,7 +1,7 @@
-import FONT from './font.gen.json' with { type: 'json' };
+import FONT from "./font.gen.json" with { type: "json" };
 
 const FPS = 25;
-const BLANK = ['000', '000', '000', '000', '000'];
+const BLANK = ["000", "000", "000", "000", "000"];
 
 /* GLYPHS */
 
@@ -10,7 +10,7 @@ function trim(rows) {
   let to = 0;
   for (const row of rows) {
     for (let c = 0; c < row.length; c++) {
-      if (row[c] !== '1') continue;
+      if (row[c] !== "1") continue;
       from = Math.min(from, c);
       to = Math.max(to, c + 1);
     }
@@ -41,7 +41,7 @@ export function letters(text) {
   const grid = Array.from({ length: width ? height : 0 }, () => Array(width).fill(0));
   for (const block of blocks) {
     block.rows.forEach((row, r) => {
-      for (let c = 0; c < row.length; c++) if (row[c] === '1') grid[block.offset + r][block.col + c] = 1;
+      for (let c = 0; c < row.length; c++) if (row[c] === "1") grid[block.offset + r][block.col + c] = 1;
     });
   }
   return { rows: grid.length, cols: width, grid };
@@ -75,7 +75,7 @@ function stamp(blocks, spots, rows, cols) {
     const [cx, cy] = spots[i];
     block.rows.forEach((row, r) => {
       for (let c = 0; c < row.length; c++) {
-        if (row[c] !== '1') continue;
+        if (row[c] !== "1") continue;
         const y = cy + r;
         const x = cx + c;
         if (y >= 0 && y < rows && x >= 0 && x < cols) active.add(y * cols + x);
@@ -126,12 +126,17 @@ export function merge(text, pad = 1) {
   return frames;
 }
 
-export function fold(text, into = 'X', pad = 0) {
+export function fold(text, into = "X", pad = 0) {
   const laid = layout(text);
   const [rows, cols] = board(laid, pad);
   const end = layout(into);
   const x = Math.floor((cols - end.width) / 2);
   const y = Math.floor((rows - end.height) / 2);
-  const last = stamp(end.blocks, end.blocks.map((b) => [x + b.col, y + b.offset]), rows, cols);
+  const last = stamp(
+    end.blocks,
+    end.blocks.map((b) => [x + b.col, y + b.offset]),
+    rows,
+    cols,
+  );
   return { rows, cols, fps: FPS, frames: [...merge(text, pad), last] };
 }

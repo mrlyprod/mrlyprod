@@ -12,7 +12,9 @@ type Verdict = { row: number; col: number; meets: boolean; constant: boolean };
 let memo: Verdict[] | undefined;
 
 function alternating(a: number, b: number) {
-  return Array.from({ length: LENGTH }, (_, place) => math.bang.MagicLayer.new(new math.name.Bang(place % 2 === 0 ? a : b, 2, 2), 2));
+  return Array.from({ length: LENGTH }, (_, place) =>
+    math.bang.MagicLayer.new(new math.name.Bang(place % 2 === 0 ? a : b, 2, 2), 2),
+  );
 }
 
 function verdict(a: number, b: number): [boolean, boolean] {
@@ -55,5 +57,8 @@ export default function draw(pen: Pen, ink: Ink) {
       pen.rect(x + (w - pip) / 2, y + (h - pip) / 2, pip, pip, ink.yellow);
     }
   }
-  if (alphabets !== 105 || ceiling !== 89 || exact !== 27) throw new Error(`paper-component-exponent-of-kronecker-words: ${alphabets} alphabets, ${ceiling} at the ceiling, ${exact} exact, want 105, 89, 27`);
+  if (alphabets !== 105 || ceiling !== 89 || exact !== 27)
+    throw new Error(
+      `paper-component-exponent-of-kronecker-words: ${alphabets} alphabets, ${ceiling} at the ceiling, ${exact} exact, want 105, 89, 27`,
+    );
 }

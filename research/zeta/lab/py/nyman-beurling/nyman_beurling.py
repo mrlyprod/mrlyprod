@@ -7,8 +7,29 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", ".."))
 DATA_DIR = os.path.join(REPO, "data", os.path.relpath(HERE, REPO))
-PAIRS = [(1, 1), (1, 2), (2, 3), (3, 4), (5, 7), (1, 9), (4, 9), (13, 27), (10, 81), (40, 81), (6, 10)]
-DESIGNS = [(3, (0, 1)), (3, (0, 2)), (3, (1, 2)), (4, (0, 1)), (4, (1, 2, 3)), (5, (0, 1)), (10, tuple(range(9))), (10, (0, 1, 2, 3, 4, 5, 6, 7, 9))]
+PAIRS = [
+    (1, 1),
+    (1, 2),
+    (2, 3),
+    (3, 4),
+    (5, 7),
+    (1, 9),
+    (4, 9),
+    (13, 27),
+    (10, 81),
+    (40, 81),
+    (6, 10),
+]
+DESIGNS = [
+    (3, (0, 1)),
+    (3, (0, 2)),
+    (3, (1, 2)),
+    (4, (0, 1)),
+    (4, (1, 2, 3)),
+    (5, (0, 1)),
+    (10, tuple(range(9))),
+    (10, (0, 1, 2, 3, 4, 5, 6, 7, 9)),
+]
 
 ENGINE = r"""
 default(parisizemax, 6000000000);
@@ -64,8 +85,14 @@ def gp(lines, prec=60):
     os.makedirs(DATA_DIR, exist_ok=True)
     path = os.path.join(DATA_DIR, "run.gp")
     with open(path, "w") as fh:
-        fh.write("PREC = {};".format(prec) + ENGINE + "\n".join(lines) + "\nquit;\n")
-    done = subprocess.run(["gp", "-q", path], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        fh.write(f"PREC = {prec};" + ENGINE + "\n".join(lines) + "\nquit;\n")
+    done = subprocess.run(
+        ["gp", "-q", path],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        check=False,
+    )
     if done.returncode != 0:
         raise RuntimeError(done.stderr)
     return [line for line in done.stdout.splitlines() if not line.startswith("  ***")]
@@ -74,10 +101,14 @@ def gp(lines, prec=60):
 def verb_gram():
     lines = []
     for h, k in PAIRS:
-        lines.append('my(a = gram({0}, {1}), b = quad({0}, {1})); print("{0} {1} ", a, " ", b, " ", abs(a - b))'.format(h, k))
+        lines.append(
+            f'my(a = gram({h}, {k}), b = quad({h}, {k})); print("{h} {k} ", a, " ", b, " ", abs(a - b))'
+        )
     lines.append('print("norm ", gram(1, 1), " ", LC)')
     for S in ("[1, 2, 3]", "[1, 3]", "[1, 2, 3, 4]", "[1, 3, 4]"):
-        lines.append('my(S = {0}, r = dist(S)); print("d2 {0} ", r[1], " ", resid(S, r[4]))'.format(S))
+        lines.append(
+            f'my(S = {S}, r = dist(S)); print("d2 {S} ", r[1], " ", resid(S, r[4]))'
+        )
     lines.append('print("d2 1 ", dist([1])[1], " ", 1 - (1 - Euler)^2/LC)')
     for row in gp(lines, 40):
         print(row)
@@ -88,18 +119,24 @@ def verb_table(levels="2-6", extra=7):
     for prec in (60, 90):
         lines = ['C = 2 + Euler - log(4*Pi); print("burnol C ", C)']
         for level in range(lo, hi + 1):
-            lines.append('my(N = 3^{0}, r = dist([1..N])); print("full {0} ", N, " ", N, " ", r[1], " ", r[2], " ", r[3], " ", C/log(N), " ", r[1]*log(N))'.format(level))
+            lines.append(
+                f'my(N = 3^{level}, r = dist([1..N])); print("full {level} ", N, " ", N, " ", r[1], " ", r[2], " ", r[3], " ", C/log(N), " ", r[1]*log(N))'
+            )
         for level in range(1, max(hi, extra) + 1):
-            lines.append('my(N = 3^{0}, D = design(3, [0, 1], N), r = dist(D)); print("design {0} ", N, " ", #D, " ", r[1], " ", r[2], " ", r[3], " ", C/log(N), " ", r[1]*log(N))'.format(level))
+            lines.append(
+                f'my(N = 3^{level}, D = design(3, [0, 1], N), r = dist(D)); print("design {level} ", N, " ", #D, " ", r[1], " ", r[2], " ", r[3], " ", C/log(N), " ", r[1]*log(N))'
+            )
         start = time.time()
         rows = gp(lines, prec)
-        print("precision", prec, "digits, {:.1f} s".format(time.time() - start))
+        print("precision", prec, f"digits, {time.time() - start:.1f} s")
         for row in rows:
             print(row)
 
 
 def verb_zeros(height=1000):
-    lines = ['my(z = lfunzeros(1, {0}), s = 2*sum(i = 1, #z, 1/(1/4 + z[i]^2)), tail = 2*(log({0}/(2*Pi)) + 1)/(2*Pi*{0})); print("zeros ", #z, " partial ", s, " tail ", tail, " sum ", s + tail, " C ", 2 + Euler - log(4*Pi))'.format(height)]
+    lines = [
+        f'my(z = lfunzeros(1, {height}), s = 2*sum(i = 1, #z, 1/(1/4 + z[i]^2)), tail = 2*(log({height}/(2*Pi)) + 1)/(2*Pi*{height})); print("zeros ", #z, " partial ", s, " tail ", tail, " sum ", s + tail, " C ", 2 + Euler - log(4*Pi))'
+    ]
     for row in gp(lines, 30):
         print(row)
 
@@ -107,11 +144,23 @@ def verb_zeros(height=1000):
 def verb_floor(kmax=40):
     lines = []
     for base, F in DESIGNS:
-        lines.append('my(S = design({0}, {1}, 100000)); print("q0 {0} {1} ", qzero(S, 100000), " ", S[1..12])'.format(base, list(F)))
-    lines.append('my(S = design(3, [0, 1], 1000)); for(K = 2, {0}, print("floor 3 [0,1] ", K, " ", floorq(S, K, 1), " ", floorq(S, K, 0)))'.format(kmax))
-    lines.append('my(S = [1..1000]); for(K = 2, 12, print("floor full ", K, " ", floorq(S, K, 1), " ", floorq(S, K, 0)))')
+        lines.append(
+            'my(S = design({0}, {1}, 100000)); print("q0 {0} {1} ", qzero(S, 100000), " ", S[1..12])'.format(
+                base, list(F)
+            )
+        )
+    lines.append(
+        f'my(S = design(3, [0, 1], 1000)); for(K = 2, {kmax}, print("floor 3 [0,1] ", K, " ", floorq(S, K, 1), " ", floorq(S, K, 0)))'
+    )
+    lines.append(
+        'my(S = [1..1000]); for(K = 2, 12, print("floor full ", K, " ", floorq(S, K, 1), " ", floorq(S, K, 0)))'
+    )
     for base, F in DESIGNS[1:]:
-        lines.append('my(S = design({0}, {1}, 1000)); foreach([{2}], K, print("floor {0} {1} ", K, " ", floorq(S, K, 1), " ", floorq(S, K, 0)))'.format(base, list(F), kmax))
+        lines.append(
+            'my(S = design({0}, {1}, 1000)); foreach([{2}], K, print("floor {0} {1} ", K, " ", floorq(S, K, 1), " ", floorq(S, K, 0)))'.format(
+                base, list(F), kmax
+            )
+        )
     for row in gp(lines, 60):
         print(row)
 
@@ -129,4 +178,4 @@ if __name__ == "__main__":
         verb_zeros(*(int(v) for v in sys.argv[2:3]))
     else:
         raise SystemExit("verbs: gram, table, floor, zeros")
-    print("runtime {:.1f} s".format(time.time() - start))
+    print(f"runtime {time.time() - start:.1f} s")

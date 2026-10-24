@@ -1,11 +1,15 @@
-import { colorizer, odd, paint } from '../../lib/moire/engine.js';
+import { colorizer, odd, paint } from "../../lib/moire/engine.js";
 
-export const CARPET = '23';
+export const CARPET = "23";
 export const SIZES = [128, 192, 256, 320, 384];
 export const LEAST = 4;
 export const MOST = 128;
 export const TILE = 64;
-export const STACKS = [['Doublings', [4, 8, 16, 32, 64]], ['Fours', [12, 20, 28, 48]], ['Twos', [6, 10, 18, 30]]];
+export const STACKS = [
+  ["Doublings", [4, 8, 16, 32, 64]],
+  ["Fours", [12, 20, 28, 48]],
+  ["Twos", [6, 10, 18, 30]],
+];
 export const DEEP = [96, 128];
 const RIBBON = 12;
 const DIAGONAL = [1, 1, 1];
@@ -30,7 +34,7 @@ export function cutter(math) {
       side = size;
     }
     if (!held.has(n)) {
-      const volume = math.moire.volume(spec, [n], 'Sum', 1, n);
+      const volume = math.moire.volume(spec, [n], "Sum", 1, n);
       const [ink, mask] = volume.plane(frame, size);
       volume.free();
       held.set(n, Uint8Array.from(ink));

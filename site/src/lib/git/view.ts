@@ -1,5 +1,5 @@
+import { esc } from "../md/text.ts";
 import { seti } from "./seti/seti.ts";
-import { escape } from "../md/text.ts";
 
 /* TYPES */
 
@@ -18,7 +18,13 @@ export type Code = { text: string; lang: string };
 
 export type Full = { html: string; code?: Code };
 
-export type View = { path: string; name: string; found: boolean; html: string; more?: (tools: Tools) => Promise<Full | null> };
+export type View = {
+  path: string;
+  name: string;
+  found: boolean;
+  html: string;
+  more?: (tools: Tools) => Promise<Full | null>;
+};
 
 /* TEXT */
 
@@ -32,7 +38,11 @@ export const ext = (path: string) => {
   return cut > 0 ? name.slice(cut + 1) : "";
 };
 
-const anchor = (text: string) => text.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "top";
+const anchor = (text: string) =>
+  text
+    .replace(/[^A-Za-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase() || "top";
 
 export const size = (n: number) =>
   n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} kB` : `${(n / (1024 * 1024)).toFixed(1)} MB`;
@@ -47,7 +57,7 @@ export const rawPath = (path: string) => `raw/${path}`;
 
 const uri = (url: string) => encodeURI(url).replace(/#/g, "%23").replace(/\?/g, "%3F");
 
-export const href = (url: string) => escape(uri(url));
+export const href = (url: string) => esc(uri(url));
 
 /* LANGS */
 
@@ -130,7 +140,7 @@ const DENY = /^(?:javascript|data|vbscript):/i;
 export function link(dir: string, url: string): string;
 export function link(dir: string, url: string, wood: Wood): string | null;
 export function link(dir: string, url: string, wood?: Wood): string | null {
-  if (DENY.test(url.replace(/[\u0000- ]/g, ""))) return "#";
+  if (DENY.test(url.replace(/[\p{Cc} ]/gu, ""))) return "#";
   if (/^(https?:|mailto:|tel:|#|\/)/.test(url)) return url;
   const cut = url.search(/[#?]/);
   const tail = cut < 0 ? "" : url.slice(cut);
@@ -153,31 +163,36 @@ export function link(dir: string, url: string, wood?: Wood): string | null {
 export const github = (wood: Pick<Wood, "slug" | "branch">, path: string, dir: boolean) =>
   wood.slug ? `https://github.com/${wood.slug}/${dir ? "tree" : "blob"}/${wood.branch}${path ? `/${path}` : ""}` : "";
 
-export function away(wood: Pick<Wood, "slug" | "branch">, view: Pick<View, "path" | "found">): { raw: string; hub: string } {
+export function away(
+  wood: Pick<Wood, "slug" | "branch">,
+  view: Pick<View, "path" | "found">,
+): { raw: string; hub: string } {
   if (!view.found) return { raw: "", hub: "" };
   const dir = view.path === "" || view.path.endsWith("/");
   const path = view.path.replace(/\/$/, "");
   return { raw: dir ? "" : uri(`/${rawPath(path)}`), hub: uri(github(wood, path, dir)) };
 }
 
-function bar(wood: Wood, path: string, dir: boolean, tools: string[]): string {
+function bar(wood: Wood, path: string, tools: string[]): string {
   const parts = path ? path.split("/") : [];
-  const crumbs = [`<a href="/git/">${escape(wood.name)}</a>`];
+  const crumbs = [`<a href="/git/">${esc(wood.name)}</a>`];
   let at = "";
   parts.forEach((part, i) => {
     at = at ? `${at}/${part}` : part;
     const last = i === parts.length - 1;
-    crumbs.push(last ? `<b>${escape(part)}</b>` : `<a href="${href(dirRoute(at))}">${escape(part)}</a>`);
+    crumbs.push(last ? `<b>${esc(part)}</b>` : `<a href="${href(dirRoute(at))}">${esc(part)}</a>`);
   });
   const side = tools.filter(Boolean).join(" · ");
   return `<nav class="path" aria-label="Path"><span class="crumbs">${crumbs.join('<span class="sep">/</span>')}</span><span class="tools">${side}</span></nav>`;
 }
 
-const lede = (name: string, lead: string) => `<div class="lede"><h1 id="${anchor(name)}">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;
+const lede = (name: string, lead: string) =>
+  `<div class="lede"><h1 id="${anchor(name)}">${esc(name)}</h1><p class="lead">${esc(lead)}</p></div>`;
 
 const source = (path: string) => `/${rawPath(path)}`;
 
-const prose = async (wood: Wood, tools: Tools, path: string, text: string) => `<div class="prose readme">${await tools.md!(text, (url) => link(home(path), url, wood))}</div>`;
+const prose = async (wood: Wood, tools: Tools, path: string, text: string) =>
+  `<div class="prose readme">${await tools.md!(text, (url) => link(home(path), url, wood))}</div>`;
 
 /* LISTING */
 
@@ -186,9 +201,9 @@ function rows(dir: string, kids: Twig[]): string {
     const path = dir ? `${dir}/${kid.n}` : kid.n;
     if (kid.k === "d") {
       const count = kid.c?.length ?? 0;
-      return `<li class="dir"><span class="ico" aria-hidden="true"></span><a href="${href(dirRoute(path))}">${escape(kid.n)}/</a><span class="n">${count} item${count === 1 ? "" : "s"}</span></li>`;
+      return `<li class="dir"><span class="ico" aria-hidden="true"></span><a href="${href(dirRoute(path))}">${esc(kid.n)}/</a><span class="n">${count} item${count === 1 ? "" : "s"}</span></li>`;
     }
-    return `<li><span class="${seti(kid.n)}" aria-hidden="true"></span><a href="${href(fileRoute(path))}">${escape(kid.n)}</a><span class="n">${size(kid.s ?? 0)}</span></li>`;
+    return `<li><span class="${seti(kid.n)}" aria-hidden="true"></span><a href="${href(fileRoute(path))}">${esc(kid.n)}</a><span class="n">${size(kid.s ?? 0)}</span></li>`;
   });
   return `<ul class="files">\n${items.join("\n")}\n</ul>`;
 }
@@ -196,7 +211,7 @@ function rows(dir: string, kids: Twig[]): string {
 function listing(wood: Wood, dir: string, twig: Twig): { html: string; more?: View["more"] } {
   const kids = twig.c ?? [];
   const where = github(wood, dir, true);
-  const head = bar(wood, dir, true, [where ? `<a href="${href(where)}">GitHub</a>` : ""]);
+  const head = bar(wood, dir, [where ? `<a href="${href(where)}">GitHub</a>` : ""]);
   const readme = kids.find((kid) => kid.k === "f" && kid.n.toLowerCase() === "readme.md");
   const folders = kids.filter((kid) => kid.k === "d").length;
   const files = kids.length - folders;
@@ -224,12 +239,13 @@ const gutter = (count: number) => Math.min(WIDEST, Math.max(NARROW, String(count
 export function block(text: string, kind: string): string {
   const lines = text.replace(/\r\n?/g, "\n").split("\n");
   if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
-  if (!paints(text)) return `<div class="code plain" data-lang="${escape(kind)}"><pre><code>${escape(text)}</code></pre></div>`;
+  if (!paints(text))
+    return `<div class="code plain" data-lang="${esc(kind)}"><pre><code>${esc(text)}</code></pre></div>`;
   const out = lines.map((line, i) => {
     const n = i + 1;
-    return `<span class="line" id="L${n}"><a class="n" href="#L${n}">${n}</a><span class="t">${escape(line)}</span></span>`;
+    return `<span class="line" id="L${n}"><a class="n" href="#L${n}">${n}</a><span class="t">${esc(line)}</span></span>`;
   });
-  return `<div class="code d${gutter(lines.length)}" data-lang="${escape(kind)}"><pre><code>${out.join("")}</code></pre></div>`;
+  return `<div class="code d${gutter(lines.length)}" data-lang="${esc(kind)}"><pre><code>${out.join("")}</code></pre></div>`;
 }
 
 export const paints = (text: string) => text.length <= WIDE;
@@ -243,18 +259,32 @@ function file(wood: Wood, path: string, twig: Twig): { html: string; more?: View
   const name = stem(path);
   const tongue = lang(path);
   const where = github(wood, path, false);
-  const head = bar(wood, path, false, [`<a href="${raw}">Raw</a>`, where ? `<a href="${href(where)}">GitHub</a>` : ""]);
+  const head = bar(wood, path, [`<a href="${raw}">Raw</a>`, where ? `<a href="${href(where)}">GitHub</a>` : ""]);
   const page = (note: string, main: string) => `${head}\n${lede(name, note)}\n${main}`;
-  const loose = page(`${size(weight)} · ${kind || "binary"}`, `<p class="lead"><a href="${raw}">Download ${escape(name)}</a> · ${size(weight)}</p>`);
+  const loose = page(
+    `${size(weight)} · ${kind || "binary"}`,
+    `<p class="lead"><a href="${raw}">Download ${esc(name)}</a> · ${size(weight)}</p>`,
+  );
   if (weight > HUGE) return { html: loose };
-  if (kind === "pdf") return { html: page(`${size(weight)} · pdf`, `<embed class="doc" src="${raw}" type="application/pdf">`) };
-  if (IMAGE.has(kind)) return { html: page(`${size(weight)} · ${kind}`, `<figure class="shot"><img src="${raw}" alt="${escape(name)}"></figure>`) };
+  if (kind === "pdf")
+    return { html: page(`${size(weight)} · pdf`, `<embed class="doc" src="${raw}" type="application/pdf">`) };
+  if (IMAGE.has(kind))
+    return {
+      html: page(`${size(weight)} · ${kind}`, `<figure class="shot"><img src="${raw}" alt="${esc(name)}"></figure>`),
+    };
   const more = async (tools: Tools): Promise<Full | null> => {
     const body = await tools.load(source(path));
-    if (!body) return { html: page(`${size(weight)} · ${tongue}`, `<p class="lead">${escape(name)} did not load. <a href="${raw}">Open the raw file</a> or reload.</p>`) };
+    if (!body)
+      return {
+        html: page(
+          `${size(weight)} · ${tongue}`,
+          `<p class="lead">${esc(name)} did not load. <a href="${raw}">Open the raw file</a> or reload.</p>`,
+        ),
+      };
     const text = reads(body);
     if (text === null) return { html: loose };
-    if (kind === "md" && tools.md) return { html: page(`${size(weight)} · ${tongue}`, await prose(wood, tools, path, text)) };
+    if (kind === "md" && tools.md)
+      return { html: page(`${size(weight)} · ${tongue}`, await prose(wood, tools, path, text)) };
     const count = text ? text.replace(/\n$/, "").split("\n").length : 0;
     const html = page(`${size(weight)} · ${tongue} · ${count} line${count === 1 ? "" : "s"}`, block(text, tongue));
     return paints(text) ? { html, code: { text, lang: tongue } } : { html };
@@ -265,13 +295,14 @@ function file(wood: Wood, path: string, twig: Twig): { html: string; more?: View
 /* DRAW */
 
 function lost(wood: Wood, path: string): string {
-  return `${bar(wood, "", true, [])}\n${lede("Not found", `No ${path} in ${wood.name}.`)}\n<p><a href="/git/">Back to ${escape(wood.name)}</a></p>`;
+  return `${bar(wood, "", [])}\n${lede("Not found", `No ${path} in ${wood.name}.`)}\n<p><a href="/git/">Back to ${esc(wood.name)}</a></p>`;
 }
 
 export function draw(wood: Wood, at: string): View {
   const path = at.split("/").filter(Boolean).join("/");
   const twig = find(wood, path);
   if (!twig) return { path, name: "Not found", found: false, html: lost(wood, path) };
-  if (twig.k === "d") return { path: path ? `${path}/` : "", name: path || wood.name, found: true, ...listing(wood, path, twig) };
+  if (twig.k === "d")
+    return { path: path ? `${path}/` : "", name: path || wood.name, found: true, ...listing(wood, path, twig) };
   return { path, name: stem(path), found: true, ...file(wood, path, twig) };
 }

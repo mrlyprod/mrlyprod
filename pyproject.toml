@@ -13,3 +13,7 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+[tool.ruff.lint]
+extend-select = ["I"]
+ignore = ["B023", "BLE001", "UP031"]

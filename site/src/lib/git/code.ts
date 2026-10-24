@@ -1,5 +1,5 @@
 import type { HighlighterCore } from "@shikijs/core";
-import { escape } from "../md/text.ts";
+import { esc } from "../md/text.ts";
 
 /* GRAMMARS */
 
@@ -31,7 +31,10 @@ let held: Promise<HighlighterCore> | undefined;
 const loaded = new Map<string, Promise<boolean>>();
 
 async function boot(): Promise<HighlighterCore> {
-  const [{ createCssVariablesTheme, createHighlighterCore }, { createJavaScriptRegexEngine }] = await Promise.all([import("@shikijs/core"), import("@shikijs/engine-javascript")]);
+  const [{ createCssVariablesTheme, createHighlighterCore }, { createJavaScriptRegexEngine }] = await Promise.all([
+    import("@shikijs/core"),
+    import("@shikijs/engine-javascript"),
+  ]);
   return createHighlighterCore({
     langs: [],
     themes: [createCssVariablesTheme({ name: NAME, variablePrefix: "--code-" })],
@@ -69,7 +72,7 @@ const BOLD = 2;
 const UNDER = 4;
 
 function span(content: string, color: string | undefined, face: number): string {
-  const body = escape(content);
+  const body = esc(content);
   const cls: string[] = [];
   const hit = color ? TOKEN.exec(color) : null;
   if (hit) cls.push(`tk-${hit[1]}`);

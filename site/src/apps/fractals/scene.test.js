@@ -1,23 +1,31 @@
-import { expect, test } from 'bun:test';
-import { asked, tidy } from '../../lib/app/spec.js';
-import { rng } from '../../lib/rand.js';
-import { spanOf } from '../../lib/fractal/view.js';
-import { unit } from '../../lib/fractal/shader.js';
-import { gl } from '../../../test/fake.js';
-import { SAVERS, SPEC, go, make } from './scene.js';
-import { PLACES } from './places.js';
+import { expect, test } from "bun:test";
+import { gl } from "../../../test/fake.js";
+import { asked, tidy } from "../../lib/app/spec.js";
+import { unit } from "../../lib/fractal/shader.js";
+import { spanOf } from "../../lib/fractal/view.js";
+import { rng } from "../../lib/rand.js";
+import { PLACES } from "./places.js";
+import { go, make, SAVERS, SPEC } from "./scene.js";
 
-const canvas = (fake) => ({ width: 1, height: 1, getContext: (kind) => (kind === 'webgl2' ? fake : null) });
+const canvas = (fake) => ({ width: 1, height: 1, getContext: (kind) => (kind === "webgl2" ? fake : null) });
 
-const VIEW = { rand: rng(7), look: () => ({ paper: '#102030', accent: '#ff8000' }), still: false, w: 1280, h: 720, dpr: 1, t: 0 };
+const VIEW = {
+  rand: rng(7),
+  look: () => ({ paper: "#102030", accent: "#ff8000" }),
+  still: false,
+  w: 1280,
+  h: 720,
+  dpr: 1,
+  t: 0,
+};
 
 const LOCK = { ...VIEW, lock: true };
 
-const paints = (fake) => fake.draws().filter((one) => 'uAlpha' in one.uniforms && one.fb === null);
+const paints = (fake) => fake.draws().filter((one) => "uAlpha" in one.uniforms && one.fb === null);
 
 const span = (one) => +(Math.hypot(...one.uniforms.uU) * VIEW.h).toFixed(9);
 
-test('under the lock each kind dives from the start and is still diving a minute in, the seed picking the kind when none is asked', () => {
+test("under the lock each kind dives from the start and is still diving a minute in, the seed picking the kind when none is asked", () => {
   const dive = (opts) => {
     const fake = gl();
     const at = { ...LOCK };
@@ -28,32 +36,60 @@ test('under the lock each kind dives from the start and is still diving a minute
     scene.stop();
     return paints(fake).map((one) => one.uniforms.uJulia);
   };
-  expect([dive({ seed: 7, kind: 'mandelbrot' }), dive({ seed: 7, kind: 'julia' }), dive({ seed: 2 }), dive({ seed: 3 })]).toEqual([[0, 0], [1, 1], [0, 0], [1, 1]]);
+  expect([
+    dive({ seed: 7, kind: "mandelbrot" }),
+    dive({ seed: 7, kind: "julia" }),
+    dive({ seed: 2 }),
+    dive({ seed: 3 }),
+  ]).toEqual([
+    [0, 0],
+    [1, 1],
+    [0, 0],
+    [1, 1],
+  ]);
 });
 
-test('under the lock the knobs map: palette empty to classic and seeded to the seeded ramp, path 1 to one more draw, speed 2 to twice the zoom', () => {
+test("under the lock the knobs map: palette empty to classic and seeded to the seeded ramp, path 1 to one more draw, speed 2 to twice the zoom", () => {
   const drawn = (opts, t = 0) => {
     const fake = gl();
-    make(canvas(fake), { ...LOCK, t }, { seed: 7, kind: 'mandelbrot', ...opts }).draw();
+    make(canvas(fake), { ...LOCK, t }, { seed: 7, kind: "mandelbrot", ...opts }).draw();
     const [one] = paints(fake);
     return { fake, one, span: span(one) };
   };
-  const looks = ['', 'seeded'].map((palette) => ['uGround', 'uRamp'].map((name) => name in drawn({ palette }).one.uniforms));
-  const pens = [0, 1].map((path) => drawn({ path }).fake.draws().filter((one) => one.vs.includes('aShape')).length);
-  expect([looks, pens, drawn({ speed: 2 }, 2000).span]).toEqual([[[true, false], [false, true]], [0, 1], drawn({ speed: 1 }, 4000).span]);
+  const looks = ["", "seeded"].map((palette) =>
+    ["uGround", "uRamp"].map((name) => name in drawn({ palette }).one.uniforms),
+  );
+  const pens = [0, 1].map(
+    (path) =>
+      drawn({ path })
+        .fake.draws()
+        .filter((one) => one.vs.includes("aShape")).length,
+  );
+  expect([looks, pens, drawn({ speed: 2 }, 2000).span]).toEqual([
+    [
+      [true, false],
+      [false, true],
+    ],
+    [0, 1],
+    drawn({ speed: 1 }, 4000).span,
+  ]);
 });
 
-test('every saver, on any roll, draws in the site tint: its ground is the paper and its colour the accent', () => {
-  const inks = SAVERS.flatMap((saver) => [1, 2, 3].map((seed) => {
-    const fake = gl();
-    make(canvas(fake), LOCK, { seed, ...saver.pick(rng(seed)) }).draw();
-    const [one] = paints(fake);
-    return [one.uniforms.uGround, one.uniforms.uAccent];
-  }));
-  expect(new Set(inks.map((one) => JSON.stringify(one)))).toEqual(new Set([JSON.stringify([unit('#102030'), unit('#ff8000')])]));
+test("every saver, on any roll, draws in the site tint: its ground is the paper and its colour the accent", () => {
+  const inks = SAVERS.flatMap((saver) =>
+    [1, 2, 3].map((seed) => {
+      const fake = gl();
+      make(canvas(fake), LOCK, { seed, ...saver.pick(rng(seed)) }).draw();
+      const [one] = paints(fake);
+      return [one.uniforms.uGround, one.uniforms.uAccent];
+    }),
+  );
+  expect(new Set(inks.map((one) => JSON.stringify(one)))).toEqual(
+    new Set([JSON.stringify([unit("#102030"), unit("#ff8000")])]),
+  );
 });
 
-test('the page opens still on the whole set, holds it as time runs, and asks to rest after every still frame', () => {
+test("the page opens still on the whole set, holds it as time runs, and asks to rest after every still frame", () => {
   const fake = gl();
   const rests = [];
   const at = { ...VIEW };
@@ -65,19 +101,28 @@ test('the page opens still on the whole set, holds it as time runs, and asks to 
   expect([span(one), span(two), one.uniforms.uOff, scene.flying(), rests]).toEqual([3, 3, [0, 0], false, [null, null]]);
 });
 
-test('Depth caps the zoom: the scene gets the cap, the url keeps the asked zoom, and a flight lands at the cap with its place', () => {
-  const value = { depth: 'shallow', zoom: 40, jzoom: 60 };
-  expect([tidy(SPEC, value).zoom, tidy(SPEC, value).jzoom, asked(SPEC, value).zoom, tidy(SPEC, { ...value, depth: 'deep' }).zoom]).toEqual([20, 20, 40, 40]);
+test("Depth caps the zoom: the scene gets the cap, the url keeps the asked zoom, and a flight lands at the cap with its place", () => {
+  const value = { depth: "shallow", zoom: 40, jzoom: 60 };
+  expect([
+    tidy(SPEC, value).zoom,
+    tidy(SPEC, value).jzoom,
+    asked(SPEC, value).zoom,
+    tidy(SPEC, { ...value, depth: "deep" }).zoom,
+  ]).toEqual([20, 20, 40, 40]);
   const rests = [];
   const at = { ...VIEW };
   const scene = make(canvas(gl()), at, { seed: 7, onRest: (place) => rests.push(place) });
   scene.fly();
   at.t = 120000;
   scene.draw();
-  expect([scene.flying(), +scene.at().span.toExponential(6), rests.at(-1)?.zoom]).toEqual([false, +spanOf(20).toExponential(6), 20]);
+  expect([scene.flying(), +scene.at().span.toExponential(6), rests.at(-1)?.zoom]).toEqual([
+    false,
+    +spanOf(20).toExponential(6),
+    20,
+  ]);
 });
 
-test('a place picked mid-flight jumps there and stops, a palette change keeps flying from where it is', () => {
+test("a place picked mid-flight jumps there and stops, a palette change keeps flying from where it is", () => {
   const at = { ...VIEW };
   const start = { seed: 7, ...tidy(SPEC, {}) };
   const scene = make(canvas(gl()), at, start);
@@ -85,9 +130,14 @@ test('a place picked mid-flight jumps there and stops, a palette change keeps fl
   at.t = 4000;
   scene.draw();
   const before = scene.at().span;
-  scene.set({ ...start, palette: 'fire' });
+  scene.set({ ...start, palette: "fire" });
   const kept = [scene.flying(), scene.at().span === before];
-  const spot = PLACES.find((one) => one.id === 'seahorse');
+  const spot = PLACES.find((one) => one.id === "seahorse");
   scene.set({ ...start, ...go(spot) });
-  expect([...kept, scene.flying(), +scene.at().span.toExponential(6)]).toEqual([true, true, false, +spanOf(8).toExponential(6)]);
+  expect([...kept, scene.flying(), +scene.at().span.toExponential(6)]).toEqual([
+    true,
+    true,
+    false,
+    +spanOf(8).toExponential(6),
+  ]);
 });

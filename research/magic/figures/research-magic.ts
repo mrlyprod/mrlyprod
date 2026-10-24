@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { Grid, frame, type Color, type Frame, type Ink, type Pen, type Tensor } from "#view";
+import { type Color, type Frame, frame, Grid, type Ink, type Pen, type Tensor } from "#view";
 
 export const units = { math };
 
@@ -21,14 +21,23 @@ export default function draw(pen: Pen, ink: Ink) {
 
   const forward = letters([7, 3], [14, 5]);
   const reverse = letters([14, 5], [7, 3]);
-  if (math.bang.word.side(forward) !== String(SIDE)) throw new Error(`research-magic: forward side ${math.bang.word.side(forward)}, want ${SIDE}`);
-  if (math.bang.word.side(reverse) !== String(SIDE)) throw new Error(`research-magic: reverse side ${math.bang.word.side(reverse)}, want ${SIDE}`);
-  if (math.bang.word.fill(forward) !== math.bang.word.fill(reverse)) throw new Error("research-magic: the two orders fill differently");
+  if (math.bang.word.side(forward) !== String(SIDE))
+    throw new Error(`research-magic: forward side ${math.bang.word.side(forward)}, want ${SIDE}`);
+  if (math.bang.word.side(reverse) !== String(SIDE))
+    throw new Error(`research-magic: reverse side ${math.bang.word.side(reverse)}, want ${SIDE}`);
+  if (math.bang.word.fill(forward) !== math.bang.word.fill(reverse))
+    throw new Error("research-magic: the two orders fill differently");
 
   const left = math.bang.magic(forward);
   const right = math.bang.magic(reverse);
   for (const tensor of [left, right]) {
-    if (tensor.shape.length !== 2 || tensor.shape[0] !== SIDE || tensor.shape[1] !== SIDE || tensor.data.length !== SIDE * SIDE) throw new Error(`research-magic: a word is ${tensor.shape}, want ${SIDE} square`);
+    if (
+      tensor.shape.length !== 2 ||
+      tensor.shape[0] !== SIDE ||
+      tensor.shape[1] !== SIDE ||
+      tensor.data.length !== SIDE * SIDE
+    )
+      throw new Error(`research-magic: a word is ${tensor.shape}, want ${SIDE} square`);
   }
   const sums = [0, 0];
   let differs = false;

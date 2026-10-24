@@ -1,49 +1,116 @@
-import { tidy } from '../../lib/app/spec.js';
-import { TINTS, mix, paints, rgb, veil } from '../../lib/color.js';
-import { pick, rng } from '../../lib/rand.js';
-import { sheet } from '../../lib/app/svg.js';
-import { CAPS, GLANCE, HOLD, INKS, LEAST, LOOKS, PAD, ROOTS, SIX, STRIDE, clock, count, glyph, hit, layout, named, nib, reach, roll, shade, study } from './engine.js';
-import { circles, clip, labels, rules } from './shapes.js';
-import { wasm } from '../../lib/units/index.js';
+import { tidy } from "../../lib/app/spec.js";
+import { sheet } from "../../lib/app/svg.js";
+import { mix, paints, rgb, TINTS, veil } from "../../lib/color.js";
+import { pick, rng } from "../../lib/rand.js";
+import { wasm } from "../../lib/units/index.js";
+import {
+  CAPS,
+  clock,
+  count,
+  GLANCE,
+  glyph,
+  HOLD,
+  hit,
+  INKS,
+  LEAST,
+  LOOKS,
+  layout,
+  named,
+  nib,
+  PAD,
+  ROOTS,
+  reach,
+  roll,
+  SIX,
+  STRIDE,
+  shade,
+  study,
+} from "./engine.js";
+import { circles, clip, labels, rules } from "./shapes.js";
 
 export const SPEC = [
-  { key: 'root', label: 'Root quadruple', kind: 'pick', def: 'strip', options: ROOTS.map((name) => [name, named(name)]), when: () => false },
-  { key: 'cap', label: 'Curvature cap T', kind: 'pick', def: 2048, options: CAPS.map((cap) => [cap, String(cap)]), group: 'Packing' },
-  { key: 'ink', label: 'Ink', kind: 'pick', def: 'size', options: INKS, group: 'Look' },
-  { key: 'look', label: 'Discs', kind: 'segment', def: 'wash', options: LOOKS, group: 'Look' },
-  { key: 'labels', label: 'Curvatures', kind: 'toggle', def: 0, group: 'Look' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  {
+    key: "root",
+    label: "Root quadruple",
+    kind: "pick",
+    def: "strip",
+    options: ROOTS.map((name) => [name, named(name)]),
+    when: () => false,
+  },
+  {
+    key: "cap",
+    label: "Curvature cap T",
+    kind: "pick",
+    def: 2048,
+    options: CAPS.map((cap) => [cap, String(cap)]),
+    group: "Packing",
+  },
+  { key: "ink", label: "Ink", kind: "pick", def: "size", options: INKS, group: "Look" },
+  { key: "look", label: "Discs", kind: "segment", def: "wash", options: LOOKS, group: "Look" },
+  { key: "labels", label: "Curvatures", kind: "toggle", def: 0, group: "Look" },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
 export const ABOUT = [
-  'Four mutually tangent circles obey Descartes\' rule. Swap one for the other circle that touches the remaining three and its curvature is k\' = 2(k1 + k2 + k3) - k4, with no square root. Written as the integer triple (k, kx, ky), a circle moves by the same rule in all three numbers, so an integer root quadruple grows the whole packing in exact integers, up to the curvature cap T.',
-  'The strip root is two lines a unit apart. The circles it grows that rest on the lower line are exactly the Ford circles: over each reduced fraction a/b sits a circle of curvature 2b^2 touching the line at a/b. The Ford ink sets them apart.',
-  'Info reads the Farey stack at the deepest depth Q the cap covers, 2Q^2 at most T: a node at each fraction a/b with b at most Q, lit floor(Q/b) times, every one touched by the Ford circle over it. The stack is the one [the Farey note](/research/farey/) builds.',
-  'Tap a circle to read its triple and the fraction it rests on; Reroll draws a new root, cap and look. The growth, its six invariant checks, the census N(T), the Ford test and the stack are computed in Rust. The dimension of the packing, which sets how fast N(T) grows, is in [the Apollonian note](/research/apollonian/).',
+  "Four mutually tangent circles obey Descartes' rule. Swap one for the other circle that touches the remaining three and its curvature is k' = 2(k1 + k2 + k3) - k4, with no square root. Written as the integer triple (k, kx, ky), a circle moves by the same rule in all three numbers, so an integer root quadruple grows the whole packing in exact integers, up to the curvature cap T.",
+  "The strip root is two lines a unit apart. The circles it grows that rest on the lower line are exactly the Ford circles: over each reduced fraction a/b sits a circle of curvature 2b^2 touching the line at a/b. The Ford ink sets them apart.",
+  "Info reads the Farey stack at the deepest depth Q the cap covers, 2Q^2 at most T: a node at each fraction a/b with b at most Q, lit floor(Q/b) times, every one touched by the Ford circle over it. The stack is the one [the Farey note](/research/farey/) builds.",
+  "Tap a circle to read its triple and the fraction it rests on; Reroll draws a new root, cap and look. The growth, its six invariant checks, the census N(T), the Ford test and the stack are computed in Rust. The dimension of the packing, which sets how fast N(T) grows, is in [the Apollonian note](/research/apollonian/).",
 ];
 
-export const units = wasm('num');
+export const units = wasm("num");
 
-export const file = (value) => `apollonian-${value.root === 'strip' ? 'strip' : `bounded-${String(value.root).replace('-', '').split(',').join('-')}`}-${value.cap}`;
+export const file = (value) =>
+  `apollonian-${value.root === "strip" ? "strip" : `bounded-${String(value.root).replace("-", "").split(",").join("-")}`}-${value.cap}`;
 
 export const PAGE = {
   spec: SPEC,
   units,
   name: file,
   about: ABOUT,
-  keys: [{ key: ['ArrowUp', 'ArrowDown'], label: 'Cap T', act: 'cap', menu: 'View' }],
+  keys: [{ key: ["ArrowUp", "ArrowDown"], label: "Cap T", act: "cap", menu: "View" }],
   actions: {
-    cap: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
+    cap: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
   },
 };
 
 export const SAVERS = [
-  { id: 'gasket', title: 'Gasket', pick: (rand) => ({ root: pick(rand, ROOTS.slice(1)), cap: pick(rand, [1024, 2048, 4096]), ink: 'shade', look: pick(rand, ['solid', 'wash']), labels: 0 }) },
-  { id: 'ford', title: 'Ford circles', pick: (rand) => ({ root: 'strip', cap: pick(rand, [1024, 2048, 4096]), ink: 'ford', look: pick(rand, ['wash', 'rings']), labels: 0 }) },
-  { id: 'curvatures', title: 'Curvatures', pick: (rand) => ({ root: pick(rand, ROOTS), cap: pick(rand, [512, 1024]), ink: pick(rand, ['one', 'shade']), look: 'rings', labels: 1 }) },
+  {
+    id: "gasket",
+    title: "Gasket",
+    pick: (rand) => ({
+      root: pick(rand, ROOTS.slice(1)),
+      cap: pick(rand, [1024, 2048, 4096]),
+      ink: "shade",
+      look: pick(rand, ["solid", "wash"]),
+      labels: 0,
+    }),
+  },
+  {
+    id: "ford",
+    title: "Ford circles",
+    pick: (rand) => ({
+      root: "strip",
+      cap: pick(rand, [1024, 2048, 4096]),
+      ink: "ford",
+      look: pick(rand, ["wash", "rings"]),
+      labels: 0,
+    }),
+  },
+  {
+    id: "curvatures",
+    title: "Curvatures",
+    pick: (rand) => ({
+      root: pick(rand, ROOTS),
+      cap: pick(rand, [512, 1024]),
+      ink: pick(rand, ["one", "shade"]),
+      look: "rings",
+      labels: 1,
+    }),
+  },
 ];
 
-export const FACE = 'Noto Sans Mono';
+export const FACE = "Noto Sans Mono";
 
 const TAU = Math.PI * 2;
 const WASH = 0.15;
@@ -59,7 +126,7 @@ const font = (size) => `${size}px "${FACE}", ui-monospace, monospace`;
 
 export const fg = (paper) => {
   const [r, g, b] = rgb(paper);
-  return 0.299 * r + 0.587 * g + 0.114 * b < 128 ? '#ffffff' : '#000000';
+  return 0.299 * r + 0.587 * g + 0.114 * b < 128 ? "#ffffff" : "#000000";
 };
 
 /* THUMB */
@@ -85,7 +152,13 @@ export function portrait(num, root, ctx, w, h, dpr, look) {
   for (let i = 0; i < data.length / STRIDE; i++) {
     const color = i < roots ? ink : hues[Math.floor(Math.log2(data[i * STRIDE + 3])) % SIX.length];
     ctx.beginPath();
-    ctx.arc(box.ox + data[i * STRIDE] * box.k, box.oy - data[i * STRIDE + 1] * box.k, data[i * STRIDE + 2] * box.k, 0, TAU);
+    ctx.arc(
+      box.ox + data[i * STRIDE] * box.k,
+      box.oy - data[i * STRIDE + 1] * box.k,
+      data[i * STRIDE + 2] * box.k,
+      0,
+      TAU,
+    );
     ctx.fillStyle = veil(color, WASH);
     ctx.fill();
     ctx.strokeStyle = color;
@@ -94,7 +167,13 @@ export function portrait(num, root, ctx, w, h, dpr, look) {
   if (packing.strip) ctx.restore();
   if (hull) {
     ctx.beginPath();
-    ctx.arc(box.ox + (hull.x / hull.k || 0) * box.k, box.oy - (hull.y / hull.k || 0) * box.k, (-1 / hull.k) * box.k, 0, TAU);
+    ctx.arc(
+      box.ox + (hull.x / hull.k || 0) * box.k,
+      box.oy - (hull.y / hull.k || 0) * box.k,
+      (-1 / hull.k) * box.k,
+      0,
+      TAU,
+    );
     ctx.strokeStyle = ink;
     ctx.stroke();
   }
@@ -104,8 +183,8 @@ export function portrait(num, root, ctx, w, h, dpr, look) {
 
 export function make(canvas, view, opts = {}) {
   const num = opts.num;
-  if (!num) throw new Error('apollonian: the scene wants @mrlyprod/mrly/num as opts.num');
-  const ctx = canvas.getContext('2d');
+  if (!num) throw new Error("apollonian: the scene wants @mrlyprod/mrly/num as opts.num");
+  const ctx = canvas.getContext("2d");
   const whole = !view.lock;
   const tell = opts.onTell;
   let value = null;
@@ -117,20 +196,20 @@ export function make(canvas, view, opts = {}) {
   let box = null;
   let picked = null;
   let dirty = true;
-  let paper = '';
-  let accent = '';
-  let ink = '';
-  let dim = '';
+  let paper = "";
+  let accent = "";
+  let ink = "";
+  let dim = "";
   let inks = [];
   const tone = (i) => {
     if (i < plan.roots) return 0;
-    if (value.ink === 'size') return 1 + plan.hues[i];
-    if (value.ink === 'shade') return 1 + plan.bands[i];
-    if (value.ink === 'ford') return plan.fords[i] ? 1 : 2;
+    if (value.ink === "size") return 1 + plan.hues[i];
+    if (value.ink === "shade") return 1 + plan.bands[i];
+    if (value.ink === "ford") return plan.fords[i] ? 1 : 2;
     return 1;
   };
-  const fills = (t) => (value.look === 'wash' ? veil(inks[t], WASH) : value.look === 'solid' ? inks[t] : null);
-  const strokes = (t) => (value.look === 'solid' ? paper : inks[t]);
+  const fills = (t) => (value.look === "wash" ? veil(inks[t], WASH) : value.look === "solid" ? inks[t] : null);
+  const strokes = (t) => (value.look === "solid" ? paper : inks[t]);
   const paint = () => {
     const skin = view.look();
     paper = skin.paper;
@@ -145,15 +224,15 @@ export function make(canvas, view, opts = {}) {
       ford: () => [accent, dim],
       one: () => [ink],
     };
-    inks = [value.look === 'solid' ? dim : ink, ...rest[value.ink]()];
+    inks = [value.look === "solid" ? dim : ink, ...rest[value.ink]()];
   };
-  const look = () => [value.root, value.cap, value.ink, value.look, value.labels, value.tint].join('|');
+  const look = () => [value.root, value.cap, value.ink, value.look, value.labels, value.tint].join("|");
   const reset = () => {
     box = layout(plan.frame, view.w, view.h, PAD * view.dpr);
     layer = new OffscreenCanvas(view.w, view.h);
-    pen = layer.getContext('2d');
-    pen.textAlign = 'center';
-    pen.textBaseline = 'middle';
+    pen = layer.getContext("2d");
+    pen.textAlign = "center";
+    pen.textBaseline = "middle";
     drawn = 0;
     dirty = true;
   };
@@ -231,7 +310,7 @@ export function make(canvas, view, opts = {}) {
       const { cx, cy, r } = plan.hull;
       ctx.beginPath();
       ctx.arc(X(cx), Y(cy), r * box.k, 0, TAU);
-      if (value.look !== 'rings') {
+      if (value.look !== "rings") {
         ctx.fillStyle = veil(ink, WASH);
         ctx.fill();
       }
@@ -326,12 +405,34 @@ export function make(canvas, view, opts = {}) {
     const { data, ints, strip, frame } = plan;
     const [x0, y0, x1, y1] = frame;
     const parts = [];
-    if (strip) parts.push(rules([[U(x0), V(y0), U(x1), V(y0)], [U(x0), V(y1), U(x1), V(y1)]], dim, EDGE));
-    else if (plan.hull) parts.push(circles([[U(plan.hull.cx), V(plan.hull.cy), plan.hull.r * css.k]], { fill: value.look === 'rings' ? 'none' : veil(ink, WASH), stroke: ink, width: HULL }));
+    if (strip)
+      parts.push(
+        rules(
+          [
+            [U(x0), V(y0), U(x1), V(y0)],
+            [U(x0), V(y1), U(x1), V(y1)],
+          ],
+          dim,
+          EDGE,
+        ),
+      );
+    else if (plan.hull)
+      parts.push(
+        circles([[U(plan.hull.cx), V(plan.hull.cy), plan.hull.r * css.k]], {
+          fill: value.look === "rings" ? "none" : veil(ink, WASH),
+          stroke: ink,
+          width: HULL,
+        }),
+      );
     const body = [];
     for (const [key, list] of sorted(0, drawn, css.k)) {
       const t = Math.floor(key / NIBS);
-      body.push(circles(list.map((i) => [U(data[i * STRIDE]), V(data[i * STRIDE + 1]), data[i * STRIDE + 2] * css.k]), { fill: fills(t) ?? 'none', stroke: strokes(t), width: (key % NIBS) / 10 }));
+      body.push(
+        circles(
+          list.map((i) => [U(data[i * STRIDE]), V(data[i * STRIDE + 1]), data[i * STRIDE + 2] * css.k]),
+          { fill: fills(t) ?? "none", stroke: strokes(t), width: (key % NIBS) / 10 },
+        ),
+      );
     }
     if (value.labels) {
       const texts = new Map();
@@ -345,8 +446,8 @@ export function make(canvas, view, opts = {}) {
       }
       for (const [colour, list] of texts) body.push(labels(list, colour, FACE));
     }
-    parts.push(strip ? clip('period', period(U, V, css.k), body.join('')) : body.join(''));
-    return sheet(w, h, parts.join(''));
+    parts.push(strip ? clip("period", period(U, V, css.k), body.join("")) : body.join(""));
+    return sheet(w, h, parts.join(""));
   };
   const json = () => {
     const { ints, roots, total } = plan;

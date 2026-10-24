@@ -11,9 +11,14 @@ const BASES = 1551;
 
 export default function draw(pen: Pen, ink: Ink) {
   const { bases, q25, q20 } = census as { bases: number[]; q25: number[]; q20: number[] };
-  if (bases.length !== BASES || q25.length !== BASES || q20.length !== BASES) throw new Error(`paper-half-interval-mobius: ${bases.length} bases, ${q25.length} and ${q20.length} margins, want ${BASES}`);
-  if (bases.some((b, i) => i > 0 && b <= bases[i - 1])) throw new Error("paper-half-interval-mobius: bases do not ascend");
-  if (!bases.includes(QUARTER) || !bases.includes(FIFTH)) throw new Error("paper-half-interval-mobius: a wall is not among the bases");
+  if (bases.length !== BASES || q25.length !== BASES || q20.length !== BASES)
+    throw new Error(
+      `paper-half-interval-mobius: ${bases.length} bases, ${q25.length} and ${q20.length} margins, want ${BASES}`,
+    );
+  if (bases.some((b, i) => i > 0 && b <= bases[i - 1]))
+    throw new Error("paper-half-interval-mobius: bases do not ascend");
+  if (!bases.includes(QUARTER) || !bases.includes(FIFTH))
+    throw new Error("paper-half-interval-mobius: a wall is not among the bases");
   const frame = pen.frame(0.08);
   const top = q25[BASES - 1];
   const bottom = q20[0];

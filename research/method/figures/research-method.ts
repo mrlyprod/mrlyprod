@@ -1,6 +1,6 @@
 import * as math from "@mrlyprod/mrly/math";
-import { iso } from "#view";
 import type { Ink, Pen } from "#view";
+import { iso } from "#view";
 
 export const units = { math };
 
@@ -16,11 +16,13 @@ function rows() {
   if (memo) return memo;
   const codes: string[][] = Array.from({ length: ROWS }, () => []);
   for (const design of math.bang.bang(3).canonical()) codes[design.rule().length].push(design.i);
-  if (codes.some((row, r) => row.length !== COUNTS[r])) throw new Error(`research-method: rows of ${codes.map((row) => row.length)}, want ${COUNTS}`);
+  if (codes.some((row, r) => row.length !== COUNTS[r]))
+    throw new Error(`research-method: rows of ${codes.map((row) => row.length)}, want ${COUNTS}`);
   memo = codes.map((row, r) =>
     row.map((code) => {
       const cube = math.three.create(code, 2, 1, 2);
-      if (math.three.fills(cube) !== r) throw new Error(`research-method: design ${code} fills ${math.three.fills(cube)}, want ${r}`);
+      if (math.three.fills(cube) !== r)
+        throw new Error(`research-method: design ${code} fills ${math.three.fills(cube)}, want ${r}`);
       return math.three.quads(cube);
     }),
   );

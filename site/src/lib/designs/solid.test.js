@@ -1,13 +1,13 @@
-import { expect, test } from 'bun:test';
-import * as math from '@mrlyprod/mrly/math';
-import { NY, PHI, PX, PZ, camera, exposed, extent, order, solid, walk } from './solid.js';
+import { expect, test } from "bun:test";
+import * as math from "@mrlyprod/mrly/math";
+import { camera, exposed, extent, NY, order, PHI, PX, PZ, solid, walk } from "./solid.js";
 
 const sponge = (level) => {
   const cell = math.three.create(23, 3, level, 2);
   return { cell, shape: solid(math.three.quads(cell), cell.shape[0]) };
 };
 
-test('the solid keeps one mask per cell and as many exposed faces as the census surface', () => {
+test("the solid keeps one mask per cell and as many exposed faces as the census surface", () => {
   const { cell, shape } = sponge(2);
   expect(shape.n).toBe(9);
   expect(shape.cells.length).toBeLessThanOrEqual(math.three.fills(cell));
@@ -16,7 +16,7 @@ test('the solid keeps one mask per cell and as many exposed faces as the census 
   expect([one.cells.length, exposed(one)]).toEqual([26, 54]);
 });
 
-test('the camera sees the top and the two sides that face it, shaded by their lean', () => {
+test("the camera sees the top and the two sides that face it, shaded by their lean", () => {
   const front = camera(0, PHI, 10);
   expect(front.visible).toBe((1 << PZ) | (1 << NY));
   expect(front.at(1, 0, 0).map((v) => +v.toFixed(6))).toEqual([10, 0]);
@@ -28,7 +28,7 @@ test('the camera sees the top and the two sides that face it, shaded by their le
   expect(extent(9, PHI)[0]).toBeCloseTo(9 * Math.SQRT2, 6);
 });
 
-test('the walk paints far cells before near ones and only the faces the camera sees', () => {
+test("the walk paints far cells before near ones and only the faces the camera sees", () => {
   const { shape } = sponge(2);
   const cam = camera(0.3, PHI, 10);
   const sorted = order(shape, cam);
@@ -46,7 +46,7 @@ test('the walk paints far cells before near ones and only the faces the camera s
   expect(seen.every(([face, n]) => (cam.visible & (1 << face)) !== 0 && n === 8)).toBe(true);
 });
 
-test('a quarter turn of the sponge shows the same number of faces', () => {
+test("a quarter turn of the sponge shows the same number of faces", () => {
   const { shape } = sponge(1);
   const count = (theta) => walk(shape, camera(theta, PHI, 10), 0, 0, () => {});
   expect(count(0.4)).toBe(count(0.4 + Math.PI / 2));

@@ -1,10 +1,10 @@
-import { rgb } from '../color.js';
-import { rng } from '../rand.js';
-import { cells } from './bang.js';
-import { project, uniforms } from '../gl/camera.js';
-import { blend, fill, hdr, program, target, texture, tier } from '../gl/gl2.js';
+import { rgb } from "../color.js";
+import { project, uniforms } from "../gl/camera.js";
+import { blend, fill, hdr, program, target, texture, tier } from "../gl/gl2.js";
+import { rng } from "../rand.js";
+import { cells } from "./bang.js";
 
-export const LOOKS = ['graphic', 'studio', 'haze'];
+export const LOOKS = ["graphic", "studio", "haze"];
 
 export const GRADES = {
   graphic: { ev: 0, bloom: 0.15, aberration: 0, vignette: 0.25, grain: 0 },
@@ -20,9 +20,9 @@ const QUALITY = {
 };
 
 export const RAMPS = {
-  fire: ['#1c0400', '#9a2005', '#f06a12', '#ffd75e'],
-  ice: ['#03111f', '#0d4f8c', '#47c3ee', '#e4fbff'],
-  mono: ['#161616', '#5a5a5a', '#a2a2a2', '#ececec'],
+  fire: ["#1c0400", "#9a2005", "#f06a12", "#ffd75e"],
+  ice: ["#03111f", "#0d4f8c", "#47c3ee", "#e4fbff"],
+  mono: ["#161616", "#5a5a5a", "#a2a2a2", "#ececec"],
 };
 
 const TAU = Math.PI * 2;
@@ -61,14 +61,18 @@ const blendTo = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
 
 export function ramp(name, seed, accent) {
   if (RAMPS[name]) return RAMPS[name].map((hex) => linear(hex).map((v) => v * ALBEDO));
-  if (name === 'accent') {
+  if (name === "accent") {
     const a = linear(accent);
-    return [blendTo([0.02, 0.02, 0.02], a, 0.25), blendTo([0, 0, 0], a, 0.7), a, blendTo(a, [1, 1, 1], 0.6)].map((c) => c.map((v) => v * ALBEDO));
+    return [blendTo([0.02, 0.02, 0.02], a, 0.25), blendTo([0, 0, 0], a, 0.7), a, blendTo(a, [1, 1, 1], 0.6)].map((c) =>
+      c.map((v) => v * ALBEDO),
+    );
   }
   const rand = rng((seed ^ TONE) >>> 0);
   const c = [0, 1, 2].map(() => 0.5 + rand() * 0.6);
   const d = [0, 1, 2].map(() => rand());
-  return [0.1, 0.4, 0.7, 1].map((x) => c.map((ci, i) => (0.5 + 0.5 * Math.cos(TAU * (ci * x + d[i]))) ** 2.2 * ALBEDO + 0.02));
+  return [0.1, 0.4, 0.7, 1].map((x) =>
+    c.map((ci, i) => (0.5 + 0.5 * Math.cos(TAU * (ci * x + d[i]))) ** 2.2 * ALBEDO + 0.02),
+  );
 }
 
 export const tone = (name, seed, accent) => ({ accent: linear(accent), ramp: ramp(name, seed, accent) });
@@ -80,7 +84,8 @@ export function boxes(all, n) {
   const hi = new Uint8Array(n * n * n * 4);
   const clear = (b) => {
     if (b[0] < 0 || b[2] < 0 || b[4] < 0 || b[1] > n || b[3] > n || b[5] > n) return false;
-    for (let z = b[4]; z < b[5]; z++) for (let y = b[2]; y < b[3]; y++) for (let x = b[0]; x < b[1]; x++) if (all[(z * n + y) * n + x]) return false;
+    for (let z = b[4]; z < b[5]; z++)
+      for (let y = b[2]; y < b[3]; y++) for (let x = b[0]; x < b[1]; x++) if (all[(z * n + y) * n + x]) return false;
     return true;
   };
   for (let i = 0; i < n * n * n; i++) {
@@ -88,7 +93,14 @@ export function boxes(all, n) {
       lo[i * 4] = 255;
       continue;
     }
-    const b = [i % n, (i % n) + 1, Math.floor(i / n) % n, (Math.floor(i / n) % n) + 1, Math.floor(i / (n * n)), Math.floor(i / (n * n)) + 1];
+    const b = [
+      i % n,
+      (i % n) + 1,
+      Math.floor(i / n) % n,
+      (Math.floor(i / n) % n) + 1,
+      Math.floor(i / (n * n)),
+      Math.floor(i / (n * n)) + 1,
+    ];
     for (let grew = true; grew; ) {
       grew = false;
       for (let s = 0; s < 6; s++) {
@@ -436,18 +448,19 @@ void main() {
 }
 `;
 
-const source = (look, budget, aux) => `#version 300 es\n#define ${look.toUpperCase()}\n#define STEPS ${budget.steps}\n#define LOD ${(aux ? LOD : RAW).toFixed(1)}\n${aux ? '#define AUX\n' : ''}${MARCH}`;
+const source = (look, budget, aux) =>
+  `#version 300 es\n#define ${look.toUpperCase()}\n#define STEPS ${budget.steps}\n#define LOD ${(aux ? LOD : RAW).toFixed(1)}\n${aux ? "#define AUX\n" : ""}${MARCH}`;
 
-const budget = (view, quality = '') => QUALITY[quality] ?? (tier(view) === 'phone' ? QUALITY.phone : QUALITY.desk);
+const budget = (view, quality = "") => QUALITY[quality] ?? (tier(view) === "phone" ? QUALITY.phone : QUALITY.desk);
 
-export function march(gl, view, design, { math, look = 'studio', quality = '', toFrame = null } = {}) {
+export function march(gl, view, design, { math, look = "studio", quality = "", toFrame = null } = {}) {
   const { n } = design;
   const made = boxes(cells(math, design.code, n), n);
   const plan = budget(view, quality);
   const taa = hdr(gl);
-  const lo = texture(gl, { w: n, h: n, d: n, data: made.lo, filter: 'nearest' });
-  const hi = texture(gl, { w: n, h: n, d: n, data: made.hi, filter: 'nearest' });
-  const shot = program(gl, source(LOOKS.includes(look) ? look : 'studio', plan, taa));
+  const lo = texture(gl, { w: n, h: n, d: n, data: made.lo, filter: "nearest" });
+  const hi = texture(gl, { w: n, h: n, d: n, data: made.hi, filter: "nearest" });
+  const shot = program(gl, source(LOOKS.includes(look) ? look : "studio", plan, taa));
   const resolve = taa ? program(gl, RESOLVE) : null;
   const paint = program(gl, LAYER);
   const raw = target(gl, 1, 1, { hdr: true, extra: taa ? 1 : 0 });
@@ -481,15 +494,27 @@ export function march(gl, view, design, { math, look = 'studio', quality = '', t
     const low = frame.edge?.[0] ?? OPEN;
     const high = frame.edge?.[1] ?? OPEN;
     if ([...low, ...high].some((v) => v >= BEYOND)) return whole;
-    const corners = Array.from({ length: 8 }, (_, i) => [0, 1, 2].map((j) => ((i >> j) & 1 ? (high[j] + 1) * n : -low[j] * n) - n / 2));
+    const corners = Array.from({ length: 8 }, (_, i) =>
+      [0, 1, 2].map((j) => ((i >> j) & 1 ? (high[j] + 1) * n : -low[j] * n) - n / 2),
+    );
     const dots = corners.map((c) => project(raw, cam, c));
     if (dots.some((p) => !p)) return whole;
     const xs = dots.map((p) => p[0]);
     const ys = dots.map((p) => raw.h - p[1]);
     const pin = (v, top) => Math.min(Math.max(v, 0), top);
-    return [pin(Math.floor(Math.min(...xs)) - BORDER, raw.w), pin(Math.floor(Math.min(...ys)) - BORDER, raw.h), pin(Math.ceil(Math.max(...xs)) + BORDER, raw.w), pin(Math.ceil(Math.max(...ys)) + BORDER, raw.h)];
+    return [
+      pin(Math.floor(Math.min(...xs)) - BORDER, raw.w),
+      pin(Math.floor(Math.min(...ys)) - BORDER, raw.h),
+      pin(Math.ceil(Math.max(...xs)) + BORDER, raw.w),
+      pin(Math.ceil(Math.max(...ys)) + BORDER, raw.h),
+    ];
   };
-  const was = ([x0, y0, x1, y1]) => [x0 > 0 ? (x0 + 1) / raw.w : 0, y0 > 0 ? (y0 + 1) / raw.h : 0, x1 < raw.w ? (x1 - 1) / raw.w : 1, y1 < raw.h ? (y1 - 1) / raw.h : 1];
+  const was = ([x0, y0, x1, y1]) => [
+    x0 > 0 ? (x0 + 1) / raw.w : 0,
+    y0 > 0 ? (y0 + 1) / raw.h : 0,
+    x1 < raw.w ? (x1 - 1) / raw.w : 1,
+    y1 < raw.h ? (y1 - 1) / raw.h : 1,
+  ];
   const draw = (cam, frame, tint) => {
     const port = gl.getParameter(gl.VIEWPORT);
     const same = fit();
@@ -575,7 +600,7 @@ export function march(gl, view, design, { math, look = 'studio', quality = '', t
     if (right <= left || top <= bottom) return;
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(port[0] + left, port[1] + bottom, right - left, top - bottom);
-    blend(gl, 'alpha');
+    blend(gl, "alpha");
     paint.set({ uSrc: shown, uK: k });
     fill(gl);
     blend(gl, null);

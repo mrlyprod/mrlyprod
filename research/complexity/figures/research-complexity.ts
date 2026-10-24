@@ -1,6 +1,6 @@
 import * as math from "@mrlyprod/mrly/math";
-import { plot } from "#view";
 import type { Ink, Pen, Point } from "#view";
+import { plot } from "#view";
 
 export const units = { math };
 
@@ -29,9 +29,12 @@ export default function draw(pen: Pen, ink: Ink) {
   const frame = pen.frame(0.08);
   plot.axis(pen, frame, ink.line);
   const total = values.length;
-  const at = (lambda: number, rank: number): Point => [frame.x + (frame.w * lambda) / 2, frame.y + frame.h * (1 - rank / total)];
+  const at = (lambda: number, rank: number): Point => [
+    frame.x + (frame.w * lambda) / 2,
+    frame.y + frame.h * (1 - rank / total),
+  ];
   const steps: Point[] = [at(0, 0)];
-  values.forEach((value, index) => steps.push(at(value, index), at(value, index + 1)));
+  for (const [index, value] of values.entries()) steps.push(at(value, index), at(value, index + 1));
   steps.push(at(2, total));
   pen.polyline(steps, 3, ink.blue);
   const below = values.reduce((n, v) => n + (v < 1 - 1e-9 ? 1 : 0), 0);

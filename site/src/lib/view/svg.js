@@ -1,11 +1,11 @@
-import { CLEAR, board } from "./frame.js";
+import { board, CLEAR } from "./frame.js";
 import { fold } from "./pixels.js";
 
 const TAU = 2 * Math.PI;
 
 /* PAINT */
 
-const hex = (c) => "#" + [c[0], c[1], c[2]].map((v) => v.toString(16).padStart(2, "0")).join("");
+const hex = (c) => `#${[c[0], c[1], c[2]].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 const alpha = (key, c) => (c[3] < 255 ? ` ${key}-opacity="${c[3] / 255}"` : "");
 const fill = (c) => ` fill="${hex(c)}"${alpha("fill", c)}`;
 const stroke = (c, thick) => ` fill="none" stroke="${hex(c)}"${alpha("stroke", c)} stroke-width="${thick}"`;
@@ -50,7 +50,10 @@ export function svg(width, height, ground = CLEAR) {
       const body = [];
       for (const part of parts) {
         if (typeof part === "string") body.push(part);
-        else body.push(`<image x="${part.x}" y="${part.y}" width="${part.w}" height="${part.h}" preserveAspectRatio="none" image-rendering="pixelated" href="${await href(part.pixels, png)}"/>`);
+        else
+          body.push(
+            `<image x="${part.x}" y="${part.y}" width="${part.w}" height="${part.h}" preserveAspectRatio="none" image-rendering="pixelated" href="${await href(part.pixels, png)}"/>`,
+          );
       }
       return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n${body.join("\n")}\n</svg>\n`;
     },

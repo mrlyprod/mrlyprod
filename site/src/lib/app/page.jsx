@@ -1,19 +1,19 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Bar, Frame, SIDES, usePanes } from './frame.jsx';
-import { island } from './island.jsx';
-import { Hints, Info, Keys, flip, useKeys } from './keys.jsx';
-import { asked, defaults as knobs, optionsOf, tidy, viewing } from './spec.js';
-import { Accordion, Btn, Export, Fold, Icon, pair } from './controls.jsx';
-import { Knob, Knobs, useAccordion } from './knobs.jsx';
-import { share, useQuery } from './query.js';
-import { run } from './run.js';
-import { record as capture } from './record.js';
-import { Rolls, rolls, useUnits } from './hooks.js';
-import { fresh, patch as diff, record as remember, redo, undo } from './history.js';
-import { menus, publish } from './menus.js';
-import { choose, current, fits, keys as owned, place, read } from '../designs/store.js';
-import { Chip } from '../designs/chip.jsx';
-import { source } from '../glass/feed.js';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Chip } from "../designs/chip.jsx";
+import { choose, current, fits, keys as owned, place, read } from "../designs/store.js";
+import { source } from "../glass/feed.js";
+import { Accordion, Btn, Export, Fold, Icon, pair } from "./controls.jsx";
+import { Bar, Frame, SIDES, usePanes } from "./frame.jsx";
+import { patch as diff, fresh, redo, record as remember, undo } from "./history.js";
+import { Rolls, rolls, useUnits } from "./hooks.js";
+import { island } from "./island.jsx";
+import { flip, Hints, Info, Keys, useKeys } from "./keys.jsx";
+import { Knob, Knobs, useAccordion } from "./knobs.jsx";
+import { menus, publish } from "./menus.js";
+import { share, useQuery } from "./query.js";
+import { record as capture } from "./record.js";
+import { run } from "./run.js";
+import { asked, defaults as knobs, optionsOf, tidy, viewing } from "./spec.js";
 
 const Stage = createContext(null);
 
@@ -21,14 +21,14 @@ export function Scene({ make, value, onReady, ...rest }) {
   const stage = useContext(Stage);
   const at = useRef(null);
   const live = useRef(null);
-  const made = useRef('');
+  const made = useRef("");
   const ready = useRef(onReady);
   ready.current = onReady;
   const [n, bump] = useState(0);
   const key = JSON.stringify(value);
   useEffect(() => {
     const canvas = at.current;
-    const frame = typeof canvas.closest === 'function' ? canvas.closest('.frame') : null;
+    const frame = typeof canvas.closest === "function" ? canvas.closest(".frame") : null;
     const drop = frame ? source(canvas, () => frame.getBoundingClientRect()) : null;
     const stop = run(canvas, make, value, { still: stage?.still });
     live.current = stop;
@@ -49,46 +49,46 @@ export function Scene({ make, value, onReady, ...rest }) {
   return <canvas key={n} ref={at} {...rest} />;
 }
 
-const PAUSE = { key: ' ', label: 'Pause', act: 'pause' };
+const PAUSE = { key: " ", label: "Pause", act: "pause" };
 
-const PLAY = { ...PAUSE, label: (value, handle) => (handle?.playing?.() === false ? 'Play' : 'Pause') };
+const PLAY = { ...PAUSE, label: (_value, handle) => (handle?.playing?.() === false ? "Play" : "Pause") };
 
 const WATCH = 250;
 
 const SHOWN = 3;
 
-const RECORD = { key: 'v', label: 'Record', act: 'record' };
+const RECORD = { key: "v", label: "Record", act: "record" };
 
-const RATIOS = ['9:16', '16:9'];
+const RATIOS = ["9:16", "16:9"];
 
-const clock = (secs) => `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, '0')}`;
+const clock = (secs) => `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}`;
 
 const BASE = [
-  { key: 'r', label: 'Reroll', act: 'reroll' },
-  { key: 'z', label: 'Zen', act: 'zen' },
-  { key: '?', label: 'Keys', act: 'keys' },
+  { key: "r", label: "Reroll", act: "reroll" },
+  { key: "z", label: "Zen", act: "zen" },
+  { key: "?", label: "Keys", act: "keys" },
 ];
 
 const MORE = [
-  { key: 'e', label: 'Export', act: 'export' },
-  { key: 'i', label: 'Info', act: 'info' },
+  { key: "e", label: "Export", act: "export" },
+  { key: "i", label: "Info", act: "info" },
 ];
 
-export const tail = (told) => MORE.filter((row) => told || row.act !== 'info');
+export const tail = (told) => MORE.filter((row) => told || row.act !== "info");
 
 const COPIED = 1500;
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 export function quiet(on) {
-  if (typeof document === 'undefined') return;
-  if (on) document.documentElement.dataset.zen = '';
+  if (typeof document === "undefined") return;
+  if (on) document.documentElement.dataset.zen = "";
   else delete document.documentElement.dataset.zen;
 }
 
 const roll = () => Math.floor(Math.random() * 4294967296);
 
-const SEED = { key: 'seed', label: 'Seed', kind: 'number', def: 0, min: 0, max: 4294967295, step: 1 };
+const SEED = { key: "seed", label: "Seed", kind: "number", def: 0, min: 0, max: 4294967295, step: 1 };
 
 const changed = (next, was) => Object.fromEntries(Object.entries(next).filter(([key, v]) => v !== was[key]));
 
@@ -97,7 +97,7 @@ export function values(defaults, spec) {
 }
 
 export function carried(params, slot, one) {
-  if (!slot || slot.blank || String(params.get(slot.code) ?? '').trim() || !fits(slot, one)) return params;
+  if (!slot || slot.blank || String(params.get(slot.code) ?? "").trim() || !fits(slot, one)) return params;
   for (const [key, v] of Object.entries(place(slot, one))) params.set(key, v);
   return params;
 }
@@ -105,8 +105,8 @@ export function carried(params, slot, one) {
 function seeded(keys, slot) {
   const params = carried(new URLSearchParams(location.search), slot, slot ? current() : null);
   for (const key of [...params.keys()]) if (!keys.includes(key)) params.delete(key);
-  if (!params.has('seed')) params.set('seed', roll());
-  history.replaceState(history.state, '', `${location.pathname}?${params}${location.hash}`);
+  if (!params.has("seed")) params.set("seed", roll());
+  history.replaceState(history.state, "", `${location.pathname}?${params}${location.hash}`);
 }
 
 const keyed = (rows, key) => rows.some((row) => [].concat(row.key).includes(key));
@@ -126,34 +126,60 @@ export function resume(handle, paused) {
   return false;
 }
 
-export const keymap = (keys, more = [], { still = false, own = false } = {}) => [...(still ? [] : [own ? PLAY : PAUSE]), ...keys, ...[BASE[0], ...more, ...BASE.slice(1)].filter((row) => !keyed(keys, row.key))];
+export const keymap = (keys, more = [], { still = false, own = false } = {}) => [
+  ...(still ? [] : [own ? PLAY : PAUSE]),
+  ...keys,
+  ...[BASE[0], ...more, ...BASE.slice(1)].filter((row) => !keyed(keys, row.key)),
+];
 
-export const labels = (map, value, handle) => map.map((row) => (typeof row.label === 'function' ? { ...row, label: row.label(value, handle) } : row));
+export const labels = (map, value, handle) =>
+  map.map((row) => (typeof row.label === "function" ? { ...row, label: row.label(value, handle) } : row));
 
-const owns = (handle) => typeof handle?.toggle === 'function' && typeof handle?.playing === 'function';
+const owns = (handle) => typeof handle?.toggle === "function" && typeof handle?.playing === "function";
 
-export const called = (name, id, value, units) => (typeof name === 'function' ? name(value, units) : `${id}-${value.seed}`);
+export const called = (name, id, value, units) =>
+  typeof name === "function" ? name(value, units) : `${id}-${value.seed}`;
 
 const resting = (handle, own, paused) => (own ? handle?.playing?.() === false : paused);
 
 export const live = (map, value) => map.filter((row) => !row.when || row.when(value));
 
-export const menu = (record, begin, more = []) => [...(record ? RATIOS.map((at) => [`Video ${at}`, () => begin(at)]) : []), ...more];
+export const menu = (record, begin, more = []) => [
+  ...(record ? RATIOS.map((at) => [`Video ${at}`, () => begin(at)]) : []),
+  ...more,
+];
 
-const TEXT = 'input[type=text], input[type=number], input[type=search], input:not([type]), textarea, [contenteditable]:not([contenteditable=false])';
+const TEXT =
+  "input[type=text], input[type=number], input[type=search], input:not([type]), textarea, [contenteditable]:not([contenteditable=false])";
 
-const typing = (e) => typeof e.target?.closest === 'function' && Boolean(e.target.closest(TEXT));
+const typing = (e) => typeof e.target?.closest === "function" && Boolean(e.target.closest(TEXT));
 
 export function undoing(e) {
   if (!(e.metaKey || e.ctrlKey) || e.altKey || typing(e)) return 0;
   const key = e.key.toLowerCase();
-  if (key === 'z') return e.shiftKey ? 1 : -1;
-  return key === 'y' && !e.shiftKey ? 1 : 0;
+  if (key === "z") return e.shiftKey ? 1 : -1;
+  return key === "y" && !e.shiftKey ? 1 : 0;
 }
 
-export const knobbed = (spec, kept = []) => Object.fromEntries((spec ?? []).filter((row) => !kept.includes(row.key)).map((row) => [row.key, row.def]));
+export const knobbed = (spec, kept = []) =>
+  Object.fromEntries((spec ?? []).filter((row) => !kept.includes(row.key)).map((row) => [row.key, row.def]));
 
-function App({ Widget, defaults, spec, units, keys, actions, gestures, record, about = [], id, title, calm = false, name, design }) {
+function App({
+  Widget,
+  defaults,
+  spec,
+  units,
+  keys,
+  actions,
+  gestures,
+  record,
+  about = [],
+  id,
+  title,
+  calm = false,
+  name,
+  design,
+}) {
   const [raw, set] = useQuery(defaults);
   const value = spec ? { ...raw, ...tidy(spec, raw, units) } : raw;
   const url = spec ? { ...value, ...asked(spec, raw, units) } : value;
@@ -161,8 +187,8 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   const [paused, setPaused] = useState(false);
   const take = useRef(null);
   const ratio = useRef(RATIOS[0]);
-  const [taking, setTaking] = useState('');
-  const [rec, setRec] = useState('');
+  const [taking, setTaking] = useState("");
+  const [rec, setRec] = useState("");
   const [zen, setZen] = useState(false);
   const [more, setMore] = useState([]);
   const [rows, setRows] = useState([]);
@@ -170,7 +196,7 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   const hush = useRef(0);
   const [fixed, setFixed] = useState(false);
   const [mode, setMode] = useState({ still: calm, own: false });
-  const [, setSign] = useState('');
+  const [, setSign] = useState("");
   const stack = useRef(fresh());
   const [, setDepth] = useState(0);
   const touched = useRef(false);
@@ -181,24 +207,24 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   const status = useCallback((next) => setRows((was) => (same(was, next ?? []) ? was : (next ?? []))), []);
   useEffect(() => {
     const on = () => (touched.current = true);
-    addEventListener('pointerdown', on, true);
-    addEventListener('keydown', on, true);
+    addEventListener("pointerdown", on, true);
+    addEventListener("keydown", on, true);
     return () => {
-      removeEventListener('pointerdown', on, true);
-      removeEventListener('keydown', on, true);
+      removeEventListener("pointerdown", on, true);
+      removeEventListener("keydown", on, true);
     };
   }, []);
   useEffect(() => {
     quiet(zen);
     if (!zen) return undefined;
     const leave = (e) => {
-      if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
+      if (e.key !== "Escape" || document.querySelector("dialog[open]")) return;
       e.preventDefault();
       setZen(false);
     };
-    addEventListener('keydown', leave);
+    addEventListener("keydown", leave);
     return () => {
-      removeEventListener('keydown', leave);
+      removeEventListener("keydown", leave);
       quiet(false);
     };
   }, [zen]);
@@ -224,7 +250,7 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   };
   useEffect(() => write(url), []);
   const slotted = design ? read(design, url) : null;
-  const picked = slotted ? JSON.stringify(slotted) : '';
+  const picked = slotted ? JSON.stringify(slotted) : "";
   const met = useRef(picked);
   useEffect(() => {
     if (met.current === picked) return;
@@ -241,12 +267,18 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   const all = useMemo(() => (record ? [...keys, RECORD] : keys), [keys, record]);
   const on = live(all, value);
   const known = about.length > 0 || rows.length > 0;
-  const map = useMemo(() => keymap(on, tail(known), mode), [all, on.map((row) => all.indexOf(row)).join(), known, mode]);
+  const map = useMemo(
+    () => keymap(on, tail(known), mode),
+    [all, on.map((row) => all.indexOf(row)).join(), known, mode],
+  );
   const shown = labels(map, value, scene.current);
   const signed = useRef(null);
-  signed.current = () => [mode.own ? scene.current?.playing?.() : '', ...labels(map, value, scene.current).map((row) => row.label)].join('|');
+  signed.current = () =>
+    [mode.own ? scene.current?.playing?.() : "", ...labels(map, value, scene.current).map((row) => row.label)].join(
+      "|",
+    );
   const sync = () => setSign(signed.current());
-  const watching = mode.own || map.some((row) => typeof row.label === 'function');
+  const watching = mode.own || map.some((row) => typeof row.label === "function");
   useEffect(() => {
     if (!watching) return undefined;
     const timer = setInterval(sync, WATCH);
@@ -271,7 +303,7 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
       one.done.then(() => {
         if (take.current !== one) return;
         take.current = null;
-        setTaking('');
+        setTaking("");
       });
     } catch (error) {
       console.error(error);
@@ -293,33 +325,77 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
     told.tell(seed);
   };
   const reset = () => onChange(knobbed(spec, design ? owned(design) : []));
-  const base = { pause, reroll, zen: () => setZen((was) => !was), record: () => (take.current ? cut() : begin(ratio.current)), ...Object.fromEntries(Object.entries(actions).map(([act, fn]) => [act, (e) => scene.current && fn(scene.current, e)])) };
-  const acts = Object.fromEntries(Object.entries(base).map(([act, fn]) => [act, (e) => {
-    fn(e);
-    sync();
-  }]));
+  const base = {
+    pause,
+    reroll,
+    zen: () => setZen((was) => !was),
+    record: () => (take.current ? cut() : begin(ratio.current)),
+    ...Object.fromEntries(
+      Object.entries(actions).map(([act, fn]) => [act, (e) => scene.current && fn(scene.current, e)]),
+    ),
+  };
+  const acts = Object.fromEntries(
+    Object.entries(base).map(([act, fn]) => [
+      act,
+      (e) => {
+        fn(e);
+        sync();
+      },
+    ]),
+  );
   useKeys(map, acts);
   const primary = shown.find((row) => row.button && acts[row.act]);
   const copy = () => {
-    navigator.clipboard?.writeText(`${location.origin}${location.pathname}${share(url)}`).then(() => {
-      clearTimeout(hush.current);
-      setCopied(true);
-      hush.current = setTimeout(() => setCopied(false), COPIED);
-    }, () => {});
+    navigator.clipboard?.writeText(`${location.origin}${location.pathname}${share(url)}`).then(
+      () => {
+        clearTimeout(hush.current);
+        setCopied(true);
+        hush.current = setTimeout(() => setCopied(false), COPIED);
+      },
+      () => {},
+    );
   };
   const view = spec ? live(spec.filter(viewing), value)[0] : undefined;
   const files = menu(record, begin, more);
-  const sides = Object.fromEntries(Object.keys(SIDES).filter(panes.has).map((side) => [side, panes.open[side]]));
-  const model = menus({ exports: files.map(([text]) => text), undo: stack.current.past.length > 0, redo: stack.current.future.length > 0, reset: Boolean(spec), view: view ? { value: value[view.key], options: optionsOf(view, value, units).map(pair) } : null, panes: sides, keys: labels(on, value, scene.current), told: known });
+  const sides = Object.fromEntries(
+    Object.keys(SIDES)
+      .filter(panes.has)
+      .map((side) => [side, panes.open[side]]),
+  );
+  const model = menus({
+    exports: files.map(([text]) => text),
+    undo: stack.current.past.length > 0,
+    redo: stack.current.future.length > 0,
+    reset: Boolean(spec),
+    view: view ? { value: value[view.key], options: optionsOf(view, value, units).map(pair) } : null,
+    panes: sides,
+    keys: labels(on, value, scene.current),
+    told: known,
+  });
   const run = useRef(null);
   run.current = (act) => {
-    if (act.startsWith('export:')) return files[Number(act.slice(7))]?.[1]();
-    if (act.startsWith('pane:')) return panes.flip(act.slice(5));
-    if (act.startsWith('view:')) return onChange({ [view.key]: optionsOf(view, value, units).map(pair).map(([one]) => one).find((one) => String(one) === act.slice(5)) });
-    const [name, key] = act.split('@');
-    const fn = { export: () => flip('dialog.export'), copy, undo: () => travel(-1), redo: () => travel(1), reset, keys: () => flip('dialog.keys'), info: () => flip('dialog.info'), ...acts }[name];
+    if (act.startsWith("export:")) return files[Number(act.slice(7))]?.[1]();
+    if (act.startsWith("pane:")) return panes.flip(act.slice(5));
+    if (act.startsWith("view:"))
+      return onChange({
+        [view.key]: optionsOf(view, value, units)
+          .map(pair)
+          .map(([one]) => one)
+          .find((one) => String(one) === act.slice(5)),
+      });
+    const [name, key] = act.split("@");
+    const fn = {
+      export: () => flip("dialog.export"),
+      copy,
+      undo: () => travel(-1),
+      redo: () => travel(1),
+      reset,
+      keys: () => flip("dialog.keys"),
+      info: () => flip("dialog.info"),
+      ...acts,
+    }[name];
     const row = map.find((one) => one.act === name);
-    fn?.({ key: key ?? (row ? [].concat(row.key)[0] : ''), preventDefault: () => {} });
+    fn?.({ key: key ?? (row ? [].concat(row.key)[0] : ""), preventDefault: () => {} });
   };
   const sign = JSON.stringify(model);
   useEffect(() => publish({ title, menus: model, run: (act) => run.current(act) }), [sign]);
@@ -327,19 +403,26 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
   useEffect(() => {
     const press = (e) => {
       const by = undoing(e);
-      if (!by || document.querySelector('dialog[open]')) return;
+      if (!by || document.querySelector("dialog[open]")) return;
       e.preventDefault();
-      run.current(by < 0 ? 'undo' : 'redo');
+      run.current(by < 0 ? "undo" : "redo");
     };
-    addEventListener('keydown', press);
-    return () => removeEventListener('keydown', press);
+    addEventListener("keydown", press);
+    return () => removeEventListener("keydown", press);
   }, []);
   return (
     <Rolls.Provider value={told}>
       <Accordion.Provider value={folds}>
         <Stage.Provider value={stage}>
           <Frame label={title} gestures={gestures} panes={panes}>
-            <Widget value={value} onChange={onChange} onReady={ready} onExport={setMore} onStatus={status} units={units} />
+            <Widget
+              value={value}
+              onChange={onChange}
+              onReady={ready}
+              onExport={setMore}
+              onStatus={status}
+              units={units}
+            />
             <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
               <Icon name="fullscreen_exit" />
             </Btn>
@@ -350,14 +433,19 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
             )}
             {spec && (
               <Bar side="tail">
-                <Fold name="Seed" live={String(value.seed)} open={folds.has('Seed')} onToggle={(on) => folds.flip('Seed', on)}>
+                <Fold
+                  name="Seed"
+                  live={String(value.seed)}
+                  open={folds.has("Seed")}
+                  onToggle={(on) => folds.flip("Seed", on)}
+                >
                   <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
                 </Fold>
               </Bar>
             )}
             <Bar side="status">
               {known && (
-                <Btn className="icon info" aria-label="Info" onClick={() => flip('dialog.info')}>
+                <Btn className="icon info" aria-label="Info" onClick={() => flip("dialog.info")}>
                   <Icon name="info" />
                 </Btn>
               )}
@@ -365,16 +453,22 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
               {!mode.still && resting(scene.current, mode.own, paused) && <span>paused</span>}
               {taking && <span>{rec}</span>}
               {copied && <span>link copied</span>}
-              {rows.slice(0, SHOWN).map(([label, v]) => <span key={label} className="out">{label} {v}</span>)}
+              {rows.slice(0, SHOWN).map(([label, v]) => (
+                <span key={label} className="out">
+                  {label} {v}
+                </span>
+              ))}
             </Bar>
             <Bar side="hints">
               <Hints map={shown} />
-              <Btn className="icon keys" aria-label="Keys" onClick={() => flip('dialog.keys')}>
+              <Btn className="icon keys" aria-label="Keys" onClick={() => flip("dialog.keys")}>
                 <Icon name="keyboard" />
               </Btn>
             </Bar>
             <Bar side="actions">
-              {design && (!design.when || design.when(value)) && <Chip slot={design} value={url} onChange={onChange} math={units?.math} />}
+              {design && (!design.when || design.when(value)) && (
+                <Chip slot={design} value={url} onChange={onChange} math={units?.math} />
+              )}
               {view && (
                 <div className="views">
                   <Knob row={view} value={value[view.key]} values={value} units={units} onChange={onChange} />
@@ -394,7 +488,7 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
                 <Icon name="casino" />
                 Reroll
               </Btn>
-              <Btn className="export" onClick={() => flip('dialog.export')}>
+              <Btn className="export" onClick={() => flip("dialog.export")}>
                 <Icon name="download" />
                 Export
               </Btn>
@@ -405,7 +499,13 @@ function App({ Widget, defaults, spec, units, keys, actions, gestures, record, a
             </Bar>
             <Keys map={shown} />
             {known && <Info about={about} rows={rows} />}
-            <Export canvas={() => scene.current?.canvas ?? document.querySelector('.frame canvas')} name={file} draw={() => scene.current?.draw?.()} fix={fixed && !taking ? (next) => scene.current?.fix?.(next) : undefined} more={files} />
+            <Export
+              canvas={() => scene.current?.canvas ?? document.querySelector(".frame canvas")}
+              name={file}
+              draw={() => scene.current?.draw?.()}
+              fix={fixed && !taking ? (next) => scene.current?.fix?.(next) : undefined}
+              more={files}
+            />
           </Frame>
         </Stage.Provider>
       </Accordion.Provider>
@@ -422,13 +522,49 @@ export function Held({ units, still, ...rest }) {
   return on ? <App {...rest} units={held ?? undefined} /> : null;
 }
 
-export function page(Widget, defaults, { spec, units, keys = [], actions = {}, gestures = false, record = false, about = [], still: calm = false, name, design } = {}) {
+export function page(
+  Widget,
+  defaults,
+  {
+    spec,
+    units,
+    keys = [],
+    actions = {},
+    gestures = false,
+    record = false,
+    about = [],
+    still: calm = false,
+    name,
+    design,
+  } = {},
+) {
   const start = values(defaults, spec);
   return island((host) => {
     const still = host.nextElementSibling;
-    const title = still?.querySelector('h1')?.textContent ?? '';
+    const title = still?.querySelector("h1")?.textContent ?? "";
     const id = host.dataset.app;
     seeded(Object.keys(start), design);
-    return { node: <Held units={units} still={still} Widget={Widget} defaults={start} spec={spec} keys={keys} actions={actions} gestures={gestures} record={record} about={about} id={id} title={title} calm={calm} name={name} design={design} />, close: () => still && host.after(still) };
+    return {
+      node: (
+        <Held
+          units={units}
+          still={still}
+          Widget={Widget}
+          defaults={start}
+          spec={spec}
+          keys={keys}
+          actions={actions}
+          gestures={gestures}
+          record={record}
+          about={about}
+          id={id}
+          title={title}
+          calm={calm}
+          name={name}
+          design={design}
+        />
+      ),
+      close: () => still && host.after(still),
+    };
   });
 }

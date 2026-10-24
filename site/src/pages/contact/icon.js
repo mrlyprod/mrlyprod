@@ -24,6 +24,10 @@ export default function draw(pen) {
   const y = box.y + (box.h - h) / 2;
   const r = w * CORNER;
   pen.round_rect(x, y, w, h, r, paint.white);
-  const flap = [...corner(x + r, y + r, r, Math.PI, Math.PI * 1.5), ...corner(x + w - r, y + r, r, Math.PI * 1.5, Math.PI * 2), [x + w / 2, y + h * TIP]];
+  const flap = [
+    ...corner(x + r, y + r, r, Math.PI, Math.PI * 1.5),
+    ...corner(x + w - r, y + r, r, Math.PI * 1.5, Math.PI * 2),
+    [x + w / 2, y + h * TIP],
+  ];
   pen.polygon(flap, paint.deep);
 }

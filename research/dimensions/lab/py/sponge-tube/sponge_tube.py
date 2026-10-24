@@ -38,7 +38,12 @@ def a1(t, d):
     if t == d:
         return dd**3 / 3
     y = dd * dd - x * x
-    return x * x * (3 * dd**4 - 3 * dd * dd * x * x + x**4) / (3 * (dd**3 + y * iv.sqrt(y)))
+    return (
+        x
+        * x
+        * (3 * dd**4 - 3 * dd * dd * x * x + x**4)
+        / (3 * (dd**3 + y * iv.sqrt(y)))
+    )
 
 
 def seg(t0, t1, alpha, beta, d):
@@ -99,7 +104,9 @@ def strip(delta):
             total += columns_below(min(full, 3 ** (m - 1)), m - 1) * hole_j(s, delta)
         cut = int((ratio - 1) // 3)
         if 0 <= cut < 3 ** (m - 1) and (3 * cut + 1) * s < delta < (3 * cut + 2) * s:
-            total += column_weight(cut, m - 1) * partial_j(s, delta - (3 * cut + 1) * s, delta)
+            total += column_weight(cut, m - 1) * partial_j(
+                s, delta - (3 * cut + 1) * s, delta
+            )
     assert upper(total) <= lower(num(delta * delta / 3))
     return total, num(delta * Fr(8, 9) ** LEVELS / 8)
 
@@ -128,7 +135,11 @@ def overlap(ints_a, ints_b):
 def columns_meeting(lo, hi, s, digits):
     first = max(0, int((lo / s - 2) // 3))
     last = min(3**digits - 1, int((hi / s - 1) // 3) + 1)
-    return [i for i in range(first, last + 1) if (3 * i + 2) * s > lo and (3 * i + 1) * s < hi]
+    return [
+        i
+        for i in range(first, last + 1)
+        if (3 * i + 2) * s > lo and (3 * i + 1) * s < hi
+    ]
 
 
 def deep_bound(delta):
@@ -143,11 +154,19 @@ def deep_bound(delta):
             for i in columns_meeting(delta - wn, delta, sm, m - 1):
                 vlen = min(delta, (3 * i + 2) * sm) - max(delta - wn, (3 * i + 1) * sm)
                 if (m, i) not in cache:
-                    cache[(m, i)] = [((3 * r + 1) * sm, (3 * r + 2) * sm) for r in hole_rows(i, m - 1)]
+                    cache[(m, i)] = [
+                        ((3 * r + 1) * sm, (3 * r + 2) * sm)
+                        for r in hole_rows(i, m - 1)
+                    ]
                 for k in columns_meeting(delta - wm, delta, sn, n - 1):
-                    ulen = min(delta, (3 * k + 2) * sn) - max(delta - wm, (3 * k + 1) * sn)
+                    ulen = min(delta, (3 * k + 2) * sn) - max(
+                        delta - wm, (3 * k + 1) * sn
+                    )
                     if (n, k) not in cache:
-                        cache[(n, k)] = [((3 * r + 1) * sn, (3 * r + 2) * sn) for r in hole_rows(k, n - 1)]
+                        cache[(n, k)] = [
+                            ((3 * r + 1) * sn, (3 * r + 2) * sn)
+                            for r in hole_rows(k, n - 1)
+                        ]
                     total += vlen * ulen * overlap(cache[(m, i)], cache[(n, k)])
     for m in range(1, TAIL_LEVELS + 1):
         for n in range(1, TAIL_LEVELS + 1):
@@ -214,7 +233,13 @@ def raster(delta, n):
     for t, dd in ((u, dvz), (1 / 3 - u, dvz), (v, duz), (1 / 3 - v, duz)):
         dist = np.minimum(dist, np.sqrt(t * t + dd * dd))
     arm = dist
-    e = np.minimum.reduce([np.sqrt(np.minimum(u, 1 / 3 - u) ** 2 + np.minimum(v, 1 / 3 - v) ** 2), np.sqrt(np.minimum(u, 1 / 3 - u) ** 2 + np.minimum(z, 1 / 3 - z) ** 2), np.sqrt(np.minimum(v, 1 / 3 - v) ** 2 + np.minimum(z, 1 / 3 - z) ** 2)])
+    e = np.minimum.reduce(
+        [
+            np.sqrt(np.minimum(u, 1 / 3 - u) ** 2 + np.minimum(v, 1 / 3 - v) ** 2),
+            np.sqrt(np.minimum(u, 1 / 3 - u) ** 2 + np.minimum(z, 1 / 3 - z) ** 2),
+            np.sqrt(np.minimum(v, 1 / 3 - v) ** 2 + np.minimum(z, 1 / 3 - z) ** 2),
+        ]
+    )
     r = np.sqrt(3) * h / 2
     inner = 6 * (arm <= delta - r).sum() + (e <= delta - r).sum()
     outer = 6 * (arm <= delta + r).sum() + (e <= delta + r).sum()
@@ -239,31 +264,49 @@ def up(x, k):
 
 def main():
     start = time.time()
-    print(f"SPONGE: base 3, fill 20, D = log 20 / log 3 in [{mp.nstr(lower(D), 12)}, {mp.nstr(upper(D), 12)}], weight per level 27/20, constant term 20/27")
-    print("TUBE: T(delta) = volume of F_delta inside the plus, delta in (0, 1/6], from the wall carpets and the centre cube edges, interval arithmetic at 133 bits")
+    print(
+        f"SPONGE: base 3, fill 20, D = log 20 / log 3 in [{mp.nstr(lower(D), 12)}, {mp.nstr(upper(D), 12)}], weight per level 27/20, constant term 20/27"
+    )
+    print(
+        "TUBE: T(delta) = volume of F_delta inside the plus, delta in (0, 1/6], from the wall carpets and the centre cube edges, interval arithmetic at 133 bits"
+    )
     for delta in (Fr(1, 8), Fr(1, 12)):
         lo, hi = tube(delta)
         lo, hi = lower(lo), upper(hi)
         rl, rh = raster(float(delta), 120)
-        print(f"  delta = {delta}: closed form in [{mp.nstr(down(lo, 9), 10)}, {mp.nstr(up(hi, 9), 10)}], raster band [{rl:.5f}, {rh:.5f}] at 120^3 cells per cube")
+        print(
+            f"  delta = {delta}: closed form in [{mp.nstr(down(lo, 9), 10)}, {mp.nstr(up(hi, 9), 10)}], raster band [{rl:.5f}, {rh:.5f}] at 120^3 cells per cube"
+        )
         assert rl <= float(lo) and float(hi) <= rh
     lo, hi = tube(Fr(1, 6))
     ident = (iv.pi + 8) / 36 - iv.sqrt(2) / 27
     assert lower(lo) <= upper(ident) and lower(ident) <= upper(hi)
-    print(f"  delta = 1/6: A1 = V1 there, so T = (pi + 8)/36 - sqrt2/27 - 24 Deep = {mp.nstr(down(ident, 9), 10)} less at most {float(24 * deep_bound(Fr(1, 6))):.2e}; closed form in [{mp.nstr(down(lo, 9), 10)}, {mp.nstr(up(hi, 9), 10)}]")
-    print("PERIODIC: p(eps) = eps^(D-3) (20/27 + sum_l (27/20)^l T(eps/3^l)), eps in (sqrt2/18, 1/6]")
+    print(
+        f"  delta = 1/6: A1 = V1 there, so T = (pi + 8)/36 - sqrt2/27 - 24 Deep = {mp.nstr(down(ident, 9), 10)} less at most {float(24 * deep_bound(Fr(1, 6))):.2e}; closed form in [{mp.nstr(down(lo, 9), 10)}, {mp.nstr(up(hi, 9), 10)}]"
+    )
+    print(
+        "PERIODIC: p(eps) = eps^(D-3) (20/27 + sum_l (27/20)^l T(eps/3^l)), eps in (sqrt2/18, 1/6]"
+    )
     bands = {}
     for eps in (Fr(1, 12), Fr(1, 8), Fr(1, 6)):
         lo, hi = periodic(eps, 40)
         bands[eps] = (lo, hi)
-        print(f"  eps = {eps}: p in [{mp.nstr(down(lo, 6), 7)}, {mp.nstr(up(hi, 6), 7)}]")
+        print(
+            f"  eps = {eps}: p in [{mp.nstr(down(lo, 6), 7)}, {mp.nstr(up(hi, 6), 7)}]"
+        )
     gap = bands[Fr(1, 6)][0] - bands[Fr(1, 12)][1]
     gap2 = bands[Fr(1, 8)][0] - bands[Fr(1, 12)][1]
     assert gap > 0 and gap2 > 0
-    print(f"  p(1/6) - p(1/12) >= {mp.nstr(down(gap, 6), 7)},  p(1/8) - p(1/12) >= {mp.nstr(down(gap2, 6), 7)}")
+    print(
+        f"  p(1/6) - p(1/12) >= {mp.nstr(down(gap, 6), 7)},  p(1/8) - p(1/12) >= {mp.nstr(down(gap2, 6), 7)}"
+    )
     swing = gap / bands[Fr(1, 12)][1]
-    print(f"  relative swing (p(1/6) - p(1/12)) / p(1/12) >= {mp.nstr(down(swing * 100, 4), 5)} %")
-    print(f"  doubly deep set, upper bound on its volume: {float(deep_bound(Fr(1, 6))):.3g} at delta = 1/6, {float(deep_bound(Fr(1, 8))):.3g} at delta = 1/8, {float(deep_bound(Fr(1, 12))):.3g} at delta = 1/12")
+    print(
+        f"  relative swing (p(1/6) - p(1/12)) / p(1/12) >= {mp.nstr(down(swing * 100, 4), 5)} %"
+    )
+    print(
+        f"  doubly deep set, upper bound on its volume: {float(deep_bound(Fr(1, 6))):.3g} at delta = 1/6, {float(deep_bound(Fr(1, 8))):.3g} at delta = 1/8, {float(deep_bound(Fr(1, 12))):.3g} at delta = 1/12"
+    )
     print(f"wall {time.time() - start:.1f} s")
 
 

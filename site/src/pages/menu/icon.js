@@ -18,11 +18,11 @@ export default function draw(pen) {
     for (const c of line) if (c !== "0" && !tone[c]) throw new Error(`menu: no tone for ${c}`);
   }
   const cells = new Grid(box, cols, rows, GAP);
-  ART.forEach((line, row) =>
+  ART.forEach((line, row) => {
     [...line].forEach((c, col) => {
       if (c === "0") return;
       const [x, y, w, h] = cells.cell(col, row);
       pen.round_rect(x, y, w, h, Math.min(w, h) * CORNER, tone[c]);
-    }),
-  );
+    });
+  });
 }

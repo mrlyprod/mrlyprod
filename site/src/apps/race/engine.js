@@ -1,5 +1,5 @@
-import { rng } from '../../lib/rand.js';
-import { title, total } from '../../lib/designs/engine.js';
+import { title, total } from "../../lib/designs/engine.js";
+import { rng } from "../../lib/rand.js";
 
 export const DIM = 2;
 export const NUMBERS = [3, 5, 7];
@@ -14,7 +14,12 @@ export const LIMIT = 60000;
 export const ROLLS = 48;
 export const TURN = 180;
 export const GAIN = 0.25;
-const MOVES = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const MOVES = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+];
 const WIDE = 4294967296;
 const ceilings = new Map();
 const masses = new Map();
@@ -38,7 +43,7 @@ export const budget = (walkers) => Math.max(1, Math.floor(STILL / (2 * walkers))
 /* CODES */
 
 export function reads(text, count) {
-  const s = String(text ?? '').trim();
+  const s = String(text ?? "").trim();
   if (!s) return null;
   const n = Number(s);
   if (!Number.isFinite(n)) return null;
@@ -109,7 +114,14 @@ export function grow(math, value, code) {
   const side = cell.shape[0];
   const filled = Uint8Array.from(cell.types, (type) => (type ? 1 : 0));
   const at = home(filled, side);
-  return { code, side, filled, home: at, lit: Number(math.counts.fill(code, value.number, DIM, value.level, value.base)), ...room(filled, side, at) };
+  return {
+    code,
+    side,
+    filled,
+    home: at,
+    lit: Number(math.counts.fill(code, value.number, DIM, value.level, value.base)),
+    ...room(filled, side, at),
+  };
 }
 
 export function fills(math, value, code) {
@@ -124,15 +136,28 @@ export function ceiling(math, value, code) {
 
 export function kin(math, value, code, count) {
   const key = `${value.base}:${value.number}`;
-  if (!masses.has(key)) masses.set(key, Array.from({ length: count }, (_, c) => fills(math, value, String(c))));
+  if (!masses.has(key))
+    masses.set(
+      key,
+      Array.from({ length: count }, (_, c) => fills(math, value, String(c))),
+    );
   const list = masses.get(key);
-  return list.flatMap((mass, c) => (c > 0 && c < count - 1 && mass === list[Number(code)] && String(c) !== code ? [String(c)] : []));
+  return list.flatMap((mass, c) =>
+    c > 0 && c < count - 1 && mass === list[Number(code)] && String(c) !== code ? [String(c)] : [],
+  );
 }
 
 export function board(math, value, code) {
   const { base, number } = value;
   const grown = grow(math, value, code);
-  return { ...grown, name: math.name.of(code, DIM, base) ?? '', title: title(math, DIM, base, code), fills: fills(math, value, code), of: number * number, dimension: math.counts.dimension(code, number, DIM, base) };
+  return {
+    ...grown,
+    name: math.name.of(code, DIM, base) ?? "",
+    title: title(math, DIM, base, code),
+    fills: fills(math, value, code),
+    of: number * number,
+    dimension: math.counts.dimension(code, number, DIM, base),
+  };
 }
 
 /* PAIR */
@@ -179,7 +204,15 @@ export function plan(math, value, rand) {
   const count = total(math, DIM, value.base);
   const codes = pair(math, value, rand, [reads(value.a, count), reads(value.b, count)]);
   const sides = codes.map((code) => board(math, value, code));
-  return { sides, side: sides[0].side, goal: value.finish, walkers: value.walkers, speed: value.speed, still: budget(value.walkers), keep: keeping(value.heat, value.speed) };
+  return {
+    sides,
+    side: sides[0].side,
+    goal: value.finish,
+    walkers: value.walkers,
+    speed: value.speed,
+    still: budget(value.walkers),
+    keep: keeping(value.heat, value.speed),
+  };
 }
 
 export function heat(value, stamp, tick, keep) {
@@ -214,7 +247,9 @@ const verdict = ([a, b]) => (a > b ? 0 : b > a ? 1 : -1);
 
 function reached(state, plan) {
   const hit = state.reach.map((r) => r >= plan.goal);
-  return hit[0] || hit[1] ? { tick: state.tick, winner: hit[0] && hit[1] ? verdict(state.reach) : hit[0] ? 0 : 1, how: 'goal' } : null;
+  return hit[0] || hit[1]
+    ? { tick: state.tick, winner: hit[0] && hit[1] ? verdict(state.reach) : hit[0] ? 0 : 1, how: "goal" }
+    : null;
 }
 
 export function step(state, plan, rand) {
@@ -248,14 +283,15 @@ export function step(state, plan, rand) {
   state.log.push([state.reach[0], state.reach[1]]);
   state.over = reached(state, plan);
   if (state.over) return state;
-  if (tick - Math.max(state.since[0], state.since[1]) >= STALL) state.over = { tick, winner: verdict(state.reach), how: 'stall' };
-  else if (tick >= LIMIT) state.over = { tick, winner: verdict(state.reach), how: 'limit' };
+  if (tick - Math.max(state.since[0], state.since[1]) >= STALL)
+    state.over = { tick, winner: verdict(state.reach), how: "stall" };
+  else if (tick >= LIMIT) state.over = { tick, winner: verdict(state.reach), how: "limit" };
   return state;
 }
 
 export function aim(state, plan) {
   if (!state.over) state.over = reached(state, plan);
-  else if (state.over.how === 'goal' && !reached(state, plan)) state.over = null;
+  else if (state.over.how === "goal" && !reached(state, plan)) state.over = null;
   return state;
 }
 
@@ -306,7 +342,22 @@ export function series(plan, walk, wait = HOLD) {
       version++;
     }
   };
-  return { to, finish, get state() { return state; }, get k() { return k; }, get start() { return start; }, get version() { return version; } };
+  return {
+    to,
+    finish,
+    get state() {
+      return state;
+    },
+    get k() {
+      return k;
+    },
+    get start() {
+      return start;
+    },
+    get version() {
+      return version;
+    },
+  };
 }
 
 /* LAYOUT */
@@ -320,6 +371,9 @@ export function lay(w, h, n, gap, pad) {
   const edge = cell * n;
   const x0 = flat ? (w - 2 * edge - gap) / 2 : (w - edge) / 2;
   const y0 = flat ? (h - edge) / 2 : (h - 2 * edge - gap) / 2;
-  const boards = [[x0, y0], flat ? [x0 + edge + gap, y0] : [x0, y0 + edge + gap]].map(([x, y]) => ({ x: Math.round(x), y: Math.round(y) }));
+  const boards = [[x0, y0], flat ? [x0 + edge + gap, y0] : [x0, y0 + edge + gap]].map(([x, y]) => ({
+    x: Math.round(x),
+    y: Math.round(y),
+  }));
   return { cell, edge, flat, boards };
 }

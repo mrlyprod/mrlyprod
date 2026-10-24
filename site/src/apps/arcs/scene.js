@@ -1,50 +1,63 @@
-import { palette } from '../../lib/theme/palette.gen.js';
-import { dark, light } from '../../lib/theme/theme.js';
-import { tidy } from '../../lib/app/spec.js';
-import { HUES, TINTS, mix, rgb } from '../../lib/color.js';
-import { runs } from '../../lib/app/svg.js';
-import { BASES, DIM, FADE, LOOKS, PAD, arc, cap, fit, picture, resolve, study, thick } from './engine.js';
-import { wasm } from '../../lib/units/index.js';
+import { tidy } from "../../lib/app/spec.js";
+import { runs } from "../../lib/app/svg.js";
+import { HUES, mix, rgb, TINTS } from "../../lib/color.js";
+import { palette } from "../../lib/theme/palette.gen.js";
+import { dark, light } from "../../lib/theme/theme.js";
+import { wasm } from "../../lib/units/index.js";
+import { arc, BASES, cap, DIM, FADE, fit, LOOKS, PAD, picture, resolve, study, thick } from "./engine.js";
 
 const HIDE = () => false;
 
 export const SPEC = [
-  { key: 'base', label: 'Base', kind: 'segment', def: 2, options: BASES, when: HIDE },
-  { key: 'code', label: 'Code', kind: 'text', def: '', when: HIDE },
-  { key: 'level', label: 'Level', kind: 'slider', def: 5, min: 1, max: (value, units) => units && cap(units.math, value.base), step: 1, group: 'Arcs' },
-  { key: 'cells', label: 'Shade cells', kind: 'toggle', def: 1, group: 'Arcs' },
-  { key: 'look', label: 'Show', kind: 'segment', def: 'all', options: LOOKS, group: 'Arcs' },
-  { key: 'width', label: 'Width', kind: 'slider', def: 0, min: 0, max: 0.5, step: 0.02, zero: 'Auto', group: 'Arcs' },
-  { key: 'tint', label: 'Loops', kind: 'pick', def: 'orange', options: TINTS, group: 'Colour' },
-  { key: 'strand', label: 'Strands', kind: 'pick', def: 'blue', options: TINTS, group: 'Colour' },
+  { key: "base", label: "Base", kind: "segment", def: 2, options: BASES, when: HIDE },
+  { key: "code", label: "Code", kind: "text", def: "", when: HIDE },
+  {
+    key: "level",
+    label: "Level",
+    kind: "slider",
+    def: 5,
+    min: 1,
+    max: (value, units) => units && cap(units.math, value.base),
+    step: 1,
+    group: "Arcs",
+  },
+  { key: "cells", label: "Shade cells", kind: "toggle", def: 1, group: "Arcs" },
+  { key: "look", label: "Show", kind: "segment", def: "all", options: LOOKS, group: "Arcs" },
+  { key: "width", label: "Width", kind: "slider", def: 0, min: 0, max: 0.5, step: 0.02, zero: "Auto", group: "Arcs" },
+  { key: "tint", label: "Loops", kind: "pick", def: "orange", options: TINTS, group: "Colour" },
+  { key: "strand", label: "Strands", kind: "pick", def: "blue", options: TINTS, group: "Colour" },
 ];
 
 export const ABOUT = [
-  'Every cell carries two quarter arcs, each joining the midpoints of two neighbouring edges. A filled cell takes the arcs round its lower-left and upper-right corners, an empty cell the other two.',
-  'The arcs join into curves. Strands run from border to border, and there are always twice the side of them. Loops close on themselves, and the design decides how many.',
-  'A law shows where one is proved: the carpet at base 3 and all sixteen codes at base 2. The library holds the designs whose law counts some loops. Every count comes from the crate, by union-find over the edge midpoints, and row 0 is at the bottom.',
-  'Trace, or a tap, lights the loops one by one. Reroll rolls a design that loops at this level. [Designs](/designs/) lists the designs, and [Two](/two/) repeats one into a sheet.',
+  "Every cell carries two quarter arcs, each joining the midpoints of two neighbouring edges. A filled cell takes the arcs round its lower-left and upper-right corners, an empty cell the other two.",
+  "The arcs join into curves. Strands run from border to border, and there are always twice the side of them. Loops close on themselves, and the design decides how many.",
+  "A law shows where one is proved: the carpet at base 3 and all sixteen codes at base 2. The library holds the designs whose law counts some loops. Every count comes from the crate, by union-find over the edge midpoints, and row 0 is at the bottom.",
+  "Trace, or a tap, lights the loops one by one. Reroll rolls a design that loops at this level. [Designs](/designs/) lists the designs, and [Two](/two/) repeats one into a sheet.",
 ];
 
-const units = wasm('math');
+const units = wasm("math");
 
-export const file = (value, unit) => `arcs-${unit?.math ? resolve(unit.math, value.base, value.code) : String(value.code ?? '').trim() || 'carpet'}-base${value.base}-level${value.level}`.replace(/[^\w.+-]+/g, '-');
+export const file = (value, unit) =>
+  `arcs-${unit?.math ? resolve(unit.math, value.base, value.code) : String(value.code ?? "").trim() || "carpet"}-base${value.base}-level${value.level}`.replace(
+    /[^\w.+-]+/g,
+    "-",
+  );
 
 export const PAGE = {
   spec: SPEC,
   units,
   name: file,
   about: ABOUT,
-  design: { dim: DIM, base: 'base', code: 'code', bases: BASES.map(([base]) => base) },
+  design: { dim: DIM, base: "base", code: "code", bases: BASES.map(([base]) => base) },
   keys: [
-    { key: 'Enter', label: 'Trace', act: 'trace', button: true, menu: 'Edit' },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Design', act: 'design' },
-    { key: 'ArrowUp', label: 'Level', act: 'up', menu: 'View' },
-    { key: 'ArrowDown', label: 'Level', act: 'down', menu: 'View' },
+    { key: "Enter", label: "Trace", act: "trace", button: true, menu: "Edit" },
+    { key: ["ArrowLeft", "ArrowRight"], label: "Design", act: "design" },
+    { key: "ArrowUp", label: "Level", act: "up", menu: "View" },
+    { key: "ArrowDown", label: "Level", act: "down", menu: "View" },
   ],
   actions: {
     trace: (scene) => scene.trace?.(),
-    design: (scene, e) => scene.step?.(e.key === 'ArrowLeft' ? -1 : 1),
+    design: (scene, e) => scene.step?.(e.key === "ArrowLeft" ? -1 : 1),
     up: (scene) => scene.deeper?.(1),
     down: (scene) => scene.deeper?.(-1),
   },
@@ -59,10 +72,15 @@ const FLIP = (h) => [1, 0, 0, -1, 0, h];
 const bright = (color) => rgb(color).reduce((a, b) => a + b, 0) > 382;
 
 export function shades(canvas, look, strand) {
-  const css = typeof getComputedStyle === 'function' && canvas?.nodeType ? getComputedStyle(canvas) : null;
-  const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
-  const other = HUES.includes(strand) ? read(`--${strand}`, palette[strand]) : read('--accent', light.accent);
-  return { loop: look.accent, strand: other, dim: mix(rgb(look.accent), rgb(look.paper), FADE), fill: read('--line', bright(look.paper) ? light.line : dark.line) };
+  const css = typeof getComputedStyle === "function" && canvas?.nodeType ? getComputedStyle(canvas) : null;
+  const read = (name, fallback) => css?.getPropertyValue(name).trim() || fallback;
+  const other = HUES.includes(strand) ? read(`--${strand}`, palette[strand]) : read("--accent", light.accent);
+  return {
+    loop: look.accent,
+    strand: other,
+    dim: mix(rgb(look.accent), rgb(look.paper), FADE),
+    fill: read("--line", bright(look.paper) ? light.line : dark.line),
+  };
 }
 
 /* STROKES */
@@ -108,17 +126,17 @@ export function shade(target, spans, box) {
 export function sketch(ctx, w, h, dpr, plan, value, inks) {
   const box = fit(plan.side, w, h, w * EDGE);
   ctx.setTransform(...FLIP(h));
-  ctx.lineCap = 'round';
+  ctx.lineCap = "round";
   ctx.lineWidth = thick(value.width, box.px, dpr);
   if (value.cells) {
     ctx.fillStyle = inks.fill;
     shade(ctx, runs({ shape: [plan.side, plan.side], types: plan.filled }), box);
   }
-  if (value.look !== 'loops') {
+  if (value.look !== "loops") {
     ctx.strokeStyle = inks.strand;
     strokes(ctx, plan, box, 0);
   }
-  if (value.look !== 'strands') {
+  if (value.look !== "strands") {
     ctx.strokeStyle = inks.loop;
     strokes(ctx, plan, box, 1);
   }
@@ -128,8 +146,8 @@ export function sketch(ctx, w, h, dpr, plan, value, inks) {
 
 export function make(canvas, view, opts = {}) {
   const { math, onTell } = opts;
-  if (!math) throw new Error('arcs: the scene wants @mrlyprod/mrly/math as opts.math');
-  const ctx = canvas.getContext('2d');
+  if (!math) throw new Error("arcs: the scene wants @mrlyprod/mrly/math as opts.math");
+  const ctx = canvas.getContext("2d");
   const clean = (next) => tidy(SPEC, next, { math });
   let value = clean(opts);
   let plan = null;
@@ -170,10 +188,10 @@ export function make(canvas, view, opts = {}) {
   };
   const blank = () => {
     const sheet = new OffscreenCanvas(view.w, view.h);
-    const ink = sheet.getContext('2d');
+    const ink = sheet.getContext("2d");
     ink.setTransform(...FLIP(view.h));
-    ink.lineCap = 'round';
-    ink.lineJoin = 'round';
+    ink.lineCap = "round";
+    ink.lineJoin = "round";
     return [sheet, ink];
   };
   const reset = () => {
@@ -183,8 +201,8 @@ export function make(canvas, view, opts = {}) {
       ink.fillStyle = inks.fill;
       shade(ink, spans, box);
     }
-    if (value.look !== 'loops') lay(ink, 0, inks.strand);
-    if (value.look !== 'strands') lay(ink, 1, tracing ? inks.dim : inks.loop);
+    if (value.look !== "loops") lay(ink, 0, inks.strand);
+    if (value.look !== "strands") lay(ink, 1, tracing ? inks.dim : inks.loop);
     if (!tracing) {
       layer = back;
       return;
@@ -200,7 +218,8 @@ export function make(canvas, view, opts = {}) {
     if (stamped >= clock.byEnd.length) return;
     pen.strokeStyle = inks.loop;
     pen.lineWidth = width();
-    while (stamped < clock.byEnd.length && clock.end[clock.byEnd[stamped]] <= now) trace(pen, lit[clock.byEnd[stamped++]], 1);
+    while (stamped < clock.byEnd.length && clock.end[clock.byEnd[stamped]] <= now)
+      trace(pen, lit[clock.byEnd[stamped++]], 1);
   };
   const draw = () => {
     if (!dirty && !tracing) return;
@@ -220,8 +239,8 @@ export function make(canvas, view, opts = {}) {
     ctx.setTransform(...FLIP(view.h));
     ctx.strokeStyle = inks.loop;
     ctx.lineWidth = width();
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
     for (const k of clock.byStart) {
       if (clock.start[k] > now) break;
       if (clock.end[k] > now) trace(ctx, lit[k], (now - clock.start[k]) / clock.dur[k]);
@@ -236,7 +255,7 @@ export function make(canvas, view, opts = {}) {
     touch();
   };
   const start = () => {
-    if (!plan.side || value.look === 'strands' || !plan.lit.length) return false;
+    if (!plan.side || value.look === "strands" || !plan.lit.length) return false;
     if (view.still) view.wake?.();
     tracing = { from: view.t };
     touch();
@@ -247,10 +266,10 @@ export function make(canvas, view, opts = {}) {
     const was = value;
     value = clean(next);
     const same = (keys) => keys.every((key) => value[key] === was[key]);
-    if (!same(['base', 'code', 'level'])) plot();
-    else if (same(['look', 'cells', 'width', 'tint', 'strand'])) return;
-    if (value.look === 'strands') tracing = null;
-    if (!same(['tint', 'strand'])) paint();
+    if (!same(["base", "code", "level"])) plot();
+    else if (same(["look", "cells", "width", "tint", "strand"])) return;
+    if (value.look === "strands") tracing = null;
+    if (!same(["tint", "strand"])) paint();
     touch();
   };
   const svg = () => (plan.side ? picture(plan, value, inks) : null);

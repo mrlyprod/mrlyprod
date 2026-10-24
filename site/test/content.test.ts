@@ -1,7 +1,7 @@
 import { beforeAll, expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { folders, state, type Row } from "../scripts/build.ts";
+import { folders, type Row, state } from "../scripts/build.ts";
 import { dead } from "../scripts/links.ts";
 import { dist, out } from "./dist.ts";
 
@@ -31,10 +31,16 @@ const plain = (doc: Doc) => {
 const LINK = /\[[^\]\n]*\]\(([^)\s]+)\)/g;
 const SKIP = new Set(["node_modules", "target"]);
 
-const places = ["site/src/pages", "site/src/apps"].flatMap((top) => folders(at(top)).map((id) => `${top}/${id}`)).filter((dir) => there(`${dir}/app.json`));
+const places = ["site/src/pages", "site/src/apps"]
+  .flatMap((top) => folders(at(top)).map((id) => `${top}/${id}`))
+  .filter((dir) => there(`${dir}/app.json`));
 const pages = places.filter((dir) => there(`${dir}/index.md`)).map((dir) => read(`${dir}/index.md`));
-const posts = folders(at("site/src/pages/blog")).filter((slug) => there(`site/src/pages/blog/${slug}/index.md`)).map((slug) => read(`site/src/pages/blog/${slug}/index.md`));
-const sources = places.flatMap((dir) => (JSON.parse(readFileSync(at(`${dir}/app.json`), "utf8")).source ?? []) as string[]).map((name) => read(name));
+const posts = folders(at("site/src/pages/blog"))
+  .filter((slug) => there(`site/src/pages/blog/${slug}/index.md`))
+  .map((slug) => read(`site/src/pages/blog/${slug}/index.md`));
+const sources = places
+  .flatMap((dir) => (JSON.parse(readFileSync(at(`${dir}/app.json`), "utf8")).source ?? []) as string[])
+  .map((name) => read(name));
 const notes = there("research")
   ? (readdirSync(at("research"), { recursive: true }) as string[])
       .filter((name) => name.endsWith(".md") && !name.split("/").some((part) => part.startsWith(".") || SKIP.has(part)))
@@ -67,7 +73,10 @@ test("every link in a research note lands, a rooted page link on a route", () =>
   for (const doc of notes) {
     const home = doc.name === "research/shared/ledger/src/prose.md" ? at("research/shared") : dirname(at(doc.name));
     for (const [n, line] of plain(doc))
-      for (const hit of line.replace(/`[^`]*`/g, "").replace(/!\[.*?\]\([^)\s]*\)/g, "").matchAll(LINK)) {
+      for (const hit of line
+        .replace(/`[^`]*`/g, "")
+        .replace(/!\[.*?\]\([^)\s]*\)/g, "")
+        .matchAll(LINK)) {
         const target = hit[1]!.split(/[#?]/)[0]!;
         if (target === "" || /^[a-z]+:/.test(target)) continue;
         if (target.startsWith("/")) {
@@ -92,7 +101,8 @@ test("pages, posts and notes keep the house rules: no two blank lines, no em or 
     });
     for (const [n, line] of plain(doc)) {
       if (/[–—]/.test(line)) bad.push(`${doc.name}:${n} em-dash or en-dash`);
-      if (line.startsWith("#") && n < doc.lines.length && doc.lines[n] !== "") bad.push(`${doc.name}:${n} heading without a blank line`);
+      if (line.startsWith("#") && n < doc.lines.length && doc.lines[n] !== "")
+        bad.push(`${doc.name}:${n} heading without a blank line`);
     }
   }
   expect(bad).toEqual([]);
@@ -124,4 +134,3 @@ test("every kept redirect goes from a gone path to a route, never through anothe
   ]);
   expect(stray).toEqual([]);
 });
-

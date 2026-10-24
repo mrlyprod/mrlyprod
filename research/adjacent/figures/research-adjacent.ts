@@ -39,5 +39,6 @@ export default function draw(pen: Pen, ink: Ink) {
   const fill = B - 1;
   if (inR !== fill ** L) throw new Error(`research-adjacent: ${inR} in R, want ${fill ** L}`);
   if (inF !== fill ** L) throw new Error(`research-adjacent: ${inF} missing 0, want ${fill ** L}`);
-  if (both !== fill * (fill - 1) ** (L - 1)) throw new Error(`research-adjacent: ${both} shared, want ${fill * (fill - 1) ** (L - 1)}`);
+  if (both !== fill * (fill - 1) ** (L - 1))
+    throw new Error(`research-adjacent: ${both} shared, want ${fill * (fill - 1) ** (L - 1)}`);
 }

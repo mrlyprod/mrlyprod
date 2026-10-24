@@ -1,8 +1,8 @@
 export const RECENT = 9;
 export const KEPT = 24;
-export const SPARE = 'New Section';
+export const SPARE = "New Section";
 
-const two = (n) => String(n).padStart(2, '0');
+const two = (n) => String(n).padStart(2, "0");
 const parse = (text) => {
   try {
     return text ? JSON.parse(text) : null;
@@ -20,7 +20,14 @@ export function arrange(base, text) {
   const names = new Set();
   const out = [];
   for (const one of Array.isArray(saved) ? saved : []) {
-    if (!one || typeof one.name !== 'string' || !one.name.trim() || !Array.isArray(one.apps) || names.has(one.name.toLowerCase())) continue;
+    if (
+      !one ||
+      typeof one.name !== "string" ||
+      !one.name.trim() ||
+      !Array.isArray(one.apps) ||
+      names.has(one.name.toLowerCase())
+    )
+      continue;
     names.add(one.name.toLowerCase());
     out.push({ name: one.name, apps: one.apps.filter((id) => known.has(id) && !seen.has(id) && seen.add(id)) });
   }
@@ -28,7 +35,10 @@ export function arrange(base, text) {
     const lost = shelf.apps.filter((id) => !seen.has(id));
     if (!lost.length) continue;
     let home = out.find((one) => one.name.toLowerCase() === shelf.name.toLowerCase());
-    if (!home) out.push((home = { name: shelf.name, apps: [] }));
+    if (!home) {
+      home = { name: shelf.name, apps: [] };
+      out.push(home);
+    }
     home.apps.push(...lost);
   }
   return out;
@@ -37,7 +47,9 @@ export function arrange(base, text) {
 export function docked(base, text, known) {
   const saved = parse(text);
   const seen = new Set();
-  const groups = (Array.isArray(saved) && saved.every(Array.isArray) ? saved : base).map((group) => group.filter((id) => known.has(id) && !seen.has(id) && seen.add(id)));
+  const groups = (Array.isArray(saved) && saved.every(Array.isArray) ? saved : base).map((group) =>
+    group.filter((id) => known.has(id) && !seen.has(id) && seen.add(id)),
+  );
   while (groups.length < base.length) groups.push([]);
   return groups;
 }
@@ -51,20 +63,22 @@ export function spare(shelves) {
 
 export function renamed(shelves, from, to) {
   const name = to.trim();
-  if (!name || shelves.some((one) => one.name !== from && one.name.toLowerCase() === name.toLowerCase())) return shelves;
+  if (!name || shelves.some((one) => one.name !== from && one.name.toLowerCase() === name.toLowerCase()))
+    return shelves;
   return shelves.map((one) => (one.name === from ? { ...one, name } : one));
 }
 
-const line = (ids) => `[${ids.map((id) => JSON.stringify(id)).join(', ')}]`;
+const line = (ids) => `[${ids.map((id) => JSON.stringify(id)).join(", ")}]`;
 
 export function exported(shelves, dock) {
   const rows = shelves.map((one) => `    { "name": ${JSON.stringify(one.name)}, "apps": ${line(one.apps)} }`);
-  return `{\n  "sections": [\n${rows.join(',\n')}\n  ],\n  "dock": [${dock.map(line).join(', ')}]\n}\n`;
+  return `{\n  "sections": [\n${rows.join(",\n")}\n  ],\n  "dock": [${dock.map(line).join(", ")}]\n}\n`;
 }
 
 /* RECENT */
 
-export const siblings = (shelves, id) => shelves.find((one) => one.apps.includes(id))?.apps.filter((one) => one !== id) ?? [];
+export const siblings = (shelves, id) =>
+  shelves.find((one) => one.apps.includes(id))?.apps.filter((one) => one !== id) ?? [];
 
 export function visited(list, entry) {
   return [entry, ...(Array.isArray(list) ? list : []).filter((one) => one?.id && one.id !== entry.id)].slice(0, KEPT);
@@ -72,26 +86,37 @@ export function visited(list, entry) {
 
 export function recents(text, known) {
   const list = parse(text);
-  return (Array.isArray(list) ? list : []).filter((one) => typeof one?.id === 'string' && known.has(one.id) && typeof one.url === 'string' && one.url.startsWith('/'));
+  return (Array.isArray(list) ? list : []).filter(
+    (one) => typeof one?.id === "string" && known.has(one.id) && typeof one.url === "string" && one.url.startsWith("/"),
+  );
 }
 
 export function gist(url) {
-  const params = new URLSearchParams(url.split('?')[1] ?? '');
-  return [...params].filter(([key, value]) => key !== 'seed' && value !== '').slice(0, 3).map(([key, value]) => `${key} ${value}`).join(' · ');
+  const params = new URLSearchParams(url.split("?")[1] ?? "");
+  return [...params]
+    .filter(([key, value]) => key !== "seed" && value !== "")
+    .slice(0, 3)
+    .map(([key, value]) => `${key} ${value}`)
+    .join(" · ");
 }
 
 export function ago(at, now = Date.now()) {
-  const say = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto', style: 'short' });
+  const say = new Intl.RelativeTimeFormat(undefined, { numeric: "auto", style: "short" });
   const s = Math.round((at - now) / 1000);
-  for (const [unit, size] of [['day', 86400], ['hour', 3600], ['minute', 60]]) if (Math.abs(s) >= size) return say.format(Math.round(s / size), unit);
-  return say.format(0, 'second');
+  for (const [unit, size] of [
+    ["day", 86400],
+    ["hour", 3600],
+    ["minute", 60],
+  ])
+    if (Math.abs(s) >= size) return say.format(Math.round(s / size), unit);
+  return say.format(0, "second");
 }
 
 /* SEARCH */
 
 export const terms = (query) => query.toLowerCase().split(/\s+/).filter(Boolean);
 
-export function score(words, title, more = '') {
+export function score(words, title, more = "") {
   const name = title.toLowerCase();
   const rest = more.toLowerCase();
   let total = 0;
@@ -119,7 +144,8 @@ export function rank(query, items, cap = Infinity) {
 
 /* DAY */
 
-export const today = (now = new Date()) => `${now.getUTCFullYear()}-${two(now.getUTCMonth() + 1)}-${two(now.getUTCDate())}`;
+export const today = (now = new Date()) =>
+  `${now.getUTCFullYear()}-${two(now.getUTCMonth() + 1)}-${two(now.getUTCDate())}`;
 
 export function daily(day, n) {
   let h = 0x811c9dc5;

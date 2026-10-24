@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { frame as box, Grid, type Color, type Frame, type Ink, type Pen } from "#view";
+import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "#view";
 
 export const units = { math };
 
@@ -41,7 +41,12 @@ function pieces(cells: ArrayLike<number>) {
       filled++;
       const row = Math.floor(at / SIDE);
       const col = at % SIDE;
-      for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      for (const [dr, dc] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ]) {
         const r = row + dr;
         const c = col + dc;
         if (r < 0 || r >= SIDE || c < 0 || c >= SIDE) continue;
@@ -61,11 +66,13 @@ function pieces(cells: ArrayLike<number>) {
 
 function panel(pen: Pen, frame: Frame, letters: ReturnType<typeof letter>[], inks: Color[], rule: number, ink: Ink) {
   const picture = math.bang.magic(letters);
-  if (picture.shape.join() !== `${SIDE},${SIDE}`) throw new Error(`paper-kronecker-word-order: picture ${picture.shape}, want ${SIDE} square`);
+  if (picture.shape.join() !== `${SIDE},${SIDE}`)
+    throw new Error(`paper-kronecker-word-order: picture ${picture.shape}, want ${SIDE} square`);
   const { label, count, filled } = pieces(picture.data);
   if (filled !== CELLS) throw new Error(`paper-kronecker-word-order: ${filled} cells, want ${CELLS}`);
   const claimed = String(math.bang.word.components(letters));
-  if (claimed !== String(count)) throw new Error(`paper-kronecker-word-order: crate counts ${claimed} pieces, the drawing ${count}`);
+  if (claimed !== String(count))
+    throw new Error(`paper-kronecker-word-order: crate counts ${claimed} pieces, the drawing ${count}`);
   const edge = frame.inset(-rule * 2);
   pen.rect(edge.x, edge.y, edge.w, rule, ink.line);
   pen.rect(edge.x, edge.y + edge.h - rule, edge.w, rule, ink.line);
@@ -88,5 +95,6 @@ export default function draw(pen: Pen, ink: Ink) {
   const inks = [ink.blue, ink.orange];
   const first = panel(pen, box(lay.x, lay.y, side, side), reading(0), inks, rule, ink);
   const second = panel(pen, box(lay.x + side + gap, lay.y + side + gap, side, side), reading(1), inks, rule, ink);
-  if (first !== PIECES[0] || second !== PIECES[1]) throw new Error(`paper-kronecker-word-order: ${first} and ${second} pieces, want ${PIECES.join(" and ")}`);
+  if (first !== PIECES[0] || second !== PIECES[1])
+    throw new Error(`paper-kronecker-word-order: ${first} and ${second} pieces, want ${PIECES.join(" and ")}`);
 }

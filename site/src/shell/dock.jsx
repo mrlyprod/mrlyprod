@@ -1,19 +1,19 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
-import { dragging, placed, sortable } from '../lib/drag.js';
-import { app, dock, redock } from './catalog.js';
-import { calm, KEY, subscribe } from './prefs.js';
-import { AppIcon } from './appicon.jsx';
-import { show } from './parts.jsx';
-import { route } from './desk.js';
-import { BIG, lens } from './lens.js';
-import { Tile } from './tile.jsx';
+import { Fragment, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { dragging, placed, sortable } from "../lib/drag.js";
+import { AppIcon } from "./appicon.jsx";
+import { app, dock, redock } from "./catalog.js";
+import { route } from "./desk.js";
+import { BIG, lens } from "./lens.js";
+import { show } from "./parts.jsx";
+import { calm, KEY, subscribe } from "./prefs.js";
+import { Tile } from "./tile.jsx";
 
 const RAMP = 150;
-const VARS = ['--l', '--r', '--big', '--dx', '--m'];
+const VARS = ["--l", "--r", "--big", "--dx", "--m"];
 
-const takes = (from) => (from === 'dock' ? 'move' : from === 'launchpad' || from === 'recent' ? 'copy' : '');
-const shift = (ms) => dispatchEvent(new CustomEvent('shift', { detail: ms }));
+const takes = (from) => (from === "dock" ? "move" : from === "launchpad" || from === "recent" ? "copy" : "");
+const shift = (ms) => dispatchEvent(new CustomEvent("shift", { detail: ms }));
 
 /* GROUP */
 
@@ -22,10 +22,10 @@ function Group({ g, ids, draft, foreign, here, hooks }) {
   useEffect(
     () =>
       sortable(list.current, {
-        kind: 'dock',
-        axis: 'x',
+        kind: "dock",
+        axis: "x",
         out: true,
-        scroller: list.current.closest('.dock'),
+        scroller: list.current.closest(".dock"),
         takes,
         name: (id) => app(id)?.title ?? id,
         preview: (next) => hooks.current.preview(g, next),
@@ -38,7 +38,7 @@ function Group({ g, ids, draft, foreign, here, hooks }) {
   return (
     <ul className="apps" ref={list}>
       {shown.map((id) => (
-        <li key={id} data-id={id} data-held={id === held ? '' : undefined}>
+        <li key={id} data-id={id} data-held={id === held ? "" : undefined}>
           <Tile id={id} name={false} current={app(id)?.route === here} />
         </li>
       ))}
@@ -51,7 +51,7 @@ function Group({ g, ids, draft, foreign, here, hooks }) {
 function Dock() {
   const [groups, setGroups] = useState(dock);
   const [drafts, setDrafts] = useState([]);
-  const [here, setHere] = useState('');
+  const [here, setHere] = useState("");
   const live = useRef(groups);
   const nav = useRef(null);
   const hooks = useRef(null);
@@ -68,7 +68,12 @@ function Dock() {
     commit: (g, next) =>
       flushSync(() => {
         setDrafts((was) => Object.assign([...was], { [g]: null }));
-        if (next) keep(live.current.map((ids, k) => (k === g ? placed(ids, next) : next.index !== null ? ids.filter((id) => id !== next.id) : ids)));
+        if (next)
+          keep(
+            live.current.map((ids, k) =>
+              k === g ? placed(ids, next) : next.index !== null ? ids.filter((id) => id !== next.id) : ids,
+            ),
+          );
       }),
   };
 
@@ -101,7 +106,7 @@ function Dock() {
       const goal = want && !held ? 1 : 0;
       amount = held ? 0 : Math.min(1, Math.max(0, amount + ((goal ? 1 : -1) * Math.max(0, t - last)) / RAMP));
       last = t;
-      const parts = [...box.querySelectorAll('.launcher, .split')];
+      const parts = [...box.querySelectorAll(".launcher, .split")];
       if (!amount && !goal) {
         stop();
         for (const el of [box, ...parts]) for (const name of VARS) el.style.removeProperty(name);
@@ -109,16 +114,20 @@ function Dock() {
       }
       const items = parts.map((el) => {
         const r = el.getBoundingClientRect();
-        return { c: r.left + r.width / 2, dx: Number.parseFloat(el.style.getPropertyValue('--dx')) || 0, w: el.classList.contains('launcher') ? r.width : 0 };
+        return {
+          c: r.left + r.width / 2,
+          dx: Number.parseFloat(el.style.getPropertyValue("--dx")) || 0,
+          w: el.classList.contains("launcher") ? r.width : 0,
+        };
       });
       const out = lens(items, x, amount * amount * (3 - 2 * amount));
       moved = false;
-      put(box, '--l', `${out.l}px`);
-      put(box, '--r', `${out.r}px`);
-      put(box, '--big', String(BIG));
+      put(box, "--l", `${out.l}px`);
+      put(box, "--r", `${out.r}px`);
+      put(box, "--big", String(BIG));
       parts.forEach((el, i) => {
-        put(el, '--dx', `${out.dx[i]}px`);
-        if (items[i].w) put(el, '--m', out.m[i].toFixed(3));
+        put(el, "--dx", `${out.dx[i]}px`);
+        if (items[i].w) put(el, "--m", out.m[i].toFixed(3));
       });
       if (moved) shift(RAMP);
       else if (amount === goal) stop();
@@ -133,7 +142,12 @@ function Dock() {
     };
     const move = (e) => {
       x = e.clientX;
-      want = e.pointerType !== 'touch' && !dragging() && html.hasAttribute('data-magnify') && html.dataset.form !== 'phone' && !calm();
+      want =
+        e.pointerType !== "touch" &&
+        !dragging() &&
+        html.hasAttribute("data-magnify") &&
+        html.dataset.form !== "phone" &&
+        !calm();
       if (want) kick();
       else redo();
     };
@@ -142,20 +156,20 @@ function Dock() {
       redo();
     };
     poke.current = redo;
-    addEventListener('wire', wire);
-    addEventListener('dock', fresh);
-    addEventListener('resize', redo);
+    addEventListener("wire", wire);
+    addEventListener("dock", fresh);
+    addEventListener("resize", redo);
     const sub = subscribe((key) => (!key || key === KEY.dock) && fresh());
-    box.addEventListener('pointermove', move);
-    box.addEventListener('pointerleave', leave);
+    box.addEventListener("pointermove", move);
+    box.addEventListener("pointerleave", leave);
     setHere(route);
     return () => {
-      removeEventListener('wire', wire);
-      removeEventListener('dock', fresh);
-      removeEventListener('resize', redo);
+      removeEventListener("wire", wire);
+      removeEventListener("dock", fresh);
+      removeEventListener("resize", redo);
       sub();
-      box.removeEventListener('pointermove', move);
-      box.removeEventListener('pointerleave', leave);
+      box.removeEventListener("pointermove", move);
+      box.removeEventListener("pointerleave", leave);
       stop();
     };
   }, []);
@@ -183,8 +197,8 @@ function Dock() {
 }
 
 export function start() {
-  const host = document.createElement('div');
-  host.className = 'docked';
+  const host = document.createElement("div");
+  host.className = "docked";
   document.body.append(host);
   show(host, <Dock />);
 }

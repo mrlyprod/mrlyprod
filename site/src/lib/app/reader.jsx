@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import { Frame, usePanes } from './frame.jsx';
-import { publish } from './menus.js';
+import { useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { Frame, usePanes } from "./frame.jsx";
+import { publish } from "./menus.js";
 
-export const layout = { wide: true, bare: true, sheet: 'mrly', window: 'app' };
+export const layout = { wide: true, bare: true, sheet: "mrly", window: "app" };
 
 const COPIED = 1500;
 
@@ -13,7 +13,7 @@ export function own(draw) {
   const live = new Map();
   return {
     layout,
-    render(row, site, host) {
+    render(row, _site, host) {
       host.innerHTML = `<noscript><p>${row.title} draws in the browser and needs JavaScript.</p></noscript>`;
     },
     mount(host, context) {
@@ -32,22 +32,31 @@ export function own(draw) {
 
 /* MENUS */
 
-export const rule = (...parts) => parts.filter((part) => part.length).flatMap((part, n) => (n ? [null, ...part] : part));
+export const rule = (...parts) =>
+  parts.filter((part) => part.length).flatMap((part, n) => (n ? [null, ...part] : part));
 
-export const library = (panes) => ({ label: 'Show Library', act: 'pane:left', keys: ['mod', '['], on: panes.open.left });
+export const library = (panes) => ({
+  label: "Show Library",
+  act: "pane:left",
+  keys: ["mod", "["],
+  on: panes.open.left,
+});
 
-export const COPY = { label: 'Copy Link', act: 'copy' };
+export const COPY = { label: "Copy Link", act: "copy" };
 
 export function useCopy(link = () => location.href) {
   const [copied, setCopied] = useState(false);
   const hush = useRef(0);
   useEffect(() => () => clearTimeout(hush.current), []);
   const copy = () => {
-    navigator.clipboard?.writeText(link()).then(() => {
-      clearTimeout(hush.current);
-      setCopied(true);
-      hush.current = setTimeout(() => setCopied(false), COPIED);
-    }, () => {});
+    navigator.clipboard?.writeText(link()).then(
+      () => {
+        clearTimeout(hush.current);
+        setCopied(true);
+        hush.current = setTimeout(() => setCopied(false), COPIED);
+      },
+      () => {},
+    );
   };
   return [copied, copy];
 }
@@ -61,8 +70,12 @@ export function Reader({ title, menus, run, panes: given, children }) {
   act.current = run;
   const sign = JSON.stringify(menus);
   useEffect(() => {
-    publish({ title, menus, run: (one) => (one.startsWith('pane:') ? panes.flip(one.slice(5)) : act.current?.(one)) });
+    publish({ title, menus, run: (one) => (one.startsWith("pane:") ? panes.flip(one.slice(5)) : act.current?.(one)) });
   }, [title, sign]);
   useEffect(() => () => publish(null), []);
-  return <Frame label={title} panes={panes}>{children}</Frame>;
+  return (
+    <Frame label={title} panes={panes}>
+      {children}
+    </Frame>
+  );
 }

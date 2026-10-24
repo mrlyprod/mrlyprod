@@ -1,18 +1,18 @@
 export const OPS = [
-  ['add', 'Add'],
-  ['sub', 'Subtract'],
-  ['hadamard', 'Multiply'],
-  ['cauchy', 'Convolve'],
-  ['shift', 'Shift'],
-  ['decimate', 'Decimate'],
-  ['delta', 'Differences'],
-  ['sigma', 'Sums'],
-  ['scale', 'Scale'],
+  ["add", "Add"],
+  ["sub", "Subtract"],
+  ["hadamard", "Multiply"],
+  ["cauchy", "Convolve"],
+  ["shift", "Shift"],
+  ["decimate", "Decimate"],
+  ["delta", "Differences"],
+  ["sigma", "Sums"],
+  ["scale", "Scale"],
 ];
 
-export const PAIRED = ['add', 'sub', 'hadamard', 'cauchy'];
+export const PAIRED = ["add", "sub", "hadamard", "cauchy"];
 
-export const TAKES = ['shift', 'decimate', 'scale'];
+export const TAKES = ["shift", "decimate", "scale"];
 
 export const ARG = { min: -8, max: 12 };
 
@@ -23,47 +23,47 @@ const WIDE = 37;
 /* SPELLING */
 
 const size = ([num, den]) => {
-  const top = String(num).replace(/^-/, '');
-  return String(den) === '1' ? top : `${top}/${den}`;
+  const top = String(num).replace(/^-/, "");
+  return String(den) === "1" ? top : `${top}/${den}`;
 };
 
-const sign = ([num]) => String(num).startsWith('-');
+const sign = ([num]) => String(num).startsWith("-");
 
-const zero = ([num]) => String(num) === '0';
+const zero = ([num]) => String(num) === "0";
 
 export function recurrence(rule) {
-  let text = 'a(n) =';
+  let text = "a(n) =";
   rule.forEach((pair, i) => {
     if (zero(pair)) return;
-    text += sign(pair) ? ' - ' : text.endsWith('=') ? ' ' : ' + ';
+    text += sign(pair) ? " - " : text.endsWith("=") ? " " : " + ";
     const weight = size(pair);
-    if (weight !== '1') text += `${weight} `;
+    if (weight !== "1") text += `${weight} `;
     text += `a(n-${i + 1})`;
   });
-  return text.endsWith('=') ? `${text} 0` : text;
+  return text.endsWith("=") ? `${text} 0` : text;
 }
 
 export function polynomial(poly) {
   const top = poly.length - 1;
-  let text = '';
+  let text = "";
   poly.forEach((pair, i) => {
     if (zero(pair)) return;
     const power = top - i;
-    if (!text) text += sign(pair) ? '-' : '';
-    else text += sign(pair) ? ' - ' : ' + ';
+    if (!text) text += sign(pair) ? "-" : "";
+    else text += sign(pair) ? " - " : " + ";
     const weight = size(pair);
-    const shown = weight !== '1' || power === 0;
+    const shown = weight !== "1" || power === 0;
     if (shown) text += weight;
-    if (power > 0) text += `x${power > 1 ? `^${power}` : ''}`;
+    if (power > 0) text += `x${power > 1 ? `^${power}` : ""}`;
   });
-  return text || '0';
+  return text || "0";
 }
 
-export const decimal = (value) => (Number.isFinite(value) ? value.toFixed(DIGITS) : 'none');
+export const decimal = (value) => (Number.isFinite(value) ? value.toFixed(DIGITS) : "none");
 
 /* WIDTH */
 
-const width = (t) => String(t).replace(/^-/, '').length;
+const width = (t) => String(t).replace(/^-/, "").length;
 
 const most = (list, n) => list.slice(0, n + 1).reduce((top, t) => Math.max(top, width(t)), 0);
 
@@ -75,11 +75,11 @@ export const held = (terms) => {
 export function room(op, a, b, arg) {
   const n = PAIRED.includes(op) ? Math.min(a.length, b.length) : a.length;
   const fits = (i) => {
-    if (op === 'add' || op === 'sub') return Math.max(width(a[i]), width(b[i])) + 1 <= WIDE;
-    if (op === 'hadamard') return width(a[i]) + width(b[i]) <= WIDE;
-    if (op === 'cauchy') return most(a, i) + most(b, i) + String(i + 1).length <= WIDE;
-    if (op === 'sigma') return most(a, i) + String(i + 1).length <= WIDE;
-    if (op === 'scale') return width(a[i]) + String(Math.abs(arg)).length <= WIDE;
+    if (op === "add" || op === "sub") return Math.max(width(a[i]), width(b[i])) + 1 <= WIDE;
+    if (op === "hadamard") return width(a[i]) + width(b[i]) <= WIDE;
+    if (op === "cauchy") return most(a, i) + most(b, i) + String(i + 1).length <= WIDE;
+    if (op === "sigma") return most(a, i) + String(i + 1).length <= WIDE;
+    if (op === "scale") return width(a[i]) + String(Math.abs(arg)).length <= WIDE;
     return width(a[i]) + 1 <= WIDE;
   };
   let at = 0;
@@ -91,7 +91,17 @@ export function room(op, a, b, arg) {
 
 export function rule(num, all) {
   const terms = held(all);
-  const none = { order: null, recurrence: '', polynomial: '', root: NaN, growth: NaN, exponent: NaN, from: 'no rule fits, so no growth is read', read: terms.length, error: '' };
+  const none = {
+    order: null,
+    recurrence: "",
+    polynomial: "",
+    root: NaN,
+    growth: NaN,
+    exponent: NaN,
+    from: "no rule fits, so no growth is read",
+    read: terms.length,
+    error: "",
+  };
   if (terms.length < 2) return none;
   let found;
   try {
@@ -109,9 +119,9 @@ export function rule(num, all) {
     root,
     growth: real ? root : NaN,
     exponent: real ? Math.log10(root) : NaN,
-    from: real ? 'the recurrence root' : 'no positive real root, so no growth is read',
+    from: real ? "the recurrence root" : "no positive real root, so no growth is read",
     read: terms.length,
-    error: '',
+    error: "",
   };
 }
 
@@ -136,7 +146,7 @@ export function combine(num, left, right, op, arg) {
   }[op];
   if (!run) return { terms: [], cut: false, error: `no operation ${op}` };
   try {
-    return { terms: n ? run() : [], cut: n < full, error: '' };
+    return { terms: n ? run() : [], cut: n < full, error: "" };
   } catch (error) {
     return { terms: [], cut: false, error: String(error?.message ?? error) };
   }

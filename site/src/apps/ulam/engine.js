@@ -1,11 +1,25 @@
-import { palette as hues } from '../../lib/theme/palette.gen.js';
-import { blend, rgb } from '../../lib/color.js';
-import { pick } from '../../lib/rand.js';
-import { grid, num as fmt, runs, sheet } from '../../lib/app/svg.js';
+import { num as fmt, grid, runs, sheet } from "../../lib/app/svg.js";
+import { blend, rgb } from "../../lib/color.js";
+import { pick } from "../../lib/rand.js";
+import { palette as hues } from "../../lib/theme/palette.gen.js";
 
-export const LATTICES = [['square', 'Square'], ['hex', 'Hex']];
-export const MARKS = [['prime', 'Primes'], ['twin', 'Twin primes'], ['squarefree', 'Squarefree'], ['mobius', 'Mobius sign']];
-export const LEADS = [[0, 'Off'], [1, '1'], [2, '2'], [3, '3'], [4, '4']];
+export const LATTICES = [
+  ["square", "Square"],
+  ["hex", "Hex"],
+];
+export const MARKS = [
+  ["prime", "Primes"],
+  ["twin", "Twin primes"],
+  ["squarefree", "Squarefree"],
+  ["mobius", "Mobius sign"],
+];
+export const LEADS = [
+  [0, "Off"],
+  [1, "1"],
+  [2, "2"],
+  [3, "3"],
+  [4, "4"],
+];
 export const SIDES = [21, 401];
 export const REACH = 1000000;
 export const LEAD = 4;
@@ -31,11 +45,14 @@ const ROOT3 = Math.sqrt(3);
 
 export const title = (word) => word[0].toUpperCase() + word.slice(1);
 
-export const HEX = Array.from({ length: 6 }, (_, i) => [Math.cos(Math.PI / 6 + (i * Math.PI) / 3), Math.sin(Math.PI / 6 + (i * Math.PI) / 3)]);
+export const HEX = Array.from({ length: 6 }, (_, i) => [
+  Math.cos(Math.PI / 6 + (i * Math.PI) / 3),
+  Math.sin(Math.PI / 6 + (i * Math.PI) / 3),
+]);
 
 /* COLOUR */
 
-export const ink = (paper) => (rgb(paper).reduce((sum, v) => sum + v, 0) > BRIGHT ? '#000000' : '#ffffff');
+export const ink = (paper) => (rgb(paper).reduce((sum, v) => sum + v, 0) > BRIGHT ? "#000000" : "#ffffff");
 
 export function palette(accent, paper) {
   return [null, accent, hues.pink, hues.orange, hues.blue, blend(paper, ink(paper), GROUND)];
@@ -46,7 +63,7 @@ export function palette(accent, paper) {
 export function lay(num, lattice, px, w, h) {
   const cx = w / 2;
   const cy = h / 2;
-  if (lattice === 'hex') {
+  if (lattice === "hex") {
     const s = px / ROOT3;
     return {
       lattice,
@@ -56,19 +73,27 @@ export function lay(num, lattice, px, w, h) {
       cy,
       at: (q, r) => [cx + s * ROOT3 * (q + r / 2), cy + 1.5 * s * r],
       cell: (x, y) => {
-        const [q, r] = num.gauss.Ring.nearest('Eisenstein', (x - cx) / px, (cy - y) / px);
+        const [q, r] = num.gauss.Ring.nearest("Eisenstein", (x - cx) / px, (cy - y) / px);
         return [Number(q) + 0, -Number(r) + 0];
       },
     };
   }
-  return { lattice, px, s: px, cx, cy, at: (x, y) => [cx + x * px, cy - y * px], cell: (x, y) => [Math.floor((x - cx) / px + 0.5), Math.floor((cy - y) / px + 0.5)] };
+  return {
+    lattice,
+    px,
+    s: px,
+    cx,
+    cy,
+    at: (x, y) => [cx + x * px, cy - y * px],
+    cell: (x, y) => [Math.floor((x - cx) / px + 0.5), Math.floor((cy - y) / px + 0.5)],
+  };
 }
 
 export function fitted(lattice, rings, w, h, pad = 0) {
   const side = 2 * rings + 1;
   const wide = Math.max(1, w - 2 * pad);
   const high = Math.max(1, h - 2 * pad);
-  if (lattice === 'hex') return ROOT3 * Math.min(wide / (ROOT3 * side), high / (3 * rings + 2));
+  if (lattice === "hex") return ROOT3 * Math.min(wide / (ROOT3 * side), high / (3 * rings + 2));
   return Math.min(wide, high) / side;
 }
 
@@ -118,19 +143,44 @@ export function share(t, length, still) {
 /* LIBRARY */
 
 export const SPIRALS = [
-  { id: 'primes', name: 'Primes', note: 'the first spiral', set: { lattice: 'square', mark: 'prime', a: 0 } },
-  { id: 'twins', name: 'Twin primes', note: 'two apart', set: { lattice: 'square', mark: 'twin', a: 0 } },
-  { id: 'free', name: 'Squarefree', note: 'no square divides', set: { lattice: 'square', mark: 'squarefree', a: 0 } },
-  { id: 'mobius', name: 'Mobius sign', note: 'minus one dim', set: { lattice: 'square', mark: 'mobius', a: 0 } },
-  { id: 'hex', name: 'Hexagons', note: 'on hexagons', set: { lattice: 'hex', mark: 'prime', a: 0 } },
+  { id: "primes", name: "Primes", note: "the first spiral", set: { lattice: "square", mark: "prime", a: 0 } },
+  { id: "twins", name: "Twin primes", note: "two apart", set: { lattice: "square", mark: "twin", a: 0 } },
+  { id: "free", name: "Squarefree", note: "no square divides", set: { lattice: "square", mark: "squarefree", a: 0 } },
+  { id: "mobius", name: "Mobius sign", note: "minus one dim", set: { lattice: "square", mark: "mobius", a: 0 } },
+  { id: "hex", name: "Hexagons", note: "on hexagons", set: { lattice: "hex", mark: "prime", a: 0 } },
 ];
 
 export const POLYS = [
-  { id: 'euler', name: 'Euler diagonal', note: 'prime for its first 21 values', set: { lattice: 'square', mark: 'prime', a: 4, b: -2, c: 41 } },
-  { id: 'axis', name: 'Euler axis', note: 'prime for its first 40 values', set: { lattice: 'square', mark: 'prime', a: 1, b: 1, c: 41 } },
-  { id: 'legendre', name: 'Legendre', note: 'prime for its first 29 values', set: { lattice: 'square', mark: 'prime', a: 2, b: 0, c: 29 } },
-  { id: 'hexaxis', name: 'Hexagon axis', note: 'prime for its first 40 values', set: { lattice: 'hex', mark: 'prime', a: 1, b: 1, c: 41 } },
-  { id: 'hexdiagonal', name: 'Hexagon diagonal', note: 'prime for its first 22 values', set: { lattice: 'hex', mark: 'prime', a: 3, b: 3, c: 23 } },
+  {
+    id: "euler",
+    name: "Euler diagonal",
+    note: "prime for its first 21 values",
+    set: { lattice: "square", mark: "prime", a: 4, b: -2, c: 41 },
+  },
+  {
+    id: "axis",
+    name: "Euler axis",
+    note: "prime for its first 40 values",
+    set: { lattice: "square", mark: "prime", a: 1, b: 1, c: 41 },
+  },
+  {
+    id: "legendre",
+    name: "Legendre",
+    note: "prime for its first 29 values",
+    set: { lattice: "square", mark: "prime", a: 2, b: 0, c: 29 },
+  },
+  {
+    id: "hexaxis",
+    name: "Hexagon axis",
+    note: "prime for its first 40 values",
+    set: { lattice: "hex", mark: "prime", a: 1, b: 1, c: 41 },
+  },
+  {
+    id: "hexdiagonal",
+    name: "Hexagon diagonal",
+    note: "prime for its first 22 values",
+    set: { lattice: "hex", mark: "prime", a: 3, b: 3, c: 23 },
+  },
 ];
 
 export const holds = (value, set) => Object.entries(set).every(([key, v]) => value[key] === v);
@@ -155,12 +205,12 @@ export function step(num, c, by, max) {
 }
 
 export function formula(a, b, c) {
-  const term = (k, word) => (k === 0 ? '' : ` ${k < 0 ? '-' : '+'} ${Math.abs(k)}${word}`);
-  return `${a}k²${term(b, 'k')}${term(c, '')}`;
+  const term = (k, word) => (k === 0 ? "" : ` ${k < 0 ? "-" : "+"} ${Math.abs(k)}${word}`);
+  return `${a}k²${term(b, "k")}${term(c, "")}`;
 }
 
 export function factors(list) {
-  return list.map(([p, e]) => (e > 1 ? `${p}^${e}` : String(p))).join(' · ');
+  return list.map(([p, e]) => (e > 1 ? `${p}^${e}` : String(p))).join(" · ");
 }
 
 /* STUDY */
@@ -168,7 +218,15 @@ export function factors(list) {
 export function spiral(num, lattice, side) {
   const name = title(lattice);
   const top = num.spiral.Lattice.count(name, side);
-  return { lattice, name, side, rings: (side - 1) / 2, top, primes: num.prime.prime_count(top), ...wind(num, name, top) };
+  return {
+    lattice,
+    name,
+    side,
+    rings: (side - 1) / 2,
+    top,
+    primes: num.prime.prime_count(top),
+    ...wind(num, name, top),
+  };
 }
 
 export function toned(num, value, top) {
@@ -186,12 +244,19 @@ export function toned(num, value, top) {
 }
 
 export function quadratic(num, value) {
-  return { line: value.a > 0 ? num.spiral.diagonal(title(value.lattice), value.side, value.a, value.b, value.c) : null };
+  return {
+    line: value.a > 0 ? num.spiral.diagonal(title(value.lattice), value.side, value.a, value.b, value.c) : null,
+  };
 }
 
 export function study(num, value, w, h, pad = 0) {
   const plan = spiral(num, value.lattice, value.side);
-  return { ...plan, geo: lay(num, value.lattice, fitted(value.lattice, plan.rings, w, h, pad), w, h), ...toned(num, value, plan.top), ...quadratic(num, value) };
+  return {
+    ...plan,
+    geo: lay(num, value.lattice, fitted(value.lattice, plan.rings, w, h, pad), w, h),
+    ...toned(num, value, plan.top),
+    ...quadratic(num, value),
+  };
 }
 
 export function read(num, plan, value) {
@@ -209,7 +274,15 @@ export function read(num, plan, value) {
     a: value.a,
     b: value.b,
     c: value.c,
-    line: line && { count: line.values.length, hits: line.hits, share: line.share, streak: line.streak, values: line.values.slice(0, SHOWN), more: line.values.length > SHOWN, next: next === null ? null : { n: next, factors: num.prime.pile(next).factors } },
+    line: line && {
+      count: line.values.length,
+      hits: line.hits,
+      share: line.share,
+      streak: line.streak,
+      values: line.values.slice(0, SHOWN),
+      more: line.values.length > SHOWN,
+      next: next === null ? null : { n: next, factors: num.prime.pile(next).factors },
+    },
   };
 }
 
@@ -218,8 +291,10 @@ export function read(num, plan, value) {
 export function picture(plan, tones) {
   const { lattice, xs, ys, top, line } = plan;
   const tone = plan.tone.slice();
-  if (line) line.values.forEach((n, i) => (tone[n] = line.hit[i] ? HIT : MISS));
-  const hex = lattice === 'hex';
+  if (line) {
+    for (const [i, n] of line.values.entries()) tone[n] = line.hit[i] ? HIT : MISS;
+  }
+  const hex = lattice === "hex";
   const s = UNIT / ROOT3;
   const raw = hex ? (q, r) => [ROOT3 * s * (q + r / 2), 1.5 * s * r] : (x, y) => [x * UNIT, -y * UNIT];
   let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
@@ -243,7 +318,9 @@ export function picture(plan, tones) {
     const [x, y] = at(xs[n], ys[n]);
     return Math.round((y - UNIT / 2) / UNIT) * cols + Math.round((x - UNIT / 2) / UNIT);
   };
-  let body = hex ? `<defs><path id="h" d="M${HEX.map(([cx, cy]) => `${fmt(cx * s)} ${fmt(cy * s)}`).join('L')}Z"/></defs>` : '';
+  let body = hex
+    ? `<defs><path id="h" d="M${HEX.map(([cx, cy]) => `${fmt(cx * s)} ${fmt(cy * s)}`).join("L")}Z"/></defs>`
+    : "";
   for (const t of ORDER) {
     const ids = [];
     for (let n = 1; n <= top; n++) if (tone[n] === t) ids.push(n);
@@ -253,12 +330,15 @@ export function picture(plan, tones) {
           const [x, y] = at(xs[n], ys[n]);
           return `<use href="#h" x="${fmt(x)}" y="${fmt(y)}"/>`;
         })
-      : runs(grid(rows, cols, ids.map(index))).map(([row, col, len]) => `<rect x="${fmt(col * UNIT)}" y="${fmt(row * UNIT)}" width="${fmt(len * UNIT)}" height="${UNIT}"/>`);
-    body += `<g fill="${tones[t]}"${hex ? '' : ' shape-rendering="crispEdges"'}>${cells.join('')}</g>`;
+      : runs(grid(rows, cols, ids.map(index))).map(
+          ([row, col, len]) =>
+            `<rect x="${fmt(col * UNIT)}" y="${fmt(row * UNIT)}" width="${fmt(len * UNIT)}" height="${UNIT}"/>`,
+        );
+    body += `<g fill="${tones[t]}"${hex ? "" : ' shape-rendering="crispEdges"'}>${cells.join("")}</g>`;
   }
   return sheet(width, height, body);
 }
 
 export function table(line) {
-  return ['k,n,prime', ...line.values.map((n, k) => `${k},${n},${line.hit[k] ? 1 : 0}`)].join('\n');
+  return ["k,n,prime", ...line.values.map((n, k) => `${k},${n},${line.hit[k] ? 1 : 0}`)].join("\n");
 }

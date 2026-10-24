@@ -6,12 +6,42 @@ export const PZ = 4;
 export const NZ = 5;
 
 const CORNERS = [
-  [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]],
-  [[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0]],
-  [[0, 1, 0], [0, 1, 1], [1, 1, 1], [1, 1, 0]],
-  [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]],
-  [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]],
-  [[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]],
+  [
+    [1, 0, 0],
+    [1, 1, 0],
+    [1, 1, 1],
+    [1, 0, 1],
+  ],
+  [
+    [0, 0, 0],
+    [0, 0, 1],
+    [0, 1, 1],
+    [0, 1, 0],
+  ],
+  [
+    [0, 1, 0],
+    [0, 1, 1],
+    [1, 1, 1],
+    [1, 1, 0],
+  ],
+  [
+    [0, 0, 0],
+    [1, 0, 0],
+    [1, 0, 1],
+    [0, 0, 1],
+  ],
+  [
+    [0, 0, 1],
+    [1, 0, 1],
+    [1, 1, 1],
+    [0, 1, 1],
+  ],
+  [
+    [0, 0, 0],
+    [0, 1, 0],
+    [1, 1, 0],
+    [1, 0, 0],
+  ],
 ];
 
 const SWELL = 0.35;
@@ -65,7 +95,8 @@ export function camera(theta, phi, scale) {
   const ex = [c * scale, -s * sp * scale];
   const ey = [-s * scale, -c * sp * scale];
   const ez = [0, -cp * scale];
-  const visible = (1 << PZ) | (s < 0 ? 1 << PX : 0) | (s > 0 ? 1 << NX : 0) | (c < 0 ? 1 << PY : 0) | (c > 0 ? 1 << NY : 0);
+  const visible =
+    (1 << PZ) | (s < 0 ? 1 << PX : 0) | (s > 0 ? 1 << NX : 0) | (c < 0 ? 1 << PY : 0) | (c > 0 ? 1 << NY : 0);
   const across = [c, -c, -s, s, 0, 0];
   const tone = across.map((nx, face) => (face === PZ ? 1 : face === NZ ? 0 : LIGHT + SPREAD * nx));
   const shapes = CORNERS.map((corners) => {
@@ -79,7 +110,16 @@ export function camera(theta, phi, scale) {
     });
   });
   const depth = (x, y, z) => (x * s + y * c) * cp - z * sp;
-  return { ex, ey, ez, visible, tone, shapes, depth, at: (x, y, z) => [x * ex[0] + y * ey[0] + z * ez[0], x * ex[1] + y * ey[1] + z * ez[1]] };
+  return {
+    ex,
+    ey,
+    ez,
+    visible,
+    tone,
+    shapes,
+    depth,
+    at: (x, y, z) => [x * ex[0] + y * ey[0] + z * ez[0], x * ex[1] + y * ey[1] + z * ez[1]],
+  };
 }
 
 export function order(shape, cam) {

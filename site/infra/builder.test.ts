@@ -2,7 +2,7 @@ import { afterAll, expect, spyOn, test } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { lambda, modules, type Get, type Head, type Wake } from "./builder.ts";
+import { type Get, type Head, lambda, modules, type Wake } from "./builder.ts";
 
 /* FIXTURES */
 
@@ -41,26 +41,49 @@ const reply = (body: unknown, opts: { ok?: boolean; status?: number; etag?: stri
   headers: { get: (name: string) => (name === "etag" ? (opts.etag ?? null) : null) },
 });
 
-const github = (plan: { compare?: string; code?: number; poll?: number; sha?: string; etag?: string }): Get => async (url) => {
-  if (url.includes("/compare/")) return plan.compare ? reply({ status: plan.compare }) : reply({}, { ok: false, status: plan.code ?? 404 });
-  if (plan.poll === 304) return reply({}, { ok: false, status: 304 });
-  return reply({ sha: plan.sha }, { etag: plan.etag });
-};
+const github =
+  (plan: { compare?: string; code?: number; poll?: number; sha?: string; etag?: string }): Get =>
+  async (url) => {
+    if (url.includes("/compare/"))
+      return plan.compare ? reply({ status: plan.compare }) : reply({}, { ok: false, status: plan.code ?? 404 });
+    if (plan.poll === 304) return reply({}, { ok: false, status: 304 });
+    return reply({ sha: plan.sha }, { etag: plan.etag });
+  };
 
 const wake = (on: Wake["on"], sha: string, force = false): Wake => ({ source: "push", on, sha, force });
 
 /* EVENT */
 
 test("the payload parser reads a schedule tick and a push wake", () => {
-  expect(net.readEvent(JSON.stringify({ source: "schedule" }))).toEqual({ source: "schedule", on: "", sha: "", force: false });
-  expect(net.readEvent(JSON.stringify({ source: "push", repo: "owner/net", sha: SHA }))).toEqual({ source: "push", on: "source", sha: SHA, force: false });
+  expect(net.readEvent(JSON.stringify({ source: "schedule" }))).toEqual({
+    source: "schedule",
+    on: "",
+    sha: "",
+    force: false,
+  });
+  expect(net.readEvent(JSON.stringify({ source: "push", repo: "owner/net", sha: SHA }))).toEqual({
+    source: "push",
+    on: "source",
+    sha: SHA,
+    force: false,
+  });
 });
 
 test("the payload parser survives junk, an unknown source and a source word the site does not take", () => {
   expect(net.readEvent("")).toEqual({ source: "", on: "", sha: "", force: false });
   expect(net.readEvent("not json")).toEqual({ source: "", on: "", sha: "", force: false });
-  expect(net.readEvent(JSON.stringify({ source: "nonsense", repo: "owner/net" }))).toEqual({ source: "", on: "source", sha: "", force: false });
-  expect(docs.readEvent(JSON.stringify({ source: "hook", repo: "owner/docs" }))).toEqual({ source: "", on: "source", sha: "", force: false });
+  expect(net.readEvent(JSON.stringify({ source: "nonsense", repo: "owner/net" }))).toEqual({
+    source: "",
+    on: "source",
+    sha: "",
+    force: false,
+  });
+  expect(docs.readEvent(JSON.stringify({ source: "hook", repo: "owner/docs" }))).toEqual({
+    source: "",
+    on: "source",
+    sha: "",
+    force: false,
+  });
 });
 
 test("the payload parser keeps a good sha, lowercases it and drops a malformed one", () => {
@@ -73,12 +96,27 @@ test("the payload parser keeps a good sha, lowercases it and drops a malformed o
 });
 
 test("a sha with no repo, or another repo's, names no target", () => {
-  expect(net.readEvent(JSON.stringify({ body: JSON.stringify({ source: "manual", sha: SHA }) }))).toEqual({ source: "manual", on: "", sha: SHA, force: false });
-  expect(net.readEvent(JSON.stringify({ source: "push", repo: "owner/fork", sha: SHA }))).toEqual({ source: "push", on: "", sha: SHA, force: false });
+  expect(net.readEvent(JSON.stringify({ body: JSON.stringify({ source: "manual", sha: SHA }) }))).toEqual({
+    source: "manual",
+    on: "",
+    sha: SHA,
+    force: false,
+  });
+  expect(net.readEvent(JSON.stringify({ source: "push", repo: "owner/fork", sha: SHA }))).toEqual({
+    source: "push",
+    on: "",
+    sha: SHA,
+    force: false,
+  });
 });
 
 test("the payload parser unwraps the bun-lambda envelope of a direct invoke", () => {
-  const wrapped = { event: { source: "manual", repo: "owner/net", sha: SHA }, requestId: "r", traceId: "t", deadlineMs: 0 };
+  const wrapped = {
+    event: { source: "manual", repo: "owner/net", sha: SHA },
+    requestId: "r",
+    traceId: "t",
+    deadlineMs: 0,
+  };
   expect(net.readEvent(JSON.stringify(wrapped))).toEqual({ source: "manual", on: "source", sha: SHA, force: false });
 });
 
@@ -109,7 +147,9 @@ test("a wake for a sha already built is a no-op, and an unfinished head never an
 });
 
 test("a forced wake is a manual one, and it never answers seen", () => {
-  expect(net.readEvent(JSON.stringify({ source: "manual", repo: "owner/net", sha: SHA, force: true })).force).toBe(true);
+  expect(net.readEvent(JSON.stringify({ source: "manual", repo: "owner/net", sha: SHA, force: true })).force).toBe(
+    true,
+  );
   expect(net.readEvent(JSON.stringify({ source: "manual", force: "yes" })).force).toBe(false);
   expect(net.readEvent(JSON.stringify({ source: "push", repo: "owner/net", sha: SHA, force: true })).force).toBe(false);
   expect(net.readEvent(JSON.stringify({ source: "schedule", force: true })).force).toBe(false);
@@ -117,7 +157,11 @@ test("a forced wake is a manual one, and it never answers seen", () => {
 });
 
 test("a sha wake stores an empty etag", async () => {
-  const out = await net.freshen(wake("source", SHA), stored, github({ compare: "ahead", sha: "polled", etag: "fresh" }));
+  const out = await net.freshen(
+    wake("source", SHA),
+    stored,
+    github({ compare: "ahead", sha: "polled", etag: "fresh" }),
+  );
   expect(out.sha).toBe(SHA);
   expect(out.etag).toBe("");
 });

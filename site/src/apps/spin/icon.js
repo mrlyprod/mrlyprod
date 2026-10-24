@@ -10,7 +10,10 @@ const BASE = 3;
 const STEPS = 96;
 const WHEEL = 256;
 const TURN = 0.35;
-const GHOSTS = [[0.3, 0.3], [0.15, 0.55]];
+const GHOSTS = [
+  [0.3, 0.3],
+  [0.15, 0.55],
+];
 const GAP = 0.08;
 const WANT = { fills: 64 };
 
@@ -21,10 +24,14 @@ function study() {
   const cell = math.two.create(CODE, NUMBER, LEVEL, 0, BASE);
   const side = cell.shape[0];
   const fills = math.two.fills(cell);
-  if (side !== NUMBER ** LEVEL || fills !== WANT.fills) throw new Error(`spin: the carpet of ${NUMBER} at level ${LEVEL} is ${side} a side with ${fills} fills, want ${NUMBER ** LEVEL} and ${WANT.fills}`);
+  if (side !== NUMBER ** LEVEL || fills !== WANT.fills)
+    throw new Error(
+      `spin: the carpet of ${NUMBER} at level ${LEVEL} is ${side} a side with ${fills} fills, want ${NUMBER ** LEVEL} and ${WANT.fills}`,
+    );
   const profile = math.spin.profile(Float32Array.from(cell.types), side, STEPS);
   const mass = math.spin.mass(profile, side);
-  if (Math.abs(mass - fills) > 0.5) throw new Error(`spin: the rings carry a mass of ${mass.toFixed(2)}, the design ${fills} fills`);
+  if (Math.abs(mass - fills) > 0.5)
+    throw new Error(`spin: the rings carry a mass of ${mass.toFixed(2)}, the design ${fills} fills`);
   plan = { side, types: cell.types, wheel: math.spin.wheel(profile, WHEEL) };
   return plan;
 }

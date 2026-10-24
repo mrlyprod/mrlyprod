@@ -1,6 +1,6 @@
-import { paints } from '../color.js';
-import { fed } from '../glass/feed.js';
-import { rng } from '../rand.js';
+import { paints } from "../color.js";
+import { fed } from "../glass/feed.js";
+import { rng } from "../rand.js";
 
 /* BOARD */
 
@@ -19,7 +19,9 @@ const SHORT = 540;
 
 const DEBT = 4;
 
-const calm = () => (typeof document !== 'undefined' && document.documentElement?.dataset?.motion === 'reduce') || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const calm = () =>
+  (typeof document !== "undefined" && document.documentElement?.dataset?.motion === "reduce") ||
+  (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 export function run(canvas, make, opts = {}, how = {}) {
   let still = Boolean(how.still) || calm();
@@ -33,7 +35,18 @@ export function run(canvas, make, opts = {}, how = {}) {
   let lent = false;
   let fall = null;
   let owed = 0;
-  const view = { rand: rng(opts.seed), look: () => skin, still, lock: Boolean(how.lock), w: 1, h: 1, dpr: 1, t: 0, fixed: false, drew: () => fed(canvas) };
+  const view = {
+    rand: rng(opts.seed),
+    look: () => skin,
+    still,
+    lock: Boolean(how.lock),
+    w: 1,
+    h: 1,
+    dpr: 1,
+    t: 0,
+    fixed: false,
+    drew: () => fed(canvas),
+  };
   const size = () => {
     const shot = held?.frame;
     view.fixed = Boolean(shot) && !held.dpr;
@@ -58,7 +71,7 @@ export function run(canvas, make, opts = {}, how = {}) {
     still = true;
     view.still = true;
   }
-  const watched = typeof IntersectionObserver === 'function';
+  const watched = typeof IntersectionObserver === "function";
   let timer = 0;
   let frame = 0;
   let seen = !watched;
@@ -142,16 +155,16 @@ export function run(canvas, make, opts = {}, how = {}) {
     watch();
   };
   const eye = watched ? new IntersectionObserver(spy) : null;
-  const tape = typeof ResizeObserver === 'function' ? new ResizeObserver(grow) : null;
-  const shade = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
+  const tape = typeof ResizeObserver === "function" ? new ResizeObserver(grow) : null;
+  const shade = typeof matchMedia === "function" ? matchMedia("(prefers-color-scheme: dark)") : null;
   const start = () => {
     if (gone) return;
     on = true;
     eye?.observe(canvas);
     tape?.observe(canvas);
-    shade?.addEventListener('change', paint);
-    window.addEventListener('theme', paint);
-    document.addEventListener('visibilitychange', watch);
+    shade?.addEventListener("change", paint);
+    window.addEventListener("theme", paint);
+    document.addEventListener("visibilitychange", watch);
     if (still || saver.every) draw();
     if (!still) watch();
   };
@@ -162,9 +175,9 @@ export function run(canvas, make, opts = {}, how = {}) {
     halt();
     eye?.disconnect();
     tape?.disconnect();
-    shade?.removeEventListener('change', paint);
-    window.removeEventListener('theme', paint);
-    document.removeEventListener('visibilitychange', watch);
+    shade?.removeEventListener("change", paint);
+    window.removeEventListener("theme", paint);
+    document.removeEventListener("visibilitychange", watch);
     saver.stop?.();
   };
   stop.pause = () => {
@@ -208,7 +221,7 @@ export function run(canvas, make, opts = {}, how = {}) {
     if (still || paused) draw();
     return true;
   };
-  Object.defineProperty(stop, 'late', { get: () => late });
+  Object.defineProperty(stop, "late", { get: () => late });
   stop.scene = saver;
   return stop;
 }

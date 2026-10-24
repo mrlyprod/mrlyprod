@@ -18,15 +18,20 @@ function orbit() {
     const pair = new math.sumset.Pair(three, four);
     const tau = pair.scale();
     pair.free();
-    if (!(tau >= 1 && tau < 4)) throw new Error(`paper-erdos-125-upper-density: scale ${tau} of pair (${three}, ${four}) off [1, 4)`);
+    if (!(tau >= 1 && tau < 4))
+      throw new Error(`paper-erdos-125-upper-density: scale ${tau} of pair (${three}, ${four}) off [1, 4)`);
     return [tau, h];
   });
   return memo;
 }
 
 export default function draw(pen: Pen, ink: Ink) {
-  if (curves.length !== LEVEL + 1 || curves.some((hs) => hs.length !== SAMPLES + 1)) throw new Error(`paper-erdos-125-upper-density: ${curves.length} curves of ${curves.map((hs) => hs.length)}, want ${LEVEL + 1} of ${SAMPLES + 1}`);
-  if (chain.length !== LEVEL + 1) throw new Error(`paper-erdos-125-upper-density: ${chain.length} orbit points, want ${LEVEL + 1}`);
+  if (curves.length !== LEVEL + 1 || curves.some((hs) => hs.length !== SAMPLES + 1))
+    throw new Error(
+      `paper-erdos-125-upper-density: ${curves.length} curves of ${curves.map((hs) => hs.length)}, want ${LEVEL + 1} of ${SAMPLES + 1}`,
+    );
+  if (chain.length !== LEVEL + 1)
+    throw new Error(`paper-erdos-125-upper-density: ${chain.length} orbit points, want ${LEVEL + 1}`);
   const frame = pen.frame(0.08);
   const lo = 0.5 * 0.92;
   const hi = curves[LEVEL].reduce((a, h) => Math.max(a, h), 0) * 1.03;

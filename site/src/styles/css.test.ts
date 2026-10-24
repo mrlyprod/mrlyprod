@@ -27,13 +27,16 @@ const selectors = (css: string) => {
 
 test("the site css never repeats a top-level selector with another rule between", () => {
   const home = import.meta.dir;
-  for (const name of readdirSync(home).filter((one) => one.endsWith(".css")).sort()) {
+  for (const name of readdirSync(home)
+    .filter((one) => one.endsWith(".css"))
+    .sort()) {
     const file = join(home, name);
     const list = selectors(readFileSync(file, "utf8"));
     const last = new Map<string, number>();
     list.forEach((sel, n) => {
       const was = last.get(sel);
-      if (was !== undefined && list.slice(was + 1, n).some((other) => other !== sel)) throw new Error(`${file}: '${sel}' at ${was} and ${n}`);
+      if (was !== undefined && list.slice(was + 1, n).some((other) => other !== sel))
+        throw new Error(`${file}: '${sel}' at ${was} and ${n}`);
       last.set(sel, n);
     });
   }
@@ -41,12 +44,15 @@ test("the site css never repeats a top-level selector with another rule between"
 
 /* SHEETS */
 
-const imports = (file: string) => [...readFileSync(file, "utf8").matchAll(/@import "([^"]+)"/g)].map(([, one]) => join(dirname(file), one!));
+const imports = (file: string) =>
+  [...readFileSync(file, "utf8").matchAll(/@import "([^"]+)"/g)].map(([, one]) => join(dirname(file), one!));
 
 test("the git and app sheets import nothing the shell sheet already links", () => {
   const page = join(import.meta.dir, "page.css");
   const shell = new Set([page, ...imports(page)]);
-  const twice = [join(import.meta.dir, "git.css"), join(import.meta.dir, "..", "lib", "app", "mrly.css")].flatMap((file) => imports(file).filter((one) => shell.has(one)));
+  const twice = [join(import.meta.dir, "git.css"), join(import.meta.dir, "..", "lib", "app", "mrly.css")].flatMap(
+    (file) => imports(file).filter((one) => shell.has(one)),
+  );
   expect(twice).toEqual([]);
 });
 
@@ -56,7 +62,10 @@ const SHEETS = ["chrome.css", "desk.css", "base.css", "pages.css", "../lib/app/m
 
 const bare = (name: string) => readFileSync(join(import.meta.dir, name), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
-const values = (css: string, prop: RegExp) => [...css.matchAll(/(?:^|[{;])\s*([a-z-]+)\s*:\s*([^;{}]+)/g)].filter(([, name]) => prop.test(name!)).map(([, , value]) => value!.trim());
+const values = (css: string, prop: RegExp) =>
+  [...css.matchAll(/(?:^|[{;])\s*([a-z-]+)\s*:\s*([^;{}]+)/g)]
+    .filter(([, name]) => prop.test(name!))
+    .map(([, , value]) => value!.trim());
 
 test("the site css and the demo css set no font size in px", () => {
   for (const name of SHEETS) {
@@ -76,7 +85,10 @@ test("the site css and the demo css set no bare numeric z-index", () => {
 
 test("tokens.css defines every type and layer token the site css reads", () => {
   const tokens = bare("tokens.css");
-  for (const name of [...readdirSync(import.meta.dir).filter((one) => one.endsWith(".css") && one !== "tokens.css"), "../lib/app/mrly.css"]) {
+  for (const name of [
+    ...readdirSync(import.meta.dir).filter((one) => one.endsWith(".css") && one !== "tokens.css"),
+    "../lib/app/mrly.css",
+  ]) {
     for (const [, token] of bare(name).matchAll(/var\(--((?:t|lh)\d+|z-[a-z]+)\b/g)) {
       if (!new RegExp(`--${token}\\s*:`).test(tokens)) throw new Error(`${name}: --${token} undefined`);
     }
@@ -85,11 +97,18 @@ test("tokens.css defines every type and layer token the site css reads", () => {
 
 /* HOME */
 
-const rules = (css: string) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => [sel!.trim().replace(/\s+/g, " "), body!] as const);
+const rules = (css: string) =>
+  [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => [sel!.trim().replace(/\s+/g, " "), body!] as const);
 
 test("no rule for a hero, a half hero or a plate on either rounds a corner", () => {
   const round = readdirSync(import.meta.dir)
     .filter((one) => one.endsWith(".css"))
-    .flatMap((name) => rules(bare(name)).filter(([sel, body]) => /\.(hero|half|plate)\b/.test(sel) && !/\.paper\b/.test(sel) && /border-radius/.test(body)).map(([sel]) => `${name}: ${sel}`));
+    .flatMap((name) =>
+      rules(bare(name))
+        .filter(
+          ([sel, body]) => /\.(hero|half|plate)\b/.test(sel) && !/\.paper\b/.test(sel) && /border-radius/.test(body),
+        )
+        .map(([sel]) => `${name}: ${sel}`),
+    );
   expect(round).toEqual([]);
 });

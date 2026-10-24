@@ -1,6 +1,6 @@
 import * as math from "@mrlyprod/mrly/math";
-import { hex } from "#view";
 import type { Ink, Pen } from "#view";
+import { hex } from "#view";
 
 export const units = { math };
 
@@ -14,9 +14,12 @@ function slice() {
   if (memo) return memo;
   const cut = math.six.cut_design(105, SIDE, 1, 2);
   const [height, width] = cut.cell.shape;
-  if (height !== 2 * SIDE || width < hex.row_len(SIDE, SIDE - 1)) throw new Error(`paper-walsh-spectrometer: the cut is ${height} by ${width}, want ${2 * SIDE} rows`);
-  if (hex.count(SIDE) !== 294) throw new Error(`paper-walsh-spectrometer: the hexagon holds ${hex.count(SIDE)} triangles, want 294`);
-  if (math.six.fills(cut) !== 72) throw new Error(`paper-walsh-spectrometer: the cut holds ${math.six.fills(cut)} fills, want 72`);
+  if (height !== 2 * SIDE || width < hex.row_len(SIDE, SIDE - 1))
+    throw new Error(`paper-walsh-spectrometer: the cut is ${height} by ${width}, want ${2 * SIDE} rows`);
+  if (hex.count(SIDE) !== 294)
+    throw new Error(`paper-walsh-spectrometer: the hexagon holds ${hex.count(SIDE)} triangles, want 294`);
+  if (math.six.fills(cut) !== 72)
+    throw new Error(`paper-walsh-spectrometer: the cut holds ${math.six.fills(cut)} fills, want 72`);
   memo = cut;
   return memo;
 }

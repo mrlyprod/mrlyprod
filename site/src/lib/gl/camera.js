@@ -1,5 +1,5 @@
-import { rng } from '../rand.js';
-import { basis, clamp01, dot, mat3, rot, sub } from './vec.js';
+import { rng } from "../rand.js";
+import { basis, clamp01, dot, mat3, rot, sub } from "./vec.js";
 
 const TAU = Math.PI * 2;
 const FOV = 1;
@@ -26,7 +26,11 @@ export function look(pos, at, up = [0, 1, 0], roll = 0) {
 
 const axes = (cam) => {
   const m = cam.rot;
-  return [[m[0], m[1], m[2]], [m[3], m[4], m[5]], [m[6], m[7], m[8]]];
+  return [
+    [m[0], m[1], m[2]],
+    [m[3], m[4], m[5]],
+    [m[6], m[7], m[8]],
+  ];
 };
 
 export function uniforms(view, cam) {

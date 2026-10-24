@@ -28,7 +28,8 @@ function lights(bound: number, nodes: Node[]) {
 
 export default function draw(pen: Pen, ink: Ink) {
   const { bound, nodes } = census as { bound: number; nodes: Node[] };
-  if (nodes.some(([x, y, n]) => !(n > 0 && x >= 0 && x < n && y >= 0 && y < n))) throw new Error("research-stack: a node is off its residue square");
+  if (nodes.some(([x, y, n]) => !(n > 0 && x >= 0 && x < n && y >= 0 && y < n)))
+    throw new Error("research-stack: a node is off its residue square");
   const { top, lit } = lights(bound, nodes);
   const stack: [number, number, number][] = [];
   for (const [xn, yn, n] of nodes) {
@@ -45,6 +46,6 @@ export default function draw(pen: Pen, ink: Ink) {
   for (const [x, y, light] of stack) {
     const share = light / top;
     const [px, py] = frame.at(x, 1 - y);
-    pen.disc(px, py, 3.5 + 15 * Math.pow(share, 0.7), ramp.at(Math.pow(share, 0.3)));
+    pen.disc(px, py, 3.5 + 15 * share ** 0.7, ramp.at(share ** 0.3));
   }
 }

@@ -18,13 +18,24 @@ function study() {
   const cell = math.two.create(CODE, NUMBER, LEVEL, 0, BASE);
   const net = math.graph.core_graph({ shape: cell.shape, data: cell.types });
   const census = math.graph.census(net);
-  const read = { nodes: census.nodes, branches: census.branches, tips: census.tips, junctions: census.junctions, pieces: census.components };
+  const read = {
+    nodes: census.nodes,
+    branches: census.branches,
+    tips: census.tips,
+    junctions: census.junctions,
+    pieces: census.components,
+  };
   const got = Object.values(read).join();
-  if (got !== Object.values(WANT).join()) throw new Error(`graphs: the core graph of ${CODE} reads ${got}, want ${Object.values(WANT).join()}`);
+  if (got !== Object.values(WANT).join())
+    throw new Error(`graphs: the core graph of ${CODE} reads ${got}, want ${Object.values(WANT).join()}`);
   const positions = new Float64Array(net.nodes.length * 2);
-  net.nodes.forEach((node, i) => positions.set(node.position, i * 2));
+  net.nodes.forEach((node, i) => {
+    positions.set(node.position, i * 2);
+  });
   const pairs = new Uint32Array(net.branches.length * 2);
-  net.branches.forEach((branch, j) => pairs.set([branch.parent, branch.child], 2 * j));
+  net.branches.forEach((branch, j) => {
+    pairs.set([branch.parent, branch.child], 2 * j);
+  });
   net.free();
   plan = { side: cell.shape[0], positions, pairs };
   return plan;

@@ -1,30 +1,103 @@
-import { palette } from '../../lib/theme/palette.gen.js';
-import { tidy } from '../../lib/app/spec.js';
-import { TINTS, blend, veil } from '../../lib/color.js';
-import { pick } from '../../lib/rand.js';
-import { BEAD, BEAT, CURVE, DASH, DOT, FADE, FILL, FLASH, FOLDING, GHOST, HEAD, HOLD, LINE, LOOKS, PAD, PER, PIP, REACH, RING, STAIR, STEP, TRAIL, UPTO, VIEWS, ZEROS, along, bands, fold, hop, index, ladder, passed, phase, picture, plane, reading, snap, study, table } from './engine.js';
-import { wasm } from '../../lib/units/index.js';
+import { tidy } from "../../lib/app/spec.js";
+import { blend, TINTS, veil } from "../../lib/color.js";
+import { pick } from "../../lib/rand.js";
+import { palette } from "../../lib/theme/palette.gen.js";
+import { wasm } from "../../lib/units/index.js";
+import {
+  along,
+  BEAD,
+  BEAT,
+  bands,
+  CURVE,
+  DASH,
+  DOT,
+  FADE,
+  FILL,
+  FLASH,
+  FOLDING,
+  fold,
+  GHOST,
+  HEAD,
+  HOLD,
+  hop,
+  index,
+  LINE,
+  LOOKS,
+  ladder,
+  PAD,
+  PER,
+  PIP,
+  passed,
+  phase,
+  picture,
+  plane,
+  REACH,
+  RING,
+  reading,
+  STAIR,
+  STEP,
+  snap,
+  study,
+  TRAIL,
+  table,
+  UPTO,
+  VIEWS,
+  ZEROS,
+} from "./engine.js";
 
-const walks = (value) => value.view !== 'stairs';
+const walks = (value) => value.view !== "stairs";
 
 const climbs = (value) => !walks(value);
 
 export const SPEC = [
-  { key: 'view', label: 'View', kind: 'segment', def: 'walk', options: VIEWS, group: 'Zeta' },
-  { key: 't', label: 't', kind: 'slider', def: 30, min: 0, max: REACH, step: STEP, show: (v) => v.toFixed(2), group: 'Zeta', when: walks },
-  { key: 'speed', label: 'Speed', kind: 'slider', def: 4, min: 1, max: 20, step: 1, unit: 't/s', group: 'Zeta', when: walks },
-  { key: 'zeros', label: 'Zeros', kind: 'slider', def: 10, min: 0, max: ZEROS, step: 1, group: 'Zeta', when: climbs },
-  { key: 'x', label: 'x', kind: 'slider', def: 100, min: UPTO[0], max: UPTO[1], step: 1, group: 'Zeta', when: climbs },
-  { key: 'look', label: 'Path', kind: 'segment', def: 'line', options: LOOKS, group: 'Look', when: walks },
-  { key: 'trail', label: 'Trail', kind: 'slider', def: 4, min: 1, max: 40, step: 1, unit: 't', group: 'Look', when: walks },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  { key: "view", label: "View", kind: "segment", def: "walk", options: VIEWS, group: "Zeta" },
+  {
+    key: "t",
+    label: "t",
+    kind: "slider",
+    def: 30,
+    min: 0,
+    max: REACH,
+    step: STEP,
+    show: (v) => v.toFixed(2),
+    group: "Zeta",
+    when: walks,
+  },
+  {
+    key: "speed",
+    label: "Speed",
+    kind: "slider",
+    def: 4,
+    min: 1,
+    max: 20,
+    step: 1,
+    unit: "t/s",
+    group: "Zeta",
+    when: walks,
+  },
+  { key: "zeros", label: "Zeros", kind: "slider", def: 10, min: 0, max: ZEROS, step: 1, group: "Zeta", when: climbs },
+  { key: "x", label: "x", kind: "slider", def: 100, min: UPTO[0], max: UPTO[1], step: 1, group: "Zeta", when: climbs },
+  { key: "look", label: "Path", kind: "segment", def: "line", options: LOOKS, group: "Look", when: walks },
+  {
+    key: "trail",
+    label: "Trail",
+    kind: "slider",
+    def: 4,
+    min: 1,
+    max: 40,
+    step: 1,
+    unit: "t",
+    group: "Look",
+    when: walks,
+  },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
 const ABOUT = [
-  'Walk: put s = 1/2 + it and let t grow. Zeta draws a curve that runs straight through the origin, the yellow ring, once for every zero on the critical line.',
-  'Stairs: psi(x), the yellow steps, adds ln p at every prime power up to x. The explicit formula with no zeros is the pink dashed guess; each zero you add folds the formula closer to the steps.',
-  'Drag the walk to scrub t, drag the stairs to change the zeros, tap to play or fold, and press the arrow keys to hop from zero to zero.',
-  'Every number comes from Rust: Euler-Maclaurin low on the line, Riemann-Siegel above it, and the zeros by bisection to a billionth.',
+  "Walk: put s = 1/2 + it and let t grow. Zeta draws a curve that runs straight through the origin, the yellow ring, once for every zero on the critical line.",
+  "Stairs: psi(x), the yellow steps, adds ln p at every prime power up to x. The explicit formula with no zeros is the pink dashed guess; each zero you add folds the formula closer to the steps.",
+  "Drag the walk to scrub t, drag the stairs to change the zeros, tap to play or fold, and press the arrow keys to hop from zero to zero.",
+  "Every number comes from Rust: Euler-Maclaurin low on the line, Riemann-Siegel above it, and the zeros by bisection to a billionth.",
 ];
 
 export const PAGE = {
@@ -34,20 +107,40 @@ export const PAGE = {
   about: ABOUT,
   name: (value) => (walks(value) ? `zeta-walk-${value.t}` : `zeta-stairs-${value.x}-${value.zeros}`),
   keys: [
-    { key: 'Enter', label: (value, scene) => scene?.word?.() ?? (walks(value) ? 'Play' : 'Fold'), act: 'go', button: true, menu: 'Edit' },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Zero to zero', act: 'hop', when: walks, menu: 'View' },
+    {
+      key: "Enter",
+      label: (value, scene) => scene?.word?.() ?? (walks(value) ? "Play" : "Fold"),
+      act: "go",
+      button: true,
+      menu: "Edit",
+    },
+    { key: ["ArrowLeft", "ArrowRight"], label: "Zero to zero", act: "hop", when: walks, menu: "View" },
   ],
-  actions: { go: (scene) => scene.go?.(), hop: (scene, e) => scene.hop?.(e.key === 'ArrowLeft' ? -1 : 1) },
+  actions: { go: (scene) => scene.go?.(), hop: (scene, e) => scene.hop?.(e.key === "ArrowLeft" ? -1 : 1) },
 };
 
 const between = (rand, lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
 
 export const SAVERS = [
-  { id: 'walk', title: 'Critical line', pick: (rand) => ({ view: 'walk', t: between(rand, 10, 120), speed: 2, look: pick(rand, LOOKS)[0], trail: between(rand, 6, 16) }) },
-  { id: 'waves', title: 'Prime waves', pick: (rand) => ({ view: 'stairs', zeros: between(rand, 12, 40), x: between(rand, 30, 150) }) },
+  {
+    id: "walk",
+    title: "Critical line",
+    pick: (rand) => ({
+      view: "walk",
+      t: between(rand, 10, 120),
+      speed: 2,
+      look: pick(rand, LOOKS)[0],
+      trail: between(rand, 6, 16),
+    }),
+  },
+  {
+    id: "waves",
+    title: "Prime waves",
+    pick: (rand) => ({ view: "stairs", zeros: between(rand, 12, 40), x: between(rand, 30, 150) }),
+  },
 ];
 
-export const units = wasm('num');
+export const units = wasm("num");
 
 const TAU = Math.PI * 2;
 const TELL = 125;
@@ -68,11 +161,11 @@ const TONE = 0.5;
 /* INKS */
 
 export function inked(canvas, accent, ink = null) {
-  const css = typeof getComputedStyle === 'function' && canvas ? getComputedStyle(canvas) : null;
-  const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
-  const guess = read('--pink', palette.pink);
+  const css = typeof getComputedStyle === "function" && canvas ? getComputedStyle(canvas) : null;
+  const read = (name, fallback) => css?.getPropertyValue(name).trim() || fallback;
+  const guess = read("--pink", palette.pink);
   if (ink) return { accent, zero: accent, head: blend(accent, ink, TONE), guess };
-  return { accent, zero: read('--yellow', palette.yellow), head: read('--orange', palette.orange), guess };
+  return { accent, zero: read("--yellow", palette.yellow), head: read("--orange", palette.orange), guess };
 }
 
 /* WAVE */
@@ -103,16 +196,22 @@ function line(ctx, pts, color, width, dash = null) {
 export function sketch(num, set, ctx, w, h, dpr, inks) {
   const rect = { x: 0, y: 0, w, h };
   const pad = SMALL * dpr;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  if (set.view === 'stairs') {
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  if (set.view === "stairs") {
     const steps = fold(num, set.x);
     const box = ladder(rect, steps.x, steps.top(set.zeros), pad);
     ctx.save();
     ctx.beginPath();
     ctx.rect(box.left, box.roof, box.right - box.left, box.floor - box.roof);
     ctx.clip();
-    line(ctx, along(box, steps.grid, steps.curve(0)), inks.guess, dpr, DASH.map((d) => d * dpr));
+    line(
+      ctx,
+      along(box, steps.grid, steps.curve(0)),
+      inks.guess,
+      dpr,
+      DASH.map((d) => d * dpr),
+    );
     line(ctx, along(box, steps.grid, steps.curve(set.zeros)), inks.accent, CURVE * dpr);
     line(ctx, along(box, steps.ladder.xs, steps.ladder.ys), inks.zero, STAIR * dpr);
     ctx.restore();
@@ -139,8 +238,8 @@ export function sketch(num, set, ctx, w, h, dpr, inks) {
 
 export function make(canvas, view, opts = {}) {
   const num = opts.num;
-  if (!num) throw new Error('zeta: the scene wants @mrlyprod/mrly/num as opts.num');
-  const ctx = canvas.getContext('2d');
+  if (!num) throw new Error("zeta: the scene wants @mrlyprod/mrly/num as opts.num");
+  const ctx = canvas.getContext("2d");
   const plan = study(num);
   let value = tidy(SPEC, opts);
   let head = value.t;
@@ -161,7 +260,7 @@ export function make(canvas, view, opts = {}) {
     inks = inked(canvas, accent, view.lock ? ink : null);
   };
   const busy = () => (walks(value) ? walking : folding !== null);
-  const word = () => (!walks(value) ? 'Fold' : walking ? 'Pause' : head >= REACH ? 'Replay' : 'Play');
+  const word = () => (!walks(value) ? "Fold" : walking ? "Pause" : head >= REACH ? "Replay" : "Play");
   const tell = (force = false) => {
     if (gone || !opts.onTell) return;
     if (!force && toldAt > -Infinity && (!busy() || view.t - toldAt < TELL)) return;
@@ -222,8 +321,8 @@ export function make(canvas, view, opts = {}) {
     const X = (j) => box.ox + plan.xs[j] * box.k;
     const Y = (j) => box.oy - plan.ys[j] * box.k;
     const every = Math.max(1, Math.round(PER * DOT));
-    const lined = value.look !== 'dots';
-    const dotted = value.look !== 'line';
+    const lined = value.look !== "dots";
+    const dotted = value.look !== "line";
     const run = (a, b, color, width) => {
       if (b <= a) return;
       ctx.strokeStyle = color;
@@ -242,11 +341,11 @@ export function make(canvas, view, opts = {}) {
       }
       ctx.fill();
     };
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
     if (lined) run(0, i, veil(inks.accent, GHOST * fade), LINE * dpr);
     else beads(0, i, veil(inks.accent, GHOST * fade), BEAD * dpr);
-    ctx.lineCap = 'butt';
+    ctx.lineCap = "butt";
     for (const { from: a, to: b, first, alpha } of bands(i, Math.round(value.trail * PER))) {
       if (lined) run(a, b, veil(inks.accent, alpha * fade), TRAIL * dpr);
       if (dotted) beads(first, b, veil(inks.accent, alpha * fade), PIP * dpr);
@@ -281,7 +380,7 @@ export function make(canvas, view, opts = {}) {
     ctx.beginPath();
     ctx.rect(box.left, box.roof, box.right - box.left, box.floor - box.roof);
     ctx.clip();
-    ctx.lineJoin = 'round';
+    ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(edge[0], edge[1]);
     for (let j = 2; j < edge.length; j += 2) ctx.lineTo(edge[j], edge[j + 1]);
@@ -290,7 +389,13 @@ export function make(canvas, view, opts = {}) {
     ctx.closePath();
     ctx.fillStyle = veil(inks.zero, FILL);
     ctx.fill();
-    line(ctx, along(box, steps.grid, steps.curve(0)), inks.guess, dpr, DASH.map((d) => d * dpr));
+    line(
+      ctx,
+      along(box, steps.grid, steps.curve(0)),
+      inks.guess,
+      dpr,
+      DASH.map((d) => d * dpr),
+    );
     line(ctx, along(box, steps.grid, steps.curve(k)), veil(inks.accent, fade), CURVE * dpr);
     line(ctx, edge, inks.zero, STAIR * dpr);
     ctx.restore();
@@ -306,8 +411,8 @@ export function make(canvas, view, opts = {}) {
     const ky = Math.max(0, r.h / 2 - PAD * dpr);
     ctx.strokeStyle = veil(inks.accent, fade);
     ctx.lineWidth = STAIR * dpr;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
     ctx.beginPath();
     for (let i = 0; i <= n; i++) {
       const s = i / n;
@@ -378,14 +483,28 @@ export function make(canvas, view, opts = {}) {
     }
     if (value.zeros !== was.zeros || value.x !== was.x || value.view !== was.view) folding = null;
     if (value.tint !== was.tint) paint();
-    if (moved || SPEC.some(({ key }) => key !== 't' && value[key] !== was[key])) tell(true);
+    if (moved || SPEC.some(({ key }) => key !== "t" && value[key] !== was[key])) tell(true);
   };
   const stop = () => {
     gone = true;
   };
   const svg = () => {
     const dpr = view.dpr;
-    return picture({ plan, steps: fold(num, value.x), view: value.view, head, k: shown, zeros: value.zeros, kept: Math.round(value.trail * PER), look: value.look, w: view.w / dpr, h: view.h / dpr }, inks);
+    return picture(
+      {
+        plan,
+        steps: fold(num, value.x),
+        view: value.view,
+        head,
+        k: shown,
+        zeros: value.zeros,
+        kept: Math.round(value.trail * PER),
+        look: value.look,
+        w: view.w / dpr,
+        h: view.h / dpr,
+      },
+      inks,
+    );
   };
   const csv = () => table(plan.zeros);
   paint();

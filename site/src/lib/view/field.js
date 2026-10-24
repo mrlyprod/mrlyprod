@@ -1,4 +1,4 @@
-import { Ramp, clamp } from "./ink.js";
+import { clamp, Ramp } from "./ink.js";
 
 export { patch } from "./pixels.js";
 
@@ -6,7 +6,7 @@ export { patch } from "./pixels.js";
 
 const byte = (v) => {
   const r = Math.round(v);
-  return r > 255 ? 255 : r > 0 ? r : 0;
+  return r > 0 ? Math.min(r, 255) : 0;
 };
 
 function range(values) {
@@ -62,7 +62,8 @@ export function sample(pen, frame, resolution, f, ramp) {
   if (resolution === 0) return;
   const values = new Float64Array(resolution * resolution);
   for (let row = 0; row < resolution; row++) {
-    for (let col = 0; col < resolution; col++) values[row * resolution + col] = f((col + 0.5) / resolution, (row + 0.5) / resolution);
+    for (let col = 0; col < resolution; col++)
+      values[row * resolution + col] = f((col + 0.5) / resolution, (row + 0.5) / resolution);
   }
   draw(pen, frame, resolution, resolution, values, ramp);
 }

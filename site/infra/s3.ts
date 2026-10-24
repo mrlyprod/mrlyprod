@@ -33,7 +33,11 @@ function credentials(): Creds {
   }
   const run = Bun.spawnSync(["aws", "configure", "export-credentials", "--format", "process"]);
   if (run.exitCode !== 0) throw new Error("s3: no AWS_* env credentials and aws configure export-credentials failed");
-  const data = JSON.parse(run.stdout.toString()) as { AccessKeyId: string; SecretAccessKey: string; SessionToken?: string };
+  const data = JSON.parse(run.stdout.toString()) as {
+    AccessKeyId: string;
+    SecretAccessKey: string;
+    SessionToken?: string;
+  };
   held = {
     accessKeyId: data.AccessKeyId,
     secretAccessKey: data.SecretAccessKey,
@@ -109,7 +113,8 @@ export async function del(s3: S3Client, keys: string[], batch = 16): Promise<num
 async function drop(s3: S3Client, key: string): Promise<void> {
   const url = s3.presign(key, { method: "DELETE", expiresIn: 900 });
   const res = await fetch(url, { method: "DELETE" });
-  if (!res.ok && res.status !== 404) throw new Error(`s3: delete ${key} failed ${res.status} ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok && res.status !== 404)
+    throw new Error(`s3: delete ${key} failed ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 
 /* LIST */

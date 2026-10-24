@@ -1,9 +1,9 @@
-import { lock } from '../../shell/lock.js';
-import { calm } from '../../shell/prefs.js';
-import { load, STILL } from '../../shell/savers.js';
+import { lock } from "../../shell/lock.js";
+import { calm } from "../../shell/prefs.js";
+import { load, STILL } from "../../shell/savers.js";
 
 const QUICK = 250;
-const TYPE = 'image/webp';
+const TYPE = "image/webp";
 const QUALITY = 0.85;
 
 export const shots = new Map();
@@ -21,7 +21,7 @@ function nap(ms, job) {
 }
 
 async function shoot(id, box, job) {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   box.append(canvas);
   let stop = null;
   try {
@@ -34,7 +34,7 @@ async function shoot(id, box, job) {
     return { url: canvas.toDataURL(TYPE, QUALITY), as: stop.as };
   } catch (error) {
     console.error(error);
-    return job.gone ? null : { url: '', as: '' };
+    return job.gone ? null : { url: "", as: "" };
   } finally {
     stop?.();
     canvas.remove();
@@ -46,9 +46,9 @@ async function shoot(id, box, job) {
 export function shooter(ids, done) {
   const seen = new Set();
   const job = { gone: false, wake: null };
-  const box = document.createElement('div');
-  box.className = 'savers-shot';
-  box.setAttribute('aria-hidden', 'true');
+  const box = document.createElement("div");
+  box.className = "savers-shot";
+  box.setAttribute("aria-hidden", "true");
   document.body.append(box);
   let busy = false;
   const next = () => ids.find((id) => seen.has(id) && !shots.has(id)) ?? ids.find((id) => !shots.has(id));
@@ -71,14 +71,14 @@ export function shooter(ids, done) {
     }
     pump();
   });
-  document.addEventListener('visibilitychange', pump);
+  document.addEventListener("visibilitychange", pump);
   return {
     watch: (node) => eye.observe(node),
     stop() {
       job.gone = true;
       job.wake?.();
       eye.disconnect();
-      document.removeEventListener('visibilitychange', pump);
+      document.removeEventListener("visibilitychange", pump);
       box.remove();
     },
   };

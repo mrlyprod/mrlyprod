@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
-
-from mrly import core, tile, life
+from mrly import core, life, tile
 from mrly.core import Rng, colors, paint, tensor
 from mrly.math import cell, six, sumset, three, two
 from mrly.num import factor, series
@@ -188,7 +187,9 @@ def test_pixels_cross_out_as_an_n_by_4_array():
     assert pixels.shape == (4 * width * height, 4)
     assert pixels.dtype == np.uint8
     listed = image.reshape(-1, 4).tolist()
-    assert np.array_equal(pixels, core.resample(listed, width, height, 2 * width, 2 * height, "Nearest"))
+    assert np.array_equal(
+        pixels, core.resample(listed, width, height, 2 * width, 2 * height, "Nearest")
+    )
 
 
 def test_a_vec_of_bytes_crosses_as_bytes():

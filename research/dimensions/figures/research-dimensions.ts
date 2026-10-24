@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { plot, type Ink, type Pen, type Point } from "#view";
+import { type Ink, type Pen, type Point, plot } from "#view";
 import census from "./research-dimensions.json" with { type: "json" };
 
 const RE_LO = -1;
@@ -38,7 +38,10 @@ export default function draw(pen: Pen, ink: Ink) {
   const { real, poles } = lattice();
   const frame = pen.frame(0.08);
   plot.axis(pen, frame, ink.line);
-  const at = (re: number, im: number): Point => [frame.x + (frame.w * (re - RE_LO)) / (RE_HI - RE_LO), frame.y + frame.h * (1 - (im + IM_REACH) / (2 * IM_REACH))];
+  const at = (re: number, im: number): Point => [
+    frame.x + (frame.w * (re - RE_LO)) / (RE_HI - RE_LO),
+    frame.y + frame.h * (1 - (im + IM_REACH) / (2 * IM_REACH)),
+  ];
   pen.segment(at(0, -IM_REACH), at(0, IM_REACH), 1.6, ink.line);
   pen.segment(at(RE_LO, 0), at(RE_HI, 0), 1.6, ink.line);
   pen.segment(at(real, -IM_REACH), at(real, IM_REACH), 1.8, ink.fade(ink.blue, 0.35));

@@ -29,7 +29,10 @@ function cone() {
       }
     }
   }
-  if (rows !== side || kept !== all || !types[side - 1]) throw new Error(`wolfram: rule ${RULE} from one cell keeps ${kept} of ${all} live cells in the left half of its cone over ${rows} rows, want all of them over ${side}`);
+  if (rows !== side || kept !== all || !types[side - 1])
+    throw new Error(
+      `wolfram: rule ${RULE} from one cell keeps ${kept} of ${all} live cells in the left half of its cone over ${rows} rows, want all of them over ${side}`,
+    );
   sheet = { side, types };
   return sheet;
 }

@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { Grid, frame } from "#view";
+import { frame, Grid } from "#view";
 import { plate } from "../../lib/plate.js";
 
 export const units = { math };
@@ -19,7 +19,8 @@ function facts() {
   for (let bit = 0; bit < BITS; bit++) lit += (CODE >> bit) & 1;
   if (lit !== corners) throw new Error(`mrlymath: ${lit} lit bits, want ${corners}`);
   const carpet = math.two.create(CODE, 3, 3, 0, 2);
-  if (carpet.shape[0] !== SIDE || carpet.shape[1] !== SIDE) throw new Error(`mrlymath: carpet shape ${carpet.shape}, want ${SIDE} square`);
+  if (carpet.shape[0] !== SIDE || carpet.shape[1] !== SIDE)
+    throw new Error(`mrlymath: carpet shape ${carpet.shape}, want ${SIDE} square`);
   let filled = 0;
   for (const kind of carpet.types) filled += kind;
   if (filled !== WANT.fills) throw new Error(`mrlymath: carpet sums to ${filled}, want ${WANT.fills}`);

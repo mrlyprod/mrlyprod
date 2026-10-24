@@ -1,7 +1,6 @@
 import json
 
 import numpy as np
-
 from mrly import life
 from mrly.life import Config, Counts, Source
 from mrly.math import two
@@ -60,7 +59,10 @@ def test_counts(row):
     r = row("life::counts")
     i = r["in"]
     seq = Source.parse(i["seq"])
-    assert life.counts(seq, i["max_neighbors"], i["include_zeros"], i["include_ones"]) == r["out"]
+    assert (
+        life.counts(seq, i["max_neighbors"], i["include_zeros"], i["include_ones"])
+        == r["out"]
+    )
 
 
 def test_heatmap(row, pixels):

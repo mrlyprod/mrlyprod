@@ -16,18 +16,22 @@ let memo: number[] | undefined;
 function arcs() {
   if (memo) return memo;
   const design = math.bang.factory.create(495, 3, 2, 3, LEVEL);
-  if (design.shape.length !== 2 || design.shape[0] !== SIDE || design.shape[1] !== SIDE) throw new Error(`research-arcs: the design is ${design.shape}, want ${SIDE},${SIDE}`);
+  if (design.shape.length !== 2 || design.shape[0] !== SIDE || design.shape[1] !== SIDE)
+    throw new Error(`research-arcs: the design is ${design.shape}, want ${SIDE},${SIDE}`);
   let sum = 0;
   for (const kind of design.data) sum += kind;
   if (sum !== 8 ** LEVEL) throw new Error(`research-arcs: the design fills ${sum} cells, want ${8 ** LEVEL}`);
   const parity = math.bang.factory.create(7, 3, 2, 2, LEVEL);
-  if (parity.data.length !== design.data.length || parity.data.some((kind, i) => kind !== design.data[i])) throw new Error("research-arcs: code 7 at base 2 differs from the carpet");
+  if (parity.data.length !== design.data.length || parity.data.some((kind, i) => kind !== design.data[i]))
+    throw new Error("research-arcs: code 7 at base 2 differs from the carpet");
 
   const drawn = math.arcs.draw(495, 3, LEVEL);
   if (drawn.side !== SIDE) throw new Error(`research-arcs: the arcs are ${drawn.side} wide, want ${SIDE}`);
-  if (drawn.cells.length !== SIDE * SIDE) throw new Error(`research-arcs: ${drawn.cells.length} arc cells, want ${SIDE * SIDE}`);
+  if (drawn.cells.length !== SIDE * SIDE)
+    throw new Error(`research-arcs: ${drawn.cells.length} arc cells, want ${SIDE * SIDE}`);
   for (let f = 0; f < SIDE * SIDE; f++) {
-    if ((drawn.cells[f] & 1) !== (design.data[f] === 1 ? 1 : 0)) throw new Error(`research-arcs: arc cell ${f} disagrees with the design`);
+    if ((drawn.cells[f] & 1) !== (design.data[f] === 1 ? 1 : 0))
+      throw new Error(`research-arcs: arc cell ${f} disagrees with the design`);
   }
   if (drawn.strands !== STRANDS) throw new Error(`research-arcs: ${drawn.strands} strands, want ${STRANDS}`);
   if (drawn.loops !== LOOPS) throw new Error(`research-arcs: ${drawn.loops} loops, want ${LOOPS}`);
@@ -59,12 +63,24 @@ export default function draw(pen: Pen, ink: Ink) {
       const sweeps: [Point, [number, number]][] =
         byte & 1
           ? [
-              [[left, top + cell], [-HALF, 0]],
-              [[left + cell, top], [HALF, Math.PI]],
+              [
+                [left, top + cell],
+                [-HALF, 0],
+              ],
+              [
+                [left + cell, top],
+                [HALF, Math.PI],
+              ],
             ]
           : [
-              [[left + cell, top + cell], [Math.PI, Math.PI + HALF]],
-              [[left, top], [0, HALF]],
+              [
+                [left + cell, top + cell],
+                [Math.PI, Math.PI + HALF],
+              ],
+              [
+                [left, top],
+                [0, HALF],
+              ],
             ];
       sweeps.forEach(([centre, angles], arc) => {
         pen.arc(centre, radius, angles, thick, byte & (2 << arc) ? ink.orange : ink.blue);

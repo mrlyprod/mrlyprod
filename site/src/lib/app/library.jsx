@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { Bar } from './frame.jsx';
-import { Icon, useRoom } from './controls.jsx';
+import { useEffect, useRef } from "react";
+import { Icon, useRoom } from "./controls.jsx";
+import { Bar } from "./frame.jsx";
 
 /* QUEUE */
 
@@ -36,33 +36,52 @@ export function Art({ paint, px = 56, deps = [], label }) {
         const side = Math.round(px * dpr);
         canvas.width = side;
         canvas.height = side;
-        paint(canvas.getContext('2d'), side, side, dpr);
+        paint(canvas.getContext("2d"), side, side, dpr);
       });
     };
-    if (typeof IntersectionObserver !== 'function') {
+    if (typeof IntersectionObserver !== "function") {
       draw();
       return () => drop();
     }
-    const eye = new IntersectionObserver(([one]) => {
-      if (!one.isIntersecting) return;
-      eye.disconnect();
-      draw();
-    }, { rootMargin: '200px' });
+    const eye = new IntersectionObserver(
+      ([one]) => {
+        if (!one.isIntersecting) return;
+        eye.disconnect();
+        draw();
+      },
+      { rootMargin: "200px" },
+    );
     eye.observe(canvas);
     return () => {
       eye.disconnect();
       drop();
     };
   }, [px, ...deps]);
-  return <canvas ref={at} width={px} height={px} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} />;
+  return (
+    <canvas
+      ref={at}
+      width={px}
+      height={px}
+      role={label ? "img" : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : "true"}
+    />
+  );
 }
 
 /* LIBRARY */
 
-const ITEMS = '.shelf [data-item]';
+const ITEMS = ".shelf [data-item]";
 
 export function roam(items, at, key, cols = 1) {
-  const by = { ArrowDown: cols, ArrowUp: -cols, ArrowRight: cols > 1 ? 1 : 0, ArrowLeft: cols > 1 ? -1 : 0, Home: -Infinity, End: Infinity }[key];
+  const by = {
+    ArrowDown: cols,
+    ArrowUp: -cols,
+    ArrowRight: cols > 1 ? 1 : 0,
+    ArrowLeft: cols > 1 ? -1 : 0,
+    Home: -Infinity,
+    End: Infinity,
+  }[key];
   if (!by || !items.length) return null;
   if (by === -Infinity) return 0;
   if (by === Infinity) return items.length - 1;
@@ -70,12 +89,12 @@ export function roam(items, at, key, cols = 1) {
 }
 
 function move(e) {
-  const from = e.target instanceof Element ? e.target.closest('[data-item]') : null;
+  const from = e.target instanceof Element ? e.target.closest("[data-item]") : null;
   if (!from) return;
-  const shelf = from.closest('.shelf');
+  const shelf = from.closest(".shelf");
   const items = [...e.currentTarget.querySelectorAll(ITEMS)];
-  const grid = shelf?.querySelector('.grid');
-  const cols = grid ? Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').length) : 1;
+  const grid = shelf?.querySelector(".grid");
+  const cols = grid ? Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(" ").length) : 1;
   const next = roam(items, items.indexOf(from), e.key, cols);
   if (next === null) return;
   e.preventDefault();
@@ -83,12 +102,20 @@ function move(e) {
 }
 
 export function Chips({ label, chips, chip, onChip }) {
-  const [at, narrow] = useRoom(chips.map(([v, text]) => `${v}:${text}`).join('\n'), true);
+  const [at, narrow] = useRoom(chips.map(([v, text]) => `${v}:${text}`).join("\n"), true);
   if (narrow) {
     return (
       <label ref={at} className="chips">
-        <select value={String(chip)} aria-label={label} onChange={(e) => onChip?.(chips.find(([v]) => String(v) === e.target.value)?.[0] ?? e.target.value)}>
-          {chips.map(([v, text]) => <option key={v} value={v}>{text}</option>)}
+        <select
+          value={String(chip)}
+          aria-label={label}
+          onChange={(e) => onChip?.(chips.find(([v]) => String(v) === e.target.value)?.[0] ?? e.target.value)}
+        >
+          {chips.map(([v, text]) => (
+            <option key={v} value={v}>
+              {text}
+            </option>
+          ))}
         </select>
         <span className="drop">
           <Icon name="expand_more" />
@@ -99,7 +126,14 @@ export function Chips({ label, chips, chip, onChip }) {
   return (
     <div ref={at} className="chips" role="radiogroup" aria-label={label}>
       {chips.map(([v, text]) => (
-        <button type="button" key={v} role="radio" aria-checked={String(v) === String(chip)} className={String(v) === String(chip) ? 'on' : undefined} onClick={() => onChip?.(v)}>
+        <button
+          type="button"
+          key={v}
+          role="radio"
+          aria-checked={String(v) === String(chip)}
+          className={String(v) === String(chip) ? "on" : undefined}
+          onClick={() => onChip?.(v)}
+        >
           {text}
         </button>
       ))}
@@ -107,13 +141,25 @@ export function Chips({ label, chips, chip, onChip }) {
   );
 }
 
-export function Library({ name = 'Library', find, onFind, onGo, hint = 'Search', label = `Search ${name}`, at, chips, chip, onChip, children }) {
+export function Library({
+  name = "Library",
+  find,
+  onFind,
+  onGo,
+  hint = "Search",
+  label = `Search ${name}`,
+  at,
+  chips,
+  chip,
+  onChip,
+  children,
+}) {
   const go = (e) => {
-    if (e.key === 'Enter' && onGo) {
+    if (e.key === "Enter" && onGo) {
       e.preventDefault();
       onGo(e.currentTarget.value);
     }
-    if (e.key === 'Escape' && e.currentTarget.value === '') e.currentTarget.blur();
+    if (e.key === "Escape" && e.currentTarget.value === "") e.currentTarget.blur();
   };
   return (
     <Bar side="left">
@@ -122,7 +168,15 @@ export function Library({ name = 'Library', find, onFind, onGo, hint = 'Search',
         {onFind && (
           <label className="find">
             <Icon name="search" />
-            <input ref={at} type="search" value={find ?? ''} placeholder={hint} aria-label={label} onChange={(e) => onFind(e.target.value)} onKeyDown={go} />
+            <input
+              ref={at}
+              type="search"
+              value={find ?? ""}
+              placeholder={hint}
+              aria-label={label}
+              onChange={(e) => onFind(e.target.value)}
+              onKeyDown={go}
+            />
           </label>
         )}
         {chips?.length > 0 && <Chips label={`${name} filter`} chips={chips} chip={chip} onChip={onChip} />}
@@ -136,7 +190,9 @@ export function Shelf({ name, grid = false, children }) {
   return (
     <section className="shelf" aria-label={name}>
       {name && <h3>{name}</h3>}
-      <div className={grid ? 'grid' : 'list'} role="list">{children}</div>
+      <div className={grid ? "grid" : "list"} role="list">
+        {children}
+      </div>
     </section>
   );
 }
@@ -149,11 +205,26 @@ export function Item({ label, sub, on = false, onPick, href, art, title }) {
       {sub && <span className="sub">{sub}</span>}
     </>
   );
-  const look = { 'data-item': '', 'aria-current': on ? 'true' : undefined, className: on ? 'on' : undefined, title, role: 'listitem' };
-  if (href) return <a href={href} {...look}>{body}</a>;
+  const look = {
+    "data-item": "",
+    "aria-current": on ? "true" : undefined,
+    className: on ? "on" : undefined,
+    title,
+    role: "listitem",
+  };
+  if (href)
+    return (
+      <a href={href} {...look}>
+        {body}
+      </a>
+    );
   const pick = (e) => {
     if (e.detail > 0) e.currentTarget.blur();
     onPick?.(e);
   };
-  return <button type="button" onClick={pick} {...look}>{body}</button>;
+  return (
+    <button type="button" onClick={pick} {...look}>
+      {body}
+    </button>
+  );
 }

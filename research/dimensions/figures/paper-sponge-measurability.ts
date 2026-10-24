@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { Grid, field, frame, plot, type Frame, type Ink, type Pen } from "#view";
+import { type Frame, field, frame, Grid, type Ink, type Pen, plot } from "#view";
 
 export const units = { math };
 
@@ -38,25 +38,32 @@ function facts() {
   if (filled !== 160000) throw new Error(`paper-sponge-measurability: carpet sums to ${filled}, want 160000`);
   const dust = math.three.slice(cube, 2, (SIDE - 1) / 2);
   const cells = dust.types;
-  if (cells.length !== SIDE * SIDE) throw new Error(`paper-sponge-measurability: slice of ${cells.length} cells, want ${SIDE * SIDE}`);
+  if (cells.length !== SIDE * SIDE)
+    throw new Error(`paper-sponge-measurability: slice of ${cells.length} cells, want ${SIDE * SIDE}`);
   let lit = 0;
   for (const kind of cells) if (kind !== 0) lit++;
   if (lit !== 256) throw new Error(`paper-sponge-measurability: slice lights ${lit} cells, want 256`);
 
   const ident = (Math.PI + 8) / 36 - Math.sqrt(2) / 27;
-  if (!(Math.abs((sponge.tube(1 / 6) ?? 0) - ident) < 1e-9)) throw new Error("paper-sponge-measurability: tube(1/6) is off the closed form");
+  if (!(Math.abs((sponge.tube(1 / 6) ?? 0) - ident) < 1e-9))
+    throw new Error("paper-sponge-measurability: tube(1/6) is off the closed form");
   for (const [delta, lo, hi] of TUBES) {
     const t = sponge.tube(delta) ?? 0;
-    if (!(lo <= t && t <= hi)) throw new Error(`paper-sponge-measurability: tube(${delta}) is ${t}, want ${lo} to ${hi}`);
+    if (!(lo <= t && t <= hi))
+      throw new Error(`paper-sponge-measurability: tube(${delta}) is ${t}, want ${lo} to ${hi}`);
   }
   const values = [0, 0, 0];
   BANDS.forEach(([eps, lo, hi], k) => {
     values[k] = sponge.profile(eps) ?? 0;
-    if (!(lo <= values[k] && values[k] <= hi)) throw new Error(`paper-sponge-measurability: profile(${eps}) is ${values[k]}, want ${lo} to ${hi}`);
+    if (!(lo <= values[k] && values[k] <= hi))
+      throw new Error(`paper-sponge-measurability: profile(${eps}) is ${values[k]}, want ${lo} to ${hi}`);
   });
-  if (!(values[2] - values[0] >= 0.012296)) throw new Error("paper-sponge-measurability: the profile gap is under 0.012296");
-  if (!(Math.abs(dist(0.5, 0.5) - sponge.COVER()) < 1e-15)) throw new Error("paper-sponge-measurability: the centre is off the covering radius");
-  if (!(Math.abs(dist(1 / 6, 1 / 6) - Math.sqrt(2) / 18) < 1e-15)) throw new Error("paper-sponge-measurability: the arm is off sqrt(2)/18");
+  if (!(values[2] - values[0] >= 0.012296))
+    throw new Error("paper-sponge-measurability: the profile gap is under 0.012296");
+  if (!(Math.abs(dist(0.5, 0.5) - sponge.COVER()) < 1e-15))
+    throw new Error("paper-sponge-measurability: the centre is off the covering radius");
+  if (!(Math.abs(dist(1 / 6, 1 / 6) - Math.sqrt(2) / 18) < 1e-15))
+    throw new Error("paper-sponge-measurability: the arm is off sqrt(2)/18");
 
   const covers = new Float64Array(PLATE * PLATE);
   for (let j = 0; j < PLATE; j++) {

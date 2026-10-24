@@ -1,51 +1,125 @@
-import { tidy } from '../../lib/app/spec.js';
-import { TINTS } from '../../lib/color.js';
-import { BEAT, COMBINES, CROPS, DEEPEST, GRAIN, RAMPS, SIZES, TOP, climb, colorizer, crop, css, field, heat, law, matrix, odd, paint, palette, study } from '../../lib/moire/engine.js';
-import { fit, shell } from '../../lib/moire/sheet.js';
+import { tidy } from "../../lib/app/spec.js";
+import { TINTS } from "../../lib/color.js";
+import {
+  BEAT,
+  COMBINES,
+  CROPS,
+  climb,
+  colorizer,
+  crop,
+  css,
+  DEEPEST,
+  field,
+  GRAIN,
+  heat,
+  law,
+  matrix,
+  odd,
+  paint,
+  palette,
+  RAMPS,
+  SIZES,
+  study,
+  TOP,
+} from "../../lib/moire/engine.js";
+import { fit, shell } from "../../lib/moire/sheet.js";
 
-const VIEWS = [['field', 'Field'], ['matrix', 'R\u2011matrix']];
+const VIEWS = [
+  ["field", "Field"],
+  ["matrix", "R\u2011matrix"],
+];
 
-const stacks = (value) => value.view !== 'matrix';
+const stacks = (value) => value.view !== "matrix";
 
 const reads = (value) => !stacks(value);
 
 const cropped = (value) => stacks(value) && Boolean(value.crop);
 
 export const SPEC = [
-  { key: 'view', label: 'View', kind: 'segment', def: 'field', options: VIEWS, group: 'Stack' },
-  { key: 'limit', label: 'Scales up to', kind: 'slider', def: TOP, min: 1, max: TOP, step: 2, group: 'Stack' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 1, min: 1, max: DEEPEST, step: 1, when: stacks, group: 'Stack' },
-  { key: 'combine', label: 'Combine', kind: 'pick', def: 'sum', options: COMBINES, when: stacks, group: 'Stack' },
-  { key: 'size', label: 'Size', kind: 'segment', def: 512, options: SIZES.map((n) => [n, String(n)]), when: stacks, group: 'Stack' },
-  { key: 'scale', label: 'Carpet m', kind: 'slider', def: 9, min: 3, max: (value) => Math.max(3, odd(value.limit).at(-1)), step: 2, keep: true, when: reads, group: 'R-matrix' },
-  { key: 'mate', label: 'Against n', kind: 'slider', def: 3, min: 3, max: (value) => Math.max(3, value.scale - 2), step: 2, keep: true, when: (value) => reads(value) && value.scale > 3, group: 'R-matrix' },
-  { key: 'ramp', label: 'Ramp', kind: 'pick', def: 'tint', options: RAMPS, when: stacks, group: 'Look' },
-  { key: 'levels', label: 'Levels', kind: 'slider', def: 16, min: 2, max: 64, step: 1, when: stacks, group: 'Look' },
-  { key: 'invert', label: 'Invert', kind: 'toggle', def: 0, when: stacks, group: 'Look' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
-  { key: 'crop', label: 'Crop', kind: 'pick', def: '', options: CROPS, when: stacks, group: 'Crop' },
-  { key: 'radius', label: 'Radius', kind: 'slider', def: 16, min: 1, max: GRAIN, step: 1, unit: `of ${GRAIN}`, when: cropped, group: 'Crop' },
-  { key: 'anti', label: 'Anti', kind: 'toggle', def: 0, when: cropped, group: 'Crop' },
+  { key: "view", label: "View", kind: "segment", def: "field", options: VIEWS, group: "Stack" },
+  { key: "limit", label: "Scales up to", kind: "slider", def: TOP, min: 1, max: TOP, step: 2, group: "Stack" },
+  { key: "level", label: "Level", kind: "slider", def: 1, min: 1, max: DEEPEST, step: 1, when: stacks, group: "Stack" },
+  { key: "combine", label: "Combine", kind: "pick", def: "sum", options: COMBINES, when: stacks, group: "Stack" },
+  {
+    key: "size",
+    label: "Size",
+    kind: "segment",
+    def: 512,
+    options: SIZES.map((n) => [n, String(n)]),
+    when: stacks,
+    group: "Stack",
+  },
+  {
+    key: "scale",
+    label: "Carpet m",
+    kind: "slider",
+    def: 9,
+    min: 3,
+    max: (value) => Math.max(3, odd(value.limit).at(-1)),
+    step: 2,
+    keep: true,
+    when: reads,
+    group: "R-matrix",
+  },
+  {
+    key: "mate",
+    label: "Against n",
+    kind: "slider",
+    def: 3,
+    min: 3,
+    max: (value) => Math.max(3, value.scale - 2),
+    step: 2,
+    keep: true,
+    when: (value) => reads(value) && value.scale > 3,
+    group: "R-matrix",
+  },
+  { key: "ramp", label: "Ramp", kind: "pick", def: "tint", options: RAMPS, when: stacks, group: "Look" },
+  { key: "levels", label: "Levels", kind: "slider", def: 16, min: 2, max: 64, step: 1, when: stacks, group: "Look" },
+  { key: "invert", label: "Invert", kind: "toggle", def: 0, when: stacks, group: "Look" },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
+  { key: "crop", label: "Crop", kind: "pick", def: "", options: CROPS, when: stacks, group: "Crop" },
+  {
+    key: "radius",
+    label: "Radius",
+    kind: "slider",
+    def: 16,
+    min: 1,
+    max: GRAIN,
+    step: 1,
+    unit: `of ${GRAIN}`,
+    when: cropped,
+    group: "Crop",
+  },
+  { key: "anti", label: "Anti", kind: "toggle", def: 0, when: cropped, group: "Crop" },
 ];
 
-export const DESIGN = { base: 2, code: '9' };
+export const DESIGN = { base: 2, code: "9" };
 
-const named = (value) => (value.view === 'matrix' ? `moire-matrix-${value.limit}` : `moire-${value.code}-${value.limit}`);
+const named = (value) =>
+  value.view === "matrix" ? `moire-matrix-${value.limit}` : `moire-${value.code}-${value.limit}`;
 
 export const PAGE = {
   defaults: DESIGN,
-  design: { dim: 2, base: 'base', code: 'code' },
+  design: { dim: 2, base: "base", code: "code" },
   spec: SPEC,
   record: true,
   gestures: true,
   name: named,
   about: [
-    'One design sampled at scale 1, 3, 5 and on, the layers stacked into one field. Each new scale lays a finer grid over the coarse ones, and that is where the interference comes from. Play, Space or a tap on the field climbs the stack two at a time.',
-    'The heatmap sums the parity of the low corner over the odd scales, the weave folds the same layers to their parity, the hive samples them on the hexagonal lattice, and the carpet keeps eight corners of nine in base 3. The page opens on the void, the base-2 checkerboard, stacked to 41: on both diagonals every layer is lit, so the X is the top of the field.',
-    'The R-matrix view reads a law off the stack: two parity carpets at odd scales correlate to exactly zero when the scales are coprime and to a positive number when they share a factor, so a scale whose row is zero against every earlier scale is prime. Tap a cell to pick the pair.',
-    'The closed form and its proof are in [the stack note](/research/stack/), and the stack that counts pi is in [the pi note](/research/pi/).',
+    "One design sampled at scale 1, 3, 5 and on, the layers stacked into one field. Each new scale lays a finer grid over the coarse ones, and that is where the interference comes from. Play, Space or a tap on the field climbs the stack two at a time.",
+    "The heatmap sums the parity of the low corner over the odd scales, the weave folds the same layers to their parity, the hive samples them on the hexagonal lattice, and the carpet keeps eight corners of nine in base 3. The page opens on the void, the base-2 checkerboard, stacked to 41: on both diagonals every layer is lit, so the X is the top of the field.",
+    "The R-matrix view reads a law off the stack: two parity carpets at odd scales correlate to exactly zero when the scales are coprime and to a positive number when they share a factor, so a scale whose row is zero against every earlier scale is prime. Tap a cell to pick the pair.",
+    "The closed form and its proof are in [the stack note](/research/stack/), and the stack that counts pi is in [the pi note](/research/pi/).",
   ],
-  keys: [{ key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Stop' : 'Play'), act: 'play', button: true, menu: 'Edit' }],
+  keys: [
+    {
+      key: "Enter",
+      label: (_value, scene) => (scene?.playing?.() ? "Stop" : "Play"),
+      act: "play",
+      button: true,
+      menu: "Edit",
+    },
+  ],
   actions: { play: (scene) => scene.toggle?.() },
 };
 
@@ -76,10 +150,12 @@ function board(ctx, view, look, table, trial) {
   const grid = cells(view, n);
   const { x, y, cell } = grid;
   const gap = Math.max(1, Math.round(cell * GAP));
-  rows.forEach((row, i) => row.forEach((r, j) => {
-    ctx.fillStyle = css(heat(ink, r));
-    ctx.fillRect(x + j * cell, y + i * cell, cell - gap, cell - gap);
-  }));
+  rows.forEach((row, i) => {
+    row.forEach((r, j) => {
+      ctx.fillStyle = css(heat(ink, r));
+      ctx.fillRect(x + j * cell, y + i * cell, cell - gap, cell - gap);
+    });
+  });
   ctx.lineWidth = Math.max(1, view.dpr);
   ctx.strokeStyle = css(ink.dim);
   ctx.beginPath();
@@ -112,27 +188,45 @@ export function make(canvas, view, opts = {}) {
   let held = null;
   let trial = null;
   let grid = null;
-  let error = '';
+  let error = "";
   let tone = 0;
   let playing = false;
   let from = value.limit;
   let origin = 0;
   let dirty = true;
-  let told = '';
-  let failed = '';
+  let told = "";
+  let failed = "";
   let gone = false;
-  const done = { plan: '', field: '', paint: '', law: '' };
-  const planKey = () => [value.base, value.code, value.level, value.limit, value.combine].join(' ');
-  const fieldKey = () => [planKey(), value.size, value.crop, value.radius, value.anti].join(' ');
-  const paintKey = () => [fieldKey(), value.ramp, value.levels, value.invert, value.tint, tone].join(' ');
-  const lawKey = () => [value.limit, value.scale, value.mate].join(' ');
+  const done = { plan: "", field: "", paint: "", law: "" };
+  const planKey = () => [value.base, value.code, value.level, value.limit, value.combine].join(" ");
+  const fieldKey = () => [planKey(), value.size, value.crop, value.radius, value.anti].join(" ");
+  const paintKey = () => [fieldKey(), value.ramp, value.levels, value.invert, value.tint, tone].join(" ");
+  const lawKey = () => [value.limit, value.scale, value.mate].join(" ");
   const facts = () => {
     if (error) return { error };
     if (reads(value)) {
       const w = trial.witness;
-      return { view: 'matrix', row: trial.row, mate: trial.mate, r: trial.r, prime: w?.prime ?? false, max: w?.max ?? 0, at: w?.at ?? 0, k: trial.k };
+      return {
+        view: "matrix",
+        row: trial.row,
+        mate: trial.mate,
+        r: trial.r,
+        prime: w?.prime ?? false,
+        max: w?.max ?? 0,
+        at: w?.at ?? 0,
+        k: trial.k,
+      };
     }
-    return { view: 'field', name: plan.name, code: plan.code, base: plan.base, level: plan.level, layers: plan.numbers.length, scales: plan.numbers, size: held.size };
+    return {
+      view: "field",
+      name: plan.name,
+      code: plan.code,
+      base: plan.base,
+      level: plan.level,
+      layers: plan.numbers.length,
+      scales: plan.numbers,
+      size: held.size,
+    };
   };
   const tell = () => {
     if (gone) return;
@@ -154,7 +248,10 @@ export function make(canvas, view, opts = {}) {
       done.field = fieldKey();
     }
     if (done.paint !== paintKey()) {
-      pad.put(paint(math, held, colorizer(value.ramp, value.levels, view.look()), value.levels, value.invert), held.size);
+      pad.put(
+        paint(math, held, colorizer(value.ramp, value.levels, view.look()), value.levels, value.invert),
+        held.size,
+      );
       done.paint = paintKey();
       dirty = true;
     }
@@ -172,8 +269,8 @@ export function make(canvas, view, opts = {}) {
     try {
       if (reads(value)) weigh();
       else stack();
-      error = '';
-      failed = '';
+      error = "";
+      failed = "";
     } catch (fault) {
       error = String(fault?.message ?? fault);
       failed = want;

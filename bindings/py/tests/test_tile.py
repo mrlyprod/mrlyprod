@@ -2,8 +2,8 @@ import json
 
 from mrly import tile
 from mrly.core import Rng
-from mrly.tile import build, name, variation
 from mrly.math import two
+from mrly.tile import build, name, variation
 
 DEFAULT_TILE = {
     "groups": ["General", "Fractal", "Magic", "Special", "Mosaic"],

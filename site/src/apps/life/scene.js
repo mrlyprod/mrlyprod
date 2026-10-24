@@ -1,86 +1,220 @@
-import { tidy } from '../../lib/app/spec.js';
-import { board } from '../../lib/app/run.js';
-import { veil } from '../../lib/color.js';
-import { pick, rng } from '../../lib/rand.js';
-import { BOARD, LIMIT, LINE, LINES, ROWS, SPANS, STARTS, destiny, dimOf, fate, hash, lattice, maskName, maskOf, population, ruleOf, sideOf, sow, told } from '../../lib/life/engine.js';
-import { PANE, SOUP, runs } from '../../lib/life/scene.js';
-import { wasm } from '../../lib/units/index.js';
+import { board } from "../../lib/app/run.js";
+import { tidy } from "../../lib/app/spec.js";
+import { veil } from "../../lib/color.js";
+import {
+  BOARD,
+  destiny,
+  dimOf,
+  fate,
+  hash,
+  LIMIT,
+  LINE,
+  LINES,
+  lattice,
+  maskName,
+  maskOf,
+  population,
+  ROWS,
+  ruleOf,
+  SPANS,
+  STARTS,
+  sideOf,
+  sow,
+  told,
+} from "../../lib/life/engine.js";
+import { PANE, runs, SOUP } from "../../lib/life/scene.js";
+import { pick, rng } from "../../lib/rand.js";
+import { wasm } from "../../lib/units/index.js";
 
 const NUMBERS = [3, 5, 7, 9].map((n) => [n, String(n)]);
 
 const LEVELS = [1, 2, 3];
 
-const START = 'glider';
+const START = "glider";
 
 export const SPEC = [
-  { key: 'dim', label: 'Dim', kind: 'segment', def: 2, options: [[1, '1D'], [2, '2D']], group: 'Mask', when: PANE },
-  { key: 'code', label: 'Code', kind: 'text', def: '7', group: 'Mask', when: PANE },
-  { key: 'number', label: 'Side', kind: 'pick', def: 3, options: NUMBERS, group: 'Mask', when: PANE },
-  { key: 'level', label: 'Level', kind: 'pick', def: 1, options: (value) => LEVELS.filter((n) => value.number ** n <= SPANS[dimOf(value)]).map((n) => [n, String(n)]), group: 'Mask', when: PANE },
-  { key: 'born', label: 'Born', kind: 'text', def: '3', group: 'Rule', when: PANE },
-  { key: 'stay', label: 'Stay', kind: 'text', def: '23', group: 'Rule', when: PANE },
-  { key: 'wrap', label: 'Wrap', kind: 'toggle', def: 1, group: 'Rule', when: PANE },
-  { key: 'from', label: 'Start', kind: 'pick', def: START, options: (value) => (dimOf(value) === 1 ? STARTS.filter(([one]) => LINES.includes(one)) : STARTS), group: 'Board', when: PANE },
-  { key: 'density', label: 'Density', kind: 'slider', def: 0.3, min: 0.05, max: 0.95, step: 0.01, group: 'Board', when: PANE },
-  { key: 'speed', label: 'Speed', kind: 'slider', def: 25, min: 1, max: 60, step: 1, unit: '/s', group: 'Board', when: PANE },
+  {
+    key: "dim",
+    label: "Dim",
+    kind: "segment",
+    def: 2,
+    options: [
+      [1, "1D"],
+      [2, "2D"],
+    ],
+    group: "Mask",
+    when: PANE,
+  },
+  { key: "code", label: "Code", kind: "text", def: "7", group: "Mask", when: PANE },
+  { key: "number", label: "Side", kind: "pick", def: 3, options: NUMBERS, group: "Mask", when: PANE },
+  {
+    key: "level",
+    label: "Level",
+    kind: "pick",
+    def: 1,
+    options: (value) => LEVELS.filter((n) => value.number ** n <= SPANS[dimOf(value)]).map((n) => [n, String(n)]),
+    group: "Mask",
+    when: PANE,
+  },
+  { key: "born", label: "Born", kind: "text", def: "3", group: "Rule", when: PANE },
+  { key: "stay", label: "Stay", kind: "text", def: "23", group: "Rule", when: PANE },
+  { key: "wrap", label: "Wrap", kind: "toggle", def: 1, group: "Rule", when: PANE },
+  {
+    key: "from",
+    label: "Start",
+    kind: "pick",
+    def: START,
+    options: (value) => (dimOf(value) === 1 ? STARTS.filter(([one]) => LINES.includes(one)) : STARTS),
+    group: "Board",
+    when: PANE,
+  },
+  {
+    key: "density",
+    label: "Density",
+    kind: "slider",
+    def: 0.3,
+    min: 0.05,
+    max: 0.95,
+    step: 0.01,
+    group: "Board",
+    when: PANE,
+  },
+  {
+    key: "speed",
+    label: "Speed",
+    kind: "slider",
+    def: 25,
+    min: 1,
+    max: 60,
+    step: 1,
+    unit: "/s",
+    group: "Board",
+    when: PANE,
+  },
 ];
 
 export const RULES = [
-  ['Conway', { born: '3', stay: '23' }],
-  ['HighLife', { born: '36', stay: '23' }],
-  ['Day and Night', { born: '3678', stay: '34678' }],
-  ['Seeds', { born: '2', stay: '-' }],
-  ['Life without Death', { born: '3', stay: '012345678' }],
-  ['Maze', { born: '3', stay: '12345' }],
-  ['Replicator', { born: '1357', stay: '1357' }],
-  ['2x2', { born: '36', stay: '125' }],
-  ['Diamoeba', { born: '35678', stay: '5678' }],
+  ["Conway", { born: "3", stay: "23" }],
+  ["HighLife", { born: "36", stay: "23" }],
+  ["Day and Night", { born: "3678", stay: "34678" }],
+  ["Seeds", { born: "2", stay: "-" }],
+  ["Life without Death", { born: "3", stay: "012345678" }],
+  ["Maze", { born: "3", stay: "12345" }],
+  ["Replicator", { born: "1357", stay: "1357" }],
+  ["2x2", { born: "36", stay: "125" }],
+  ["Diamoeba", { born: "35678", stay: "5678" }],
 ];
 
 export const PRESETS = [
-  ['Conway', { dim: 2, code: '7', number: 3, level: 1, born: '3', stay: '23' }],
-  ['Cantor-Life', { dim: 1, code: '1', number: 3, level: 3, born: '3', stay: '23' }],
-  ['Menger row', { dim: 1, code: '3', number: 3, level: 2, born: '3', stay: '23' }],
-  ['Nine-cell XOR', { dim: 2, code: '15', number: 3, level: 1, born: '1357', stay: '02468' }],
-  ['Rule 150', { dim: 1, code: '1', number: 3, level: 1, born: '1', stay: '02' }],
+  ["Conway", { dim: 2, code: "7", number: 3, level: 1, born: "3", stay: "23" }],
+  ["Cantor-Life", { dim: 1, code: "1", number: 3, level: 3, born: "3", stay: "23" }],
+  ["Menger row", { dim: 1, code: "3", number: 3, level: 2, born: "3", stay: "23" }],
+  ["Nine-cell XOR", { dim: 2, code: "15", number: 3, level: 1, born: "1357", stay: "02468" }],
+  ["Rule 150", { dim: 1, code: "1", number: 3, level: 1, born: "1", stay: "02" }],
 ];
 
 export const wears = (value, preset) => Object.entries(preset).every(([key, v]) => String(value[key]) === String(v));
 
-const slug = (text) => String(text).toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
+const slug = (text) =>
+  String(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9.]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
-export const worn = (presets, value) => presets.find(([, one]) => wears(value, one))?.[0] ?? '';
+export const worn = (presets, value) => presets.find(([, one]) => wears(value, one))?.[0] ?? "";
 
 export const PAGE = {
   spec: SPEC,
-  design: { dim: 'dim', base: 2, code: 'code', dims: [1, 2] },
+  design: { dim: "dim", base: 2, code: "code", dims: [1, 2] },
   gestures: true,
   record: true,
   about: [
     "Conway's Life is one rule on the eight cells around a cell: a dead cell with three live neighbours is born, a live cell with two or three stays, and every other cell dies.",
-    'Here the neighbourhood is a design, picked with the design chip. The carpet at side 3, level 1 is the Moore ring; any other code, side and level is another life. Born and Stay count live mask cells, as digits or as a named sequence.',
-    'The Library holds famous patterns to seed the board, whole worlds of mask and rule, and named rules. Reroll sows a random soup.',
-    'Paint cells by hand, then press Play. Run to fate replays the board for up to 512 generations and says whether it dies, freezes, loops, or is still moving.',
-    'In 1D the board is one line of 320 cells, drawn top to bottom with the newest row last. Wrap joins the edges. A side-3 line at level 1 runs elementary rules, as on [Wolfram](/wolfram/); the whole family is in [the automata note](/research/automata/).',
+    "Here the neighbourhood is a design, picked with the design chip. The carpet at side 3, level 1 is the Moore ring; any other code, side and level is another life. Born and Stay count live mask cells, as digits or as a named sequence.",
+    "The Library holds famous patterns to seed the board, whole worlds of mask and rule, and named rules. Reroll sows a random soup.",
+    "Paint cells by hand, then press Play. Run to fate replays the board for up to 512 generations and says whether it dies, freezes, loops, or is still moving.",
+    "In 1D the board is one line of 320 cells, drawn top to bottom with the newest row last. Wrap joins the edges. A side-3 line at level 1 runs elementary rules, as on [Wolfram](/wolfram/); the whole family is in [the automata note](/research/automata/).",
   ],
-  name: (value) => ['life', slug(worn(PRESETS, value) || `${dimOf(value)}d ${value.code} ${value.number} ${value.level} b${value.born} s${value.stay}`), SOUP(value) ? value.seed : slug(value.from)].join('-'),
+  name: (value) =>
+    [
+      "life",
+      slug(
+        worn(PRESETS, value) ||
+          `${dimOf(value)}d ${value.code} ${value.number} ${value.level} b${value.born} s${value.stay}`,
+      ),
+      SOUP(value) ? value.seed : slug(value.from),
+    ].join("-"),
   keys: [
-    { key: 'Enter', label: (value, scene) => (scene?.playing?.() ? 'Pause' : 'Play'), act: 'play', button: true, menu: 'Edit' },
-    { key: 'n', label: 'Step', act: 'step', menu: 'Edit' },
-    { key: 'f', label: 'Run to fate', act: 'fate', menu: 'Edit' },
-    { key: ['0', 'Home'], label: 'Reset', act: 'reset' },
-    { key: 'c', label: 'Clear', act: 'clear' },
+    {
+      key: "Enter",
+      label: (_value, scene) => (scene?.playing?.() ? "Pause" : "Play"),
+      act: "play",
+      button: true,
+      menu: "Edit",
+    },
+    { key: "n", label: "Step", act: "step", menu: "Edit" },
+    { key: "f", label: "Run to fate", act: "fate", menu: "Edit" },
+    { key: ["0", "Home"], label: "Reset", act: "reset" },
+    { key: "c", label: "Clear", act: "clear" },
   ],
-  actions: { play: (scene) => scene.toggle(), step: (scene) => scene.step(), fate: (scene) => scene.doom(), reset: (scene) => scene.reset(), clear: (scene) => scene.clear() },
+  actions: {
+    play: (scene) => scene.toggle(),
+    step: (scene) => scene.step(),
+    fate: (scene) => scene.doom(),
+    reset: (scene) => scene.reset(),
+    clear: (scene) => scene.clear(),
+  },
 };
 
 export const SAVERS = [
-  { id: 'soup', title: 'Soup', pick: (rand) => ({ dim: 2, code: '7', number: 3, level: 1, ...pick(rand, RULES.slice(0, 2))[1], wrap: 1, from: 'noise', density: Math.round((0.26 + rand() * 0.12) * 100) / 100, speed: 12 }) },
-  { id: 'crystal', title: 'Crystal', pick: () => ({ dim: 2, code: '15', number: 3, level: 1, born: '1357', stay: '02468', wrap: 0, from: 'one', speed: 10 }) },
-  { id: 'tapestry', title: 'Tapestry', pick: (rand) => ({ dim: 1, code: '1', number: 3, level: 1, born: '1', stay: rand() < 0.5 ? '02' : '1', wrap: 1, from: 'one', speed: 16 }) },
+  {
+    id: "soup",
+    title: "Soup",
+    pick: (rand) => ({
+      dim: 2,
+      code: "7",
+      number: 3,
+      level: 1,
+      ...pick(rand, RULES.slice(0, 2))[1],
+      wrap: 1,
+      from: "noise",
+      density: Math.round((0.26 + rand() * 0.12) * 100) / 100,
+      speed: 12,
+    }),
+  },
+  {
+    id: "crystal",
+    title: "Crystal",
+    pick: () => ({
+      dim: 2,
+      code: "15",
+      number: 3,
+      level: 1,
+      born: "1357",
+      stay: "02468",
+      wrap: 0,
+      from: "one",
+      speed: 10,
+    }),
+  },
+  {
+    id: "tapestry",
+    title: "Tapestry",
+    pick: (rand) => ({
+      dim: 1,
+      code: "1",
+      number: 3,
+      level: 1,
+      born: "1",
+      stay: rand() < 0.5 ? "02" : "1",
+      wrap: 1,
+      from: "one",
+      speed: 16,
+    }),
+  },
 ];
 
-export const units = wasm('life', 'math');
+export const units = wasm("life", "math");
 
 export const HOLD = 3000;
 
@@ -101,16 +235,16 @@ const EPS = 1e-6;
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const { life, math } = opts;
   const read = (next) => {
     const one = { ...tidy(SPEC, next), seed: next.seed };
-    return view.lock && one.from === START ? { ...one, from: 'noise' } : one;
+    return view.lock && one.from === START ? { ...one, from: "noise" } : one;
   };
   let value = read(opts);
   let shape = null;
   let rule = null;
-  let name = '';
+  let name = "";
   let width = BOARD;
   let height = BOARD;
   let ring = null;
@@ -118,9 +252,9 @@ export function make(canvas, view, opts = {}) {
   let age = null;
   let gen = 0;
   let seen = [];
-  let word = '';
-  let verdict = '';
-  let error = '';
+  let word = "";
+  let verdict = "";
+  let error = "";
   let pop = 0;
   let playing = Boolean(view.lock);
   let origin = 0;
@@ -156,7 +290,7 @@ export function make(canvas, view, opts = {}) {
     seen = [];
     pop = population(types);
     word = fate(seen, hash(types), pop);
-    verdict = '';
+    verdict = "";
     origin = view.t;
     since = -1;
     shown = -1;
@@ -166,9 +300,22 @@ export function make(canvas, view, opts = {}) {
     const { accent } = view.look();
     skin = { ink: accent, dim: veil(accent, GROUND) };
   };
-  const tell = () => !gone && opts.onStat?.({ gen, pop, fate: verdict || word, name, counts: [rule.birth, rule.survive], mask: shape.mask, cells: shape.cells, lattice: lattice(shape.lattice), label: shape.label, error });
+  const tell = () =>
+    !gone &&
+    opts.onStat?.({
+      gen,
+      pop,
+      fate: verdict || word,
+      name,
+      counts: [rule.birth, rule.survive],
+      mask: shape.mask,
+      cells: shape.cells,
+      lattice: lattice(shape.lattice),
+      label: shape.label,
+      error,
+    });
   const advance = () => {
-    types = life.next_grid(grid(), rule.birth, rule.survive, shape.mask, value.wrap ? 'Wrap' : 'Constant').types;
+    types = life.next_grid(grid(), rule.birth, rule.survive, shape.mask, value.wrap ? "Wrap" : "Constant").types;
     if (ring) ring.set(types, ((gen + 1) % ROWS) * LINE);
     else for (let i = 0; i < types.length; i++) age[i] = types[i] ? Math.min(255, age[i] + 1) : 0;
     gen++;
@@ -192,7 +339,14 @@ export function make(canvas, view, opts = {}) {
     if (!linear()) return board(view, width, height, FIT);
     const cell = Math.max(1, Math.floor((view.w * FIT) / LINE));
     const rows = Math.max(1, Math.min(ROWS, Math.floor((view.h * FIT) / cell)));
-    return { x: Math.floor((view.w - LINE * cell) / 2), y: Math.floor((view.h - rows * cell) / 2), w: LINE * cell, h: rows * cell, cell, rows };
+    return {
+      x: Math.floor((view.w - LINE * cell) / 2),
+      y: Math.floor((view.h - rows * cell) / 2),
+      w: LINE * cell,
+      h: rows * cell,
+      cell,
+      rows,
+    };
   };
   const ground = (x, y, w, h) => {
     ctx.fillStyle = skin.dim;
@@ -203,17 +357,22 @@ export function make(canvas, view, opts = {}) {
     const { x, y, w, h, cell } = lay;
     ctx.clearRect(0, 0, view.w, view.h);
     ground(x, y, w, h);
-    for (const [lit, alpha] of [[(a) => a === 1, 1], [(a) => a > 1, OLD]]) {
+    for (const [lit, alpha] of [
+      [(a) => a === 1, 1],
+      [(a) => a > 1, OLD],
+    ]) {
       ctx.globalAlpha = alpha;
       ctx.beginPath();
-      for (let i = 0; i < types.length; i++) if (lit(age[i])) ctx.rect(x + (i % width) * cell, y + Math.floor(i / width) * cell, cell, cell);
+      for (let i = 0; i < types.length; i++)
+        if (lit(age[i])) ctx.rect(x + (i % width) * cell, y + Math.floor(i / width) * cell, cell, cell);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
   };
   const first = () => Math.max(0, gen - lay.rows + 1);
   const band = (g) => lay.y + (g - first()) * lay.cell;
-  const row = (g) => runs(ctx, ring.subarray((g % ROWS) * LINE, (g % ROWS) * LINE + LINE), LINE, 1, lay.x, band(g), lay.cell);
+  const row = (g) =>
+    runs(ctx, ring.subarray((g % ROWS) * LINE, (g % ROWS) * LINE + LINE), LINE, 1, lay.x, band(g), lay.cell);
   const sheet = () => {
     ctx.clearRect(0, 0, view.w, view.h);
     ground(lay.x, lay.y, lay.w, lay.h);
@@ -293,7 +452,7 @@ export function make(canvas, view, opts = {}) {
   const doom = () => {
     try {
       verdict = told(destiny(life, grid(), shape.mask, rule, value.wrap, LIMIT));
-      error = '';
+      error = "";
     } catch (thrown) {
       error = String(thrown?.message ?? thrown);
     }
@@ -314,7 +473,7 @@ export function make(canvas, view, opts = {}) {
     seen = [];
     pop = 0;
     word = fate(seen, hash(types), 0);
-    verdict = '';
+    verdict = "";
     origin = view.t;
     tell();
     whole();
@@ -335,7 +494,7 @@ export function make(canvas, view, opts = {}) {
     seen = [];
     pop = population(types);
     word = fate(seen, hash(types), pop);
-    verdict = '';
+    verdict = "";
     tell();
     paint(!linear());
   };
@@ -343,12 +502,12 @@ export function make(canvas, view, opts = {}) {
     const was = value;
     value = read(next);
     const moved = (...keys) => keys.some((key) => String(value[key]) !== String(was[key]));
-    if (moved('dim', 'code', 'number', 'level')) mould();
-    if (moved('dim', 'from')) measure();
-    if (moved('dim', 'code', 'number', 'level', 'born', 'stay')) judge();
-    if (moved('dim', 'from', 'density', 'seed') || (value.from === 'design' && moved('code', 'number'))) sowed();
-    else if (moved('dim', 'code', 'number', 'level', 'born', 'stay', 'wrap')) verdict = '';
-    if (moved('speed')) origin = view.t - (gen * 1000) / value.speed;
+    if (moved("dim", "code", "number", "level")) mould();
+    if (moved("dim", "from")) measure();
+    if (moved("dim", "code", "number", "level", "born", "stay")) judge();
+    if (moved("dim", "from", "density", "seed") || (value.from === "design" && moved("code", "number"))) sowed();
+    else if (moved("dim", "code", "number", "level", "born", "stay", "wrap")) verdict = "";
+    if (moved("speed")) origin = view.t - (gen * 1000) / value.speed;
     tell();
     whole();
   };

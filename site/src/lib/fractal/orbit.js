@@ -1,4 +1,4 @@
-import { BITS, ESCAPE, SHARP, WIDE } from './consts.js';
+import { BITS, ESCAPE, SHARP, WIDE } from "./consts.js";
 
 const NEWTON = 64;
 const ZERO = 1e-8;

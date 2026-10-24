@@ -1,5 +1,5 @@
-import { rgb } from '../../lib/color.js';
-import { turn } from '../../lib/app/turn.js';
+import { turn } from "../../lib/app/turn.js";
+import { rgb } from "../../lib/color.js";
 
 export const SIDE = 128;
 export const TOP = 12;
@@ -59,13 +59,19 @@ const design = ({ code, number, level }) => `${code} ${number} ${level}`;
 
 function figures(math, value) {
   const door = math?.nodal?.figures;
-  if (!door) return { error: 'the carpet waits for its door' };
+  if (!door) return { error: "the carpet waits for its door" };
   const key = design(value);
   if (!solved.has(key)) {
     let made;
     try {
       const out = door(BigInt(value.code), value.number, value.level, COUNT);
-      made = { side: out.side, values: Array.from(out.values), domains: Array.from(out.domains), bound: Array.from(out.bound), fields: Float64Array.from(out.fields, (v) => v ?? NaN) };
+      made = {
+        side: out.side,
+        values: Array.from(out.values),
+        domains: Array.from(out.domains),
+        bound: Array.from(out.bound),
+        fields: Float64Array.from(out.fields, (v) => v ?? NaN),
+      };
     } catch (fault) {
       made = { error: String(fault?.message ?? fault) };
     }
@@ -89,7 +95,8 @@ const named = (math, code) => {
   return names.get(code);
 };
 
-const holding = (math, value) => range(capOf(math, value.number)).filter((level) => holds(math, value.code, value.number, level));
+const holding = (math, value) =>
+  range(capOf(math, value.number)).filter((level) => holds(math, value.code, value.number, level));
 
 export function codes(value, units) {
   const math = units?.math;
@@ -125,25 +132,42 @@ export function hits(one, query) {
 
 const kOf = (value) => Math.max(1, Math.min(value.k, known(value) || value.k));
 
-export const keyOf = (value) => (value.view === 'carpet' ? `carpet ${design(value)} ${kOf(value)}` : `plate ${value.n} ${value.m} ${value.n === value.m ? 1 : value.sign}`);
+export const keyOf = (value) =>
+  value.view === "carpet"
+    ? `carpet ${design(value)} ${kOf(value)}`
+    : `plate ${value.n} ${value.m} ${value.n === value.m ? 1 : value.sign}`;
 
 export function raster(units, value) {
-  if (value.view === 'carpet') {
+  if (value.view === "carpet") {
     const made = figures(units.math, value);
     const key = keyOf(value);
     if (made.error) return { error: made.error, key };
-    if (!made.values.length) return { error: 'the design has no figures', key };
+    if (!made.values.length) return { error: "the design has no figures", key };
     const k = kOf(value);
     const size = made.side * made.side;
-    return { side: made.side, data: made.fields.subarray((k - 1) * size, k * size), smooth: false, mask: `carpet ${design(value)}`, key, k, made };
+    return {
+      side: made.side,
+      data: made.fields.subarray((k - 1) * size, k * size),
+      smooth: false,
+      mask: `carpet ${design(value)}`,
+      key,
+      k,
+      made,
+    };
   }
   const { n, m } = value;
-  return { side: SIDE, data: units.num.chladni.plate(n, m, n === m ? 1 : value.sign, SIDE), smooth: true, mask: 'plate', key: keyOf(value) };
+  return {
+    side: SIDE,
+    data: units.num.chladni.plate(n, m, n === m ? 1 : value.sign, SIDE),
+    smooth: true,
+    mask: "plate",
+    key: keyOf(value),
+  };
 }
 
 const on = (data, side, x, y) => {
   const at = Math.min(side - 1, Math.floor(y * side)) * side + Math.min(side - 1, Math.floor(x * side));
-  return data[at] === data[at];
+  return !Number.isNaN(data[at]);
 };
 
 /* SAND */
@@ -165,7 +189,7 @@ export function sprinkle(rand, data, side, count) {
 
 export function live(grains) {
   let n = 0;
-  for (let i = 0; i < grains.length; i += 2) if (grains[i] === grains[i]) n++;
+  for (let i = 0; i < grains.length; i += 2) if (!Number.isNaN(grains[i])) n++;
   return n;
 }
 
@@ -187,7 +211,7 @@ export function fill(grains, points, cap) {
   const take = Math.min(points.length / 2, Math.max(0, cap - live(grains)));
   let put = 0;
   for (let i = 0; i < grains.length && put < take; i += 2) {
-    if (grains[i] === grains[i]) continue;
+    if (!Number.isNaN(grains[i])) continue;
     grains[i] = points[2 * put];
     grains[i + 1] = points[2 * put + 1];
     put++;
@@ -208,22 +232,29 @@ const mix = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
 export function inks(look) {
   const paper = rgb(look.paper);
   const accent = rgb(look.accent);
-  return { paper, accent, other: rgb(turn(look.accent, 180)), face: pack(...mix(paper, accent, FACE)), sand: pack(...accent), ink: look.ink ?? look.accent };
+  return {
+    paper,
+    accent,
+    other: rgb(turn(look.accent, 180)),
+    face: pack(...mix(paper, accent, FACE)),
+    sand: pack(...accent),
+    ink: look.ink ?? look.accent,
+  };
 }
 
 function ramp(inks, f) {
-  if (f !== f) return [0, 0, 0, 0];
+  if (Number.isNaN(f)) return [0, 0, 0, 0];
   return [...mix(inks.paper, f >= 0 ? inks.accent : inks.other, Math.min(1, Math.abs(f))), 255];
 }
 
 export function base(shape, inks) {
-  return Uint32Array.from(shape.data, (v) => (v === v ? inks.face : 0));
+  return Uint32Array.from(shape.data, (v) => (!Number.isNaN(v) ? inks.face : 0));
 }
 
 export function stamp(words, grains, side, colour) {
   for (let i = 0; i < grains.length; i += 2) {
     const x = grains[i];
-    if (x !== x) continue;
+    if (Number.isNaN(x)) continue;
     const px = Math.min(side - 1, Math.floor(x * side));
     const py = Math.min(side - 1, Math.floor(grains[i + 1] * side));
     words[py * side + px] = colour;
@@ -237,4 +268,5 @@ export function paint(shape, inks) {
   return bytes;
 }
 
-export const swatch = (num, one, inks, side) => paint({ side, data: num.chladni.plate(one.n, one.m, one.n === one.m ? 1 : one.sign, side) }, inks);
+export const swatch = (num, one, inks, side) =>
+  paint({ side, data: num.chladni.plate(one.n, one.m, one.n === one.m ? 1 : one.sign, side) }, inks);

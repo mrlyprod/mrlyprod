@@ -1,5 +1,6 @@
 from fractions import Fraction
 from math import isqrt
+
 import mpmath
 import numpy as np
 import sympy as sp
@@ -8,6 +9,7 @@ N2 = 200000
 N_ROT = 6000
 DPS = 30
 EXPONENTS = (2, 3, 4)
+
 
 def parity_classes(limit):
     bound = isqrt(limit)
@@ -22,6 +24,7 @@ def parity_classes(limit):
     flat = np.bincount(np.concatenate(keys), minlength=4 * (limit + 1))
     return flat.reshape(4, limit + 1).astype(np.int64)
 
+
 def jacobi_r2(limit):
     out = np.zeros(limit + 1, dtype=np.int64)
     for d in range(1, limit + 1, 4):
@@ -30,22 +33,27 @@ def jacobi_r2(limit):
         out[d::d] -= 4
     return out
 
+
 def shifted(source, step, limit):
     out = np.zeros(limit + 1, dtype=np.int64)
     out[::step] = source[: limit // step + 1]
     return out
 
+
 def doubling_identity(cls, total, limit):
     predicted = shifted(total, 4, limit)
     return int(np.count_nonzero(cls[0][1:] != predicted[1:]))
+
 
 def rotation_identity(cls, limit):
     mixed = cls[1] + cls[2]
     predicted = shifted(mixed, 2, limit)
     return int(np.count_nonzero(cls[3][1:] != predicted[1:]))
 
+
 def swap_identity(cls):
     return int(np.count_nonzero(cls[1][1:] != cls[2][1:]))
+
 
 def odd_odd_points(norm):
     out = []
@@ -62,6 +70,7 @@ def odd_odd_points(norm):
         out.append((i, j))
         out.append((i, -j))
     return out
+
 
 def rotation_as_a_map(cls, limit):
     moved = 0
@@ -83,6 +92,7 @@ def rotation_as_a_map(cls, limit):
             faults += 1
     return moved, faults
 
+
 def pinned_polynomial():
     t, whole = sp.symbols("t S")
     ee, eo, oe, oo = sp.symbols("S_ee S_eo S_oe S_oo")
@@ -103,13 +113,15 @@ def pinned_polynomial():
         + a_oe * solution[oe]
         + a_oo * solution[oo]
     )
-    claimed = whole * (
-        a_ee * t**2 + a_oo * t * (1 - t) + (a_eo + a_oe) * (1 - t) / 2
-    )
+    claimed = whole * (a_ee * t**2 + a_oo * t * (1 - t) + (a_eo + a_oe) * (1 - t) / 2)
     return sp.simplify(filled - claimed) == 0
 
+
 def dirichlet_beta(s):
-    return (mpmath.zeta(s, mpmath.mpf(1) / 4) - mpmath.zeta(s, mpmath.mpf(3) / 4)) / 4**s
+    return (
+        mpmath.zeta(s, mpmath.mpf(1) / 4) - mpmath.zeta(s, mpmath.mpf(3) / 4)
+    ) / 4**s
+
 
 def shell_sums(cls, total, limit):
     live = np.nonzero(total[: limit + 1])[0]
@@ -130,15 +142,19 @@ def shell_sums(cls, total, limit):
                 totals[s][slot] += value / powers[s]
     return totals
 
+
 def indicators(code):
     return [(code >> k) & 1 for k in range(4)]
+
 
 def q_polynomial(a, s):
     t = Fraction(1, 2**s)
     return a[0] * t * t + a[3] * t * (1 - t) + Fraction(a[1] + a[2], 2) * (1 - t)
 
+
 def to_mpf(value):
     return mpmath.mpf(value.numerator) / mpmath.mpf(value.denominator)
+
 
 def closed_form_gaps(totals, limit):
     zeta = {s: mpmath.zeta(s) for s in EXPONENTS}
@@ -149,9 +165,7 @@ def closed_form_gaps(totals, limit):
         for code in range(1, 16):
             a = indicators(code)
             predicted = 4 * zeta[s] * beta[s] * to_mpf(q_polynomial(a, s))
-            measured = mpmath.fsum(
-                totals[s][slot] for slot in range(4) if a[slot]
-            )
+            measured = mpmath.fsum(totals[s][slot] for slot in range(4) if a[slot])
             tail = mpmath.mpf(0)
             if s == 2:
                 tail = sum(a) * mpmath.pi / (4 * limit)
@@ -160,14 +174,18 @@ def closed_form_gaps(totals, limit):
         worst[s] = biggest
     return worst
 
+
 def sci(value):
     return mpmath.nstr(value, 2, strip_zeros=False)
+
 
 def main():
     mpmath.mp.dps = DPS
     cls = parity_classes(N2)
     total = cls.sum(axis=0)
-    print(f"DOMAIN  parity classes of Z^2 to n = {N2}, rotation as a map to n = {N_ROT}")
+    print(
+        f"DOMAIN  parity classes of Z^2 to n = {N2}, rotation as a map to n = {N_ROT}"
+    )
     print()
     print("JACOBI")
     jacobi = jacobi_r2(N2)
@@ -184,21 +202,30 @@ def main():
     print()
     print("THE 45 DEGREE ROTATION AS A MAP")
     moved, faults = rotation_as_a_map(cls, N_ROT)
-    print(f"  (i,j) -> ((i+j)/2, (i-j)/2) on every odd-odd point of even norm to n = {N_ROT}")
+    print(
+        f"  (i,j) -> ((i+j)/2, (i-j)/2) on every odd-odd point of even norm to n = {N_ROT}"
+    )
     print(f"  odd-odd points transported {moved}, faults {faults}")
     print()
     print("THE THREE RELATIONS PIN Q_c")
-    print(f"  solving the four linear relations returns Q_c exactly: {pinned_polynomial()}")
+    print(
+        f"  solving the four linear relations returns Q_c exactly: {pinned_polynomial()}"
+    )
     print()
     print("SELF TEST OF THE BETA VALUES")
     print(f"  beta(2) against Catalan   {sci(abs(dirichlet_beta(2) - mpmath.catalan))}")
-    print(f"  beta(3) against pi^3/32   {sci(abs(dirichlet_beta(3) - mpmath.pi**3 / 32))}")
+    print(
+        f"  beta(3) against pi^3/32   {sci(abs(dirichlet_beta(3) - mpmath.pi**3 / 32))}"
+    )
     print()
     print("THE CLOSED FORM AGAINST TRUNCATED LATTICE SUMS")
     totals = shell_sums(cls, total, N2)
     worst = closed_form_gaps(totals, N2)
     for s in EXPONENTS:
         note = " after the leading tail k pi / (4N)" if s == 2 else ""
-        print(f"  s = {s}  worst gap over the 15 nonempty designs {sci(worst[s])}{note}")
+        print(
+            f"  s = {s}  worst gap over the 15 nonempty designs {sci(worst[s])}{note}"
+        )
+
 
 main()

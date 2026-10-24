@@ -18,7 +18,8 @@ function spun() {
   if (held) return held;
   const data = math.tourbillon.field(TOP, SIZE, "golden", 0, "odd", "plain", "cells", "mean", 1);
   const read = math.tourbillon.stats(data, SIZE, TOP, "golden", 0, "odd", "plain", "mean", 1);
-  if (read.layers !== WANT.layers || Math.abs(read.centre - WANT.centre) > 1e-6 || data.length !== SIZE * SIZE) throw new Error(`tourbillon: ${read.layers} layers, centre ${read.centre}, want ${WANT.layers} and ${WANT.centre}`);
+  if (read.layers !== WANT.layers || Math.abs(read.centre - WANT.centre) > 1e-6 || data.length !== SIZE * SIZE)
+    throw new Error(`tourbillon: ${read.layers} layers, centre ${read.centre}, want ${WANT.layers} and ${WANT.centre}`);
   const span = read.high - read.low || 1;
   const types = Uint8Array.from(data, (v) => (Number.isNaN(v) ? 0 : Math.round((255 * (v - read.low)) / span)));
   const side = 2 * SPREAD + 1;

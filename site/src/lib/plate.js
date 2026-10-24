@@ -1,5 +1,5 @@
-import { frame, ink, mix } from '#view';
-import { dark } from './theme/theme.js';
+import { frame, ink, mix } from "#view";
+import { dark } from "./theme/theme.js";
 
 const POWER = 5;
 const SPAN = 0.92;
@@ -29,7 +29,7 @@ function pixels(size, hue) {
       const cover = d > 0.5 ? 0 : d < -0.5 ? 1 : 0.5 - d;
       if (cover <= 0) continue;
       const sheen = Math.max(0, 1 - ((x - c * 0.7) ** 2 + (y - c * 0.5) ** 2) / (a * a * 1.1)) * SHEEN;
-      const rim = d > -2.5 ? RIM * (1 - (-d) / 2.5) : 0;
+      const rim = d > -2.5 ? RIM * (1 - -d / 2.5) : 0;
       const lift = Math.min(1, sheen + rim);
       const i = (y * size + x) * 4;
       colors[i] = row[0] + (255 - row[0]) * lift;
@@ -43,7 +43,7 @@ function pixels(size, hue) {
   return made;
 }
 
-export function plate(pen, hue = 'blue', inset = 0.2) {
+export function plate(pen, hue = "blue", inset = 0.2) {
   const tone = HUES[hue];
   if (!tone) throw new Error(`icon: no hue ${hue}`);
   const size = Math.min(pen.width, pen.height);
@@ -52,6 +52,12 @@ export function plate(pen, hue = 'blue', inset = 0.2) {
   pen.image(x, y, size, size, pixels(size, tone));
   const pad = size * inset;
   const box = frame(x + pad, y + pad, size - 2 * pad, size - 2 * pad);
-  const paint = { white: WHITE, light: mix(tone, WHITE, 0.6), deep: mix(tone, BLACK, 0.45), ink: mix(tone, BLACK, 0.75), tone };
+  const paint = {
+    white: WHITE,
+    light: mix(tone, WHITE, 0.6),
+    deep: mix(tone, BLACK, 0.45),
+    ink: mix(tone, BLACK, 0.75),
+    tone,
+  };
   return { box, paint, size };
 }

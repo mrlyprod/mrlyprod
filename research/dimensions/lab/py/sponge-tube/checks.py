@@ -13,7 +13,9 @@ import sponge_tube as st
 
 LEVEL = 4
 SIDE = 3**LEVEL
-REMOVED = np.array([(1, 1, 1), (0, 1, 1), (2, 1, 1), (1, 0, 1), (1, 2, 1), (1, 1, 0), (1, 1, 2)])
+REMOVED = np.array(
+    [(1, 1, 1), (0, 1, 1), (2, 1, 1), (1, 0, 1), (1, 2, 1), (1, 1, 0), (1, 1, 2)]
+)
 PLUS = 7 / 27
 SQRT2 = np.sqrt(2)
 
@@ -56,8 +58,14 @@ def wall_faces(cubes):
                 c = 3 - a - b
                 for side in (0, 1):
                     plane = 1 / 3 if side == 0 else 2 / 3
-                    sel = (cubes[:, b] == n // 3 - 1) if side == 0 else (cubes[:, b] == 2 * n // 3)
-                    sel &= (cubes[:, a] >= arm * n // 3) & (cubes[:, a] < (arm + 1) * n // 3)
+                    sel = (
+                        (cubes[:, b] == n // 3 - 1)
+                        if side == 0
+                        else (cubes[:, b] == 2 * n // 3)
+                    )
+                    sel &= (cubes[:, a] >= arm * n // 3) & (
+                        cubes[:, a] < (arm + 1) * n // 3
+                    )
                     sel &= (cubes[:, c] >= n // 3) & (cubes[:, c] < 2 * n // 3)
                     faces.append((b, plane, sel))
     return faces
@@ -71,19 +79,33 @@ def dist_to_faces(points, oracle, faces, own):
         lo, hi = oracle.lo[sel], oracle.hi[sel]
         others = [k for k in range(3) if k != b]
         q = points[:, None, :]
-        g = np.maximum(np.maximum(lo[None, :, others] - q[:, :, others], q[:, :, others] - hi[None, :, others]), 0)
+        g = np.maximum(
+            np.maximum(
+                lo[None, :, others] - q[:, :, others],
+                q[:, :, others] - hi[None, :, others],
+            ),
+            0,
+        )
         dd = np.sqrt((g * g).sum(-1) + (points[:, None, b] - plane) ** 2).min(1)
         if own:
             inside = np.ones(len(points), bool)
             for k in others:
-                inside &= (points[:, k] >= lo[:, k].min() - 1e-12) & (points[:, k] <= hi[:, k].max() + 1e-12)
+                inside &= (points[:, k] >= lo[:, k].min() - 1e-12) & (
+                    points[:, k] <= hi[:, k].max() + 1e-12
+                )
             inside &= np.abs(points[:, b] - plane) <= 1 / 3 + 1e-12
             best = np.where(inside & ~centre, np.minimum(best, dd), best)
         else:
             best = np.minimum(best, dd)
     if own:
         m = np.minimum(points[centre] - 1 / 3, 2 / 3 - points[centre])
-        best[centre] = np.minimum.reduce([np.hypot(m[:, 0], m[:, 1]), np.hypot(m[:, 0], m[:, 2]), np.hypot(m[:, 1], m[:, 2])])
+        best[centre] = np.minimum.reduce(
+            [
+                np.hypot(m[:, 0], m[:, 1]),
+                np.hypot(m[:, 0], m[:, 2]),
+                np.hypot(m[:, 1], m[:, 2]),
+            ]
+        )
     return best
 
 
@@ -120,7 +142,13 @@ def reduced(points):
             out[arm] = np.minimum(out[arm], np.sqrt(u * u + dd * dd))
             out[arm] = np.minimum(out[arm], np.sqrt((1 / 3 - u) ** 2 + dd * dd))
     m = np.minimum(points[centre] - 1 / 3, 2 / 3 - points[centre])
-    out[centre] = np.minimum.reduce([np.hypot(m[:, 0], m[:, 1]), np.hypot(m[:, 0], m[:, 2]), np.hypot(m[:, 1], m[:, 2])])
+    out[centre] = np.minimum.reduce(
+        [
+            np.hypot(m[:, 0], m[:, 1]),
+            np.hypot(m[:, 0], m[:, 2]),
+            np.hypot(m[:, 1], m[:, 2]),
+        ]
+    )
     return out
 
 
@@ -143,11 +171,15 @@ def verb_oracle():
     cubes = prefractal()
     oracle = Oracle(cubes)
     faces = wall_faces(cubes)
-    print(f"ORACLE: level-{LEVEL} prefractal, {len(cubes)} cubes, {sum(int(f[2].sum()) for f in faces)} cube faces on the 24 walls")
+    print(
+        f"ORACLE: level-{LEVEL} prefractal, {len(cubes)} cubes, {sum(int(f[2].sum()) for f in faces)} cube faces on the 24 walls"
+    )
     points = sample_plus(rng, 20000)
     near = sample_plus(rng, 4000)
     axis = rng.integers(0, 3, 4000)
-    near[np.arange(4000), axis] = np.where(rng.random(4000) < 0.5, 1 / 3, 2 / 3) + rng.normal(0, 1e-3, 4000)
+    near[np.arange(4000), axis] = np.where(
+        rng.random(4000) < 0.5, 1 / 3, 2 / 3
+    ) + rng.normal(0, 1e-3, 4000)
     near = np.clip(near, 0, 1)
     c = np.minimum(np.floor(near * 3).astype(int), 2)
     near = near[(c == 1).sum(1) >= 2]
@@ -155,13 +187,23 @@ def verb_oracle():
     d_f4, complete = oracle.dist(points)
     d_walls = dist_to_faces(points, oracle, faces, own=False)
     d_own = dist_to_faces(points, oracle, faces, own=True)
-    print(f"  {len(points)} points of the plus, {len(near)} of them within about 1e-3 of a face; candidate set complete for every point: {bool(complete.all())}")
-    print(f"  max |dist(x, F_4) - dist(x, 24 level-4 wall carpets)| = {np.abs(d_f4 - d_walls).max():.1e}")
-    print(f"  max |dist(x, F_4) - own four walls or centre edges at level 4| = {np.abs(d_f4 - d_own).max():.1e}")
+    print(
+        f"  {len(points)} points of the plus, {len(near)} of them within about 1e-3 of a face; candidate set complete for every point: {bool(complete.all())}"
+    )
+    print(
+        f"  max |dist(x, F_4) - dist(x, 24 level-4 wall carpets)| = {np.abs(d_f4 - d_walls).max():.1e}"
+    )
+    print(
+        f"  max |dist(x, F_4) - own four walls or centre edges at level 4| = {np.abs(d_f4 - d_own).max():.1e}"
+    )
     d_red = reduced(points)
-    print(f"  reduced distance of the lemmas (infinite carpets) minus dist(x, F_4): min {(d_red - d_f4).min():.1e}, max {(d_red - d_f4).max():.2e}, against sqrt(2)/{3**LEVEL} = {SQRT2 / 3**LEVEL:.2e}")
+    print(
+        f"  reduced distance of the lemmas (infinite carpets) minus dist(x, F_4): min {(d_red - d_f4).min():.1e}, max {(d_red - d_f4).max():.2e}, against sqrt(2)/{3**LEVEL} = {SQRT2 / 3**LEVEL:.2e}"
+    )
     centre = oracle.dist(np.array([[0.5, 0.5, 0.5]]))[0][0]
-    print(f"  dist(centre, F_4) = {centre:.17f}, sqrt(2)/6 = {SQRT2 / 6:.17f}, difference {abs(centre - SQRT2 / 6):.1e}")
+    print(
+        f"  dist(centre, F_4) = {centre:.17f}, sqrt(2)/6 = {SQRT2 / 6:.17f}, difference {abs(centre - SQRT2 / 6):.1e}"
+    )
     print(f"  wall {time.time() - t0:.1f} s")
 
 
@@ -173,7 +215,9 @@ def verb_montecarlo():
     rng = np.random.default_rng(7)
     cubes = prefractal()
     oracle = Oracle(cubes)
-    print("MONTECARLO: T(delta) from the reduced distance of the lemmas, and a lemma-free bracket from the level-4 prefractal")
+    print(
+        "MONTECARLO: T(delta) from the reduced distance of the lemmas, and a lemma-free bracket from the level-4 prefractal"
+    )
     n, chunk = 1_000_000, 100_000
     margin = SQRT2 / (6 * SIDE)
     low = {Fr(1, 8): 0, Fr(1, 12): 0}
@@ -184,17 +228,21 @@ def verb_montecarlo():
         for d in low:
             high[d] += int((d_f4 <= float(d)).sum())
             low[d] += int((d_f4 <= float(d) - margin).sum())
-    for d in low:
-        print(f"  lemma-free, {n} points against F_4: T({d}) in about [{low[d] / n * PLUS:.5f}, {high[d] / n * PLUS:.5f}], the count within delta an upper bound on T since F lies in F_4, the count within delta - sqrt(2)/486 a lower bound since every point of a kept cube is within sqrt(2)/486 of F, Monte Carlo 3 sigma {3 * np.sqrt(0.25 / n) * PLUS:.5f}")
+    for d, lo in low.items():
+        print(
+            f"  lemma-free, {n} points against F_4: T({d}) in about [{lo / n * PLUS:.5f}, {high[d] / n * PLUS:.5f}], the count within delta an upper bound on T since F lies in F_4, the count within delta - sqrt(2)/486 a lower bound since every point of a kept cube is within sqrt(2)/486 of F, Monte Carlo 3 sigma {3 * np.sqrt(0.25 / n) * PLUS:.5f}"
+        )
     n, chunk = 40_000_000, 2_000_000
     hits = {Fr(1, 12): 0, Fr(1, 8): 0, Fr(1, 6): 0}
     for _ in range(n // chunk):
         d_red = reduced(sample_plus(rng, chunk))
         for d in hits:
             hits[d] += int((d_red <= float(d)).sum())
-    for d in hits:
-        value, err = three_sigma(hits[d], n, PLUS)
-        print(f"  reduced distance, {n} points: T({d}) = {value:.6f} +- {err:.6f} (3 sigma)")
+    for d, h in hits.items():
+        value, err = three_sigma(h, n, PLUS)
+        print(
+            f"  reduced distance, {n} points: T({d}) = {value:.6f} +- {err:.6f} (3 sigma)"
+        )
     delta = Fr(1, 12)
     d = float(delta)
     a1 = st.lower(st.strip(delta)[0])
@@ -205,7 +253,9 @@ def verb_montecarlo():
         du, dv = carpet_dist(v, z, 1 / 3), carpet_dist(u, z, 1 / 3)
         hits += int(((u * u + du * du <= d * d) & (v * v + dv * dv <= d * d)).sum())
     value, err = three_sigma(hits, n, d * d / 3)
-    print(f"  overlap of the two wall tubes, {n} points of the column: V2({delta}) = {value:.8f} +- {err:.1e}, against 2 A1 - delta^2/3 = {float(2 * a1 - mpf(d) ** 2 / 3):.8f} with A1 from the generator")
+    print(
+        f"  overlap of the two wall tubes, {n} points of the column: V2({delta}) = {value:.8f} +- {err:.1e}, against 2 A1 - delta^2/3 = {float(2 * a1 - mpf(d) ** 2 / 3):.8f} with A1 from the generator"
+    )
     print(f"  wall {time.time() - t0:.1f} s")
 
 
@@ -215,7 +265,9 @@ def verb_montecarlo():
 def verb_seeded():
     t0 = time.time()
     rng = np.random.default_rng(20260921)
-    print("SEEDED: Deep sampled on its confinement box [delta - w, delta]^2 x [0, 1/3], w = (1/81)/(4 delta), and V2 on the column, seed 20260921")
+    print(
+        "SEEDED: Deep sampled on its confinement box [delta - w, delta]^2 x [0, 1/3], w = (1/81)/(4 delta), and V2 on the column, seed 20260921"
+    )
     for delta in (Fr(1, 6), Fr(1, 8)):
         d = float(delta)
         w = (1 / 81) / (4 * d)
@@ -224,18 +276,34 @@ def verb_seeded():
         deep_hits = 0
         v2_hits = 0
         for _ in range(n // chunk):
-            u, v, z = d - w * rng.random(chunk), d - w * rng.random(chunk), rng.random(chunk) / 3
+            u, v, z = (
+                d - w * rng.random(chunk),
+                d - w * rng.random(chunk),
+                rng.random(chunk) / 3,
+            )
             du, dv = carpet_dist(v, z, 1 / 3), carpet_dist(u, z, 1 / 3)
-            deep_hits += int(((u * u + du * du > d * d) & (v * v + dv * dv > d * d)).sum())
-            u, v, z = d * rng.random(chunk), d * rng.random(chunk), rng.random(chunk) / 3
+            deep_hits += int(
+                ((u * u + du * du > d * d) & (v * v + dv * dv > d * d)).sum()
+            )
+            u, v, z = (
+                d * rng.random(chunk),
+                d * rng.random(chunk),
+                rng.random(chunk) / 3,
+            )
             du, dv = carpet_dist(v, z, 1 / 3), carpet_dist(u, z, 1 / 3)
-            v2_hits += int(((u * u + du * du <= d * d) & (v * v + dv * dv <= d * d)).sum())
+            v2_hits += int(
+                ((u * u + du * du <= d * d) & (v * v + dv * dv <= d * d)).sum()
+            )
         deep, deep_err = three_sigma(deep_hits, n, w * w / 3)
         v2, v2_err = three_sigma(v2_hits, n, d * d / 3)
         a1 = st.lower(st.strip(delta)[0])
         ident = float(2 * a1 - mpf(d) ** 2 / 3) + deep
-        print(f"  delta = {delta}: Deep = {deep:.4e} +- {deep_err:.1e} (3 sigma, {deep_hits} hits of {n}), bound {bound:.4e}, ratio {bound / deep:.1f}")
-        print(f"  delta = {delta}: V2 = {v2:.7f} +- {v2_err:.1e} (3 sigma), against 2 A1 - delta^2/3 + Deep = {ident:.7f}, difference {v2 - ident:.1e}")
+        print(
+            f"  delta = {delta}: Deep = {deep:.4e} +- {deep_err:.1e} (3 sigma, {deep_hits} hits of {n}), bound {bound:.4e}, ratio {bound / deep:.1f}"
+        )
+        print(
+            f"  delta = {delta}: V2 = {v2:.7f} +- {v2_err:.1e} (3 sigma), against 2 A1 - delta^2/3 + Deep = {ident:.7f}, difference {v2 - ident:.1e}"
+        )
     print(f"  wall {time.time() - t0:.1f} s")
 
 
@@ -273,7 +341,12 @@ def cut_hole(s, c, d, prim=a1):
         return (s + 2 * c) * a0(tau, d) - 4 * prim(tau, d)
     t1, t2 = R(min(s - c, d)), R(min(s / 2, d))
     s, c, d = R(s), R(c), R(d)
-    return (s + 2 * c) * a0(t1, d) - 4 * prim(t1, d) + 4 * s * (a0(t2, d) - a0(t1, d)) - 8 * (prim(t2, d) - prim(t1, d))
+    return (
+        (s + 2 * c) * a0(t1, d)
+        - 4 * prim(t1, d)
+        + 4 * s * (a0(t2, d) - a0(t1, d))
+        - 8 * (prim(t2, d) - prim(t1, d))
+    )
 
 
 def column_holes(i, m):
@@ -295,7 +368,13 @@ def columns_below(count, digits):
 
 
 def wall_half(d, levels, prim=a1):
-    return sum(8 ** (m - 1) * hole(Fr(1, 3 ** (m + 1)), d, prim) for m in range(1, levels + 1)) / 2
+    return (
+        sum(
+            8 ** (m - 1) * hole(Fr(1, 3 ** (m + 1)), d, prim)
+            for m in range(1, levels + 1)
+        )
+        / 2
+    )
 
 
 def strip(d, levels, prim=a1):
@@ -314,7 +393,11 @@ def strip(d, levels, prim=a1):
 
 def tube_open(d, levels):
     x = R(d)
-    return (pi + 8) * x**2 - 8 * sqrt(2) * x**3 + 48 * (wall_half(d, levels) - strip(d, levels))
+    return (
+        (pi + 8) * x**2
+        - 8 * sqrt(2) * x**3
+        + 48 * (wall_half(d, levels) - strip(d, levels))
+    )
 
 
 def tube_upper(d):
@@ -354,9 +437,19 @@ def deep_bound(delta, tables, levels=7, tail_levels=80):
             sn = 3.0 ** (-(n + 1))
             wn = sn * sn / (4 * delta)
             i = np.arange(3 ** (m - 1))
-            vlen = np.clip(np.minimum((3 * i + 2) * sm, delta) - np.maximum((3 * i + 1) * sm, delta - wn), 0, None)
+            vlen = np.clip(
+                np.minimum((3 * i + 2) * sm, delta)
+                - np.maximum((3 * i + 1) * sm, delta - wn),
+                0,
+                None,
+            )
             k = np.arange(3 ** (n - 1))
-            ulen = np.clip(np.minimum((3 * k + 2) * sn, delta) - np.maximum((3 * k + 1) * sn, delta - wm), 0, None)
+            ulen = np.clip(
+                np.minimum((3 * k + 2) * sn, delta)
+                - np.maximum((3 * k + 1) * sn, delta - wm),
+                0,
+                None,
+            )
             boxes += float((vlen @ tables[m]) @ (ulen @ tables[n])) / cells / 3
     tail = 0.0
     for m in range(1, tail_levels + 1):
@@ -375,18 +468,42 @@ def verb_recompute():
     t0 = time.time()
     mp.dps = 60
     levels = 200
-    print("RECOMPUTE: the tube and the bands from the closed forms of the paper alone, 60 decimal digits, 200 hole levels")
+    print(
+        "RECOMPUTE: the tube and the bands from the closed forms of the paper alone, 60 decimal digits, 200 hole levels"
+    )
     for m in range(1, 7):
         digits = m - 1
-        brute = [sum(1 for r in range(3**digits) if all(not ((i // 3**k) % 3 == 1 and (r // 3**k) % 3 == 1) for k in range(digits))) for i in range(3**digits)]
+        brute = [
+            sum(
+                1
+                for r in range(3**digits)
+                if all(
+                    not ((i // 3**k) % 3 == 1 and (r // 3**k) % 3 == 1)
+                    for k in range(digits)
+                )
+            )
+            for i in range(3**digits)
+        ]
         assert brute == [column_holes(i, m) for i in range(3**digits)], m
-        assert all(columns_below(count, digits) == sum(brute[:count]) for count in range(3**digits + 1)), m
+        assert all(
+            columns_below(count, digits) == sum(brute[:count])
+            for count in range(3**digits + 1)
+        ), m
     print("  column counts of the strip validated by brute force to level 6")
     for s, d in ((Fr(1, 27), Fr(1, 12)), (Fr(1, 9), Fr(1, 6))):
-        q = quad(lambda t: 4 * (R(s) - 2 * t) * sqrt(R(d) ** 2 - t**2), [0, min(R(d), R(s) / 2)])
-        print(f"  J({s}, {d}) closed form minus quadrature: {mp.nstr(hole(s, d) - q, 3)}")
+        q = quad(
+            lambda t: 4 * (R(s) - 2 * t) * sqrt(R(d) ** 2 - t**2),
+            [0, min(R(d), R(s) / 2)],
+        )
+        print(
+            f"  J({s}, {d}) closed form minus quadrature: {mp.nstr(hole(s, d) - q, 3)}"
+        )
     mp.dps = 20
-    for s, c, d in ((Fr(1, 9), Fr(1, 72), Fr(1, 8)), (Fr(1, 9), Fr(7, 108), Fr(1, 6)), (Fr(1, 81), Fr(1, 200), Fr(1, 12))):
+    for s, c, d in (
+        (Fr(1, 9), Fr(1, 72), Fr(1, 8)),
+        (Fr(1, 9), Fr(7, 108), Fr(1, 6)),
+        (Fr(1, 81), Fr(1, 200), Fr(1, 12)),
+    ):
         s_, c_, d_ = R(s), R(c), R(d)
 
         def inner(v):
@@ -397,7 +514,9 @@ def verb_recompute():
             return quad(f, [0, min(v, s_ - v), s_ / 2, s_ - min(v, s_ - v), s_])
 
         q = quad(inner, [0, min(c_, s_ / 2), c_] if c_ > s_ / 2 else [0, c_])
-        print(f"  cut hole (s, c, delta) = ({s}, {c}, {d}) closed form minus 2D quadrature: {mp.nstr(cut_hole(s, c, d) - q, 3)}")
+        print(
+            f"  cut hole (s, c, delta) = ({s}, {c}, {d}) closed form minus 2D quadrature: {mp.nstr(cut_hole(s, c, d) - q, 3)}"
+        )
     mp.dps = 60
     tail_v1 = lambda d: R(d) * R(Fr(8, 9) ** levels) / 18
     tail_a1 = lambda d: R(d) * R(Fr(8, 9) ** levels) / 9
@@ -406,7 +525,9 @@ def verb_recompute():
         v1, s1 = wall_half(d, levels), strip(d, levels)
         t = tube_open(d, levels)
         deep = deep_bound(d, tables)
-        print(f"  delta = {d}: V1 = {mp.nstr(v1, 15)}, A1 = {mp.nstr(s1, 15)}, Deep bound {deep:.4e}, T in [{mp.nstr(t - 48 * tail_a1(d) - 24 * mpf(deep), 12)}, {mp.nstr(t + 48 * tail_v1(d), 12)}]")
+        print(
+            f"  delta = {d}: V1 = {mp.nstr(v1, 15)}, A1 = {mp.nstr(s1, 15)}, Deep bound {deep:.4e}, T in [{mp.nstr(t - 48 * tail_a1(d) - 24 * mpf(deep), 12)}, {mp.nstr(t + 48 * tail_v1(d), 12)}]"
+        )
     weight = mpf(27) / 20
     dim = log(20) / log(3)
     for eps in (Fr(1, 12), Fr(1, 8), Fr(1, 6)):
@@ -420,18 +541,24 @@ def verb_recompute():
         series_tail = weight**41 * tube_upper(eps / 3**41) * mpf(20) / 9
         hi += series_tail
         scale = exp((dim - 3) * log(R(eps)))
-        print(f"  eps = {eps}: p in [{mp.nstr(lo * scale, 12)}, {mp.nstr(hi * scale, 12)}], series tail {mp.nstr(series_tail, 3)}")
+        print(
+            f"  eps = {eps}: p in [{mp.nstr(lo * scale, 12)}, {mp.nstr(hi * scale, 12)}], series tail {mp.nstr(series_tail, 3)}"
+        )
     mp.dps = 200
     d = Fr(1, 12)
     v1, s1 = wall_half(d, levels, a1_naive), strip(d, levels, a1_naive)
     mp.dps = 60
-    print(f"  delta = 1/12 at 200 digits with a1 = (delta^3 - (delta^2 - t^2)^(3/2))/3: V1 = {mp.nstr(v1, 15)}, A1 = {mp.nstr(s1, 15)}")
+    print(
+        f"  delta = 1/12 at 200 digits with a1 = (delta^3 - (delta^2 - t^2)^(3/2))/3: V1 = {mp.nstr(v1, 15)}, A1 = {mp.nstr(s1, 15)}"
+    )
     n = 3000
     g = (np.arange(n) + 0.5) / (3 * n)
     v, z = np.meshgrid(g, g, indexing="ij")
     f = np.sqrt(np.maximum(float(d) ** 2 - carpet_dist(v, z, 1 / 3) ** 2, 0))
     cell = (1 / (3 * n)) ** 2
-    print(f"  delta = 1/12 on a {n}^2 midpoint grid of the carpet distance: V1 = {f.sum() * cell / 2:.9f}, A1 = {f[v <= float(d)].sum() * cell:.9f}")
+    print(
+        f"  delta = 1/12 on a {n}^2 midpoint grid of the carpet distance: V1 = {f.sum() * cell / 2:.9f}, A1 = {f[v <= float(d)].sum() * cell:.9f}"
+    )
     print(f"  wall {time.time() - t0:.1f} s")
 
 

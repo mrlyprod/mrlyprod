@@ -1,30 +1,30 @@
-import { useCallback, useRef, useState } from 'react';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { Scene } from '../../lib/app/page.jsx';
-import { paints } from '../../lib/color.js';
-import { useTheme } from '../../lib/designs/pick.jsx';
-import { cap, read, tag } from '../../lib/two/engine.js';
-import { SHEETS, SPEC, make, name as called, sketch } from './scene.js';
-import { Folds, design, knobs, useReroll, useShots, useStatus } from '../../lib/two/parts.jsx';
-import { useUnit } from '../../lib/app/hooks.js';
+import { useCallback, useRef, useState } from "react";
+import { Bar } from "../../lib/app/frame.jsx";
+import { useUnit } from "../../lib/app/hooks.js";
+import { Art, Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { paints } from "../../lib/color.js";
+import { useTheme } from "../../lib/designs/pick.jsx";
+import { cap, read, tag } from "../../lib/two/engine.js";
+import { design, Folds, knobs, useReroll, useShots, useStatus } from "../../lib/two/parts.jsx";
+import { name as called, make, SHEETS, SPEC, sketch } from "./scene.js";
 
 /* ROWS */
 
 export const rows = (f) => [
-  ['design', tag(f)],
-  ['copies', f.copies],
-  ['exposed', f.exposed],
-  ['one copy exposed', f.one],
-  ['fills', f.fills],
-  ['voids', f.voids],
-  ['tile', `${f.side} by ${f.side}`],
-  ['sheet', `${f.cols} by ${f.rows}`],
-  ['level', f.level],
-  ['corners', f.corners],
-  ['edges', f.edges],
-  ['euler', f.euler],
-  ['dimension', f.dimension.toFixed(4)],
+  ["design", tag(f)],
+  ["copies", f.copies],
+  ["exposed", f.exposed],
+  ["one copy exposed", f.one],
+  ["fills", f.fills],
+  ["voids", f.voids],
+  ["tile", `${f.side} by ${f.side}`],
+  ["sheet", `${f.cols} by ${f.rows}`],
+  ["level", f.level],
+  ["corners", f.corners],
+  ["edges", f.edges],
+  ["euler", f.euler],
+  ["dimension", f.dimension.toFixed(4)],
 ];
 
 /* PANES */
@@ -33,9 +33,9 @@ export function panes(value, onChange, unit) {
   return [
     design(value, onChange, unit, SPEC),
     {
-      name: 'Sheet',
+      name: "Sheet",
       live: `${value.x} by ${value.y}`,
-      body: knobs(['x', 'y'], value, onChange, SPEC),
+      body: knobs(["x", "y"], value, onChange, SPEC),
     },
   ];
 }
@@ -50,7 +50,19 @@ export function Sheets({ value, onChange, unit }) {
     <Library name="Sheets">
       <Shelf grid>
         {SHEETS.map(([label, x, y]) => (
-          <Item key={label} label={label} sub={`${x} by ${y}`} on={value.x === x && value.y === y} onPick={() => onChange({ x, y })} art={<Art deps={[x, y, ...deps]} paint={(ctx, w) => sketch(ctx, unit, value, x, y, w, paints(ctx.canvas, value.tint).accent)} />} />
+          <Item
+            key={label}
+            label={label}
+            sub={`${x} by ${y}`}
+            on={value.x === x && value.y === y}
+            onPick={() => onChange({ x, y })}
+            art={
+              <Art
+                deps={[x, y, ...deps]}
+                paint={(ctx, w) => sketch(ctx, unit, value, x, y, w, paints(ctx.canvas, value.tint).accent)}
+              />
+            }
+          />
         ))}
       </Shelf>
     </Library>
@@ -60,7 +72,7 @@ export function Sheets({ value, onChange, unit }) {
 /* WIDGET */
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units }) {
-  const unit = useUnit('math', units?.math);
+  const unit = useUnit("math", units?.math);
   const live = useRef(null);
   const now = useRef(value);
   now.current = value;
@@ -76,7 +88,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }) 
     const at = () => now.current;
     const hands = {
       seams: () => onChange({ seams: at().seams ? 0 : 1 }),
-      deeper: (by) => onChange({ level: Math.max(1, Math.min(cap(unit, at().number, at().x * at().y), at().level + by)) }),
+      deeper: (by) =>
+        onChange({ level: Math.max(1, Math.min(cap(unit, at().number, at().x * at().y), at().level + by)) }),
       wider: (by) => onChange({ x: Math.max(1, Math.min(12, at().x + by)) }),
     };
     onReady?.({ ...handle, ...hands });

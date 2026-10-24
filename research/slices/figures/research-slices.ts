@@ -1,6 +1,6 @@
 import * as math from "@mrlyprod/mrly/math";
-import { hex } from "#view";
 import type { Ink, Pen } from "#view";
+import { hex } from "#view";
 
 export const units = { math };
 
@@ -16,13 +16,16 @@ function slices() {
   const net = math.six.cut_design(232, SIDE, 1, 2);
   for (const cut of [carpet, net]) {
     const [height, width] = cut.cell.shape;
-    if (height !== 2 * SIDE || width < hex.row_len(SIDE, SIDE - 1)) throw new Error(`research-slices: the cut is ${height} by ${width}, want ${2 * SIDE} rows`);
+    if (height !== 2 * SIDE || width < hex.row_len(SIDE, SIDE - 1))
+      throw new Error(`research-slices: the cut is ${height} by ${width}, want ${2 * SIDE} rows`);
   }
   const fills = [math.six.fills(carpet), math.six.fills(net)];
   if (fills[0] !== 486) throw new Error(`research-slices: the carpet holds ${fills[0]} fills, want 486`);
   if (fills[1] !== 240) throw new Error(`research-slices: the net holds ${fills[1]} fills, want 240`);
-  if (math.six.holes(carpet) !== 19) throw new Error(`research-slices: the carpet holds ${math.six.holes(carpet)} holes, want 19`);
-  if (fills[0] + fills[1] !== hex.count(SIDE)) throw new Error(`research-slices: ${fills[0] + fills[1]} fills, want ${hex.count(SIDE)}`);
+  if (math.six.holes(carpet) !== 19)
+    throw new Error(`research-slices: the carpet holds ${math.six.holes(carpet)} holes, want 19`);
+  if (fills[0] + fills[1] !== hex.count(SIDE))
+    throw new Error(`research-slices: ${fills[0] + fills[1]} fills, want ${hex.count(SIDE)}`);
   memo = { carpet, net };
   return memo;
 }

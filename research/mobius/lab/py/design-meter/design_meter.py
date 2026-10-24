@@ -1,7 +1,7 @@
 import sys
 
 import numpy as np
-from mpmath import mp, findroot, mpc, mpf, power, zeta, zetazero
+from mpmath import findroot, mp, mpc, mpf, power, zeta, zetazero
 from scipy.ndimage import median_filter
 from scipy.stats import spearmanr
 
@@ -15,7 +15,13 @@ LINES = 14
 SHIFTS = 4000
 SEED = 20260907
 LADDER = (14, 16, 18, 20, 22)
-LADDER_CENSUS = {14: (11, 105), 16: (149, 173), 18: (-30, 312), 20: (496, 539), 22: (1009, 1089)}
+LADDER_CENSUS = {
+    14: (11, 105),
+    16: (149, 173),
+    18: (-30, 312),
+    20: (496, 539),
+    22: (1009, 1089),
+}
 DRAWS = 24
 SIGNS = 8
 DETAIL = ("3-01", "10-x9")
@@ -37,7 +43,12 @@ DESIGNS = {
     "10-x9": (10, (9,), 100000000, 5),
 }
 
-CENSUS = {"3-01": (496, 539), "3-02": (-382, 485), "3-12": (-1461, 1582), "10-x9": (2181, 5234)}
+CENSUS = {
+    "3-01": (496, 539),
+    "3-02": (-382, 485),
+    "3-12": (-1461, 1582),
+    "10-x9": (2181, 5234),
+}
 
 QUADRATIC = {3: {1: 1, 2: -1}, 4: {1: 1, 3: -1}, 5: {1: 1, 2: -1, 3: -1, 4: 1}}
 
@@ -82,7 +93,7 @@ def mobius_values(values):
     mu = np.ones(values.size, dtype=np.int8)
     rem = values.astype(np.int64).copy()
     alive = np.flatnonzero(rem > 1)
-    limit = int(round(float(values.max()) ** (1.0 / 3.0))) + 2
+    limit = round(float(values.max()) ** (1.0 / 3.0)) + 2
     for p in primes_upto(limit):
         if alive.size == 0:
             break
@@ -294,7 +305,9 @@ def split_null(values, support, exponent, rng, draws):
     for _ in range(draws):
         signs = np.zeros(values.size, dtype=np.int32)
         signs[support] = rng.choice([-1, 1], int(support.sum()))
-        out.append(split_correlation(values, np.cumsum(signs, dtype=np.int64), exponent)[0])
+        out.append(
+            split_correlation(values, np.cumsum(signs, dtype=np.int64), exponent)[0]
+        )
     return float(np.mean(out)), float(np.std(out))
 
 
@@ -356,7 +369,15 @@ def mean_field(n, base, digits, samples):
     meter = np.cumsum(np.add.reduceat(mu * mask, bounds[:-1]))
     del mu, mask
     scale = np.exp(alpha * 0.5 * log_x)
-    return log_x, alpha, meter[inverse] / scale, echo[inverse] / scale, (meter[inverse] - echo[inverse]) / scale, int(meter[-1]), seen
+    return (
+        log_x,
+        alpha,
+        meter[inverse] / scale,
+        echo[inverse] / scale,
+        (meter[inverse] - echo[inverse]) / scale,
+        int(meter[-1]),
+        seen,
+    )
 
 
 def upper_rms(series):
@@ -374,7 +395,9 @@ def kempner(n, base, missing):
 
 
 def line(tag, name, count, value, null, p):
-    print(f"  {tag:8s} {name:8s} n {count:3d} logscore {value:6.3f} null {null:6.3f} p {p:.4f}")
+    print(
+        f"  {tag:8s} {name:8s} n {count:3d} logscore {value:6.3f} null {null:6.3f} p {p:.4f}"
+    )
 
 
 def verb_sieve():
@@ -391,14 +414,18 @@ def verb_sieve():
         )
         want = CENSUS.get(name)
         if want:
-            print(f"anchor {name:8s} census {want} meter {(top, peak)} match {want == (top, peak)}")
+            print(
+                f"anchor {name:8s} census {want} meter {(top, peak)} match {want == (top, peak)}"
+            )
         del values, mu, running
     lhs, lmu = design(9, (0, 1, 3, 4), 10)
     rhs, rmu = design(3, (0, 1), 20)
     same = bool(np.array_equal(lhs, rhs)) and bool(np.array_equal(lmu, rmu))
     print(f"identity base 9 F 0134 equals base 3 F 01 at 3^20 {same}")
     _, _, anchor = control_series(CONTROL, 1024)
-    print(f"control base 10 full set M(10^8) {anchor} A084237 {CONTROL_ANCHOR} match {anchor == CONTROL_ANCHOR}")
+    print(
+        f"control base 10 full set M(10^8) {anchor} A084237 {CONTROL_ANCHOR} match {anchor == CONTROL_ANCHOR}"
+    )
 
 
 def sources(name):
@@ -422,7 +449,9 @@ def census_row(name, rng, zeros, cache, detail=False):
     gamma, power = power_spectrum(log_x, series)
     score = scored(gamma, power)
     rho, _ = split_correlation(values, running, alpha * 0.5)
-    mean, sigma = split_null(values, support, alpha * 0.5, rng, DRAWS if values.size < 5000000 else 6)
+    mean, sigma = split_null(
+        values, support, alpha * 0.5, rng, DRAWS if values.size < 5000000 else 6
+    )
     z = (rho - mean) / sigma if sigma > 0 else 0.0
     cells = []
     for label, targets in families(q, alpha, conductor, zeros, cache):
@@ -435,7 +464,10 @@ def census_row(name, rng, zeros, cache, detail=False):
     )
     print("  meter    " + "  ".join(cells))
     if detail:
-        for tag, weight in (("count", np.ones(values.size, dtype=np.int64)), ("random", None)):
+        for tag, weight in (
+            ("count", np.ones(values.size, dtype=np.int64)),
+            ("random", None),
+        ):
             if weight is None:
                 weight = np.zeros(values.size, dtype=np.int32)
                 weight[support] = rng.choice([-1, 1], int(support.sum()))
@@ -449,7 +481,9 @@ def census_row(name, rng, zeros, cache, detail=False):
                 _, value, null, p = shift_test(g, sc, targets, rng)
                 cells.append(f"{label} {value:6.3f}/{null:5.3f} p {p:.4f}")
             print(f"  {tag:8s} " + "  ".join(cells))
-            print(f"  {tag:8s} split {split_correlation(values, run, exponent)[0]:7.4f}")
+            print(
+                f"  {tag:8s} split {split_correlation(values, run, exponent)[0]:7.4f}"
+            )
         found = peaks(gamma, score)
         for i in sorted(found[np.argsort(-score[found])][:6]):
             row = f"  peak {gamma[i]:8.4f} score {score[i]:8.2f}"
@@ -496,7 +530,9 @@ def verb_spectrum():
     for i in sorted(order):
         near = min(zeros, key=lambda z: abs(z - gamma[i]))
         matched += abs(near - gamma[i]) < gamma[1]
-        print(f"  peak {gamma[i]:8.4f} score {score[i]:11.1f} zeta {near:8.4f} off {abs(near - gamma[i]):5.3f}")
+        print(
+            f"  peak {gamma[i]:8.4f} score {score[i]:11.1f} zeta {near:8.4f} off {abs(near - gamma[i]):5.3f}"
+        )
     print(f"  control top 10 peaks within one bin of a zeta zero {matched} of 10")
     print()
     for name in DESIGNS:
@@ -506,7 +542,9 @@ def verb_spectrum():
             print(f"anchor {name:8s} census {want} meter {got} match {want == got}")
         print()
     for n, base, digits in FIELD:
-        log_x, alpha, meter, echo, residual, top, count = mean_field(n, base, digits, SAMPLES)
+        log_x, alpha, meter, echo, residual, top, count = mean_field(
+            n, base, digits, SAMPLES
+        )
         print(
             f"field  base {base} F {''.join(str(d) for d in digits)} N {n} alpha {alpha:.6f}"
             f" A_F {count} M_F {top} bin {2 * np.pi / (log_x[-1] - log_x[0]):.4f}"
@@ -563,17 +601,27 @@ def verb_family():
     rng = np.random.default_rng(SEED)
     zeros = zeta_zeros()
     cache = {}
-    for left, right in (("4-01", "9-012"), ("3-01", "9-0123"), ("3-01", "9-0134"), ("3-01", "3-02"), ("10-x9", "3-01")):
+    for left, right in (
+        ("4-01", "9-012"),
+        ("3-01", "9-0123"),
+        ("3-01", "9-0134"),
+        ("3-01", "3-02"),
+        ("10-x9", "3-01"),
+    ):
         rows = []
         for name in (left, right):
             q, alpha, conductor, values, mu = sources(name)
-            log_x, series = design_series(values, np.cumsum(mu, dtype=np.int64), alpha * 0.5, SAMPLES)
+            log_x, series = design_series(
+                values, np.cumsum(mu, dtype=np.int64), alpha * 0.5, SAMPLES
+            )
             gamma, power = power_spectrum(log_x, series)
             score = scored(gamma, power)
             rows.append((name, q, alpha, gamma, score, peaks(gamma, score), values, mu))
         (an, aq, aa, ag, asc, ap, av, amu), (bn, bq, ba, bg, bsc, bp, bv, bmu) = rows
         width = max(float(ag[1]), float(bg[1]))
-        shared = sum(1 for i in ap if bp.size and np.min(np.abs(bg[bp] - ag[i])) < width)
+        shared = sum(
+            1 for i in ap if bp.size and np.min(np.abs(bg[bp] - ag[i])) < width
+        )
         cover = min(1.0, bp.size * 2.0 * width / (BAND[1] - BAND[0]))
         print(
             f"family {an:8s} alpha {aa:.6f} peaks {ap.size} against {bn:8s} alpha {ba:.6f}"
@@ -590,11 +638,18 @@ def verb_family():
             for _ in range(SIGNS):
                 weight = np.zeros(values.size, dtype=np.int32)
                 weight[support] = rng.choice([-1, 1], int(support.sum()))
-                lx, sr = design_series(values, np.cumsum(weight, dtype=np.int64), alpha * 0.5, SAMPLES)
+                lx, sr = design_series(
+                    values, np.cumsum(weight, dtype=np.int64), alpha * 0.5, SAMPLES
+                )
                 g, pw = power_spectrum(lx, sr)
                 counts.append(int(peaks(g, scored(g, pw)).size))
-            print(f"  random  {name:8s} peaks {min(counts)} to {max(counts)} over {SIGNS} sign draws")
-        for name, q, alpha, gamma, score in ((an, aq, aa, ag, asc), (bn, bq, ba, bg, bsc)):
+            print(
+                f"  random  {name:8s} peaks {min(counts)} to {max(counts)} over {SIGNS} sign draws"
+            )
+        for name, q, alpha, gamma, score in (
+            (an, aq, aa, ag, asc),
+            (bn, bq, ba, bg, bsc),
+        ):
             conductor = DESIGNS[name][3]
             cells = []
             for label, targets in families(q, alpha, conductor, zeros, cache):

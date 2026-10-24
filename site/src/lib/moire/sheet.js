@@ -6,14 +6,20 @@ export function fit(w, h, fill = FIT) {
 }
 
 export function shell(canvas, view) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const sheets = new Map();
   const sheet = (size) => {
     if (!sheets.has(size)) sheets.set(size, new OffscreenCanvas(size, size));
     return sheets.get(size);
   };
   const put = ({ colors }, size) => {
-    sheet(size).getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(colors.buffer, colors.byteOffset, colors.length), size, size), 0, 0);
+    sheet(size)
+      .getContext("2d")
+      .putImageData(
+        new ImageData(new Uint8ClampedArray(colors.buffer, colors.byteOffset, colors.length), size, size),
+        0,
+        0,
+      );
   };
   const clear = () => {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -34,7 +40,7 @@ export function stamp(ctx, { colors }, size) {
     return;
   }
   const tile = new OffscreenCanvas(size, size);
-  tile.getContext('2d').putImageData(image, 0, 0);
+  tile.getContext("2d").putImageData(image, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(tile, 0, 0, side, side);
 }

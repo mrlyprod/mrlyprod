@@ -269,7 +269,7 @@ def reflection_closed(keep, q):
         if not keep[b]:
             continue
         for a in range(1, b):
-            if gcd(a, b) == 1 and not (keep[a] == keep[b - a]):
+            if gcd(a, b) == 1 and keep[a] != keep[b - a]:
                 return False
     return True
 
@@ -302,9 +302,15 @@ def verb_denominator():
         mu = mobius_sieve(q)
         lit = literal_denominator(keep, q, FREQS)
         print(f"\n{design[2]}, Q = {q}")
-        print("    m | sum_(d|m) d M_F(Q/d; d) |    Re literal |    Im literal |       err")
+        print(
+            "    m | sum_(d|m) d M_F(Q/d; d) |    Re literal |    Im literal |       err"
+        )
         for m in FREQS:
-            exact = sum(d * mertens_dilated(keep, mu, q, d) for d in range(1, m + 1) if m % d == 0)
+            exact = sum(
+                d * mertens_dilated(keep, mu, q, d)
+                for d in range(1, m + 1)
+                if m % d == 0
+            )
             v = lit[m]
             err = abs(v - exact)
             print(f"{m:5d} | {exact:23d} | {v.real:13.9f} | {v.imag:13.9f} | {err:.3e}")
@@ -332,12 +338,21 @@ SCAN_FLOOR = 100
 
 SCAN = [(BASE3, 2187), (BASE10, 400), ((0, None, "full set, control"), 400)]
 
-ID_CASES = [(BASE3, 81, 200000), (BASE3, 243, 200000), (BASE10, 40, 200000), ((0, None, "full set, control"), 40, 200000)]
+ID_CASES = [
+    (BASE3, 81, 200000),
+    (BASE3, 243, 200000),
+    (BASE10, 40, 200000),
+    ((0, None, "full set, control"), 40, 200000),
+]
 
 
 def verb_identity():
-    print("\nTHE DIGIT-RESTRICTED FRANEL IDENTITY, GCD-KERNEL SIDE AGAINST THE FOURIER SIDE")
-    print("   set                        |    Q |    m |      G_F(Q) | (pi^2/3) G_F |  truncated |      gap |  tail bound")
+    print(
+        "\nTHE DIGIT-RESTRICTED FRANEL IDENTITY, GCD-KERNEL SIDE AGAINST THE FOURIER SIDE"
+    )
+    print(
+        "   set                        |    Q |    m |      G_F(Q) | (pi^2/3) G_F |  truncated |      gap |  tail bound"
+    )
     for design, q, cut in ID_CASES:
         keep = keep_of(design, q)
         mu = mobius_sieve(q)
@@ -351,28 +366,45 @@ def verb_identity():
         )
 
     print("\n   THE RANK FORM, G_F(Q) - 1 = 12 m sum delta^2, exact rationals")
-    print("   set                        |    Q |    m |   sum delta^2 |  G_F - 1 == 12 m sum delta^2")
-    for design, q in [(BASE3, 81), (BASE3, 243), (BASE10, 40), ((0, None, "full set, control"), 40)]:
+    print(
+        "   set                        |    Q |    m |   sum delta^2 |  G_F - 1 == 12 m sum delta^2"
+    )
+    for design, q in [
+        (BASE3, 81),
+        (BASE3, 243),
+        (BASE10, 40),
+        ((0, None, "full set, control"), 40),
+    ]:
         keep = keep_of(design, q)
         mu = mobius_sieve(q)
         g, _ = kernel_sum(keep, mu, q)
         m, s2 = farey_delta_square(keep, q)
-        print(f"   {design[2]:26s} | {q:4d} | {m:4d} | {float(s2):13.10f} | {g - 1 == 12 * m * s2}")
+        print(
+            f"   {design[2]:26s} | {q:4d} | {m:4d} | {float(s2):13.10f} | {g - 1 == 12 * m * s2}"
+        )
 
     print("\n   the backward inequality 2 M_F(Q)^2 <= (pi^2/3) G_F(Q), sampled")
     print("   set                        |      Q |  M_F(Q) |   (pi^2/3) G_F |  ratio")
-    for design, ladder in [(BASE3, [243, 2187]), (BASE10, [100, 1000]), ((0, None, "full set, control"), [100, 1000])]:
+    for design, ladder in [
+        (BASE3, [243, 2187]),
+        (BASE10, [100, 1000]),
+        ((0, None, "full set, control"), [100, 1000]),
+    ]:
         for q in ladder:
             keep = keep_of(design, q)
             mu = mobius_sieve(q)
             g, _ = kernel_sum(keep, mu, q)
             mf = mertens_design(keep, mu, q)
             ident = float(g) * pi * pi / 3.0
-            print(f"   {design[2]:26s} | {q:6d} | {mf:7d} | {ident:14.6f} | {2.0 * mf * mf / ident:.6f}")
+            print(
+                f"   {design[2]:26s} | {q:6d} | {mf:7d} | {ident:14.6f} | {2.0 * mf * mf / ident:.6f}"
+            )
 
     print("\n   the same inequality asserted at EVERY integer Q up to the bound")
     print("   both sides step only at Q in S_F, so scanning S_F covers every integer Q")
-    print("   set                        |   Qmax | jumps | violations |  max ratio |  at Q |  max over Q >= 100 |  at Q")
+    print(
+        "   set                        |   Qmax | jumps | violations |  max ratio |  at Q |  max over Q >= 100 |  at Q"
+    )
     for design, qmax in SCAN:
         seen, bad, best, at, tail, tail_at = scan_backward(design, qmax)
         assert bad == 0
@@ -397,7 +429,13 @@ def verb_strict():
             if not keep[b]:
                 continue
             n += 1
-            worst = max(worst, abs(strict_ramanujan_literal(keep, b) - strict_ramanujan_divisor(keep, mu, b)))
+            worst = max(
+                worst,
+                abs(
+                    strict_ramanujan_literal(keep, b)
+                    - strict_ramanujan_divisor(keep, mu, b)
+                ),
+            )
         print(f"   {design[2]:26s} | {q:4d} | {n:12d} | {worst:.3e}")
 
     print("\nTHE STRICT SET, THE FIRST Q WITH A NONZERO IMAGINARY PART")
@@ -516,13 +554,17 @@ def verb_dilate():
     acc = dilate_accept(base, digits, 2)
     for r, row in enumerate(t):
         print(f"   carry {r} -> {row}   accept {acc[r]}")
-    print(f"   row sums {[sum(r) for r in t]}, column sums {[sum(c) for c in zip(*t)]}, |F| = {len(digits)}")
+    print(
+        f"   row sums {[sum(r) for r in t]}, column sums {[sum(c) for c in zip(*t)]}, |F| = {len(digits)}"
+    )
     print("\n    L |    3^L | transfer matrix | brute force |    2^L - 1")
     for lvl in range(1, 13):
         x = base**lvl
         auto = automaton_count(base, digits, 2, lvl) - 1
         brute = int(dilate_mask(base, digits, 2, x - 1).sum())
-        print(f"   {lvl:2d} | {x:6d} | {auto:15d} | {brute:11d} | {2**lvl - 1:10d}  {'ok' if auto == brute else 'MISMATCH'}")
+        print(
+            f"   {lvl:2d} | {x:6d} | {auto:15d} | {brute:11d} | {2**lvl - 1:10d}  {'ok' if auto == brute else 'MISMATCH'}"
+        )
 
     print("\nTHE COLUMN-SUM LAW, every dilate d <= 64, both designs")
     for bb, dd, nm in (BASE3, BASE10):
@@ -533,29 +575,46 @@ def verb_dilate():
                 bad += 1
             if any(sum(r) != len(dd) for r in m):
                 off.append(d)
-        print(f"   {nm:26s} columns off |F| at {bad} of 64; rows off |F| at {len(off)} of 64, every one with gcd(d,q) > 1: {all(gcd(d, bb) > 1 for d in off)}")
+        print(
+            f"   {nm:26s} columns off |F| at {bad} of 64; rows off |F| at {len(off)} of 64, every one with gcd(d,q) > 1: {all(gcd(d, bb) > 1 for d in off)}"
+        )
 
-    for bb, dd, nm, ds in ((BASE3[0], BASE3[1], BASE3[2], DILATE_D3), (BASE10[0], BASE10[1], BASE10[2], DILATE_D10)):
+    for bb, dd, nm, ds in (
+        (BASE3[0], BASE3[1], BASE3[2], DILATE_D3),
+        (BASE10[0], BASE10[1], BASE10[2], DILATE_D10),
+    ):
         al = np.log(len(dd)) / np.log(bb)
         print(f"\nTHE ACCEPT MASS, {nm}, K_d = A_d(q^24)/|F|^24 against |Acc_d|/d")
         print("      d | gcd(d,q) |     K_d | |Acc_d|/d | d^(alpha-1)")
         for d in ds + ([8, 16, 32] if bb == 10 else []):
             k = automaton_count(bb, dd, d, 24) / len(dd) ** 24
             a = sum(dilate_accept(bb, dd, d))
-            print(f"   {d:6d} | {gcd(d, bb):8d} | {k:7.4f} | {a / d:9.6f} | {d ** (al - 1):11.6f}")
+            print(
+                f"   {d:6d} | {gcd(d, bb):8d} | {k:7.4f} | {a / d:9.6f} | {d ** (al - 1):11.6f}"
+            )
 
-    for bb, dd, nm, top, ds in ((3, BASE3[1], BASE3[2], 12, DILATE_D3), (10, BASE10[1], BASE10[2], 7, DILATE_D10[:7])):
+    for bb, dd, nm, top, ds in (
+        (3, BASE3[1], BASE3[2], 12, DILATE_D3),
+        (10, BASE10[1], BASE10[2], 7, DILATE_D10[:7]),
+    ):
         x = bb**top
         mu = mobius_sieve(x)
         al = np.log(len(dd)) / np.log(bb)
         root = x ** (al / 2)
         print(f"\nTHE DILATED METER, {nm}, x = {bb}^{top} = {x}")
-        print("      d |  A_d(x) |  M_F(x;d) | max |M| | log max/log x | same at x/q | (U) ratio | (U\u0027) ratio |  local exponents")
+        print(
+            "      d |  A_d(x) |  M_F(x;d) | max |M| | log max/log x | same at x/q | (U) ratio | (U\u0027) ratio |  local exponents"
+        )
         for d in ds:
             ok = dilate_mask(bb, dd, d, x)
             run = np.cumsum(np.where(ok, mu[1 : x + 1], 0))
-            peaks = [int(np.abs(run[: bb**lvl]).max()) for lvl in range(top - 4, top + 1)]
-            loc = [round(float(np.log(peaks[i + 1] / peaks[i]) / np.log(bb)), 3) for i in range(len(peaks) - 1)]
+            peaks = [
+                int(np.abs(run[: bb**lvl]).max()) for lvl in range(top - 4, top + 1)
+            ]
+            loc = [
+                round(float(np.log(peaks[i + 1] / peaks[i]) / np.log(bb)), 3)
+                for i in range(len(peaks) - 1)
+            ]
             mass, peak = int(ok.sum()), peaks[-1]
             ru = peak / (d ** ((al - 1) / 2) * root)
             rv = peak / (qfree(d, bb) ** ((al - 1) / 2) * root)
@@ -579,8 +638,12 @@ def verb_dilate():
         )
 
     al = np.log(2) / np.log(3)
-    print(f"\nTHE SMITH REDUCTION, B(Q) = sum gcd(d,e)^2/(d e) sqrt(N_F(Q;d) N_F(Q;e)), {BASE3[2]}")
-    print("        Q |  A_F(Q) |        B(Q) | B/Q^alpha | B/(Q^alpha ln Q) | B/(Q^alpha ln^2 Q) | local exponent")
+    print(
+        f"\nTHE SMITH REDUCTION, B(Q) = sum gcd(d,e)^2/(d e) sqrt(N_F(Q;d) N_F(Q;e)), {BASE3[2]}"
+    )
+    print(
+        "        Q |  A_F(Q) |        B(Q) | B/Q^alpha | B/(Q^alpha ln Q) | B/(Q^alpha ln^2 Q) | local exponent"
+    )
     prev = None
     for lvl in range(4, 9):
         cut = 3**lvl
@@ -624,7 +687,9 @@ GAP_POWER = 400
 
 
 def verb_converse():
-    print("\nTHE SCOPE OF D1, D2, D5, automaton against brute force, q = 3, 4, 5, every F, d <= 6, L <= 5")
+    print(
+        "\nTHE SCOPE OF D1, D2, D5, automaton against brute force, q = 3, 4, 5, every F, d <= 6, L <= 5"
+    )
     tally = {True: [0, 0], False: [0, 0]}
     for base in SCOPE_BASES:
         for digits in subsets(base):
@@ -632,15 +697,21 @@ def verb_converse():
                 for lvl in range(1, 6):
                     row = tally[0 in digits]
                     row[0] += 1
-                    row[1] += positive_count(base, digits, d, lvl) != brute_dilate(base, digits, d, lvl)
+                    row[1] += positive_count(base, digits, d, lvl) != brute_dilate(
+                        base, digits, d, lvl
+                    )
     for key, label in ((True, "0 in F"), (False, "0 not in F")):
         n, bad = tally[key]
         print(f"   {label:12s} {bad:4d} mismatches of {n:4d}")
     base, digits, d, lvl = 3, {1, 2}, 1, 3
-    print(f"   witness q = 3, F = {{1,2}}, d = 1, L = 3: automaton {positive_count(base, digits, d, lvl)}, "
-          f"true {brute_dilate(base, digits, d, lvl)}, |F|^L {len(digits) ** lvl}")
+    print(
+        f"   witness q = 3, F = {{1,2}}, d = 1, L = 3: automaton {positive_count(base, digits, d, lvl)}, "
+        f"true {brute_dilate(base, digits, d, lvl)}, |F|^L {len(digits) ** lvl}"
+    )
 
-    print(f"\nTHE MASS CONSTANT, K_d against |Acc_d|/d at L = {GAP_POWER}, every F with 0 in F, gcd(d,q) = 1, 2 <= d <= 24")
+    print(
+        f"\nTHE MASS CONSTANT, K_d against |Acc_d|/d at L = {GAP_POWER}, every F with 0 in F, gcd(d,q) = 1, 2 <= d <= 24"
+    )
     split = {True: [0, 0], False: [0, 0]}
     odd = []
     for base in GAP_BASES:
@@ -651,21 +722,34 @@ def verb_converse():
             for d in range(2, 25):
                 if gcd(d, base) != 1:
                     continue
-                k = automaton_count(base, digits, d, GAP_POWER) / len(digits) ** GAP_POWER
+                k = (
+                    automaton_count(base, digits, d, GAP_POWER)
+                    / len(digits) ** GAP_POWER
+                )
                 row = split[gcd(d, gap) == 1]
                 row[0] += 1
                 good = abs(k - sum(dilate_accept(base, digits, d)) / d) < 1e-9
                 row[1] += good
                 if good == (gcd(d, gap) > 1):
-                    odd.append((base, sorted(digits), d, round(k, 6), sum(dilate_accept(base, digits, d)) / d))
+                    odd.append(
+                        (
+                            base,
+                            sorted(digits),
+                            d,
+                            round(k, 6),
+                            sum(dilate_accept(base, digits, d)) / d,
+                        )
+                    )
     for key, label in ((True, "gcd(d, gap) = 1"), (False, "gcd(d, gap) > 1")):
         n, ok = split[key]
         print(f"   {label:16s} {ok:5d} agree, {n - ok:5d} fail, of {n:5d}")
     print(f"   off the split: {odd}")
     base, digits, d = 3, {0, 2}, 2
-    print(f"   witness q = 3, F = {{0,2}}, gap 2, d = 2: counts "
-          f"{[brute_dilate(base, digits, d, lvl) + 1 for lvl in range(1, 9)]}, |F|^L, so K_2 = 1 against "
-          f"|Acc_2|/2 = {sum(dilate_accept(base, digits, d)) / d}")
+    print(
+        f"   witness q = 3, F = {{0,2}}, gap 2, d = 2: counts "
+        f"{[brute_dilate(base, digits, d, lvl) + 1 for lvl in range(1, 9)]}, |F|^L, so K_2 = 1 against "
+        f"|Acc_2|/2 = {sum(dilate_accept(base, digits, d)) / d}"
+    )
 
     base, digits, name = BASE3
     al = np.log(len(digits)) / np.log(base)
@@ -674,21 +758,35 @@ def verb_converse():
     mu = mobius_sieve(x)
     run = np.cumsum(np.where(dilate_mask(base, digits, 1, x), mu[1 : x + 1], 0))
     peak, tail = int(np.abs(run).max()), int(run[-1])
-    print(f"\n(U) IS UNSATISFIABLE, {name}, x = {base}^{top}, M_F(x; {base}^j) = M_F(x) = {tail} at every j by D4")
-    print("      j |        d = q^j | d^((alpha-1)/2) x^(alpha/2) | |M_F| / bound | max |M| / bound")
+    print(
+        f"\n(U) IS UNSATISFIABLE, {name}, x = {base}^{top}, M_F(x; {base}^j) = M_F(x) = {tail} at every j by D4"
+    )
+    print(
+        "      j |        d = q^j | d^((alpha-1)/2) x^(alpha/2) | |M_F| / bound | max |M| / bound"
+    )
     for j in range(top + 1):
         d = base**j
         bound = d ** ((al - 1) / 2) * x ** (al / 2)
-        print(f"   {j:4d} | {d:14d} | {bound:27.4f} | {abs(tail) / bound:13.3f} | {peak / bound:15.3f}")
+        print(
+            f"   {j:4d} | {d:14d} | {bound:27.4f} | {abs(tail) / bound:13.3f} | {peak / bound:15.3f}"
+        )
 
     base, digits, name = BASE10
-    print(f"\nTHE BASE-SMOOTH MASS, {name}, K_d at L = 24 over the base-smooth d <= 1000")
+    print(
+        f"\nTHE BASE-SMOOTH MASS, {name}, K_d at L = 24 over the base-smooth d <= 1000"
+    )
     smooth = sorted(d for d in range(1, 1001) if qfree(d, base) == 1)
-    masses = {d: automaton_count(base, digits, d, 24) / len(digits) ** 24 for d in smooth}
+    masses = {
+        d: automaton_count(base, digits, d, 24) / len(digits) ** 24 for d in smooth
+    }
     lo = min(masses, key=masses.get)
     hi = max(masses, key=masses.get)
-    print(f"   {len(smooth)} such d; K_d in [{masses[lo]:.4f} at d = {lo}, {masses[hi]:.4f} at d = {hi}]")
-    print(f"   sample {[(d, round(masses[d], 4)) for d in (2, 4, 5, 8, 16, 32, 64, 128, 256, 512, 625)]}")
+    print(
+        f"   {len(smooth)} such d; K_d in [{masses[lo]:.4f} at d = {lo}, {masses[hi]:.4f} at d = {hi}]"
+    )
+    print(
+        f"   sample {[(d, round(masses[d], 4)) for d in (2, 4, 5, 8, 16, 32, 64, 128, 256, 512, 625)]}"
+    )
     ratio = {}
     for d in range(1, 201):
         f = qfree(d, base)
@@ -698,7 +796,9 @@ def verb_converse():
         ratio[d] = k / kf
     lo = min(ratio, key=ratio.get)
     hi = max(ratio, key=ratio.get)
-    print(f"   K_d / K_(q-free part) over d <= 200 in [{ratio[lo]:.4f} at d = {lo}, {ratio[hi]:.4f} at d = {hi}]")
+    print(
+        f"   K_d / K_(q-free part) over d <= 200 in [{ratio[lo]:.4f} at d = {lo}, {ratio[hi]:.4f} at d = {hi}]"
+    )
 
 
 # THE SANDWICH
@@ -781,16 +881,31 @@ def top_singular(a, steps=3000, seed=1):
     return float(np.linalg.norm(a @ v))
 
 
-SANDWICH = [(BASE3, [81, 243, 729, 2187, 6561]), ((0, None, "full set, control"), [40, 81, 243])]
+SANDWICH = [
+    (BASE3, [81, 243, 729, 2187, 6561]),
+    ((0, None, "full set, control"), [40, 81, 243]),
+]
 
 SANDWICH_EXACT = 729
 
-RANK_CASES = [(3, {0, 1}, 40), (10, set(range(9)), 40), (3, {0, 2}, 40), (4, {0, 2, 3}, 40), (5, {0, 2, 4}, 40), (10, {0, 2, 5, 7}, 40)]
+RANK_CASES = [
+    (3, {0, 1}, 40),
+    (10, set(range(9)), 40),
+    (3, {0, 2}, 40),
+    (4, {0, 2, 3}, 40),
+    (5, {0, 2, 4}, 40),
+    (10, {0, 2, 5, 7}, 40),
+]
 
 
 def verb_sandwich():
-    print("\nTHE SANDWICH, G_F(Q) = sum_f (J_2(f)/f^2) y_f^2 with y_f = sum_m x_(fm)/m, x_d = M_F(Q/d; d)")
-    print("   6/pi^2 = %.6f; exact means the Jordan form and the gcd double sum agree as rationals" % (6 / pi**2))
+    print(
+        "\nTHE SANDWICH, G_F(Q) = sum_f (J_2(f)/f^2) y_f^2 with y_f = sum_m x_(fm)/m, x_d = M_F(Q/d; d)"
+    )
+    print(
+        "   6/pi^2 = %.6f; exact means the Jordan form and the gcd double sum agree as rationals"
+        % (6 / pi**2)
+    )
     print(
         "   set                        |     Q |      G_F(Q) | sum x^2 | sum y^2 | G/sum y^2 | G/sum x^2 |"
         " x_1^2/sum x^2 |   exact | double gap"
@@ -816,8 +931,12 @@ def verb_sandwich():
                 f"{float(g) / sx:9.6f} | {int(x[1]) ** 2 / sx:13.6f} | {exact:>7s} | {gap:.1e}   {time.time() - t0:4.1f} s"
             )
 
-    print("\n   THE TWO MAPS, l^2 operator norms on vectors indexed by d <= Q, against the Schur bound N_Q^(1/2)")
-    print("   N_Q = H_Q max_(d<=Q) sigma(d)/d; the power readings are Rayleigh quotients, lower bounds on the norms")
+    print(
+        "\n   THE TWO MAPS, l^2 operator norms on vectors indexed by d <= Q, against the Schur bound N_Q^(1/2)"
+    )
+    print(
+        "   N_Q = H_Q max_(d<=Q) sigma(d)/d; the power readings are Rayleigh quotients, lower bounds on the norms"
+    )
     print(
         "   set                        |     Q |    H_Q | max sigma/d | at d |    N_Q | (6/pi^2)/N_Q |  N_Q^(1/2) | 1 + ln Q |"
         " norm x->y | norm y->x | sqrt(sum y^2/sum x^2)"
@@ -833,8 +952,12 @@ def verb_sandwich():
             f"{np.sqrt(nq):10.6f} | {1 + np.log(q):8.4f} | {na:9.6f} | {nb:9.6f} | {np.sqrt(sy / sx):9.6f}"
         )
 
-    print("\n   THE RANK FORM'S CONSTANT, G_F(Q) - 12 m sum delta^2 as an exact rational at every Q in S_F up to the bound")
-    print("   base | digits          | 1 in F |  Qmax | jumps | constants | G_F(26) | 12 m S2 at 26")
+    print(
+        "\n   THE RANK FORM'S CONSTANT, G_F(Q) - 12 m sum delta^2 as an exact rational at every Q in S_F up to the bound"
+    )
+    print(
+        "   base | digits          | 1 in F |  Qmax | jumps | constants | G_F(26) | 12 m S2 at 26"
+    )
     for base, digits, qmax in RANK_CASES:
         keep = flags(base, frozenset(digits), qmax)
         mu = mobius_sieve(qmax)
@@ -848,7 +971,9 @@ def verb_sandwich():
             consts.add(g - 12 * m * s2)
             if q == 26:
                 at26 = f"{float(g):.6f} | {float(12 * m * s2):.6f}"
-        print(f"   {base:4d} | {str(sorted(digits)):15s} | {str(1 in digits):6s} | {qmax:5d} | {len(consts):5d} | {sorted(consts)} | {at26}")
+        print(
+            f"   {base:4d} | {sorted(digits)!s:15s} | {1 in digits!s:6s} | {qmax:5d} | {len(consts):5d} | {sorted(consts)} | {at26}"
+        )
 
 
 # THE ACCEPTING LAW
@@ -934,7 +1059,6 @@ def mult_order(base, d):
 
 
 def pair_carry_matrix(base, digits, r):
-    ds = [sum(1 for f in digits if f == v) for v in range(base)]
     dist = {0: 1}
     for _ in range(r):
         nxt = {}
@@ -982,7 +1106,9 @@ def pair_count(base, digits, r, t):
     vec = [Fraction(0)] * len(cls)
     vec[i] = Fraction(1)
     for _ in range(t):
-        vec = [sum(vec[a] * exact[a][b] for a in range(len(cls))) for b in range(len(cls))]
+        vec = [
+            sum(vec[a] * exact[a][b] for a in range(len(cls))) for b in range(len(cls))
+        ]
     return int(vec[i])
 
 
@@ -992,9 +1118,12 @@ def perron_certificate(mat, floor, steps=2000):
         v = mat @ v
         v /= v.max()
     rho = float((mat @ v).max() / v.max())
-    vq = [Fraction(int(round(x * 10**9)), 10**9) for x in v]
+    vq = [Fraction(round(x * 10**9), 10**9) for x in v]
     exact = [[Fraction(int(x)) for x in row] for row in mat]
-    quot = [sum(exact[a][b] * vq[b] for b in range(len(mat))) / vq[a] for a in range(len(mat))]
+    quot = [
+        sum(exact[a][b] * vq[b] for b in range(len(mat))) / vq[a]
+        for a in range(len(mat))
+    ]
     return rho, min(quot), min(quot) > floor
 
 
@@ -1002,8 +1131,12 @@ def verb_accepting():
     base, digits, name = BASE3
     fill = len(digits)
     al = np.log(fill) / np.log(base)
-    print(f"\nTHE SURROGATE, {name}: sum tau(m) <= B(Q) <= (1 + ln Q) sum_d (sigma(d)/d) N_F(Q;d) <= (1 + ln Q)^2 sum tau(m)")
-    print("    L |      Q | A_F(Q) | sum tau |        B(Q) | B/sum tau | amgm bound | bound/B | (1+lnQ)^2 sum tau | B/(Q^a ln^2 Q) | double gap")
+    print(
+        f"\nTHE SURROGATE, {name}: sum tau(m) <= B(Q) <= (1 + ln Q) sum_d (sigma(d)/d) N_F(Q;d) <= (1 + ln Q)^2 sum tau(m)"
+    )
+    print(
+        "    L |      Q | A_F(Q) | sum tau |        B(Q) | B/sum tau | amgm bound | bound/B | (1+lnQ)^2 sum tau | B/(Q^a ln^2 Q) | double gap"
+    )
     for lvl in range(4, 13):
         t0 = time.time()
         cut = base**lvl
@@ -1022,8 +1155,12 @@ def verb_accepting():
             f"{amgm / b:7.3f} | {top:17.1f} | {b / (cut**al * np.log(cut) ** 2):14.4f} | {gap:>10s}   {time.time() - t0:.1f} s"
         )
 
-    print(f"\nTHE LAW METER, {name}: R(Q, d) = N_F(Q; d) d_co / A_F(Q) over d <= Q^(1/2), Q = 3^L")
-    print("    L |  d <= | max R | argmax | max R at coprime d | argmax | cells within 0.02 of the max | R(Q,4) | 1 + 2^(1-L/2) - 2^(2-L) | N at coprime argmax | Mobius peak there | peak/N^(1/2)")
+    print(
+        f"\nTHE LAW METER, {name}: R(Q, d) = N_F(Q; d) d_co / A_F(Q) over d <= Q^(1/2), Q = 3^L"
+    )
+    print(
+        "    L |  d <= | max R | argmax | max R at coprime d | argmax | cells within 0.02 of the max | R(Q,4) | 1 + 2^(1-L/2) - 2^(2-L) | N at coprime argmax | Mobius peak there | peak/N^(1/2)"
+    )
     for lvl in range(8, 17):
         cut = base**lvl
         members = design_below(base, digits, lvl)
@@ -1043,28 +1180,44 @@ def verb_accepting():
         argc = int(ds[copr][r[copr].argmax()])
         r4 = float(r[3])
         pred = 1 + 2 ** (1 - lvl / 2) - 2 ** (2 - lvl) if lvl % 2 == 0 else float("nan")
-        near_s = " ".join(str(v) for v in near[:12]) + (" ..." if len(near) > 12 else "")
+        near_s = " ".join(str(v) for v in near[:12]) + (
+            " ..." if len(near) > 12 else ""
+        )
         cs = np.sort(members[members % argc == 0] // argc)
         mu = mobius_sieve(cut // argc)
         peak = int(np.abs(np.cumsum(mu[cs])).max())
         print(
             f"   {lvl:2d} | {top:5d} | {best:.4f} | {arg:6d} | {bestc:18.4f} | {argc:6d} | {near_s:28s} | {r4:.4f} | {pred:.4f} | "
-            f"{cs.size:19d} | {peak:17d} | {peak / cs.size ** 0.5:12.4f}"
+            f"{cs.size:19d} | {peak:17d} | {peak / cs.size**0.5:12.4f}"
         )
 
-    print(f"\nTHE RIPPLE, {name}: A_4(3^L/4) / A_F(3^L/4) against #Acc_4/4 = 3/4, and N_F(3^L; 4) against 2^(L-2) + 2^(L/2-1) - 1")
-    print("    L | N_F(3^L;4) = A_4(3^L/4) | A_F(floor(3^L/4)) |  ratio | 2^(L-2)+2^(L/2-1)-1 | A_4(3^L)/2^L")
+    print(
+        f"\nTHE RIPPLE, {name}: A_4(3^L/4) / A_F(3^L/4) against #Acc_4/4 = 3/4, and N_F(3^L; 4) against 2^(L-2) + 2^(L/2-1) - 1"
+    )
+    print(
+        "    L | N_F(3^L;4) = A_4(3^L/4) | A_F(floor(3^L/4)) |  ratio | 2^(L-2)+2^(L/2-1)-1 | A_4(3^L)/2^L"
+    )
     for lvl in (8, 10, 12, 14):
         cut = base**lvl
         members = design_below(base, digits, lvl)
         n4 = int((members % 4 == 0).sum())
         af4 = int((members <= cut // 4).sum())
         wide = design_below(base, digits, lvl + 2)
-        a4 = int(((wide <= 4 * cut) & (wide % 4 == 0)).sum()) + 1 - int(holds(base, digits, 4 * cut))
-        print(f"   {lvl:2d} | {n4:23d} | {af4:17d} | {n4 / af4:.4f} | {2 ** (lvl - 2) + 2 ** (lvl // 2 - 1) - 1:19d} | {a4 / 2**lvl:.4f}")
+        a4 = (
+            int(((wide <= 4 * cut) & (wide % 4 == 0)).sum())
+            + 1
+            - int(holds(base, digits, 4 * cut))
+        )
+        print(
+            f"   {lvl:2d} | {n4:23d} | {af4:17d} | {n4 / af4:.4f} | {2 ** (lvl - 2) + 2 ** (lvl // 2 - 1) - 1:19d} | {a4 / 2**lvl:.4f}"
+        )
 
-    print(f"\nTHE REPUNITS, {name}: N_F(3^(kt); R_t) at R_t = (3^t - 1)/2 against 2^t + 1, 2 3^t + 1 and 6^t + 5^t + 3^t + 1")
-    print("    t |  R_t | k = 2 | 2^t+1 | k = 3 | 2 3^t+1 | k = 4 | 6^t+5^t+3^t+1 | R at k = 2 | x = 2 3^t + 2 | (U') yard | peak | ratio | peak/N^(1/2)")
+    print(
+        f"\nTHE REPUNITS, {name}: N_F(3^(kt); R_t) at R_t = (3^t - 1)/2 against 2^t + 1, 2 3^t + 1 and 6^t + 5^t + 3^t + 1"
+    )
+    print(
+        "    t |  R_t | k = 2 | 2^t+1 | k = 3 | 2 3^t+1 | k = 4 | 6^t+5^t+3^t+1 | R at k = 2 | x = 2 3^t + 2 | (U') yard | peak | ratio | peak/N^(1/2)"
+    )
     for t in range(2, 9):
         rep = (base**t - 1) // 2
         cells = []
@@ -1088,8 +1241,12 @@ def verb_accepting():
             f"{6**t + 5**t + 3**t + 1:13d} | {cells[0] * rep / 2 ** (2 * t):10.4f} | {x:13d} | {yard:9.3f} | {peak:4d} | {peak / yard:5.3f} | {peak / len(cs) ** 0.5:12.3f}"
         )
 
-    print(f"\nTHE ENERGIES, {name}: K_r(t) = #(u_1..u_r, v_1..v_r) in D_t^(2r) with u_1+..+u_r = v_1+..+v_r, carry class of 0, Perron root rho_r, Lambda(2r) = 3 rho_r")
-    print("    r | carries | K_r(1) K_r(2) K_r(3) | brute K_r(2) |      rho_r |  Lambda(2r) | Lambda/4^r | certificate min (Mv)_c/v_c > 4^r/3 | char poly")
+    print(
+        f"\nTHE ENERGIES, {name}: K_r(t) = #(u_1..u_r, v_1..v_r) in D_t^(2r) with u_1+..+u_r = v_1+..+v_r, carry class of 0, Perron root rho_r, Lambda(2r) = 3 rho_r"
+    )
+    print(
+        "    r | carries | K_r(1) K_r(2) K_r(3) | brute K_r(2) |      rho_r |  Lambda(2r) | Lambda/4^r | certificate min (Mv)_c/v_c > 4^r/3 | char poly"
+    )
     for r in range(1, 6):
         cls, mat = pair_carry_matrix(base, digits, r)
         counts = [pair_count(base, digits, r, t) for t in (1, 2, 3)]
@@ -1103,18 +1260,27 @@ def verb_accepting():
         rho, low, ok = perron_certificate(mat, Fraction(4**r, 3))
         poly = np.rint(np.poly(mat)).astype(np.int64)
         print(
-            f"   {r:2d} | {str(cls):>16s} | {counts[0]:6d} {counts[1]:6d} {counts[2]:6d} | {brute:12d} | {rho:10.6f} | {3 * rho:11.6f} | "
-            f"{3 * rho / 4**r:10.6f} | {float(low):12.6f} {str(ok):>5s} | {' '.join(str(c) for c in poly)}"
+            f"   {r:2d} | {cls!s:>16s} | {counts[0]:6d} {counts[1]:6d} {counts[2]:6d} | {brute:12d} | {rho:10.6f} | {3 * rho:11.6f} | "
+            f"{3 * rho / 4**r:10.6f} | {float(low):12.6f} {ok!s:>5s} | {' '.join(str(c) for c in poly)}"
         )
 
-    print(f"\nTHE ROOTS OF UNITY, {name}: E_d = sum over a != 0 mod d of abs(hat F_L(a/d)) / 2^L over d <= 3^(L/2)")
-    print("    L |  d <= | max E_d | argmax | ord_d(3) | E at d = 3^(L/2) - 1 | (3^t - 1)/2^t - 1 | N_F(3^L; 3^(L/2)-1) | R there")
+    print(
+        f"\nTHE ROOTS OF UNITY, {name}: E_d = sum over a != 0 mod d of abs(hat F_L(a/d)) / 2^L over d <= 3^(L/2)"
+    )
+    print(
+        "    L |  d <= | max E_d | argmax | ord_d(3) | E at d = 3^(L/2) - 1 | (3^t - 1)/2^t - 1 | N_F(3^L; 3^(L/2)-1) | R there"
+    )
     for lvl in range(8, 17, 2):
         t0 = time.time()
         cut = base**lvl
         top = base ** (lvl // 2)
         members = design_below(base, digits, lvl)
-        e = np.array([roots_l1(base, digits, lvl, d) / fill**lvl if d > 1 else 0.0 for d in range(1, top + 1)])
+        e = np.array(
+            [
+                roots_l1(base, digits, lvl, d) / fill**lvl if d > 1 else 0.0
+                for d in range(1, top + 1)
+            ]
+        )
         arg = int(e.argmax()) + 1
         pinned = top - 1
         t = lvl // 2
@@ -1141,7 +1307,9 @@ def repunit(base, t):
 def marked_block(base, digits, t):
     parts = [np.array([base**t], dtype=np.int64)]
     for k in range(t):
-        parts.append(base**k * (base * (base - 1) * padded_strings(base, digits, t - 1 - k) + 1))
+        parts.append(
+            base**k * (base * (base - 1) * padded_strings(base, digits, t - 1 - k) + 1)
+        )
     return np.sort(np.concatenate(parts))
 
 
@@ -1168,7 +1336,13 @@ def repunit_pari(base, ts):
             f"for(i=0,n-1, c={base - 1}*fromdigits(binary(i),{base})+1; s+=moebius(c); mx=max(mx,abs(s))); "
             f'e=s; s+=moebius({base}^{t}+1); mx=max(mx,abs(s)); print({t}," ",e," ",s," ",mx," ",getabstime()-tt);'
         )
-    out = subprocess.run(["gp", "-q"], input="\n".join(lines) + "\n", capture_output=True, text=True, check=True).stdout
+    out = subprocess.run(
+        ["gp", "-q"],
+        input="\n".join(lines) + "\n",
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
     rows = {}
     for line in out.split("\n"):
         if line.strip():
@@ -1224,11 +1398,17 @@ def verb_repunit():
                 f"   {t:2d} | {rep:10d} | {x:12d} | {n:8d} | {tcol} | {total - end:9d} | {total:12d} | {peak:11d} | {ycol} | "
                 f"{n**0.5:7.1f} | {n**0.6:8.1f} | {peak / n**0.5:12.4f} | {peak / n**0.6:12.4f} | {peak / yard:10.3f} | {checks:23s} | {pari[t][3]:.1f}"
             )
-        print(f"   sieve to {base}^{top_sieve} + 1 in {sieve_time:.1f} s, design total {time.time() - t0:.1f} s")
+        print(
+            f"   sieve to {base}^{top_sieve} + 1 in {sieve_time:.1f} s, design total {time.time() - t0:.1f} s"
+        )
 
     base, digits, name = 3, frozenset({0, 2}), "base 3, digits {0,2}"
-    print(f"\nTHE SCALED DESIGN, {name}: S_F = 2 S_(0,1), so d^(-1) S_F = (d/2)^(-1) S_(0,1) at even d and 2 (d^(-1) S_(0,1)) at odd d")
-    print("    t | 3^t-1 | dilate at 3^t - 1 is the {0,1} repunit dilate | M_F(x_t; 3^t - 1) | {0,1} reading | R_t | R_t dilate obeys the law")
+    print(
+        f"\nTHE SCALED DESIGN, {name}: S_F = 2 S_(0,1), so d^(-1) S_F = (d/2)^(-1) S_(0,1) at even d and 2 (d^(-1) S_(0,1)) at odd d"
+    )
+    print(
+        "    t | 3^t-1 | dilate at 3^t - 1 is the {0,1} repunit dilate | M_F(x_t; 3^t - 1) | {0,1} reading | R_t | R_t dilate obeys the law"
+    )
     mu = mobius_sieve(3**8 + 2)
     ones = frozenset({0, 1})
     for t in range(2, 7):
@@ -1245,7 +1425,9 @@ def verb_repunit():
             law = np.sort(m1[m1 % (rep // 2) == 0] // (rep // 2))
             law = law[law <= 2 * (3**t + 1)]
         obeys = bool(half.size == law.size and (half == law).all())
-        print(f"   {t:2d} | {3**t - 1:5d} | {str(same):>43s} | {int(mu[full].sum()):17d} | {int(mu[aff].sum()):13d} | {rep:3d} | {str(obeys):>24s}")
+        print(
+            f"   {t:2d} | {3**t - 1:5d} | {same!s:>43s} | {int(mu[full].sum()):17d} | {int(mu[aff].sum()):13d} | {rep:3d} | {obeys!s:>24s}"
+        )
 
 
 def main():

@@ -7,6 +7,7 @@ DIM = 2
 BASES = (2, 3)
 TOP = 24
 
+
 def wallis(top):
     even = {2: Fraction(16, 3)}
     odd = {3: Fraction(3, 8)}
@@ -22,6 +23,7 @@ def wallis(top):
         k += 1
     return even, odd
 
+
 def squarefree_divisors(q):
     primes = sp.primefactors(q)
     out = []
@@ -33,6 +35,7 @@ def squarefree_divisors(q):
             out.append((value, (-1) ** size))
     return out
 
+
 def bracket(design, q):
     total = len(design)
     acc = Fraction(0)
@@ -41,11 +44,13 @@ def bracket(design, q):
         acc += mu * Fraction(count, total)
     return acc
 
+
 def base_factor(q, dim):
     factor = Fraction(1)
     for p in sp.primefactors(q):
         factor /= 1 - Fraction(1, p**dim)
     return factor
+
 
 def designs(q, dim):
     cells = list(product(range(q), repeat=dim))
@@ -54,12 +59,15 @@ def designs(q, dim):
         if len(picked) >= 2:
             yield tuple(picked)
 
+
 def main():
     even, odd = wallis(TOP)
     print("MISMATCH: design coprime densities against the Version L family")
     print("  bracket B(F) = Sum_{e | rad(q)} mu(e) k_e / k")
     print("  delta = B(F) (1/zeta(D)) Prod_{p | q} (1 - p^-D)^-1")
-    print(f"  at D = {DIM} that is delta = numerator/Pi^2 with numerator = 6 B(F) factor")
+    print(
+        f"  at D = {DIM} that is delta = numerator/Pi^2 with numerator = 6 B(F) factor"
+    )
     print(f"  Version L swept at d = 2..{TOP}")
 
     numerators = {}
@@ -94,6 +102,9 @@ def main():
 
     print("  the one match in closed form")
     for q, d, r, _ in hits:
-        print(f"  base {q}, d = {d}: ({r})/Pi^2 = {sp.N(sp.Rational(r.numerator, r.denominator) / sp.pi**2, 16)}")
+        print(
+            f"  base {q}, d = {d}: ({r})/Pi^2 = {sp.N(sp.Rational(r.numerator, r.denominator) / sp.pi**2, 16)}"
+        )
+
 
 main()

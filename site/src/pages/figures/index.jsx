@@ -1,11 +1,11 @@
-import { figures } from 'site:figures';
-import { Figure, hide, Lede, show } from '../../shell/parts.jsx';
+import { figures } from "site:figures";
+import { Figure, hide, Lede, show } from "../../shell/parts.jsx";
 
 export const layout = { wide: true, bare: true };
 
 const live = new WeakMap();
 
-export function render(row, site, host) {
+export function render(row, _site, host) {
   const names = Object.keys(figures).sort();
   show(
     host,
@@ -24,11 +24,11 @@ export function render(row, site, host) {
 
 export function mount(host) {
   const drawn = (event) => {
-    const caption = event.target.querySelector('figcaption');
+    const caption = event.target.querySelector("figcaption");
     if (caption) caption.textContent = `${event.target.dataset.figure} ${event.detail.toFixed(1)} ms`;
   };
-  host.addEventListener('drawn', drawn);
-  live.set(host, () => host.removeEventListener('drawn', drawn));
+  host.addEventListener("drawn", drawn);
+  live.set(host, () => host.removeEventListener("drawn", drawn));
 }
 
 export function unmount(host) {

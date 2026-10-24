@@ -47,7 +47,8 @@ export default function draw(pen) {
   const r = box.radius();
   const spokes = streaks(r);
   const longest = Math.max(...spokes.map((s) => s.head - s.tail));
-  for (const { tail } of spokes) if (tail <= r * POINT) throw new Error("lightspeed: a streak crosses the vanishing point");
+  for (const { tail } of spokes)
+    if (tail <= r * POINT) throw new Error("lightspeed: a streak crosses the vanishing point");
   pen.disc(cx, cy, r * HALO, [255, 255, 255, 45]);
   for (const { angle, head, tail } of spokes) {
     const t = (head - tail) / longest;

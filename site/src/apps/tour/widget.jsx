@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { rng } from '../../lib/rand.js';
-import { Scene } from '../../lib/app/page.jsx';
-import { ledger } from '../../lib/sequences/engine.js';
-import { CARDS, build, shown } from './cards.js';
-import { make } from './scene.js';
-import { useReroll, useUnits } from '../../lib/app/hooks.js';
-import { wasm } from '../../lib/units/index.js';
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useReroll, useUnits } from "../../lib/app/hooks.js";
+import { Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { rng } from "../../lib/rand.js";
+import { ledger } from "../../lib/sequences/engine.js";
+import { wasm } from "../../lib/units/index.js";
+import { build, CARDS, shown } from "./cards.js";
+import { make } from "./scene.js";
 
-const UNITS = wasm('math', 'num');
+const UNITS = wasm("math", "num");
 
 const STILL = {};
 
@@ -44,16 +44,28 @@ export function Widget({ value, onChange, onReady, onStatus }) {
   const made = useMemo(() => (units && book ? build({ ...units, book }, card, step) : null), [units, book, card, step]);
   const said = shown(card, step);
   useEffect(() => {
-    live.current = { made, card, shown: `${CARDS[card].label.toLowerCase()} ${said}`, version: live.current.version + 1 };
+    live.current = {
+      made,
+      card,
+      shown: `${CARDS[card].label.toLowerCase()} ${said}`,
+      version: live.current.version + 1,
+    };
     stage.current?.draw?.();
   }, [made]);
   const link = made?.lines.find((line) => line.link);
-  const toldKey = made ? `${card}|${step}|${made.lines.map((line) => line.terms.join()).join('|')}` : '';
+  const toldKey = made ? `${card}|${step}|${made.lines.map((line) => line.terms.join()).join("|")}` : "";
   useEffect(() => {
     if (!made) return onStatus?.([]);
     const rows = [[CARDS[card].label.toLowerCase(), said]];
-    made.lines.forEach((line) => rows.push([line.label, `${line.terms.join(', ')}${line.capped ? ', to the budget' : ''}`]));
-    if (link) rows.push(['ledger', <a href={link.link}>open in sequences</a>]);
+    for (const line of made.lines)
+      rows.push([line.label, `${line.terms.join(", ")}${line.capped ? ", to the budget" : ""}`]);
+    if (link)
+      rows.push([
+        "ledger",
+        <a key="ledger" href={link.link}>
+          open in sequences
+        </a>,
+      ]);
     onStatus?.(rows);
   }, [toldKey]);
   const handle = {
@@ -76,11 +88,24 @@ export function Widget({ value, onChange, onReady, onStatus }) {
   if (!units) return null;
   return (
     <>
-      <Scene make={scene} value={STILL} onReady={ready} onPointerUp={tap} role="img" aria-label={`${card + 1}, ${one.title}: ${one.say}`} />
+      <Scene
+        make={scene}
+        value={STILL}
+        onReady={ready}
+        onPointerUp={tap}
+        role="img"
+        aria-label={`${card + 1}, ${one.title}: ${one.say}`}
+      />
       <Library name="Cards">
         <Shelf>
           {CARDS.map((each, i) => (
-            <Item key={each.key} label={each.title} sub={String(i + 1)} on={i === card} onPick={() => tell.current?.({ card: i, step: each.first })} />
+            <Item
+              key={each.key}
+              label={each.title}
+              sub={String(i + 1)}
+              on={i === card}
+              onPick={() => tell.current?.({ card: i, step: each.first })}
+            />
           ))}
         </Shelf>
       </Library>

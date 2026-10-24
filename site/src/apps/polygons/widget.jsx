@@ -1,13 +1,13 @@
-import { useRef } from 'react';
-import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { Scene } from '../../lib/app/page.jsx';
-import { useLatest } from '../../lib/app/hooks.js';
-import { paints } from '../../lib/color.js';
-import { useTheme } from '../../lib/designs/pick.jsx';
-import { SETS, make } from './scene.js';
-import { inks, swatch } from './swatch.js';
+import { useRef } from "react";
+import { useLatest } from "../../lib/app/hooks.js";
+import { Art, Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { paints } from "../../lib/color.js";
+import { useTheme } from "../../lib/designs/pick.jsx";
+import { make, SETS } from "./scene.js";
+import { inks, swatch } from "./swatch.js";
 
-const NAMES = { square: '4.4.4.4', triangle: '3.3.3.3.3.3', hex: '6.6.6', cube: 'rhombille', mix: '3.4.6.4' };
+const NAMES = { square: "4.4.4.4", triangle: "3.3.3.3.3.3", hex: "6.6.6", cube: "rhombille", mix: "3.4.6.4" };
 
 const named = (word) => word[0].toUpperCase() + word.slice(1);
 
@@ -19,12 +19,37 @@ export function Shelves({ value, onChange }) {
     <Library>
       <Shelf name="Shapes" grid>
         {SETS.shape.map((one) => (
-          <Item key={one} label={named(one)} sub={NAMES[one]} on={one === shape} onPick={() => onChange({ shape: one })} art={<Art paint={(ctx, w, h) => swatch(ctx, w, h, dye(ctx), { shape: one, palette, seed, noise })} deps={[one, palette, seed, noise, tint, tick]} />} />
+          <Item
+            key={one}
+            label={named(one)}
+            sub={NAMES[one]}
+            on={one === shape}
+            onPick={() => onChange({ shape: one })}
+            art={
+              <Art
+                paint={(ctx, w, h) => swatch(ctx, w, h, dye(ctx), { shape: one, palette, seed, noise })}
+                deps={[one, palette, seed, noise, tint, tick]}
+              />
+            }
+          />
         ))}
       </Shelf>
       <Shelf name="Palettes" grid>
         {SETS.palette.map((one) => (
-          <Item key={one || 'seeded'} label={one ? named(one) : 'Seeded'} on={one === palette} onPick={() => onChange({ palette: one })} art={<Art paint={(ctx, w, h) => swatch(ctx, w, h, dye(ctx), { shape: 'square', palette: one, seed, noise, cells: 5 })} deps={[one, seed, noise, tint, tick]} />} />
+          <Item
+            key={one || "seeded"}
+            label={one ? named(one) : "Seeded"}
+            on={one === palette}
+            onPick={() => onChange({ palette: one })}
+            art={
+              <Art
+                paint={(ctx, w, h) =>
+                  swatch(ctx, w, h, dye(ctx), { shape: "square", palette: one, seed, noise, cells: 5 })
+                }
+                deps={[one, seed, noise, tint, tick]}
+              />
+            }
+          />
         ))}
       </Shelf>
     </Library>

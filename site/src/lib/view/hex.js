@@ -2,17 +2,34 @@
 
 const RATIO = 0.8660254037844386;
 
-const north = (x, y) => [[x, 2 * y + 2], [x + 1, 2 * y], [x + 2, 2 * y + 2]];
-const south = (x, y) => [[x, 2 * y], [x + 1, 2 * y + 2], [x + 2, 2 * y]];
-const east = (x, y) => [[2 * x, y], [2 * x, y + 2], [2 * x + 2, y + 1]];
-const west = (x, y) => [[2 * x + 2, y], [2 * x + 2, y + 2], [2 * x, y + 1]];
+const north = (x, y) => [
+  [x, 2 * y + 2],
+  [x + 1, 2 * y],
+  [x + 2, 2 * y + 2],
+];
+const south = (x, y) => [
+  [x, 2 * y],
+  [x + 1, 2 * y + 2],
+  [x + 2, 2 * y],
+];
+const east = (x, y) => [
+  [2 * x, y],
+  [2 * x, y + 2],
+  [2 * x + 2, y + 1],
+];
+const west = (x, y) => [
+  [2 * x + 2, y],
+  [2 * x + 2, y + 2],
+  [2 * x, y + 1],
+];
 
 function shrink(pts, gap) {
   const cx = (pts[0][0] + pts[1][0] + pts[2][0]) / 3;
   const cy = (pts[0][1] + pts[1][1] + pts[2][1]) / 3;
   const side = (a, b) => Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
   const perimeter = side(pts[0], pts[1]) + side(pts[1], pts[2]) + side(pts[2], pts[0]);
-  const area = Math.abs((pts[1][0] - pts[0][0]) * (pts[2][1] - pts[0][1]) - (pts[2][0] - pts[0][0]) * (pts[1][1] - pts[0][1])) / 2;
+  const area =
+    Math.abs((pts[1][0] - pts[0][0]) * (pts[2][1] - pts[0][1]) - (pts[2][0] - pts[0][0]) * (pts[1][1] - pts[0][1])) / 2;
   const inradius = (2 * area) / perimeter;
   const k = inradius > 0 ? Math.max((inradius - gap) / inradius, 0) : 0;
   return pts.map((p) => [cx + (p[0] - cx) * k, cy + (p[1] - cy) * k]);
@@ -98,8 +115,16 @@ export function hexagon(pen, frame, n, gap, ink) {
       const pointing = (col % 2 === 0) === up;
       const j = Math.floor(col / 2);
       const points = pointing
-        ? [[bx + j * side, y1], [bx + (j + 1) * side, y1], [bx + (j + 0.5) * side, y0]]
-        : [[tx + j * side, y0], [tx + (j + 1) * side, y0], [tx + (j + 0.5) * side, y1]];
+        ? [
+            [bx + j * side, y1],
+            [bx + (j + 1) * side, y1],
+            [bx + (j + 0.5) * side, y0],
+          ]
+        : [
+            [tx + j * side, y0],
+            [tx + (j + 1) * side, y0],
+            [tx + (j + 0.5) * side, y1],
+          ];
       const color = ink(row, col, pointing ? 1 : 0);
       if (color) {
         const small = shrink(points, gap);

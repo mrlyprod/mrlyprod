@@ -254,7 +254,9 @@ def sieve_block(zk3, zki, inv_zk3):
         f"  vs 1/zeta_K3(2) = {inv_zk3:.5f}"
     )
     assert enorm(emul((3, 2), (1, 5))) == enorm((3, 2)) * enorm((1, 5))
-    print(f"gcd(6,9) in Z[omega] has norm {enorm(egcd((6, 0), (9, 0)))} (expect 9 = N(3))")
+    print(
+        f"gcd(6,9) in Z[omega] has norm {enorm(egcd((6, 0), (9, 0)))} (expect 9 = N(3))"
+    )
     for base in (2, 3, 5):
         for level in range(1, 5):
             new = fresh(base, level)
@@ -270,10 +272,14 @@ def sieve_block(zk3, zki, inv_zk3):
 
 
 def main():
-    print(f"domain: decimal prec {PREC}, Euler-Maclaurin {EULER_TERMS} terms through B_20")
-    print(f"domain: Dirichlet {PAIRS} pairs, lattice norm <= {CUTOFF}"
-          f" (radius {lattice_radius(CUTOFF)}), census [1,{SIDE}]^2,"
-          f" sieve {TRIALS} pairs in [-{RADIUS},{RADIUS}]^2")
+    print(
+        f"domain: decimal prec {PREC}, Euler-Maclaurin {EULER_TERMS} terms through B_20"
+    )
+    print(
+        f"domain: Dirichlet {PAIRS} pairs, lattice norm <= {CUTOFF}"
+        f" (radius {lattice_radius(CUTOFF)}), census [1,{SIDE}]^2,"
+        f" sieve {TRIALS} pairs in [-{RADIUS},{RADIUS}]^2"
+    )
     zk3, zki, inv_zk3 = precision_block()
     sieve_block(zk3, zki, inv_zk3)
 

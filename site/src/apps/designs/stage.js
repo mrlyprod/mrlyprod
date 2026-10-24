@@ -1,5 +1,5 @@
-import { rgb } from '../../lib/color.js';
-import { SWING, THETA, TILT, eye, frustum } from '../../lib/designs/mesh.js';
+import { rgb } from "../../lib/color.js";
+import { eye, frustum, SWING, THETA, TILT } from "../../lib/designs/mesh.js";
 
 const TAU = Math.PI * 2;
 const ORBIT = 48000;
@@ -14,8 +14,8 @@ const lean = (phi) => Math.min(LEAN, Math.max(-LEAN, phi));
 
 function shape(three, built) {
   const geometry = new three.BufferGeometry();
-  geometry.setAttribute('position', new three.BufferAttribute(built.position, 3));
-  geometry.setAttribute('normal', new three.BufferAttribute(built.normal, 3));
+  geometry.setAttribute("position", new three.BufferAttribute(built.position, 3));
+  geometry.setAttribute("normal", new three.BufferAttribute(built.normal, 3));
   geometry.setIndex(new three.BufferAttribute(built.index, 1));
   return geometry;
 }

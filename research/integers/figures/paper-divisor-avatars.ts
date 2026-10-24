@@ -1,6 +1,6 @@
 import * as math from "@mrlyprod/mrly/math";
-import { iso } from "#view";
 import type { Ink, Pen, Point } from "#view";
+import { iso } from "#view";
 
 export const units = { math };
 
@@ -24,11 +24,14 @@ let memo: { marks: Mark[]; faces: iso.Face[] } | undefined;
 function marks() {
   if (memo) return memo;
   const solid = math.three.carpet(SIDE, 1);
-  if (solid.shape.length !== 3 || solid.shape.some((n) => n !== SIDE)) throw new Error(`paper-divisor-avatars: the solid is ${solid.shape}, want ${SIDE} by ${SIDE} by ${SIDE}`);
+  if (solid.shape.length !== 3 || solid.shape.some((n) => n !== SIDE))
+    throw new Error(`paper-divisor-avatars: the solid is ${solid.shape}, want ${SIDE} by ${SIDE} by ${SIDE}`);
   const filled = math.three.fills(solid);
   if (filled !== 20) throw new Error(`paper-divisor-avatars: the solid fills ${filled}, want 20`);
   const drilled: number[][] = [];
-  for (let i = 0; i < SIDE; i++) for (let j = 0; j < SIDE; j++) for (let k = 0; k < SIDE; k++) if (solid.types[(i * SIDE + j) * SIDE + k] === 0) drilled.push([i, j, k]);
+  for (let i = 0; i < SIDE; i++)
+    for (let j = 0; j < SIDE; j++)
+      for (let k = 0; k < SIDE; k++) if (solid.types[(i * SIDE + j) * SIDE + k] === 0) drilled.push([i, j, k]);
   if (drilled.length !== 7) throw new Error(`paper-divisor-avatars: ${drilled.length} drilled corners, want 7`);
   const faces = iso.faces(math.three.quads(solid));
   const list: Mark[] = faces.map((face) => ({ depth: face.depth, face }));

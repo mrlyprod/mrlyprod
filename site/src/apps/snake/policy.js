@@ -1,4 +1,4 @@
-import { DIRS, ahead, bearing, flip } from './engine.js';
+import { ahead, bearing, DIRS, flip } from "./engine.js";
 
 const STRAIGHT = 0.7;
 const GOAL = 1;
@@ -133,5 +133,5 @@ function silly(state, rand) {
 }
 
 export function pick(state, mode, rand) {
-  return mode === 'silly' ? silly(state, rand) : smart(state, rand);
+  return mode === "silly" ? silly(state, rand) : smart(state, rand);
 }

@@ -1,13 +1,24 @@
-import { rng } from '../../lib/rand.js';
-import { num, sheet as paper } from '../../lib/app/svg.js';
-import { canon, roll, title } from '../../lib/designs/engine.js';
+import { num, sheet as paper } from "../../lib/app/svg.js";
+import { canon, roll, title } from "../../lib/designs/engine.js";
+import { rng } from "../../lib/rand.js";
 
 export const DIM = 3;
 export const NUMBERS = [3, 5, 7, 9];
-export const VIEWS = [['cut', 'Middle slice'], ['pro', 'Three sides'], ['iso', 'Iso skin']];
-export const SHEETS = [['rect', 'Rectangle'], ['disc', 'Disc']];
-export const PRESETS = [{ sheet: 'rect', x: 5, y: 5 }, { sheet: 'rect', x: 3, y: 9 }, { sheet: 'disc', radius: 2 }];
-export const ORDER = ['VOID', 'FILL', 'UP', 'LEFT', 'RIGHT'];
+export const VIEWS = [
+  ["cut", "Middle slice"],
+  ["pro", "Three sides"],
+  ["iso", "Iso skin"],
+];
+export const SHEETS = [
+  ["rect", "Rectangle"],
+  ["disc", "Disc"],
+];
+export const PRESETS = [
+  { sheet: "rect", x: 5, y: 5 },
+  { sheet: "rect", x: 3, y: 9 },
+  { sheet: "disc", radius: 2 },
+];
+export const ORDER = ["VOID", "FILL", "UP", "LEFT", "RIGHT"];
 export const BUDGET = 32000;
 export const REPEATS = 12;
 export const RINGS = 4;
@@ -16,17 +27,17 @@ export const SCALE = 8;
 
 /* SIZE */
 
-export const copies = (math, value) => (value.sheet === 'disc' ? math.six.copies(value.radius) : value.x * value.y);
+export const copies = (math, value) => (value.sheet === "disc" ? math.six.copies(value.radius) : value.x * value.y);
 
 export const cap = (math, number, n) => math.bang.level_cap(number, 2, Math.floor(BUDGET / (6 * n)));
 
-export const croppable = (value) => value.sheet !== 'disc' && value.x >= 2 && value.y >= 2;
+export const croppable = (value) => value.sheet !== "disc" && value.x >= 2 && value.y >= 2;
 
 export const cropped = (value) => croppable(value) && Number(value.overhang) !== 1;
 
 export const reroll = (math, base, seed) => roll(math, DIM, base, rng(seed));
 
-export const titled = (one) => (one.sheet === 'disc' ? `disc(${one.radius})` : `tile(${one.x},${one.y})`);
+export const titled = (one) => (one.sheet === "disc" ? `disc(${one.radius})` : `tile(${one.x},${one.y})`);
 
 export const holds = (value, one) => Object.entries(one).every(([key, v]) => value[key] === v);
 
@@ -39,7 +50,8 @@ const solid = (math, code, value, level) => {
   return value.invert ? math.cell.models.anti(made) : made;
 };
 
-const laid = (math, one, value) => (value.sheet === 'disc' ? math.six.disc(one, value.radius) : math.six.tile_cell(one, value.x, value.y, cropped(value)));
+const laid = (math, one, value) =>
+  value.sheet === "disc" ? math.six.disc(one, value.radius) : math.six.tile_cell(one, value.x, value.y, cropped(value));
 
 export function sample(math, value) {
   const one = math.six[value.view](solid(math, canon(math, DIM, value.base, value.code), value, 1));
@@ -60,20 +72,20 @@ export function studio(math) {
     const n = copies(math, value);
     const top = cap(math, value.number, n);
     const level = Math.min(value.level, top);
-    const code = layer('code', keyed(value.base, value.code), () => canon(math, DIM, value.base, value.code));
+    const code = layer("code", keyed(value.base, value.code), () => canon(math, DIM, value.base, value.code));
     const grown = keyed(code, value.number, level, value.base, value.invert);
-    const cube = layer('cube', grown, () => solid(math, code, value, level));
+    const cube = layer("cube", grown, () => solid(math, code, value, level));
     const seen = keyed(grown, value.view);
-    const one = layer('one', seen, () => six[value.view](cube));
-    const key = keyed(seen, value.sheet === 'disc' ? ['disc', value.radius] : [value.x, value.y, cropped(value)]);
-    const sheet = layer('sheet', key, () => laid(math, one, value));
-    const drawn = layer('drawn', key, () => six.framed(sheet));
-    const facts = layer('facts', keyed(key, top), () => {
+    const one = layer("one", seen, () => six[value.view](cube));
+    const key = keyed(seen, value.sheet === "disc" ? ["disc", value.radius] : [value.x, value.y, cropped(value)]);
+    const sheet = layer("sheet", key, () => laid(math, one, value));
+    const drawn = layer("drawn", key, () => six.framed(sheet));
+    const facts = layer("facts", keyed(key, top), () => {
       const skin = six.skin(sheet);
       const tally = six.census(skin, false);
       return {
         code,
-        name: math.name.of(code, DIM, value.base) ?? '',
+        name: math.name.of(code, DIM, value.base) ?? "",
         title: title(math, DIM, value.base, code),
         level,
         top,
@@ -120,8 +132,10 @@ export function bounds(groups) {
 export function mesh(math, sheet, turn) {
   const codes = kinds(math);
   const names = Object.fromEntries(Object.entries(codes).map(([name, type]) => [type, name]));
-  const custom = Object.fromEntries(Object.entries(codes).map(([name, type]) => [String(type), [[type, 0, 0, name === 'GRID' ? 0 : 255]]]));
-  const across = sheet.orientation === 'Horizontal';
+  const custom = Object.fromEntries(
+    Object.entries(codes).map(([name, type]) => [String(type), [[type, 0, 0, name === "GRID" ? 0 : 255]]]),
+  );
+  const across = sheet.orientation === "Horizontal";
   const runs = new Map();
   for (const [corners, rgba] of math.six.triangles(math.six.paint(sheet, custom))) {
     const name = names[rgba[0]];
@@ -134,7 +148,10 @@ export function mesh(math, sheet, turn) {
       else pts.push(u, v);
     }
   }
-  const groups = ORDER.filter((name) => runs.has(name)).map((name) => ({ name, points: Float64Array.from(runs.get(name)) }));
+  const groups = ORDER.filter((name) => runs.has(name)).map((name) => ({
+    name,
+    points: Float64Array.from(runs.get(name)),
+  }));
   return { groups, box: bounds(groups), across };
 }
 
@@ -155,6 +172,6 @@ export function wrap(text, across, turn) {
   const W = w * sx;
   const H = h * sy;
   const [width, height] = turn ? [H, W] : [W, H];
-  const transform = `${turn ? `translate(${num(H, 3)} 0) rotate(90) ` : ''}scale(${num(sx, 3)} ${num(sy, 3)})`;
+  const transform = `${turn ? `translate(${num(H, 3)} 0) rotate(90) ` : ""}scale(${num(sx, 3)} ${num(sy, 3)})`;
   return paper(width, height, `<g transform="${transform}">${body.trim()}</g>`);
 }

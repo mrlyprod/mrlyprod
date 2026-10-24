@@ -1,6 +1,6 @@
-import { project, uniforms } from '../../lib/gl/camera.js';
-import { blend, fill, program } from '../../lib/gl/gl2.js';
-import { add, dot, mul, sub } from '../../lib/gl/vec.js';
+import { project, uniforms } from "../../lib/gl/camera.js";
+import { blend, fill, program } from "../../lib/gl/gl2.js";
+import { add, dot, mul, sub } from "../../lib/gl/vec.js";
 
 const TAIL = 2.5;
 const WIDE = 2.2;
@@ -103,13 +103,20 @@ export function ship(gl, view) {
     const tail = sub(at, mul(fwd, reach));
     const tip = add(at, mul(fwd, reach));
     const length = size * TAIL * (0.4 + plume);
-    const corners = Array.from({ length: 8 }, (_, i) => axes.reduce((sum, v, j) => add(sum, mul(v, ((i >> j) & 1 ? HALO : -HALO) * size)), at));
+    const corners = Array.from({ length: 8 }, (_, i) =>
+      axes.reduce((sum, v, j) => add(sum, mul(v, ((i >> j) & 1 ? HALO : -HALO) * size)), at),
+    );
     const trail = plume > LIVE ? [0, 0.5, 1].map((f) => sub(tail, mul(fwd, length * f))) : [];
-    const box = frame(port, cam, [...corners, ...trail.flatMap((c) => axes.flatMap((v) => [add(c, mul(v, WIDE * size * 0.3)), sub(c, mul(v, WIDE * size * 0.3))]))]);
+    const box = frame(port, cam, [
+      ...corners,
+      ...trail.flatMap((c) =>
+        axes.flatMap((v) => [add(c, mul(v, WIDE * size * 0.3)), sub(c, mul(v, WIDE * size * 0.3))]),
+      ),
+    ]);
     if (!box) return;
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(...box);
-    blend(gl, 'add');
+    blend(gl, "add");
     prog.set({
       ...uniforms({ w: port[2], h: port[3] }, cam),
       uOrigin: [port[0], port[1]],

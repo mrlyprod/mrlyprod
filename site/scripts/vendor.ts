@@ -135,7 +135,7 @@ export async function main(root: string) {
   }
 
   const kept = fonts.keep ? (await readFile(resolve(root, fonts.keep), "utf8")).trim() : "";
-  await save(join(out, "fonts.css"), sheet.join("\n\n") + (kept ? `\n\n${kept}` : "") + "\n");
+  await save(join(out, "fonts.css"), `${sheet.join("\n\n")}${kept ? `\n\n${kept}` : ""}\n`);
 
   await glyphs(root, icons, save);
   licences.push(["LICENSE-icons.txt", `${MATERIAL}/LICENSE`]);

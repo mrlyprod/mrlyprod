@@ -29,7 +29,9 @@ def split_index(eps):
 
 def direct_sum(eps):
     m0 = split_index(eps)
-    ring = sum(FILL ** (m - 1) * hole_tube(Fraction(1, BASE**m), eps) for m in range(1, m0))
+    ring = sum(
+        FILL ** (m - 1) * hole_tube(Fraction(1, BASE**m), eps) for m in range(1, m0)
+    )
     return ring + Fraction(FILL, BASE**2) ** (m0 - 1)
 
 
@@ -119,7 +121,10 @@ def window(ulo, uhi, samples):
             n += 1
             t = eps * BASE**n
         m0 = split_index(Fraction(eps))
-        ring = sum(FILL ** (m - 1) * float(hole_tube(Fraction(1, BASE**m), Fraction(eps))) for m in range(1, m0))
+        ring = sum(
+            FILL ** (m - 1) * float(hole_tube(Fraction(1, BASE**m), Fraction(eps)))
+            for m in range(1, m0)
+        )
         v = ring + (FILL / BASE**2) ** (m0 - 1)
         m = eps ** (DIM_F - 2) * v
         worst = max(worst, abs(m - profile_float(t)))
@@ -129,35 +134,60 @@ def window(ulo, uhi, samples):
 
 def main():
     start = time.time()
-    print(f"CARPET: base {BASE}, fill {FILL}, d = log {FILL} / log {BASE} = {mp.nstr(DIM, 12)}")
-    print("HOLES: every hole is an open square whose boundary lies in the carpet, and the holes exhaust the complement")
+    print(
+        f"CARPET: base {BASE}, fill {FILL}, d = log {FILL} / log {BASE} = {mp.nstr(DIM, 12)}"
+    )
+    print(
+        "HOLES: every hole is an open square whose boundary lies in the carpet, and the holes exhaust the complement"
+    )
     for level in (3, 4, 5):
         lv, filled, empty = hole_census(level)
-        print(f"  level {lv}: {filled} filled cells, {empty} empty cells in 8^(m-1) holes of side 3^-m, m = 1..{lv}, every hole ringed by filled cells")
+        print(
+            f"  level {lv}: {filled} filled cells, {empty} empty cells in 8^(m-1) holes of side 3^-m, m = 1..{lv}, every hole ringed by filled cells"
+        )
     print()
-    print("TUBE: V(eps) = sum_m 8^(m-1) h(3^-m, eps), h(s, eps) = s^2 if s <= 2 eps else 4 eps s - 4 eps^2, against the closed form, exact rationals")
-    grid = [Fraction(1, 3), Fraction(2, 5), Fraction(1, 2), Fraction(3, 5), Fraction(2, 3), Fraction(4, 5), Fraction(9, 10), Fraction(999, 1000)]
+    print(
+        "TUBE: V(eps) = sum_m 8^(m-1) h(3^-m, eps), h(s, eps) = s^2 if s <= 2 eps else 4 eps s - 4 eps^2, against the closed form, exact rationals"
+    )
+    grid = [
+        Fraction(1, 3),
+        Fraction(2, 5),
+        Fraction(1, 2),
+        Fraction(3, 5),
+        Fraction(2, 3),
+        Fraction(4, 5),
+        Fraction(9, 10),
+        Fraction(999, 1000),
+    ]
     checks = 0
     for n in range(1, 13):
         for t in grid:
             eps = t / BASE**n
             assert direct_sum(eps) == closed_v(eps)
             checks += 1
-    print(f"  {checks} pairs (n, t), n = 1..12, t in {{1/3, 2/5, 1/2, 3/5, 2/3, 4/5, 9/10, 999/1000}}: direct sum equals closed form exactly")
+    print(
+        f"  {checks} pairs (n, t), n = 1..12, t in {{1/3, 2/5, 1/2, 3/5, 2/3, 4/5, 9/10, 999/1000}}: direct sum equals closed form exactly"
+    )
     print()
     print("PROFILE: eps = 3^-n t, t in [1/3, 1), M(eps) = eps^(d-2) V(eps) -> G(t)")
-    print("  G(t) = t^(d-2) (1 + 4t/5 - 4t^2/7) on [1/3, 1/2),  G(t) = t^(d-2) (9/8 + 3t/10 - t^2/14) on [1/2, 1)")
+    print(
+        "  G(t) = t^(d-2) (1 + 4t/5 - 4t^2/7) on [1/3, 1/2),  G(t) = t^(d-2) (9/8 + 3t/10 - t^2/14) on [1/2, 1)"
+    )
     half = Fraction(1, 2)
     left = sum(c * half**i for i, c in enumerate(LOW))
     right = sum(c * half**i for i, c in enumerate(HIGH))
     assert left == right == Fraction(44, 35)
-    seam_low = Fraction(1, FILL) * sum(c * Fraction(1, 3) ** i for i, c in enumerate(LOW)) * 9
+    seam_low = (
+        Fraction(1, FILL) * sum(c * Fraction(1, 3) ** i for i, c in enumerate(LOW)) * 9
+    )
     seam_high = sum(HIGH)
     assert seam_low == seam_high == SEAM
     slope_low = sum(i * c * half ** (i - 1) for i, c in enumerate(LOW) if i)
     slope_high = sum(i * c * half ** (i - 1) for i, c in enumerate(HIGH) if i)
     assert slope_low == slope_high == Fraction(8, 35)
-    print(f"  continuous at t = 1/2: both branches give 44/35 * 2^(2-d) = {mp.nstr(profile(half), 12)}, and C^1 there: both polynomial factors have slope 8/35")
+    print(
+        f"  continuous at t = 1/2: both branches give 44/35 * 2^(2-d) = {mp.nstr(profile(half), 12)}, and C^1 there: both polynomial factors have slope 8/35"
+    )
     print(f"  periodic: G(1/3) = G(1) = 379/280 = {mp.nstr(mpf(379) / 280, 12)}")
     tmax = [r for r in stationary(LOW) if Fraction(1, 3) <= Fraction(float(r)) < half]
     tmin = [r for r in stationary(HIGH) if half <= Fraction(float(r)) < 1]
@@ -168,24 +198,40 @@ def main():
     assert min(scan) >= float(gmin) - 1e-12 and max(scan) <= float(gmax) + 1e-12
     swing = (gmax - gmin) / gmin
     scale = mpf(10) ** 11
-    print(f"  maximum {mp.nstr(gmax, 15)}, safe {mp.nstr(mp.ceil(gmax * scale) / scale, 12)} up, at t = {mp.nstr(tmax, 9)} (root of (4/7) d t^2 - (4/5)(d-1) t - (d-2) = 0 in [1/3, 1/2))")
-    print(f"  minimum {mp.nstr(gmin, 15)}, safe {mp.nstr(mp.floor(gmin * scale) / scale, 12)} down, at t = {mp.nstr(tmin, 9)} (root of (d/14) t^2 - (3/10)(d-1) t - (9/8)(d-2) = 0 in [1/2, 1))")
-    print(f"  swing (max - min) / min = {mp.nstr(swing * 100, 8)} %   scan of 200001 points stays inside [min, max]")
-    print(f"  Cantor design for scale: swing 3.53 %; the carpet swings {mp.nstr(swing * 100, 4)} %")
+    print(
+        f"  maximum {mp.nstr(gmax, 15)}, safe {mp.nstr(mp.ceil(gmax * scale) / scale, 12)} up, at t = {mp.nstr(tmax, 9)} (root of (4/7) d t^2 - (4/5)(d-1) t - (d-2) = 0 in [1/3, 1/2))"
+    )
+    print(
+        f"  minimum {mp.nstr(gmin, 15)}, safe {mp.nstr(mp.floor(gmin * scale) / scale, 12)} down, at t = {mp.nstr(tmin, 9)} (root of (d/14) t^2 - (3/10)(d-1) t - (9/8)(d-2) = 0 in [1/2, 1))"
+    )
+    print(
+        f"  swing (max - min) / min = {mp.nstr(swing * 100, 8)} %   scan of 200001 points stays inside [min, max]"
+    )
+    print(
+        f"  Cantor design for scale: swing 3.53 %; the carpet swings {mp.nstr(swing * 100, 4)} %"
+    )
     print()
     print("MEASURED: the level sum at eps = e^-u against G(t)")
     lo, hi, worst = window(50.0, 60.0, 2001)
-    print(f"  u in [50, 60]: min {lo:.12f}   max {hi:.12f}   max |M(eps) - G(t)| = {worst:.1e}")
+    print(
+        f"  u in [50, 60]: min {lo:.12f}   max {hi:.12f}   max |M(eps) - G(t)| = {worst:.1e}"
+    )
     assert worst < 1e-9
     eps = math.exp(-60)
-    print(f"  outer collar at u = 60: eps^(D-2) (4 eps + pi eps^2) = {eps ** (DIM_F - 2) * (4 * eps + math.pi * eps * eps):.1e}")
+    print(
+        f"  outer collar at u = 60: eps^(D-2) (4 eps + pi eps^2) = {eps ** (DIM_F - 2) * (4 * eps + math.pi * eps * eps):.1e}"
+    )
     print()
-    print("RASTER: level-6 cells, Euclidean distance transform to the nearest filled cell centre, no hole lemma used")
+    print(
+        "RASTER: level-6 cells, Euclidean distance transform to the nearest filled cell centre, no hole lemma used"
+    )
     level, k = 6, 21
     side = BASE**level
     raster = raster_tube(level, k)
     exact = closed_v(Fraction(k, side))
-    print(f"  cells within {k} cell widths of a filled centre, plus the filled cells: {raster} = {float(raster):.12f}")
+    print(
+        f"  cells within {k} cell widths of a filled centre, plus the filled cells: {raster} = {float(raster):.12f}"
+    )
     print(f"  exact V({k}/{side}) from the closed form: {exact} = {float(exact):.12f}")
     assert raster == exact
     print("  equal as rationals")

@@ -1,8 +1,15 @@
-import { rng } from '../../lib/rand.js';
-import { num as fix, path, sheet } from '../../lib/app/svg.js';
+import { num as fix, path, sheet } from "../../lib/app/svg.js";
+import { rng } from "../../lib/rand.js";
 
-export const VIEWS = [['walk', 'Walk'], ['stairs', 'Stairs']];
-export const LOOKS = [['line', 'Line'], ['dots', 'Dots'], ['both', 'Both']];
+export const VIEWS = [
+  ["walk", "Walk"],
+  ["stairs", "Stairs"],
+];
+export const LOOKS = [
+  ["line", "Line"],
+  ["dots", "Dots"],
+  ["both", "Both"],
+];
 export const REACH = 200;
 export const PER = 50;
 export const STEP = 0.05;
@@ -11,10 +18,10 @@ export const LISTED = 8;
 export const UPTO = [10, 1000];
 export const FIRST = 12;
 export const STATES = [
-  { id: 'smooth', name: 'No zeros', note: 'the smooth guess', set: { view: 'stairs', x: 100, zeros: 0 } },
-  { id: 'few', name: '3 zeros', note: 'the first folds', set: { view: 'stairs', x: 100, zeros: 3 } },
-  { id: 'ten', name: '10 zeros', note: 'the start', set: { view: 'stairs', x: 100, zeros: 10 } },
-  { id: 'all', name: '100 zeros', note: 'the steps appear', set: { view: 'stairs', x: 100, zeros: 100 } },
+  { id: "smooth", name: "No zeros", note: "the smooth guess", set: { view: "stairs", x: 100, zeros: 0 } },
+  { id: "few", name: "3 zeros", note: "the first folds", set: { view: "stairs", x: 100, zeros: 3 } },
+  { id: "ten", name: "10 zeros", note: "the start", set: { view: "stairs", x: 100, zeros: 10 } },
+  { id: "all", name: "100 zeros", note: "the steps appear", set: { view: "stairs", x: 100, zeros: 100 } },
 ];
 export const ROLLS = { t: [10, 150], zeros: [1, 60], x: [50, 500] };
 export const HOLD = 2500;
@@ -114,11 +121,26 @@ export function reading(num, plan, t) {
 
 export function shelves(zeros, value) {
   const walked = Array.from(zeros.subarray(0, FIRST), (zero, i) => {
-    const set = { view: 'walk', t: snap(zero) };
-    return { id: `zero${i + 1}`, label: `Zero ${i + 1}`, sub: zero.toFixed(4), set, on: value.view === 'walk' && value.t === set.t };
+    const set = { view: "walk", t: snap(zero) };
+    return {
+      id: `zero${i + 1}`,
+      label: `Zero ${i + 1}`,
+      sub: zero.toFixed(4),
+      set,
+      on: value.view === "walk" && value.t === set.t,
+    };
   });
-  const climbed = STATES.map(({ id, name, note, set }) => ({ id, label: name, sub: note, set, on: value.view === 'stairs' && value.x === set.x && value.zeros === set.zeros }));
-  return [['Zeros', walked], ['Staircase', climbed]];
+  const climbed = STATES.map(({ id, name, note, set }) => ({
+    id,
+    label: name,
+    sub: note,
+    set,
+    on: value.view === "stairs" && value.x === set.x && value.zeros === set.zeros,
+  }));
+  return [
+    ["Zeros", walked],
+    ["Staircase", climbed],
+  ];
 }
 
 export function roll(seed) {
@@ -148,7 +170,11 @@ export function phase(t, length, still) {
 }
 
 export function plane(rect, reach, pad) {
-  return { k: Math.max(0, (Math.min(rect.w, rect.h) / 2 - pad) / reach), ox: rect.x + rect.w / 2, oy: rect.y + rect.h / 2 };
+  return {
+    k: Math.max(0, (Math.min(rect.w, rect.h) / 2 - pad) / reach),
+    ox: rect.x + rect.w / 2,
+    oy: rect.y + rect.h / 2,
+  };
 }
 
 /* STAIRS */
@@ -175,7 +201,13 @@ function climb(num, x) {
   };
   const psi = stair[x - 1];
   const curve = kept((k) => num.zeta.psi_curve(gammas.subarray(0, k), grid));
-  const facts = kept((k) => ({ x, zeros: k, psi, formula: num.zeta.psi_formula(x, gammas.subarray(0, k)), gap: num.zeta.psi_gap(x, gammas.subarray(0, k)) }));
+  const facts = kept((k) => ({
+    x,
+    zeros: k,
+    psi,
+    formula: num.zeta.psi_formula(x, gammas.subarray(0, k)),
+    gap: num.zeta.psi_gap(x, gammas.subarray(0, k)),
+  }));
   const top = kept((k) => Math.max(psi, ...curve(0), ...curve(k)) * ROOM);
   return { x, gammas, stair, grid, ladder, curve, facts, top };
 }
@@ -215,52 +247,59 @@ function walked(plan, rect, head, kept, look, inks) {
   const X = (j) => box.ox + plan.xs[j] * box.k;
   const Y = (j) => box.oy - plan.ys[j] * box.k;
   const every = Math.max(1, Math.round(PER * DOT));
-  const lined = look !== 'dots';
-  const dotted = look !== 'line';
+  const lined = look !== "dots";
+  const dotted = look !== "line";
   const stroke = (from, to, alpha, width, cap) => {
-    if (to <= from) return '';
+    if (to <= from) return "";
     const pts = [];
     for (let j = from; j <= to; j++) pts.push(X(j), Y(j));
     return `<path d="${path(pts)}" fill="none" ${ink(inks.accent, alpha)} stroke-width="${fix(width)}" stroke-linecap="${cap}" stroke-linejoin="round"/>`;
   };
   const dots = (from, to, alpha, r) => {
     const out = [];
-    for (let j = Math.ceil(from / every) * every; j <= to; j += every) out.push(`<circle cx="${fix(X(j))}" cy="${fix(Y(j))}" r="${fix(r)}"/>`);
-    return out.length ? `<g fill="${inks.accent}" fill-opacity="${fix(alpha)}">${out.join('')}</g>` : '';
+    for (let j = Math.ceil(from / every) * every; j <= to; j += every)
+      out.push(`<circle cx="${fix(X(j))}" cy="${fix(Y(j))}" r="${fix(r)}"/>`);
+    return out.length ? `<g fill="${inks.accent}" fill-opacity="${fix(alpha)}">${out.join("")}</g>` : "";
   };
-  const body = [lined ? stroke(0, i, GHOST, LINE, 'round') : dots(0, i, GHOST, BEAD)];
+  const body = [lined ? stroke(0, i, GHOST, LINE, "round") : dots(0, i, GHOST, BEAD)];
   for (const { from, to, first, alpha } of bands(i, kept)) {
-    if (lined) body.push(stroke(from, to, alpha, TRAIL, 'butt'));
+    if (lined) body.push(stroke(from, to, alpha, TRAIL, "butt"));
     if (dotted) body.push(dots(first, to, alpha, PIP));
   }
-  body.push(`<circle cx="${fix(box.ox)}" cy="${fix(box.oy)}" r="${RING}" fill="none" stroke="${inks.zero}" stroke-width="2"/>`);
+  body.push(
+    `<circle cx="${fix(box.ox)}" cy="${fix(box.oy)}" r="${RING}" fill="none" stroke="${inks.zero}" stroke-width="2"/>`,
+  );
   body.push(`<circle cx="${fix(X(i))}" cy="${fix(Y(i))}" r="${HEAD}" fill="${inks.head}"/>`);
-  return body.join('');
+  return body.join("");
 }
 
 function stepped(steps, rect, k, top, inks) {
   const box = ladder(rect, steps.x, top, PAD);
   const edge = along(box, steps.ladder.xs, steps.ladder.ys);
   const floor = [box.left + (steps.x - 1) * box.kx, box.floor, box.left, box.floor];
-  const id = 'zeta-stairs';
+  const id = "zeta-stairs";
   return [
     `<clipPath id="${id}"><rect x="${fix(box.left)}" y="${fix(box.roof)}" width="${fix(box.right - box.left)}" height="${fix(box.floor - box.roof)}"/></clipPath>`,
     `<g clip-path="url(#${id})">`,
     `<path d="${path([...edge, ...floor], true)}" fill="${inks.zero}" fill-opacity="${FILL}"/>`,
-    `<path d="${path(along(box, steps.grid, steps.curve(0)))}" fill="none" stroke="${inks.guess}" stroke-width="1" stroke-dasharray="${DASH.join(' ')}"/>`,
+    `<path d="${path(along(box, steps.grid, steps.curve(0)))}" fill="none" stroke="${inks.guess}" stroke-width="1" stroke-dasharray="${DASH.join(" ")}"/>`,
     `<path d="${path(along(box, steps.grid, steps.curve(k)))}" fill="none" stroke="${inks.accent}" stroke-width="${CURVE}" stroke-linejoin="round"/>`,
     `<path d="${path(edge)}" fill="none" stroke="${inks.zero}" stroke-width="${STAIR}" stroke-linejoin="round"/>`,
-    '</g>',
-  ].join('');
+    "</g>",
+  ].join("");
 }
 
 export function picture({ plan, steps, view, head, k, zeros, kept, look, w, h }, inks) {
   const rect = { x: 0, y: 0, w, h };
-  return sheet(w, h, view === 'stairs' ? stepped(steps, rect, k, steps.top(zeros), inks) : walked(plan, rect, head, kept, look, inks));
+  return sheet(
+    w,
+    h,
+    view === "stairs" ? stepped(steps, rect, k, steps.top(zeros), inks) : walked(plan, rect, head, kept, look, inks),
+  );
 }
 
 export function table(zeros) {
-  const rows = ['zero,t'];
-  zeros.forEach((t, i) => rows.push(`${i + 1},${t.toFixed(6)}`));
-  return `${rows.join('\n')}\n`;
+  const rows = ["zero,t"];
+  for (const [i, t] of zeros.entries()) rows.push(`${i + 1},${t.toFixed(6)}`);
+  return `${rows.join("\n")}\n`;
 }

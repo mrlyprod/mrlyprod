@@ -23,7 +23,8 @@ export default function draw(pen) {
   const half = HALF * w;
   const span = (LENGTH / 2) * w;
   const reach = span * K;
-  if (reach > w / 2) throw new Error(`blog: the pencil reaches ${reach.toFixed(0)} from centre, the box allows ${(w / 2).toFixed(0)}`);
+  if (reach > w / 2)
+    throw new Error(`blog: the pencil reaches ${reach.toFixed(0)} from centre, the box allows ${(w / 2).toFixed(0)}`);
   const at = (t, v) => [cx + (t + v) * K, cy + (v - t) * K];
   const t0 = -span + TIP * w;
   const cap = span - half;
@@ -31,9 +32,15 @@ export default function draw(pen) {
   pen.polygon([at(t0, -half), at(cap, -half), at(cap, half), at(t0, half)], paint.white);
   pen.disc(...at(cap, 0), half, paint.white);
   pen.polygon([at(t0, half / 3), at(cap, half / 3), at(cap, half), at(t0, half)], facet);
-  pen.polygon([at(cap - BAND * w * 2, -half), at(cap - BAND * w, -half), at(cap - BAND * w, half), at(cap - BAND * w * 2, half)], paint.light);
+  pen.polygon(
+    [at(cap - BAND * w * 2, -half), at(cap - BAND * w, -half), at(cap - BAND * w, half), at(cap - BAND * w * 2, half)],
+    paint.light,
+  );
   pen.polygon([at(t0, -half), at(t0, half), at(-span, 0)], paint.deep);
-  pen.polygon([at(-span + TIP * w * LEAD, -half * LEAD), at(-span + TIP * w * LEAD, half * LEAD), at(-span, 0)], paint.ink);
+  pen.polygon(
+    [at(-span + TIP * w * LEAD, -half * LEAD), at(-span + TIP * w * LEAD, half * LEAD), at(-span, 0)],
+    paint.ink,
+  );
   const [tx, ty] = at(-span, 0);
   const line = Array.from({ length: STEPS + 1 }, (_, i) => {
     const s = i / STEPS;

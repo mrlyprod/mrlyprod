@@ -1,43 +1,67 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { text } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { Scene } from '../../lib/app/page.jsx';
-import { paints } from '../../lib/color.js';
-import { useTheme } from '../../lib/designs/pick.jsx';
-import { rng } from '../../lib/rand.js';
-import { POLYS, REACH, SPIRALS, factors, formula, holds, shuffle, step } from './engine.js';
-import { make, named, sketch } from './scene.js';
-import { useReroll, useUnit } from '../../lib/app/hooks.js';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { text } from "../../lib/app/export.js";
+import { Bar } from "../../lib/app/frame.jsx";
+import { useReroll, useUnit } from "../../lib/app/hooks.js";
+import { Art, Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { paints } from "../../lib/color.js";
+import { useTheme } from "../../lib/designs/pick.jsx";
+import { rng } from "../../lib/rand.js";
+import { factors, formula, holds, POLYS, REACH, SPIRALS, shuffle, step } from "./engine.js";
+import { make, named, sketch } from "./scene.js";
 
 const ART = 112;
 
 const pct = (x, places = 1) => `${(x * 100).toFixed(places)}%`;
 
-const LABEL = 'The sheet: the whole numbers wound from one on the lattice, the marked ones lit and the quadratic in orange and blue';
+const LABEL =
+  "The sheet: the whole numbers wound from one on the lattice, the marked ones lit and the quadratic in orange and blue";
 
 export function streak(line) {
-  if (!line.count) return 'off the sheet';
+  if (!line.count) return "off the sheet";
   if (line.streak === line.count) return `all ${line.count} prime`;
   return `${line.streak}, then ${line.next.n} = ${factors(line.next.factors)}`;
 }
 
-export const values = (line) => (line.values.length ? `${line.values.join(' ')}${line.more ? ' …' : ''}` : 'none on the sheet');
+export const values = (line) =>
+  line.values.length ? `${line.values.join(" ")}${line.more ? " …" : ""}` : "none on the sheet";
 
 export function verdict(pick) {
-  if (pick.n === 1) return 'one, neither prime nor composite';
-  return pick.prime ? 'prime' : `composite, ${factors(pick.factors)}`;
+  if (pick.n === 1) return "one, neither prime nor composite";
+  return pick.prime ? "prime" : `composite, ${factors(pick.factors)}`;
 }
 
 export function readouts(f) {
-  const pick = f.pick?.off ? [['Cell', 'off the sheet']] : f.pick ? [['Cell', `${f.pick.n} on ring ${f.pick.ring} at ${f.pick.x}, ${f.pick.y}`], ['Verdict', verdict(f.pick)]] : [];
-  const line = f.line ? [['Values', values(f.line)], ['Streak', streak(f.line)], ['Hits', `${f.line.hits} of ${f.line.count}`], ['Share', pct(f.line.share)]] : [];
-  const lit = f.mark === 'prime' ? [] : [['Lit', f.lit]];
-  return [...(f.line ? [['Line', formula(f.a, f.b, f.c)]] : []), ...pick, ...line, ['Numbers', f.top], ['Primes', f.primes], ['Density', pct(f.density, 2)], ...lit];
+  const pick = f.pick?.off
+    ? [["Cell", "off the sheet"]]
+    : f.pick
+      ? [
+          ["Cell", `${f.pick.n} on ring ${f.pick.ring} at ${f.pick.x}, ${f.pick.y}`],
+          ["Verdict", verdict(f.pick)],
+        ]
+      : [];
+  const line = f.line
+    ? [
+        ["Values", values(f.line)],
+        ["Streak", streak(f.line)],
+        ["Hits", `${f.line.hits} of ${f.line.count}`],
+        ["Share", pct(f.line.share)],
+      ]
+    : [];
+  const lit = f.mark === "prime" ? [] : [["Lit", f.lit]];
+  return [
+    ...(f.line ? [["Line", formula(f.a, f.b, f.c)]] : []),
+    ...pick,
+    ...line,
+    ["Numbers", f.top],
+    ["Primes", f.primes],
+    ["Density", pct(f.density, 2)],
+    ...lit,
+  ];
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }) {
-  const unit = useUnit('num', given);
+  const unit = useUnit("num", given);
   const [facts, setFacts] = useState(null);
   const live = useRef(null);
   const now = useRef(value);
@@ -46,7 +70,10 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   change.current = onChange;
   const tick = useTheme();
   useReroll(value.seed, (next) => unit && change.current(shuffle(unit, rng(next))));
-  const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onFacts: setFacts }), [unit]);
+  const scene = useCallback(
+    (canvas, view, opts) => make(canvas, view, { ...opts, num: unit, onFacts: setFacts }),
+    [unit],
+  );
   const ready = (handle) => {
     live.current = handle;
     setFacts(handle?.facts ?? null);
@@ -67,7 +94,10 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   };
   const have = Boolean(facts);
   const lined = Boolean(facts?.line);
-  useEffect(() => onExport?.(have ? [['SVG', () => keep('svg')], ...(lined ? [['CSV', () => keep('csv')]] : [])] : []), [have, lined]);
+  useEffect(
+    () => onExport?.(have ? [["SVG", () => keep("svg")], ...(lined ? [["CSV", () => keep("csv")]] : [])] : []),
+    [have, lined],
+  );
   const rows = facts ? readouts(facts) : [];
   const said = JSON.stringify(rows);
   useEffect(() => onStatus?.(rows), [said]);
@@ -81,7 +111,13 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
           title={one.note}
           on={holds(value, one.set)}
           onPick={() => change.current(one.set)}
-          art={<Art px={ART} paint={(ctx, w, h, dpr) => sketch(unit, one.set, ctx, w, h, dpr, paints(ctx.canvas, value.tint))} deps={[unit, value.tint, tick]} />}
+          art={
+            <Art
+              px={ART}
+              paint={(ctx, w, h, dpr) => sketch(unit, one.set, ctx, w, h, dpr, paints(ctx.canvas, value.tint))}
+              deps={[unit, value.tint, tick]}
+            />
+          }
         />
       ))}
     </Shelf>
@@ -90,8 +126,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
     <>
       {unit && (
         <Library>
-          {shelf('Spirals', SPIRALS, (one) => one.note)}
-          {shelf('Prime polynomials', POLYS, (one) => formula(one.set.a, one.set.b, one.set.c))}
+          {shelf("Spirals", SPIRALS, (one) => one.note)}
+          {shelf("Prime polynomials", POLYS, (one) => formula(one.set.a, one.set.b, one.set.c))}
         </Library>
       )}
       {unit && <Scene make={scene} value={value} onReady={ready} onClick={tap} aria-label={LABEL} />}

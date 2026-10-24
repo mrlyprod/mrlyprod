@@ -1,5 +1,4 @@
 import numpy as np
-
 from mrly.core import Colorizer, colors, image, ramp, tensor
 
 
@@ -29,6 +28,8 @@ def test_colorizer_color(row):
     r = row("core::Colorizer::color")
     i = r["in"]
     stops = [colors.from_hex(h) for h in i["ramp"]]
-    colorizer = Colorizer.gradient_bins(colors.from_hex(i["background"]), stops, i["shades"])
+    colorizer = Colorizer.gradient_bins(
+        colors.from_hex(i["background"]), stops, i["shades"]
+    )
     swatches = [colors.to_hex(ramp.color(colorizer, v, i["max"])) for v in i["values"]]
     assert swatches == r["out"]

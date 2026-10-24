@@ -1,5 +1,5 @@
-import { DEEP, TABLE, axisOf, badge, closed, identify, number } from './engine.js';
-import RECORDS from './records.json' with { type: 'json' };
+import { axisOf, badge, closed, DEEP, identify, number, TABLE } from "./engine.js";
+import RECORDS from "./records.json" with { type: "json" };
 
 export { RECORDS };
 
@@ -18,8 +18,8 @@ export function facts(book, row, count) {
   const capped = book.capped(row, count, DEEP.cells);
   return {
     record: found,
-    status: found ? found.status.toLowerCase() : 'unmatched',
-    closed: closed(RECORDS, row) || 'none known',
+    status: found ? found.status.toLowerCase() : "unmatched",
+    closed: closed(RECORDS, row) || "none known",
     terms: row.error ? `${n}, a read error` : capped ? `${n}, to the budget` : String(n),
     space: `dimension ${row.dim}, base ${row.base}`,
     axis: axisOf(row.axis).at(number(row)),
@@ -29,5 +29,5 @@ export function facts(book, row, count) {
 
 export function found(terms) {
   const one = terms.length >= 4 ? identify(RECORDS, terms.slice(0, TABLE.terms))[0] : null;
-  return one ? { id: one.record.id, name: one.record.name, at: one.at, shift: one.at, status: 'Found' } : null;
+  return one ? { id: one.record.id, name: one.record.name, at: one.at, shift: one.at, status: "Found" } : null;
 }

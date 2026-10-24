@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { download, wav } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Icon } from '../../lib/app/controls.jsx';
-import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { Scene } from '../../lib/app/page.jsx';
-import { bus, engine, pattern, render } from '../../lib/audio/audio.js';
-import { paints } from '../../lib/color.js';
-import { useTheme } from '../../lib/designs/pick.jsx';
-import { STYLES, make, score, seconds, song, stamp, styled } from './scene.js';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Btn, Icon } from "../../lib/app/controls.jsx";
+import { download, wav } from "../../lib/app/export.js";
+import { Bar } from "../../lib/app/frame.jsx";
+import { Art, Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { bus, engine, pattern, render } from "../../lib/audio/audio.js";
+import { paints } from "../../lib/color.js";
+import { useTheme } from "../../lib/designs/pick.jsx";
+import { make, STYLES, score, seconds, song, stamp, styled } from "./scene.js";
 
 export function Widget({ value, onChange, onReady, onExport }) {
   const line = useMemo(bus, []);
@@ -77,7 +77,7 @@ export function Widget({ value, onChange, onReady, onExport }) {
     } catch {}
     working.current = false;
   };
-  useEffect(() => onExport?.([['WAV', save]]), []);
+  useEffect(() => onExport?.([["WAV", save]]), []);
   const style = styled(value);
   const seed = value.seed >>> 0;
   return (
@@ -86,7 +86,21 @@ export function Widget({ value, onChange, onReady, onExport }) {
       <Library name="Styles">
         <Shelf grid>
           {STYLES.map((one) => (
-            <Item key={one.id} label={one.name} sub={`${one.song.bpm} bpm`} on={style === one.id} onPick={() => onChange(one.song)} art={<Art paint={(ctx, w, h) => stamp(ctx, w, h, pattern(seed, song({ ...value, ...one.song }), 0), paints(ctx.canvas).accent)} deps={[one.id, seed, theme]} />} />
+            <Item
+              key={one.id}
+              label={one.name}
+              sub={`${one.song.bpm} bpm`}
+              on={style === one.id}
+              onPick={() => onChange(one.song)}
+              art={
+                <Art
+                  paint={(ctx, w, h) =>
+                    stamp(ctx, w, h, pattern(seed, song({ ...value, ...one.song }), 0), paints(ctx.canvas).accent)
+                  }
+                  deps={[one.id, seed, theme]}
+                />
+              }
+            />
           ))}
         </Shelf>
       </Library>

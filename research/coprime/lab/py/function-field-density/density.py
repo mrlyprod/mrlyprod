@@ -1,6 +1,7 @@
 import itertools
 from fractions import Fraction
 from math import log
+
 import numpy as np
 
 Q = 3
@@ -10,10 +11,12 @@ EULER_N = 10
 EULER_DEG = 5
 LEVELS = (10, 12, 14)
 
+
 def trim(c):
     while c and c[-1] == 0:
         del c[-1]
     return c
+
 
 def divmod_poly(a, b):
     r = list(a)
@@ -29,9 +32,11 @@ def divmod_poly(a, b):
         trim(r)
     return tuple(trim(q)), tuple(r)
 
+
 def monics(d):
     for tail in itertools.product(range(Q), repeat=d):
         yield tail + (1,)
+
 
 def irreducibles(maxdeg):
     out = []
@@ -40,6 +45,7 @@ def irreducibles(maxdeg):
             if all(divmod_poly(p, s)[1] != () for s in out if len(s) - 1 <= d // 2):
                 out.append(p)
     return out
+
 
 def label(p):
     parts = []
@@ -54,8 +60,10 @@ def label(p):
             parts.append(base if c == 1 else "%d%s" % (c, base))
     return " + ".join(parts) if parts else "0"
 
+
 def poly_of(i, n):
     return tuple(trim([(i >> k) & 1 for k in range(n)]))
+
 
 def masks(primes, n):
     bits = ((np.arange(1 << n)[:, None] >> np.arange(n)) & 1).astype(np.int64)
@@ -65,9 +73,10 @@ def masks(primes, n):
         rows = np.zeros((n, dp), dtype=np.int64)
         for k in range(n):
             r = divmod_poly(tuple([0] * k + [1]), p)[1]
-            rows[k, :len(r)] = r
+            rows[k, : len(r)] = r
         out[p] = ~((bits @ rows) % Q).any(axis=1)
     return out
+
 
 def factor_sets(primes, msk, n):
     small = [[] for _ in range(1 << n)]
@@ -97,6 +106,7 @@ def factor_sets(primes, msk, n):
         sets[i] = tuple(sorted(keys))
     return sets, degs
 
+
 def sieve_count(sets, degs, n, degcap=None):
     cnt = {}
     for i in range(1, 1 << n):
@@ -111,6 +121,7 @@ def sieve_count(sets, degs, n, degcap=None):
         total += (-1 if len(key) % 2 else 1) * (m * m + 2 * m)
     return total
 
+
 def brute(n):
     polys = [poly_of(i, n) for i in range(1 << n)]
     c = 0
@@ -122,12 +133,15 @@ def brute(n):
             c += 1 if len(x) == 1 else 0
     return c
 
+
 primes = irreducibles(FACTOR_DEG)
 msk = masks(primes, NMAX)
 sets, degs = factor_sets(primes, msk, NMAX)
 
-print("DOMAIN q = 3, S = {0, 1}, degree below n, n up to %d, ordered pairs over all %d^2 including the zero polynomial"
-      % (NMAX, 1 << NMAX))
+print(
+    "DOMAIN q = 3, S = {0, 1}, degree below n, n up to %d, ordered pairs over all %d^2 including the zero polynomial"
+    % (NMAX, 1 << NMAX)
+)
 print("irreducibles of degree at most %d: %d" % (FACTOR_DEG, len(primes)))
 
 for n in range(1, 5):
@@ -136,21 +150,28 @@ print("cross-check against Euclid on every ordered pair, n = 1 to 4: passed")
 
 for n in LEVELS:
     z = sieve_count(sets, degs, n)
-    print("n = %2d  Z = %d / %d  density = %.6f  gap from 9/16 = %+.6f"
-          % (n, z, 4 ** n, z / 4 ** n, z / 4 ** n - 9 / 16))
+    print(
+        "n = %2d  Z = %d / %d  density = %.6f  gap from 9/16 = %+.6f"
+        % (n, z, 4**n, z / 4**n, z / 4**n - 9 / 16)
+    )
 
 print("prediction (2/3) * (3/4) / (8/9) = 9/16 = %.6f" % (9 / 16))
 
-pi = {p: Fraction(int(msk[p][:1 << EULER_N].sum()), 1 << EULER_N)
-      for p in primes if len(p) - 1 <= EULER_DEG}
+pi = {
+    p: Fraction(int(msk[p][: 1 << EULER_N].sum()), 1 << EULER_N)
+    for p in primes
+    if len(p) - 1 <= EULER_DEG
+}
 for p in primes:
     if len(p) - 1 == 1:
         print("pi(%s) at n = %d = %s = %.6f" % (label(p), EULER_N, pi[p], float(pi[p])))
 for d in (2, 3):
     ps = [p for p in primes if len(p) - 1 == d]
-    devs = [abs(pi[p] - Fraction(1, Q ** d)) for p in ps]
-    print("degree %d, %d primes, mean |pi - 3^-%d| = %.6f, max = %.6f"
-          % (d, len(ps), d, float(sum(devs) / len(devs)), float(max(devs))))
+    devs = [abs(pi[p] - Fraction(1, Q**d)) for p in ps]
+    print(
+        "degree %d, %d primes, mean |pi - 3^-%d| = %.6f, max = %.6f"
+        % (d, len(ps), d, float(sum(devs) / len(devs)), float(max(devs)))
+    )
 
 prod = Fraction(1)
 for d in range(1, EULER_DEG + 1):
@@ -160,11 +181,15 @@ for d in range(1, EULER_DEG + 1):
     print("marginal Euler product through degree %d = %.6f" % (d, float(prod)))
 
 shared = sieve_count(sets, degs, EULER_N, degcap=EULER_DEG)
-exact = Fraction(shared, 4 ** EULER_N)
-print("exact no shared prime of degree at most %d at n = %d = %d/%d = %.6f"
-      % (EULER_DEG, EULER_N, shared, 4 ** EULER_N, float(exact)))
+exact = Fraction(shared, 4**EULER_N)
+print(
+    "exact no shared prime of degree at most %d at n = %d = %d/%d = %.6f"
+    % (EULER_DEG, EULER_N, shared, 4**EULER_N, float(exact))
+)
 print("marginal product minus exact = %+.6f" % float(prod - exact))
 
 g = log(4) / log(3)
-print("gamma = log_3(4) = %.6f  gamma/2 = %.6f  window (gamma/2, 1/2] empty = %s"
-      % (g, g / 2, g / 2 > 0.5))
+print(
+    "gamma = log_3(4) = %.6f  gamma/2 = %.6f  window (gamma/2, 1/2] empty = %s"
+    % (g, g / 2, g / 2 > 0.5)
+)

@@ -1,4 +1,4 @@
-import { rng } from '../rand.js';
+import { rng } from "../rand.js";
 
 const TAU = Math.PI * 2;
 const GAIN = 1.12;
@@ -13,10 +13,10 @@ const BANDS = 4;
 const RIM = 0.14;
 const SUN = 0.45;
 
-const tone = (rgb, a = 1) => `rgba(${rgb.map((c) => Math.round(Math.min(1, c ** GAMMA * GAIN) * 255)).join(',')},${a})`;
+const tone = (rgb, a = 1) => `rgba(${rgb.map((c) => Math.round(Math.min(1, c ** GAMMA * GAIN) * 255)).join(",")},${a})`;
 
 const halo = (air, kind) => {
-  const rgb = kind === 'terran' || kind === 'ice' ? air.ray : air.mie;
+  const rgb = kind === "terran" || kind === "ice" ? air.ray : air.mie;
   const top = Math.max(...rgb) || 1;
   return rgb.map((c) => Math.round(255 * (c / top) ** 0.5));
 };
@@ -37,9 +37,20 @@ export function globe(ctx, w, h, params) {
     ctx.lineWidth = step * FLAT * 2;
     for (let i = 0; i < BANDS; i++) {
       const k = i / (BANDS - 1);
-      ctx.strokeStyle = tone(ring.dark.map((c, j) => c + (ring.bright[j] - c) * k), 0.85);
+      ctx.strokeStyle = tone(
+        ring.dark.map((c, j) => c + (ring.bright[j] - c) * k),
+        0.85,
+      );
       ctx.beginPath();
-      ctx.ellipse(0, 0, a + step * (i + 0.5), (a + step * (i + 0.5)) * FLAT, 0, front ? 0 : Math.PI, front ? Math.PI : TAU);
+      ctx.ellipse(
+        0,
+        0,
+        a + step * (i + 0.5),
+        (a + step * (i + 0.5)) * FLAT,
+        0,
+        front ? 0 : Math.PI,
+        front ? Math.PI : TAU,
+      );
       ctx.stroke();
     }
     ctx.restore();
@@ -65,7 +76,7 @@ export function globe(ctx, w, h, params) {
     }
     if (params.cloud && params.cover > 0.2) {
       ctx.strokeStyle = tone(params.cloud, 0.7);
-      ctx.lineCap = 'round';
+      ctx.lineCap = "round";
       ctx.lineWidth = r * 0.1;
       for (let i = 0; i < CLOUDS; i++) {
         const a = rand() * TAU;
@@ -76,9 +87,9 @@ export function globe(ctx, w, h, params) {
     }
   }
   const lit = ctx.createRadialGradient(mid - r * SUN, mid - r * SUN, r * 0.1, mid - r * 0.15, mid - r * 0.15, r * 1.5);
-  lit.addColorStop(0, 'rgba(0,0,0,0)');
-  lit.addColorStop(0.55, 'rgba(0,0,0,0.15)');
-  lit.addColorStop(1, 'rgba(0,0,0,0.9)');
+  lit.addColorStop(0, "rgba(0,0,0,0)");
+  lit.addColorStop(0.55, "rgba(0,0,0,0.15)");
+  lit.addColorStop(1, "rgba(0,0,0,0.9)");
   ctx.fillStyle = lit;
   ctx.fillRect(0, 0, w, h);
   ctx.restore();

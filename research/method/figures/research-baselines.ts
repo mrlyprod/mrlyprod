@@ -18,7 +18,8 @@ function peel(m: number, points: Point[]): Map<string, number> {
   for (let r = 0; live.length; r++) {
     const mids = new Set<string>();
     for (let i = 0; i < live.length; i++)
-      for (let j = i + 1; j < live.length; j++) mids.add(key([((live[i][0] + live[j][0]) * half) % m, ((live[i][1] + live[j][1]) * half) % m]));
+      for (let j = i + 1; j < live.length; j++)
+        mids.add(key([((live[i][0] + live[j][0]) * half) % m, ((live[i][1] + live[j][1]) * half) % m]));
     const out = live.filter((p) => !mids.has(key(p)));
     if (!out.length) throw new Error(`research-baselines: ${live.length} points do not peel`);
     for (const p of out) round.set(key(p), r);

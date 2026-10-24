@@ -1,7 +1,7 @@
-import { scenes } from 'apps:scenes';
-import { site } from 'site:routes';
-import { rng } from '../lib/rand.js';
-import { offs } from './prefs.js';
+import { scenes } from "apps:scenes";
+import { site } from "site:routes";
+import { rng } from "../lib/rand.js";
+import { offs } from "./prefs.js";
 
 const LONGEST = 10000;
 
@@ -35,7 +35,8 @@ export async function load(id) {
 
 function still(entry, saver) {
   const ms = saver.still ?? STILL;
-  if (!Number.isInteger(ms) || ms < 1 || ms > LONGEST) throw new Error(`savers: ${entry.id} sets still to ${ms}; it is a whole number of ms from 1 to ${LONGEST}`);
+  if (!Number.isInteger(ms) || ms < 1 || ms > LONGEST)
+    throw new Error(`savers: ${entry.id} sets still to ${ms}; it is a whole number of ms from 1 to ${LONGEST}`);
   return ms;
 }
 

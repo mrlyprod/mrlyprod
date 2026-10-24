@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
-import { decode } from "../src/lib/git/view.ts";
 import { decide, joined } from "../infra/edge.ts";
 import { kind } from "../infra/mime.ts";
+import { decode } from "../src/lib/git/view.ts";
 
 /* WHERE */
 
@@ -33,7 +33,8 @@ export function block(config: Record<string, unknown>): Block {
 
 /* SERVER */
 
-const doc = (bytes: Uint8Array) => new TextDecoder().decode(bytes.subarray(0, 15)).toLowerCase().startsWith("<!doctype html");
+const doc = (bytes: Uint8Array) =>
+  new TextDecoder().decode(bytes.subarray(0, 15)).toLowerCase().startsWith("<!doctype html");
 
 function serve(dist: string) {
   const file = (path: string): Response | null => {
@@ -54,7 +55,9 @@ function serve(dist: string) {
       const hit = file(step.uri!);
       if (hit) return hit;
       const lost = file("/404.html");
-      return lost ? new Response(lost.body, { status: 404, headers: lost.headers }) : new Response("not found", { status: 404 });
+      return lost
+        ? new Response(lost.body, { status: 404, headers: lost.headers })
+        : new Response("not found", { status: 404 });
     },
   });
 }
@@ -92,7 +95,18 @@ async function launch(profile: string) {
   if (!LIVE) rmSync(profile, { recursive: true, force: true });
   mkdirSync(profile, { recursive: true });
   const proc = Bun.spawn(
-    [CHROME, "--headless=new", "--disable-gpu", "--enable-unsafe-swiftshader", "--use-angle=swiftshader", "--no-first-run", "--hide-scrollbars", `--user-data-dir=${profile}`, `--remote-debugging-port=${PORT}`, "about:blank"],
+    [
+      CHROME,
+      "--headless=new",
+      "--disable-gpu",
+      "--enable-unsafe-swiftshader",
+      "--use-angle=swiftshader",
+      "--no-first-run",
+      "--hide-scrollbars",
+      `--user-data-dir=${profile}`,
+      `--remote-debugging-port=${PORT}`,
+      "about:blank",
+    ],
     { stdout: "ignore", stderr: "ignore" },
   );
   for (let i = 0; i < 50; i++) {
@@ -105,13 +119,33 @@ async function launch(profile: string) {
   throw new Error(`shots: no chrome at ${CHROME}; set CHROME to the binary`);
 }
 
-const flat = (one: any) => (one?.value !== undefined ? String(one.value) : (one?.description ?? one?.preview?.description ?? one?.unserializableValue ?? one?.type ?? ""));
+type Remote = {
+  type?: string;
+  value?: unknown;
+  description?: string;
+  unserializableValue?: string;
+  preview?: { description?: string };
+};
+
+type Reply = {
+  result: { value?: unknown };
+  exceptionDetails?: { text: string; exception?: { description?: string } };
+  cssContentSize: { width: number; height: number };
+  data: string;
+};
+
+type Params = { requestId: string; frame: { parentId?: string } };
+
+const flat = (one?: Remote) =>
+  one?.value !== undefined
+    ? String(one.value)
+    : (one?.description ?? one?.preview?.description ?? one?.unserializableValue ?? one?.type ?? "");
 
 function driver(ws: WebSocket) {
   let id = 0;
-  const pending = new Map<number, (v: any) => void>();
+  const pending = new Map<number, (v: Reply) => void>();
   const events = new Map<string, () => void>();
-  const heard = new Map<string, (params: any) => void>();
+  const heard = new Map<string, (params: Params) => void>();
   const noise: string[] = [];
   const said = (text: string) => {
     const line = text.trim().replace(/\s+/g, " ").slice(0, 400);
@@ -137,7 +171,7 @@ function driver(ws: WebSocket) {
   };
   const send = (method: string, params = {}, ms = REPLY) =>
     deadline(
-      new Promise<any>((r) => {
+      new Promise<Reply>((r) => {
         pending.set(++id, r);
         ws.send(JSON.stringify({ id, method, params }));
       }),
@@ -145,7 +179,7 @@ function driver(ws: WebSocket) {
       `${method} reply`,
     );
   const once = (method: string) => deadline(new Promise<void>((r) => events.set(method, r)), PATIENCE, method);
-  const on = (method: string, fn: (params: any) => void) => heard.set(method, fn);
+  const on = (method: string, fn: (params: Params) => void) => heard.set(method, fn);
   return { send, once, on, noise };
 }
 
@@ -172,7 +206,8 @@ const ready = (motion: boolean) =>
 
 const QUIET = `(() => { for (const i of document.images) { i.loading = "eager"; i.decoding = "sync"; } return document.readyState === "complete" && [...document.images].every((i) => i.complete) && document.fonts.status !== "loading"; })()`;
 
-const painted = (born: number) => `performance.timeOrigin !== ${born} && document.readyState !== "loading" && [...document.querySelectorAll('link[rel="stylesheet"]')].every((one) => one.sheet)`;
+const painted = (born: number) =>
+  `performance.timeOrigin !== ${born} && document.readyState !== "loading" && [...document.querySelectorAll('link[rel="stylesheet"]')].every((one) => one.sheet)`;
 
 const WIDE = `JSON.stringify([...document.querySelectorAll("body *")].filter((el) => !el.closest(".pane, .scrim") && getComputedStyle(el).visibility !== "hidden").map((el) => [el, el.getBoundingClientRect()]).filter(([, r]) => r.right > innerWidth + 1 && r.width > 0).sort((a, b) => b[1].right - a[1].right).slice(0, 4).map(([el, r]) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\\s+/).join(".") : "") + " right=" + Math.round(r.right) + " width=" + Math.round(r.width)))`;
 
@@ -211,15 +246,25 @@ async function stroke(send: Send, step: string) {
   }
   const [code, text] = KEYS[name]!;
   const modifiers = mods.reduce((sum, one) => sum | MODS[one]!, 0);
-  const key = { key: name === "Space" ? " " : name, code: name, windowsVirtualKeyCode: code, nativeVirtualKeyCode: code, modifiers };
+  const key = {
+    key: name === "Space" ? " " : name,
+    code: name,
+    windowsVirtualKeyCode: code,
+    nativeVirtualKeyCode: code,
+    modifiers,
+  };
   const types = text !== undefined && !(modifiers & 7);
-  await send("Input.dispatchKeyEvent", types ? { ...key, type: "keyDown", text, unmodifiedText: text } : { ...key, type: "rawKeyDown" });
+  await send(
+    "Input.dispatchKeyEvent",
+    types ? { ...key, type: "keyDown", text, unmodifiedText: text } : { ...key, type: "rawKeyDown" },
+  );
   await send("Input.dispatchKeyEvent", { ...key, type: "keyUp" });
 }
 
 /* WALK */
 
-const AIM = (to: string) => `const want = new URL(${JSON.stringify(to)}, location.origin); const same = (one) => one.origin === want.origin && one.pathname === want.pathname && one.search === want.search && one.hash === want.hash;`;
+const AIM = (to: string) =>
+  `const want = new URL(${JSON.stringify(to)}, location.origin); const same = (one) => one.origin === want.origin && one.pathname === want.pathname && one.search === want.search && one.hash === want.hash;`;
 
 const OVER = `document.querySelector("dialog[open]")`;
 
@@ -231,7 +276,8 @@ const HERE = `location.pathname + location.search + location.hash`;
 const landed = (to: string, from: string) =>
   `(() => { ${AIM(to)} const was = new URL(${JSON.stringify(from)}, location.origin); const on = location.pathname === want.pathname; const self = was.pathname === want.pathname && !want.hash; const fresh = window.__main?.isConnected !== true || (window.__over === true && !${OVER}); return ((self ? on && fresh : same(location) || (on && ${HERE} !== ${JSON.stringify(from)})) || ${OVER}?.dataset.page === want.pathname) && document.readyState === "complete"; })()`;
 
-const moved = (from: string) => `(${HERE} !== ${JSON.stringify(from)} || window.__popped === true) && document.readyState === "complete"`;
+const moved = (from: string) =>
+  `(${HERE} !== ${JSON.stringify(from)} || window.__popped === true) && document.readyState === "complete"`;
 
 /* RUN */
 
@@ -259,8 +305,10 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
   const pages = asked.length ? asked : routes;
   const sized = Object.entries(sizes).filter(([size]) => !only || size === only);
   if (!sized.length) throw new Error(`shots: --size ${only} is none of ${Object.keys(sizes).join(", ")}`);
-  if (frames.some((at) => !Number.isFinite(at) || at < 0)) throw new Error("shots: --frames takes milliseconds, as 0,200,400");
-  if (first && (walk || keys.length || frames.length)) throw new Error("shots: --first shoots alone, without --walk, --keys or --frames");
+  if (frames.some((at) => !Number.isFinite(at) || at < 0))
+    throw new Error("shots: --frames takes milliseconds, as 0,200,400");
+  if (first && (walk || keys.length || frames.length))
+    throw new Error("shots: --first shoots alone, without --walk, --keys or --frames");
   const out = join(DATA_DIR, "shots", baseline ? "baseline" : "latest");
   const base = join(DATA_DIR, "shots", "baseline");
   const origin = LIVE || `http://127.0.0.1:${SERVE}`;
@@ -280,7 +328,13 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
     await send("Runtime.enable");
     await send("Log.enable");
     await send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: out });
-    await send("Emulation.setEmulatedMedia", { media: print ? "print" : "", features: [{ name: "prefers-reduced-motion", value: motion ? "no-preference" : "reduce" }, ...(scheme ? [{ name: "prefers-color-scheme", value: scheme }] : [])] });
+    await send("Emulation.setEmulatedMedia", {
+      media: print ? "print" : "",
+      features: [
+        { name: "prefers-reduced-motion", value: motion ? "no-preference" : "reduce" },
+        ...(scheme ? [{ name: "prefers-color-scheme", value: scheme }] : []),
+      ],
+    });
     if (nojs) await send("Emulation.setScriptExecutionDisabled", { value: true });
     if (keys.length) await send("Emulation.setFocusEmulationEnabled", { enabled: true });
     const held: string[] = [];
@@ -294,19 +348,29 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
     on("Page.frameNavigated", ({ frame }) => {
       if (!frame.parentId) loads++;
     });
-    const value = async (expression: string) => (await send("Runtime.evaluate", { expression, returnByValue: true })).result?.value;
+    const value = async (expression: string) =>
+      (await send("Runtime.evaluate", { expression, returnByValue: true })).result?.value;
     const said = () => {
       for (const line of [...new Set(noise)]) console.log(`  ${line}`);
     };
     const probed = async () => {
       if (!probe) return;
-      const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: probe, returnByValue: true, awaitPromise: true });
+      const { result, exceptionDetails } = await send("Runtime.evaluate", {
+        expression: probe,
+        returnByValue: true,
+        awaitPromise: true,
+      });
       console.log(`  ${exceptionDetails ? `probe failed: ${exceptionDetails.text}` : JSON.stringify(result.value)}`);
     };
     const take = async ([width, height]: Size, file: string, view: boolean, note = "", tell = true) => {
       const { cssContentSize } = await send("Page.getLayoutMetrics");
       const full = view ? height : Math.min(Math.ceil(cssContentSize.height), TALL);
-      const cap = await send("Page.captureScreenshot", view ? { format: "png" } : { format: "png", captureBeyondViewport: true, clip: { x: 0, y: 0, width, height: full, scale: 1 } });
+      const cap = await send(
+        "Page.captureScreenshot",
+        view
+          ? { format: "png" }
+          : { format: "png", captureBeyondViewport: true, clip: { x: 0, y: 0, width, height: full, scale: 1 } },
+      );
       const bytes = new Uint8Array(Buffer.from(cap.data, "base64"));
       await Bun.write(join(out, file), bytes);
       shot++;
@@ -321,26 +385,39 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
         verdict = " new";
         fresh++;
       }
-      console.log(`shots: ${file} ${width}x${full} ${sha(bytes)}${note}${wide ? " OVERFLOW" : ""}${verdict}${tell && noise.length ? ` ${noise.length} NOISE` : ""}`);
+      console.log(
+        `shots: ${file} ${width}x${full} ${sha(bytes)}${note}${wide ? " OVERFLOW" : ""}${verdict}${tell && noise.length ? ` ${noise.length} NOISE` : ""}`,
+      );
       if (tell) {
         said();
         await probed();
       }
       if (wide) {
         const { result } = await send("Runtime.evaluate", { expression: WIDE, returnByValue: true });
-        for (const line of JSON.parse(result.value) as string[]) console.log(`  ${line}`);
+        for (const line of JSON.parse(String(result.value)) as string[]) console.log(`  ${line}`);
       }
     };
     const settle = async () => {
       if (nojs) {
         await until(send, QUIET, PATIENCE);
         if (!motion) await send("Runtime.evaluate", { expression: STILL });
-      } else await Promise.race([send("Runtime.evaluate", { expression: ready(motion), awaitPromise: true, returnByValue: true }).catch(() => 0), wait(PATIENCE)]);
+      } else
+        await Promise.race([
+          send("Runtime.evaluate", { expression: ready(motion), awaitPromise: true, returnByValue: true }).catch(
+            () => 0,
+          ),
+          wait(PATIENCE),
+        ]);
       await wait(PAUSE);
     };
     const run = async (act: string) => {
-      const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: act, returnByValue: true, awaitPromise: true }, ACT);
-      if (exceptionDetails) console.log(`  act failed: ${exceptionDetails.exception?.description ?? exceptionDetails.text}`);
+      const { result, exceptionDetails } = await send(
+        "Runtime.evaluate",
+        { expression: act, returnByValue: true, awaitPromise: true },
+        ACT,
+      );
+      if (exceptionDetails)
+        console.log(`  act failed: ${exceptionDetails.exception?.description ?? exceptionDetails.text}`);
       else if (result?.value !== undefined && result.value !== 0) console.log(`  act: ${JSON.stringify(result.value)}`);
     };
     const finish = async (dims: Size, file: (stage: string) => string, moved: boolean, tell = true) => {
@@ -361,7 +438,10 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
     const shoot = async (turn: number, want: string, size: string, dims: Size) => {
       const [route = "/", act] = want.split("@");
       const born = first ? Number(await value("performance.timeOrigin")) : 0;
-      const loaded = once("Page.loadEventFired").then(() => "", (error: Error) => error.message);
+      const loaded = once("Page.loadEventFired").then(
+        () => "",
+        (error: Error) => error.message,
+      );
       noise.length = 0;
       held.length = 0;
       holding = first;
@@ -398,20 +478,29 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
         let how = "load";
         noise.length = 0;
         if (!n) {
-          const loaded = once("Page.loadEventFired").then(() => "", (error: Error) => error.message);
+          const loaded = once("Page.loadEventFired").then(
+            () => "",
+            (error: Error) => error.message,
+          );
           await send("Page.navigate", { url: `${origin}${to}` });
           const lost = await loaded;
           if (lost) return console.log(`walk: ${n} ${to} FAILED ${lost}`);
         } else if (to === "reload") {
           how = to;
-          const loaded = once("Page.loadEventFired").then(() => "", (error: Error) => error.message);
+          const loaded = once("Page.loadEventFired").then(
+            () => "",
+            (error: Error) => error.message,
+          );
           await send("Page.reload");
           const lost = await loaded;
           if (lost) return console.log(`walk: ${n} ${to} FAILED ${lost}`);
         } else if (to === "back" || to === "forward") {
           how = to;
-          await send("Runtime.evaluate", { expression: `window.__popped = false; addEventListener("popstate", () => { window.__popped = true; }, { once: true }); history.${to}()` });
-          if (!(await until(send, moved(from), PATIENCE))) return console.log(`walk: ${n} ${to} FAILED ${from} never left`);
+          await send("Runtime.evaluate", {
+            expression: `window.__popped = false; addEventListener("popstate", () => { window.__popped = true; }, { once: true }); history.${to}()`,
+          });
+          if (!(await until(send, moved(from), PATIENCE)))
+            return console.log(`walk: ${n} ${to} FAILED ${from} never left`);
         } else {
           const spot = String(await value(hop(to)));
           if (spot === "none") return console.log(`walk: ${n} ${to} FAILED ${from} holds no link to it`);
@@ -422,7 +511,8 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
             await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
             await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
           }
-          if (!(await until(send, landed(to, from), PATIENCE))) return console.log(`walk: ${n} ${to} FAILED the ${how} on ${from} never landed`);
+          if (!(await until(send, landed(to, from), PATIENCE)))
+            return console.log(`walk: ${n} ${to} FAILED the ${how} on ${from} never landed`);
         }
         await settle();
         if (act) await run(act);
@@ -430,19 +520,31 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
         if (n === pages.length - 1) await finish(dims, (stage) => name(here, size, -1, stage), true, false);
         else if (act) await wait(PAUSE);
         const over = await value(`${OVER}?.dataset.page ?? ""`);
-        console.log(`walk: ${n} ${here} ${how} loads=${loads} scroll=${await value("Math.round(scrollY)")}${over ? ` dialog=${over}` : ""}${noise.length ? ` ${noise.length} NOISE` : ""}`);
+        console.log(
+          `walk: ${n} ${here} ${how} loads=${loads} scroll=${await value("Math.round(scrollY)")}${over ? ` dialog=${over}` : ""}${noise.length ? ` ${noise.length} NOISE` : ""}`,
+        );
         said();
         await probed();
       }
       console.log(`walk: ${pages.length} hops at ${size}, ${loads} page loads`);
     };
     for (const [size, dims] of walk ? sized : []) {
-      await send("Emulation.setDeviceMetricsOverride", { width: dims[0], height: dims[1], deviceScaleFactor: 1, mobile: dims[2] });
+      await send("Emulation.setDeviceMetricsOverride", {
+        width: dims[0],
+        height: dims[1],
+        deviceScaleFactor: 1,
+        mobile: dims[2],
+      });
       await stroll(size, dims);
     }
     for (const [turn, want] of walk ? [] : pages.entries()) {
       for (const [size, dims] of sized) {
-        await send("Emulation.setDeviceMetricsOverride", { width: dims[0], height: dims[1], deviceScaleFactor: 1, mobile: dims[2] });
+        await send("Emulation.setDeviceMetricsOverride", {
+          width: dims[0],
+          height: dims[1],
+          deviceScaleFactor: 1,
+          mobile: dims[2],
+        });
         await shoot(turn, want, size, dims);
       }
     }

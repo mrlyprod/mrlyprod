@@ -13,11 +13,18 @@ let memo = null;
 function build() {
   if (memo) return memo;
   const design = math.radix.twindragon();
-  const got = { fill: Number(design.fill(LEVEL)), distinct: design.distinct(LEVEL), code: design.code(), base: design.base().value().map(Number).join() };
-  if (Object.values(got).join() !== Object.values(WANT).join()) throw new Error(`radix: the twindragon reads ${Object.values(got).join()}, want ${Object.values(WANT).join()}`);
+  const got = {
+    fill: Number(design.fill(LEVEL)),
+    distinct: design.distinct(LEVEL),
+    code: design.code(),
+    base: design.base().value().map(Number).join(),
+  };
+  if (Object.values(got).join() !== Object.values(WANT).join())
+    throw new Error(`radix: the twindragon reads ${Object.values(got).join()}, want ${Object.values(WANT).join()}`);
   if (LEVEL % 2 || DRAW % 2) throw new Error("radix: an odd level turns the cells off the axes");
   const pts = design.plane(DRAW);
-  if (pts.length !== 2 ** DRAW || design.distinct(DRAW) !== 2 ** DRAW) throw new Error(`radix: level ${DRAW} draws ${pts.length} cells, want ${2 ** DRAW}`);
+  if (pts.length !== 2 ** DRAW || design.distinct(DRAW) !== 2 ** DRAW)
+    throw new Error(`radix: level ${DRAW} draws ${pts.length} cells, want ${2 ** DRAW}`);
   const side = 2 ** (-DRAW / 2);
   const box = [Infinity, Infinity, -Infinity, -Infinity];
   for (const [x, y] of pts) {

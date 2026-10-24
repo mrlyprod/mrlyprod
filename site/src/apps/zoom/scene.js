@@ -1,15 +1,15 @@
-import { tidy } from '../../lib/app/spec.js';
-import { NAMES, SPEED, canon, name, route, teach } from '../../lib/space/bang.js';
-import { look as aim } from '../../lib/gl/camera.js';
-import { blank, context } from '../../lib/gl/gl2.js';
-import { hud } from './hud.js';
-import { hyper } from '../../lib/space/hyper.js';
-import { GRADES, march, tone } from '../../lib/space/march.js';
-import { post } from '../../lib/gl/post.js';
-import { trails } from './trails.js';
-import { add } from '../../lib/gl/vec.js';
-import { pick } from '../../lib/rand.js';
-import { wasm } from '../../lib/units/index.js';
+import { tidy } from "../../lib/app/spec.js";
+import { look as aim } from "../../lib/gl/camera.js";
+import { blank, context } from "../../lib/gl/gl2.js";
+import { post } from "../../lib/gl/post.js";
+import { add } from "../../lib/gl/vec.js";
+import { pick } from "../../lib/rand.js";
+import { canon, NAMES, name, route, SPEED, teach } from "../../lib/space/bang.js";
+import { hyper } from "../../lib/space/hyper.js";
+import { GRADES, march, tone } from "../../lib/space/march.js";
+import { wasm } from "../../lib/units/index.js";
+import { hud } from "./hud.js";
+import { trails } from "./trails.js";
 
 const HIDE = () => false;
 const FAMILY = NAMES.map(([code]) => code);
@@ -17,44 +17,124 @@ const GRIDS = [3, 5];
 const SLOW = 0.5;
 
 export const SPEC = [
-  { key: 'code', label: 'Code', kind: 'slider', def: 23, min: 0, max: 255, step: 1, group: 'Shape', when: HIDE },
-  { key: 'n', label: 'N', kind: 'segment', def: 3, options: [[3, '3'], [5, '5']], group: 'Shape' },
-  { key: 'pick', label: 'Pick', kind: 'segment', def: 'all', options: [['all', 'All'], ['flyable', 'Flyable'], ['named', 'Named'], ['family', 'Family']], group: 'Shape', when: HIDE },
-  { key: 'speed', label: 'Speed', kind: 'slider', def: 1, min: 0.25, max: 2, step: 0.25, group: 'Flight' },
-  { key: 'path', label: 'Path', kind: 'toggle', def: 1, group: 'Flight' },
-  { key: 'pilot', label: 'Pilot', kind: 'segment', def: 'steady', options: [['steady', 'Steady'], ['fighter', 'Fighter'], ['coaster', 'Coaster']], group: 'Flight' },
-  { key: 'look', label: 'Look', kind: 'segment', def: 'studio', options: [['graphic', 'Graphic'], ['studio', 'Studio'], ['haze', 'Haze']], group: 'Look' },
-  { key: 'palette', label: 'Palette', kind: 'pick', def: '', options: [['', 'Seeded'], ['accent', 'Accent'], ['fire', 'Fire'], ['ice', 'Ice'], ['mono', 'Mono']], group: 'Look' },
-  { key: 'quality', label: 'Quality', kind: 'segment', def: '', options: [['', 'Auto'], ['low', 'Low'], ['high', 'High']], group: 'Look' },
-  { key: 'hyper', label: 'Hyper', kind: 'toggle', def: 0, group: 'Look' },
+  { key: "code", label: "Code", kind: "slider", def: 23, min: 0, max: 255, step: 1, group: "Shape", when: HIDE },
+  {
+    key: "n",
+    label: "N",
+    kind: "segment",
+    def: 3,
+    options: [
+      [3, "3"],
+      [5, "5"],
+    ],
+    group: "Shape",
+  },
+  {
+    key: "pick",
+    label: "Pick",
+    kind: "segment",
+    def: "all",
+    options: [
+      ["all", "All"],
+      ["flyable", "Flyable"],
+      ["named", "Named"],
+      ["family", "Family"],
+    ],
+    group: "Shape",
+    when: HIDE,
+  },
+  { key: "speed", label: "Speed", kind: "slider", def: 1, min: 0.25, max: 2, step: 0.25, group: "Flight" },
+  { key: "path", label: "Path", kind: "toggle", def: 1, group: "Flight" },
+  {
+    key: "pilot",
+    label: "Pilot",
+    kind: "segment",
+    def: "steady",
+    options: [
+      ["steady", "Steady"],
+      ["fighter", "Fighter"],
+      ["coaster", "Coaster"],
+    ],
+    group: "Flight",
+  },
+  {
+    key: "look",
+    label: "Look",
+    kind: "segment",
+    def: "studio",
+    options: [
+      ["graphic", "Graphic"],
+      ["studio", "Studio"],
+      ["haze", "Haze"],
+    ],
+    group: "Look",
+  },
+  {
+    key: "palette",
+    label: "Palette",
+    kind: "pick",
+    def: "",
+    options: [
+      ["", "Seeded"],
+      ["accent", "Accent"],
+      ["fire", "Fire"],
+      ["ice", "Ice"],
+      ["mono", "Mono"],
+    ],
+    group: "Look",
+  },
+  {
+    key: "quality",
+    label: "Quality",
+    kind: "segment",
+    def: "",
+    options: [
+      ["", "Auto"],
+      ["low", "Low"],
+      ["high", "High"],
+    ],
+    group: "Look",
+  },
+  { key: "hyper", label: "Hyper", kind: "toggle", def: 0, group: "Look" },
 ];
 
-export const units = wasm('math');
+export const units = wasm("math");
 
 export const PAGE = {
   spec: SPEC,
   units,
-  design: { dim: 3, base: 2, code: 'code' },
+  design: { dim: 3, base: 2, code: "code" },
   keys: [
-    { key: 'ArrowRight', label: 'Next shape', act: 'next', menu: 'View' },
-    { key: 'ArrowLeft', label: 'Previous shape', act: 'prev', menu: 'View' },
+    { key: "ArrowRight", label: "Next shape", act: "next", menu: "View" },
+    { key: "ArrowLeft", label: "Previous shape", act: "prev", menu: "View" },
   ],
   actions: { next: (scene) => scene.step?.(1), prev: (scene) => scene.step?.(-1) },
   record: true,
 };
 
-const flight = (look) => (rand) => ({ code: pick(rand, FAMILY), n: pick(rand, GRIDS), speed: SLOW, path: 0, pilot: 'steady', look, palette: 'accent', quality: 'low' });
+const flight = (look) => (rand) => ({
+  code: pick(rand, FAMILY),
+  n: pick(rand, GRIDS),
+  speed: SLOW,
+  path: 0,
+  pilot: "steady",
+  look,
+  palette: "accent",
+  quality: "low",
+});
 
 export const SAVERS = [
-  { id: 'studio', title: 'Studio', pick: flight('studio') },
-  { id: 'graphic', title: 'Graphic', pick: flight('graphic') },
-  { id: 'haze', title: 'Haze', pick: flight('haze') },
+  { id: "studio", title: "Studio", pick: flight("studio") },
+  { id: "graphic", title: "Graphic", pick: flight("graphic") },
+  { id: "haze", title: "Haze", pick: flight("haze") },
 ];
 
 export function step(pool, code, by) {
   const at = pool.indexOf(code);
   if (at >= 0) return pool[(at + by + pool.length) % pool.length];
-  return (by > 0 ? (pool.find((one) => one > code) ?? pool[0]) : (pool.findLast((one) => one < code) ?? pool.at(-1))) ?? code;
+  return (
+    (by > 0 ? (pool.find((one) => one > code) ?? pool[0]) : (pool.findLast((one) => one < code) ?? pool.at(-1))) ?? code
+  );
 }
 
 const FOV = 1.25;
@@ -67,7 +147,7 @@ const DROP = 0.2;
 
 export function make(canvas, view, opts = {}) {
   const { math } = opts;
-  if (!math) throw new Error('zoom: the scene wants @mrlyprod/mrly/math as opts.math');
+  if (!math) throw new Error("zoom: the scene wants @mrlyprod/mrly/math as opts.math");
   const gl = context(canvas);
   if (!gl) return blank(canvas);
   const value = tidy(SPEC, opts);
@@ -93,7 +173,7 @@ export function make(canvas, view, opts = {}) {
         made.push(lines);
       }
       if (value.hyper) {
-        trip = hyper(gl, view, { seed, sky: SKY, tint: '', look: 'cloud', idle: 0, mode: null, floor: 'cloud' });
+        trip = hyper(gl, view, { seed, sky: SKY, tint: "", look: "cloud", idle: 0, mode: null, floor: "cloud" });
         made.push({ drop: trip.stop });
       } else {
         film = post(gl, view);
@@ -113,19 +193,25 @@ export function make(canvas, view, opts = {}) {
     trip.hold();
   }
   const grade = GRADES[value.look];
-  const title = `${NAMES.some(([one]) => canon(math, one) === canon(math, code)) ? name(math, code) : 'bang'} ${code}`;
+  const title = `${NAMES.some(([one]) => canon(math, one) === canon(math, code)) ? name(math, code) : "bang"} ${code}`;
   let tint = null;
   let paints = null;
   let rail = [];
   let said = [];
-  const words = (state) => [title, `n ${n}  level ${state.level}`, `bits ${info.bits}  fill ${info.kept}/${n ** 3}`, `dim ${info.dimension.toFixed(2)}  class ${info.class}`, state.mode];
+  const words = (state) => [
+    title,
+    `n ${n}  level ${state.level}`,
+    `bits ${info.bits}  fill ${info.kept}/${n ** 3}`,
+    `dim ${info.dimension.toFixed(2)}  class ${info.class}`,
+    state.mode,
+  ];
   const empty = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, view.w, view.h);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    said = ['empty'];
-    face.lines(said, 'tl');
+    said = ["empty"];
+    face.lines(said, "tl");
     face.draw();
   };
   const draw = () => {
@@ -157,12 +243,12 @@ export function make(canvas, view, opts = {}) {
     }
     said = words(state);
     if (view.lock) return;
-    face.lines(said, 'tl');
+    face.lines(said, "tl");
     face.draw();
   };
   const stop = () => {
     for (const one of made) one.drop();
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
   };
   return { draw, stop, code, said: () => said, trails: () => rail };
 }

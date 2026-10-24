@@ -16,7 +16,8 @@ let heights = null;
 function terms() {
   if (heights) return heights;
   const read = Array.from({ length: LEVELS }, (_, k) => Number(math.counts.exposure(CODE, 3, 2, k + 1, 2)));
-  if (read.join() !== PERIMETER.join()) throw new Error(`plot: the carpet perimeter reads ${read.join(", ")}, want ${PERIMETER.join(", ")}`);
+  if (read.join() !== PERIMETER.join())
+    throw new Error(`plot: the carpet perimeter reads ${read.join(", ")}, want ${PERIMETER.join(", ")}`);
   const top = Math.log10(read[LEVELS - 1]);
   heights = read.map((v) => FLOOR + (1 - FLOOR) * (Math.log10(v) / top));
   return heights;
@@ -29,7 +30,10 @@ export default function draw(pen) {
   const r = slot * HEAD;
   const floor = box.y + box.h;
   const head = (k) => [box.x + (k + 0.5) * slot, floor - r - (box.h - 2 * r) * tall[k]];
-  const ahead = [box.x + (LEVELS + 0.1) * slot, floor - r - (box.h - 2 * r) * (2 * tall[LEVELS - 1] - tall[LEVELS - 2])];
+  const ahead = [
+    box.x + (LEVELS + 0.1) * slot,
+    floor - r - (box.h - 2 * r) * (2 * tall[LEVELS - 1] - tall[LEVELS - 2]),
+  ];
   const back = [box.x - 0.1 * slot, floor - r - (box.h - 2 * r) * (2 * tall[0] - tall[1])];
   pen.polyline([back, ...tall.map((_, k) => head(k)), ahead], slot * LINE, paint.light);
   tall.forEach((_, k) => {

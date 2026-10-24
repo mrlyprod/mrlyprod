@@ -1,4 +1,4 @@
-export const DESIGNS = ['carpet', 'net', 'htree', 'vtree', 'void'];
+export const DESIGNS = ["carpet", "net", "htree", "vtree", "void"];
 
 export const NUMBERS = [3, 5, 7, 9];
 
@@ -10,7 +10,7 @@ const RULES = {
   carpet: (r, c) => (r & 1) + (c & 1) <= 1,
   net: (r, c) => (r & 1) + (c & 1) >= 1,
   htree: (r) => (r & 1) === 0,
-  vtree: (r, c) => (c & 1) === 0,
+  vtree: (_r, c) => (c & 1) === 0,
   void: (r, c) => (r & 1) === (c & 1),
 };
 

@@ -16,8 +16,27 @@ export default function draw(pen) {
   const tip = w / 2 - thick / 2;
   const heel = tip - w * BRACKET;
   const lean = w * SLASH;
-  if (heel <= lean + thick) throw new Error(`git: the brackets overlap the slash, heel ${heel.toFixed(0)}, lean ${lean.toFixed(0)}, stroke ${thick.toFixed(0)}`);
-  pen.polyline([[cx - heel, cy - h], [cx - tip, cy], [cx - heel, cy + h]], thick, paint.white);
-  pen.polyline([[cx + heel, cy - h], [cx + tip, cy], [cx + heel, cy + h]], thick, paint.white);
+  if (heel <= lean + thick)
+    throw new Error(
+      `git: the brackets overlap the slash, heel ${heel.toFixed(0)}, lean ${lean.toFixed(0)}, stroke ${thick.toFixed(0)}`,
+    );
+  pen.polyline(
+    [
+      [cx - heel, cy - h],
+      [cx - tip, cy],
+      [cx - heel, cy + h],
+    ],
+    thick,
+    paint.white,
+  );
+  pen.polyline(
+    [
+      [cx + heel, cy - h],
+      [cx + tip, cy],
+      [cx + heel, cy + h],
+    ],
+    thick,
+    paint.white,
+  );
   pen.segment([cx + lean, cy - h], [cx - lean, cy + h], thick, paint.light);
 }

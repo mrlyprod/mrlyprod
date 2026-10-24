@@ -19,8 +19,8 @@ function digits(dim: number) {
   const even = Array.from({ length: dim + 1 }, (_, k) => binomial(dim, k));
   const odd = Array.from({ length: dim }, (_, k) => BigInt(dim) * binomial(dim - 1, k));
   const out = Array<bigint>(2 * dim + 1).fill(0n);
-  even.forEach((v, k) => (out[2 * k] = v));
-  odd.forEach((v, k) => (out[2 * k + 1] = v));
+  for (const [k, v] of even.entries()) out[2 * k] = v;
+  for (const [k, v] of odd.entries()) out[2 * k + 1] = v;
   return out;
 }
 
@@ -63,12 +63,15 @@ function rows() {
     const floor = Math.floor(star);
     const below = floor % 2 ? floor : floor - 1;
     if (last !== below) throw new Error(`paper-slice-sign-law: last negative level ${last} at ${dim}, want ${below}`);
-    if (!stop || stop - last < 1 || stop - last > 2) throw new Error(`paper-slice-sign-law: stopping level ${stop} at ${dim}, want ${last} + 1 or + 2`);
-    if (signs.some((neg, level) => neg !== (level % 2 === 1 && level <= last))) throw new Error(`paper-slice-sign-law: a broken run at ${dim}`);
+    if (!stop || stop - last < 1 || stop - last > 2)
+      throw new Error(`paper-slice-sign-law: stopping level ${stop} at ${dim}, want ${last} + 1 or + 2`);
+    if (signs.some((neg, level) => neg !== (level % 2 === 1 && level <= last)))
+      throw new Error(`paper-slice-sign-law: a broken run at ${dim}`);
     out.push({ dim, last, star });
   }
   const forty = out.find((one) => one.dim === 40);
-  if (!forty || forty.last !== 87 || Math.abs(forty.star - 88.7719) > 1e-3) throw new Error(`paper-slice-sign-law: ${forty?.last} and ${forty?.star} at 40, want 87 and 88.7719`);
+  if (forty?.last !== 87 || Math.abs(forty.star - 88.7719) > 1e-3)
+    throw new Error(`paper-slice-sign-law: ${forty?.last} and ${forty?.star} at 40, want 87 and 88.7719`);
   return out;
 }
 
@@ -85,7 +88,8 @@ export default function draw(pen: Pen, ink: Ink) {
   table.forEach(({ last, star }, i) => {
     const top = frame.y + i * band + band * 0.14;
     const height = band * 0.72;
-    for (let level = 1; level <= last; level += 2) pen.rect(place(level) - slot / 2 + gap / 2, top, slot - gap, height, ink.blue);
+    for (let level = 1; level <= last; level += 2)
+      pen.rect(place(level) - slot / 2 + gap / 2, top, slot - gap, height, ink.blue);
     pen.rect(place(star) - 1.5, frame.y + i * band + band * 0.04, 3, band * 0.92, ink.yellow);
   });
 }

@@ -16,8 +16,9 @@ DEPENDENT = (3, (0, 1), 9, (0, 1, 3))
 
 # ENUMERATION
 
+
 def walk(L, p, pd, q, qd, sink):
-    pw_p = [p ** i for i in range(L + 1)]
+    pw_p = [p**i for i in range(L + 1)]
     pw_q = [1]
     while pw_q[-1] <= pw_p[L]:
         pw_q.append(pw_q[-1] * q)
@@ -58,7 +59,7 @@ def in_base(n, b, ds):
 
 
 def brute(L, p, pd, q, qd):
-    return [n for n in range(p ** L) if in_base(n, p, pd) and in_base(n, q, qd)]
+    return [n for n in range(p**L) if in_base(n, p, pd) and in_base(n, q, qd)]
 
 
 def digit_count(N, q, ds):
@@ -72,7 +73,7 @@ def digit_count(N, q, ds):
         m //= q
     total = 0
     for i in range(len(dig) - 1, -1, -1):
-        total += sum(1 for d in ds if d < dig[i]) * k ** i
+        total += sum(1 for d in ds if d < dig[i]) * k**i
         if dig[i] not in ds:
             break
     return total - (1 if 0 in ds else 0)
@@ -109,10 +110,17 @@ def crop(h, counts):
         start += 1
     return [i * h for i in range(start, len(counts))], list(counts[start:])
 
+
 # DETECTOR
 
+
 def blackman(m):
-    return [0.42 - 0.5 * math.cos(2 * math.pi * j / (m - 1)) + 0.08 * math.cos(4 * math.pi * j / (m - 1)) for j in range(m)]
+    return [
+        0.42
+        - 0.5 * math.cos(2 * math.pi * j / (m - 1))
+        + 0.08 * math.cos(4 * math.pi * j / (m - 1))
+        for j in range(m)
+    ]
 
 
 def power_at(y, h, w):
@@ -147,7 +155,7 @@ def detrend(us, cs, deg):
     ts = [(x - mid) / half for x in us]
     basis = []
     for k in range(deg + 1):
-        v = [t ** k for t in ts]
+        v = [t**k for t in ts]
         for b in basis:
             d = sum(a * c for a, c in zip(v, b))
             v = [a - d * c for a, c in zip(v, b)]
@@ -160,7 +168,11 @@ def detrend(us, cs, deg):
     n = len(ts)
     mt = sum(ts) / n
     my = sum(ys) / n
-    slope = sum((t - mt) * (y - my) for t, y in zip(ts, ys)) / sum((t - mt) ** 2 for t in ts) / half
+    slope = (
+        sum((t - mt) * (y - my) for t, y in zip(ts, ys))
+        / sum((t - mt) ** 2 for t in ts)
+        / half
+    )
     return slope, g
 
 
@@ -200,6 +212,7 @@ CANDIDATES = [
 
 # READING
 
+
 def nearest_comb(w):
     best = None
     for m in range(-COMB, COMB + 1):
@@ -231,27 +244,60 @@ def analyse(us, cs, asked, deg):
         best = min(peaks, key=lambda t: abs(t[0] - target))
         err = abs(best[0] - target) / target * 100
         ratio = best[1] / med
-        verdict[label] = (err < TOL * 100 and ratio >= RATIO, err, ratio, best[0], target)
-    return slope, max(g) - min(g), len(loud), cover, [(w, p / med) for w, p in top], verdict
+        verdict[label] = (
+            err < TOL * 100 and ratio >= RATIO,
+            err,
+            ratio,
+            best[0],
+            target,
+        )
+    return (
+        slope,
+        max(g) - min(g),
+        len(loud),
+        cover,
+        [(w, p / med) for w, p in top],
+        verdict,
+    )
 
 
 def reading(us, cs, asked, deg):
     slope, swing, nloud, cover, top, verdict = analyse(us, cs, asked, deg)
-    print("    detrend degree %d   fitted exponent %.6f   swing %.6f   maxima above %.0fx median %d   chance of a hit by position alone %.3f" % (deg, slope, swing, RATIO, nloud, cover))
+    print(
+        "    detrend degree %d   fitted exponent %.6f   swing %.6f   maxima above %.0fx median %d   chance of a hit by position alone %.3f"
+        % (deg, slope, swing, RATIO, nloud, cover)
+    )
     print("      strongest maxima  " + "   ".join("%.4f (%.3g x)" % t for t in top))
     e, m, n, v = nearest_comb(top[0][0])
-    print("      strongest maximum %.6f: nearest m 2pi/ln3 + n 2pi/ln5 with |m|, |n| <= %d is (%d, %d) = %.6f, error %.3f%%" % (top[0][0], COMB, m, n, v, e))
+    print(
+        "      strongest maximum %.6f: nearest m 2pi/ln3 + n 2pi/ln5 with |m|, |n| <= %d is (%d, %d) = %.6f, error %.3f%%"
+        % (top[0][0], COMB, m, n, v, e)
+    )
     for label, _ in CANDIDATES:
         if label not in verdict:
             continue
         ok, err, ratio, got, target = verdict[label]
-        print("      %-8s predicted %.6f  nearest max %.6f  error %.3f%%  power %.3g x median  present %s" % (label, target, got, err, ratio, ok))
+        print(
+            "      %-8s predicted %.6f  nearest max %.6f  error %.3f%%  power %.3g x median  present %s"
+            % (label, target, got, err, ratio, ok)
+        )
     return slope, verdict
 
 
 def report(name, us, cs, asked):
     print("  %s" % name)
-    print("    window u in [%.4f, %.4f], span %.4f, %d points, count %s to %s, resolution 2pi/span %.4f" % (us[0], us[-1], us[-1] - us[0], len(us), fmt(cs[0]), fmt(cs[-1]), 2 * math.pi / (us[-1] - us[0])))
+    print(
+        "    window u in [%.4f, %.4f], span %.4f, %d points, count %s to %s, resolution 2pi/span %.4f"
+        % (
+            us[0],
+            us[-1],
+            us[-1] - us[0],
+            len(us),
+            fmt(cs[0]),
+            fmt(cs[-1]),
+            2 * math.pi / (us[-1] - us[0]),
+        )
+    )
     reading(us, cs, asked, 1)
     reading(us, cs, asked, 3)
 
@@ -259,21 +305,32 @@ def report(name, us, cs, asked):
 def fmt(c):
     return "%d" % c if float(c).is_integer() else "%.6g" % c
 
+
 # VERBS
+
 
 def verb_control(M):
     p, pd, q, qd = INDEPENDENT
-    print("CONTROL: the pruned walk against direct digit filtering, base %d digits %s and base %d digits %s" % (p, list(pd), q, list(qd)))
+    print(
+        "CONTROL: the pruned walk against direct digit filtering, base %d digits %s and base %d digits %s"
+        % (p, list(pd), q, list(qd))
+    )
     print("L  height        direct  walk  nodes  agree")
     for L in range(M + 1):
         ref = brute(L, p, pd, q, qd)
         got = []
         nodes = walk(L, p, pd, q, qd, got.append)
-        print("%-2d %-13d %-7d %-5d %-6d %s" % (L, p ** L, len(ref), len(got), nodes, ref == got))
+        print(
+            "%-2d %-13d %-7d %-5d %-6d %s"
+            % (L, p**L, len(ref), len(got), nodes, ref == got)
+        )
         sys.stdout.flush()
     terms = []
     walk(10, p, pd, q, qd, terms.append)
-    print("first members of the cell below %d^10: %s" % (p, ", ".join(str(n) for n in terms[1:13])))
+    print(
+        "first members of the cell below %d^10: %s"
+        % (p, ", ".join(str(n) for n in terms[1:13]))
+    )
 
 
 def pair_counts(L, cell):
@@ -281,20 +338,45 @@ def pair_counts(L, cell):
     t0 = time.time()
     h, counts, nodes = histogram(L, p, pd, q, qd)
     budget = math.log(len(pd), p) + math.log(len(qd), q) - 1
-    print("  base %d digits %s against base %d digits %s: budget %.6f rounded up, %d nodes, %d hits, %.1f s" % (p, list(pd), q, list(qd), math.ceil(budget * 1e6) / 1e6, nodes, counts[-1], time.time() - t0))
+    print(
+        "  base %d digits %s against base %d digits %s: budget %.6f rounded up, %d nodes, %d hits, %.1f s"
+        % (
+            p,
+            list(pd),
+            q,
+            list(qd),
+            math.ceil(budget * 1e6) / 1e6,
+            nodes,
+            counts[-1],
+            time.time() - t0,
+        )
+    )
     sys.stdout.flush()
     return crop(h, counts)
 
 
 def verb_cell(L):
     p, pd, q, qd = INDEPENDENT
-    print("CELL: height %d^%d = %d" % (p, L, p ** L))
-    print("  criterion: a local maximum of the Blackman periodogram of ln C(e^u) detrended in u, lying within %.0f%% of the prediction and carrying at least %.0fx the median power of the band [%.1f, %.1f]" % (TOL * 100, RATIO, OMEGA_LO, OMEGA_HI))
+    print("CELL: height %d^%d = %d" % (p, L, p**L))
+    print(
+        "  criterion: a local maximum of the Blackman periodogram of ln C(e^u) detrended in u, lying within %.0f%% of the prediction and carrying at least %.0fx the median power of the band [%.1f, %.1f]"
+        % (TOL * 100, RATIO, OMEGA_LO, OMEGA_HI)
+    )
     print("INDEPENDENT PAIR")
     us, cs = pair_counts(L, INDEPENDENT)
-    report("C(N) of the intersection", us, cs, ("2pi/ln3", "2pi/ln5", "2pi/ln15", "beat", "sum"))
+    report(
+        "C(N) of the intersection",
+        us,
+        cs,
+        ("2pi/ln3", "2pi/ln5", "2pi/ln15", "beat", "sum"),
+    )
     half = len(us) // 2
-    report("C(N) on the upper half of the window", us[half:], cs[half:], ("2pi/ln3", "2pi/ln5"))
+    report(
+        "C(N) on the upper half of the window",
+        us[half:],
+        cs[half:],
+        ("2pi/ln3", "2pi/ln5"),
+    )
     print("ONE-BASE CONTROLS")
     hp, cp = one_base_ladder(L, p, p, pd)
     up, vp = crop(hp, cp)
@@ -306,38 +388,70 @@ def verb_cell(L):
 
 def verb_ladder(A, B):
     p, pd, q, qd = INDEPENDENT
-    print("LADDER: the criterion at every height from %d^%d to %d^%d, full window, both detrends" % (p, A, p, B))
-    print("  a height whose new hits are 0 is a decade of %d containing no member of the cell, on which C is exactly constant" % p)
-    print("L  hits      new       span   pts  loud cover  deg  2pi/ln3 err   power  present  2pi/ln5 err   power  present")
+    print(
+        "LADDER: the criterion at every height from %d^%d to %d^%d, full window, both detrends"
+        % (p, A, p, B)
+    )
+    print(
+        "  a height whose new hits are 0 is a decade of %d containing no member of the cell, on which C is exactly constant"
+        % p
+    )
+    print(
+        "L  hits      new       span   pts  loud cover  deg  2pi/ln3 err   power  present  2pi/ln5 err   power  present"
+    )
     prev = None
     for L in range(A, B + 1):
-        h, counts, nodes = histogram(L, p, pd, q, qd)
+        h, counts, _nodes = histogram(L, p, pd, q, qd)
         us, cs = crop(h, counts)
         new = "" if prev is None else "%d" % (counts[-1] - prev)
         prev = counts[-1]
         for deg in (1, 3):
             _, _, nloud, cover, _, v = analyse(us, cs, ("2pi/ln3", "2pi/ln5"), deg)
             a, b = v["2pi/ln3"], v["2pi/ln5"]
-            print("%-2d %-9d %-9s %6.2f %5d %4d %6.3f %3d %8.3f%% %7.3g %-8s %8.3f%% %7.3g %-8s" % (L, counts[-1], new, us[-1] - us[0], len(us), nloud, cover, deg, a[1], a[2], a[0], b[1], b[2], b[0]))
+            print(
+                "%-2d %-9d %-9s %6.2f %5d %4d %6.3f %3d %8.3f%% %7.3g %-8s %8.3f%% %7.3g %-8s"
+                % (
+                    L,
+                    counts[-1],
+                    new,
+                    us[-1] - us[0],
+                    len(us),
+                    nloud,
+                    cover,
+                    deg,
+                    a[1],
+                    a[2],
+                    a[0],
+                    b[1],
+                    b[2],
+                    b[0],
+                )
+            )
             new = ""
             sys.stdout.flush()
 
 
 def top_band(b, k, ds):
-    return b ** k, max(ds) * (b ** (k + 1) - 1) // (b - 1)
+    return b**k, max(ds) * (b ** (k + 1) - 1) // (b - 1)
 
 
 def verb_blocks(L):
     p, pd, q, qd = INDEPENDENT
     print("BLOCKS: the applicability hypothesis of the detector, height %d^%d" % (p, L))
-    print("  a member of the base %d design with k+1 digits lies in [%d^k, (%d^(k+1)-1)/2], so the design occupies the fraction ln(%d/2)/ln %d = %.6f of every decade of %d and the rest of the decade is empty" % (p, p, p, p, p, math.log(p / 2) / math.log(p), p))
-    print("  the base %d design occupies ln(%d/2)/ln %d = %.6f of every decade of %d" % (q, q, q, math.log(q / 2) / math.log(q), q))
+    print(
+        "  a member of the base %d design with k+1 digits lies in [%d^k, (%d^(k+1)-1)/2], so the design occupies the fraction ln(%d/2)/ln %d = %.6f of every decade of %d and the rest of the decade is empty"
+        % (p, p, p, p, p, math.log(p / 2) / math.log(p), p)
+    )
+    print(
+        "  the base %d design occupies ln(%d/2)/ln %d = %.6f of every decade of %d"
+        % (q, q, q, math.log(q / 2) / math.log(q), q)
+    )
     empty = []
     for j in range(L):
         lo3, hi3 = top_band(p, j, pd)
         hit = False
         i = 0
-        while q ** i <= hi3:
+        while q**i <= hi3:
             lo5, hi5 = top_band(q, i, qd)
             if max(lo3, lo5) <= min(hi3, hi5):
                 hit = True
@@ -345,9 +459,17 @@ def verb_blocks(L):
             i += 1
         if not hit:
             empty.append(j)
-    print("  decades [%d^j, %d^(j+1)) whose two design bands do not meet, so the cell has no member there and C is constant across the whole decade, j = %s" % (p, p, ", ".join(str(j) for j in empty)))
-    print("  the fraction of the exponents j < %d carrying no member is %d / %d = %.4f" % (L, len(empty), L, len(empty) / L))
-    print("BLOCK MODEL: C3(N) C5(N) / N, the two band structures multiplied with no joint arithmetic")
+    print(
+        "  decades [%d^j, %d^(j+1)) whose two design bands do not meet, so the cell has no member there and C is constant across the whole decade, j = %s"
+        % (p, p, ", ".join(str(j) for j in empty))
+    )
+    print(
+        "  the fraction of the exponents j < %d carrying no member is %d / %d = %.4f"
+        % (L, len(empty), L, len(empty) / L)
+    )
+    print(
+        "BLOCK MODEL: C3(N) C5(N) / N, the two band structures multiplied with no joint arithmetic"
+    )
     h = L * math.log(p) / (NGRID - 1)
     model = []
     for i in range(NGRID):
@@ -358,11 +480,15 @@ def verb_blocks(L):
 
 
 def verb_collapse(L):
-    p, pd, q, qd = DEPENDENT
-    print("COLLAPSE: height %d^%d = %d" % (p, L, p ** L))
-    print("  the dependent pair collapses to the base 9 design {0,1,3} of exponent log_9 3 = 0.5, one lattice of frequency 2pi/ln 9 whose first harmonic is 2pi/ln 3")
+    p, _pd, _q, _qd = DEPENDENT
+    print("COLLAPSE: height %d^%d = %d" % (p, L, p**L))
+    print(
+        "  the dependent pair collapses to the base 9 design {0,1,3} of exponent log_9 3 = 0.5, one lattice of frequency 2pi/ln 9 whose first harmonic is 2pi/ln 3"
+    )
     ud, cd = pair_counts(L, DEPENDENT)
-    report("C(N) of the dependent intersection", ud, cd, ("2pi/ln3", "2pi/ln5", "2pi/ln9"))
+    report(
+        "C(N) of the dependent intersection", ud, cd, ("2pi/ln3", "2pi/ln5", "2pi/ln9")
+    )
 
 
 def main():

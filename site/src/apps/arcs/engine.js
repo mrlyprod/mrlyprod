@@ -1,11 +1,20 @@
-import { codes, total } from '../../lib/designs/engine.js';
-import { num as fix, runs, sheet } from '../../lib/app/svg.js';
+import { num as fix, runs, sheet } from "../../lib/app/svg.js";
+import { codes, total } from "../../lib/designs/engine.js";
 
 export const DIM = 2;
 export const BUDGET = 65536;
-export const BASES = [[2, '2'], [3, '3'], [4, '4'], [5, '5']];
-export const LOOKS = [['all', 'All'], ['loops', 'Loops'], ['strands', 'Strands']];
-export const CANON = 'carpet';
+export const BASES = [
+  [2, "2"],
+  [3, "3"],
+  [4, "4"],
+  [5, "5"],
+];
+export const LOOKS = [
+  ["all", "All"],
+  ["loops", "Loops"],
+  ["strands", "Strands"],
+];
+export const CANON = "carpet";
 export const UNIT = 10;
 export const PAD = 16;
 export const AUTO = 0.16;
@@ -29,9 +38,9 @@ export const cap = (math, base) => math.bang.level_cap(Number(base), DIM, BUDGET
 export const names = (math, base) => math.name.words(DIM, base);
 
 export function resolve(math, base, text) {
-  const raw = String(text ?? '').trim();
+  const raw = String(text ?? "").trim();
   const words = names(math, base);
-  if (raw === '') return (words.find(([, word]) => word === CANON) ?? words[0])[0];
+  if (raw === "") return (words.find(([, word]) => word === CANON) ?? words[0])[0];
   return words.find(([, word]) => word === raw.toLowerCase())?.[0] ?? raw;
 }
 
@@ -55,10 +64,14 @@ const lawful = new Map();
 
 export function laws(math) {
   if (!lawful.has(math)) {
-    const found = BASES.flatMap(([base]) => (codes(math, DIM, base) ?? names(math, base).map(([code]) => code)).flatMap((code) => {
-      const law = math.arcs.law(code, base, 1);
-      return law && law.formula !== '0' ? [{ base, code, name: math.name.of(code, DIM, base) ?? '', formula: law.formula }] : [];
-    }));
+    const found = BASES.flatMap(([base]) =>
+      (codes(math, DIM, base) ?? names(math, base).map(([code]) => code)).flatMap((code) => {
+        const law = math.arcs.law(code, base, 1);
+        return law && law.formula !== "0"
+          ? [{ base, code, name: math.name.of(code, DIM, base) ?? "", formula: law.formula }]
+          : [];
+      }),
+    );
     lawful.set(math, found);
   }
   return lawful.get(math);
@@ -96,7 +109,17 @@ export function curves(math, code, base, level) {
     closed[k] = one.closed ? 1 : 0;
   });
   const cells = Uint8Array.from(drawn.cells);
-  return { side: drawn.side, cells, filled: cells.map((byte) => byte & 1), order, dir, bounds, closed, loops: drawn.loops, strands: drawn.strands };
+  return {
+    side: drawn.side,
+    cells,
+    filled: cells.map((byte) => byte & 1),
+    order,
+    dir,
+    bounds,
+    closed,
+    loops: drawn.loops,
+    strands: drawn.strands,
+  };
 }
 
 /* STUDY */
@@ -111,7 +134,18 @@ function plan(math, code, base, level) {
   const clock = schedule(lit.map((k) => drawn.bounds[k + 1] - drawn.bounds[k]));
   let filled = 0;
   for (const on of drawn.filled) filled += on;
-  const facts = { code, name: math.name.of(code, DIM, base) ?? '', base, level, side: drawn.side, cells: drawn.side * drawn.side, filled, loops: drawn.loops, strands: drawn.strands, law: law ? { formula: law.formula, loops: Number(law.loops) } : null };
+  const facts = {
+    code,
+    name: math.name.of(code, DIM, base) ?? "",
+    base,
+    level,
+    side: drawn.side,
+    cells: drawn.side * drawn.side,
+    filled,
+    loops: drawn.loops,
+    strands: drawn.strands,
+    law: law ? { formula: law.formula, loops: Number(law.loops) } : null,
+  };
   return { ...drawn, code, lit: Int32Array.from(lit), clock, facts };
 }
 
@@ -177,7 +211,7 @@ export const bend = (r, x, y, clockwise) => `A${fix(r)} ${fix(r)} 0 0 ${clockwis
 export function trail(plan, k, unit) {
   const { order, dir, bounds } = plan;
   const r = unit / 2;
-  let d = '';
+  let d = "";
   for (let j = bounds[k]; j < bounds[k + 1]; j++) {
     const g = arc(plan, order[j]);
     const v = [g.cx * unit, (g.y + 0.5) * unit];
@@ -194,14 +228,18 @@ export function picture(plan, value, shades) {
   const w = side * UNIT;
   const body = [];
   if (value.cells) {
-    const boxes = runs({ shape: [side, side], types: filled }).map(([row, col, len]) => `<rect x="${fix(col * UNIT)}" y="${fix(row * UNIT)}" width="${fix(len * UNIT)}" height="${fix(UNIT)}"/>`);
-    if (boxes.length) body.push(`<g fill="${shades.fill}">${boxes.join('')}</g>`);
+    const boxes = runs({ shape: [side, side], types: filled }).map(
+      ([row, col, len]) =>
+        `<rect x="${fix(col * UNIT)}" y="${fix(row * UNIT)}" width="${fix(len * UNIT)}" height="${fix(UNIT)}"/>`,
+    );
+    if (boxes.length) body.push(`<g fill="${shades.fill}">${boxes.join("")}</g>`);
   }
   const strands = [];
   const loops = [];
   for (let k = 0; k < closed.length; k++) (closed[k] ? loops : strands).push(trail(plan, k, UNIT));
-  const stroke = (d, color) => `<path d="${d}" fill="none" stroke="${color}" stroke-width="${fix((value.width || AUTO) * UNIT)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  if (value.look !== 'loops' && strands.length) body.push(stroke(strands.join(''), shades.strand));
-  if (value.look !== 'strands' && loops.length) body.push(stroke(loops.join(''), shades.loop));
-  return sheet(w, w, `<g transform="matrix(1 0 0 -1 0 ${fix(w)})">${body.join('')}</g>`);
+  const stroke = (d, color) =>
+    `<path d="${d}" fill="none" stroke="${color}" stroke-width="${fix((value.width || AUTO) * UNIT)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (value.look !== "loops" && strands.length) body.push(stroke(strands.join(""), shades.strand));
+  if (value.look !== "strands" && loops.length) body.push(stroke(loops.join(""), shades.loop));
+  return sheet(w, w, `<g transform="matrix(1 0 0 -1 0 ${fix(w)})">${body.join("")}</g>`);
 }

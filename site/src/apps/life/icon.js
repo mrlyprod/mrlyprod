@@ -4,7 +4,13 @@ import { plate } from "../../lib/plate.js";
 
 export const units = { life };
 
-const GLIDER = [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]];
+const GLIDER = [
+  [1, 0],
+  [2, 1],
+  [0, 2],
+  [1, 2],
+  [2, 2],
+];
 const SIDE = 9;
 const START = 1;
 const PERIOD = 4;
@@ -24,9 +30,12 @@ function prove() {
   for (let g = 0; g < PERIOD; g++) {
     cell = life.next_grid(cell, [3], [2, 3], MOORE, "Constant");
     const alive = cell.types.reduce((a, b) => a + b, 0);
-    if (alive !== GLIDER.length) throw new Error(`life: generation ${g + 1} has ${alive} live cells, the glider has ${GLIDER.length}`);
+    if (alive !== GLIDER.length)
+      throw new Error(`life: generation ${g + 1} has ${alive} live cells, the glider has ${GLIDER.length}`);
   }
-  for (const [c, r] of GLIDER) if (!cell.types[(START + 1 + r) * SIDE + START + 1 + c]) throw new Error(`life: after ${PERIOD} generations the glider is not one step down the diagonal`);
+  for (const [c, r] of GLIDER)
+    if (!cell.types[(START + 1 + r) * SIDE + START + 1 + c])
+      throw new Error(`life: after ${PERIOD} generations the glider is not one step down the diagonal`);
   proven = true;
 }
 
@@ -41,7 +50,9 @@ export default function draw(pen) {
       alpha.set(key, Math.max(alpha.get(key) ?? 0, a));
     }
   };
-  GHOSTS.forEach((a, i) => stamp(GHOSTS.length - 1 - i, a));
+  GHOSTS.forEach((a, i) => {
+    stamp(GHOSTS.length - 1 - i, a);
+  });
   stamp(GHOSTS.length, 255);
   for (const [key, a] of alpha) {
     const [x, y, w, h] = cells.cell(key % FIELD, Math.floor(key / FIELD));

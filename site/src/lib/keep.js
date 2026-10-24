@@ -1,6 +1,6 @@
 /* KEEP */
 
-const prefix = () => (typeof document !== 'undefined' && document.documentElement?.dataset?.prefix) || 'mrly-';
+const prefix = () => (typeof document !== "undefined" && document.documentElement?.dataset?.prefix) || "mrly-";
 
 export function held(name, fallback = null) {
   try {

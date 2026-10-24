@@ -1,6 +1,6 @@
 import * as math from "@mrlyprod/mrly/math";
-import { field, frame } from "#view";
 import type { Ink, Pen } from "#view";
+import { field, frame } from "#view";
 
 export const units = { math };
 
@@ -13,10 +13,13 @@ function values() {
   if (memo) return memo;
   const odds: number[] = [];
   for (let m = 3; m <= 63; m += 2) odds.push(m);
-  if (odds.length !== SCALES) throw new Error(`paper-moire-correlation-laws: ${odds.length} odd scales, want ${SCALES}`);
+  if (odds.length !== SCALES)
+    throw new Error(`paper-moire-correlation-laws: ${odds.length} odd scales, want ${SCALES}`);
   const correlation = math.moire.pairs.correlation;
-  if (correlation(3, 5) !== 0) throw new Error(`paper-moire-correlation-laws: correlation(3, 5) is ${correlation(3, 5)}, want 0`);
-  if (!(Math.abs(correlation(9, 9) - 1) < 1e-12)) throw new Error(`paper-moire-correlation-laws: correlation(9, 9) is ${correlation(9, 9)}, want 1`);
+  if (correlation(3, 5) !== 0)
+    throw new Error(`paper-moire-correlation-laws: correlation(3, 5) is ${correlation(3, 5)}, want 0`);
+  if (!(Math.abs(correlation(9, 9) - 1) < 1e-12))
+    throw new Error(`paper-moire-correlation-laws: correlation(9, 9) is ${correlation(9, 9)}, want 1`);
   const grid = new Float64Array(SCALES * SCALES);
   let at = 0;
   for (const m of odds) {

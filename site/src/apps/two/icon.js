@@ -26,10 +26,15 @@ function joins(side, rows, cols) {
 function facts() {
   if (sheet) return sheet;
   const tile = math.two.create(CODE, NUMBER, LEVEL, 0, BASE);
-  const block = math.two.merge(Array.from({ length: COPIES * COPIES }, () => tile), COPIES, COPIES);
+  const block = math.two.merge(
+    Array.from({ length: COPIES * COPIES }, () => tile),
+    COPIES,
+    COPIES,
+  );
   const fills = math.two.fills(block);
   const [rows, cols] = block.shape;
-  if (cols !== WANT.side || fills !== WANT.fills) throw new Error(`two: a sheet of ${cols} fills ${fills}, want ${WANT.side} and ${WANT.fills}`);
+  if (cols !== WANT.side || fills !== WANT.fills)
+    throw new Error(`two: a sheet of ${cols} fills ${fills}, want ${WANT.side} and ${WANT.fills}`);
   sheet = { shape: block.shape, types: block.types, lines: joins(tile.shape[0], rows, cols) };
   return sheet;
 }

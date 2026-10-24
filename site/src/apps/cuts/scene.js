@@ -1,10 +1,10 @@
-import { tidy } from '../../lib/app/spec.js';
-import { TINTS, rgb } from '../../lib/color.js';
-import { canvas as pen, frame as box, hex, svg as sheet } from '#view';
-import { design, memo, named, tag as title } from '../../lib/three/engine.js';
-import { wasm } from '../../lib/units/index.js';
+import { frame as box, hex, canvas as pen, svg as sheet } from "#view";
+import { tidy } from "../../lib/app/spec.js";
+import { rgb, TINTS } from "../../lib/color.js";
+import { design, memo, named, tag as title } from "../../lib/three/engine.js";
+import { wasm } from "../../lib/units/index.js";
 
-export const GASKET = '126';
+export const GASKET = "126";
 export const NUMBER = 2;
 export const REACH = { points: 512, section: 64 };
 const SPAN = 512;
@@ -18,37 +18,64 @@ const ROOT6 = Math.sqrt(6);
 export const lid = (math, view) => math.bang.level_cap(NUMBER, 1, REACH[view] ?? REACH.points);
 
 export const SPEC = [
-  { key: 'view', label: 'View', kind: 'segment', def: 'points', options: [['points', 'Points'], ['section', 'Section']], group: 'Cut' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 5, min: 1, max: (value, units) => units && lid(units.math, value.view), step: 1, group: 'Cut' },
-  { key: 'both', label: 'Both central heights', kind: 'toggle', def: 0, group: 'Cut' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look', when: (value) => value.view === 'section' },
+  {
+    key: "view",
+    label: "View",
+    kind: "segment",
+    def: "points",
+    options: [
+      ["points", "Points"],
+      ["section", "Section"],
+    ],
+    group: "Cut",
+  },
+  {
+    key: "level",
+    label: "Level",
+    kind: "slider",
+    def: 5,
+    min: 1,
+    max: (value, units) => units && lid(units.math, value.view),
+    step: 1,
+    group: "Cut",
+  },
+  { key: "both", label: "Both central heights", kind: "toggle", def: 0, group: "Cut" },
+  {
+    key: "tint",
+    label: "Tint",
+    kind: "pick",
+    def: "",
+    options: TINTS,
+    group: "Look",
+    when: (value) => value.view === "section",
+  },
 ];
 
-export const units = wasm('math');
+export const units = wasm("math");
 
-export const name = (value) => `cuts-${String(value.code ?? '').trim() || GASKET}-l${value.level}-${value.view}`;
+export const name = (value) => `cuts-${String(value.code ?? "").trim() || GASKET}-l${value.level}-${value.view}`;
 
 export const PAGE = {
-  defaults: { base: 2, code: '126', height: '' },
-  design: { dim: 3, base: 'base', code: 'code' },
+  defaults: { base: 2, code: "126", height: "" },
+  design: { dim: 3, base: "base", code: "code" },
   spec: SPEC,
   units,
   gestures: true,
   about: [
-    'A plane x + y + z = s slides through the solid of code 126 and meets exactly 3^level cells at every height it meets at all.',
-    'The binary digits of the height above the support say which corners each scale may use, so every cut is a Sierpinski gasket, and the two central heights together fall into six gaskets tiling a hexagon.',
-    'Drag across the picture or press Left and Right to move the plane. A height is counted without building a cell, so the points reach level 9. More in [the cuts note](/research/cuts/).',
+    "A plane x + y + z = s slides through the solid of code 126 and meets exactly 3^level cells at every height it meets at all.",
+    "The binary digits of the height above the support say which corners each scale may use, so every cut is a Sierpinski gasket, and the two central heights together fall into six gaskets tiling a hexagon.",
+    "Drag across the picture or press Left and Right to move the plane. A height is counted without building a cell, so the points reach level 9. More in [the cuts note](/research/cuts/).",
   ],
   name,
   keys: [
-    { key: 'ArrowLeft', label: 'Height down', act: 'lower', menu: 'View' },
-    { key: 'ArrowRight', label: 'Height up', act: 'higher', menu: 'View' },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Level', act: 'level' },
+    { key: "ArrowLeft", label: "Height down", act: "lower", menu: "View" },
+    { key: "ArrowRight", label: "Height up", act: "higher", menu: "View" },
+    { key: ["ArrowUp", "ArrowDown"], label: "Level", act: "level" },
   ],
   actions: {
     lower: (scene) => scene.slide?.(-1),
     higher: (scene) => scene.slide?.(1),
-    level: (scene, e) => scene.deeper?.(e.key === 'ArrowDown' ? -1 : 1),
+    level: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
   },
 };
 
@@ -69,20 +96,40 @@ export function profile(math, code, base, level) {
     const least = Math.min(...live);
     const most = Math.max(...live);
     const mid = Math.floor((low + high) / 2);
-    return { counts, side, low, high, span, nonempty: live.length, heights: span.length, least, most, central: [mid, Math.min(high, mid + 1)] };
+    return {
+      counts,
+      side,
+      low,
+      high,
+      span,
+      nonempty: live.length,
+      heights: span.length,
+      least,
+      most,
+      central: [mid, Math.min(high, mid + 1)],
+    };
   });
 }
 
 export function heights(cut, value) {
   if (cut.empty) return [];
   if (Number(value.both) === 1) return cut.central;
-  const asked = String(value.height ?? '').trim();
-  const at = asked === '' || !Number.isFinite(Number(asked)) ? cut.central[0] : Math.round(Number(asked));
+  const asked = String(value.height ?? "").trim();
+  const at = asked === "" || !Number.isFinite(Number(asked)) ? cut.central[0] : Math.round(Number(asked));
   return [Math.min(cut.high, Math.max(cut.low, at))];
 }
 
 export function points(math, code, base, level, list) {
-  return drawings(`${code} ${base} ${level} ${list}`, () => math.three.diagonal_svg(code, NUMBER, level, base, Uint32Array.from(list), Math.max(1, Math.round(SPAN / 2 ** level))));
+  return drawings(`${code} ${base} ${level} ${list}`, () =>
+    math.three.diagonal_svg(
+      code,
+      NUMBER,
+      level,
+      base,
+      Uint32Array.from(list),
+      Math.max(1, Math.round(SPAN / 2 ** level)),
+    ),
+  );
 }
 
 export function section(math, code, base, level) {
@@ -90,27 +137,35 @@ export function section(math, code, base, level) {
 }
 
 export function study(math, value) {
-  const { base, code } = design(math, { ...value, code: String(value.code ?? '').trim() || GASKET });
+  const { base, code } = design(math, { ...value, code: String(value.code ?? "").trim() || GASKET });
   const level = Math.min(value.level, lid(math, value.view));
   const cut = profile(math, code, base, level);
   const list = heights(cut, value);
   const counts = list.map((h) => cut.counts[h] ?? 0);
-  const drawn = value.view === 'section' ? '-' : String(counts.reduce((a, b) => a + b, 0));
+  const drawn = value.view === "section" ? "-" : String(counts.reduce((a, b) => a + b, 0));
   const facts = cut.empty
-    ? [['name', title(named(math, code, base), code, base)], ['side', cut.side], ['support', 'none']]
+    ? [
+        ["name", title(named(math, code, base), code, base)],
+        ["side", cut.side],
+        ["support", "none"],
+      ]
     : [
-        ['name', title(named(math, code, base), code, base)],
-        ['height', list.join(' and ')],
-        ['this slice', counts.join(' and ')],
-        ['offset in binary', list.map((h) => (h - cut.low).toString(2)).join(' and ')],
-        ['side', cut.side],
-        ['support', `[${cut.low}, ${cut.high}]`],
-        ['non-empty', `${cut.nonempty} of ${cut.heights}`],
-        ['min', cut.least],
-        ['max', cut.most],
-        ['points drawn', drawn],
+        ["name", title(named(math, code, base), code, base)],
+        ["height", list.join(" and ")],
+        ["this slice", counts.join(" and ")],
+        ["offset in binary", list.map((h) => (h - cut.low).toString(2)).join(" and ")],
+        ["side", cut.side],
+        ["support", `[${cut.low}, ${cut.high}]`],
+        ["non-empty", `${cut.nonempty} of ${cut.heights}`],
+        ["min", cut.least],
+        ["max", cut.most],
+        ["points drawn", drawn],
       ];
-  const art = cut.empty ? null : value.view === 'section' ? { mesh: section(math, code, base, level) } : { svg: points(math, code, base, level, list) };
+  const art = cut.empty
+    ? null
+    : value.view === "section"
+      ? { mesh: section(math, code, base, level) }
+      : { svg: points(math, code, base, level, list) };
   return { code, base, level, cut, heights: list, rows: facts, art, view: value.view };
 }
 
@@ -128,7 +183,9 @@ export function near(list, at) {
 }
 
 export function plot(math, code, base, level, height) {
-  return math.three.diagonal_slice(code, NUMBER, level, base, height).map(([x, y, z]) => [(x - y) / Math.SQRT2, (x + y - 2 * z) / ROOT6]);
+  return math.three
+    .diagonal_slice(code, NUMBER, level, base, height)
+    .map(([x, y, z]) => [(x - y) / Math.SQRT2, (x + y - 2 * z) / ROOT6]);
 }
 
 /* PAINT */
@@ -166,7 +223,9 @@ export function fit(w, h, frame) {
 export function picture(page, frame, plan, paint, image) {
   if (plan.art?.mesh) {
     const faint = [...paint.accent.slice(0, 3), FAINT];
-    hex.draw(page, frame, plan.art.mesh, 0, (type) => (type === paint.fill ? paint.accent : type === paint.void ? faint : null));
+    hex.draw(page, frame, plan.art.mesh, 0, (type) =>
+      type === paint.fill ? paint.accent : type === paint.void ? faint : null,
+    );
   } else if (image?.ctx && plan.art?.svg) {
     image.ctx.drawImage(image.img, ...fit(image.img.naturalWidth || 1, image.img.naturalHeight || 1, frame));
   }
@@ -174,20 +233,27 @@ export function picture(page, frame, plan, paint, image) {
 
 /* SCENE */
 
-const settle = (opts) => ({ ...tidy(SPEC, opts, opts.math && { math: opts.math }), seed: opts.seed, base: opts.base, code: opts.code, height: opts.height });
+const settle = (opts) => ({
+  ...tidy(SPEC, opts, opts.math && { math: opts.math }),
+  seed: opts.seed,
+  base: opts.base,
+  code: opts.code,
+  height: opts.height,
+});
 
-const drawable = () => typeof Image === 'function' && typeof Blob === 'function' && typeof URL?.createObjectURL === 'function';
+const drawable = () =>
+  typeof Image === "function" && typeof Blob === "function" && typeof URL?.createObjectURL === "function";
 
 export function make(canvas, view, opts = {}) {
   const { math, tell } = opts;
-  if (!math) throw new Error('cuts: the scene wants @mrlyprod/mrly/math as opts.math');
-  const ctx = canvas.getContext('2d');
+  if (!math) throw new Error("cuts: the scene wants @mrlyprod/mrly/math as opts.math");
+  const ctx = canvas.getContext("2d");
   const codes = { fill: math.six.FILL(), void: math.six.VOID() };
   let value = settle(opts);
   let plan = study(math, value);
   let dirty = true;
   let img = null;
-  let wanted = '';
+  let wanted = "";
   const paint = () => ({ ...codes, accent: [...rgb(view.look().accent), 255] });
   const draw = () => {
     if (!dirty) return;
@@ -204,7 +270,7 @@ export function make(canvas, view, opts = {}) {
     if (!svg || svg === wanted || !drawable()) return;
     wanted = svg;
     const one = new Image();
-    const link = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    const link = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
     one.onload = () => {
       URL.revokeObjectURL(link);
       if (wanted !== svg) return;
@@ -213,7 +279,15 @@ export function make(canvas, view, opts = {}) {
     };
     one.src = link;
   };
-  const report = () => tell?.({ rows: plan.rows, cut: plan.cut, heights: plan.heights, code: plan.code, base: plan.base, level: plan.level });
+  const report = () =>
+    tell?.({
+      rows: plan.rows,
+      cut: plan.cut,
+      heights: plan.heights,
+      code: plan.code,
+      base: plan.base,
+      level: plan.level,
+    });
   report();
   fetch();
   return {

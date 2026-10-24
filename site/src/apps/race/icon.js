@@ -15,13 +15,19 @@ const STEPS = 120;
 const TRAIL = 130;
 const RING = 0.95;
 const WANT = { fills: 343 };
-const MOVES = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const MOVES = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+];
 
 let swarms = null;
 
 function walk(code, seed) {
   const cell = math.two.create(code, NUMBER, LEVEL, 0, BASE);
-  if (cell.shape[0] !== SIDE || cell.shape[1] !== SIDE) throw new Error(`race: design ${code} is ${cell.shape}, want ${SIDE} square`);
+  if (cell.shape[0] !== SIDE || cell.shape[1] !== SIDE)
+    throw new Error(`race: design ${code} is ${cell.shape}, want ${SIDE} square`);
   const filled = Uint8Array.from(cell.types, (type) => (type ? 1 : 0));
   const fills = filled.reduce((sum, on) => sum + on, 0);
   if (fills !== WANT.fills) throw new Error(`race: design ${code} fills ${fills}, want ${WANT.fills}`);
@@ -56,14 +62,19 @@ function walk(code, seed) {
   if (at.some((i) => !filled[i])) throw new Error(`race: a walker of design ${code} is off the filled sites`);
   const hr = Math.floor(home / SIDE);
   const hc = home % SIDE;
-  const spread = Math.sqrt(at.reduce((sum, i) => sum + (Math.floor(i / SIDE) - hr) ** 2 + ((i % SIDE) - hc) ** 2, 0) / at.length);
+  const spread = Math.sqrt(
+    at.reduce((sum, i) => sum + (Math.floor(i / SIDE) - hr) ** 2 + ((i % SIDE) - hc) ** 2, 0) / at.length,
+  );
   return { filled, home, at, seen, spread };
 }
 
 function study() {
   if (swarms) return swarms;
   const made = CODES.map((code, i) => walk(code, SEEDS[i]));
-  if (made[0].spread <= made[1].spread) throw new Error(`race: ${CODES[0]} spreads ${made[0].spread.toFixed(2)}, ${CODES[1]} ${made[1].spread.toFixed(2)}, the fast one should lead`);
+  if (made[0].spread <= made[1].spread)
+    throw new Error(
+      `race: ${CODES[0]} spreads ${made[0].spread.toFixed(2)}, ${CODES[1]} ${made[1].spread.toFixed(2)}, the fast one should lead`,
+    );
   swarms = made;
   return swarms;
 }

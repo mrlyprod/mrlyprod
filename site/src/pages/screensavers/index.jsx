@@ -1,19 +1,26 @@
-import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react';
-import { Icon } from '../../lib/app/controls.jsx';
-import { AppIcon } from '../../shell/appicon.jsx';
-import { desk } from '../../shell/desk.js';
-import { start as preview } from '../../shell/idle.js';
-import { lock } from '../../shell/lock.js';
-import { hide, Lede, show } from '../../shell/parts.jsx';
-import { calm, KEY, offs, read, savers as save, screen, subscribe } from '../../shell/prefs.js';
-import { named } from '../../shell/route.js';
-import { all, find } from '../../shell/savers.js';
-import { shooter, shots } from './shots.js';
+import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import { Icon } from "../../lib/app/controls.jsx";
+import { AppIcon } from "../../shell/appicon.jsx";
+import { desk } from "../../shell/desk.js";
+import { start as preview } from "../../shell/idle.js";
+import { lock } from "../../shell/lock.js";
+import { hide, Lede, show } from "../../shell/parts.jsx";
+import { calm, KEY, offs, read, savers as save, screen, subscribe } from "../../shell/prefs.js";
+import { named } from "../../shell/route.js";
+import { all, find } from "../../shell/savers.js";
+import { shooter, shots } from "./shots.js";
 
-const ROOT = '/screensavers/';
+const ROOT = "/screensavers/";
 const WAIT = 250;
 const SHOWN = 1500;
-const POSTER = { position: 'absolute', top: '50%', left: '50%', width: '36%', aspectRatio: '1', translate: '-50% -50%' };
+const POSTER = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  width: "36%",
+  aspectRatio: "1",
+  translate: "-50% -50%",
+};
 
 /* PATHS */
 
@@ -22,17 +29,17 @@ const link = (id) => `${ROOT}${id}/`;
 const routed = (rows, app) => rows.some((row) => row.route === `/${app}/`);
 
 function spot(path) {
-  const rest = path.slice(ROOT.length).replace(/\/$/, '');
-  if (!rest) return { kind: 'all' };
+  const rest = path.slice(ROOT.length).replace(/\/$/, "");
+  if (!rest) return { kind: "all" };
   const entry = find(rest);
-  return entry?.id === rest ? { kind: 'one', entry } : { kind: 'lost', id: rest };
+  return entry?.id === rest ? { kind: "one", entry } : { kind: "lost", id: rest };
 }
 
-const number = (text) => (text.trim() !== '' && Number.isFinite(Number(text)) ? Number(text) : text);
+const number = (text) => (text.trim() !== "" && Number.isFinite(Number(text)) ? Number(text) : text);
 
 const usePref = (key) => useSyncExternalStore(subscribe, () => read(key));
 
-const away = () => document.documentElement.hasAttribute('data-saver');
+const away = () => document.documentElement.hasAttribute("data-saver");
 
 /* GALLERY */
 
@@ -60,7 +67,7 @@ function Live({ id }) {
       stop?.();
     };
   }, [id]);
-  return <canvas ref={at} className={on ? 'on' : undefined} aria-hidden="true" />;
+  return <canvas ref={at} className={on ? "on" : undefined} aria-hidden="true" />;
 }
 
 function Card({ one, off, hot, point, icon }) {
@@ -69,9 +76,23 @@ function Card({ one, off, hot, point, icon }) {
   const leave = () => point(one.id, false);
   return (
     <li>
-      <a className="card" href={link(one.id)} data-id={one.id} onPointerEnter={(e) => e.pointerType !== 'touch' && enter()} onPointerLeave={leave} onFocus={enter} onBlur={leave}>
+      <a
+        className="card"
+        href={link(one.id)}
+        data-id={one.id}
+        onPointerEnter={(e) => e.pointerType !== "touch" && enter()}
+        onPointerLeave={leave}
+        onFocus={enter}
+        onBlur={leave}
+      >
         <span className="thumb">
-          {shot?.url ? <img src={shot.url} alt="" /> : <span style={POSTER}><AppIcon id={one.app} /></span>}
+          {shot?.url ? (
+            <img src={shot.url} alt="" />
+          ) : (
+            <span style={POSTER}>
+              <AppIcon id={one.app} />
+            </span>
+          )}
           {hot && <Live id={one.id} />}
         </span>
         <span className="who">
@@ -91,8 +112,11 @@ function Gallery({ row, rows, list, off, live }) {
   const grid = useRef(null);
   useEffect(() => {
     if (!live) return;
-    const worker = shooter(list.map((one) => one.id), bump);
-    for (const node of grid.current.querySelectorAll('.card[data-id]')) worker.watch(node);
+    const worker = shooter(
+      list.map((one) => one.id),
+      bump,
+    );
+    for (const node of grid.current.querySelectorAll(".card[data-id]")) worker.watch(node);
     return worker.stop;
   }, [live]);
   const point = (id, on) => live && !calm() && setHot((now) => (on ? id : now === id ? null : now));
@@ -101,7 +125,16 @@ function Gallery({ row, rows, list, off, live }) {
       <Lede id="screensavers" title={row.title} lead={row.lead} />
       {!list.length && <p className="fine">No app declares a screen saver yet.</p>}
       <ul className="cards">
-        {list.map((one) => <Card key={one.id} one={one} off={off.includes(one.id)} hot={hot === one.id} point={point} icon={routed(rows, one.app)} />)}
+        {list.map((one) => (
+          <Card
+            key={one.id}
+            one={one}
+            off={off.includes(one.id)}
+            hot={hot === one.id}
+            point={point}
+            icon={routed(rows, one.app)}
+          />
+        ))}
       </ul>
     </div>
   );
@@ -117,7 +150,7 @@ function Stage({ pick, label, live, roll, fail }) {
     let gone = false;
     const rest = () => stop && (away() ? stop.pause?.() : stop.play?.());
     const eye = new MutationObserver(rest);
-    eye.observe(document.documentElement, { attributes: true, attributeFilter: ['data-saver'] });
+    eye.observe(document.documentElement, { attributes: true, attributeFilter: ["data-saver"] });
     lock(at.current, pick).then(
       (made) => {
         if (gone) return made();
@@ -141,29 +174,36 @@ function Stage({ pick, label, live, roll, fail }) {
 
 function Saver({ row, rows, site, entry, list, off, want, live, go }) {
   const [turn, setTurn] = useState(0);
-  const [as, setAs] = useState('');
+  const [as, setAs] = useState("");
   const [failed, setFailed] = useState(false);
   const [copied, setCopied] = useState(false);
   const at = list.findIndex((one) => one.id === entry.id);
   const prev = list[(at - 1 + list.length) % list.length];
   const next = list[(at + 1) % list.length];
   const many = list.length > 1;
-  const query = as.includes('?') ? as.slice(as.indexOf('?') + 1) : '';
-  const value = as ? Object.fromEntries([...new URLSearchParams(query)].map(([key, text]) => [key, number(text)])) : null;
-  const current = find(want.split('?')[0] || site.desk)?.id === entry.id;
+  const query = as.includes("?") ? as.slice(as.indexOf("?") + 1) : "";
+  const value = as
+    ? Object.fromEntries([...new URLSearchParams(query)].map(([key, text]) => [key, number(text)]))
+    : null;
+  const current = find(want.split("?")[0] || site.desk)?.id === entry.id;
   const app = routed(rows, entry.app);
   const pick = (!turn && shots.get(entry.id)?.as) || entry.id;
   useEffect(() => {
     if (!live || !many) return;
     const key = (e) => {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || away()) return;
-      const to = e.key === 'ArrowLeft' ? prev : e.key === 'ArrowRight' ? next : null;
-      if (!to || (e.target instanceof Element && e.target.closest('input, select, textarea, [contenteditable]')) || document.querySelector('dialog[open], :popover-open')) return;
+      const to = e.key === "ArrowLeft" ? prev : e.key === "ArrowRight" ? next : null;
+      if (
+        !to ||
+        (e.target instanceof Element && e.target.closest("input, select, textarea, [contenteditable]")) ||
+        document.querySelector("dialog[open], :popover-open")
+      )
+        return;
       e.preventDefault();
       go(link(to.id));
     };
-    document.addEventListener('keydown', key);
-    return () => document.removeEventListener('keydown', key);
+    document.addEventListener("keydown", key);
+    return () => document.removeEventListener("keydown", key);
   }, [live, many, prev, next]);
   useEffect(() => {
     if (!copied) return;
@@ -175,15 +215,20 @@ function Saver({ row, rows, site, entry, list, off, want, live, go }) {
     setCopied(false);
   };
   const reroll = () => {
-    setAs('');
+    setAs("");
     setFailed(false);
     setTurn((n) => n + 1);
   };
-  const copy = () => navigator.clipboard?.writeText(as).then(() => setCopied(true), () => {});
+  const copy = () =>
+    navigator.clipboard?.writeText(as).then(
+      () => setCopied(true),
+      () => {},
+    );
   const use = () => {
     screen(entry.id);
     desk();
   };
+  const kept = !off.includes(entry.id);
   const flip = (on) => save(on ? off.filter((id) => id !== entry.id) : [...off, entry.id]);
   return (
     <div className="one">
@@ -224,14 +269,14 @@ function Saver({ row, rows, site, entry, list, off, want, live, go }) {
         <div className="as">
           <code>{as || entry.id}</code>
           <button type="button" onClick={copy} disabled={!as}>
-            {copied ? 'Copied' : 'Copy'}
+            {copied ? "Copied" : "Copy"}
           </button>
         </div>
         {value && <pre>{JSON.stringify(value, null, 2)}</pre>}
       </section>
       <div className="use">
         {app && (
-          <a className="button" href={`/${entry.app}/${query ? `?${query}` : ''}`}>
+          <a className="button" href={`/${entry.app}/${query ? `?${query}` : ""}`}>
             Open in {entry.name}
           </a>
         )}
@@ -254,7 +299,13 @@ function Saver({ row, rows, site, entry, list, off, want, live, go }) {
           In shuffle
           <small>When off, the screen saver skips it.</small>
         </span>
-        <input type="checkbox" role="switch" checked={!off.includes(entry.id)} onChange={(e) => flip(e.target.checked)} />
+        <input
+          type="checkbox"
+          role="switch"
+          checked={kept}
+          aria-checked={kept}
+          onChange={(e) => flip(e.target.checked)}
+        />
       </label>
     </div>
   );
@@ -281,47 +332,63 @@ function Screensavers({ row, rows, site, from, live }) {
   const list = all();
   const at = spot(path);
   const go = useCallback((to) => {
-    if (to !== location.pathname) history.pushState({ ...history.state, depth: (history.state?.depth ?? 0) + 1 }, '', to);
+    if (to !== location.pathname)
+      history.pushState({ ...history.state, depth: (history.state?.depth ?? 0) + 1 }, "", to);
     setPath(to);
-    document.getElementById('main')?.scrollTo({ top: 0, behavior: 'instant' });
+    document.getElementById("main")?.scrollTo({ top: 0, behavior: "instant" });
   }, []);
   useEffect(() => {
     if (!live) return;
     const click = (e) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = e.target instanceof Element ? e.target.closest(`a[href^="${ROOT}"]`) : null;
-      if (!a || a.target || a.hasAttribute('download')) return;
+      if (!a || a.target || a.hasAttribute("download")) return;
       e.preventDefault();
       go(a.pathname);
     };
     const pop = () => location.pathname.startsWith(ROOT) && setPath(location.pathname);
-    document.addEventListener('click', click);
-    addEventListener('popstate', pop);
+    document.addEventListener("click", click);
+    addEventListener("popstate", pop);
     return () => {
-      document.removeEventListener('click', click);
-      removeEventListener('popstate', pop);
+      document.removeEventListener("click", click);
+      removeEventListener("popstate", pop);
     };
   }, [live]);
   useEffect(() => {
     if (!live) return;
-    const name = at.kind === 'one' ? at.entry.title : at.kind === 'lost' ? 'Not found' : '';
+    const name = at.kind === "one" ? at.entry.title : at.kind === "lost" ? "Not found" : "";
     document.title = name ? `${name} · ${row.title} · ${site.title}` : named(row, site);
-    document.head.querySelector('link[rel="canonical"]')?.setAttribute('href', site.root + (at.kind === 'one' ? link(at.entry.id) : path));
-    if (at.kind !== 'lost') return;
-    const robots = Object.assign(document.createElement('meta'), { name: 'robots', content: 'noindex' });
+    document.head
+      .querySelector('link[rel="canonical"]')
+      ?.setAttribute("href", site.root + (at.kind === "one" ? link(at.entry.id) : path));
+    if (at.kind !== "lost") return;
+    const robots = Object.assign(document.createElement("meta"), { name: "robots", content: "noindex" });
     document.head.append(robots);
     return () => robots.remove();
   }, [live, path]);
   return (
     <div className="screensavers">
-      {at.kind === 'all' && <Gallery row={row} rows={rows} list={list} off={off} live={live} />}
-      {at.kind === 'one' && <Saver key={at.entry.id} row={row} rows={rows} site={site} entry={at.entry} list={list} off={off} want={want} live={live} go={go} />}
-      {at.kind === 'lost' && <Missing id={at.id} />}
+      {at.kind === "all" && <Gallery row={row} rows={rows} list={list} off={off} live={live} />}
+      {at.kind === "one" && (
+        <Saver
+          key={at.entry.id}
+          row={row}
+          rows={rows}
+          site={site}
+          entry={at.entry}
+          list={list}
+          off={off}
+          want={want}
+          live={live}
+          go={go}
+        />
+      )}
+      {at.kind === "lost" && <Missing id={at.id} />}
     </div>
   );
 }
 
-export const layout = { wide: true, bare: true, window: 'wide' };
+export const layout = { wide: true, bare: true, window: "wide" };
 
 const given = new WeakMap();
 

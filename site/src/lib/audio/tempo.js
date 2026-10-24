@@ -2,9 +2,9 @@
 
 export const STEPS = 16;
 
-export const KEYS = ['c', 'cs', 'd', 'ds', 'e', 'f', 'fs', 'g', 'gs', 'a', 'as', 'b'];
+export const KEYS = ["c", "cs", "d", "ds", "e", "f", "fs", "g", "gs", "a", "as", "b"];
 
-export const SONG = { seed: 1, bpm: 128, key: 'a', scale: 'minor', bars: 32, density: 0.6, drive: 0.4, swing: 0.1 };
+export const SONG = { seed: 1, bpm: 128, key: "a", scale: "minor", bars: 32, density: 0.6, drive: 0.4, swing: 0.1 };
 
 /* TEMPO */
 

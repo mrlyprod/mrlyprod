@@ -3,7 +3,16 @@ from math import isqrt, lcm, log
 from pathlib import Path
 
 from sympy import N as N_
-from sympy import Poly, Rational, Symbol, cos, cyclotomic_poly, minimal_polynomial, sin, sqrt
+from sympy import (
+    Poly,
+    Rational,
+    Symbol,
+    cos,
+    cyclotomic_poly,
+    minimal_polynomial,
+    sin,
+    sqrt,
+)
 from sympy import pi as spi
 from sympy import zeta as szeta
 
@@ -23,40 +32,47 @@ FIG_N = 60
 FIG_W = 900
 FIG_H = 600
 FIG_OUT = HERE / "eisenstein-stack.png"
-ROOT3 = 3.0 ** 0.5
+ROOT3 = 3.0**0.5
 
 SURF = (255, 255, 255)
 BLUE = (0, 140, 255)
 GRAY = (186, 186, 191)
 INK = (0, 0, 0)
 
+
 def enorm(z):
     a, b = z
     return a * a - a * b + b * b
+
 
 def emul(z, w):
     a, b = z
     c, d = w
     return (a * c - b * d, a * d + b * c - b * d)
 
+
 def econj(z):
     a, b = z
     return (a - b, -b)
+
 
 def edivides(w, z):
     p = emul(z, econj(w))
     n = enorm(w)
     return p[0] % n == 0 and p[1] % n == 0
 
+
 def equo(z, w):
     p = emul(z, econj(w))
     n = enorm(w)
     return (p[0] // n, p[1] // n)
 
+
 def enearest(z, w):
     p = emul(z, econj(w))
     n = enorm(w)
     return ((2 * p[0] + n) // (2 * n), (2 * p[1] + n) // (2 * n))
+
 
 def egcd(z, w):
     while w != (0, 0):
@@ -65,12 +81,14 @@ def egcd(z, w):
         z, w = w, (z[0] - t[0], z[1] - t[1])
     return z
 
+
 def associates(z):
     out = [z]
     for _ in range(2):
         a, b = out[-1]
         out.append((-b, a - b))
     return out + [(-a, -b) for a, b in out]
+
 
 def ecanon(z):
     if z == (0, 0):
@@ -79,6 +97,7 @@ def ecanon(z):
         if c[0] > 0 and 0 <= c[1] < c[0]:
             return c
     return z
+
 
 def classes_up_to(n):
     out = set()
@@ -91,6 +110,7 @@ def classes_up_to(n):
                 out.add(ecanon((a, b)))
     return sorted(out, key=lambda z: (enorm(z), z))
 
+
 def hex_classes_closed(t):
     s = 0
     j = 0
@@ -99,8 +119,10 @@ def hex_classes_closed(t):
         j += 1
     return s
 
+
 def hex_classes_direct(t):
     return len(classes_up_to(t))
+
 
 def eisenstein_primes_dividing(z):
     n = enorm(z)
@@ -134,6 +156,7 @@ def eisenstein_primes_dividing(z):
             primes.append(ecanon(econj(p)))
     return [p for p in primes if edivides(p, z)]
 
+
 def eisenstein_totient(z):
     v = enorm(z)
     if v == 1:
@@ -142,8 +165,10 @@ def eisenstein_totient(z):
         v = v // enorm(p) * (enorm(p) - 1)
     return v
 
+
 def totient_sum(n_max):
     return sum(eisenstein_totient(z) for z in classes_up_to(n_max))
+
 
 def layer_nodes(z):
     n = enorm(z)
@@ -155,12 +180,14 @@ def layer_nodes(z):
             out.add((Fraction(p % n, n), Fraction(q % n, n)))
     return out
 
+
 def literal_stack(n_max):
     hits = {}
     for z in classes_up_to(n_max):
         for p in layer_nodes(z):
             hits[p] = hits.get(p, 0) + 1
     return hits
+
 
 def reduced_denominator(node):
     x, y = node
@@ -169,8 +196,10 @@ def reduced_denominator(node):
     g = egcd(u, (d, 0))
     return ecanon(equo((d, 0), g))
 
+
 def closed_brightness(n_max, d):
     return hex_classes_closed(n_max // enorm(d))
+
 
 def cyc_reduce(terms):
     acc = {}
@@ -182,21 +211,27 @@ def cyc_reduce(terms):
         return Poly(0, X, domain="QQ")
     return Poly(acc, X, domain="QQ").rem(PHI360)
 
+
 def field_cos_sin(d):
     c = cyc_reduce([(d, 1), (-d, 1)])
     s = cyc_reduce([(d + 120, 1), (d + 240, -1), (-d + 120, -1), (-d + 240, 1)])
     return c.degree() <= 0, s.degree() <= 0
 
+
 def field_rotation_degrees():
     return [d for d in range(CYC) if all(field_cos_sin(d))]
+
 
 def spot_check_degrees():
     out = []
     for d in SPOT_DEGREES:
         c = minimal_polynomial(cos(spi * Rational(d, 180)), X, polys=True).degree()
-        s = minimal_polynomial(sin(spi * Rational(d, 180)) / sqrt(3), X, polys=True).degree()
+        s = minimal_polynomial(
+            sin(spi * Rational(d, 180)) / sqrt(3), X, polys=True
+        ).degree()
         out.append((d, c == 1, s == 1, field_cos_sin(d)))
     return out
+
 
 def rotation_hits(bound, reach):
     seen = set()
@@ -205,7 +240,12 @@ def rotation_hits(bound, reach):
             if (a, b) == (0, 0):
                 continue
             n = enorm((a, b))
-            seen.add((Fraction(2 * a * a - 2 * a * b - b * b, 2 * n), Fraction(2 * a * b - b * b, 2 * n)))
+            seen.add(
+                (
+                    Fraction(2 * a * a - 2 * a * b - b * b, 2 * n),
+                    Fraction(2 * a * b - b * b, 2 * n),
+                )
+            )
     direct = set()
     for r in range(1, bound + 1):
         for p in range(-r, r + 1):
@@ -218,8 +258,10 @@ def rotation_hits(bound, reach):
                     direct.add((Fraction(p, r), Fraction(t, r)))
     return len(direct), direct <= seen
 
+
 def chi3(n):
     return (0, 1, -1)[n % 3]
+
 
 def dirichlet_mul(u, v, m):
     out = [0] * (m + 1)
@@ -229,6 +271,7 @@ def dirichlet_mul(u, v, m):
         for j in range(1, m // i + 1):
             out[i * j] += u[i] * v[j]
     return out
+
 
 def csl_zeta_ratio(m):
     a = [0] * (m + 1)
@@ -256,11 +299,12 @@ def csl_zeta_ratio(m):
     inv_three = [0] * (m + 1)
     e = 1
     j = 0
-    while 3 ** j <= m:
-        inv_three[3 ** j] = e
+    while 3**j <= m:
+        inv_three[3**j] = e
         e = -e
         j += 1
     return dirichlet_mul(dirichlet_mul(a, inv_square, m), inv_three, m)
+
 
 def csl_euler_product(m):
     out = [0] * (m + 1)
@@ -276,6 +320,7 @@ def csl_euler_product(m):
             k *= q
         out = dirichlet_mul(out, local, m)
     return out
+
 
 def draw(n_max):
     from PIL import Image, ImageDraw
@@ -300,21 +345,31 @@ def draw(n_max):
     small.convert("P", palette=Image.ADAPTIVE, colors=48).save(FIG_OUT, optimize=True)
     return len(stack), top
 
+
 def main():
     print("ring Z[omega], omega^2 = -1 - omega, norm a^2 - ab + b^2, units 6")
-    print("coordinates in the basis 1, omega; fundamental domain the unit square of that chart")
+    print(
+        "coordinates in the basis 1, omega; fundamental domain the unit square of that chart"
+    )
 
     rots = field_rotation_degrees()
     print("field rotation degrees", *rots)
     print("field rotation count", len(rots))
     spots = spot_check_degrees()
     print("spot degrees", len(spots))
-    print("spot minpoly agrees with cyclotomic", all((c, s) == r for _, c, s, r in spots))
+    print(
+        "spot minpoly agrees with cyclotomic", all((c, s) == r for _, c, s, r in spots)
+    )
     hits, covered = rotation_hits(ROT_BOUND, ROT_REACH)
     print("rational rotations denominator <=", ROT_BOUND, hits)
     print("all are w/conj(w), Eisenstein w in box", ROT_REACH, covered)
 
-    print("hex circle count closed equals direct", all(hex_classes_closed(t) == hex_classes_direct(t) for t in range(CIRCLE_T + 1)))
+    print(
+        "hex circle count closed equals direct",
+        all(
+            hex_classes_closed(t) == hex_classes_direct(t) for t in range(CIRCLE_T + 1)
+        ),
+    )
     print("hex circle counts t=1..12", *[hex_classes_closed(t) for t in range(1, 13)])
 
     stack = literal_stack(STACK_N)
@@ -330,10 +385,15 @@ def main():
             bad += 1
     print("brightness comparisons", len(stack))
     print("brightness mismatches", bad)
-    print("origin brightness", stack[(Fraction(0), Fraction(0))], "max", max(stack.values()))
+    print(
+        "origin brightness",
+        stack[(Fraction(0), Fraction(0))],
+        "max",
+        max(stack.values()),
+    )
 
     lval = (szeta(2, Rational(1, 3)) - szeta(2, Rational(2, 3))) / 9
-    z2 = spi ** 2 / 6
+    z2 = spi**2 / 6
     rho = spi / (3 * sqrt(3))
     const = rho / (2 * z2 * lval)
     print("zeta(2)", "%.15f" % float(N_(z2, 30)))
@@ -345,16 +405,31 @@ def main():
     for n in COUNT_NS:
         s = totient_sum(n)
         r = s / (n * n)
-        print("node count N", n, "=", s, "ratio N^2", "%.6f" % r, "deviation", "%+.6f" % (r - c), "scaled by N/log N", "%+.3f" % ((r - c) * n / log(n)))
+        print(
+            "node count N",
+            n,
+            "=",
+            s,
+            "ratio N^2",
+            "%.6f" % r,
+            "deviation",
+            "%+.6f" % (r - c),
+            "scaled by N/log N",
+            "%+.3f" % ((r - c) * n / log(n)),
+        )
 
     ratio = csl_zeta_ratio(CSL_M)
     euler = csl_euler_product(CSL_M)
     print("csl series bound", CSL_M)
     print("csl zeta ratio equals euler product", ratio == euler)
-    print("csl nonzero coefficients", *[(n, ratio[n]) for n in range(1, CSL_M + 1) if ratio[n]])
+    print(
+        "csl nonzero coefficients",
+        *[(n, ratio[n]) for n in range(1, CSL_M + 1) if ratio[n]],
+    )
 
     nodes, top = draw(FIG_N)
     print("figure norm bound", FIG_N, "nodes", nodes, "brightest", top)
     print("figure bytes", FIG_OUT.stat().st_size)
+
 
 main()

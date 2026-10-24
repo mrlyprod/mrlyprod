@@ -1,17 +1,39 @@
-import { afterAll, expect, test } from 'bun:test';
-import * as math from '@mrlyprod/mrly/math';
-import * as num from '@mrlyprod/mrly/num';
-import { defaults, maxOf, tidy } from '../../lib/app/spec.js';
-import { rng } from '../../lib/rand.js';
-import { COUNT, HOLD, NUMBERS, POUR, RATE, REST, SIDE, TAP, carpets, cell, codes, highest, hits, inks, ladder, lowest, rungOf, swatch } from './engine.js';
-import { PAGE, SPEC, fit, make } from './scene.js';
-import { rows } from './widget.jsx';
+import { afterAll, expect, test } from "bun:test";
+import * as math from "@mrlyprod/mrly/math";
+import * as num from "@mrlyprod/mrly/num";
+import { defaults, maxOf, tidy } from "../../lib/app/spec.js";
+import { rng } from "../../lib/rand.js";
+import {
+  COUNT,
+  carpets,
+  cell,
+  codes,
+  HOLD,
+  highest,
+  hits,
+  inks,
+  ladder,
+  lowest,
+  NUMBERS,
+  POUR,
+  RATE,
+  REST,
+  rungOf,
+  SIDE,
+  swatch,
+  TAP,
+} from "./engine.js";
+import { fit, make, PAGE, SPEC } from "./scene.js";
+import { rows } from "./widget.jsx";
 
 const pen = (log) =>
   new Proxy(
     {},
     {
-      get: (_, key) => (...args) => log.push([key, ...args.map((arg) => (arg && typeof arg === 'object' ? 'page' : arg))]),
+      get:
+        (_, key) =>
+        (...args) =>
+          log.push([key, ...args.map((arg) => (arg && typeof arg === "object" ? "page" : arg))]),
       set: (_, key, v) => {
         log.push([key, v]);
         return true;
@@ -49,7 +71,7 @@ const G = 10000;
 
 const VALUE = { ...defaults(SPEC), seed: 7, grains: G };
 
-const LOOK = { paper: '#000000', accent: '#008cff', ink: '#ffffff' };
+const LOOK = { paper: "#000000", accent: "#008cff", ink: "#ffffff" };
 
 const open = (value = {}, { still = false, w = 800, h = 600, dpr = 1, units = { num, math } } = {}) => {
   const log = [];
@@ -68,7 +90,14 @@ const open = (value = {}, { still = false, w = 800, h = 600, dpr = 1, units = { 
     return out;
   };
   let now = { ...VALUE, ...value };
-  const scene = grab(() => make({ getContext: () => pen(log) }, view, { ...now, ...units, onTell: (stat) => tells.push(stat), onWalk: (patch) => walks.push(patch) }));
+  const scene = grab(() =>
+    make({ getContext: () => pen(log) }, view, {
+      ...now,
+      ...units,
+      onTell: (stat) => tells.push(stat),
+      onWalk: (patch) => walks.push(patch),
+    }),
+  );
   const at = (t) => {
     view.t = t;
     log.length = 0;
@@ -100,7 +129,7 @@ const counted = () => {
   return [tally, { num: { ...num, chladni: { ...num.chladni, shake } }, math }];
 };
 
-const blits = (log) => log.filter(([name]) => name === 'drawImage');
+const blits = (log) => log.filter(([name]) => name === "drawImage");
 
 const lit = (bytes) => {
   let n = 0;
@@ -110,26 +139,26 @@ const lit = (bytes) => {
 
 const RUN = (REST / RATE) * 1000;
 
-test('the plate opens on (3, 5, -) as sand, the plate and one sheet of css pixels blitted crisp into the fitted square', () => {
+test("the plate opens on (3, 5, -) as sand, the plate and one sheet of css pixels blitted crisp into the fitted square", () => {
   const live = open();
   const log = live.at(0);
   const box = fit(live.view, 0);
-  const blit = ['drawImage', 'page', box.x, box.y, box.side, box.side];
+  const blit = ["drawImage", "page", box.x, box.y, box.side, box.side];
   expect(blits(log)).toEqual([blit, blit]);
-  expect(log).toContainEqual(['imageSmoothingEnabled', false]);
-  expect(log.some(([name]) => ['stroke', 'fillText', 'arc'].includes(name))).toBe(false);
+  expect(log).toContainEqual(["imageSmoothingEnabled", false]);
+  expect(log.some(([name]) => ["stroke", "fillText", "arc"].includes(name))).toBe(false);
   expect(lit(live.sheet())).toBeGreaterThan(1000);
-  expect(live.tells.at(-1)).toMatchObject({ view: 'plate', n: 3, m: 5, sign: -1, grains: G });
+  expect(live.tells.at(-1)).toMatchObject({ view: "plate", n: 3, m: 5, sign: -1, grains: G });
   expect(live.tells.at(-1).pitch).toBeCloseTo(Math.hypot(3, 5), 9);
 });
 
-test('the opening is the rested still and waits for a hand: no later draw paints', () => {
+test("the opening is the rested still and waits for a hand: no later draw paints", () => {
   const live = open();
   live.at(0);
   expect([live.at(1000), live.at(60000)]).toEqual([[], []]);
 });
 
-test('a rested epoch equals the still: a Reroll to the seed run to rest paints what the page opens on', () => {
+test("a rested epoch equals the still: a Reroll to the seed run to rest paints what the page opens on", () => {
   const still = open();
   still.at(0);
   const rolled = open({ seed: 1 });
@@ -139,7 +168,7 @@ test('a rested epoch equals the still: a Reroll to the seed run to rest paints w
   expect(rolled.sheet()).toEqual(still.sheet());
 });
 
-test('a run drawn at t in one jump equals one stepped by 16, 33 and 100 ms frames', () => {
+test("a run drawn at t in one jump equals one stepped by 16, 33 and 100 ms frames", () => {
   const end = RUN / 2;
   const jumped = open();
   jumped.at(0);
@@ -157,7 +186,7 @@ test('a run drawn at t in one jump equals one stepped by 16, 33 and 100 ms frame
   }
 });
 
-test('a tap sprinkles grains under the finger and the sand runs again to rest', () => {
+test("a tap sprinkles grains under the finger and the sand runs again to rest", () => {
   const live = open();
   live.at(0);
   live.scene.touch(0.5, 0.5, true);
@@ -167,7 +196,7 @@ test('a tap sprinkles grains under the finger and the sand runs again to rest', 
   expect(live.at(2000 + RUN)).toEqual([]);
 });
 
-test('a drag pours by the distance it covers in css pixels', () => {
+test("a drag pours by the distance it covers in css pixels", () => {
   const live = open();
   live.at(0);
   live.scene.touch(0.3, 0.5, true);
@@ -175,7 +204,7 @@ test('a drag pours by the distance it covers in css pixels', () => {
   expect(live.tells.at(-1).grains).toBe(G + TAP + Math.floor(0.1 * 800 * POUR));
 });
 
-test('a figure change keeps the sand where it lies', () => {
+test("a figure change keeps the sand where it lies", () => {
   const live = open();
   live.at(0);
   const before = Uint8ClampedArray.from(live.sheet());
@@ -185,7 +214,7 @@ test('a figure change keeps the sand where it lies', () => {
   expect(live.tells.at(-1)).toMatchObject({ n: 4, m: 5, grains: G });
 });
 
-test('a resize swaps the sand sheet for one of the new size: the scene keeps one sheet, never one a size', () => {
+test("a resize swaps the sand sheet for one of the new size: the scene keeps one sheet, never one a size", () => {
   const live = open();
   live.at(0);
   live.resize(700, 500);
@@ -193,7 +222,7 @@ test('a resize swaps the sand sheet for one of the new size: the scene keeps one
   expect(live.sheets()).toBe(3);
 });
 
-test('Play walks the ladder from the figure on show, one figure every hold, and the echo of a pushed figure does not re-base', () => {
+test("Play walks the ladder from the figure on show, one figure every hold, and the echo of a pushed figure does not re-base", () => {
   const live = open();
   live.at(0);
   const rungs = ladder(num);
@@ -208,7 +237,7 @@ test('Play walks the ladder from the figure on show, one figure every hold, and 
   expect(live.walks.at(-1)).toEqual((({ n, m, sign }) => ({ n, m, sign }))(rungs[from + 2]));
 });
 
-test('a slider move while walking re-bases the walk on the new figure', () => {
+test("a slider move while walking re-bases the walk on the new figure", () => {
   const live = open();
   live.at(0);
   live.scene.walk();
@@ -221,9 +250,16 @@ test('a slider move while walking re-bases the walk on the new figure', () => {
   expect(live.scene.walking()).toBe(true);
 });
 
-test('Enter is Play or Stop by the walk in the Edit menu, and the scene leaves Space to the lib pause', () => {
+test("Enter is Play or Stop by the walk in the Edit menu, and the scene leaves Space to the lib pause", () => {
   const [row] = PAGE.keys;
-  expect([row.key, row.menu, row.button, row.label(VALUE, { walking: () => false }), row.label(VALUE, { walking: () => true }), row.label(VALUE, null)]).toEqual(['Enter', 'Edit', true, 'Play', 'Stop', 'Play']);
+  expect([
+    row.key,
+    row.menu,
+    row.button,
+    row.label(VALUE, { walking: () => false }),
+    row.label(VALUE, { walking: () => true }),
+    row.label(VALUE, null),
+  ]).toEqual(["Enter", "Edit", true, "Play", "Stop", "Play"]);
   const live = open();
   expect([live.scene.toggle, live.scene.playing]).toEqual([undefined, undefined]);
   live.scene.walk();
@@ -231,7 +267,7 @@ test('Enter is Play or Stop by the walk in the Edit menu, and the scene leaves S
   expect(live.scene.walking()).toBe(false);
 });
 
-test('under reduced motion a drag only lays sand, and the lift rests it once', () => {
+test("under reduced motion a drag only lays sand, and the lift rests it once", () => {
   const [tally, units] = counted();
   const calm = open({}, { still: true, units });
   calm.at(0);
@@ -243,7 +279,7 @@ test('under reduced motion a drag only lays sand, and the lift rests it once', (
   expect(tally.steps).toBe(REST);
 });
 
-test('under reduced motion Stop returns to the still: a tap after the walk rests at once', () => {
+test("under reduced motion Stop returns to the still: a tap after the walk rests at once", () => {
   const [tally, units] = counted();
   const calm = open({}, { still: true, units });
   calm.at(0);
@@ -257,7 +293,7 @@ test('under reduced motion Stop returns to the still: a tap after the walk rests
   expect([calm.view.woke, tally.steps]).toEqual([1, REST]);
 });
 
-test('under reduced motion a Reroll shows the rested sand at once', () => {
+test("under reduced motion a Reroll shows the rested sand at once", () => {
   const calm = open({}, { still: true });
   calm.at(0);
   calm.set({ seed: 9 });
@@ -267,15 +303,15 @@ test('under reduced motion a Reroll shows the rested sand at once', () => {
   expect(calm.sheet()).toEqual(still.sheet());
 });
 
-test('a look away from Sand freezes the sand, and Sand runs on from where it stood', () => {
+test("a look away from Sand freezes the sand, and Sand runs on from where it stood", () => {
   const live = open();
   live.at(0);
   live.set({ seed: 9 });
   live.at(500);
   const stood = Uint8ClampedArray.from(live.sheet());
-  live.set({ look: 'lines' });
+  live.set({ look: "lines" });
   live.at(5000);
-  live.set({ look: 'sand' });
+  live.set({ look: "sand" });
   live.at(5000);
   expect(live.sheet()).toEqual(stood);
   const solo = open();
@@ -286,34 +322,48 @@ test('a look away from Sand freezes the sand, and Sand runs on from where it sto
   expect(live.sheet()).toEqual(solo.sheet());
 });
 
-test('Field paints the signed amplitude smooth: the accent at the top, the opposite hue at the bottom', () => {
-  const live = open({ look: 'field' });
+test("Field paints the signed amplitude smooth: the accent at the top, the opposite hue at the bottom", () => {
+  const live = open({ look: "field" });
   const log = live.at(0);
-  expect(log).toContainEqual(['imageSmoothingEnabled', true]);
+  expect(log).toContainEqual(["imageSmoothingEnabled", true]);
   const field = num.chladni.plate(3, 5, -1, SIDE);
   const top = field.indexOf(Math.max(...field));
   const low = field.indexOf(Math.min(...field));
   const page = live.cells();
-  expect([[...page.slice(4 * top, 4 * top + 4)], [...page.slice(4 * low, 4 * low + 4)]]).toEqual([[0, 140, 255, 255], [255, 115, 0, 255]]);
+  expect([[...page.slice(4 * top, 4 * top + 4)], [...page.slice(4 * low, 4 * low + 4)]]).toEqual([
+    [0, 140, 255, 255],
+    [255, 115, 0, 255],
+  ]);
 });
 
-test('Lines strokes the zero set once in the ink, one segment a door segment', () => {
-  const live = open({ look: 'lines' });
+test("Lines strokes the zero set once in the ink, one segment a door segment", () => {
+  const live = open({ look: "lines" });
   const log = live.at(0);
   const segments = num.chladni.lines(num.chladni.plate(3, 5, -1, SIDE), SIDE).length / 4;
-  expect([log.filter(([name]) => name === 'stroke').length, log.filter(([name]) => name === 'lineTo').length]).toEqual([1, segments]);
-  expect(log).toContainEqual(['strokeStyle', '#ffffff']);
+  expect([log.filter(([name]) => name === "stroke").length, log.filter(([name]) => name === "lineTo").length]).toEqual([
+    1,
+    segments,
+  ]);
+  expect(log).toContainEqual(["strokeStyle", "#ffffff"]);
 });
 
-test('the sign hides when n equals m, the grains outside Sand, and no row is named modes', () => {
+test("the sign hides when n equals m, the grains outside Sand, and no row is named modes", () => {
   const row = (key) => SPEC.find((one) => one.key === key);
-  expect([row('sign').when({ view: 'plate', n: 4, m: 4 }), row('sign').when({ view: 'plate', n: 3, m: 5 }), row('grains').when({ look: 'field' })]).toEqual([false, true, false]);
-  expect(SPEC.map((one) => one.key)).not.toContain('modes');
-  expect([SPEC[0].key, SPEC[0].def, SPEC[0].group]).toEqual(['view', 'plate', 'Figure']);
+  expect([
+    row("sign").when({ view: "plate", n: 4, m: 4 }),
+    row("sign").when({ view: "plate", n: 3, m: 5 }),
+    row("grains").when({ look: "field" }),
+  ]).toEqual([false, true, false]);
+  expect(SPEC.map((one) => one.key)).not.toContain("modes");
+  expect([SPEC[0].key, SPEC[0].def, SPEC[0].group]).toEqual(["view", "plate", "Figure"]);
 });
 
-test('an export is named by the figure and the seed', () => {
-  expect([PAGE.name(VALUE), PAGE.name({ ...VALUE, n: 4, m: 4 }), PAGE.name({ ...VALUE, view: 'carpet' })]).toEqual(['chladni-3-5m-7', 'chladni-4-4-7', 'chladni-7-3-3-k8-7']);
+test("an export is named by the figure and the seed", () => {
+  expect([PAGE.name(VALUE), PAGE.name({ ...VALUE, n: 4, m: 4 }), PAGE.name({ ...VALUE, view: "carpet" })]).toEqual([
+    "chladni-3-5m-7",
+    "chladni-4-4-7",
+    "chladni-7-3-3-k8-7",
+  ]);
 });
 
 const UNITS = { num, math };
@@ -326,10 +376,17 @@ const carpetOf = (level, k = 8) => {
 
 const cellOf = (plate, px, x, y) => Math.floor((y * plate.side) / px) * plate.side + Math.floor((x * plate.side) / px);
 
-const lined = ({ side, data }) => (cell) => {
-  const [r, c] = [Math.floor(cell / side), cell % side];
-  return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].some(([i, j]) => i >= 0 && j >= 0 && i < side && j < side && data[i * side + j] * data[cell] <= 0);
-};
+const lined =
+  ({ side, data }) =>
+  (cell) => {
+    const [r, c] = [Math.floor(cell / side), cell % side];
+    return [
+      [r - 1, c],
+      [r + 1, c],
+      [r, c - 1],
+      [r, c + 1],
+    ].some(([i, j]) => i >= 0 && j >= 0 && i < side && j < side && data[i * side + j] * data[cell] <= 0);
+  };
 
 const shares = (bytes, plate) => {
   const px = Math.sqrt(bytes.length / 4);
@@ -338,7 +395,7 @@ const shares = (bytes, plate) => {
   for (let y = 0; y < px; y++) {
     for (let x = 0; x < px; x++) {
       const cell = cellOf(plate, px, x, y);
-      if (plate.data[cell] !== plate.data[cell]) continue;
+      if (Number.isNaN(plate.data[cell])) continue;
       const hit = near(cell) ? 1 : 0;
       tally.face++;
       tally.faceNear += hit;
@@ -350,23 +407,23 @@ const shares = (bytes, plate) => {
   return { sand: tally.sandNear / tally.sand, uniform: tally.faceNear / tally.face };
 };
 
-test('the first Carpet draw at level 4 solves the design, rests the sand and paints within a budget', () => {
+test("the first Carpet draw at level 4 solves the design, rests the sand and paints within a budget", () => {
   const start = performance.now();
-  const live = open({ view: 'carpet', level: 4 });
+  const live = open({ view: "carpet", level: 4 });
   live.at(0);
   const took = performance.now() - start;
   expect(blits(live.log)).toHaveLength(2);
   expect(took).toBeLessThan(1500);
 });
 
-test('the carpet opens as a page of one pixel a cell, its holes the ground, blitted crisp into whole device pixels a cell under a sheet of grains alone', () => {
-  const live = open({ view: 'carpet' }, { dpr: 2, h: 620 });
+test("the carpet opens as a page of one pixel a cell, its holes the ground, blitted crisp into whole device pixels a cell under a sheet of grains alone", () => {
+  const live = open({ view: "carpet" }, { dpr: 2, h: 620 });
   const log = live.at(0);
   const box = fit(live.view, 27);
   expect([box.side % 27, (box.side / 2) % 27 > 0]).toEqual([0, true]);
-  const blit = ['drawImage', 'page', box.x, box.y, box.side, box.side];
+  const blit = ["drawImage", "page", box.x, box.y, box.side, box.side];
   expect(blits(log)).toEqual([blit, blit]);
-  expect(log).toContainEqual(['imageSmoothingEnabled', false]);
+  expect(log).toContainEqual(["imageSmoothingEnabled", false]);
   const cells = live.cells();
   const alpha = (row, col) => cells[4 * (row * 27 + col) + 3];
   expect([cells.length, alpha(13, 13), alpha(0, 0)]).toEqual([27 * 27 * 4, 0, 255]);
@@ -374,12 +431,16 @@ test('the carpet opens as a page of one pixel a cell, its holes the ground, blit
   let stray = 0;
   for (let i = 0; i < sheet.length; i += 4) if (sheet[i + 3] && sheet[i + 2] !== 255) stray++;
   expect([lit(sheet) > 250, stray]).toEqual([true, 0]);
-  expect(live.tells.at(-1)).toMatchObject({ view: 'carpet', k: 8, count: COUNT });
+  expect(live.tells.at(-1)).toMatchObject({ view: "carpet", k: 8, count: COUNT });
 });
 
-test('the design picker offers only what holds accepts, and a number change lands on a design that holds', () => {
-  const codesOf = (number) => Array.from({ length: 16 }, (_, i) => String(i)).filter((code) => holding(number, code).length);
-  const holding = (number, code) => Array.from({ length: math.bang.level_cap(number, 2, 128 * 128) }, (_, i) => i + 1).filter((level) => math.nodal.holds(BigInt(code), number, level));
+test("the design picker offers only what holds accepts, and a number change lands on a design that holds", () => {
+  const codesOf = (number) =>
+    Array.from({ length: 16 }, (_, i) => String(i)).filter((code) => holding(number, code).length);
+  const holding = (number, code) =>
+    Array.from({ length: math.bang.level_cap(number, 2, 128 * 128) }, (_, i) => i + 1).filter((level) =>
+      math.nodal.holds(BigInt(code), number, level),
+    );
   for (const number of NUMBERS) {
     expect(codes({ number }, UNITS).map(([code]) => code)).toEqual(codesOf(number));
     for (const code of codesOf(number)) {
@@ -387,14 +448,14 @@ test('the design picker offers only what holds accepts, and a number change land
       const [low, high] = [lowest({ number, code }, UNITS), highest({ number, code }, UNITS)];
       expect([low, high, levels.length]).toEqual([levels[0], levels.at(-1), high - low + 1]);
     }
-    const value = tidy(SPEC, { ...VALUE, view: 'carpet', number }, UNITS);
+    const value = tidy(SPEC, { ...VALUE, view: "carpet", number }, UNITS);
     expect([number, math.nodal.holds(BigInt(value.code), number, value.level)]).toEqual([number, true]);
   }
 });
 
-test('a rested Carpet epoch at levels 3 and 4 loses grains to the holes and lays the rest on the zero set', () => {
+test("a rested Carpet epoch at levels 3 and 4 loses grains to the holes and lays the rest on the zero set", () => {
   for (const level of [3, 4]) {
-    const live = open({ view: 'carpet', level });
+    const live = open({ view: "carpet", level });
     live.at(0);
     const left = live.tells.at(-1).grains;
     const { sand, uniform } = shares(live.sheet(), carpetOf(level));
@@ -402,8 +463,8 @@ test('a rested Carpet epoch at levels 3 and 4 loses grains to the holes and lays
   }
 });
 
-test('a grain on a hole is gone: a tap over the centre hole adds none, and no grain lies on a hole', () => {
-  const live = open({ view: 'carpet' });
+test("a grain on a hole is gone: a tap over the centre hole adds none, and no grain lies on a hole", () => {
+  const live = open({ view: "carpet" });
   live.at(0);
   const left = live.tells.at(-1).grains;
   live.scene.touch(0.5, 0.5, true);
@@ -412,67 +473,99 @@ test('a grain on a hole is gone: a tap over the centre hole adds none, and no gr
   const bytes = live.sheet();
   const px = Math.sqrt(bytes.length / 4);
   let wet = 0;
-  for (let i = 0; i < px * px; i++) if (bytes[4 * i + 2] === 255 && plate.data[cellOf(plate, px, i % px, Math.floor(i / px))] !== plate.data[cellOf(plate, px, i % px, Math.floor(i / px))]) wet++;
+  for (let i = 0; i < px * px; i++)
+    if (bytes[4 * i + 2] === 255 && Number.isNaN(plate.data[cellOf(plate, px, i % px, Math.floor(i / px))])) wet++;
   expect(wet).toBe(0);
 });
 
-test('the Carpet status reads k, lambda, domains d of b and the grains left, every number from the door', () => {
-  const live = open({ view: 'carpet' });
+test("the Carpet status reads k, lambda, domains d of b and the grains left, every number from the door", () => {
+  const live = open({ view: "carpet" });
   live.at(0);
   const door = math.nodal.figures(7n, 3, 3, COUNT);
   const stat = live.tells.at(-1);
   expect([door.domains[7], door.bound[7]]).toEqual([5, 8]);
-  expect(rows(stat)).toEqual([['k', `8 of ${COUNT}`], ['lambda', door.values[7].toFixed(6)], ['domains', '5 of 8'], ['grains left', String(stat.grains)]]);
+  expect(rows(stat)).toEqual([
+    ["k", `8 of ${COUNT}`],
+    ["lambda", door.values[7].toFixed(6)],
+    ["domains", "5 of 8"],
+    ["grains left", String(stat.grains)],
+  ]);
 });
 
-test('Play on Carpet walks k from the figure on show and wraps from the last figure to 2, past the constant figure', () => {
-  const live = open({ view: 'carpet', k: COUNT - 1 });
+test("Play on Carpet walks k from the figure on show and wraps from the last figure to 2, past the constant figure", () => {
+  const live = open({ view: "carpet", k: COUNT - 1 });
   live.at(0);
   live.scene.walk();
   live.at(HOLD);
   expect(live.walks).toEqual([{ k: COUNT }, { k: 2 }]);
 });
 
-test('a Carpet figure change tops the drained sand up to the preset before it runs', () => {
-  const live = open({ view: 'carpet' });
+test("a Carpet figure change tops the drained sand up to the preset before it runs", () => {
+  const live = open({ view: "carpet" });
   live.at(0);
   expect(live.tells.at(-1).grains).toBeLessThan(G / 2);
   live.set({ k: 9 });
   expect([live.tells.at(-1).k, G - live.tells.at(-1).grains < 40]).toEqual([9, true]);
 });
 
-test('k past a small design reads its last figure, and the echo of the tidied k leaves the sand at rest', () => {
-  const small = { view: 'carpet', number: 5, code: '14', level: 1 };
+test("k past a small design reads its last figure, and the echo of the tidied k leaves the sand at rest", () => {
+  const small = { view: "carpet", number: 5, code: "14", level: 1 };
   const live = open({ ...small, k: 40 });
   live.at(0);
   expect(live.tells.at(-1)).toMatchObject({ k: 16, count: 16 });
-  expect(maxOf(SPEC.find((row) => row.key === 'k'), { ...VALUE, ...small }, UNITS)).toBe(16);
+  expect(
+    maxOf(
+      SPEC.find((row) => row.key === "k"),
+      { ...VALUE, ...small },
+      UNITS,
+    ),
+  ).toBe(16);
   const rested = Uint8ClampedArray.from(live.sheet());
   live.set({ k: 16 });
   live.at(60000);
   expect(live.sheet()).toEqual(rested);
 });
 
-test('the design slot is the code of a base 2 plane design shown on a carpet alone, and its row hides in the pane while the url keeps it', () => {
-  expect([PAGE.design.dim, PAGE.design.base, PAGE.design.code, PAGE.design.when({ view: 'plate' }), PAGE.design.when({ view: 'carpet' })]).toEqual([2, 2, 'code', false, true]);
-  const row = SPEC.find((one) => one.key === 'code');
-  expect([row.when({ view: 'carpet' }), tidy(SPEC, { ...VALUE, view: 'carpet', code: '10' }, UNITS).code]).toEqual([false, '10']);
+test("the design slot is the code of a base 2 plane design shown on a carpet alone, and its row hides in the pane while the url keeps it", () => {
+  expect([
+    PAGE.design.dim,
+    PAGE.design.base,
+    PAGE.design.code,
+    PAGE.design.when({ view: "plate" }),
+    PAGE.design.when({ view: "carpet" }),
+  ]).toEqual([2, 2, "code", false, true]);
+  const row = SPEC.find((one) => one.key === "code");
+  expect([row.when({ view: "carpet" }), tidy(SPEC, { ...VALUE, view: "carpet", code: "10" }, UNITS).code]).toEqual([
+    false,
+    "10",
+  ]);
 });
 
-test('the carpet shelf lists every design that holds, shown at a level that draws more than 25 cells, and its cell is the figure mask', () => {
+test("the carpet shelf lists every design that holds, shown at a level that draws more than 25 cells, and its cell is the figure mask", () => {
   const list = carpets(math);
   expect(list.length).toBe(NUMBERS.reduce((sum, number) => sum + codes({ number }, UNITS).length, 0));
-  expect(list.find((one) => one.number === 3 && one.code === '7')).toEqual({ number: 3, code: '7', level: 3, name: 'carpet' });
+  expect(list.find((one) => one.number === 3 && one.code === "7")).toEqual({
+    number: 3,
+    code: "7",
+    level: 3,
+    name: "carpet",
+  });
   expect(list.every((one) => math.nodal.holds(BigInt(one.code), one.number, one.level))).toBe(true);
   for (const one of list.filter((pick) => pick.number > 3)) expect(one.level).toBe(Math.min(2, highest(one, UNITS)));
-  const one = list.find((pick) => pick.number === 3 && pick.code === '10');
+  const one = list.find((pick) => pick.number === 3 && pick.code === "10");
   const figure = math.nodal.figures(BigInt(one.code), one.number, one.level, 2).fields.slice(0, 27 * 27);
-  expect(Array.from(cell(math, one).types, (type) => type === 0)).toEqual(Array.from(figure, (v) => v !== v));
+  expect(Array.from(cell(math, one).types, (type) => type === 0)).toEqual(Array.from(figure, (v) => Number.isNaN(v)));
 });
 
-test('the plate shelf finds a figure by its numbers, and a swatch paints the field in the ink to a square of the asked side', () => {
+test("the plate shelf finds a figure by its numbers, and a swatch paints the field in the ink to a square of the asked side", () => {
   const one = ladder(num).find((rung) => rung.n === 3 && rung.m === 5 && rung.sign === -1);
-  expect([hits(one, ''), hits(one, '3 5'), hits(one, '5,3'), hits(one, '3'), hits(one, '4 5')]).toEqual([true, true, true, true, false]);
+  expect([hits(one, ""), hits(one, "3 5"), hits(one, "5,3"), hits(one, "3"), hits(one, "4 5")]).toEqual([
+    true,
+    true,
+    true,
+    true,
+    false,
+  ]);
   const bytes = swatch(num, one, inks(LOOK), 24);
   expect(bytes.length).toBe(24 * 24 * 4);
   expect(bytes.every((v, i) => i % 4 !== 3 || v === 255)).toBe(true);

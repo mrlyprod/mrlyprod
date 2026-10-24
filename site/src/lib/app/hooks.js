@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { wasm } from '../units/index.js';
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { wasm } from "../units/index.js";
 
 const ONE = {};
 
@@ -58,7 +58,8 @@ export function useUnits(units, given) {
 }
 
 export function useUnit(name, given) {
-  const held = useUnits((ONE[name] ??= wasm(name)), given);
+  ONE[name] ??= wasm(name);
+  const held = useUnits(ONE[name], given);
   return given ?? held?.[name] ?? null;
 }
 
@@ -67,7 +68,7 @@ export function useThree(wanted, given) {
   useEffect(() => {
     if (given || !wanted || three) return undefined;
     let on = true;
-    import('three').then((mod) => on && setThree(mod));
+    import("three").then((mod) => on && setThree(mod));
     return () => {
       on = false;
     };

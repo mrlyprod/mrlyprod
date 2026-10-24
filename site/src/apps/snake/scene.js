@@ -1,27 +1,46 @@
-import { tidy } from '../../lib/app/spec.js';
-import { board } from '../../lib/app/run.js';
-import { TINTS, veil } from '../../lib/color.js';
-import { pick } from '../../lib/rand.js';
-import { DESIGNS, NUMBERS, ink, tile } from '../../lib/designs/tiles.js';
-import { DOWN, LEFT, RIGHT, UP, rounds, starve, start, step, turn } from './engine.js';
-import { STARVED, pick as choose } from './policy.js';
+import { board } from "../../lib/app/run.js";
+import { tidy } from "../../lib/app/spec.js";
+import { TINTS, veil } from "../../lib/color.js";
+import { DESIGNS, ink, NUMBERS, tile } from "../../lib/designs/tiles.js";
+import { pick } from "../../lib/rand.js";
+import { DOWN, LEFT, RIGHT, rounds, start, starve, step, turn, UP } from "./engine.js";
+import { pick as choose, STARVED } from "./policy.js";
 
-export const PARTS = ['head', 'body', 'food'];
+export const PARTS = ["head", "body", "food"];
 
 const HIDE = () => false;
 
 export const named = (word) => word[0].toUpperCase() + word.slice(1);
 
-export const PIECES = [['', 'Random'], ...DESIGNS.map((design) => [design, named(design)])];
+export const PIECES = [["", "Random"], ...DESIGNS.map((design) => [design, named(design)])];
 
 export const SPEC = [
-  { key: 'size', label: 'Size', kind: 'slider', def: 16, min: 8, max: 32, step: 2, group: 'Board' },
-  { key: 'wrap', label: 'Wrap', kind: 'toggle', def: 1, group: 'Board' },
-  { key: 'apples', label: 'Apples', kind: 'slider', def: 1, min: 1, max: 10, step: 1, group: 'Board' },
-  { key: 'tick', label: 'Tick', kind: 'slider', def: 150, min: 50, max: 500, step: 25, unit: 'ms', group: 'Pace' },
-  { key: 'play', label: 'Player', kind: 'segment', def: 'me', options: [['me', 'Me'], ['smart', 'Smart'], ['silly', 'Silly']], group: 'Play' },
-  ...PARTS.map((part) => ({ key: part, label: named(part), kind: 'pick', def: '', options: PIECES, group: 'Pieces', when: HIDE })),
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  { key: "size", label: "Size", kind: "slider", def: 16, min: 8, max: 32, step: 2, group: "Board" },
+  { key: "wrap", label: "Wrap", kind: "toggle", def: 1, group: "Board" },
+  { key: "apples", label: "Apples", kind: "slider", def: 1, min: 1, max: 10, step: 1, group: "Board" },
+  { key: "tick", label: "Tick", kind: "slider", def: 150, min: 50, max: 500, step: 25, unit: "ms", group: "Pace" },
+  {
+    key: "play",
+    label: "Player",
+    kind: "segment",
+    def: "me",
+    options: [
+      ["me", "Me"],
+      ["smart", "Smart"],
+      ["silly", "Silly"],
+    ],
+    group: "Play",
+  },
+  ...PARTS.map((part) => ({
+    key: part,
+    label: named(part),
+    kind: "pick",
+    def: "",
+    options: PIECES,
+    group: "Pieces",
+    when: HIDE,
+  })),
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
 const ARROWS = { ArrowUp: UP, ArrowDown: DOWN, ArrowLeft: LEFT, ArrowRight: RIGHT };
@@ -34,17 +53,37 @@ export const PAGE = {
   spec: SPEC,
   gestures: true,
   keys: [
-    { key: Object.keys(ARROWS), label: 'Turn', act: 'arrows' },
-    { key: 'r', label: 'New game', act: 'reroll' },
-    { key: '?', label: 'Keys', act: 'keys' },
-    { key: Object.keys(WASD), label: 'Turn', act: 'wasd' },
+    { key: Object.keys(ARROWS), label: "Turn", act: "arrows" },
+    { key: "r", label: "New game", act: "reroll" },
+    { key: "?", label: "Keys", act: "keys" },
+    { key: Object.keys(WASD), label: "Turn", act: "wasd" },
   ],
   actions: { arrows: steer, wasd: steer },
 };
 
 export const SAVERS = [
-  { id: 'solo', title: 'One apple', pick: (rand) => ({ play: 'smart', size: 12 + 2 * Math.floor(rand() * 5), wrap: pick(rand, [0, 1]), apples: 1, tick: 200 }) },
-  { id: 'feast', title: 'Many apples', pick: (rand) => ({ play: 'smart', size: 20 + 2 * Math.floor(rand() * 4), wrap: pick(rand, [0, 1]), apples: 5 + Math.floor(rand() * 5), tick: 175 }) },
+  {
+    id: "solo",
+    title: "One apple",
+    pick: (rand) => ({
+      play: "smart",
+      size: 12 + 2 * Math.floor(rand() * 5),
+      wrap: pick(rand, [0, 1]),
+      apples: 1,
+      tick: 200,
+    }),
+  },
+  {
+    id: "feast",
+    title: "Many apples",
+    pick: (rand) => ({
+      play: "smart",
+      size: 20 + 2 * Math.floor(rand() * 4),
+      wrap: pick(rand, [0, 1]),
+      apples: 5 + Math.floor(rand() * 5),
+      tick: 175,
+    }),
+  },
 ];
 
 const TAU = Math.PI * 2;
@@ -57,11 +96,11 @@ const PREVIEW = 160;
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const rand = view.rand;
   const value = tidy(SPEC, opts);
   const play = value.play;
-  const auto = play !== 'me' || !opts.player;
+  const auto = play !== "me" || !opts.player;
   let state;
   let marks;
   let ended = 0;
@@ -70,13 +109,15 @@ export function make(canvas, view, opts = {}) {
   const tell = (name, arg) => !gone && opts[name]?.(arg);
   const begin = () => {
     state = start(value, rand);
-    marks = Object.fromEntries(PARTS.map((part) => {
-      const design = pick(rand, DESIGNS);
-      return [part, tile(value[part] || design, pick(rand, NUMBERS))];
-    }));
+    marks = Object.fromEntries(
+      PARTS.map((part) => {
+        const design = pick(rand, DESIGNS);
+        return [part, tile(value[part] || design, pick(rand, NUMBERS))];
+      }),
+    );
     ended = 0;
-    tell('onScore', state.score);
-    tell('onOver', state.over);
+    tell("onScore", state.score);
+    tell("onOver", state.over);
   };
   const advance = () => {
     if (state.over) {
@@ -89,10 +130,10 @@ export function make(canvas, view, opts = {}) {
       state = dir === STARVED ? starve(state) : turn(state, dir);
     }
     state = step(state, rand);
-    if (state.score !== score) tell('onScore', state.score);
+    if (state.score !== score) tell("onScore", state.score);
     if (!state.over) return;
     ended = view.t;
-    tell('onOver', state.over);
+    tell("onOver", state.over);
   };
   const paint = () => {
     const n = state.size;
@@ -103,7 +144,14 @@ export function make(canvas, view, opts = {}) {
       const y = top + Math.floor(at / n) * cell;
       ctx.save();
       ctx.beginPath();
-      if (corners) ctx.roundRect(x, y, cell, cell, corners.map((one) => (one * cell) / 2));
+      if (corners)
+        ctx.roundRect(
+          x,
+          y,
+          cell,
+          cell,
+          corners.map((one) => (one * cell) / 2),
+        );
       else ctx.arc(x + cell / 2, y + cell / 2, cell / 2, 0, TAU);
       ctx.clip();
       ink(ctx, mark, x, y, cell);
@@ -118,7 +166,7 @@ export function make(canvas, view, opts = {}) {
     ctx.fillStyle = accent;
     for (const at of state.foods) piece(marks.food, at, null);
     const ends = rounds(state);
-    state.snake.forEach((at, i) => piece(i ? marks.body : marks.head, at, ends[i]));
+    for (const [i, at] of state.snake.entries()) piece(i ? marks.body : marks.head, at, ends[i]);
   };
   const draw = () => {
     if (!view.still && view.t !== last) advance();

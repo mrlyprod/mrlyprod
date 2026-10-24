@@ -1,18 +1,18 @@
-import { expect, test } from 'bun:test';
-import * as math from '@mrlyprod/mrly/math';
-import { mount } from '../../../test/dom.js';
-import { Rolls, rolls } from '../app/hooks.js';
-import { roll } from '../designs/engine.js';
-import { rng } from '../rand.js';
-import { DIM } from './engine.js';
-import { useReroll } from './parts.jsx';
+import { expect, test } from "bun:test";
+import * as math from "@mrlyprod/mrly/math";
+import { mount } from "../../../test/dom.js";
+import { Rolls, rolls } from "../app/hooks.js";
+import { roll } from "../designs/engine.js";
+import { rng } from "../rand.js";
+import { DIM } from "./engine.js";
+import { useReroll } from "./parts.jsx";
 
 function Probe({ value, onChange }) {
   useReroll(value, onChange, math);
   return null;
 }
 
-test('a reroll draws a code of the base from the new seed, and a seed that moves any other way draws nothing', async () => {
+test("a reroll draws a code of the base from the new seed, and a seed that moves any other way draws nothing", async () => {
   const told = rolls();
   const seen = [];
   await mount(async (draw) => {

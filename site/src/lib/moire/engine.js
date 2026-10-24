@@ -1,19 +1,38 @@
-import { dark, light } from '../theme/theme.js';
-import { hex, rgb } from '../color.js';
-import { rng } from '../rand.js';
-import { ink } from '#view';
-import { canon } from '../designs/engine.js';
+import { ink } from "#view";
+import { hex, rgb } from "../color.js";
+import { canon } from "../designs/engine.js";
+import { rng } from "../rand.js";
+import { dark, light } from "../theme/theme.js";
 
-export const RAMPS = [['fire', 'Fire'], ['heat', 'Heat'], ['diverge', 'Diverge'], ['tint', 'Tint'], ['ink', 'Ink'], ['bands', 'Bands']];
-export const COMBINES = [['sum', 'Sum'], ['and', 'And'], ['xor', 'Xor'], ['hive', 'Hive']];
-export const CROPS = [['', 'Off'], ['ball', 'Ball'], ['box', 'Box'], ['diamond', 'Diamond'], ['triangle', 'Triangle'], ['octagon', 'Octagon']];
+export const RAMPS = [
+  ["fire", "Fire"],
+  ["heat", "Heat"],
+  ["diverge", "Diverge"],
+  ["tint", "Tint"],
+  ["ink", "Ink"],
+  ["bands", "Bands"],
+];
+export const COMBINES = [
+  ["sum", "Sum"],
+  ["and", "And"],
+  ["xor", "Xor"],
+  ["hive", "Hive"],
+];
+export const CROPS = [
+  ["", "Off"],
+  ["ball", "Ball"],
+  ["box", "Box"],
+  ["diamond", "Diamond"],
+  ["triangle", "Triangle"],
+  ["octagon", "Octagon"],
+];
 export const SIZES = [128, 256, 384, 512];
 export const TOP = 41;
 export const BEAT = 350;
 export const DEEPEST = 5;
 export const GRAIN = 32;
 const DIM = 2;
-const MERGE = { sum: 'Sum', and: 'And', xor: 'Xor', hive: 'Sum' };
+const MERGE = { sum: "Sum", and: "And", xor: "Xor", hive: "Sum" };
 
 /* SCALES */
 
@@ -62,16 +81,18 @@ export function heat(ink, r) {
 export function stops(ramp, look) {
   const paper = rgb(look.paper);
   const accent = rgb(look.accent);
-  if (ramp === 'tint' || ramp === 'bands') return [paper, accent];
-  if (ramp === 'ink') return [paper, accent, contrast(paper)];
+  if (ramp === "tint" || ramp === "bands") return [paper, accent];
+  if (ramp === "ink") return [paper, accent, contrast(paper)];
   const made = palette(look).Ramp;
-  return (ramp === 'heat' ? made.heat() : ramp === 'diverge' ? made.diverge() : made.fire()).stops.map((c) => c.slice(0, 3));
+  return (ramp === "heat" ? made.heat() : ramp === "diverge" ? made.diverge() : made.fire()).stops.map((c) =>
+    c.slice(0, 3),
+  );
 }
 
 export function bins(ramp, levels, look) {
   const n = Math.max(2, Math.floor(levels));
   const list = stops(ramp, look);
-  if (ramp === 'bands') return Array.from({ length: n }, (_, i) => hex(list[i % 2]));
+  if (ramp === "bands") return Array.from({ length: n }, (_, i) => hex(list[i % 2]));
   return Array.from({ length: n }, (_, i) => hex(along(list, i / (n - 1))));
 }
 
@@ -92,7 +113,7 @@ export function design(math, value) {
   const base = Number(value.base) === 2 ? 2 : 3;
   const code = canon(math, DIM, base, value.code);
   const level = Math.min(DEEPEST, Math.max(1, Math.round(Number(value.level) || 1)));
-  return { base, code, level, name: math.name.of(code, DIM, base) ?? '' };
+  return { base, code, level, name: math.name.of(code, DIM, base) ?? "" };
 }
 
 const tables = new WeakMap();
@@ -104,7 +125,13 @@ export function presets(math) {
       math.moire.all(1).map((one) => {
         const { name, spec, level, lattice, combine } = one.toJSON();
         one.free();
-        return { name, base: spec.base, code: String(spec.code), level, combine: lattice === 'Hex' ? 'hive' : combine.toLowerCase() };
+        return {
+          name,
+          base: spec.base,
+          code: String(spec.code),
+          level,
+          combine: lattice === "Hex" ? "hive" : combine.toLowerCase(),
+        };
       }),
     );
   }
@@ -112,7 +139,15 @@ export function presets(math) {
 }
 
 export function presetOf(list, value) {
-  return list.find((one) => one.base === Number(value.base) && one.code === String(value.code) && one.level === Number(value.level) && one.combine === value.combine)?.name ?? '';
+  return (
+    list.find(
+      (one) =>
+        one.base === Number(value.base) &&
+        one.code === String(value.code) &&
+        one.level === Number(value.level) &&
+        one.combine === value.combine,
+    )?.name ?? ""
+  );
 }
 
 export function drawn(math, seed) {
@@ -162,7 +197,13 @@ export function law(math, limit, scale, mate) {
 export function study(math, value) {
   const made = design(math, value);
   const numbers = odd(value.limit);
-  return { ...made, numbers, spec: math.moire.Spec.new(made.code, made.base, DIM), merge: MERGE[value.combine] ?? 'Sum', lattice: value.combine === 'hive' ? 'Hex' : 'Square' };
+  return {
+    ...made,
+    numbers,
+    spec: math.moire.Spec.new(made.code, made.base, DIM),
+    merge: MERGE[value.combine] ?? "Sum",
+    lattice: value.combine === "hive" ? "Hex" : "Square",
+  };
 }
 
 export function swatch(math, value, size, look) {
@@ -177,7 +218,9 @@ export function crop(math, name, radius, anti, size) {
   const frac = new math.shape.Frac(radius, GRAIN);
   const shape = math.shape.named(name, DIM, frac);
   frac.free();
-  return Uint8Array.from(math.shape.regions(shape, [size, size]).data, (region) => ((Number(anti) === 1 ? region === 0 : region > 0) ? 1 : 0));
+  return Uint8Array.from(math.shape.regions(shape, [size, size]).data, (region) =>
+    (Number(anti) === 1 ? region === 0 : region > 0) ? 1 : 0,
+  );
 }
 
 export function field(math, plan, size, kept = null) {

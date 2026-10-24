@@ -17,7 +17,7 @@ TRUNCATION_LEVEL = 8
 
 
 def popcount(value):
-    return bin(value).count("1")
+    return value.bit_count()
 
 
 def tile_of(code):
@@ -128,7 +128,7 @@ def level_sets():
         agree = cells == anded and len(cells) == 3**level
         print(
             f"  L={level:2d}  side {side:4d}  cells {len(cells):6d}"
-            f"  3^L {3 ** level:6d}  set == (i AND j == 0) {agree}"
+            f"  3^L {3**level:6d}  set == (i AND j == 0) {agree}"
         )
     same = all(
         sum(1 << (level - popcount(i)) for i in range(1 << level)) == 3**level

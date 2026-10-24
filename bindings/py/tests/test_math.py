@@ -26,7 +26,9 @@ def test_two_census(row):
 def test_counts_fill(row):
     r = row("math::counts::fill")
     i = r["in"]
-    filled = counts.fill(int(i["code"]), i["number"], i["dimension"], i["level"], i["base"])
+    filled = counts.fill(
+        int(i["code"]), i["number"], i["dimension"], i["level"], i["base"]
+    )
     assert filled == int(r["out"])
 
 

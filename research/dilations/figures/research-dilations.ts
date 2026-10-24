@@ -18,7 +18,12 @@ export default function draw(pen: Pen, ink: Ink) {
     for (let n = 0; n < LAGS; n++) {
       const count = field[m] * field[n];
       const r = top * Math.sqrt(count / (peak * peak));
-      pen.disc(frame.x + (n + 0.5) * cell, frame.y + (m + 0.5) * cell, r, count === peak * peak ? ink.yellow : ink.blue);
+      pen.disc(
+        frame.x + (n + 0.5) * cell,
+        frame.y + (m + 0.5) * cell,
+        r,
+        count === peak * peak ? ink.yellow : ink.blue,
+      );
     }
   }
 }

@@ -32,9 +32,15 @@ leak() {
 
 pytest_py() { uv run --no-project --with pytest --with ./bindings/py pytest bindings/py; }
 
+RUFF="uvx ruff@0.17.2"
+lint_py() { $RUFF format --check . && $RUFF check .; }
+
 mkdir -p "$DATA_DIR"
 total=$SECONDS
 step leak leak
+step site-install bun install --cwd site --frozen-lockfile
+step biome bun run --cwd site lint
+step ruff lint_py
 step fmt cargo fmt --all --check
 step bridge scripts/bridge.sh check
 step clippy cargo clippy --workspace -- -D warnings
@@ -45,7 +51,6 @@ step wasm scripts/wasm.sh
 step js bun --cwd bindings/js test
 step node node bindings/js/node.smoke.js
 step py pytest_py
-step site-install bun install --cwd site --frozen-lockfile
 step site-wasm bun run --cwd site wasm --no-build
 step site-types bun run --cwd site types
 step site-test bun --cwd site test

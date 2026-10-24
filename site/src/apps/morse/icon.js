@@ -8,7 +8,7 @@ const LEVEL = 2;
 const SIDE = 2 ** LEVEL;
 const GAP = 0.12;
 const CORNER = 0.24;
-const WANT = { tile: "0110", level: LEVEL, plus: SIDE * SIDE / 2 };
+const WANT = { tile: "0110", level: LEVEL, plus: (SIDE * SIDE) / 2 };
 
 let lift = null;
 

@@ -1,4 +1,4 @@
-import { CLEAR, board } from "./frame.js";
+import { board, CLEAR } from "./frame.js";
 import { fold } from "./pixels.js";
 
 const TAU = 2 * Math.PI;
@@ -12,7 +12,11 @@ let scratch;
 function surface(pixels) {
   const [h, w] = pixels.shape;
   const src = pixels.colors;
-  const bytes = pixels.cover ? fold(pixels) : src instanceof Uint8ClampedArray ? src : new Uint8ClampedArray(src.buffer, src.byteOffset, w * h * 4);
+  const bytes = pixels.cover
+    ? fold(pixels)
+    : src instanceof Uint8ClampedArray
+      ? src
+      : new Uint8ClampedArray(src.buffer, src.byteOffset, w * h * 4);
   if (!scratch) scratch = new OffscreenCanvas(w, h);
   else if (scratch.width !== w || scratch.height !== h) {
     scratch.width = w;

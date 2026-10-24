@@ -1,4 +1,4 @@
-import { frame, plot, type Frame, type Ink, type Pen, type Point } from "#view";
+import { type Frame, frame, type Ink, type Pen, type Point, plot } from "#view";
 import census from "./research-zeta.json" with { type: "json" };
 
 type Panel = { columns: number[]; ordinates: number[]; family: number[][]; teeth: number[][]; hollow: number[][] };
@@ -17,7 +17,8 @@ function check(p: Panel, sizes: [number, number, number]) {
   if (p.columns.length !== 2) throw new Error(`research-zeta: ${p.columns.length} pole columns, want 2`);
   const [alpha] = p.columns;
   for (const [re, im] of [...p.family, ...p.teeth, ...p.hollow]) {
-    if (!(re > alpha - WIDE && re < alpha + REACH && im > 0 && im < HEIGHT)) throw new Error(`research-zeta: zero ${re} ${im} off the strip`);
+    if (!(re > alpha - WIDE && re < alpha + REACH && im > 0 && im < HEIGHT))
+      throw new Error(`research-zeta: zero ${re} ${im} off the strip`);
   }
 }
 
@@ -27,7 +28,10 @@ function panel(pen: Pen, ink: Ink, box: Frame, p: Panel) {
   const [alpha, below] = p.columns;
   const lo = alpha - WIDE;
   const hi = alpha + REACH;
-  const at = (re: number, im: number): Point => [box.x + (box.w * (re - lo)) / (hi - lo), box.y + box.h * (1 - im / HEIGHT)];
+  const at = (re: number, im: number): Point => [
+    box.x + (box.w * (re - lo)) / (hi - lo),
+    box.y + box.h * (1 - im / HEIGHT),
+  ];
   pen.rect(box.x, box.y, box.w, box.h, ink.panel);
   plot.axis(pen, box, ink.line);
   pen.segment(at(alpha, 0), at(alpha, HEIGHT), 1.6, ink.fade(ink.dim, 0.5));

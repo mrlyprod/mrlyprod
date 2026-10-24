@@ -1,13 +1,13 @@
-import { CLEAR, board } from "./frame.js";
+import { board, CLEAR } from "./frame.js";
 
 const TAU = 2 * Math.PI;
 const MAX = Number.MAX_VALUE;
 
 /* GEOMETRY */
 
-const fmin = (a, b) => (b < a || a !== a ? b : a);
-const fmax = (a, b) => (b > a || a !== a ? b : a);
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+const fmin = (a, b) => (b < a || Number.isNaN(a) ? b : a);
+const fmax = (a, b) => (b > a || Number.isNaN(a) ? b : a);
+const clamp = (v, lo, hi) => (v < lo ? lo : Math.min(v, hi));
 
 function boxSdf(px, py, cx, cy, hw, hh) {
   const qx = Math.abs(px - cx) - hw;
@@ -78,7 +78,9 @@ function bounds(pts) {
 
 export function raster(width, height, ground = CLEAR) {
   const colors = new Uint8ClampedArray(width * height * 4);
-  new Uint32Array(colors.buffer).fill(new Uint32Array(Uint8ClampedArray.from(ground.slice(0, 4), Math.round).buffer)[0]);
+  new Uint32Array(colors.buffer).fill(
+    new Uint32Array(Uint8ClampedArray.from(ground.slice(0, 4), Math.round).buffer)[0],
+  );
   const swatch = [0, 0, 0, 0];
 
   function blend(x, y, c, cover) {
@@ -232,8 +234,7 @@ export function raster(width, height, ground = CLEAR) {
       const half = thick / 2;
       const outer = r + half;
       const span = Math.abs(to - from);
-      const lo = to >= from ? from : to;
-      const hi = to >= from ? to : from;
+      const [lo, hi] = to >= from ? [from, to] : [to, from];
       const ends = [
         [cx + r * Math.cos(lo), cy + r * Math.sin(lo)],
         [cx + r * Math.cos(hi), cy + r * Math.sin(hi)],

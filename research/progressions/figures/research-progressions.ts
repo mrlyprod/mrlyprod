@@ -22,6 +22,8 @@ export default function draw(pen: Pen, ink: Ink) {
     grid.fill(pen, n % BASE, SIDE - 1 - Math.floor(n / BASE), ink.orange);
   }
   for (const n of cells) grid.fill(pen, n % BASE, SIDE - 1 - Math.floor(n / BASE), ink.blue);
-  if (cells.length !== DIGITS.length ** 2) throw new Error(`research-progressions: ${cells.length} cells, want ${DIGITS.length ** 2}`);
-  if (!(shadow.size > cells.length && shadow.size < SIDE * SIDE - cells.length)) throw new Error(`research-progressions: ${shadow.size} midpoints`);
+  if (cells.length !== DIGITS.length ** 2)
+    throw new Error(`research-progressions: ${cells.length} cells, want ${DIGITS.length ** 2}`);
+  if (!(shadow.size > cells.length && shadow.size < SIDE * SIDE - cells.length))
+    throw new Error(`research-progressions: ${shadow.size} midpoints`);
 }

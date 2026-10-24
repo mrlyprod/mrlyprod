@@ -1,15 +1,15 @@
-import { canvas, ink } from '#view';
-import { dark, light, tinted } from './theme/theme.js';
+import { canvas, ink } from "#view";
+import { dark, light, tinted } from "./theme/theme.js";
 
 export const TILE = 512;
 export const OPENER = 1024;
 export const BUDGET = 128 * 1024 * 1024;
 
 export const SIZE = [1024, 1024];
-const MARGIN = '100% 0px';
-const STILL = '(prefers-reduced-motion: reduce)';
-const DARK = '(prefers-color-scheme: dark)';
-const calm = () => document.documentElement.dataset.motion === 'reduce' || matchMedia(STILL).matches;
+const MARGIN = "100% 0px";
+const STILL = "(prefers-reduced-motion: reduce)";
+const DARK = "(prefers-color-scheme: dark)";
+const calm = () => document.documentElement.dataset.motion === "reduce" || matchMedia(STILL).matches;
 
 /* SIZE */
 
@@ -21,7 +21,12 @@ export function fit(box, dpr, cap, [w, h] = SIZE) {
 
 /* QUEUE */
 
-export function queue({ near, paint, frame = (fn) => requestAnimationFrame(fn), cancel = (id) => cancelAnimationFrame(id) }) {
+export function queue({
+  near,
+  paint,
+  frame = (fn) => requestAnimationFrame(fn),
+  cancel = (id) => cancelAnimationFrame(id),
+}) {
   const waiting = new Set();
   let ticket = 0;
   let busy = false;
@@ -73,17 +78,17 @@ export function queue({ near, paint, frame = (fn) => requestAnimationFrame(fn), 
 
 let table = { figures: {}, units: {}, plates: [] };
 
-export const inked = (theme, accent, link) => ink(tinted(theme === 'dark' ? dark : light, { accent, link, theme }));
+export const inked = (theme, accent, link) => ink(tinted(theme === "dark" ? dark : light, { accent, link, theme }));
 
 let shade = null;
 
 function look() {
   const root = document.documentElement;
   const set = root.dataset.theme;
-  const theme = set === 'dark' || set === 'light' ? set : matchMedia(DARK).matches ? 'dark' : 'light';
+  const theme = set === "dark" || set === "light" ? set : matchMedia(DARK).matches ? "dark" : "light";
   const css = getComputedStyle(root);
-  const accent = css.getPropertyValue('--accent').trim();
-  const link = css.getPropertyValue('--link').trim();
+  const accent = css.getPropertyValue("--accent").trim();
+  const link = css.getPropertyValue("--link").trim();
   const key = `${theme} ${accent} ${link}`;
   if (shade?.key !== key) shade = { key, ink: inked(theme, accent, link) };
   return shade;
@@ -111,7 +116,15 @@ const modules = new Map();
 function load(name) {
   if (!modules.has(name)) {
     const thunk = table.figures[name];
-    modules.set(name, thunk ? thunk().then(async (one) => (await open(one.units), one)) : Promise.reject(new Error(`figure: no live figure ${name}`)));
+    modules.set(
+      name,
+      thunk
+        ? thunk().then(async (one) => {
+            await open(one.units);
+            return one;
+          })
+        : Promise.reject(new Error(`figure: no live figure ${name}`)),
+    );
   }
   return modules.get(name);
 }
@@ -145,7 +158,7 @@ async function paint(host) {
   try {
     await draw(host, one);
   } finally {
-    host.removeAttribute('aria-busy');
+    host.removeAttribute("aria-busy");
   }
 }
 
@@ -154,7 +167,7 @@ async function draw(host, one) {
     const figure = await load(one.name);
     if (hosts.get(host) !== one || !host.isConnected) return;
     const size = figure.size ?? SIZE;
-    const node = host.querySelector('canvas');
+    const node = host.querySelector("canvas");
     if (size[0] !== size[1]) node.style.aspectRatio = `${size[0]} / ${size[1]}`;
     const box = node.getBoundingClientRect().width || host.getBoundingClientRect().width;
     const [w, h] = fit(box, devicePixelRatio || 1, one.cap, size);
@@ -165,22 +178,29 @@ async function draw(host, one) {
     }
     const pen = look();
     const start = performance.now();
-    scratch ??= document.createElement('canvas');
+    scratch ??= document.createElement("canvas");
     if (scratch.width !== size[0] || scratch.height !== size[1]) [scratch.width, scratch.height] = size;
-    const ctx = scratch.getContext('2d');
-    figure.default(canvas(ctx, size[0], size[1], table.plates?.includes(one.name) ? undefined : pen.ink.ground), pen.ink, moment(figure, one));
-    const out = node.getContext('2d', { willReadFrequently: one.eager });
-    out.imageSmoothingQuality = 'high';
+    const ctx = scratch.getContext("2d");
+    figure.default(
+      canvas(ctx, size[0], size[1], table.plates?.includes(one.name) ? undefined : pen.ink.ground),
+      pen.ink,
+      moment(figure, one),
+    );
+    const out = node.getContext("2d", { willReadFrequently: one.eager });
+    out.imageSmoothingQuality = "high";
     out.clearRect(0, 0, w, h);
     out.drawImage(scratch, 0, 0, w, h);
     if (one.eager) out.getImageData(0, 0, 1, 1);
     one.key = pen.key;
     host.dataset.ms = (performance.now() - start).toFixed(1);
-    host.dispatchEvent(new CustomEvent('drawn', { detail: Number(host.dataset.ms), bubbles: true }));
+    host.dispatchEvent(new CustomEvent("drawn", { detail: Number(host.dataset.ms), bubbles: true }));
     if (figure.loop && figure.frames && !calm()) {
       one.loop = true;
       clearTimeout(one.timer);
-      one.timer = setTimeout(() => one.seen && !document.hidden && line.add(host), (figure.loop * 1000) / figure.frames);
+      one.timer = setTimeout(
+        () => one.seen && !document.hidden && line.add(host),
+        (figure.loop * 1000) / figure.frames,
+      );
     }
   } catch (error) {
     console.error(`figure ${one.name}:`, error);
@@ -192,16 +212,16 @@ function near(host) {
   return box.bottom < 0 ? -box.bottom : box.top > innerHeight ? box.top - innerHeight : 0;
 }
 
-const line = typeof document === 'undefined' ? null : queue({ near, paint });
+const line = typeof document === "undefined" ? null : queue({ near, paint });
 
 function want(host) {
   clearTimeout(hosts.get(host)?.timer);
-  host.setAttribute('aria-busy', 'true');
+  host.setAttribute("aria-busy", "true");
   line.add(host);
 }
 
 function skip(host) {
-  host.removeAttribute('aria-busy');
+  host.removeAttribute("aria-busy");
   line.remove(host);
 }
 
@@ -241,19 +261,29 @@ export function start(given) {
   table = given;
   if (started) return;
   started = true;
-  matchMedia(DARK).addEventListener('change', repaint);
-  window.addEventListener('theme', repaint);
-  document.addEventListener('visibilitychange', resume);
+  matchMedia(DARK).addEventListener("change", repaint);
+  window.addEventListener("theme", repaint);
+  document.addEventListener("visibilitychange", resume);
 }
 
 export function scan(root, eager = false, keep = false) {
   eye ??= new IntersectionObserver(seen, { rootMargin: MARGIN });
-  for (const host of root.querySelectorAll('figure[data-figure]')) {
+  for (const host of root.querySelectorAll("figure[data-figure]")) {
     if (hosts.has(host)) continue;
-    const cap = host.closest('.tile') ? TILE : OPENER;
-    hosts.set(host, { name: host.dataset.figure, cap, bytes: 0, seen: eager, eager, keep, key: '', timer: 0, loop: false });
+    const cap = host.closest(".tile") ? TILE : OPENER;
+    hosts.set(host, {
+      name: host.dataset.figure,
+      cap,
+      bytes: 0,
+      seen: eager,
+      eager,
+      keep,
+      key: "",
+      timer: 0,
+      loop: false,
+    });
     eye.observe(host);
-    host.setAttribute('aria-busy', 'true');
+    host.setAttribute("aria-busy", "true");
     if (eager) line.add(host);
   }
 }
@@ -263,15 +293,18 @@ export function drop() {
   let key = null;
   for (const [host, one] of hosts) {
     if (one.keep && host.isConnected) {
-      if (one.seen && due(one, (key ??= look().key))) want(host);
+      if (one.seen) {
+        key ??= look().key;
+        if (due(one, key)) want(host);
+      }
       continue;
     }
     eye?.unobserve(host);
     clearTimeout(one.timer);
     account(one, 0);
-    const node = host.querySelector('canvas');
+    const node = host.querySelector("canvas");
     if (node) node.width = node.height = 0;
-    host.removeAttribute('aria-busy');
+    host.removeAttribute("aria-busy");
     hosts.delete(host);
   }
 }

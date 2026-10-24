@@ -1,8 +1,21 @@
 import { expect, test } from "bun:test";
-import { seti } from "./seti/seti.ts";
-import { paint } from "./code.ts";
-import { away, block, decode, dirRoute, draw, fileRoute, href, lang, link, rawPath, type Tools, type Wood } from "./view.ts";
 import { render as md } from "../md/md.ts";
+import { paint } from "./code.ts";
+import { seti } from "./seti/seti.ts";
+import {
+  away,
+  block,
+  decode,
+  dirRoute,
+  draw,
+  fileRoute,
+  href,
+  lang,
+  link,
+  rawPath,
+  type Tools,
+  type Wood,
+} from "./view.ts";
 
 const shiki = await import("@shikijs/core").then(
   () => true,
@@ -47,8 +60,14 @@ test("a path that is not valid percent-encoding is kept as written", () => {
 
 test("a file opens its raw bytes and its GitHub blob, a folder only its tree, a lost path nothing", () => {
   const git = { slug: "acme/demo", branch: "main" };
-  expect(away(git, { path: "a b/c#1.ts", found: true })).toEqual({ raw: "/raw/a%20b/c%231.ts", hub: "https://github.com/acme/demo/blob/main/a%20b/c%231.ts" });
-  expect(away(git, { path: "src/", found: true })).toEqual({ raw: "", hub: "https://github.com/acme/demo/tree/main/src" });
+  expect(away(git, { path: "a b/c#1.ts", found: true })).toEqual({
+    raw: "/raw/a%20b/c%231.ts",
+    hub: "https://github.com/acme/demo/blob/main/a%20b/c%231.ts",
+  });
+  expect(away(git, { path: "src/", found: true })).toEqual({
+    raw: "",
+    hub: "https://github.com/acme/demo/tree/main/src",
+  });
   expect(away(git, { path: "", found: true })).toEqual({ raw: "", hub: "https://github.com/acme/demo/tree/main" });
   expect(away(git, { path: "gone", found: false })).toEqual({ raw: "", hub: "" });
 });
@@ -72,7 +91,14 @@ const wood: Wood = {
   slug: "acme/demo",
   branch: "main",
   c: [
-    { n: "docs", k: "d", c: [{ n: "paper.pdf", k: "f", s: 900 }, { n: "shot.png", k: "f", i: "image", s: 2048 }] },
+    {
+      n: "docs",
+      k: "d",
+      c: [
+        { n: "paper.pdf", k: "f", s: 900 },
+        { n: "shot.png", k: "f", i: "image", s: 2048 },
+      ],
+    },
     { n: "big.rs", k: "f", i: "rust", s: 2 << 20 },
     { n: "blob.bin", k: "f", s: 4 },
     { n: "Makefile", k: "f", s: 9 },
@@ -101,7 +127,9 @@ test("a listing draws its folders and files with their sizes at once, and its RE
   const view = draw(wood, "");
   expect(view).toMatchObject({ path: "", name: "demo", found: true });
   expect(view.html).toContain('<p class="lead">1 directory and 4 files in demo.</p>');
-  expect(view.html).toContain('<li class="dir"><span class="ico" aria-hidden="true"></span><a href="/git/docs/">docs/</a><span class="n">2 items</span></li>');
+  expect(view.html).toContain(
+    '<li class="dir"><span class="ico" aria-hidden="true"></span><a href="/git/docs/">docs/</a><span class="n">2 items</span></li>',
+  );
   expect(view.html).toContain('<a href="/git/Makefile">Makefile</a><span class="n">9 B</span>');
   expect(view.html).toContain('<a href="https://github.com/acme/demo/tree/main">GitHub</a>');
   expect(view.html).not.toContain("readme");
@@ -112,11 +140,15 @@ test("a listing draws its folders and files with their sizes at once, and its RE
 
 test("a code file shows its bar first, then its numbered lines, and hands its text over for painting", async () => {
   const view = draw(wood, "Makefile");
-  expect(view.html).toContain('<a href="/raw/Makefile">Raw</a> · <a href="https://github.com/acme/demo/blob/main/Makefile">GitHub</a>');
+  expect(view.html).toContain(
+    '<a href="/raw/Makefile">Raw</a> · <a href="https://github.com/acme/demo/blob/main/Makefile">GitHub</a>',
+  );
   expect(view.html).not.toContain('class="code');
   const full = (await view.more!(tools))!;
   expect(full.html).toContain('<p class="lead">9 B · text · 2 lines</p>');
-  expect(full.html).toContain('<span class="line" id="L2"><a class="n" href="#L2">2</a><span class="t">\techo</span></span>');
+  expect(full.html).toContain(
+    '<span class="line" id="L2"><a class="n" href="#L2">2</a><span class="t">\techo</span></span>',
+  );
   expect(full.code).toEqual({ text: "all:\n\techo\n", lang: "text" });
 });
 
@@ -135,7 +167,9 @@ test("with the tree, a README link to a missing path is plain text and a folder 
 
 test("with the tree, a reference link whose definition is a missing path is plain text too", () => {
   const to = (url: string) => link("", url, wood);
-  expect(md("[gone][g] and [docs][d]\n\n[g]: gone.rs\n[d]: docs", { link: to })).toBe('<p>gone and <a href="/git/docs/">docs</a></p>');
+  expect(md("[gone][g] and [docs][d]\n\n[g]: gone.rs\n[d]: docs", { link: to })).toBe(
+    '<p>gone and <a href="/git/docs/">docs</a></p>',
+  );
 });
 
 test("with the tree, a README link to a file with a space in its name is found through its percent-encoding", () => {

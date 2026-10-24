@@ -29,7 +29,8 @@ function facts() {
   window.free();
   const read = { points: census.points, split: seen[1], inert: seen[2], ramified: seen[3], units: seen[4] };
   const got = Object.values(read).join();
-  if (got !== Object.values(WANT).join() || census.split !== seen[1] || census.inert !== seen[2]) throw new Error(`gaussian: the window of ${REACH} reads ${got}, want ${Object.values(WANT).join()}`);
+  if (got !== Object.values(WANT).join() || census.split !== seen[1] || census.inert !== seen[2])
+    throw new Error(`gaussian: the window of ${REACH} reads ${got}, want ${Object.values(WANT).join()}`);
   fates = grid;
   return grid;
 }
@@ -50,7 +51,8 @@ export default function draw(pen) {
   for (let b = -REACH; b <= REACH; b++) {
     for (let a = -REACH; a <= REACH; a++) {
       if (!prime(grid, a, b)) continue;
-      for (const s of [1, -1]) if (prime(grid, a + 1, b + s)) pen.segment(at(a, b), at(a + 1, b + s), cell * LINK, tone(a + 0.5, b + s / 2));
+      for (const s of [1, -1])
+        if (prime(grid, a + 1, b + s)) pen.segment(at(a, b), at(a + 1, b + s), cell * LINK, tone(a + 0.5, b + s / 2));
     }
   }
   for (let b = -REACH; b <= REACH; b++) {

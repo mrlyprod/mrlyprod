@@ -12,8 +12,10 @@ export default function draw(pen: Pen, ink: Ink) {
   const universe = math.bang.bang(3);
   if (universe.total !== 256) throw new Error(`research-bijection: ${universe.total} codes, want 256`);
   if (universe.distinct() !== 22) throw new Error(`research-bijection: ${universe.distinct()} orbits, want 22`);
-  if (math.bang.baseq.distinct_designs(2, 3) !== "22") throw new Error(`research-bijection: ${math.bang.baseq.distinct_designs(2, 3)} distinct designs, want 22`);
-  if (math.bang.corners(3).length !== 8) throw new Error(`research-bijection: ${math.bang.corners(3).length} corners, want 8`);
+  if (math.bang.baseq.distinct_designs(2, 3) !== "22")
+    throw new Error(`research-bijection: ${math.bang.baseq.distinct_designs(2, 3)} distinct designs, want 22`);
+  if (math.bang.corners(3).length !== 8)
+    throw new Error(`research-bijection: ${math.bang.corners(3).length} corners, want 8`);
 
   const pitch = area.w / CENSUS;
   const bit = (pitch * 0.84) / STAMP_COLS;

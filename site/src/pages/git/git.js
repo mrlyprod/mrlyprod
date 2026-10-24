@@ -1,18 +1,24 @@
-import { start } from '../../lib/git/client.ts';
+import { start } from "../../lib/git/client.ts";
 
 /* MARKDOWN */
 
 async function md(text, link) {
-  const [{ front, render }, katex] = await Promise.all([import('../../lib/md/md.ts'), text.includes('$') ? import('katex') : null]);
-  const math = katex ? (tex, display) => katex.default.renderToString(tex, { output: 'mathml', throwOnError: false, displayMode: display }) : undefined;
+  const [{ front, render }, katex] = await Promise.all([
+    import("../../lib/md/md.ts"),
+    text.includes("$") ? import("katex") : null,
+  ]);
+  const math = katex
+    ? (tex, display) =>
+        katex.default.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display })
+    : undefined;
   return render(front(text).body, { math, link });
 }
 
-const paint = () => import('../../lib/git/code.ts').then((one) => one.paint);
+const paint = () => import("../../lib/git/code.ts").then((one) => one.paint);
 
 /* VIEWER */
 
-export const view = (host, after) => start({ tree: '/git.json', mount: host, md, paint, after });
+export const view = (host, after) => start({ tree: "/git.json", mount: host, md, paint, after });
 
 const live = new Map();
 

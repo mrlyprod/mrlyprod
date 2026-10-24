@@ -106,7 +106,10 @@ def fib(n):
 
 
 def main():
-    print("object: design code %d, base %d, dimension 2, normalised Laplacian" % (CODE, BASE))
+    print(
+        "object: design code %d, base %d, dimension 2, normalised Laplacian"
+        % (CODE, BASE)
+    )
     print("clustering tolerance: %g" % TOL)
     print()
     print("level nodes distinct degenerate repeated mult_1 mult_second max_spread")
@@ -169,10 +172,18 @@ def main():
     print()
 
     print("counting fits")
-    print("  distinct:        %s" % ", ".join(str(table[l]["distinct"]) for l in LEVELS))
+    print(
+        "  distinct:        %s" % ", ".join(str(table[l]["distinct"]) for l in LEVELS)
+    )
     print("  2*Fib(2L)+1:     %s" % ", ".join(str(2 * fib(2 * l) + 1) for l in LEVELS))
-    print("  degenerate:      %s" % ", ".join(str(table[l]["degenerate"]) for l in LEVELS[1:]))
-    print("  2*Fib(2L-3)-1:   %s" % ", ".join(str(2 * fib(2 * l - 3) - 1) for l in LEVELS[1:]))
+    print(
+        "  degenerate:      %s"
+        % ", ".join(str(table[l]["degenerate"]) for l in LEVELS[1:])
+    )
+    print(
+        "  2*Fib(2L-3)-1:   %s"
+        % ", ".join(str(2 * fib(2 * l - 3) - 1) for l in LEVELS[1:])
+    )
     print()
 
     mu8, values8, counts8 = top
@@ -181,14 +192,18 @@ def main():
     at = locate(values8, 1.0)
     print("  nearest distinct eigenvalue below 1: %.10f" % values8[at - 1])
     print("  nearest distinct eigenvalue above 1: %.10f" % values8[at + 1])
-    print("  isolation of the class at 1: %.3f below, %.3f above"
-          % (1.0 - values8[at - 1], values8[at + 1] - 1.0))
+    print(
+        "  isolation of the class at 1: %.3f below, %.3f above"
+        % (1.0 - values8[at - 1], values8[at + 1] - 1.0)
+    )
     print()
 
-    stop = 3 ** 9
+    stop = 3**9
     print("why level 9 stops under this method")
     print("  nodes at level 9: %d" % stop)
-    print("  dense matrix before eigensolver workspace: %.2f GB" % (stop * stop * 8 / 1e9))
+    print(
+        "  dense matrix before eigensolver workspace: %.2f GB" % (stop * stop * 8 / 1e9)
+    )
     print()
 
     print("tolerance sweep at level 8")
@@ -197,8 +212,12 @@ def main():
         values, counts, _ = classes(mu8, tol)
         print(
             "  %.0e %d %d %d"
-            % (tol, values.size, multiplicity(values, counts, 1.0),
-               multiplicity(values, counts, SECOND))
+            % (
+                tol,
+                values.size,
+                multiplicity(values, counts, 1.0),
+                multiplicity(values, counts, SECOND),
+            )
         )
 
 

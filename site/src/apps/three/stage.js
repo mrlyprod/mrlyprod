@@ -82,7 +82,10 @@ const corner = (frame, a, b) => frame.centre.map((c, i) => c + a * frame.u[i] + 
 export function sheet(frame) {
   const h = frame.width / 2;
   const [p00, p10, p11, p01] = [corner(frame, -h, -h), corner(frame, -h, h), corner(frame, h, h), corner(frame, h, -h)];
-  return { position: Float32Array.from([...p00, ...p10, ...p11, ...p00, ...p11, ...p01]), uv: Float32Array.from([0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0]) };
+  return {
+    position: Float32Array.from([...p00, ...p10, ...p11, ...p00, ...p11, ...p01]),
+    uv: Float32Array.from([0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0]),
+  };
 }
 
 export function space(three, canvas, view) {
@@ -156,7 +159,10 @@ export function space(three, canvas, view) {
     mark();
     draw();
   };
-  const held = new Map([[solid, []], [cuts, []]]);
+  const held = new Map([
+    [solid, []],
+    [cuts, []],
+  ]);
   const hold = (group, one, ...parts) => {
     group.add(one);
     held.get(group).push([one, parts]);
@@ -175,8 +181,8 @@ export function space(three, canvas, view) {
     if (next?.quads?.length) {
       const built = pack(next.quads);
       const geometry = new three.BufferGeometry();
-      geometry.setAttribute('position', new three.BufferAttribute(built.position, 3));
-      geometry.setAttribute('normal', new three.BufferAttribute(built.normal, 3));
+      geometry.setAttribute("position", new three.BufferAttribute(built.position, 3));
+      geometry.setAttribute("normal", new three.BufferAttribute(built.normal, 3));
       geometry.setIndex(new three.BufferAttribute(built.index, 1));
       hold(solid, new three.Mesh(geometry, material), geometry);
     } else if (next?.cell && next.cubes) {
@@ -186,7 +192,8 @@ export function space(three, canvas, view) {
         const box = new three.BoxGeometry(unit * CUBE, unit * CUBE, unit * CUBE);
         const many = new three.InstancedMesh(box, material, count);
         const place = new three.Matrix4();
-        for (let i = 0; i < count; i++) many.setMatrixAt(i, place.makeTranslation(centres[i * 3], centres[i * 3 + 1], centres[i * 3 + 2]));
+        for (let i = 0; i < count; i++)
+          many.setMatrixAt(i, place.makeTranslation(centres[i * 3], centres[i * 3 + 1], centres[i * 3 + 2]));
         many.instanceMatrix.needsUpdate = true;
         hold(solid, many, box);
       }
@@ -200,7 +207,9 @@ export function space(three, canvas, view) {
     material.transparent = clear;
     material.opacity = opacity;
     material.depthWrite = !clear;
-    material.clippingPlanes = clip ? clip.map(({ normal, constant }) => new three.Plane(new three.Vector3(...normal), constant)) : null;
+    material.clippingPlanes = clip
+      ? clip.map(({ normal, constant }) => new three.Plane(new three.Vector3(...normal), constant))
+      : null;
     material.side = clip ? three.DoubleSide : three.FrontSide;
     material.needsUpdate = true;
     dirty = true;
@@ -215,15 +224,20 @@ export function space(three, canvas, view) {
       texture.needsUpdate = true;
       const quad = sheet(at);
       const shape = new three.BufferGeometry();
-      shape.setAttribute('position', new three.BufferAttribute(quad.position, 3));
-      shape.setAttribute('uv', new three.BufferAttribute(quad.uv, 2));
-      const skin = new three.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: ALPHA, side: three.DoubleSide });
+      shape.setAttribute("position", new three.BufferAttribute(quad.position, 3));
+      shape.setAttribute("uv", new three.BufferAttribute(quad.uv, 2));
+      const skin = new three.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        alphaTest: ALPHA,
+        side: three.DoubleSide,
+      });
       hold(cuts, new three.Mesh(shape, skin), shape, skin, texture);
     }
     dirty = true;
   };
   const project = (kind) => {
-    const next = kind === 'iso' ? flat : near;
+    const next = kind === "iso" ? flat : near;
     if (next === camera) return;
     camera = next;
     dirty = true;

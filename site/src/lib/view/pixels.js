@@ -13,7 +13,8 @@ export function fold(pixels) {
 }
 
 export function patch(x, y, w, h) {
-  if (![x, y, w, h].every(Number.isInteger) || w < 0 || h < 0) throw new Error(`patch: ${x}, ${y}, ${w}, ${h} is not a box of whole pixels`);
+  if (![x, y, w, h].every(Number.isInteger) || w < 0 || h < 0)
+    throw new Error(`patch: ${x}, ${y}, ${w}, ${h} is not a box of whole pixels`);
   const colors = new Uint8ClampedArray(w * h * 4);
   const cover = new Float64Array(w * h);
   return {

@@ -15,19 +15,22 @@ PARALLEL_FROM = 5
 CHUNKS = 96
 LADDER_DEPTH = 400
 
+
 def corners(d):
     return [tuple((i >> (d - 1 - a)) & 1 for a in range(d)) for i in range(1 << d)]
+
 
 def block_tables(values, combine):
     tables = []
     for start in range(0, len(values), 8):
-        block = values[start:start + 8]
+        block = values[start : start + 8]
         table = [0] * (1 << len(block))
         for mask in range(1, 1 << len(block)):
             low = mask & -mask
             table[mask] = combine(table[mask ^ low], block[low.bit_length() - 1])
         tables.append(table)
     return tables
+
 
 def block_apply(tables, code, combine):
     out = 0
@@ -36,20 +39,26 @@ def block_apply(tables, code, combine):
         code >>= 8
     return out
 
+
 def sum_tables(values):
     return block_tables(values, operator.add)
+
 
 def or_tables(mapping):
     return block_tables([1 << target for target in mapping], operator.or_)
 
+
 def block_sum(tables, code):
     return block_apply(tables, code, operator.add)
+
 
 def block_or(tables, code):
     return block_apply(tables, code, operator.or_)
 
+
 def fill_tables(d, k):
     return sum_tables([k ** (d - sum(c)) * (k - 1) ** sum(c) for c in corners(d)])
+
 
 def polymul(a, b):
     out = [a[0] * b[0] * 0] * (len(a) + len(b) - 1)
@@ -57,6 +66,7 @@ def polymul(a, b):
         for j, right in enumerate(b):
             out[i + j] = out[i + j] + left * right
     return out
+
 
 def scaled_basis(xs):
     basis = []
@@ -73,6 +83,7 @@ def scaled_basis(xs):
             scale = scale * value.denominator // math.gcd(scale, value.denominator)
     return scale, [[int(value * scale) for value in term] for term in basis]
 
+
 def group_maps(d):
     cs = corners(d)
     index = {c: i for i, c in enumerate(cs)}
@@ -80,9 +91,11 @@ def group_maps(d):
     for perm in permutations(range(d)):
         for pattern in range(1 << d):
             flip = tuple((pattern >> (d - 1 - a)) & 1 for a in range(d))
-            maps.append(tuple(index[tuple(c[perm[a]] ^ flip[a] for a in range(d))]
-                              for c in cs))
+            maps.append(
+                tuple(index[tuple(c[perm[a]] ^ flip[a] for a in range(d))] for c in cs)
+            )
     return maps
+
 
 def classify(d, total):
     maps = [or_tables(mapping) for mapping in group_maps(d)]
@@ -96,11 +109,13 @@ def classify(d, total):
             rep_of[block_or(tables, code)] = code
     return reps, rep_of
 
+
 def a129824(d):
     out = 1
     for w in range(d + 1):
         out *= 1 + math.comb(d, w)
     return out
+
 
 def sweep(d):
     size = 1 << d
@@ -122,11 +137,12 @@ def sweep(d):
             if coef[d] != block_sum(pop, code):
                 failures += 1
             for k, tables in held:
-                if sum(c * k ** j for j, c in enumerate(coef)) != block_sum(tables, code):
+                if sum(c * k**j for j, c in enumerate(coef)) != block_sum(tables, code):
                     failures += 1
                     break
         polys.append(tuple(coef))
     return polys, failures
+
 
 def polynomial_report():
     out = []
@@ -138,12 +154,24 @@ def polynomial_report():
             members.setdefault(rep, []).append(code)
         lower = sum(1 for r in reps if len({polys[c][:-1] for c in members[r]}) > 1)
         lead = sum(1 for r in reps if len({polys[c][-1] for c in members[r]}) > 1)
-        out.append((d, len(polys), len(reps), len(set(polys)), a129824(d),
-                    lower, lead, failures))
+        out.append(
+            (
+                d,
+                len(polys),
+                len(reps),
+                len(set(polys)),
+                a129824(d),
+                lower,
+                lead,
+                failures,
+            )
+        )
     return out
+
 
 def sig_bounds(d):
     return [math.comb(d, w) + 1 for w in range(d + 1)]
+
 
 def unrank(index, bounds):
     f = [0] * len(bounds)
@@ -151,6 +179,7 @@ def unrank(index, bounds):
         f[i] = index % bounds[i]
         index //= bounds[i]
     return f
+
 
 def poly_of_sig(f, d):
     coef = [0] * (d + 1)
@@ -160,11 +189,13 @@ def poly_of_sig(f, d):
                 coef[w + j] += fw * math.comb(d - w, j)
     return coef
 
+
 def factor_list(coef):
     parts = []
     for g, mult in Poly(list(reversed(coef)), VAR, domain="ZZ").factor_list()[1]:
         parts.extend([g] * mult)
     return parts
+
 
 def quadratic_discs(coef):
     if not any(coef):
@@ -176,9 +207,11 @@ def quadratic_discs(coef):
             out.append(int(b * b - 4 * a * c))
     return out
 
+
 def evaluate_scaled(coef, q):
     top = len(coef) - 1
     return sum(c * (-1) ** i * q ** (top - i) for i, c in enumerate(coef))
+
 
 def peel_unit_linear(coef):
     c = list(coef)
@@ -198,11 +231,13 @@ def peel_unit_linear(coef):
         c = out
     return c
 
+
 def remainder_disc(coef):
     rest = peel_unit_linear(coef)
     if len(rest) == 3:
         return rest[1] * rest[1] - 4 * rest[2] * rest[0]
     return None
+
 
 def disc_chunk(job):
     d, lo, hi = job
@@ -215,6 +250,7 @@ def disc_chunk(job):
         if value is not None:
             remainder.add(value)
     return every, remainder
+
 
 def disc_sets(d, workers):
     total = 1
@@ -232,6 +268,7 @@ def disc_sets(d, workers):
             remainder |= rest
     return every, remainder, total
 
+
 def gapless_run(found):
     out = []
     for v in range(-3, -LADDER_DEPTH - 1, -1):
@@ -242,10 +279,14 @@ def gapless_run(found):
         out.append(v)
     return out
 
+
 def polytext(coef):
-    return " + ".join("{}n^{}".format(c, i) if i > 1 else
-                      ("{}n".format(c) if i == 1 else str(c))
-                      for i, c in reversed(list(enumerate(coef))) if c)
+    return " + ".join(
+        f"{c}n^{i}" if i > 1 else (f"{c}n" if i == 1 else str(c))
+        for i, c in reversed(list(enumerate(coef)))
+        if c
+    )
+
 
 def quartic_splits(d):
     hits = []
@@ -258,9 +299,16 @@ def quartic_splits(d):
             hits.append((f, rest, parts))
     return hits
 
+
 def solid_cells(mask, s):
-    return [(x, y, z) for x in range(s) for y in range(s) for z in range(s)
-            if (mask >> ((x & 1) | ((y & 1) << 1) | ((z & 1) << 2))) & 1]
+    return [
+        (x, y, z)
+        for x in range(s)
+        for y in range(s)
+        for z in range(s)
+        if (mask >> ((x & 1) | ((y & 1) << 1) | ((z & 1) << 2))) & 1
+    ]
+
 
 def census_values(mask, s):
     cells = solid_cells(mask, s)
@@ -270,8 +318,14 @@ def census_values(mask, s):
     exposed = 0
     vertices, edges, faces = set(), set(), set()
     for x, y, z in cells:
-        for p in ((x - 1, y, z), (x + 1, y, z), (x, y - 1, z),
-                  (x, y + 1, z), (x, y, z - 1), (x, y, z + 1)):
+        for p in (
+            (x - 1, y, z),
+            (x + 1, y, z),
+            (x, y - 1, z),
+            (x, y + 1, z),
+            (x, y, z - 1),
+            (x, y, z + 1),
+        ):
             if p not in solid:
                 exposed += 1
         for a in (0, 1):
@@ -289,7 +343,8 @@ def census_values(mask, s):
                 edges.add(shift + ((x + b) * m + y) * m + z + c)
                 edges.add(2 * shift + ((x + b) * m + y + c) * m + z)
     v, e, f, fills = len(vertices), len(edges), len(faces), len(cells)
-    return [fills, s ** 3 - fills, exposed, v, e, f, v - e + f - fills]
+    return [fills, s**3 - fills, exposed, v, e, f, v - e + f - fills]
+
 
 def census_polys(mask, fam, scale, basis):
     side = (lambda i: 2 * i + 1) if fam == "odd" else (lambda i: 2 * i)
@@ -298,29 +353,37 @@ def census_polys(mask, fam, scale, basis):
     bad = 0
     for obs in range(7):
         ys = [samples[1 + i][obs] for i in range(4)]
-        coef = [Fraction(sum(ys[i] * basis[i][j] for i in range(4)), scale)
-                for j in range(4)]
+        coef = [
+            Fraction(sum(ys[i] * basis[i][j] for i in range(4)), scale)
+            for j in range(4)
+        ]
         for h in (5, 6):
-            if sum(c * h ** j for j, c in enumerate(coef)) != samples[h][obs]:
+            if sum(c * h**j for j, c in enumerate(coef)) != samples[h][obs]:
                 bad += 1
         out.append(coef)
     return out, bad, samples
 
+
 def closed_fill(mask, k):
-    return sum(k ** (3 - bin(j).count("1")) * (k - 1) ** bin(j).count("1")
-               for j in range(8) if (mask >> j) & 1)
+    return sum(
+        k ** (3 - j.bit_count()) * (k - 1) ** j.bit_count()
+        for j in range(8)
+        if (mask >> j) & 1
+    )
+
 
 def factor_multisets(value, count, low=1):
     if count == 1:
         return [[value]] if value >= low else []
     out = []
     a = low
-    while a ** count <= value:
+    while a**count <= value:
         if value % a == 0:
             for tail in factor_multisets(value // a, count - 1, a):
                 out.append([a] + tail)
         a += 1
     return out
+
 
 def divisor_shape(coef):
     if all(c == 0 for c in coef):
@@ -344,6 +407,7 @@ def divisor_shape(coef):
             return True
     return False
 
+
 def census_locked(mask, scale, basis):
     bad = 0
     drift = 0
@@ -352,24 +416,31 @@ def census_locked(mask, scale, basis):
         polys, misses, samples = census_polys(mask, fam, scale, basis)
         bad += misses
         if fam == "odd":
-            drift = sum(1 for i in range(1, 7)
-                        if samples[i][0] != closed_fill(mask, i + 1))
+            drift = sum(
+                1 for i in range(1, 7) if samples[i][0] != closed_fill(mask, i + 1)
+            )
         for coef in polys:
             if divisor_shape(coef):
                 unlocked = True
     return not unlocked, bad, drift
 
+
 def lock_predicate(mask):
     if mask & 1:
         return 0
-    size = bin(mask).count("1")
-    inner = sum(1 for c in range(8) for i in range(3)
-                if (mask >> c) & 1 and c < (c ^ (1 << i)) and (mask >> (c ^ (1 << i))) & 1)
+    size = mask.bit_count()
+    inner = sum(
+        1
+        for c in range(8)
+        for i in range(3)
+        if (mask >> c) & 1 and c < (c ^ (1 << i)) and (mask >> (c ^ (1 << i))) & 1
+    )
     if size == 5 and inner == 4:
         return 1
     if inner == 0 and (mask >> 7) & 1 and size != 2:
         return 2
     return 0
+
 
 def lock_report():
     scale, basis = scaled_basis([1, 2, 3, 4])
@@ -391,6 +462,7 @@ def lock_report():
         agree += (clause != 0) == is_locked
     return path, edgeless, sorted(path + edgeless), locked, agree, holdout, grid
 
+
 def main():
     workers = min(8, os.cpu_count() or 1)
     started = time.time()
@@ -401,43 +473,51 @@ def main():
     print()
     print("FILL POLYNOMIALS")
     for d, designs, classes, distinct, closed, lower, lead, bad in polynomial_report():
-        print("  D = {}: {} designs, {} classes, {} distinct polynomials, "
-              "A129824 = {}".format(d, designs, classes, distinct, closed))
-        print("    lower coefficients split {} of {} classes, leading splits {} of {}, "
-              "failures {}".format(lower, classes, lead, classes, bad))
+        print(
+            f"  D = {d}: {designs} designs, {classes} classes, {distinct} distinct polynomials, "
+            f"A129824 = {closed}"
+        )
+        print(
+            f"    lower coefficients split {lower} of {classes} classes, leading splits {lead} of {classes}, "
+            f"failures {bad}"
+        )
     print()
     print("QUARTIC REMAINDERS SPLITTING INTO TWO QUADRATICS AT D = 4")
     hits = quartic_splits(4)
-    print("  count {}".format(len(hits)))
+    print(f"  count {len(hits)}")
     for f, rest, parts in hits:
-        body = " ".join("({})".format(polytext(list(reversed(g.all_coeffs()))))
-                        for g in parts)
-        print("  f={}: {} = {}".format(tuple(f), polytext(rest), body))
+        body = " ".join(f"({polytext(list(reversed(g.all_coeffs())))})" for g in parts)
+        print(f"  f={tuple(f)}: {polytext(rest)} = {body}")
     print()
     print("QUADRATIC-FACTOR DISCRIMINANTS")
     for d in DISC_DIMS:
         every, remainder, total = disc_sets(d, workers)
         wide = gapless_run(every)
         narrow = gapless_run(remainder)
-        print("  D = {}: {} signatures".format(d, total))
-        print("    all quadratic factors: gapless -3..{}, length {}, deepest {}".format(
-            wide[-1], len(wide), min(every)))
-        print("    peeled remainder only: gapless -3..{}, length {}, deepest {}".format(
-            narrow[-1], len(narrow), min(remainder)))
+        print(f"  D = {d}: {total} signatures")
+        print(
+            f"    all quadratic factors: gapless -3..{wide[-1]}, length {len(wide)}, deepest {min(every)}"
+        )
+        print(
+            f"    peeled remainder only: gapless -3..{narrow[-1]}, length {len(narrow)}, deepest {min(remainder)}"
+        )
     print()
     print("THE CENSUS LOCK AT D = 3")
     path, edgeless, predicted, locked, agree, holdout, grid = lock_report()
-    print("  path clause, origin-free with 5 corners and 4 edges: {} designs {}".format(
-        len(path), path))
-    print("  edgeless clause, origin-free with 111 and size not 2: {} designs {}".format(
-        len(edgeless), edgeless))
-    print("  predicate union: {} designs {}".format(len(predicted), predicted))
-    print("  census rule locked: {} designs {}".format(len(locked), locked))
-    print("  predicate and census rule agree on {} of 256 designs".format(agree))
-    print("  held-out census fits that missed: {}".format(holdout))
-    print("  grid fills match the closed form at k = 2..7 on {} of 256 designs".format(grid))
+    print(
+        f"  path clause, origin-free with 5 corners and 4 edges: {len(path)} designs {path}"
+    )
+    print(
+        f"  edgeless clause, origin-free with 111 and size not 2: {len(edgeless)} designs {edgeless}"
+    )
+    print(f"  predicate union: {len(predicted)} designs {predicted}")
+    print(f"  census rule locked: {len(locked)} designs {locked}")
+    print(f"  predicate and census rule agree on {agree} of 256 designs")
+    print(f"  held-out census fits that missed: {holdout}")
+    print(f"  grid fills match the closed form at k = 2..7 on {grid} of 256 designs")
     print()
-    print("wall time {:.1f} s on {} workers".format(time.time() - started, workers))
+    print(f"wall time {time.time() - started:.1f} s on {workers} workers")
+
 
 if __name__ == "__main__":
     main()

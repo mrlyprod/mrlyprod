@@ -1,14 +1,14 @@
-const blank = (v) => v === undefined || v === null || String(v).trim() === '';
+const blank = (v) => v === undefined || v === null || String(v).trim() === "";
 
 const choice = (option) => (Array.isArray(option) ? option[0] : option);
 
-const sep = (row) => row.sep ?? '.';
+const sep = (row) => row.sep ?? ".";
 
-const live = (row) => [row.max, row.min, row.options].some((one) => typeof one === 'function');
+const live = (row) => [row.max, row.min, row.options].some((one) => typeof one === "function");
 
-const read = (one, value, units) => (typeof one === 'function' ? one(value, units) : one);
+const read = (one, value, units) => (typeof one === "function" ? one(value, units) : one);
 
-const plain = (one) => (typeof one === 'function' ? undefined : one);
+const plain = (one) => (typeof one === "function" ? undefined : one);
 
 export const maxOf = (row, value, units) => read(row.max, value, units);
 
@@ -33,7 +33,9 @@ function number(row, v, value, units, grid = minOf(row, value, units)) {
 
 function pick(row, v, value, units) {
   if (v === undefined || v === null) return row.def;
-  const found = optionsOf(row, value, units).map(choice).find((option) => String(option) === String(v).trim());
+  const found = optionsOf(row, value, units)
+    .map(choice)
+    .find((option) => String(option) === String(v).trim());
   return found === undefined ? row.def : found;
 }
 
@@ -61,9 +63,17 @@ export function defaults(spec) {
 }
 
 function walk(spec, value, units) {
-  const fixed = Object.fromEntries(spec.filter((row) => !live(row)).map((row) => [row.key, KINDS[row.kind](row, value?.[row.key], {})]));
+  const fixed = Object.fromEntries(
+    spec.filter((row) => !live(row)).map((row) => [row.key, KINDS[row.kind](row, value?.[row.key], {})]),
+  );
   const start = { seen: { ...value, ...defaults(spec), ...fixed }, at: {} };
-  return spec.filter(live).reduce(({ seen, at }, row) => ({ seen: { ...seen, [row.key]: KINDS[row.kind](row, value?.[row.key], seen, units) }, at: { ...at, [row.key]: seen } }), start);
+  return spec.filter(live).reduce(
+    ({ seen, at }, row) => ({
+      seen: { ...seen, [row.key]: KINDS[row.kind](row, value?.[row.key], seen, units) },
+      at: { ...at, [row.key]: seen },
+    }),
+    start,
+  );
 }
 
 export function tidy(spec, value, units) {
@@ -75,7 +85,14 @@ export function asked(spec, value, units) {
   const { at } = walk(spec, value, units);
   const one = (row, v) => {
     if (!live(row)) return KINDS[row.kind](row, v, {});
-    if (row.kind === 'slider' || row.kind === 'number') return number({ ...row, max: plain(row.max), min: plain(row.min) }, v, at[row.key], units, minOf(row, at[row.key], units));
+    if (row.kind === "slider" || row.kind === "number")
+      return number(
+        { ...row, max: plain(row.max), min: plain(row.min) },
+        v,
+        at[row.key],
+        units,
+        minOf(row, at[row.key], units),
+      );
     return blank(v) ? row.def : v;
   };
   return Object.fromEntries(spec.filter((row) => row.keep).map((row) => [row.key, one(row, value?.[row.key])]));
@@ -85,7 +102,7 @@ export function describe(spec, value = {}) {
   const groups = [];
   for (const row of spec) {
     if (row.when && !row.when(value)) continue;
-    const name = row.group ?? '';
+    const name = row.group ?? "";
     const group = groups.find((one) => one.name === name);
     if (group) group.rows.push(row);
     else groups.push({ name, rows: [row] });
@@ -93,12 +110,12 @@ export function describe(spec, value = {}) {
   return groups;
 }
 
-export const viewing = (row) => row.key === 'view' || row.view === true;
+export const viewing = (row) => row.key === "view" || row.view === true;
 
 export function places(spec = []) {
   const view = spec.find(viewing);
-  const lead = view ? (view.group ?? '') : null;
-  const rest = [...new Set(spec.map((row) => row.group ?? ''))].filter((name) => name !== lead);
+  const lead = view ? (view.group ?? "") : null;
+  const rest = [...new Set(spec.map((row) => row.group ?? ""))].filter((name) => name !== lead);
   const of = (name) => (name === lead ? 0 : 2 * rest.indexOf(name) + 3);
   const at = (after) => (after !== undefined && (after === lead || rest.includes(after)) ? of(after) + 1 : 2);
   return { lead, of, at };

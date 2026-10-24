@@ -1,4 +1,4 @@
-import { blend, fill, hdr, program, target, tier } from './gl2.js';
+import { blend, fill, hdr, program, target, tier } from "./gl2.js";
 
 const LOOK = { ev: 0, bloom: 1, aberration: 0, vignette: 0.3, grain: 0.015, flare: 0, fade: 1 };
 const KNEE = [1, 0.5];
@@ -121,14 +121,16 @@ void main() {
 
 export function post(gl, view) {
   const high = hdr(gl);
-  const phone = tier(view) === 'phone';
+  const phone = tier(view) === "phone";
   const levels = phone ? 4 : 5;
   const first = phone ? 4 : 2;
   const wide = phone ? 1 : 2;
   const [threshold, knee] = high ? KNEE : DIM;
   const streak = target(gl, view.w / (first << wide), view.h / (first << wide), { hdr: high });
   const scene = target(gl, view.w, view.h, { hdr: high });
-  const mips = Array.from({ length: levels }, (_, i) => target(gl, view.w / (first << i), view.h / (first << i), { hdr: high }));
+  const mips = Array.from({ length: levels }, (_, i) =>
+    target(gl, view.w / (first << i), view.h / (first << i), { hdr: high }),
+  );
   const bright = program(gl, BRIGHT);
   const down = program(gl, DOWN);
   const up = program(gl, UP);
@@ -144,7 +146,7 @@ export function post(gl, view) {
   const begin = (scale = 1) => {
     const k = Math.min(Math.max(scale, 0.1), 1);
     scene.size(view.w * k, view.h * k);
-    mips.forEach((mip, i) => mip.size(scene.w / (first << i), scene.h / (first << i)));
+    for (const [i, mip] of mips.entries()) mip.size(scene.w / (first << i), scene.h / (first << i));
     streak.size(mips[wide].w, mips[wide].h);
     gl.bindFramebuffer(gl.FRAMEBUFFER, scene.fb);
     gl.viewport(0, 0, scene.w, scene.h);
@@ -162,7 +164,7 @@ export function post(gl, view) {
       pass(mips[0], bright, { uSrc: scene, uTexel: texel(scene), uGain: gain, uKnee: [threshold, knee] });
       for (let i = 1; i < levels; i++) pass(mips[i], down, { uSrc: mips[i - 1], uTexel: texel(mips[i - 1]) });
       if (L.flare > 0) pass(streak, smear, { uSrc: mips[wide], uTexel: texel(mips[wide]) });
-      blend(gl, 'add');
+      blend(gl, "add");
       for (let i = levels - 2; i >= 0; i--) pass(mips[i], up, { uSrc: mips[i + 1], uTexel: texel(mips[i + 1]) });
       blend(gl, null);
     }

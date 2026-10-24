@@ -16,7 +16,8 @@ export default function draw(pen: Pen, ink: Ink) {
   let corner = 0;
   owners.forEach((owner, n) => {
     const side = 1 << (n + 2);
-    if (owner.length !== side * side) throw new Error(`research-tilings: level ${n + 1} holds ${owner.length} cells, want ${side * side}`);
+    if (owner.length !== side * side)
+      throw new Error(`research-tilings: level ${n + 1} holds ${owner.length} cells, want ${side * side}`);
     const size = side * unit;
     const grid = new Grid(box(frame.x + corner, frame.y + corner, size, size), side, side, 0.14);
     owner.forEach((k, r) => {

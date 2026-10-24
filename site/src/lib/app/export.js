@@ -1,14 +1,34 @@
-const MIME = { png: 'image/png', webp: 'image/webp', jpeg: 'image/jpeg', jpg: 'image/jpeg', webm: 'video/webm', mp4: 'video/mp4', wav: 'audio/wav', svg: 'image/svg+xml', json: 'application/json', csv: 'text/csv', obj: 'model/obj', txt: 'text/plain' };
+const MIME = {
+  png: "image/png",
+  webp: "image/webp",
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  webm: "video/webm",
+  mp4: "video/mp4",
+  wav: "audio/wav",
+  svg: "image/svg+xml",
+  json: "application/json",
+  csv: "text/csv",
+  obj: "model/obj",
+  txt: "text/plain",
+};
 
-const EXT = { 'image/png': 'png', 'image/webp': 'webp', 'image/jpeg': 'jpg', 'video/webm': 'webm', 'video/mp4': 'mp4', 'audio/wav': 'wav' };
+const EXT = {
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/jpeg": "jpg",
+  "video/webm": "webm",
+  "video/mp4": "mp4",
+  "audio/wav": "wav",
+};
 
 const LATER = 1000;
 
-const ext = (type) => EXT[type] ?? 'png';
+const ext = (type) => EXT[type] ?? "png";
 
 export function download(blob, file) {
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = file;
   link.click();
@@ -16,7 +36,7 @@ export function download(blob, file) {
   return file;
 }
 
-export function text(string, name, type = 'txt') {
+export function text(string, name, type = "txt") {
   return download(new Blob([string], { type: MIME[type] ?? MIME.txt }), `${name}.${type}`);
 }
 
@@ -27,8 +47,8 @@ export function grown(w, h, scale) {
   return k > 1 ? [Math.floor(w * k), Math.floor(h * k)] : null;
 }
 
-export async function save(canvas, { name = 'mrly', kind = 'png', draw, scale = 1, fix } = {}) {
-  const frame = typeof fix === 'function' ? grown(canvas.width, canvas.height, scale) : null;
+export async function save(canvas, { name = "mrly", kind = "png", draw, scale = 1, fix } = {}) {
+  const frame = typeof fix === "function" ? grown(canvas.width, canvas.height, scale) : null;
   if (frame) fix({ frame, dpr: frame[0] / (canvas.clientWidth || canvas.width) });
   let blob;
   try {
@@ -37,7 +57,7 @@ export async function save(canvas, { name = 'mrly', kind = 'png', draw, scale = 
   } finally {
     if (frame) fix();
   }
-  if (!blob) throw new Error('the canvas gave no picture');
+  if (!blob) throw new Error("the canvas gave no picture");
   return download(blob, `${name}.${ext(blob.type)}`);
 }
 
@@ -48,11 +68,13 @@ export function wav(buffer) {
   const size = frames * channels * 2;
   const bytes = new ArrayBuffer(44 + size);
   const view = new DataView(bytes);
-  const word = (at, text) => [...text].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)));
-  word(0, 'RIFF');
+  const word = (at, text) => {
+    for (const [i, c] of [...text].entries()) view.setUint8(at + i, c.charCodeAt(0));
+  };
+  word(0, "RIFF");
   view.setUint32(4, 36 + size, true);
-  word(8, 'WAVE');
-  word(12, 'fmt ');
+  word(8, "WAVE");
+  word(12, "fmt ");
   view.setUint32(16, 16, true);
   view.setUint16(20, 1, true);
   view.setUint16(22, channels, true);
@@ -60,12 +82,12 @@ export function wav(buffer) {
   view.setUint32(28, rate * channels * 2, true);
   view.setUint16(32, channels * 2, true);
   view.setUint16(34, 16, true);
-  word(36, 'data');
+  word(36, "data");
   view.setUint32(40, size, true);
   const pcm = new Int16Array(bytes, 44);
   const data = Array.from({ length: channels }, (_, c) => buffer.getChannelData(c));
   for (let i = 0, at = 0; i < frames; i++) {
     for (let c = 0; c < channels; c++) pcm[at++] = Math.max(-32768, Math.min(32767, Math.round(data[c][i] * 32767)));
   }
-  return new Blob([bytes], { type: 'audio/wav' });
+  return new Blob([bytes], { type: "audio/wav" });
 }

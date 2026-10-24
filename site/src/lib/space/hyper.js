@@ -1,21 +1,54 @@
-import { rgb } from '../color.js';
-import { rng } from '../rand.js';
-import { ease, look as aim, project, shake } from '../gl/camera.js';
-import { clock, flown } from '../gl/clock.js';
-import { blend, fill, governor, hdr, program, target, texture, tier } from '../gl/gl2.js';
-import { post } from '../gl/post.js';
-import { sky as field } from './sky.js';
-import { add, mul, norm, smooth } from '../gl/vec.js';
+import { rgb } from "../color.js";
+import { look as aim, ease, project, shake } from "../gl/camera.js";
+import { clock, flown } from "../gl/clock.js";
+import { blend, fill, governor, hdr, program, target, texture, tier } from "../gl/gl2.js";
+import { post } from "../gl/post.js";
+import { add, mul, norm, smooth } from "../gl/vec.js";
+import { rng } from "../rand.js";
+import { sky as field } from "./sky.js";
 
-export const FILM = { wind: 300, stretch: 900, pile: 600, flash: 300, tunnel: 1200, bloom: 400, white: 200, decay: 900, snap: 200 };
+export const FILM = {
+  wind: 300,
+  stretch: 900,
+  pile: 600,
+  flash: 300,
+  tunnel: 1200,
+  bloom: 400,
+  white: 200,
+  decay: 900,
+  snap: 200,
+};
 
-const OLD = { wind: [['wind', 1]], run: [['stretch', 0.6], ['pile', 0.4]], punch: [['flash', 1]], snap: [['bloom', 1]], flash: [['white', 1]], fade: [['decay', 9 / 11], ['snap', 2 / 11]] };
+const OLD = {
+  wind: [["wind", 1]],
+  run: [
+    ["stretch", 0.6],
+    ["pile", 0.4],
+  ],
+  punch: [["flash", 1]],
+  snap: [["bloom", 1]],
+  flash: [["white", 1]],
+  fade: [
+    ["decay", 9 / 11],
+    ["snap", 2 / 11],
+  ],
+};
 
-const JUMP = ['wind', 'stretch', 'pile', 'flash', 'tunnel'];
-const EXIT = ['bloom', 'white', 'decay', 'snap'];
-const BUSY = ['flash', 'tunnel', 'bloom'];
-const EARLY = ['wind', 'stretch', 'pile'];
-const HOST = { wind: 'wind', stretch: 'jump', pile: 'jump', flash: 'jump', tunnel: 'hyper', bloom: 'exit', white: 'exit', decay: 'exit', snap: 'exit' };
+const JUMP = ["wind", "stretch", "pile", "flash", "tunnel"];
+const EXIT = ["bloom", "white", "decay", "snap"];
+const BUSY = ["flash", "tunnel", "bloom"];
+const EARLY = ["wind", "stretch", "pile"];
+const HOST = {
+  wind: "wind",
+  stretch: "jump",
+  pile: "jump",
+  flash: "jump",
+  tunnel: "hyper",
+  bloom: "exit",
+  white: "exit",
+  decay: "exit",
+  snap: "exit",
+};
 const GAPS = { yes: [12, 12], mix: [6, 30] };
 const STAY = [4, 10];
 const SALT = 0x5bd1e995;
@@ -38,21 +71,36 @@ const WHITE = [1, 1, 1];
 const BLACK = [0, 0, 0];
 const BLOOM = 0.8;
 const NEUTRAL = [0.46, 0.76, 0.9];
-const FILMIC = { pale: '#e1fdff' };
-const GRADE = ['ev', 'bloom', 'aberration', 'vignette', 'grain'];
-const GRADED = ['cruise', 'tunnel'];
+const FILMIC = { pale: "#e1fdff" };
+const GRADE = ["ev", "bloom", "aberration", "vignette", "grain"];
+const GRADED = ["cruise", "tunnel"];
 const AHEAD = aim([0, 0, 0], [0, 0, 1]);
 const PATHS = {
-  wind: '#040a14',
-  lift: '#081428',
-  pile: '#0f2c44',
-  decay: [[0, '#b2eefb'], [0.11, '#699ae8'], [0.44, '#6298e5'], [0.56, '#4675d2'], [0.67, '#132e78'], [0.78, '#101e42'], [0.89, '#0c1838'], [1, '#0a0d17']],
-  streak: [[0, '#b8ecfb'], [0.44, '#b7edf8'], [0.56, '#7ebaf0'], [0.67, '#5a8ad8'], [1, '#4a6fc0']],
+  wind: "#040a14",
+  lift: "#081428",
+  pile: "#0f2c44",
+  decay: [
+    [0, "#b2eefb"],
+    [0.11, "#699ae8"],
+    [0.44, "#6298e5"],
+    [0.56, "#4675d2"],
+    [0.67, "#132e78"],
+    [0.78, "#101e42"],
+    [0.89, "#0c1838"],
+    [1, "#0a0d17"],
+  ],
+  streak: [
+    [0, "#b8ecfb"],
+    [0.44, "#b7edf8"],
+    [0.56, "#7ebaf0"],
+    [0.67, "#5a8ad8"],
+    [1, "#4a6fc0"],
+  ],
 };
 
 /* TIMES */
 
-const number = (v) => (String(v ?? '').trim() ? Number(v) : NaN);
+const number = (v) => (String(v ?? "").trim() ? Number(v) : NaN);
 
 export function film(opts = {}) {
   const out = { ...FILM };
@@ -109,7 +157,13 @@ function trails(tint, plain = false) {
   const hue = plain ? null : shown(tint);
   const tone = (hex) => linear(plain ? grey(shown(hex)) : shade(hue, shown(hex)));
   const lift = (hex) => (plain ? BLACK : tone(hex));
-  return { wind: lift(PATHS.wind), lift: lift(PATHS.lift), pile: lift(PATHS.pile), decay: PATHS.decay.map(([k, hex]) => [k, tone(hex)]), streak: PATHS.streak.map(([k, hex]) => [k, tone(hex)]) };
+  return {
+    wind: lift(PATHS.wind),
+    lift: lift(PATHS.lift),
+    pile: lift(PATHS.pile),
+    decay: PATHS.decay.map(([k, hex]) => [k, tone(hex)]),
+    streak: PATHS.streak.map(([k, hex]) => [k, tone(hex)]),
+  };
 }
 
 function ramp(tint) {
@@ -246,11 +300,51 @@ void main() {
 
 const lerp = (a, b, k) => a + (b - a) * k;
 
-const quiet = () => ({ tint: 0, hue: null, glass: null, here: 1, extra: 0, there: 0, ev: 0, fov: 1, jolt: 0, aberration: 0, vignette: 0.3, bloom: 0.8, field: null, cloud: 0, milk: 0, fan: 0, reach: 0, core: 1, hot: 0, steer: 0, dest: 1, approach: 1, far: 0 });
+const quiet = () => ({
+  tint: 0,
+  hue: null,
+  glass: null,
+  here: 1,
+  extra: 0,
+  there: 0,
+  ev: 0,
+  fov: 1,
+  jolt: 0,
+  aberration: 0,
+  vignette: 0.3,
+  bloom: 0.8,
+  field: null,
+  cloud: 0,
+  milk: 0,
+  fan: 0,
+  reach: 0,
+  core: 1,
+  hot: 0,
+  steer: 0,
+  dest: 1,
+  approach: 1,
+  far: 0,
+});
 
 /* HYPER */
 
-export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud', speed = 1, idle = 0.015, film: times = FILM, audio = null, mode = null, floor = '', far = false } = {}) {
+export function hyper(
+  gl,
+  view,
+  {
+    seed = 0,
+    sky = {},
+    tint = "",
+    look = "cloud",
+    speed = 1,
+    idle = 0.015,
+    film: times = FILM,
+    audio = null,
+    mode = null,
+    floor = "",
+    far = false,
+  } = {},
+) {
   const T = { ...FILM, ...times };
   const top = TOP * speed;
   const full = top * SHUTTER;
@@ -262,13 +356,13 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
   const paint = tint || view.look().accent;
   const lit = Object.fromEntries(Object.entries(ramp(paint)).map(([key, c]) => [key, linear(c)]));
   const films = trails(paint);
-  const greys = trails('', true);
+  const greys = trails("", true);
   const bright = linear(grey(shown(FILMIC.pale)));
   const streak = blendTo(peakOf(lit.tip), WHITE, 0.35);
   const glow = peakOf(lit.mid);
   const core = blendTo(peakOf(lit.mid), peakOf(lit.pale), 0.35).map((v) => v * 3);
   const notches = NOTCHES[tier(view)];
-  const budget = governor(view, floor === 'cloud' ? notches.slice(0, -1) : notches);
+  const budget = governor(view, floor === "cloud" ? notches.slice(0, -1) : notches);
   const flick = wobble(seed);
   const jolts = (seed ^ EXTRA) >>> 0;
   const swing = rng((seed ^ GRAIN) >>> 0);
@@ -288,7 +382,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
   let next = later(view.t);
   let shot = { s: 0, shutter: 0, axis: [0, 0, 1], k: 1, flicker: 0 };
   let gone = false;
-  let classic = look === 'classic';
+  let classic = look === "classic";
   let plain = classic;
   const jumps = [];
   const done = [];
@@ -301,7 +395,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
     try {
       tunnel = program(gl, TUNNEL);
       const copy = program(gl, COPY);
-      const noise = texture(gl, { w: NOISE, h: NOISE, format: 'r8', data: grain(seed), filter: 'mip', wrap: 'repeat' });
+      const noise = texture(gl, { w: NOISE, h: NOISE, format: "r8", data: grain(seed), filter: "mip", wrap: "repeat" });
       tunnel.set({ uNoise: noise, uDeep: lit.deep, uMid: lit.mid, uTip: lit.tip, uPale: core });
       kit = { tunnel, copy, noise, layer: target(gl, view.w, view.h, { hdr: hdr(gl) }) };
     } catch {
@@ -312,23 +406,29 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
   const flat = program(gl, FLAT);
   const goal = () => there ?? here;
   const speeds = {
-    jump: { wind: [idle, -0.4 * idle, 1], stretch: [-0.4 * idle, top, 2.5], pile: top, flash: [top, 0.4 * top, 1], tunnel: 0.4 * top },
+    jump: {
+      wind: [idle, -0.4 * idle, 1],
+      stretch: [-0.4 * idle, top, 2.5],
+      pile: top,
+      flash: [top, 0.4 * top, 1],
+      tunnel: 0.4 * top,
+    },
     exit: (from) => ({ bloom: [from, top, 2], white: top, decay: [top, 0.15 * top, 0.5], snap: [0.15 * top, idle, 1] }),
   };
   const settled = Math.max(T.decay + T.snap, 1);
   const sinking = (name, k, from) => {
-    if (name === 'cruise' || name === 'wind') return 1;
-    if (name === 'stretch') return 1 - ease.smooth(k);
-    if (name === 'bloom') return from * (1 - ease.smooth(k));
-    if (name === 'decay') return ease.smooth((k * T.decay) / settled);
-    if (name === 'snap') return ease.smooth((T.decay + k * T.snap) / settled);
+    if (name === "cruise" || name === "wind") return 1;
+    if (name === "stretch") return 1 - ease.smooth(k);
+    if (name === "bloom") return from * (1 - ease.smooth(k));
+    if (name === "decay") return ease.smooth((k * T.decay) / settled);
+    if (name === "snap") return ease.smooth((T.decay + k * T.snap) / settled);
     return 0;
   };
   const where = (t) => {
-    if (!trip) return { name: 'cruise', k: 0, since: t - rest.t };
+    if (!trip) return { name: "cruise", k: 0, since: t - rest.t };
     const leg = trip.out === null || t < trip.out ? trip.jump : trip.exit;
     const now = leg.at(t);
-    return now.name ? now : { name: 'cruise', k: 0, since: now.since };
+    return now.name ? now : { name: "cruise", k: 0, since: now.since };
   };
   const pace = (t) => {
     if (!trip) return idle;
@@ -336,7 +436,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
     const { name, k } = leg.at(t);
     const c = table[name];
     if (c === undefined) return idle;
-    return typeof c === 'number' ? c : c[0] + (c[1] - c[0]) * k ** c[2];
+    return typeof c === "number" ? c : c[0] + (c[1] - c[0]) * k ** c[2];
   };
   const distance = (t) => {
     if (!trip) return rest.s + (idle * (t - rest.t)) / 1000;
@@ -350,15 +450,15 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
     const o = { stage: name, k, since, s: distance(t), shutter: pace(t) * SHUTTER, flicker: flick(t), ...quiet() };
     const b = trip?.base;
     const sm = ease.smooth(k);
-    const kept = b && EARLY.includes(b.stage) ? (b.stage === 'pile' ? 1 - b.k : 1) : 0;
+    const kept = b && EARLY.includes(b.stage) ? (b.stage === "pile" ? 1 - b.k : 1) : 0;
     const paths = plain ? greys : films;
     const pale = plain ? bright : lit.pale;
-    if (name === 'wind') {
+    if (name === "wind") {
       o.ev = -0.3 * sm;
       o.fov = 1 - 0.03 * sm;
       o.tint = 0.3 * sm;
       o.glass = blendTo(BLACK, paths.wind, sm);
-    } else if (name === 'stretch') {
+    } else if (name === "stretch") {
       o.tint = 0.3 + 0.7 * ease.smooth(k * 2.5);
       o.ev = -0.3 + 0.8 * k * k;
       o.fov = 0.97 + 0.15 * sm;
@@ -367,7 +467,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.shutter = full * k * k;
       o.glass = blendTo(paths.wind, paths.lift, sm);
       o.aberration = 0.001 * k;
-    } else if (name === 'pile') {
+    } else if (name === "pile") {
       o.tint = 1;
       o.ev = 0.5 + 1.5 * k ** 1.5;
       o.fov = 1.12;
@@ -381,7 +481,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.aberration = 0.001 + 0.002 * k;
       o.vignette = 0.3 - 0.05 * k;
       o.dest = 1 - k;
-    } else if (name === 'flash') {
+    } else if (name === "flash") {
       const fall = (since - peak) / Math.max(T.flash - peak, 1);
       o.tint = 1;
       o.ev = since < peak ? 2 + (3 * since) / peak : 0.5 + 4.5 * (1 - fall) ** 3;
@@ -400,7 +500,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.vignette = 0.45 * sm;
       o.steer = sm;
       o.dest = 0;
-    } else if (name === 'tunnel') {
+    } else if (name === "tunnel") {
       const settle = ease.smooth(since / 400);
       o.tint = 1;
       o.ev = 0.5 * (1 - settle);
@@ -416,7 +516,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.vignette = 0.45;
       o.steer = 1;
       o.dest = 0;
-    } else if (name === 'bloom') {
+    } else if (name === "bloom") {
       o.tint = lerp(b.tint, 1, sm);
       o.ev = lerp(b.ev, BLOOM, ease.in(k, 2));
       o.cloud = b.cloud * (1 - k);
@@ -435,7 +535,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.vignette = lerp(b.vignette, 0.45, sm);
       o.bloom = 1;
       o.dest = kept;
-    } else if (name === 'white') {
+    } else if (name === "white") {
       const w = Math.max(0, (k - 0.25) / 0.75);
       o.tint = 1;
       o.ev = BLOOM + (5 - BLOOM) * w ** 3;
@@ -451,7 +551,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.vignette = 0.45 * (1 - sm);
       o.bloom = 1;
       o.dest = kept * (1 - w);
-    } else if (name === 'decay') {
+    } else if (name === "decay") {
       o.tint = 1;
       o.ev = 0.4 + 2.2 * (1 - k) ** 2 + 2.4 * (1 - k) ** 12;
       o.glass = along(paths.decay, k);
@@ -465,7 +565,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.bloom = 0.6 + 0.4 * k;
       o.dest = ease.smooth((k - 0.45) / 0.55);
       o.approach = 1.4 - 0.4 * ease.out((k - 0.45) / 0.55);
-    } else if (name === 'snap') {
+    } else if (name === "snap") {
       o.tint = 1 - sm;
       o.hue = along(paths.streak, 1);
       o.ev = 0.4 * (1 - sm);
@@ -482,17 +582,17 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.fan = 0;
       o.hot = 0;
       o.tint = 0;
-      if (name === 'tunnel') {
+      if (name === "tunnel") {
         o.here = 0.8;
         o.shutter = 0.6 * full;
         o.ev = 0;
       }
-      if (name === 'bloom') {
+      if (name === "bloom") {
         o.here = b.here;
         o.extra = b.extra;
         o.field = pale.map((c) => (c / 32) * k ** 3);
       }
-      if (name === 'white') {
+      if (name === "white") {
         o.here = b.here * (1 - sm);
         o.extra = Math.max(b.extra * (1 - sm), sm);
       }
@@ -505,12 +605,12 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
   const begin = (at, stay) => {
     prepare();
     const s0 = distance(at);
-    const jump = clock(JUMP.map((name) => [name, name === 'tunnel' ? Infinity : T[name]]));
+    const jump = clock(JUMP.map((name) => [name, name === "tunnel" ? Infinity : T[name]]));
     jump.start(at);
     trip = { from: at, jump, s0, out: null, exit: null, after: null, stay, base: null, cues: [] };
-    cue(at, 'riser', { dur: (T.wind + T.stretch + T.pile) / 1000 });
-    cue(at + T.wind + T.stretch + T.pile, 'hit', {});
-    cue(at + tunnelAt, 'drone', { dur: Math.max(T.tunnel, Number.isFinite(stay) ? stay : 4000) / 1000 });
+    cue(at, "riser", { dur: (T.wind + T.stretch + T.pile) / 1000 });
+    cue(at + T.wind + T.stretch + T.pile, "hit", {});
+    cue(at + tunnelAt, "drone", { dur: Math.max(T.tunnel, Number.isFinite(stay) ? stay : 4000) / 1000 });
   };
   const leave = (at) => {
     if (!trip) begin(at, Infinity);
@@ -521,8 +621,8 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
     trip.exit.start(at);
     trip.after = speeds.exit(from);
     trip.cues = trip.cues.filter(([t]) => t < at);
-    cue(at, 'swell', { dur: T.bloom / 1000 });
-    cue(at + T.bloom, 'hit', { white: true });
+    cue(at, "swell", { dur: T.bloom / 1000 });
+    cue(at + T.bloom, "hit", { white: true });
   };
   const arrive = (end) => {
     rest = { s: distance(end), t: end };
@@ -618,7 +718,9 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
     const lens = aimed(cam, o, t);
     const hue = o.hue ? peakOf(o.hue) : streak;
     const base = { s: o.s, shutter: Math.max(o.shutter, 0), axis: lens.axis, far: o.far };
-    const flow = plain ? { ...base, halo: WHITE, tint: WHITE } : { ...base, halo: o.tint > 0 ? blendTo(NEUTRAL, glow, o.tint) : undefined, tint: blendTo(WHITE, hue, o.tint) };
+    const flow = plain
+      ? { ...base, halo: WHITE, tint: WHITE }
+      : { ...base, halo: o.tint > 0 ? blendTo(NEUTRAL, glow, o.tint) : undefined, tint: blendTo(WHITE, hue, o.tint) };
     shot = { ...flow, k: o.here, flicker: o.flicker };
     const soft = !plain && kit && (o.cloud > 0 || o.fan > 0 || o.hot > 0);
     const layer = soft ? tunnel(o, lens, notch, t) : null;
@@ -630,12 +732,12 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
     }
     if (extra) stars(extra, lens.cam, flow, o.extra);
     if (o.field) {
-      blend(gl, 'add');
+      blend(gl, "add");
       flat.set({ uColor: o.field });
       fill(gl);
     }
     if (layer) {
-      blend(gl, 'add');
+      blend(gl, "add");
       kit.copy.set({ uSrc: layer });
       fill(gl);
     }
@@ -645,7 +747,10 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       over(lens.cam);
       blend(gl, null);
     }
-    const graded = grade && GRADED.includes(o.stage) ? Object.fromEntries(GRADE.filter((key) => grade[key] !== undefined).map((key) => [key, grade[key]])) : {};
+    const graded =
+      grade && GRADED.includes(o.stage)
+        ? Object.fromEntries(GRADE.filter((key) => grade[key] !== undefined).map((key) => [key, grade[key]]))
+        : {};
     chain.end({ ev: o.ev, bloom: o.bloom, aberration: o.aberration, vignette: o.vignette, ...graded, fade: 1 });
     fire();
     if (!trip && !gone) prepare();
@@ -704,7 +809,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
     else if (trip.out === null) trip.stay = Infinity;
   };
   const stage = () => where(view.t).name;
-  const phase = () => HOST[stage()] ?? 'cruise';
+  const phase = () => HOST[stage()] ?? "cruise";
   const stop = () => {
     calls.push(...jumps.splice(0), ...done.splice(0));
     fire();

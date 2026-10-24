@@ -5,8 +5,17 @@ import type { Color, Ink, Pen, Point } from "#view";
 export const units = { math, num };
 
 const QUARTIC = [1, -7833, 7916949, -850684437, 13054946580];
-const PRINTED = { edge: 0.6402121937, cstar: 0.3597878062, supergolden: 0.6053028664, wall: 0.4479309878, rung: 0.4475978134 };
-const WORDS: [number, bigint][] = [[2, 45765225n], [3, 53582633n]];
+const PRINTED = {
+  edge: 0.6402121937,
+  cstar: 0.3597878062,
+  supergolden: 0.6053028664,
+  wall: 0.4479309878,
+  rung: 0.4475978134,
+};
+const WORDS: [number, bigint][] = [
+  [2, 45765225n],
+  [3, 53582633n],
+];
 
 type Numbers = { phi: number; supergolden: number; edge: number; sgedge: number; rung: number };
 
@@ -23,7 +32,7 @@ function rule(width: number, allowed: (bits: number) => boolean) {
 }
 
 function distance(k: number) {
-  return rule(k + 1, (bits) => !((bits & 1) && (bits >> k) & 1));
+  return rule(k + 1, (bits) => !(bits & 1 && (bits >> k) & 1));
 }
 
 function quartic(x: number) {
@@ -52,14 +61,16 @@ function numbers() {
   if (Math.abs(phi - (1 + Math.sqrt(5)) / 2) > 1e-12) fail(`distance-one rule grows ${phi}, want phi`);
   const ladder = num.series.fibonacci(100000);
   const fib = (n: number) => BigInt(ladder[n - 1]);
-  if (fib(2) !== 1n || fib(3) !== 2n || fib(14) !== 377n || fib(20) !== 6765n) fail(`fibonacci ladder ${ladder.slice(0, 21)}`);
+  if (fib(2) !== 1n || fib(3) !== 2n || fib(14) !== 377n || fib(20) !== 6765n)
+    fail(`fibonacci ladder ${ladder.slice(0, 21)}`);
   for (const [k, want] of WORDS) {
     const growth = math.memory.perron(distance(k));
     if (Math.abs(growth - phi) > 1e-12) fail(`distance-${k} rule grows ${growth}, want phi`);
     const count = math.memory.counts(distance(k), 36)[35];
     const chains = Array.from({ length: k }, (_, r) => Math.floor((36 - (r + 1)) / k) + 1);
     const product = chains.reduce((acc, m) => acc * fib(m + 2), 1n);
-    if (count !== want || product !== want) fail(`D_${k}(36) counts ${count}, Fibonacci product ${product}, want ${want}`);
+    if (count !== want || product !== want)
+      fail(`D_${k}(36) counts ${count}, Fibonacci product ${product}, want ${want}`);
   }
   const supergolden = math.memory.perron(rule(3, (bits) => [0, 1, 2, 4].includes(bits)));
   if (Math.abs(supergolden ** 3 - supergolden ** 2 - 1) > 1e-12) fail(`supergolden rule grows ${supergolden}`);
@@ -77,7 +88,8 @@ function numbers() {
   truncated(rung, PRINTED.rung, "tenth rung");
   const octave = (27 * phi) / (3 - phi) / (1 - phi / 9) + 81 / 8;
   if (!(octave > 48.66 && octave < 48.67)) fail(`octave constant ${octave}`);
-  if (!(rung < wall && wall < 0.5 && 0.5 < sgedge && sgedge < edge && edge < 0.6402122)) fail(`walls out of order ${[rung, wall, sgedge, edge]}`);
+  if (!(rung < wall && wall < 0.5 && 0.5 < sgedge && sgedge < edge && edge < 0.6402122))
+    fail(`walls out of order ${[rung, wall, sgedge, edge]}`);
   memo = { phi, supergolden, edge, sgedge, rung };
   return memo;
 }
@@ -85,7 +97,10 @@ function numbers() {
 export default function draw(pen: Pen, ink: Ink) {
   const { phi, supergolden, edge, sgedge, rung } = numbers();
   const frame = pen.frame(0.08);
-  const at = (beta: number, exponent: number): Point => [frame.x + frame.w * beta, frame.y + frame.h * (1 - exponent / 2)];
+  const at = (beta: number, exponent: number): Point => [
+    frame.x + frame.w * beta,
+    frame.y + frame.h * (1 - exponent / 2),
+  ];
   const thick = frame.w / 160;
   pen.rect(frame.x, frame.y, frame.w * rung, frame.h, ink.panel);
   pen.rect(frame.x + frame.w * edge, frame.y, frame.w * (1 - edge), frame.h, ink.panel);

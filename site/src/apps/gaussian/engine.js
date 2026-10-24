@@ -1,12 +1,19 @@
-import { palette } from '../../lib/theme/palette.gen.js';
-import { rgb, veil } from '../../lib/color.js';
-import { pick } from '../../lib/rand.js';
-import { num as fix, runs, sheet } from '../../lib/app/svg.js';
+import { num as fix, runs, sheet } from "../../lib/app/svg.js";
+import { rgb, veil } from "../../lib/color.js";
+import { pick } from "../../lib/rand.js";
+import { palette } from "../../lib/theme/palette.gen.js";
 
-export const RINGS = [['gaussian', 'Gaussian, a + bi'], ['eisenstein', 'Eisenstein, a + bω']];
-export const LOOKS = [['fate', 'Fate'], ['norm', 'Norm'], ['plain', 'Plain']];
-export const LETTERS = { gaussian: 'i', eisenstein: 'ω' };
-export const FATES = ['composite', 'split', 'inert', 'ramified', 'unit', 'zero'];
+export const RINGS = [
+  ["gaussian", "Gaussian, a + bi"],
+  ["eisenstein", "Eisenstein, a + bω"],
+];
+export const LOOKS = [
+  ["fate", "Fate"],
+  ["norm", "Norm"],
+  ["plain", "Plain"],
+];
+export const LETTERS = { gaussian: "i", eisenstein: "ω" };
+export const FATES = ["composite", "split", "inert", "ramified", "unit", "zero"];
 export const REACH = { gaussian: 200, eisenstein: 231 };
 export const SPAN = [20, 120];
 export const PEEK = 20;
@@ -25,40 +32,85 @@ export const cap = (ring) => REACH[ring];
 export const coords = (a, b) => `${a},${b}`;
 
 export function parse(click) {
-  const found = /^\s*(-?\d+)\s*,\s*(-?\d+)\s*$/.exec(String(click ?? ''));
+  const found = /^\s*(-?\d+)\s*,\s*(-?\d+)\s*$/.exec(String(click ?? ""));
   return found ? [Number(found[1]), Number(found[2])] : null;
 }
 
 export const WINDOWS = [
-  { id: 'gaussian', name: 'Gaussian', note: 'snowflake', set: { ring: 'gaussian', limit: 40, look: 'fate', click: '' } },
-  { id: 'eisenstein', name: 'Eisenstein', note: 'snowflake', set: { ring: 'eisenstein', limit: 40, look: 'fate', click: '' } },
-  { id: 'gaussian-norm', name: 'Gaussian', note: 'norms', set: { ring: 'gaussian', limit: 40, look: 'norm', click: '' } },
-  { id: 'eisenstein-norm', name: 'Eisenstein', note: 'norms', set: { ring: 'eisenstein', limit: 40, look: 'norm', click: '' } },
-  { id: 'gaussian-close', name: 'Gaussian', note: 'close-up', set: { ring: 'gaussian', limit: 12, look: 'fate', click: '' } },
-  { id: 'eisenstein-close', name: 'Eisenstein', note: 'close-up', set: { ring: 'eisenstein', limit: 12, look: 'fate', click: '' } },
+  {
+    id: "gaussian",
+    name: "Gaussian",
+    note: "snowflake",
+    set: { ring: "gaussian", limit: 40, look: "fate", click: "" },
+  },
+  {
+    id: "eisenstein",
+    name: "Eisenstein",
+    note: "snowflake",
+    set: { ring: "eisenstein", limit: 40, look: "fate", click: "" },
+  },
+  {
+    id: "gaussian-norm",
+    name: "Gaussian",
+    note: "norms",
+    set: { ring: "gaussian", limit: 40, look: "norm", click: "" },
+  },
+  {
+    id: "eisenstein-norm",
+    name: "Eisenstein",
+    note: "norms",
+    set: { ring: "eisenstein", limit: 40, look: "norm", click: "" },
+  },
+  {
+    id: "gaussian-close",
+    name: "Gaussian",
+    note: "close-up",
+    set: { ring: "gaussian", limit: 12, look: "fate", click: "" },
+  },
+  {
+    id: "eisenstein-close",
+    name: "Eisenstein",
+    note: "close-up",
+    set: { ring: "eisenstein", limit: 12, look: "fate", click: "" },
+  },
 ];
 
 export const POINTS = [
-  { ring: 'gaussian', a: 1, b: 1, norm: 2, fate: 3 },
-  { ring: 'gaussian', a: 3, b: 0, norm: 9, fate: 2 },
-  { ring: 'gaussian', a: 2, b: 1, norm: 5, fate: 1 },
-  { ring: 'gaussian', a: 2, b: 3, norm: 13, fate: 1 },
-  { ring: 'gaussian', a: 4, b: 1, norm: 17, fate: 1 },
-  { ring: 'eisenstein', a: 1, b: -1, norm: 3, fate: 3 },
-  { ring: 'eisenstein', a: 2, b: 0, norm: 4, fate: 2 },
-  { ring: 'eisenstein', a: 3, b: 1, norm: 7, fate: 1 },
-  { ring: 'eisenstein', a: 4, b: 1, norm: 13, fate: 1 },
+  { ring: "gaussian", a: 1, b: 1, norm: 2, fate: 3 },
+  { ring: "gaussian", a: 3, b: 0, norm: 9, fate: 2 },
+  { ring: "gaussian", a: 2, b: 1, norm: 5, fate: 1 },
+  { ring: "gaussian", a: 2, b: 3, norm: 13, fate: 1 },
+  { ring: "gaussian", a: 4, b: 1, norm: 17, fate: 1 },
+  { ring: "eisenstein", a: 1, b: -1, norm: 3, fate: 3 },
+  { ring: "eisenstein", a: 2, b: 0, norm: 4, fate: 2 },
+  { ring: "eisenstein", a: 3, b: 1, norm: 7, fate: 1 },
+  { ring: "eisenstein", a: 4, b: 1, norm: 13, fate: 1 },
 ];
 
-const ENDS = ['', 'splits', 'stays prime', 'ramifies'];
+const ENDS = ["", "splits", "stays prime", "ramifies"];
 
 export function shelves(value) {
-  const windows = WINDOWS.map(({ id, name: label, note, set }) => ({ id, label, sub: note, set, on: value.ring === set.ring && value.limit === set.limit && value.look === set.look }));
+  const windows = WINDOWS.map(({ id, name: label, note, set }) => ({
+    id,
+    label,
+    sub: note,
+    set,
+    on: value.ring === set.ring && value.limit === set.limit && value.look === set.look,
+  }));
   const points = POINTS.map(({ ring, a, b, norm, fate }) => {
     const click = coords(a, b);
-    return { id: `${ring}-${click}`, label: name(ring, a, b), sub: `${fate === 2 ? Math.sqrt(norm) : norm} ${ENDS[fate]}`, set: { ring, limit: PEEK, click }, on: value.ring === ring && value.click === click };
+    return {
+      id: `${ring}-${click}`,
+      label: name(ring, a, b),
+      sub: `${fate === 2 ? Math.sqrt(norm) : norm} ${ENDS[fate]}`,
+      set: { ring, limit: PEEK, click },
+      on: value.ring === ring && value.click === click,
+    };
   });
-  return [['Windows', windows], ['Primes', points]];
+  return [
+    ["Windows", windows],
+    ["Primes", points],
+  ];
 }
 
 export function shuffle(rand) {
@@ -119,11 +171,14 @@ function survey(num, word, R) {
       const [x, y] = classes[k];
       if (!window.holds(x, y)) continue;
       const f = CLASSES[window.class(x, y)];
-      g.Ring.associates(ring, x, y).forEach(([u, v], i) => put(Number(u), Number(v), m, f, i === 0));
+      g.Ring.associates(ring, x, y).forEach(([u, v], i) => {
+        put(Number(u), Number(v), m, f, i === 0);
+      });
     }
   }
   window.free();
-  if (n !== count || k !== classes.length) throw new Error(`gaussian: the shells lay ${n} points, the window holds ${count}`);
+  if (n !== count || k !== classes.length)
+    throw new Error(`gaussian: the shells lay ${n} points, the window holds ${count}`);
   return { num, word, ring, R, side, count, a, b, norm, fate, head, shells };
 }
 
@@ -178,7 +233,26 @@ function cut(num, full, r) {
   }
   const [busy, most] = g.peak(ring, round);
   const facts = { ...census, ring: word, reach: r, top, symmetry: g.Ring.symmetry(ring), busy, most };
-  return { word, ring, R, side, r, top, count, a, b, norm, fate, head, inside, shells, ex, ey, frame: [x0 - 0.5, y0 - 0.5, x1 + 0.5, y1 + 0.5], facts };
+  return {
+    word,
+    ring,
+    R,
+    side,
+    r,
+    top,
+    count,
+    a,
+    b,
+    norm,
+    fate,
+    head,
+    inside,
+    shells,
+    ex,
+    ey,
+    frame: [x0 - 0.5, y0 - 0.5, x1 + 0.5, y1 + 0.5],
+    facts,
+  };
 }
 
 /* POINT */
@@ -212,21 +286,21 @@ export function turned(point, dir) {
 
 export function name(word, a, b) {
   const letter = LETTERS[word];
-  const size = Math.abs(b) === 1 ? '' : String(Math.abs(b));
+  const size = Math.abs(b) === 1 ? "" : String(Math.abs(b));
   if (b === 0) return String(a);
-  if (a === 0) return `${b < 0 ? '-' : ''}${size}${letter}`;
-  return `${a} ${b < 0 ? '-' : '+'} ${size}${letter}`;
+  if (a === 0) return `${b < 0 ? "-" : ""}${size}${letter}`;
+  return `${a} ${b < 0 ? "-" : "+"} ${size}${letter}`;
 }
 
 export const clicked = (word, point) => `${name(word, point.a, point.b)} at ${point.a}, ${point.b}`;
 
-export const product = (factors) => factors.map(([p, e]) => (e > 1 ? `${p}^${e}` : String(p))).join(' · ');
+export const product = (factors) => factors.map(([p, e]) => (e > 1 ? `${p}^${e}` : String(p))).join(" · ");
 
 export function verdict(word, point) {
   const { fate, norm, factors } = point;
   const [ca, cb] = point.conjugate;
-  if (fate === 5) return 'the origin';
-  if (fate === 4) return 'a unit, norm 1';
+  if (fate === 5) return "the origin";
+  if (fate === 4) return "a unit, norm 1";
   if (fate === 3) return `prime: ${norm} ramifies, a unit times a square`;
   if (fate === 2) return `prime: ${factors[0][0]} stays prime in the plane`;
   if (fate === 1) return `prime: ${norm} splits as (${name(word, point.a, point.b)})(${name(word, ca, cb)})`;
@@ -262,17 +336,28 @@ export function styleOf(look, faint, fate, norm, top) {
   if (fate === 5) return SKIP;
   if (fate === 0) return faint ? FAINTLY : SKIP;
   if (fate === 4) return UNITS;
-  if (look === 'norm') return BAND + Math.min(BANDS - 1, Math.floor(Math.sqrt(norm / (top || 1)) * BANDS));
-  if (look === 'plain') return PLAIN;
+  if (look === "norm") return BAND + Math.min(BANDS - 1, Math.floor(Math.sqrt(norm / (top || 1)) * BANDS));
+  if (look === "plain") return PLAIN;
   return SPLIT + fate - 1;
 }
 
-const css = (list) => `rgb(${list.map((v) => Math.round(v)).join(', ')})`;
+const css = (list) => `rgb(${list.map((v) => Math.round(v)).join(", ")})`;
 
 export function inks({ paper, accent }) {
   const [r, g, b] = rgb(paper);
   const fg = css(0.299 * r + 0.587 * g + 0.114 * b > 128 ? [0, 0, 0] : [255, 255, 255]);
-  return { paper, accent, fg, dim: veil(fg, DIM), faint: veil(fg, FAINT), split: palette.blue, inert: palette.orange, ramified: palette.pink, unit: palette.green, fire: [palette.red, palette.orange, palette.yellow, fg] };
+  return {
+    paper,
+    accent,
+    fg,
+    dim: veil(fg, DIM),
+    faint: veil(fg, FAINT),
+    split: palette.blue,
+    inert: palette.orange,
+    ramified: palette.pink,
+    unit: palette.green,
+    fire: [palette.red, palette.orange, palette.yellow, fg],
+  };
 }
 
 export function ramp(stops, t) {
@@ -299,13 +384,16 @@ export function picture(plan, style, tone) {
   const h = (y1 - y0) * UNIT;
   const inset = INSET * UNIT;
   const groups = tone.map((color) => (color ? [] : null));
-  if (word === 'gaussian') {
+  if (word === "gaussian") {
     const cells = tone.map((color) => (color ? new Uint8Array(side * side) : null));
     for (let p = 0; p < count; p++) if (cells[style[p]]) cells[style[p]][(b[p] + r) * side + (a[p] + r)] = 1;
     cells.forEach((types, s) => {
       if (!types) return;
       const gap = s === FAINTLY ? 0 : inset;
-      for (const [row, col, len] of runs({ shape: [side, side], types })) groups[s].push(`<rect x="${fix(col * UNIT + gap)}" y="${fix((side - 1 - row) * UNIT + gap)}" width="${fix(len * UNIT - 2 * gap)}" height="${fix(UNIT - 2 * gap)}"/>`);
+      for (const [row, col, len] of runs({ shape: [side, side], types }))
+        groups[s].push(
+          `<rect x="${fix(col * UNIT + gap)}" y="${fix((side - 1 - row) * UNIT + gap)}" width="${fix(len * UNIT - 2 * gap)}" height="${fix(UNIT - 2 * gap)}"/>`,
+        );
     });
   } else {
     for (let p = 0; p < count; p++) {
@@ -313,16 +401,19 @@ export function picture(plan, style, tone) {
       if (!groups[s]) continue;
       const x = a[p] * ex[0] + b[p] * ey[0] - x0;
       const y = y1 - (a[p] * ex[1] + b[p] * ey[1]);
-      groups[s].push(`<circle cx="${fix(x * UNIT)}" cy="${fix(y * UNIT)}" r="${fix(UNIT / 2 - (s === FAINTLY ? 0 : inset))}"/>`);
+      groups[s].push(
+        `<circle cx="${fix(x * UNIT)}" cy="${fix(y * UNIT)}" r="${fix(UNIT / 2 - (s === FAINTLY ? 0 : inset))}"/>`,
+      );
     }
   }
-  const body = groups.map((marks, s) => (marks && marks.length ? `<g fill="${tone[s]}">${marks.join('')}</g>` : ''));
-  return sheet(w, h, body.join(''));
+  const body = groups.map((marks, s) => (marks?.length ? `<g fill="${tone[s]}">${marks.join("")}</g>` : ""));
+  return sheet(w, h, body.join(""));
 }
 
 export function table(plan) {
   const { count, a, b, norm, fate } = plan;
-  const rows = ['a,b,norm,fate'];
-  for (let p = 0; p < count; p++) if (fate[p] >= 1 && fate[p] <= 3) rows.push(`${a[p]},${b[p]},${norm[p]},${FATES[fate[p]]}`);
-  return `${rows.join('\n')}\n`;
+  const rows = ["a,b,norm,fate"];
+  for (let p = 0; p < count; p++)
+    if (fate[p] >= 1 && fate[p] <= 3) rows.push(`${a[p]},${b[p]},${norm[p]},${FATES[fate[p]]}`);
+  return `${rows.join("\n")}\n`;
 }

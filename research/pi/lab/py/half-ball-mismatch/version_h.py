@@ -7,8 +7,10 @@ MC_DIMS = (3, 4, 5)
 MC_SAMPLES = 10**8
 BATCH = 10**6
 
+
 def beta_sym(x, y):
     return sp.gamma(x) * sp.gamma(y) / sp.gamma(x + y)
+
 
 def exact_miss(d):
     th, ps = sp.symbols("th ps", positive=True)
@@ -20,6 +22,7 @@ def exact_miss(d):
         sp.Rational(1, 2), alpha + 1
     )
     return sp.radsimp(sp.expand(sp.nsimplify(sp.simplify(2**d * num / denom))))
+
 
 def quad_miss(d, dps):
     saved = mp.mp.dps
@@ -35,6 +38,7 @@ def quad_miss(d, dps):
     mp.mp.dps = saved
     return out
 
+
 def half_ball(rng, count, dim):
     pts = rng.standard_normal((count, dim, dim))
     pts /= np.linalg.norm(pts, axis=2, keepdims=True)
@@ -42,15 +46,14 @@ def half_ball(rng, count, dim):
     pts[:, :, dim - 1] = np.abs(pts[:, :, dim - 1])
     return pts
 
+
 def flat_face_rate(rng, dim, samples):
     hits = 0
     done = 0
     while done < samples:
         take = min(BATCH, samples - done)
         pts = half_ball(rng, take, dim)
-        mat = np.concatenate(
-            [pts[:, :, : dim - 1], np.ones((take, dim, 1))], axis=2
-        )
+        mat = np.concatenate([pts[:, :, : dim - 1], np.ones((take, dim, 1))], axis=2)
         rhs = pts[:, :, dim - 1][:, :, None]
         sol = np.linalg.solve(mat, rhs)[:, :, 0]
         slope = np.linalg.norm(sol[:, : dim - 1], axis=1)
@@ -58,9 +61,12 @@ def flat_face_rate(rng, dim, samples):
         done += take
     return hits / samples
 
+
 def main():
     mp.mp.dps = 30
-    print("VERSION H: d uniform points, the hyperplane through them misses the flat face")
+    print(
+        "VERSION H: d uniform points, the hyperplane through them misses the flat face"
+    )
     print("  reduction: unoriented normal n with n_d = t >= 0 and signed offset h")
     print("  the section is a (d-1)-ball of radius sqrt(1-h^2) and stays above the")
     print("  flat face exactly when h >= sqrt(1-t^2)")
@@ -109,5 +115,6 @@ def main():
             f"  exact {mp.nstr(flat_exact, 8)}"
             f"  deviation {mp.nstr(est - flat_exact, 3)}  one sigma {mp.nstr(se, 3)}"
         )
+
 
 main()

@@ -1,24 +1,44 @@
-import { tidy } from '../../lib/app/spec.js';
-import { num as fix, runs, sheet } from '../../lib/app/svg.js';
-import { DESIGN, canon, title, total } from '../../lib/designs/engine.js';
+import { tidy } from "../../lib/app/spec.js";
+import { num as fix, runs, sheet } from "../../lib/app/svg.js";
+import { canon, DESIGN, title, total } from "../../lib/designs/engine.js";
 
 export const DIM = 2;
-export const VIEWS = [['word', 'Word'], ['plane', 'Lifts'], ['design', 'Design']];
-export const READS = [['power', 'Sign power'], ['filter', 'Filter']];
-export const PICTURES = ['word', 'plane', 'power', 'filter'];
-export const DESIGNED = ['power', 'filter'];
-export const GRIDS = ['plane', 'power', 'filter'];
-export const KINDS = ['Parity', 'And', 'Xor', 'Sum'];
-export const FORMULA = { Parity: 't(i) xor t(j)', And: 't(i and j)', Xor: 't(i xor j)', Sum: 't(i + j)' };
+export const VIEWS = [
+  ["word", "Word"],
+  ["plane", "Lifts"],
+  ["design", "Design"],
+];
+export const READS = [
+  ["power", "Sign power"],
+  ["filter", "Filter"],
+];
+export const PICTURES = ["word", "plane", "power", "filter"];
+export const DESIGNED = ["power", "filter"];
+export const GRIDS = ["plane", "power", "filter"];
+export const KINDS = ["Parity", "And", "Xor", "Sum"];
+export const FORMULA = { Parity: "t(i) xor t(j)", And: "t(i and j)", Xor: "t(i xor j)", Sum: "t(i + j)" };
 export const LIFTS = KINDS.map((kind) => [kind, `${kind}, ${FORMULA[kind]}`]);
-export const COLOURS = [['letters', 'Letters'], ['runs', 'Runs']];
-export const FOLDS = [['sign', 'Plus-minus, the exclusive or'], ['design', 'The design, the and']];
+export const COLOURS = [
+  ["letters", "Letters"],
+  ["runs", "Runs"],
+];
+export const FOLDS = [
+  ["sign", "Plus-minus, the exclusive or"],
+  ["design", "The design, the and"],
+];
 export const NUMBERS = [2, 3, 5];
-export const CELLS = [[0, 'Fit'], [1, '1 px'], [2, '2 px'], [4, '4 px'], [8, '8 px'], [16, '16 px']];
+export const CELLS = [
+  [0, "Fit"],
+  [1, "1 px"],
+  [2, "2 px"],
+  [4, "4 px"],
+  [8, "8 px"],
+  [16, "16 px"],
+];
 export const ROUNDS = 10;
 export const SIDE = 512;
-export const FALLBACK = '9';
-export const SCHEDULE = ['3', '7'];
+export const FALLBACK = "9";
+export const SCHEDULE = ["3", "7"];
 export const RATES = 64;
 export const PAD = 16;
 export const GAP = 0.015;
@@ -27,7 +47,7 @@ export const BUDGET = 65536;
 export const ROW = 4;
 const TRIES = 32;
 
-export const PAINTS = { sign: ['plus', 'minus'], diff: ['unlit', 'diff'], runs: ['unlit', 'one', 'two'] };
+export const PAINTS = { sign: ["plus", "minus"], diff: ["unlit", "diff"], runs: ["unlit", "one", "two"] };
 
 export function cap(number) {
   let level = 1;
@@ -46,9 +66,9 @@ export function sides(value) {
 
 export const sideOf = (value) => value.number || based(value);
 
-export const pictureOf = (value) => (value.view === 'design' ? value.read : value.view);
+export const pictureOf = (value) => (value.view === "design" ? value.read : value.view);
 
-export const place = (kind) => (DESIGNED.includes(kind) ? { view: 'design', read: kind } : { view: kind });
+export const place = (kind) => (DESIGNED.includes(kind) ? { view: "design", read: kind } : { view: kind });
 
 /* CHOICE */
 
@@ -75,14 +95,20 @@ export function roll(math, number, base, rand) {
 
 export const coded = (math, value) => canon(math, DIM, value.base, value.code);
 
-const named = (math, code, base = 2) => math.name.of(code, DIM, base) ?? '';
+const named = (math, code, base = 2) => math.name.of(code, DIM, base) ?? "";
 
 const tiles = new Map();
 
 export function rendered(num, math, tile) {
-  if (!tiles.has(math)) tiles.set(math, Array.from({ length: total(math, DIM, 2) }, (_, code) => Array.from(num.morse.signs(math.two.create(String(code), 2, 1, 0, 2).types)).join('')));
-  const at = tiles.get(math).indexOf(Array.from(tile).join(''));
-  return at < 0 ? '' : String(at);
+  if (!tiles.has(math))
+    tiles.set(
+      math,
+      Array.from({ length: total(math, DIM, 2) }, (_, code) =>
+        Array.from(num.morse.signs(math.two.create(String(code), 2, 1, 0, 2).types)).join(""),
+      ),
+    );
+  const at = tiles.get(math).indexOf(Array.from(tile).join(""));
+  return at < 0 ? "" : String(at);
 }
 
 const schedules = new Map();
@@ -94,10 +120,17 @@ export function schedule(math) {
   const pair = bangs.map((bang) => math.bang.MagicLayer.new(bang, 2));
   for (const bang of bangs) bang.free();
   const rates = (kind) => word.rates(word.spell(kind, pair, RATES));
-  const thue = rates('ThueMorse');
+  const thue = rates("ThueMorse");
   const [rate, exponent] = thue.at(-1);
-  const [control] = rates('Periodic').at(-1);
-  const read = { zero: named(math, SCHEDULE[0]) || SCHEDULE[0], one: named(math, SCHEDULE[1]) || SCHEDULE[1], exponent, rate, control, prefix: thue.length };
+  const [control] = rates("Periodic").at(-1);
+  const read = {
+    zero: named(math, SCHEDULE[0]) || SCHEDULE[0],
+    one: named(math, SCHEDULE[1]) || SCHEDULE[1],
+    exponent,
+    rate,
+    control,
+    prefix: thue.length,
+  };
   schedules.set(math, read);
   return read;
 }
@@ -106,12 +139,18 @@ export function schedule(math) {
 
 let kept = null;
 
-const keyed = (value, code) => ({ word: [value.round, value.colour], plane: [value.level, value.lift], power: [code, value.number, value.base, value.power], filter: [code, value.number, value.base, value.depth, value.fold] })[pictureOf(value)];
+const keyed = (value, code) =>
+  ({
+    word: [value.round, value.colour],
+    plane: [value.level, value.lift],
+    power: [code, value.number, value.base, value.power],
+    filter: [code, value.number, value.base, value.depth, value.fold],
+  })[pictureOf(value)];
 
 const read = (units, given) => {
   const value = { ...given, number: sideOf(given) };
   const kind = pictureOf(value);
-  return { value, kind, code: DESIGNED.includes(kind) ? coded(units.math, value) : '' };
+  return { value, kind, code: DESIGNED.includes(kind) ? coded(units.math, value) : "" };
 };
 
 export function survey(units, given) {
@@ -144,7 +183,10 @@ const tally = (runs) => {
   return read;
 };
 
-export const print = (tile, side) => Array.from({ length: side }, (_, r) => Array.from(tile.slice(r * side, (r + 1) * side), (bit) => (bit ? '-' : '+')).join('')).join('/');
+export const print = (tile, side) =>
+  Array.from({ length: side }, (_, r) =>
+    Array.from(tile.slice(r * side, (r + 1) * side), (bit) => (bit ? "-" : "+")).join(""),
+  ).join("/");
 
 const filled = (types) => Uint8Array.from(types, (bit) => (bit ? 1 : 0));
 
@@ -163,22 +205,51 @@ const SURVEYS = {
     const m = num.morse;
     const stages = Array.from({ length: round }, (_, k) => m.stage(k + 1));
     const stage = stages.at(-1);
-    const byRuns = colour === 'runs';
+    const byRuns = colour === "runs";
     const rows = byRuns ? stages.map((letters) => spread(m.runs(letters), letters.length)) : stages;
     const boundary = m.boundary(stage);
     const read = tally(m.runs(stage));
-    const facts = { view: 'word', round, colour, letters: stage.length, plus: count(stage, 0), minus: count(stage, 1), agree: m.faults(stage, m.digits(stage.length)) === 0, ...read, ones: count(stage, 1), cube: read.longest <= 2, doubling: m.faults(boundary, m.doubling(boundary.length)) === 0, ...schedule(math) };
-    return { view: 'word', side: 0, types: null, paint: byRuns ? 'runs' : 'sign', rows, facts };
+    const facts = {
+      view: "word",
+      round,
+      colour,
+      letters: stage.length,
+      plus: count(stage, 0),
+      minus: count(stage, 1),
+      agree: m.faults(stage, m.digits(stage.length)) === 0,
+      ...read,
+      ones: count(stage, 1),
+      cube: read.longest <= 2,
+      doubling: m.faults(boundary, m.doubling(boundary.length)) === 0,
+      ...schedule(math),
+    };
+    return { view: "word", side: 0, types: null, paint: byRuns ? "runs" : "sign", rows, facts };
   },
   plane: ({ num, math }, { level, lift }) => {
     const m = num.morse;
     const side = 2 ** level;
     const grid = m.lift(lift, side);
     const read = m.fold(grid, side, 2);
-    const code = read.folds ? rendered(num, math, read.tile) : '';
-    const twin = lift !== KINDS[0] && m.faults(grid, m.lift(KINDS[0], side)) === 0 ? KINDS[0] : '';
-    const facts = { view: 'plane', level, side, cells: side * side, kind: lift, formula: m.Lift.formula(lift), folds: read.folds, faults: read.faults, first: read.first ?? null, tile: print(read.tile, 2), twin, code, name: code ? named(math, code) || code : '', plus: count(grid, 0), minus: count(grid, 1) };
-    return { view: 'plane', side, types: grid, paint: 'sign', rows: [], facts };
+    const code = read.folds ? rendered(num, math, read.tile) : "";
+    const twin = lift !== KINDS[0] && m.faults(grid, m.lift(KINDS[0], side)) === 0 ? KINDS[0] : "";
+    const facts = {
+      view: "plane",
+      level,
+      side,
+      cells: side * side,
+      kind: lift,
+      formula: m.Lift.formula(lift),
+      folds: read.folds,
+      faults: read.faults,
+      first: read.first ?? null,
+      tile: print(read.tile, 2),
+      twin,
+      code,
+      name: code ? named(math, code) || code : "",
+      plus: count(grid, 0),
+      minus: count(grid, 1),
+    };
+    return { view: "plane", side, types: grid, paint: "sign", rows: [], facts };
   },
   power: ({ num, math }, { power: level, number, base }, code) => {
     const m = num.morse;
@@ -191,12 +262,28 @@ const SURVEYS = {
     const types = filled(design.types);
     const agree = m.faults(types, power);
     const exact = number === 2 && m.faults(power, m.lift(KINDS[0], side)) === 0;
-    const facts = { view: 'power', level, code, name: named(math, code, base), title: title(math, DIM, base, code), number, base, side, cells, filled: count(types, 1), plus: count(power, 0), agree, differ: cells - agree, tile: print(sign, number), exact };
-    return { view: 'power', side, types: power, paint: 'sign', rows: [], facts };
+    const facts = {
+      view: "power",
+      level,
+      code,
+      name: named(math, code, base),
+      title: title(math, DIM, base, code),
+      number,
+      base,
+      side,
+      cells,
+      filled: count(types, 1),
+      plus: count(power, 0),
+      agree,
+      differ: cells - agree,
+      tile: print(sign, number),
+      exact,
+    };
+    return { view: "power", side, types: power, paint: "sign", rows: [], facts };
   },
   filter: ({ num, math }, { depth: level, number, base, fold }, code) => {
     const m = num.morse;
-    const signed = fold === 'sign';
+    const signed = fold === "sign";
     const tile = math.two.create(code, number, 1, 0, base);
     const sign = m.signs(tile.types);
     const grown = (k) => (signed ? m.power(sign, number, k) : filled(math.two.create(code, number, k, 0, base).types));
@@ -210,9 +297,29 @@ const SURVEYS = {
     const tiled = m.repeat(sign, number, side);
     const closed = m.faults(diff, signed ? tiled : m.mask(wide, tiled)) === 0;
     const morse = number === 2 ? m.faults(diff, m.lift(KINDS[0], side)) : null;
-    const form = signed ? 'the tile repeated' : 'the blow-up, masked by the tile complement';
-    const facts = { view: 'filter', level, fold, code, name: named(math, code, base), title: title(math, DIM, base, code), number, base, side, cells, differ, closed, form, morse, exact: morse === 0, half: morse !== null && morse * 2 === cells, share: morse === null ? null : morse / cells, kin: number === 2 && m.faults(sign, m.lift(KINDS[0], 2)) === 0, tile: print(sign, number) };
-    return { view: 'filter', side, types: diff, paint: signed ? 'sign' : 'diff', rows: [], facts };
+    const form = signed ? "the tile repeated" : "the blow-up, masked by the tile complement";
+    const facts = {
+      view: "filter",
+      level,
+      fold,
+      code,
+      name: named(math, code, base),
+      title: title(math, DIM, base, code),
+      number,
+      base,
+      side,
+      cells,
+      differ,
+      closed,
+      form,
+      morse,
+      exact: morse === 0,
+      half: morse !== null && morse * 2 === cells,
+      share: morse === null ? null : morse / cells,
+      kin: number === 2 && m.faults(sign, m.lift(KINDS[0], 2)) === 0,
+      tile: print(sign, number),
+    };
+    return { view: "filter", side, types: diff, paint: signed ? "sign" : "diff", rows: [], facts };
   },
 };
 
@@ -230,7 +337,13 @@ export function tower(w, h, rows, dpr, pad = PAD * dpr) {
   return rows.map((letters, k) => {
     const step = (w - 2 * pad) / letters.length;
     const top = Math.round(pad + k * (tall + gap));
-    return { x: pad, y: top, h: Math.max(1, Math.round(pad + k * (tall + gap) + tall) - top), step, gap: step >= 3 * dpr ? Math.max(1, Math.round(dpr)) : 0 };
+    return {
+      x: pad,
+      y: top,
+      h: Math.max(1, Math.round(pad + k * (tall + gap) + tall) - top),
+      step,
+      gap: step >= 3 * dpr ? Math.max(1, Math.round(dpr)) : 0,
+    };
   });
 }
 
@@ -240,10 +353,15 @@ const layer = (types, rows, cols, dx, dy, w, h, paint, inks) =>
   PAINTS[paint]
     .map((ink, v) => {
       const mask = Uint8Array.from(types, (bit) => (bit === v ? 1 : 0));
-      const body = runs({ shape: [rows, cols], types: mask }).map(([row, col, len]) => `<rect x="${fix(dx + col * w)}" y="${fix(dy + row * h)}" width="${fix(len * w)}" height="${fix(h)}"/>`).join('');
-      return body ? `<g fill="${inks[ink]}" shape-rendering="crispEdges">${body}</g>` : '';
+      const body = runs({ shape: [rows, cols], types: mask })
+        .map(
+          ([row, col, len]) =>
+            `<rect x="${fix(dx + col * w)}" y="${fix(dy + row * h)}" width="${fix(len * w)}" height="${fix(h)}"/>`,
+        )
+        .join("");
+      return body ? `<g fill="${inks[ink]}" shape-rendering="crispEdges">${body}</g>` : "";
     })
-    .join('');
+    .join("");
 
 export const fits = (plan) => plan.rows.reduce((sum, row) => sum + row.length, 0) + plan.side * plan.side <= BUDGET;
 
@@ -252,7 +370,11 @@ export function picture(plan, inks) {
   if (rows.length) {
     const width = UNIT * rows.at(-1).length;
     const tall = UNIT * ROW;
-    const body = rows.map((letters, k) => layer(letters, 1, letters.length, 0, k * (tall + UNIT), width / letters.length, tall, paint, inks)).join('');
+    const body = rows
+      .map((letters, k) =>
+        layer(letters, 1, letters.length, 0, k * (tall + UNIT), width / letters.length, tall, paint, inks),
+      )
+      .join("");
     return sheet(width, rows.length * tall + (rows.length - 1) * UNIT, body);
   }
   const size = side * UNIT;

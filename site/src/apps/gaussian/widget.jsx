@@ -1,35 +1,38 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { text } from '../../lib/app/export.js';
-import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { Scene } from '../../lib/app/page.jsx';
-import { paints } from '../../lib/color.js';
-import { useTheme } from '../../lib/designs/pick.jsx';
-import { rng } from '../../lib/rand.js';
-import { FATES, clicked, coords, hit, name, parse, product, shelves, shuffle, study, verdict } from './engine.js';
-import { make, named, sketch } from './scene.js';
-import { useLatest, useReroll, useStatus, useUnit } from '../../lib/app/hooks.js';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { text } from "../../lib/app/export.js";
+import { useLatest, useReroll, useStatus, useUnit } from "../../lib/app/hooks.js";
+import { Art, Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { paints } from "../../lib/color.js";
+import { useTheme } from "../../lib/designs/pick.jsx";
+import { rng } from "../../lib/rand.js";
+import { clicked, coords, FATES, hit, name, parse, product, shelves, shuffle, study, verdict } from "./engine.js";
+import { make, named, sketch } from "./scene.js";
 
 const TAP = 8;
 
 const ART = 112;
 
-const KEY = 'blue split · orange inert · pink ramified · green units';
+const KEY = "blue split · orange inert · pink ramified · green units";
 
 const pct = (x) => `${(x * 100).toFixed(2)}%`;
 
-export const rerolled = (seed) => ({ ...shuffle(rng(seed)), click: '' });
+export const rerolled = (seed) => ({ ...shuffle(rng(seed)), click: "" });
 
 function told(word, p) {
   if (!p) return [];
-  const head = [['point', clicked(word, p)], ['verdict', verdict(word, p)]];
+  const head = [
+    ["point", clicked(word, p)],
+    ["verdict", verdict(word, p)],
+  ];
   if (!p.norm) return head;
   return [
     ...head,
-    ['norm', String(p.norm)],
-    ['class', FATES[p.fate]],
-    ...(p.factors.length ? [['factors', product(p.factors)]] : []),
-    ['conjugate', name(word, p.conjugate[0], p.conjugate[1])],
-    ['associates', p.associates.map(([a, b]) => name(word, a, b)).join(', ')],
+    ["norm", String(p.norm)],
+    ["class", FATES[p.fate]],
+    ...(p.factors.length ? [["factors", product(p.factors)]] : []),
+    ["conjugate", name(word, p.conjugate[0], p.conjugate[1])],
+    ["associates", p.associates.map(([a, b]) => name(word, a, b)).join(", ")],
     [`points of norm ${p.norm}`, String(p.shell)],
   ];
 }
@@ -38,23 +41,23 @@ export function rows(facts, point, missed, look) {
   if (!facts) return [];
   const word = facts.ring;
   return [
-    ...(missed ? [['tap', 'missed the window']] : []),
+    ...(missed ? [["tap", "missed the window"]] : []),
     ...told(word, point),
-    ['window', `${word}, reach ${facts.reach}, norms to ${facts.top}, ${facts.units} units`],
-    ['primes', String(facts.primes)],
-    ['density', pct(facts.density)],
-    ['split', String(facts.split)],
-    ['inert', String(facts.inert)],
-    ['ramified', String(facts.ramified)],
-    ['points', String(facts.points)],
-    ['symmetry', `${facts.symmetry}-fold`],
-    ['busiest norm', `${facts.busy}, ${facts.most} points`],
-    ...(look === 'fate' ? [['key', KEY]] : []),
+    ["window", `${word}, reach ${facts.reach}, norms to ${facts.top}, ${facts.units} units`],
+    ["primes", String(facts.primes)],
+    ["density", pct(facts.density)],
+    ["split", String(facts.split)],
+    ["inert", String(facts.inert)],
+    ["ramified", String(facts.ramified)],
+    ["points", String(facts.points)],
+    ["symmetry", `${facts.symmetry}-fold`],
+    ["busiest norm", `${facts.busy}, ${facts.most} points`],
+    ...(look === "fate" ? [["key", KEY]] : []),
   ];
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }) {
-  const unit = useUnit('num', given);
+  const unit = useUnit("num", given);
   const live = useRef(null);
   const from = useRef(null);
   const now = useLatest(value);
@@ -100,14 +103,25 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   };
   const keep = () => {
     const picture = live.current?.svg?.();
-    if (picture) text(picture, named(now.current), 'svg');
+    if (picture) text(picture, named(now.current), "svg");
   };
   const sheet = () => {
     const list = live.current?.csv?.();
-    if (list) text(list, named(now.current), 'csv');
+    if (list) text(list, named(now.current), "csv");
   };
   const have = Boolean(unit);
-  useEffect(() => onExport?.(have ? [['SVG', keep], ['CSV', sheet]] : []), [have]);
+  useEffect(
+    () =>
+      onExport?.(
+        have
+          ? [
+              ["SVG", keep],
+              ["CSV", sheet],
+            ]
+          : [],
+      ),
+    [have],
+  );
   if (!unit) return null;
   return (
     <>
@@ -121,13 +135,29 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
                 sub={sub}
                 on={on}
                 onPick={() => change.current(set)}
-                art={n === 0 ? <Art px={ART} paint={(ctx, w, h, dpr) => sketch(unit, set, ctx, w, h, dpr, paints(ctx.canvas, value.tint))} deps={[unit, value.tint, tick]} /> : undefined}
+                art={
+                  n === 0 ? (
+                    <Art
+                      px={ART}
+                      paint={(ctx, w, h, dpr) => sketch(unit, set, ctx, w, h, dpr, paints(ctx.canvas, value.tint))}
+                      deps={[unit, value.tint, tick]}
+                    />
+                  ) : undefined
+                }
               />
             ))}
           </Shelf>
         ))}
       </Library>
-      <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerUp={up} onPointerCancel={cancel} aria-label="The window: the primes of the ring around the origin" />
+      <Scene
+        make={scene}
+        value={value}
+        onReady={ready}
+        onPointerDown={down}
+        onPointerUp={up}
+        onPointerCancel={cancel}
+        aria-label="The window: the primes of the ring around the origin"
+      />
     </>
   );
 }

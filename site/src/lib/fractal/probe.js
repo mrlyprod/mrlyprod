@@ -1,4 +1,4 @@
-import { TILE } from './consts.js';
+import { TILE } from "./consts.js";
 
 const GAP = 2;
 const VAR = 16;
@@ -23,7 +23,10 @@ function decode(probe, w, h) {
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      for (const [nx, ny] of [[x + 1, y], [x, y + 1]]) {
+      for (const [nx, ny] of [
+        [x + 1, y],
+        [x, y + 1],
+      ]) {
         if (nx >= w || ny >= h) continue;
         const j = ny * w + nx;
         if (inside[i] !== inside[j] || (!inside[i] && Math.abs(count[i] - count[j]) > 2)) {
@@ -57,7 +60,12 @@ function islands(inside, per, w, h) {
       sy += y;
       n += 1;
       votes.set(per[i], (votes.get(per[i]) ?? 0) + 1);
-      for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
+      for (const [nx, ny] of [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ]) {
         if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
         const j = ny * w + nx;
         if (inside[j] && !seen[j]) {
@@ -112,7 +120,13 @@ export function score(probe, w, h) {
       const mean = out ? sum / out : 0;
       const variance = out > 1 ? Math.max(0, sq / out - mean * mean) : 0;
       if (held > 0.9 * n || variance < 0.5) continue;
-      const pool = pools.find((one) => Math.floor(one.x - 0.5) >= tx * TILE && Math.floor(one.x - 0.5) < (tx + 1) * TILE && Math.floor(one.y - 0.5) >= ty * TILE && Math.floor(one.y - 0.5) < (ty + 1) * TILE);
+      const pool = pools.find(
+        (one) =>
+          Math.floor(one.x - 0.5) >= tx * TILE &&
+          Math.floor(one.x - 0.5) < (tx + 1) * TILE &&
+          Math.floor(one.y - 0.5) >= ty * TILE &&
+          Math.floor(one.y - 0.5) < (ty + 1) * TILE,
+      );
       const b = rim / n;
       const v = variance / (variance + VAR);
       const share = out / n;
@@ -124,7 +138,7 @@ export function score(probe, w, h) {
         ex: (at % w) + 0.5,
         ey: Math.floor(at / w) + 0.5,
         s,
-        kind: pool ? 'island' : b * v > 0.25 ? 'spiral' : 'edge',
+        kind: pool ? "island" : b * v > 0.25 ? "spiral" : "edge",
         period: pool ? pool.period : per[at],
         n: pool ? pool.n : 0,
         tx,
@@ -153,7 +167,12 @@ export function edge(probe, w, h) {
     if (inside[i] || !rim[i]) continue;
     const x = i % w;
     const y = (i - x) / w;
-    const touches = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].some(([nx, ny]) => nx >= 0 && ny >= 0 && nx < w && ny < h && inside[ny * w + nx]);
+    const touches = [
+      [x - 1, y],
+      [x + 1, y],
+      [x, y - 1],
+      [x, y + 1],
+    ].some(([nx, ny]) => nx >= 0 && ny >= 0 && nx < w && ny < h && inside[ny * w + nx]);
     if (touches && (best < 0 || count[i] > count[best])) best = i;
     if (fallback < 0 || count[i] > count[fallback]) fallback = i;
   }

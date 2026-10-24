@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { frame, plot, type Color, type Frame, type Ink, type Pen } from "#view";
+import { type Color, type Frame, frame, type Ink, type Pen, plot } from "#view";
 import census from "./research-walks.json" with { type: "json" };
 
 const LEVEL = 4;
@@ -10,13 +10,15 @@ export const units = { math };
 
 function panel(pen: Pen, ink: Ink, area: Frame, code: number, trail: number[], color: Color) {
   const cell = math.two.create(code, 3, LEVEL, 0, 3);
-  if (cell.shape.length !== 2 || cell.shape[0] !== SIDE || cell.shape[1] !== SIDE) throw new Error(`research-walks: code ${code} is ${cell.shape}, want ${SIDE} by ${SIDE}`);
+  if (cell.shape.length !== 2 || cell.shape[0] !== SIDE || cell.shape[1] !== SIDE)
+    throw new Error(`research-walks: code ${code} is ${cell.shape}, want ${SIDE} by ${SIDE}`);
   const mask = Array.from(cell.types, (kind) => kind !== 0);
   const sites = mask.filter(Boolean).length;
   if (sites !== SITES) throw new Error(`research-walks: code ${code} holds ${sites} sites, want ${SITES}`);
   const seen = new Set<number>();
   for (const at of trail) {
-    if (!Number.isInteger(at) || at < 0 || at >= mask.length || !mask[at]) throw new Error(`research-walks: code ${code} visits ${at}, not a site`);
+    if (!Number.isInteger(at) || at < 0 || at >= mask.length || !mask[at])
+      throw new Error(`research-walks: code ${code} visits ${at}, not a site`);
     if (seen.has(at)) throw new Error(`research-walks: code ${code} visits ${at} twice`);
     seen.add(at);
   }

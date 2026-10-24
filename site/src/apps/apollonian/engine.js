@@ -1,12 +1,21 @@
-import { pick } from '../../lib/rand.js';
+import { pick } from "../../lib/rand.js";
 
-export const ROOTS = ['strip', '-1,2,2,3', '-2,3,6,7', '-3,4,12,13'];
+export const ROOTS = ["strip", "-1,2,2,3", "-2,3,6,7", "-3,4,12,13"];
 export const CAPS = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192];
 export const ROLLED = CAPS.slice(-5);
 export const ORDER_CAP = 64;
-export const INKS = [['size', 'By curvature'], ['shade', 'Octave shades'], ['ford', 'Ford circles apart'], ['one', 'One ink']];
-export const LOOKS = [['wash', 'Wash'], ['solid', 'Solid'], ['rings', 'Rings']];
-export const SIX = ['blue', 'teal', 'green', 'yellow', 'orange', 'pink'];
+export const INKS = [
+  ["size", "By curvature"],
+  ["shade", "Octave shades"],
+  ["ford", "Ford circles apart"],
+  ["one", "One ink"],
+];
+export const LOOKS = [
+  ["wash", "Wash"],
+  ["solid", "Solid"],
+  ["rings", "Rings"],
+];
+export const SIX = ["blue", "teal", "green", "yellow", "orange", "pink"];
 export const OCTAVE = 1000;
 export const HOLD = 4000;
 export const PAD = 24;
@@ -17,9 +26,9 @@ const KEEP = 6;
 
 export const GLANCE = 128;
 
-export const quadruple = (root) => (root === 'strip' ? '(0, 0, 2, 2)' : `(${root.split(',').join(', ')})`);
+export const quadruple = (root) => (root === "strip" ? "(0, 0, 2, 2)" : `(${root.split(",").join(", ")})`);
 
-export const named = (name) => (name === 'strip' ? 'Strip' : `Bounded (${name.split(',').join(', ')})`);
+export const named = (name) => (name === "strip" ? "Strip" : `Bounded (${name.split(",").join(", ")})`);
 
 export const stack = (cap) => Math.min(ORDER_CAP, Math.floor(Math.sqrt(cap / 2)));
 
@@ -64,7 +73,9 @@ function grown(num, name, cap) {
   const ints = Int32Array.from(rows.flatMap((c) => [c.k, c.x, c.y]));
   const k0 = packing.circles[0]?.k ?? inner.at(-1)?.k ?? cap;
   const octaves = Math.max(1, Math.ceil(Math.log2(cap / k0)) + 1);
-  const bands = Uint8Array.from({ length: total }, (_, i) => Math.min(octaves - 1, Math.max(0, Math.floor(Math.log2(data[i * STRIDE + 3] / k0)))));
+  const bands = Uint8Array.from({ length: total }, (_, i) =>
+    Math.min(octaves - 1, Math.max(0, Math.floor(Math.log2(data[i * STRIDE + 3] / k0)))),
+  );
   const hues = Uint8Array.from({ length: total }, (_, i) => Math.floor(Math.log2(data[i * STRIDE + 3])) % SIX.length);
   const touches = packing.strip ? a.touches(packing) : [];
   const at = new Map(touches.map((t) => [t.num / t.den, t]));
@@ -80,7 +91,7 @@ function grown(num, name, cap) {
   const circles = packing.circles.length;
   const facts = {
     name,
-    title: `${name === 'strip' ? 'strip ' : ''}(${quad.map(([k]) => k).join(', ')})`,
+    title: `${name === "strip" ? "strip " : ""}(${quad.map(([k]) => k).join(", ")})`,
     cap,
     circles,
     drawn: circles + packing.root.filter((c) => c.k !== 0).length,
@@ -116,7 +127,17 @@ function grown(num, name, cap) {
 export function shadow(num, packing, data, roots, order) {
   const lit = count(data, roots, roots + packing.circles.length, 2 * order * order) - roots;
   const read = num.apollonian.shadow({ ...packing, circles: packing.circles.slice(0, lit) }, order);
-  return { order, reach: read.reach, covered: read.covered, nodes: read.nodes, touched: read.touched, missed: read.missed, offford: read.offford, bright: Number(read.bright), want: Number(read.want) };
+  return {
+    order,
+    reach: read.reach,
+    covered: read.covered,
+    nodes: read.nodes,
+    touched: read.touched,
+    missed: read.missed,
+    offford: read.offford,
+    bright: Number(read.bright),
+    want: Number(read.want),
+  };
 }
 
 /* TIME */

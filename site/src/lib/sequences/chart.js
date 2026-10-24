@@ -1,14 +1,22 @@
-export const KINDS = [['pins', 'Pins'], ['log', 'Log pins'], ['steps', 'Steps'], ['sums', 'Sums'], ['ratios', 'Ratios'], ['diffs', 'Differences'], ['digits', 'Digits']];
+export const KINDS = [
+  ["pins", "Pins"],
+  ["log", "Log pins"],
+  ["steps", "Steps"],
+  ["sums", "Sums"],
+  ["ratios", "Ratios"],
+  ["diffs", "Differences"],
+  ["digits", "Digits"],
+];
 
 const HEAD = 15;
 
-const text = (t) => String(t ?? '').trim();
+const text = (t) => String(t ?? "").trim();
 
-export const negative = (t) => text(t).startsWith('-');
+export const negative = (t) => text(t).startsWith("-");
 
 const bare = (t) => {
   const s = text(t);
-  return (negative(s) ? s.slice(1) : s).replace(/^0+(?=\d)/, '');
+  return (negative(s) ? s.slice(1) : s).replace(/^0+(?=\d)/, "");
 };
 
 /* SCALE */
@@ -16,7 +24,7 @@ const bare = (t) => {
 export function log10(t) {
   const d = bare(t);
   if (!/^\d+$/.test(d)) return -Infinity;
-  if (d === '0') return -Infinity;
+  if (d === "0") return -Infinity;
   return Math.log10(Number(d.slice(0, HEAD))) + Math.max(0, d.length - HEAD);
 }
 
@@ -28,7 +36,7 @@ export function span(values) {
 export function scale(rows, force = false) {
   const all = rows.flatMap((row) => row.terms);
   const { hi, lo } = span(all);
-  const max = all.reduce((best, t) => (log10(t) > log10(best) ? t : best), all[0] ?? '0');
+  const max = all.reduce((best, t) => (log10(t) > log10(best) ? t : best), all[0] ?? "0");
   const log = force || hi - lo >= 2;
   const floor = log ? Math.floor(lo) : 0;
   const top = log ? Math.ceil(hi) : hi;
@@ -47,7 +55,7 @@ export function decade(k) {
 
 export function label(t) {
   const d = bare(t);
-  const sign = negative(t) ? '-' : '';
+  const sign = negative(t) ? "-" : "";
   if (d.length <= 7) return sign + d;
   return `${sign}${d[0]}.${d.slice(1, 3)}e${d.length - 1}`;
 }
@@ -56,7 +64,10 @@ export function label(t) {
 
 export function sums(terms) {
   let total = 0n;
-  return terms.map((t) => (total += BigInt(text(t))).toString());
+  return terms.map((t) => {
+    total += BigInt(text(t));
+    return total.toString();
+  });
 }
 
 export function ratios(terms) {

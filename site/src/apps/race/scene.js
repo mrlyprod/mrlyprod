@@ -1,56 +1,120 @@
-import { light } from '../../lib/theme/theme.js';
-import { tidy } from '../../lib/app/spec.js';
-import { TINTS, rgb, veil } from '../../lib/color.js';
-import { pick, rng } from '../../lib/rand.js';
-import { num, runs, sheet } from '../../lib/app/svg.js';
-import { turn } from '../../lib/app/turn.js';
-import { DIM, HOLD, HOT, NUMBERS, TURN, aim, bake, budget, cap, heat, keeping, lay, plan, roots, series, top } from './engine.js';
-import { wasm } from '../../lib/units/index.js';
+import { tidy } from "../../lib/app/spec.js";
+import { num, runs, sheet } from "../../lib/app/svg.js";
+import { turn } from "../../lib/app/turn.js";
+import { rgb, TINTS, veil } from "../../lib/color.js";
+import { pick, rng } from "../../lib/rand.js";
+import { light } from "../../lib/theme/theme.js";
+import { wasm } from "../../lib/units/index.js";
+import {
+  aim,
+  bake,
+  budget,
+  cap,
+  DIM,
+  HOLD,
+  HOT,
+  heat,
+  keeping,
+  lay,
+  NUMBERS,
+  plan,
+  roots,
+  series,
+  TURN,
+  top,
+} from "./engine.js";
 
 const HIDE = () => false;
 
 export const SPEC = [
-  { key: 'a', label: 'Code A', kind: 'text', def: '127', group: 'Race', when: HIDE },
-  { key: 'b', label: 'Rival code', kind: 'text', def: '239', group: 'Race' },
-  { key: 'base', label: 'Base', kind: 'segment', def: 3, options: [[2, '2'], [3, '3']], group: 'Board', when: HIDE },
-  { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: 'Board' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 4, min: 1, max: (value) => cap(value.number), step: 1, group: 'Board' },
-  { key: 'finish', label: 'Finish', kind: 'slider', def: 20, min: 1, max: (value) => top(value.number ** value.level), step: 1, unit: 'cells', group: 'Race' },
-  { key: 'speed', label: 'Speed', kind: 'slider', def: 720, min: 6, max: 3000, step: 6, unit: '/s', group: 'Race' },
-  { key: 'walkers', label: 'Walkers', kind: 'slider', def: 300, min: 10, max: 1000, step: 10, group: 'Race' },
-  { key: 'heat', label: 'Fade', kind: 'slider', def: 0, min: 0, max: 90, step: 5, unit: '%/s', zero: 'Off', group: 'Look' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  { key: "a", label: "Code A", kind: "text", def: "127", group: "Race", when: HIDE },
+  { key: "b", label: "Rival code", kind: "text", def: "239", group: "Race" },
+  {
+    key: "base",
+    label: "Base",
+    kind: "segment",
+    def: 3,
+    options: [
+      [2, "2"],
+      [3, "3"],
+    ],
+    group: "Board",
+    when: HIDE,
+  },
+  { key: "number", label: "Number", kind: "pick", def: 3, options: NUMBERS.map((n) => [n, String(n)]), group: "Board" },
+  {
+    key: "level",
+    label: "Level",
+    kind: "slider",
+    def: 4,
+    min: 1,
+    max: (value) => cap(value.number),
+    step: 1,
+    group: "Board",
+  },
+  {
+    key: "finish",
+    label: "Finish",
+    kind: "slider",
+    def: 20,
+    min: 1,
+    max: (value) => top(value.number ** value.level),
+    step: 1,
+    unit: "cells",
+    group: "Race",
+  },
+  { key: "speed", label: "Speed", kind: "slider", def: 720, min: 6, max: 3000, step: 6, unit: "/s", group: "Race" },
+  { key: "walkers", label: "Walkers", kind: "slider", def: 300, min: 10, max: 1000, step: 10, group: "Race" },
+  {
+    key: "heat",
+    label: "Fade",
+    kind: "slider",
+    def: 0,
+    min: 0,
+    max: 90,
+    step: 5,
+    unit: "%/s",
+    zero: "Off",
+    group: "Look",
+  },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
 const ABOUT = [
-  'Two designs that keep the same number of cells at every scale weigh the same and share one fractal dimension. Walkers start at home on both boards, the filled cell nearest the centre, and the first team to wander an average of the finish from home wins.',
-  'Each tick every walker takes one blind step, and a step into a hole is a lost turn. The shape alone sets the pace. Distance grows like a power of time whose exponent the shape sets, which [the walk dimension note](/research/walks/) measures.',
-  'Code A walks the left board, the top one on a tall screen, in the accent colour; code B walks the other in the opposite hue. The dashed ring is the finish and the solid ring is how far the swarm has spread.',
-  'Space, Enter or a tap on the boards starts, pauses and races again on the next seed. Reroll is a new walk on the same pair, n rolls a new pair of one mass, and the codes take any two designs.',
-  'The design chip picks the left board. The Library lists matchups of one mass and every rival of the left board that weighs the same.',
+  "Two designs that keep the same number of cells at every scale weigh the same and share one fractal dimension. Walkers start at home on both boards, the filled cell nearest the centre, and the first team to wander an average of the finish from home wins.",
+  "Each tick every walker takes one blind step, and a step into a hole is a lost turn. The shape alone sets the pace. Distance grows like a power of time whose exponent the shape sets, which [the walk dimension note](/research/walks/) measures.",
+  "Code A walks the left board, the top one on a tall screen, in the accent colour; code B walks the other in the opposite hue. The dashed ring is the finish and the solid ring is how far the swarm has spread.",
+  "Space, Enter or a tap on the boards starts, pauses and races again on the next seed. Reroll is a new walk on the same pair, n rolls a new pair of one mass, and the codes take any two designs.",
+  "The design chip picks the left board. The Library lists matchups of one mass and every rival of the left board that weighs the same.",
 ];
 
-export const LABELS = { ready: 'Start', running: 'Pause', held: 'Resume', done: 'Race again' };
+export const LABELS = { ready: "Start", running: "Pause", held: "Resume", done: "Race again" };
 
 export const named = (value) => `race-${value.a}-${value.b}-${value.seed}`;
 
 export const MATCHUPS = [
-  ['127', '239'],
-  ['495', '510'],
-  ['186', '316'],
-  ['486', '187'],
-  ['494', '254'],
+  ["127", "239"],
+  ["495", "510"],
+  ["186", "316"],
+  ["486", "187"],
+  ["494", "254"],
 ];
 
 export const PAGE = {
   spec: SPEC,
-  design: { dim: DIM, base: 'base', code: 'a' },
+  design: { dim: DIM, base: "base", code: "a" },
   record: true,
   about: ABOUT,
   name: named,
   keys: [
-    { key: 'Enter', label: (value, scene) => LABELS[scene?.phase?.() ?? 'ready'], act: 'go', button: true, menu: 'Edit' },
-    { key: 'n', label: 'New pair', act: 'pair', menu: 'Edit' },
+    {
+      key: "Enter",
+      label: (_value, scene) => LABELS[scene?.phase?.() ?? "ready"],
+      act: "go",
+      button: true,
+      menu: "Edit",
+    },
+    { key: "n", label: "New pair", act: "pair", menu: "Edit" },
   ],
   actions: { go: (scene) => scene.go?.(), pair: (scene) => scene.pair?.() },
 };
@@ -61,11 +125,19 @@ const duel = (rand) => {
 };
 
 export const SAVERS = [
-  { id: 'footprints', title: 'Footprints', pick: (rand) => ({ ...duel(rand), base: 3, number: 3, level: 4, finish: 20, walkers: 300, speed: 180, heat: 0 }) },
-  { id: 'embers', title: 'Embers', pick: () => ({ base: 3, number: 5, level: 3, finish: 28, walkers: 500, speed: 240, heat: 40 }) },
+  {
+    id: "footprints",
+    title: "Footprints",
+    pick: (rand) => ({ ...duel(rand), base: 3, number: 3, level: 4, finish: 20, walkers: 300, speed: 180, heat: 0 }),
+  },
+  {
+    id: "embers",
+    title: "Embers",
+    pick: () => ({ base: 3, number: 5, level: 3, finish: 28, walkers: 500, speed: 240, heat: 40 }),
+  },
 ];
 
-export const units = wasm('math');
+export const units = wasm("math");
 
 const TAU = Math.PI * 2;
 const PAD = 16;
@@ -77,18 +149,18 @@ const LINE = 1.5;
 const WIN = 3;
 const MARK = 2;
 const TOLD = 100;
-const BOARD = ['a', 'b', 'base', 'number', 'level'];
+const BOARD = ["a", "b", "base", "number", "level"];
 
 const glow = (h) => TOP * Math.min(1, h / HOT);
 
-const won = (over, s) => over?.how === 'goal' && over.winner === s;
+const won = (over, s) => over?.how === "goal" && over.winner === s;
 
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
   const math = opts.math;
-  if (!math) throw new Error('race: the scene wants @mrlyprod/mrly/math as opts.math');
-  const ctx = canvas.getContext('2d');
+  if (!math) throw new Error("race: the scene wants @mrlyprod/mrly/math as opts.math");
+  const ctx = canvas.getContext("2d");
   const hands = !view.lock;
   let value = tidy(SPEC, opts);
   let seed = opts.seed;
@@ -97,7 +169,7 @@ export function make(canvas, view, opts = {}) {
   let n = 0;
   let sheets = [];
   let show = null;
-  let phase = 'ready';
+  let phase = "ready";
   let at = 0;
   let clock = { t: 0, tick: 0 };
   let seen = -1;
@@ -108,21 +180,38 @@ export function make(canvas, view, opts = {}) {
   let ink = null;
   let ground = [];
   let told = -Infinity;
-  let said = '';
+  let said = "";
   let gone = false;
   const paint = () => {
     const { accent } = view.look();
-    const css = typeof getComputedStyle === 'function' && canvas ? getComputedStyle(canvas) : null;
-    const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
+    const css = typeof getComputedStyle === "function" && canvas ? getComputedStyle(canvas) : null;
+    const read = (name, fallback) => css?.getPropertyValue(name).trim() || fallback;
     colours = [accent, turn(accent, TURN)];
     bytes = colours.map(rgb);
-    ink = { fg: read('--fg', light.fg), line: read('--line', light.line), deep: read('--deep', light.deep) };
+    ink = { fg: read("--fg", light.fg), line: read("--line", light.line), deep: read("--deep", light.deep) };
     ground = [rgb(ink.deep), rgb(ink.line)];
     dirty = true;
   };
   const stat = () => {
     const { state } = show;
-    return { phase, tick: state.tick, reach: [...state.reach], over: state.over, goal: laid.goal, side: n, walkers: laid.walkers, sides: laid.sides.map(({ code, name, fills, of, lit, cells, dimension }) => ({ code, name, fills, of, lit, cells, dimension })) };
+    return {
+      phase,
+      tick: state.tick,
+      reach: [...state.reach],
+      over: state.over,
+      goal: laid.goal,
+      side: n,
+      walkers: laid.walkers,
+      sides: laid.sides.map(({ code, name, fills, of, lit, cells, dimension }) => ({
+        code,
+        name,
+        fills,
+        of,
+        lit,
+        cells,
+        dimension,
+      })),
+    };
   };
   const tell = (force) => {
     if (gone || !hands) return;
@@ -133,7 +222,7 @@ export function make(canvas, view, opts = {}) {
   };
   const restart = () => {
     show = series(laid, walk, hands ? Infinity : HOLD);
-    phase = hands ? 'ready' : 'running';
+    phase = hands ? "ready" : "running";
     at = 0;
     clock = { t: hands ? view.t : 0, tick: 0 };
     seen = -1;
@@ -142,12 +231,12 @@ export function make(canvas, view, opts = {}) {
   const replan = () => {
     const seeds = roots(rng(seed));
     walk = seeds.walk;
-    laid = plan(math, hands ? value : { ...value, a: opts.a ?? '', b: opts.b ?? '' }, seeds.code);
+    laid = plan(math, hands ? value : { ...value, a: opts.a ?? "", b: opts.b ?? "" }, seeds.code);
     if (laid.side !== n) {
       n = laid.side;
       sheets = laid.sides.map(() => {
         const page = new OffscreenCanvas(n, n);
-        return { page, pen: page.getContext('2d'), image: new ImageData(n, n), hot: new Float32Array(n * n) };
+        return { page, pen: page.getContext("2d"), image: new ImageData(n, n), hot: new Float32Array(n * n) };
       });
     }
     box = null;
@@ -157,14 +246,14 @@ export function make(canvas, view, opts = {}) {
     clock = { t: view.t, tick: at };
   };
   const play = () => {
-    if (phase !== 'ready' && phase !== 'held') return;
+    if (phase !== "ready" && phase !== "held") return;
     anchor();
-    phase = 'running';
+    phase = "running";
     dirty = true;
     view.wake?.();
   };
   const go = () => {
-    if (phase === 'running') phase = 'held';
+    if (phase === "running") phase = "held";
     else play();
     dirty = true;
     tell(true);
@@ -173,11 +262,11 @@ export function make(canvas, view, opts = {}) {
   const retarget = () => {
     const was = show.state.over;
     aim(show.state, laid);
-    if (was && !show.state.over && phase === 'done') {
-      phase = 'running';
+    if (was && !show.state.over && phase === "done") {
+      phase = "running";
       anchor();
     }
-    if (!was && show.state.over && hands) phase = 'done';
+    if (!was && show.state.over && hands) phase = "done";
   };
   const level = (s) => {
     const { state } = show;
@@ -240,13 +329,13 @@ export function make(canvas, view, opts = {}) {
     ctx.restore();
   };
   const draw = () => {
-    if (hands && view.fixed && phase === 'ready') play();
+    if (hands && view.fixed && phase === "ready") play();
     if (view.still && !hands) {
       if (!show.state.over) show.finish(laid.still);
-    } else if (phase === 'running') {
+    } else if (phase === "running") {
       at = Math.max(at, clock.tick + Math.floor(((view.t - clock.t) * value.speed) / 1000));
       show.to(at);
-      if (hands && show.state.over) phase = 'done';
+      if (hands && show.state.over) phase = "done";
     }
     if (!dirty && seen === show.version) return;
     seen = show.version;
@@ -309,23 +398,43 @@ export function make(canvas, view, opts = {}) {
     const body = laid.sides.map(({ filled, home }, s) => {
       const { x, y } = css.boards[s];
       const hot = level(s);
-      const base = runs({ shape: [n, n], types: filled }).map(([row, col, len]) => `<rect x="${col}" y="${row}" width="${len}" height="1"/>`);
+      const base = runs({ shape: [n, n], types: filled }).map(
+        ([row, col, len]) => `<rect x="${col}" y="${row}" width="${len}" height="1"/>`,
+      );
       const warm = [];
-      for (let i = 0; i < hot.length; i++) if (hot[i] > 0) warm.push(`<rect x="${i % n}" y="${Math.floor(i / n)}" width="1" height="1" fill-opacity="${num(glow(hot[i]), 3)}"/>`);
+      for (let i = 0; i < hot.length; i++)
+        if (hot[i] > 0)
+          warm.push(
+            `<rect x="${i % n}" y="${Math.floor(i / n)}" width="1" height="1" fill-opacity="${num(glow(hot[i]), 3)}"/>`,
+          );
       const dots = Array.from(state.at[s], (i) => `<rect x="${i % n}" y="${Math.floor(i / n)}" width="1" height="1"/>`);
-      const cells = `<g transform="translate(${num(x)} ${num(y)}) scale(${num(c, 4)})" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="${ink.deep}"/><g fill="${ink.line}">${base.join('')}</g><g fill="${colours[s]}">${warm.join('')}${dots.join('')}</g></g>`;
+      const cells = `<g transform="translate(${num(x)} ${num(y)}) scale(${num(c, 4)})" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="${ink.deep}"/><g fill="${ink.line}">${base.join("")}</g><g fill="${colours[s]}">${warm.join("")}${dots.join("")}</g></g>`;
       if (home < 0) return cells;
       const hx = x + ((home % n) + 0.5) * c;
       const hy = y + (Math.floor(home / n) + 0.5) * c;
-      const ring = (r, width, dash) => `<circle cx="${num(hx)}" cy="${num(hy)}" r="${num(r)}" fill="none" stroke="${colours[s]}" stroke-width="${num(width)}"${dash ? ` stroke-dasharray="${DASH.join(' ')}" stroke-opacity="${RING}"` : ''}/>`;
+      const ring = (r, width, dash) =>
+        `<circle cx="${num(hx)}" cy="${num(hy)}" r="${num(r)}" fill="none" stroke="${colours[s]}" stroke-width="${num(width)}"${dash ? ` stroke-dasharray="${DASH.join(" ")}" stroke-opacity="${RING}"` : ""}/>`;
       const m = c + 4;
       const mark = `<rect x="${num(hx - m / 2)}" y="${num(hy - m / 2)}" width="${num(m)}" height="${num(m)}" fill="none" stroke="${ink.fg}" stroke-width="${MARK}"/>`;
-      return `${cells}<clipPath id="race-${s}"><rect x="${num(x)}" y="${num(y)}" width="${num(css.edge)}" height="${num(css.edge)}"/></clipPath><g clip-path="url(#race-${s})">${ring(laid.goal * c, 1, true)}${state.reach[s] > 0 ? ring(state.reach[s] * c, won(state.over, s) ? WIN : LINE, false) : ''}${mark}</g>`;
+      return `${cells}<clipPath id="race-${s}"><rect x="${num(x)}" y="${num(y)}" width="${num(css.edge)}" height="${num(css.edge)}"/></clipPath><g clip-path="url(#race-${s})">${ring(laid.goal * c, 1, true)}${state.reach[s] > 0 ? ring(state.reach[s] * c, won(state.over, s) ? WIN : LINE, false) : ""}${mark}</g>`;
     });
-    return sheet(view.w / dpr, view.h / dpr, body.join(''));
+    return sheet(view.w / dpr, view.h / dpr, body.join(""));
   };
-  const csv = () => ['step,a,b', ...show.state.log.map(([a, b], i) => `${i},${num(a, 3)},${num(b, 3)}`)].join('\n');
+  const csv = () => ["step,a,b", ...show.state.log.map(([a, b], i) => `${i},${num(a, 3)},${num(b, 3)}`)].join("\n");
   paint();
   replan();
-  return { draw, size, theme, stop, set, svg, csv, stat, go, toggle: go, playing: () => phase === 'running', phase: () => phase };
+  return {
+    draw,
+    size,
+    theme,
+    stop,
+    set,
+    svg,
+    csv,
+    stat,
+    go,
+    toggle: go,
+    playing: () => phase === "running",
+    phase: () => phase,
+  };
 }

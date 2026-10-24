@@ -8,6 +8,7 @@ MC_TOP = 7
 MC_SAMPLES = 10**7
 BATCH = 10**6
 
+
 def wallis_table(top):
     table = {}
     even = Fraction(16, 3)
@@ -25,10 +26,12 @@ def wallis_table(top):
         k += 1
     return table
 
+
 def value(form, rational):
     if form == "r/Pi^2":
         return mp.mpf(rational.numerator) / mp.mpf(rational.denominator) / mp.pi**2
     return mp.mpf(rational.numerator) / mp.mpf(rational.denominator)
+
 
 def half_ball(rng, count, dim):
     pts = rng.standard_normal((count, dim))
@@ -36,6 +39,7 @@ def half_ball(rng, count, dim):
     pts *= rng.random((count, 1)) ** (1.0 / dim)
     pts[:, dim - 1] = np.abs(pts[:, dim - 1])
     return pts
+
 
 def flat_face_rate(rng, dim, samples):
     hits = 0
@@ -51,6 +55,7 @@ def flat_face_rate(rng, dim, samples):
         hits += int(np.count_nonzero(good & (np.linalg.norm(cross, axis=1) <= 1.0)))
         done += take
     return hits / samples
+
 
 def main():
     mp.mp.dps = 30
@@ -82,5 +87,6 @@ def main():
             f"  d = {d}  estimate {mp.nstr(est, 8)}  exact {mp.nstr(exact, 8)}"
             f"  deviation {mp.nstr(est - exact, 3)}  one sigma {mp.nstr(se, 3)}"
         )
+
 
 main()

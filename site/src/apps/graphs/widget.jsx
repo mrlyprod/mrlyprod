@@ -1,42 +1,70 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { text } from '../../lib/app/export.js';
-import { Bar } from '../../lib/app/frame.jsx';
-import { Btn, Group } from '../../lib/app/controls.jsx';
-import { Art, Item, Library, Shelf } from '../../lib/app/library.jsx';
-import { Scene } from '../../lib/app/page.jsx';
-import { paints } from '../../lib/color.js';
-import { rng } from '../../lib/rand.js';
-import { useTheme } from '../../lib/designs/pick.jsx';
-import { SETS, bounds, deal, design, glimpse, graphs, kindOf, lay, plane, solid as isSolid, spaceOf, turn } from './engine.js';
-import { make, name } from './scene.js';
-import { useReroll, useThree } from '../../lib/app/hooks.js';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Btn, Group } from "../../lib/app/controls.jsx";
+import { text } from "../../lib/app/export.js";
+import { Bar } from "../../lib/app/frame.jsx";
+import { useReroll, useThree } from "../../lib/app/hooks.js";
+import { Art, Item, Library, Shelf } from "../../lib/app/library.jsx";
+import { Scene } from "../../lib/app/page.jsx";
+import { paints } from "../../lib/color.js";
+import { useTheme } from "../../lib/designs/pick.jsx";
+import { rng } from "../../lib/rand.js";
+import {
+  bounds,
+  deal,
+  design,
+  glimpse,
+  graphs,
+  solid as isSolid,
+  kindOf,
+  lay,
+  plane,
+  SETS,
+  spaceOf,
+  turn,
+} from "./engine.js";
+import { make, name } from "./scene.js";
 
 const POLL = 250;
 const TAP = 6;
 const WHEEL = 0.0015;
 const DOT = 1.5;
-const POSES = [['corner', 'Corner'], ['edge', 'Edge'], ['face', 'Face']];
-const CAMERA = { eye: 'perspective', iso: 'isometric' };
+const POSES = [
+  ["corner", "Corner"],
+  ["edge", "Edge"],
+  ["face", "Face"],
+];
+const CAMERA = { eye: "perspective", iso: "isometric" };
 
 const sci = (x) => Number(x).toExponential(2);
 
-export const note = (f, camera = 'eye') => `${f.graph} graph, level ${f.level}, ${f.layout}${f.space === 'cube' ? `, ${CAMERA[camera] ?? CAMERA.eye}` : ''}`;
+export const note = (f, camera = "eye") =>
+  `${f.graph} graph, level ${f.level}, ${f.layout}${f.space === "cube" ? `, ${CAMERA[camera] ?? CAMERA.eye}` : ""}`;
 
 export function rows(f, r, camera) {
   const out = [
-    ['design', `${f.name || 'bang'} ${f.code}`],
-    ['network', note(f, camera)],
-    ['nodes', f.nodes],
-    ['branches', f.branches],
-    ['tips', f.tips],
-    ['junctions', f.junctions],
-    ['pieces', f.pieces],
-    ['length', f.length.toFixed(2)],
-    ['box dimension', f.box.toFixed(3)],
-    ['euler', f.euler ?? 'none'],
+    ["design", `${f.name || "bang"} ${f.code}`],
+    ["network", note(f, camera)],
+    ["nodes", f.nodes],
+    ["branches", f.branches],
+    ["tips", f.tips],
+    ["junctions", f.junctions],
+    ["pieces", f.pieces],
+    ["length", f.length.toFixed(2)],
+    ["box dimension", f.box.toFixed(3)],
+    ["euler", f.euler ?? "none"],
   ];
   if (!r) return out;
-  return [...out, ['ticks', r.ticks], ...(r.ticks ? [['energy', sci(r.energy)], ['moved', sci(r.moved)]] : []), ['heat', sci(r.heat)]];
+  return [
+    ...out,
+    ["ticks", r.ticks],
+    ...(r.ticks
+      ? [
+          ["energy", sci(r.energy)],
+          ["moved", sci(r.moved)],
+        ]
+      : []),
+    ["heat", sci(r.heat)],
+  ];
 }
 
 export function etch(ctx, seen, w, h, dpr) {
@@ -45,7 +73,7 @@ export function etch(ctx, seen, w, h, dpr) {
   ctx.strokeStyle = paints(ctx.canvas).accent;
   ctx.fillStyle = ctx.strokeStyle;
   ctx.lineWidth = dpr;
-  ctx.lineCap = 'round';
+  ctx.lineCap = "round";
   ctx.beginPath();
   for (let j = 0; j < seen.pairs.length; j += 2) {
     const [a, b] = [seen.pairs[j], seen.pairs[j + 1]];
@@ -76,12 +104,29 @@ export function Shelves({ value, onChange, math }) {
     <>
       <Shelf name="Graphs" grid>
         {graphs(value).map(([graph, text]) => {
-          const [head, tail] = text.split(', ');
-          return <Item key={graph} label={head} sub={tail} on={kindOf(value) === graph} onPick={() => onChange({ graph })} art={math ? glance({ value, graph }) : undefined} />;
+          const [head, tail] = text.split(", ");
+          return (
+            <Item
+              key={graph}
+              label={head}
+              sub={tail}
+              on={kindOf(value) === graph}
+              onPick={() => onChange({ graph })}
+              art={math ? glance({ value, graph }) : undefined}
+            />
+          );
         })}
       </Shelf>
       <Shelf name="Sets" grid>
-        {SETS.map(([text, patch]) => <Item key={text} label={text} on={lit(value, patch)} onPick={() => onChange(patch)} art={math ? glance({ value: patch, graph: patch.graph }) : undefined} />)}
+        {SETS.map(([text, patch]) => (
+          <Item
+            key={text}
+            label={text}
+            on={lit(value, patch)}
+            onPick={() => onChange(patch)}
+            art={math ? glance({ value: patch, graph: patch.graph }) : undefined}
+          />
+        ))}
       </Shelf>
     </>
   );
@@ -91,9 +136,11 @@ export function Pane({ value, relax, onRelax, onReset, onPose }) {
   const running = Boolean(relax?.on);
   return (
     <>
-      {value.layout === 'force' && (
+      {value.layout === "force" && (
         <Group name="Relax" after="Layout">
-          <Btn on={running} onClick={onRelax}>{running ? 'Pause' : 'Relax'}</Btn>
+          <Btn on={running} onClick={onRelax}>
+            {running ? "Pause" : "Relax"}
+          </Btn>
           <Btn onClick={onReset}>Reset</Btn>
         </Group>
       )}
@@ -130,7 +177,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
     setSeen((was) => (same(was, next) ? was : next));
   };
   const relax = () => {
-    if (now.current.layout !== 'force') return tell.current({ layout: 'force' });
+    if (now.current.layout !== "force") return tell.current({ layout: "force" });
     live.current?.toggle?.();
     sync();
   };
@@ -149,8 +196,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
       e.preventDefault();
       live.current.zoom(Math.exp(-e.deltaY * WHEEL));
     };
-    handle.canvas?.addEventListener?.('wheel', spin, { passive: false });
-    wheel.current = () => handle.canvas?.removeEventListener?.('wheel', spin);
+    handle.canvas?.addEventListener?.("wheel", spin, { passive: false });
+    wheel.current = () => handle.canvas?.removeEventListener?.("wheel", spin);
     onReady?.({
       ...handle,
       toggle: relax,
@@ -170,19 +217,37 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
   useEffect(() => {
     sync();
     const facts = live.current?.facts?.();
-    if (facts && facts.space === spaceOf(value) && design(value).code !== '' && facts.code !== design(value).code) onChange({ code: facts.code });
+    if (facts && facts.space === spaceOf(value) && design(value).code !== "" && facts.code !== design(value).code)
+      onChange({ code: facts.code });
   }, [JSON.stringify(value), have]);
   const keep = (body, kind) => body && text(body, name(now.current), kind);
-  const svg = () => keep(live.current?.svg?.(), 'svg');
-  const json = () => keep(live.current?.json?.(), 'json');
-  useEffect(() => onExport?.(have ? [['SVG', svg], ['JSON', json]] : []), [have]);
+  const svg = () => keep(live.current?.svg?.(), "svg");
+  const json = () => keep(live.current?.json?.(), "json");
+  useEffect(
+    () =>
+      onExport?.(
+        have
+          ? [
+              ["SVG", svg],
+              ["JSON", json],
+            ]
+          : [],
+      ),
+    [have],
+  );
   const scene = useCallback((canvas, view, opts) => make(canvas, view, { ...opts, math, three }), [math, three]);
   const down = (e) => {
     const { points } = touch.current;
     e.currentTarget.setPointerCapture?.(e.pointerId);
     points.set(e.pointerId, [e.clientX, e.clientY]);
     if (points.size === 1) {
-      touch.current.from = { x: e.clientX, y: e.clientY, far: 0, tap: e.button === 0, pan: e.button === 2 || e.shiftKey };
+      touch.current.from = {
+        x: e.clientX,
+        y: e.clientY,
+        far: 0,
+        tap: e.button === 0,
+        pan: e.button === 2 || e.shiftKey,
+      };
       live.current?.grab?.();
     } else if (touch.current.from) touch.current.from.tap = false;
   };
@@ -213,17 +278,34 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
     if (!points.delete(e.pointerId) || points.size) return;
     live.current?.release?.();
     touch.current.from = null;
-    if (!cube && e.type === 'pointerup' && from?.tap && from.far < TAP) relax();
+    if (!cube && e.type === "pointerup" && from?.tap && from.far < TAP) relax();
   };
   const hush = (e) => cube && e.preventDefault();
   return (
     <>
-      {math && (!cube || three) && <Scene make={scene} value={value} onReady={ready} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onContextMenu={hush} />}
+      {math && (!cube || three) && (
+        <Scene
+          make={scene}
+          value={value}
+          onReady={ready}
+          onPointerDown={down}
+          onPointerMove={move}
+          onPointerUp={up}
+          onPointerCancel={up}
+          onContextMenu={hush}
+        />
+      )}
       <Library>
         <Shelves value={value} onChange={onChange} math={math} />
       </Library>
       <Bar side="right">
-        <Pane value={value} relax={seen?.relax} onRelax={relax} onReset={reset} onPose={(pose) => live.current?.snap?.(pose)} />
+        <Pane
+          value={value}
+          relax={seen?.relax}
+          onRelax={relax}
+          onReset={reset}
+          onPose={(pose) => live.current?.snap?.(pose)}
+        />
       </Bar>
     </>
   );

@@ -28,11 +28,16 @@ function study() {
   const pencils = s.pencils(design.types, width, height, "fill", REACH, 0, 1);
   const curves = s.distinct(track, pencils, true);
   const nodes = s.nodes(track, pencils, true);
-  if (pencils.length !== WANT.pencils || curves !== WANT.curves || nodes !== WANT.nodes) throw new Error(`spirograph: ${pencils.length} pencils, ${curves} curves, ${nodes} nodes, want ${WANT.pencils}, ${WANT.curves}, ${WANT.nodes}`);
+  if (pencils.length !== WANT.pencils || curves !== WANT.curves || nodes !== WANT.nodes)
+    throw new Error(
+      `spirograph: ${pencils.length} pencils, ${curves} curves, ${nodes} nodes, want ${WANT.pencils}, ${WANT.curves}, ${WANT.nodes}`,
+    );
   const radii = pencils.map((p) => Math.hypot(p.x, p.y));
   const lo = Math.min(...radii);
   const hi = Math.max(...radii);
-  const bands = radii.map((r) => (hi > lo ? Math.min(BANDS - 1, Math.floor(((r - lo) / (hi - lo)) * BANDS)) : BANDS - 1));
+  const bands = radii.map((r) =>
+    hi > lo ? Math.min(BANDS - 1, Math.floor(((r - lo) / (hi - lo)) * BANDS)) : BANDS - 1,
+  );
   const trace = s.trace(track, pencils, SAMPLES);
   let outer = 0;
   let inner = Infinity;
@@ -56,7 +61,8 @@ export default function draw(pen) {
     pencils.forEach((_, p) => {
       if (bands[p] !== band) return;
       const pts = [];
-      for (let i = 0; i < SAMPLES; i++) pts.push([cx + trace[(p * SAMPLES + i) * 2] * k, cy - trace[(p * SAMPLES + i) * 2 + 1] * k]);
+      for (let i = 0; i < SAMPLES; i++)
+        pts.push([cx + trace[(p * SAMPLES + i) * 2] * k, cy - trace[(p * SAMPLES + i) * 2 + 1] * k]);
       pen.polyline(pts, thick, color);
     });
   }

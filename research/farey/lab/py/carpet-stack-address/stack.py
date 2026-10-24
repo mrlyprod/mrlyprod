@@ -6,13 +6,14 @@ FAREY_N = 55
 Q = 9973
 M = 2 * Q
 PROBES = 48
-PROBE_NS = [55, 5555, 10 ** 18]
+PROBE_NS = [55, 5555, 10**18]
 SWEEP_NS = [1, 2, 55, 5555, 19945, 19946, 19947, 40001]
 R = 512
 D = 2 * R
 IMAGE_N = 55
 ODDS = list(range(1, IMAGE_N + 1, 2))
 K = len(ODDS)
+
 
 def farey_nodes(n_max):
     out = []
@@ -22,29 +23,36 @@ def farey_nodes(n_max):
                 out.append((a, b))
     return out
 
+
 def farey_by_form(n_max):
     return ["%d/%d:%d" % (a, b, n_max // b) for (a, b) in farey_nodes(n_max)]
+
 
 def farey_by_membership(n_max):
     scales = []
     for n in range(1, n_max + 1):
-        scales.append(set((k // gcd(k, n), n // gcd(k, n)) for k in range(1, n + 1)))
+        scales.append({(k // gcd(k, n), n // gcd(k, n)) for k in range(1, n + 1)})
     lines = []
-    for (a, b) in farey_nodes(n_max):
+    for a, b in farey_nodes(n_max):
         lines.append("%d/%d:%d" % (a, b, sum(1 for s in scales if (a, b) in s)))
     return lines
+
 
 def digest(lines):
     return hashlib.sha256("\n".join(lines).encode("utf-8")).hexdigest()
 
+
 def brightness_sum(lines):
     return sum(int(t.split(":")[1]) for t in lines)
+
 
 def probe_points():
     return [((137 * i + 61) % Q, (211 * i + 97) % Q) for i in range(PROBES)]
 
+
 def bad_residues(a, b):
     return [r for r in range(1, M, 2) if (r * a) % M >= Q and (r * b) % M >= Q]
+
 
 def brightness_closed(bad, n_max):
     dark = 0
@@ -53,8 +61,10 @@ def brightness_closed(bad, n_max):
             dark += (n_max - r) // M + 1
     return (n_max + 1) // 2 - dark
 
+
 def good_residues(a, b):
     return [r for r in range(1, M, 2) if (r * a) % M < Q or (r * b) % M < Q]
+
 
 def brightness_direct(good, n_max):
     lit = 0
@@ -63,12 +73,14 @@ def brightness_direct(good, n_max):
             lit += (n_max - r) // M + 1
     return lit
 
+
 def brightness_literal(a, b, n_max):
     c = 0
     for n in range(1, n_max + 1, 2):
         if not (((n * a) // Q) % 2 == 1 and ((n * b) // Q) % 2 == 1):
             c += 1
     return c
+
 
 def column_masks():
     masks = []
@@ -81,6 +93,7 @@ def column_masks():
         masks.append(m)
     return masks
 
+
 def render_masks():
     masks = column_masks()
     buf = bytearray(R * R)
@@ -90,6 +103,7 @@ def render_masks():
         for j in range(R):
             buf[row + j] = K - (my & masks[j]).bit_count()
     return buf
+
 
 def render_layers():
     xs = [2 * j + 1 for j in range(R)]
@@ -110,6 +124,7 @@ def render_layers():
         buf.extend(bytes(img[i]))
     return buf
 
+
 def render_pixels():
     buf = bytearray()
     for i in range(R):
@@ -122,6 +137,7 @@ def render_pixels():
                     c += 1
             buf.append(c)
     return buf
+
 
 def main():
     form = farey_by_form(FAREY_N)
@@ -186,5 +202,6 @@ def main():
     print("image sha256 layers", hashlib.sha256(bytes(b)).hexdigest())
     print("image sha256 pixels", hashlib.sha256(bytes(c)).hexdigest())
     print("image three routes equal", a == b == c)
+
 
 main()

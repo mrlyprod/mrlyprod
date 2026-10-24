@@ -1,7 +1,14 @@
-import { act } from 'react';
-import { createRoot } from 'react-dom/client';
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 
-const GLOBALS = ['document', 'window', 'HTMLIFrameElement', 'IS_REACT_ACT_ENVIRONMENT', 'requestAnimationFrame', 'cancelAnimationFrame'];
+const GLOBALS = [
+  "document",
+  "window",
+  "HTMLIFrameElement",
+  "IS_REACT_ACT_ENVIRONMENT",
+  "requestAnimationFrame",
+  "cancelAnimationFrame",
+];
 
 export function node(tag, nodeType = 1) {
   const kids = [];
@@ -9,7 +16,7 @@ export function node(tag, nodeType = 1) {
     nodeType,
     nodeName: tag.toUpperCase(),
     tagName: tag.toUpperCase(),
-    namespaceURI: 'http://www.w3.org/1999/xhtml',
+    namespaceURI: "http://www.w3.org/1999/xhtml",
     childNodes: kids,
     style: {
       setProperty(name, value) {
@@ -76,21 +83,41 @@ export function node(tag, nodeType = 1) {
   return self;
 }
 
-export const doc = Object.assign(node('#document', 9), { createElement: (tag) => node(tag), createElementNS: (ns, tag) => node(tag), createTextNode: (text) => Object.assign(node('#text', 3), { nodeValue: text }), createComment: () => node('#comment', 8), activeElement: null, hidden: false, defaultView: globalThis, documentElement: node('html'), querySelector: () => null, querySelectorAll: () => [] });
+export const doc = Object.assign(node("#document", 9), {
+  createElement: (tag) => node(tag),
+  createElementNS: (_ns, tag) => node(tag),
+  createTextNode: (text) => Object.assign(node("#text", 3), { nodeValue: text }),
+  createComment: () => node("#comment", 8),
+  activeElement: null,
+  hidden: false,
+  defaultView: globalThis,
+  documentElement: node("html"),
+  querySelector: () => null,
+  querySelectorAll: () => [],
+});
 
-doc.body = doc.appendChild(node('html')).appendChild(node('body'));
+doc.body = doc.appendChild(node("html")).appendChild(node("body"));
 
-export const find = (at, test) => (test(at) ? at : at.childNodes.reduce((found, kid) => found ?? find(kid, test), null));
+export const find = (at, test) =>
+  test(at) ? at : at.childNodes.reduce((found, kid) => found ?? find(kid, test), null);
 
 export const all = (at, test) => [...(test(at) ? [at] : []), ...at.childNodes.flatMap((kid) => all(kid, test))];
 
-export const text = (at) => (at.nodeType === 3 ? at.nodeValue : at.childNodes.length ? at.childNodes.map(text).join('') : (at.textContent ?? ''));
+export const text = (at) =>
+  at.nodeType === 3 ? at.nodeValue : at.childNodes.length ? at.childNodes.map(text).join("") : (at.textContent ?? "");
 
-export const classed = (name) => (at) => (at.attributes?.class ?? '').split(' ').includes(name);
+export const classed = (name) => (at) => (at.attributes?.class ?? "").split(" ").includes(name);
 
 export async function mount(fn) {
-  Object.assign(globalThis, { document: doc, window: globalThis, HTMLIFrameElement: class {}, IS_REACT_ACT_ENVIRONMENT: true, requestAnimationFrame: () => 0, cancelAnimationFrame: () => {} });
-  const host = doc.body.appendChild(node('div'));
+  Object.assign(globalThis, {
+    document: doc,
+    window: globalThis,
+    HTMLIFrameElement: class {},
+    IS_REACT_ACT_ENVIRONMENT: true,
+    requestAnimationFrame: () => 0,
+    cancelAnimationFrame: () => {},
+  });
+  const host = doc.body.appendChild(node("div"));
   const root = createRoot(host);
   const draw = (one) => act(async () => root.render(one));
   try {

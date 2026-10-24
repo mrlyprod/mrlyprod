@@ -1,4 +1,4 @@
-import { decode, draw, type Code, type Paint, type Tools, type View, type Wood } from "./view.ts";
+import { type Code, decode, draw, type Paint, type Tools, type View, type Wood } from "./view.ts";
 
 /* TYPES */
 
@@ -56,7 +56,8 @@ function settle() {
 
 function mark(base: string, path: string, mine: number) {
   const here = `${base}${path}`;
-  for (const a of document.querySelectorAll<HTMLAnchorElement>(".tree a[aria-current]")) a.removeAttribute("aria-current");
+  for (const a of document.querySelectorAll<HTMLAnchorElement>(".tree a[aria-current]"))
+    a.removeAttribute("aria-current");
   const parts = path.split("/").filter(Boolean);
   let at = "";
   let tries = 0;
@@ -64,7 +65,9 @@ function mark(base: string, path: string, mine: number) {
     if (mine !== turn) return;
     while (parts.length > 1 || (parts.length === 1 && path.endsWith("/"))) {
       const next = at ? `${at}/${parts[0]}` : parts[0]!;
-      const fold = [...document.querySelectorAll<HTMLDetailsElement>(".tree details[data-lazy]")].find((one) => one.dataset.lazy === next);
+      const fold = [...document.querySelectorAll<HTMLDetailsElement>(".tree details[data-lazy]")].find(
+        (one) => one.dataset.lazy === next,
+      );
       if (!fold) {
         if (tries++ < 40) setTimeout(step, 50);
         return;
@@ -73,7 +76,9 @@ function mark(base: string, path: string, mine: number) {
       at = next;
       parts.shift();
     }
-    const hit = [...document.querySelectorAll<HTMLAnchorElement>(".tree a[href]")].find((a) => decode(a.pathname) === here);
+    const hit = [...document.querySelectorAll<HTMLAnchorElement>(".tree a[href]")].find(
+      (a) => decode(a.pathname) === here,
+    );
     const pane = hit?.closest<HTMLElement>(".body, .pane");
     if (hit && pane) {
       hit.setAttribute("aria-current", "page");
@@ -147,9 +152,24 @@ export function start(options: Options): () => void {
 function wire(data: Wood, options: Options, brand: string): () => void {
   const go = () => show(data, options, brand);
   const click = (event: MouseEvent) => {
-    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
     const a = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
-    if (!a || a.target || a.hasAttribute("download") || a.origin !== location.origin || !a.pathname.startsWith(data.base)) return;
+    if (
+      !a ||
+      a.target ||
+      a.hasAttribute("download") ||
+      a.origin !== location.origin ||
+      !a.pathname.startsWith(data.base)
+    )
+      return;
     if (a.pathname === location.pathname && a.hash) return;
     event.preventDefault();
     if (a.pathname === location.pathname) return roll(0);

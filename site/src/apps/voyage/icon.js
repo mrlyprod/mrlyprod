@@ -50,7 +50,8 @@ function world(box, light) {
       const d = Math.hypot(dx, dy);
       const edge = Math.min(1, Math.max(0, rim / 2 + 0.5 - Math.abs(d - r)));
       const inside = r - d;
-      const haze = inside > 0 ? Math.exp(-inside / glow) * WORLD.haze * Math.max(0, (bottom - y0 - y) / (bottom - top)) : 0;
+      const haze =
+        inside > 0 ? Math.exp(-inside / glow) * WORLD.haze * Math.max(0, (bottom - y0 - y) / (bottom - top)) : 0;
       const a = edge * fade;
       const b = haze * fade * (1 - a);
       const out = a + b;

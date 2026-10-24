@@ -3,7 +3,7 @@ import os
 import sys
 from time import perf_counter
 
-from mpmath import mp, mpc, log, sqrt
+from mpmath import log, mp, mpc, sqrt
 
 mp.dps = 40
 P = 14
@@ -30,8 +30,10 @@ def mv(m, v):
 def solve(x, rhs):
     a = [[1 - x * T[0][0], -x * T[0][1]], [-x * T[1][0], 1 - x * T[1][1]]]
     det = a[0][0] * a[1][1] - a[0][1] * a[1][0]
-    return [(a[1][1] * rhs[0] - a[0][1] * rhs[1]) / det,
-            (a[0][0] * rhs[1] - a[1][0] * rhs[0]) / det]
+    return [
+        (a[1][1] * rhs[0] - a[0][1] * rhs[1]) / det,
+        (a[0][0] * rhs[1] - a[1][0] * rhs[0]) / det,
+    ]
 
 
 def epoly(w):
@@ -81,19 +83,44 @@ def control():
     period = 2 * mp.pi / LN2
     half = mp.pi / LN2
     rows = []
-    for kind, s in [("zeta", mpc(3)), ("zeta", mpc("0.8")), ("Z", mpc(3)), ("Z", mpc(2)),
-                    ("Z", mpc("0.8")), ("Z", mpc("-0.95", 20)), ("Z", mpc(0, 30)),
-                    ("Z", mpc("-0.693919320380", "9.492981163426")),
-                    ("Z", mpc("-0.737611737911", "14.343440171295")),
-                    ("Z", mpc("-0.708500086380", "27.443172842651")),
-                    ("Z", mpc("0.665353220372", "18.164471712166")),
-                    ("Z", mpc("-0.315485550754", "23.209873760385")),
-                    ("residue", mpc(alpha, period)), ("residue", mpc(-alpha, half * 5))]:
+    for kind, s in [
+        ("zeta", mpc(3)),
+        ("zeta", mpc("0.8")),
+        ("Z", mpc(3)),
+        ("Z", mpc(2)),
+        ("Z", mpc("0.8")),
+        ("Z", mpc("-0.95", 20)),
+        ("Z", mpc(0, 30)),
+        ("Z", mpc("-0.693919320380", "9.492981163426")),
+        ("Z", mpc("-0.737611737911", "14.343440171295")),
+        ("Z", mpc("-0.708500086380", "27.443172842651")),
+        ("Z", mpc("0.665353220372", "18.164471712166")),
+        ("Z", mpc("-0.315485550754", "23.209873760385")),
+        ("residue", mpc(alpha, period)),
+        ("residue", mpc(-alpha, half * 5)),
+    ]:
         v = zeta(s) if kind == "zeta" else cofactor(s) if kind == "Z" else residue(s)
-        rows.append({"kind": kind, "re": mp.nstr(s.real, 25), "im": mp.nstr(s.imag, 25),
-                     "value": [mp.nstr(v.real, 25), mp.nstr(v.imag, 25)]})
-    json.dump({"source": "lab/py/memory-zeta peel.py control", "dps": mp.dps, "peel": P,
-               "shift": SHIFT, "cut": CUT, "rows": rows}, open(CONTROL, "w"), indent=1)
+        rows.append(
+            {
+                "kind": kind,
+                "re": mp.nstr(s.real, 25),
+                "im": mp.nstr(s.imag, 25),
+                "value": [mp.nstr(v.real, 25), mp.nstr(v.imag, 25)],
+            }
+        )
+    with open(CONTROL, "w") as f:
+        json.dump(
+            {
+                "source": "lab/py/memory-zeta peel.py control",
+                "dps": mp.dps,
+                "peel": P,
+                "shift": SHIFT,
+                "cut": CUT,
+                "rows": rows,
+            },
+            f,
+            indent=1,
+        )
     print("control.json", len(rows), "rows,", round(perf_counter() - start, 2), "s")
 
 

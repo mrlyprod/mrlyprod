@@ -39,7 +39,10 @@ function walls(pen, outer, inner, tones) {
 export default function draw(pen) {
   const { box, paint } = plate(pen, "blue", 0.16);
   const tones = [paint.white, paint.light, paint.deep];
-  const shade = [{ top: [0, 0, 0, 120], side: [0, 0, 0, 65], floor: [255, 255, 255, 60] }, { top: [0, 0, 0, 120], side: [0, 0, 0, 70], floor: [255, 255, 255, 40] }];
+  const shade = [
+    { top: [0, 0, 0, 120], side: [0, 0, 0, 65], floor: [255, 255, 255, 60] },
+    { top: [0, 0, 0, 120], side: [0, 0, 0, 70], floor: [255, 255, 255, 40] },
+  ];
   const ends = [box];
   for (let depth = 1; depth < DEPTHS; depth++) {
     const hole = shrink(ends[depth - 1], 1 / 3);
@@ -65,5 +68,6 @@ export default function draw(pen) {
       grids[depth].fill(pen, col - from, row - from, tones[depth]);
     }
   }
-  if (counts.join() !== WANT.join()) throw new Error(`zoom: the nested cells light ${counts.join(", ")}, want ${WANT.join(", ")}`);
+  if (counts.join() !== WANT.join())
+    throw new Error(`zoom: the nested cells light ${counts.join(", ")}, want ${WANT.join(", ")}`);
 }

@@ -1,37 +1,78 @@
-import { text as file } from '../../lib/app/export.js';
-import { tidy } from '../../lib/app/spec.js';
-import { board } from '../../lib/app/run.js';
-import { TINTS, veil } from '../../lib/color.js';
-import { pick, rng } from '../../lib/rand.js';
-import { grid, rects } from '../../lib/app/svg.js';
-import { GAP, SAMPLES, SLOT, cells, common, cut, gallery, index, pen, plan, sample, shift, slug, written } from './engine.js';
-import { wasm } from '../../lib/units/index.js';
+import { text as file } from "../../lib/app/export.js";
+import { board } from "../../lib/app/run.js";
+import { tidy } from "../../lib/app/spec.js";
+import { grid, rects } from "../../lib/app/svg.js";
+import { TINTS, veil } from "../../lib/color.js";
+import { pick, rng } from "../../lib/rand.js";
+import { wasm } from "../../lib/units/index.js";
+import {
+  cells,
+  common,
+  cut,
+  GAP,
+  gallery,
+  index,
+  pen,
+  plan,
+  SAMPLES,
+  SLOT,
+  sample,
+  shift,
+  slug,
+  written,
+} from "./engine.js";
 
-export const VIEWS = [['pens', 'Pens'], ['text', 'Text']];
+export const VIEWS = [
+  ["pens", "Pens"],
+  ["text", "Text"],
+];
 
-const TEXT = (value) => value.view === 'text';
+const TEXT = (value) => value.view === "text";
 
 const PENS = (value) => !TEXT(value);
 
-export const named = (value) => (TEXT(value) ? `font-${slug(value.text || sample(rng(value.seed)))}` : 'font-pens');
+export const named = (value) => (TEXT(value) ? `font-${slug(value.text || sample(rng(value.seed)))}` : "font-pens");
 
 export const SPEC = [
-  { key: 'view', label: 'View', kind: 'segment', def: 'pens', options: VIEWS, group: 'View' },
-  { key: 'text', label: 'Text', kind: 'text', def: '', wide: true, group: 'View', when: TEXT },
-  { key: 'speed', label: 'Speed', kind: 'slider', def: 1, min: 0.25, max: 4, step: 0.25, unit: 'x', group: 'Motion' },
-  { key: 'hold', label: 'Hold', kind: 'slider', def: 25, min: 0, max: 100, step: 1, unit: 'frames', group: 'Motion' },
-  { key: 'loop', label: 'Loop', kind: 'toggle', def: 1, group: 'Motion' },
-  { key: 'flags', label: 'Flags', kind: 'toggle', def: 1, group: 'Look', when: PENS },
-  { key: 'pad', label: 'Pad', kind: 'slider', def: 1, min: 0, max: 4, step: 1, unit: 'cells', group: 'Look', when: TEXT },
-  { key: 'cell', label: 'Cell', kind: 'slider', def: 0, min: 0, max: 40, step: 2, unit: 'px', zero: 'Fit', group: 'Look', when: TEXT },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  { key: "view", label: "View", kind: "segment", def: "pens", options: VIEWS, group: "View" },
+  { key: "text", label: "Text", kind: "text", def: "", wide: true, group: "View", when: TEXT },
+  { key: "speed", label: "Speed", kind: "slider", def: 1, min: 0.25, max: 4, step: 0.25, unit: "x", group: "Motion" },
+  { key: "hold", label: "Hold", kind: "slider", def: 25, min: 0, max: 100, step: 1, unit: "frames", group: "Motion" },
+  { key: "loop", label: "Loop", kind: "toggle", def: 1, group: "Motion" },
+  { key: "flags", label: "Flags", kind: "toggle", def: 1, group: "Look", when: PENS },
+  {
+    key: "pad",
+    label: "Pad",
+    kind: "slider",
+    def: 1,
+    min: 0,
+    max: 4,
+    step: 1,
+    unit: "cells",
+    group: "Look",
+    when: TEXT,
+  },
+  {
+    key: "cell",
+    label: "Cell",
+    kind: "slider",
+    def: 0,
+    min: 0,
+    max: 40,
+    step: 2,
+    unit: "px",
+    zero: "Fit",
+    group: "Look",
+    when: TEXT,
+  },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
 export const ABOUT = [
-  'Every glyph of MrlyFont writes itself in the order its pen table gives, one cell a frame at 25 a second, then holds and writes again.',
-  'Each pen has a stroke count and a floor, the fewest strokes that can write it. A stroke walks 4-adjacent cells; a lift is any step that is not.',
-  'A plate marks a flagged pen: written over its floor on purpose, like the wordmark letters, or lifting five times or more, which only a new shape can help.',
-  'Text writes your own words cell by cell, then folds them into one stack and back. A tap rewrites a pen or the text; a click in the gallery adds a glyph.',
+  "Every glyph of MrlyFont writes itself in the order its pen table gives, one cell a frame at 25 a second, then holds and writes again.",
+  "Each pen has a stroke count and a floor, the fewest strokes that can write it. A stroke walks 4-adjacent cells; a lift is any step that is not.",
+  "A plate marks a flagged pen: written over its floor on purpose, like the wordmark letters, or lifting five times or more, which only a new shape can help.",
+  "Text writes your own words cell by cell, then folds them into one stack and back. A tap rewrites a pen or the text; a click in the gallery adds a glyph.",
 ];
 
 export const PAGE = {
@@ -40,23 +81,33 @@ export const PAGE = {
   about: ABOUT,
   record: true,
   keys: [
-    { key: 'Enter', label: 'Write', act: 'write', button: true, menu: 'Edit' },
-    { key: 'j', label: 'JSON', act: 'json' },
-    { key: 's', label: 'SVG', act: 'svg' },
+    { key: "Enter", label: "Write", act: "write", button: true, menu: "Edit" },
+    { key: "j", label: "JSON", act: "json" },
+    { key: "s", label: "SVG", act: "svg" },
   ],
   actions: {
     write: (scene) => scene.write(),
-    json: (scene) => file(JSON.stringify(scene.json()), scene.name(), 'json'),
-    svg: (scene) => file(scene.svg(), scene.name(), 'svg'),
+    json: (scene) => file(JSON.stringify(scene.json()), scene.name(), "json"),
+    svg: (scene) => file(scene.svg(), scene.name(), "svg"),
   },
 };
 
 export const SAVERS = [
-  { id: 'pens', title: 'Pens writing', still: 3000, pick: (rand) => ({ view: 'pens', speed: 0.5, hold: 30 + Math.floor(rand() * 41), flags: pick(rand, [0, 1]) }) },
-  { id: 'words', title: 'Words folding', still: 4500, pick: (rand) => ({ view: 'text', speed: 0.75, hold: 30 + Math.floor(rand() * 31), pad: pick(rand, [1, 2, 3]) }) },
+  {
+    id: "pens",
+    title: "Pens writing",
+    still: 3000,
+    pick: (rand) => ({ view: "pens", speed: 0.5, hold: 30 + Math.floor(rand() * 41), flags: pick(rand, [0, 1]) }),
+  },
+  {
+    id: "words",
+    title: "Words folding",
+    still: 4500,
+    pick: (rand) => ({ view: "text", speed: 0.75, hold: 30 + Math.floor(rand() * 31), pad: pick(rand, [1, 2, 3]) }),
+  },
 ];
 
-export const units = wasm('font');
+export const units = wasm("font");
 
 const FIT = 0.92;
 
@@ -77,7 +128,10 @@ export function tile(view, n) {
   let best = null;
   for (let across = 1; across <= n; across++) {
     const down = Math.ceil(n / across);
-    const cell = Math.max(1, Math.floor(Math.min((view.w * FIT) / (across * PITCH - GAP), (view.h * FIT) / (down * PITCH - GAP))));
+    const cell = Math.max(
+      1,
+      Math.floor(Math.min((view.w * FIT) / (across * PITCH - GAP), (view.h * FIT) / (down * PITCH - GAP))),
+    );
     const spare = across * down - n;
     if (!best || cell > best.cell || (cell === best.cell && spare < best.spare)) best = { across, down, cell, spare };
   }
@@ -95,7 +149,7 @@ export function place(box, i) {
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const { font, onPlan } = opts;
   const pens = (opts.kinds ?? gallery(font)).flatMap((kind) => kind.glyphs);
   const starts = pens.map(() => 0);
@@ -115,7 +169,8 @@ export function make(canvas, view, opts = {}) {
   const fit = () => {
     box = TEXT(value) ? layout(view, show, value.cell) : tile(view, pens.length);
   };
-  const told = () => onPlan?.({ text: show.text, rows: show.rows, cols: show.cols, frames: show.frames.length, fps: show.fps });
+  const told = () =>
+    onPlan?.({ text: show.text, rows: show.rows, cols: show.cols, frames: show.frames.length, fps: show.fps });
   const build = (words) => {
     if (made.text !== words || made.pad !== value.pad) made = written(font, words, value.pad);
     show = plan(font, value, made);
@@ -142,7 +197,10 @@ export function make(canvas, view, opts = {}) {
   };
   const roams = (k) => TEXT(value) && !value.text && value.loop && !view.still && k - start >= show.frames.length;
   const turn = (k) => {
-    said = pick(view.rand, SAMPLES.filter((one) => one !== said));
+    said = pick(
+      view.rand,
+      SAMPLES.filter((one) => one !== said),
+    );
     build(said);
     start = k;
     fit();
@@ -179,7 +237,9 @@ export function make(canvas, view, opts = {}) {
     }
     ctx.fillStyle = accent;
     ctx.beginPath();
-    if (TEXT(value)) for (const i of show.frames[frame(k)]) ctx.rect(x + (i % show.cols) * cell, y + Math.floor(i / show.cols) * cell, cell, cell);
+    if (TEXT(value))
+      for (const i of show.frames[frame(k)])
+        ctx.rect(x + (i % show.cols) * cell, y + Math.floor(i / show.cols) * cell, cell, cell);
     else for (const [cx, cy] of lit(k)) ctx.rect(x + cx * cell, y + cy * cell, cell, cell);
     ctx.fill();
     shown = key(k);
@@ -237,7 +297,11 @@ export function make(canvas, view, opts = {}) {
       build(words);
       start = k;
       starts.fill(k);
-    } else if (TEXT(value) && (words !== show.text || value.pad !== was.pad || value.hold !== was.hold || value.loop !== was.loop)) start = rewrite(was, k, words);
+    } else if (
+      TEXT(value) &&
+      (words !== show.text || value.pad !== was.pad || value.hold !== was.hold || value.loop !== was.loop)
+    )
+      start = rewrite(was, k, words);
     else if (PENS(value) && reseeded) shuffle(k);
     else if (PENS(value) && (value.hold !== was.hold || value.loop !== was.loop)) regrip(was, k);
     fit();
@@ -271,8 +335,33 @@ export function make(canvas, view, opts = {}) {
   };
   const json = () => {
     const fps = show.fps * value.speed;
-    if (TEXT(value)) return { text: show.text, pad: value.pad, hold: value.hold, loop: value.loop, rows: show.rows, cols: show.cols, fps, frames: show.frames };
-    return { hold: value.hold, loop: value.loop, fps, pens: pens.map(({ char, name, rows, cols, strokes, floor, lifts, flag, frames }) => ({ char, name, rows, cols, strokes, floor, lifts, flag, frames })) };
+    if (TEXT(value))
+      return {
+        text: show.text,
+        pad: value.pad,
+        hold: value.hold,
+        loop: value.loop,
+        rows: show.rows,
+        cols: show.cols,
+        fps,
+        frames: show.frames,
+      };
+    return {
+      hold: value.hold,
+      loop: value.loop,
+      fps,
+      pens: pens.map(({ char, name, rows, cols, strokes, floor, lifts, flag, frames }) => ({
+        char,
+        name,
+        rows,
+        cols,
+        strokes,
+        floor,
+        lifts,
+        flag,
+        frames,
+      })),
+    };
   };
   const svg = () => {
     const k = shown === null ? now() : last;
@@ -280,7 +369,14 @@ export function make(canvas, view, opts = {}) {
     const unit = box.cell / view.dpr;
     if (TEXT(value)) return rects(grid(show.rows, show.cols, show.frames[frame(k)]), { fill, unit });
     const across = box.across * PITCH - GAP;
-    return rects(grid(box.down * PITCH - GAP, across, lit(k).map(([cx, cy]) => cy * across + cx)), { fill, unit });
+    return rects(
+      grid(
+        box.down * PITCH - GAP,
+        across,
+        lit(k).map(([cx, cy]) => cy * across + cx),
+      ),
+      { fill, unit },
+    );
   };
   const name = () => named(value);
   if (view.lock && PENS(value)) drift();

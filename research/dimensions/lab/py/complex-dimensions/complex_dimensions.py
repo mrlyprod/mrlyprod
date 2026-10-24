@@ -1,11 +1,17 @@
 import math
 import time
 from fractions import Fraction
+from itertools import pairwise
 
 import numpy as np
 from scipy.special import gammaln
 
-LATTICE = [(3, (0, 2)), (5, (0, 2, 4)), (15, (0, 4, 10, 14)), (15, (0, 2, 4, 10, 12, 14))]
+LATTICE = [
+    (3, (0, 2)),
+    (5, (0, 2, 4)),
+    (15, (0, 4, 10, 14)),
+    (15, (0, 2, 4, 10, 12, 14)),
+]
 RATIOS = (1 / 3, 1 / 5)
 CONTROL_MAPS = ((1 / 3, 0.0), (1 / 5, 4 / 5))
 CONTROL_SEED = Fraction(7, 15)
@@ -29,7 +35,7 @@ def label(base, digits):
 
 def gap_seeds(base, digits):
     ds = sorted(digits)
-    return [Fraction(b - a - 1, base) for a, b in zip(ds, ds[1:]) if b - a > 1]
+    return [Fraction(b - a - 1, base) for a, b in pairwise(ds) if b - a > 1]
 
 
 def dimension(base, digits):
@@ -55,9 +61,15 @@ def lattice_poles(base, digits):
     numerator = np.abs(np.exp(np.outer(s, np.log(seeds))).sum(axis=1))
     d1 = sum(gap_seeds(base, digits))
     print(f"  {label(base, digits)}")
-    print(f"    d = {d:.6f} ({d:.9f})   omega = 2*pi/ln({base}) = {omega:.6f} ({omega:.9f})")
-    print(f"    {s.size} predicted poles m = -{POLE_RANGE}..{POLE_RANGE}: max |1 - k n^(-s)| = {denominator.max():.1e}")
-    print(f"    min |D(s)| = {numerator.min():.6f}   D(1) = {d1} = 1 - k/n: {d1 == 1 - Fraction(k, base)}")
+    print(
+        f"    d = {d:.6f} ({d:.9f})   omega = 2*pi/ln({base}) = {omega:.6f} ({omega:.9f})"
+    )
+    print(
+        f"    {s.size} predicted poles m = -{POLE_RANGE}..{POLE_RANGE}: max |1 - k n^(-s)| = {denominator.max():.1e}"
+    )
+    print(
+        f"    min |D(s)| = {numerator.min():.6f}   D(1) = {d1} = 1 - k/n: {d1 == 1 - Fraction(k, base)}"
+    )
 
 
 def moran(s):
@@ -69,13 +81,20 @@ def moran_prime(s):
 
 
 def winding_number():
-    corners = [-REMAX - 1j * IMMAX, REMAX - 1j * IMMAX, REMAX + 1j * IMMAX, -REMAX + 1j * IMMAX]
+    corners = [
+        -REMAX - 1j * IMMAX,
+        REMAX - 1j * IMMAX,
+        REMAX + 1j * IMMAX,
+        -REMAX + 1j * IMMAX,
+    ]
     steps = np.arange(BOUNDARY) / BOUNDARY
-    path = np.concatenate([a + (b - a) * steps for a, b in zip(corners, corners[1:] + corners[:1])])
+    path = np.concatenate(
+        [a + (b - a) * steps for a, b in zip(corners, corners[1:] + corners[:1])]
+    )
     phase = np.angle(moran(path))
     turns = np.diff(np.concatenate([phase, phase[:1]]))
     turns = (turns + np.pi) % (2 * np.pi) - np.pi
-    return int(round(turns.sum() / (2 * np.pi)))
+    return round(turns.sum() / (2 * np.pi))
 
 
 def control_poles():
@@ -88,7 +107,12 @@ def control_poles():
             s = s - moran(s) / moran_prime(s)
             alive &= np.isfinite(s) & (np.abs(s.real) <= 40) & (np.abs(s.imag) <= 4000)
         s = np.where(alive, s, np.nan)
-        good = alive & (np.abs(moran(s)) < 1e-13) & (np.abs(s.imag) <= IMMAX) & (np.abs(s.real) <= REMAX)
+        good = (
+            alive
+            & (np.abs(moran(s)) < 1e-13)
+            & (np.abs(s.imag) <= IMMAX)
+            & (np.abs(s.real) <= REMAX)
+        )
     roots = []
     for z in sorted(s[good], key=lambda z: (z.imag, z.real)):
         if all(abs(z - q) > 1e-7 for q in roots):
@@ -96,13 +120,21 @@ def control_poles():
     roots = np.array(roots)
     gaps = np.diff(roots.imag)
     d = solve_moran(RATIOS)
-    print(f"  two-ratio control, ratios 1/3 and 1/5, d = {d:.9f} solving 3^(-d) + 5^(-d) = 1")
-    print(f"    roots in Re [-{REMAX:.0f},{REMAX:.0f}], Im [-{IMMAX:.0f},{IMMAX:.0f}]: {roots.size}   winding number of 1 - 3^(-s) - 5^(-s) over the box: {winding_number()}")
-    print(f"    Re range {roots.real.min():.6f} .. {roots.real.max():.6f}   Im gaps {gaps.min():.6f} .. {gaps.max():.6f}")
+    print(
+        f"  two-ratio control, ratios 1/3 and 1/5, d = {d:.9f} solving 3^(-d) + 5^(-d) = 1"
+    )
+    print(
+        f"    roots in Re [-{REMAX:.0f},{REMAX:.0f}], Im [-{IMMAX:.0f},{IMMAX:.0f}]: {roots.size}   winding number of 1 - 3^(-s) - 5^(-s) over the box: {winding_number()}"
+    )
+    print(
+        f"    Re range {roots.real.min():.6f} .. {roots.real.max():.6f}   Im gaps {gaps.min():.6f} .. {gaps.max():.6f}"
+    )
     for base in (3, 5, 15):
         omega = 2 * math.pi / math.log(base)
         ratio = roots.imag / omega
-        print(f"    worst offset from spacing 2*pi/ln{base}: {np.abs(ratio - np.round(ratio)).max():.2f} of a step")
+        print(
+            f"    worst offset from spacing 2*pi/ln{base}: {np.abs(ratio - np.round(ratio)).max():.2f} of a step"
+        )
     print(f"    ln3/ln5 = {LN3 / LN5:.12f}")
 
 
@@ -126,10 +158,14 @@ def integer_cover(schedule, levels):
 def composition():
     for schedule in [((3, (0, 2)), (5, (0, 4))), ((3, (0, 2)), (5, (0, 2, 4)))]:
         base, digits = compose(schedule)
-        print(f"  {' then '.join(label(b, ds) for b, ds in schedule)} -> {label(base, digits)}")
+        print(
+            f"  {' then '.join(label(b, ds) for b, ds in schedule)} -> {label(base, digits)}"
+        )
     alternating = integer_cover(((3, (0, 2)), (5, (0, 4))), 8)
     product = integer_cover(((15, (0, 4, 10, 14)),), 4)
-    print(f"    8 alternating levels and 4 base-15 levels: {len(alternating)} and {len(product)} intervals, identical as exact fractions: {alternating == product}")
+    print(
+        f"    8 alternating levels and 4 base-15 levels: {len(alternating)} and {len(product)} intervals, identical as exact fractions: {alternating == product}"
+    )
 
 
 def level_cover(base, digits, floor):
@@ -174,7 +210,7 @@ def ratio_cover(maps, floor):
 
 
 def thue_morse(n):
-    return [bin(i).count("1") % 2 for i in range(n)]
+    return [i.bit_count() % 2 for i in range(n)]
 
 
 def box_count(lefts, rights, eps):
@@ -213,11 +249,20 @@ def golden(f, lo, hi):
 
 def periodogram_peak(u, g):
     j = np.arange(g.size)
-    window = 0.42 - 0.5 * np.cos(2 * np.pi * j / (g.size - 1)) + 0.08 * np.cos(4 * np.pi * j / (g.size - 1))
+    window = (
+        0.42
+        - 0.5 * np.cos(2 * np.pi * j / (g.size - 1))
+        + 0.08 * np.cos(4 * np.pi * j / (g.size - 1))
+    )
     y = g * window
     y = y - y.mean()
     dt = u - u[0]
-    power = np.concatenate([np.abs(np.exp(-1j * np.outer(chunk, dt)) @ y) ** 2 for chunk in np.array_split(OMEGA_GRID, 48)])
+    power = np.concatenate(
+        [
+            np.abs(np.exp(-1j * np.outer(chunk, dt)) @ y) ** 2
+            for chunk in np.array_split(OMEGA_GRID, 48)
+        ]
+    )
     i = int(np.argmax(power))
     lo, hi = OMEGA_GRID[max(i - 1, 0)], OMEGA_GRID[min(i + 1, OMEGA_GRID.size - 1)]
     return golden(lambda w: -power_at(w, dt, y), lo, hi)
@@ -240,15 +285,21 @@ def box_report(name, lefts, lens, d, base):
     if base:
         predicted = 2 * math.pi / math.log(base)
         err = abs(omega - predicted) / predicted * 100
-        print(f"    predicted omega {predicted:.4f}   periodogram peak {omega:.4f}   error {err:.3f}%   within 1%: {err < 1}")
+        print(
+            f"    predicted omega {predicted:.4f}   periodogram peak {omega:.4f}   error {err:.3f}%   within 1%: {err < 1}"
+        )
     else:
         print(f"    no lattice prediction   periodogram peak {omega:.4f}")
-    print(f"    folding variance explained at ln3 {fold[0]:.3f}   ln5 {fold[1]:.3f}   ln15 {fold[2]:.3f}")
+    print(
+        f"    folding variance explained at ln3 {fold[0]:.3f}   ln5 {fold[1]:.3f}   ln15 {fold[2]:.3f}"
+    )
 
 
 def box_counts():
     floor = math.exp(-UMAX) / SAFETY
-    print(f"  u in [{UMIN:.4f},{UMAX:.4f}], {NU} points, covers refined below eps/{SAFETY:.0f}, {NBINS} folding bins")
+    print(
+        f"  u in [{UMIN:.4f},{UMAX:.4f}], {NU} points, covers refined below eps/{SAFETY:.0f}, {NBINS} folding bins"
+    )
     for base, digits in LATTICE:
         lefts, lens = level_cover(base, digits, floor)
         box_report(label(base, digits), lefts, lens, dimension(base, digits), base)
@@ -256,7 +307,13 @@ def box_counts():
     box_report("two-ratio control x/3, (x+4)/5", lefts, lens, solve_moran(RATIOS), None)
     schedule = [APERIODIC[bit] for bit in thue_morse(64)]
     lefts, lens, used, d = schedule_cover(schedule, floor)
-    box_report(f"aperiodic control, Thue-Morse schedule of {label(3, (0, 2))} and {label(5, (0, 4))}, {used} levels", lefts, lens, d, None)
+    box_report(
+        f"aperiodic control, Thue-Morse schedule of {label(3, (0, 2))} and {label(5, (0, 4))}, {used} levels",
+        lefts,
+        lens,
+        d,
+        None,
+    )
 
 
 def tube_digit(base, k, seeds, t):
@@ -272,9 +329,9 @@ def brute_digit(base, digits, level, t):
     for _ in range(level):
         lefts = (lefts[:, None] * base + np.array(sorted(digits))).ravel()
     den = base**level
-    gaps = [Fraction(int(b - a - 1), den) for a, b in zip(lefts, lefts[1:]) if b - a > 1]
+    gaps = [Fraction(int(b - a - 1), den) for a, b in pairwise(lefts) if b - a > 1]
     cut = Fraction(t)
-    covered = sum(g if g <= cut else cut for g in gaps)
+    covered = sum(min(g, cut) for g in gaps)
     return float(covered), lefts.size / den
 
 
@@ -298,7 +355,7 @@ def content_curve(measure, d, ulo, uhi):
 def window_swings(measure, d):
     u, m = content_curve(measure, d, WINDOWS[0], WINDOWS[-1])
     swings = []
-    for lo, hi in zip(WINDOWS, WINDOWS[1:]):
+    for lo, hi in pairwise(WINDOWS):
         vals = m[(u >= lo) & (u <= hi)]
         swings.append((vals.max() - vals.min()) / vals.mean() * 100)
     return swings
@@ -314,7 +371,10 @@ def periodicity_defect(measure, d, period):
 
 
 def swing_line(swings):
-    return "    swing of M(eps) per window u in " + ", ".join(f"[{lo:.0f},{hi:.0f}] {s:.4f}%" for (lo, hi), s in zip(zip(WINDOWS, WINDOWS[1:]), swings))
+    return "    swing of M(eps) per window u in " + ", ".join(
+        f"[{lo:.0f},{hi:.0f}] {s:.4f}%"
+        for (lo, hi), s in zip(pairwise(WINDOWS), swings)
+    )
 
 
 def tube_lattice(base, digits):
@@ -322,22 +382,32 @@ def tube_lattice(base, digits):
     d = dimension(base, digits)
     seeds = [float(g) for g in gap_seeds(base, digits)]
     measure = lambda t: tube_digit(base, k, seeds, t)
-    print(f"  {label(base, digits)}: total gap length {sum(seeds) * base / (base - k):.12f}")
+    print(
+        f"  {label(base, digits)}: total gap length {sum(seeds) * base / (base - k):.12f}"
+    )
     brute, tail = brute_digit(base, digits, 6, 0.01)
     closed = measure(0.01)
-    print(f"    level 6, t = 0.01: brute {brute:.9f}   closed form {closed:.9f}   excess {closed - brute:.6e} <= cover length {tail:.6e}: {-1e-12 <= closed - brute <= tail * (1 + 1e-9) + 1e-12}")
+    print(
+        f"    level 6, t = 0.01: brute {brute:.9f}   closed form {closed:.9f}   excess {closed - brute:.6e} <= cover length {tail:.6e}: {-1e-12 <= closed - brute <= tail * (1 + 1e-9) + 1e-12}"
+    )
     print(swing_line(window_swings(measure, d)))
     defects = [periodicity_defect(measure, d, math.log(p)) for p in (3, 5, 15)]
-    print(f"    max relative defect of M(eps) = M(eps/p) on u in [40,50]: p=3 {defects[0]:.1e}   p=5 {defects[1]:.1e}   p=15 {defects[2]:.1e}")
+    print(
+        f"    max relative defect of M(eps) = M(eps/p) on u in [40,50]: p=3 {defects[0]:.1e}   p=5 {defects[1]:.1e}   p=15 {defects[2]:.1e}"
+    )
 
 
 def tube_two_ratio():
     d = solve_moran(RATIOS)
-    total = CONTROL_SEED / (1 - sum(Fraction(1, int(round(1 / r))) for r in RATIOS))
-    print(f"  two-ratio control, gap seed {CONTROL_SEED}, d = {d:.9f}, total gap length {total}, eps at u = 60: {math.exp(-60):.1e}")
+    total = CONTROL_SEED / (1 - sum(Fraction(1, round(1 / r)) for r in RATIOS))
+    print(
+        f"  two-ratio control, gap seed {CONTROL_SEED}, d = {d:.9f}, total gap length {total}, eps at u = 60: {math.exp(-60):.1e}"
+    )
     swings = window_swings(tube_control, d)
     print(swing_line(swings))
-    print(f"    swing decays {swings[0]:.2f}% -> {swings[-1]:.2f}%, monotone: {all(a > b for a, b in zip(swings, swings[1:]))}")
+    print(
+        f"    swing decays {swings[0]:.2f}% -> {swings[-1]:.2f}%, monotone: {all(a > b for a, b in pairwise(swings))}"
+    )
 
 
 def cantor_profile():
@@ -346,26 +416,38 @@ def cantor_profile():
     tstar = (1 - d) / d
     lo, hi = profile(tstar), profile(1.0)
     seeds = [float(g) for g in gap_seeds(3, (0, 2))]
-    u, m = content_curve(lambda t: tube_digit(3, 2, seeds, t), d, 50.0, 60.0)
-    print(f"  Cantor limit profile 2^(1-d) (t^(d-1) + t^d), t in [1/3, 1)")
-    print(f"    minimum {lo:.9f} at t* = (1-d)/d = {tstar:.6f}   maximum {hi:.9f} at the ends   swing {(hi - lo) / lo * 100:.2f}%")
-    print(f"    measured on u in [50,60]: min {m.min():.9f}   max {m.max():.9f}   min gap {abs(m.min() - lo):.1e}   max gap {abs(m.max() - hi):.1e}")
+    _, m = content_curve(lambda t: tube_digit(3, 2, seeds, t), d, 50.0, 60.0)
+    print("  Cantor limit profile 2^(1-d) (t^(d-1) + t^d), t in [1/3, 1)")
+    print(
+        f"    minimum {lo:.9f} at t* = (1-d)/d = {tstar:.6f}   maximum {hi:.9f} at the ends   swing {(hi - lo) / lo * 100:.2f}%"
+    )
+    print(
+        f"    measured on u in [50,60]: min {m.min():.9f}   max {m.max():.9f}   min gap {abs(m.min() - lo):.1e}   max gap {abs(m.max() - hi):.1e}"
+    )
 
 
 def main():
     start = time.time()
-    print("POLES: zeros of 1 - k n^(-s) at s = d + 2 pi i m/ln(n), the numerator D(s) there, and the two-ratio Moran roots")
+    print(
+        "POLES: zeros of 1 - k n^(-s) at s = d + 2 pi i m/ln(n), the numerator D(s) there, and the two-ratio Moran roots"
+    )
     for base, digits in LATTICE:
         lattice_poles(base, digits)
     control_poles()
     print()
-    print("COMPOSITION: alternating one base per level multiplies into the product base")
+    print(
+        "COMPOSITION: alternating one base per level multiplies into the product base"
+    )
     composition()
     print()
-    print("BOX COUNT: g(u) = ln N(e^-u) - d u, Blackman periodogram on a direct DFT grid, and period folding")
+    print(
+        "BOX COUNT: g(u) = ln N(e^-u) - d u, Blackman periodogram on a direct DFT grid, and period folding"
+    )
     box_counts()
     print()
-    print("TUBE: V(eps) = sum over gaps of min(gap, 2 eps) in closed form, M(eps) = eps^(d-1) V(eps)")
+    print(
+        "TUBE: V(eps) = sum over gaps of min(gap, 2 eps) in closed form, M(eps) = eps^(d-1) V(eps)"
+    )
     for base, digits in LATTICE:
         tube_lattice(base, digits)
     tube_two_ratio()

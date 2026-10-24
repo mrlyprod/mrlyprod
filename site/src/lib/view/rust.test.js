@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { dark, light } from "../theme/theme.js";
 import * as core from "@mrlyprod/mrly/core";
-import { Grid, field, frame, grid, hex, ink, iso, plot, raster } from "./index.js";
+import { dark, light } from "../theme/theme.js";
+import { field, frame, Grid, grid, hex, ink, iso, plot, raster } from "./index.js";
 
 const T = ink(dark);
 const sha = (data) => createHash("sha256").update(data).digest("hex");
@@ -13,27 +13,73 @@ const FG = [255, 255, 255, 255];
 const BLUE = [0, 140, 255, 255];
 const ORANGE = [255, 143, 44, 255];
 const YELLOW = [255, 209, 0, 255];
-const GREEN = [50, 204, 88, 255];
 const PINK = [255, 50, 90, 255];
 const INDIGO = [103, 104, 250, 255];
 const PANEL = [17, 17, 18, 255];
 const GLASS = [255, 255, 255, 128];
 
-const ZIG = [[10, 128], [30.5, 60.25], [55.1, 190.7], [80, 70], [105.5, 200.5], [130.25, 50], [155, 180.75], [180.4, 90], [205, 210], [245.5, 40.5]];
-const BITE = [[30, 30], [220, 40.5], [150.5, 120], [225, 200.25], [40.75, 215], [100, 125]];
+const ZIG = [
+  [10, 128],
+  [30.5, 60.25],
+  [55.1, 190.7],
+  [80, 70],
+  [105.5, 200.5],
+  [130.25, 50],
+  [155, 180.75],
+  [180.4, 90],
+  [205, 210],
+  [245.5, 40.5],
+];
+const BITE = [
+  [30, 30],
+  [220, 40.5],
+  [150.5, 120],
+  [225, 200.25],
+  [40.75, 215],
+  [100, 125],
+];
 
 const PRIMITIVES = {
   rect: [["rect", 20.3, 30.7, 150.4, 90.2, FG]],
-  round_rect: [["round_rect", 20.3, 30.7, 200, 150, 30, FG], ["round_rect", 10.5, 200.25, 100, 20, 50, BLUE]],
+  round_rect: [
+    ["round_rect", 20.3, 30.7, 200, 150, 30, FG],
+    ["round_rect", 10.5, 200.25, 100, 20, 50, BLUE],
+  ],
   disc: [["disc", 128.3, 127.6, 90, FG]],
   ring: [["ring", 128.3, 127.6, 80, 6, FG]],
   segment: [["segment", [20.5, 30.25], [230.1, 200.7], 7, FG]],
   polyline: [["polyline", ZIG, 5, FG]],
   triangle: [["triangle", [30, 220], [128.4, 25.3], [230.2, 210.1], FG]],
   polygon: [["polygon", BITE, FG]],
-  arc: [["arc", [128.3, 127.6], 80, [0.3, 4.1], 9, FG], ["arc", [60, 60], 30, [4.1, 0.3], 5, ORANGE], ["arc", [200, 200], 40, [0, 7], 3, YELLOW], ["arc", [200, 60], 30, [1, 1], 6, PINK]],
-  edges: [["rect", 5.5, 5.5, 0.4, 0.4, FG], ["disc", 100.5, 100.5, 0.3, FG], ["disc", -3, 20, 10, FG], ["rect", 250, 250, 20, 20, FG], ["segment", [0, 0], [256, 256], 1, FG], ["polygon", [[1, 1], [9, 9]], FG], ["ring", 128, 128, 0, 6, FG], ["segment", [40, 40], [40, 40], 9, BLUE]],
-  glass: [["rect", 20, 20, 150, 150, BLUE], ["disc", 150, 150, 70, GLASS], ["polyline", ZIG, 9, [255, 143, 44, 153]], ["triangle", [20, 240], [120, 140], [240, 236], [50, 204, 88, 128]]],
+  arc: [
+    ["arc", [128.3, 127.6], 80, [0.3, 4.1], 9, FG],
+    ["arc", [60, 60], 30, [4.1, 0.3], 5, ORANGE],
+    ["arc", [200, 200], 40, [0, 7], 3, YELLOW],
+    ["arc", [200, 60], 30, [1, 1], 6, PINK],
+  ],
+  edges: [
+    ["rect", 5.5, 5.5, 0.4, 0.4, FG],
+    ["disc", 100.5, 100.5, 0.3, FG],
+    ["disc", -3, 20, 10, FG],
+    ["rect", 250, 250, 20, 20, FG],
+    ["segment", [0, 0], [256, 256], 1, FG],
+    [
+      "polygon",
+      [
+        [1, 1],
+        [9, 9],
+      ],
+      FG,
+    ],
+    ["ring", 128, 128, 0, 6, FG],
+    ["segment", [40, 40], [40, 40], 9, BLUE],
+  ],
+  glass: [
+    ["rect", 20, 20, 150, 150, BLUE],
+    ["disc", 150, 150, 70, GLASS],
+    ["polyline", ZIG, 9, [255, 143, 44, 153]],
+    ["triangle", [20, 240], [120, 140], [240, 236], [50, 204, 88, 128]],
+  ],
   mixed: [
     ["rect", 10, 10, 236, 236, PANEL],
     ["disc", 90, 100, 60, BLUE],
@@ -49,7 +95,14 @@ const PRIMITIVES = {
 
 /* SOLIDS */
 
-const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+const DIRS = [
+  [1, 0, 0],
+  [-1, 0, 0],
+  [0, 1, 0],
+  [0, -1, 0],
+  [0, 0, 1],
+  [0, 0, -1],
+];
 
 function corners(i, j, k, [dx, dy, dz]) {
   const c = (a, b, d) => ({ x: i + a, y: j + b, z: k + d });
@@ -65,7 +118,11 @@ function quadsOf(filled, scale = 1) {
   for (const [i, j, k] of filled) {
     for (const d of DIRS) {
       if (has.has([i + d[0], j + d[1], k + d[2]].join())) continue;
-      const verts = corners(i, j, k, d).map((v) => ({ x: Math.fround(v.x * scale), y: Math.fround(v.y * scale), z: Math.fround(v.z * scale) }));
+      const verts = corners(i, j, k, d).map((v) => ({
+        x: Math.fround(v.x * scale),
+        y: Math.fround(v.y * scale),
+        z: Math.fround(v.z * scale),
+      }));
       out.push({ normal: { x: d[0], y: d[1], z: d[2] }, verts });
     }
   }
@@ -77,7 +134,14 @@ for (let i = 0; i < 27; i++) {
   const cell = [Math.floor(i / 9), Math.floor(i / 3) % 3, i % 3];
   if (cell.filter((v) => v === 1).length <= 1) SPONGE.push(cell);
 }
-const STAIRS = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 1, 1], [2, 1, 1], [0, 0, 1]];
+const STAIRS = [
+  [0, 0, 0],
+  [1, 0, 0],
+  [1, 1, 0],
+  [1, 1, 1],
+  [2, 1, 1],
+  [0, 0, 1],
+];
 
 /* SCENES */
 
@@ -87,7 +151,10 @@ const Q_FRAC = quadsOf(STAIRS, 0.1);
 
 const vals = Array.from({ length: 48 }, (_, i) => ((i * 37) % 17) / 3);
 const cells = { shape: [4, 5], types: Uint8Array.from([1, 0, 2, 1, 0, 0, 1, 1, 2, 0, 2, 0, 1, 0, 1, 1, 1, 0, 2, 2]) };
-const hcells = (h, w) => ({ cell: { shape: [h, w], types: Uint8Array.from({ length: h * w }, (_, i) => (i * 5 + (i >> 2)) % 3) }, start: 0 });
+const hcells = (h, w) => ({
+  cell: { shape: [h, w], types: Uint8Array.from({ length: h * w }, (_, i) => (i * 5 + (i >> 2)) % 3) },
+  start: 0,
+});
 
 const KIT = {
   plot(p) {
@@ -95,7 +162,15 @@ const KIT = {
     plot.bars(p, f, [1, -4, 2.5, 0, 3.3], 0.2, T.blue);
     plot.axis(p, f, T.dim);
     plot.baseline(p, f, T.fg);
-    plot.dots(p, [[10.5, 10.5], [100.25, 50]], 4.5, T.yellow);
+    plot.dots(
+      p,
+      [
+        [10.5, 10.5],
+        [100.25, 50],
+      ],
+      4.5,
+      T.yellow,
+    );
     plot.rings(p, [128, 128], [10, 20.5, 33.3], 2, T.orange);
     plot.staircase(p, f, [3, 1, 4, 1.5, 9, 2.6], 2, T.green);
     plot.curve(p, f, [0, 1, 2.5, 4], [5, 9, 7, 1], 3, T.pink);
@@ -104,7 +179,8 @@ const KIT = {
   },
   grid(p) {
     const g = new Grid(frame(3.3, 0.7, 200.12, 180.9), 7, 5, 0);
-    for (let row = 0; row < 5; row++) for (let col = 0; col < 7; col++) if ((row * 3 + col * 5) % 4 === 0) g.fill(p, col, row, T.blue);
+    for (let row = 0; row < 5; row++)
+      for (let col = 0; col < 7; col++) if ((row * 3 + col * 5) % 4 === 0) g.fill(p, col, row, T.blue);
     grid.carpet(p, frame(10, 10, 120, 120), grid.mask(grid.LOGO, 2), 0, T.fg);
     grid.carpet(p, frame(130.5, 130.5, 120, 100), grid.mask(["11", "10"], 3), 0.15, T.orange);
     new Grid(frame(140, 10, 100, 80), 5, 4, 0.1).paint(p, cells, (t) => (t === 1 ? T.yellow : t === 2 ? T.pink : null));
@@ -113,7 +189,7 @@ const KIT = {
   hex(p) {
     const f = frame(8, 8, 240, 240);
     hex.hexagon(p, f, 4, 1.2, (row, col, par) => ((row + col) % 3 === 0 ? null : par === 1 ? T.blue : T.yellow));
-    hex.hexagon(p, frame(100.5, 100.5, 60, 60), 1, 0, (r, c, par) => (par === 1 ? T.fg : T.dim));
+    hex.hexagon(p, frame(100.5, 100.5, 60, 60), 1, 0, (_r, _c, par) => (par === 1 ? T.fg : T.dim));
     hex.hexagon(p, f, 0, 0, () => T.fg);
   },
   hexdraw(p) {
@@ -138,7 +214,13 @@ const KIT = {
   },
 };
 
-const Q_CUBE2 = quadsOf([[0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]]);
+const Q_CUBE2 = quadsOf([
+  [0, 0, 0],
+  [1, 0, 0],
+  [1, 1, 0],
+  [1, 1, 1],
+  [0, 1, 1],
+]);
 
 KIT.stamp = (p) => {
   const shade = [T.blue, T.mix(T.blue, T.ground, 0.4), T.mix(T.blue, T.ground, 0.65)];
@@ -157,12 +239,18 @@ const washed = (p) => {
     for (let px = 30; px < 110; px++) {
       const u = (px - 30) / 80;
       const v = (py - 20) / 50;
-      w.blend(px, py, [Math.trunc(u * 255), Math.trunc(v * 255), 128, (px + py) % 7 === 0 ? 100 : 255], u * 1.3 - v * 0.2 - 0.1);
+      w.blend(
+        px,
+        py,
+        [Math.trunc(u * 255), Math.trunc(v * 255), 128, (px + py) % 7 === 0 ? 100 : 255],
+        u * 1.3 - v * 0.2 - 0.1,
+      );
     }
   }
   w.paint(p);
   const x = field.patch(60, 40, 120, 90);
-  for (let py = 40; py < 130; py++) for (let px = 60; px < 180; px++) x.blend(px, py, T.orange, ((px * 31 + py * 17) % 101) / 100);
+  for (let py = 40; py < 130; py++)
+    for (let px = 60; px < 180; px++) x.blend(px, py, T.orange, ((px * 31 + py * 17) % 101) / 100);
   x.paint(p);
 };
 KIT.cover = washed;
@@ -171,28 +259,61 @@ KIT.cover_clear = Object.assign((p) => washed(p), { ground: [0, 0, 0, 0] });
 const numbers = () => {
   const out = {};
   const mixes = [];
-  for (let k = 0; k <= 510; k++) mixes.push(T.mix([0, 0, 0, 255], [255, 255, 255, 255], k / 510), T.mix([10, 200, 7, 0], [250, 3, 99, 255], k / 510));
+  for (let k = 0; k <= 510; k++)
+    mixes.push(
+      T.mix([0, 0, 0, 255], [255, 255, 255, 255], k / 510),
+      T.mix([10, 200, 7, 0], [250, 3, 99, 255], k / 510),
+    );
   out.mix = mixes.flat();
   out.mixclamp = [T.mix(T.blue, T.orange, -3), T.mix(T.blue, T.orange, 7)].flat();
   out.fade = Array.from({ length: 511 }, (_, k) => T.fade(T.blue, k / 510)).flat();
   out.fadeclamp = [T.fade(T.blue, -1), T.fade(T.blue, 2)].flat();
-  const ramps = [T.Ramp.heat(), T.Ramp.fire(), T.Ramp.diverge(), T.Ramp.tone(T.blue, T.yellow), new T.Ramp([]), new T.Ramp([T.pink])];
-  out.ramp = ramps.map((r) => Array.from({ length: 301 }, (_, k) => r.at((k - 20) / 260)).flat()).flat();
+  const ramps = [
+    T.Ramp.heat(),
+    T.Ramp.fire(),
+    T.Ramp.diverge(),
+    T.Ramp.tone(T.blue, T.yellow),
+    new T.Ramp([]),
+    new T.Ramp([T.pink]),
+  ];
+  out.ramp = ramps.flatMap((r) => Array.from({ length: 301 }, (_, k) => r.at((k - 20) / 260)).flat());
   const f = frame(10.3, 20.7, 300.1, 200.9);
-  out.frame = [f.inset(7.5), f.inset(-4), ...f.cols(3), ...f.rows(7), f.square(), frame(1, 2, 3, 40).square()].map((x) => [x.x, x.y, x.w, x.h]).flat();
+  out.frame = [f.inset(7.5), f.inset(-4), ...f.cols(3), ...f.rows(7), f.square(), frame(1, 2, 3, 40).square()].flatMap(
+    (x) => [x.x, x.y, x.w, x.h],
+  );
   out.frame.push(f.cell(7), f.cell(81), ...f.at(0.3, 0.7), ...f.center(), f.radius(), frame(0, 0, 5, 3).radius());
   const pen = raster(1200, 630, T.ground);
   const ok = [0, 0.08, 0.1, 0.5].flatMap((m) => [pen.frame(m), pen.area(m)]);
-  out.board = ok.map((x) => [x.x, x.y, x.w, x.h]).flat();
+  out.board = ok.flatMap((x) => [x.x, x.y, x.w, x.h]);
   const cellsOut = [];
-  for (const [fr, cols, rows, gap] of [[frame(3.3, 0.7, 389.12, 389.12), 5, 5, 0], [frame(0.5, 0.5, 1000.3, 700.1), 81, 27, 0], [frame(5.25, 3.75, 100, 50), 9, 4, 0.2], [frame(0, 0, 10, 10), 0, 0, 0.5], [frame(-2.5, -3.5, 7, 9), 3, 3, 0]]) {
+  for (const [fr, cols, rows, gap] of [
+    [frame(3.3, 0.7, 389.12, 389.12), 5, 5, 0],
+    [frame(0.5, 0.5, 1000.3, 700.1), 81, 27, 0],
+    [frame(5.25, 3.75, 100, 50), 9, 4, 0.2],
+    [frame(0, 0, 10, 10), 0, 0, 0.5],
+    [frame(-2.5, -3.5, 7, 9), 3, 3, 0],
+  ]) {
     const g = new Grid(fr, cols, rows, gap);
     for (let r = 0; r < g.rows; r++) for (let c = 0; c < g.cols; c++) cellsOut.push(...g.cell(c, r));
   }
   out.gridcell = cellsOut;
-  out.mask = [grid.mask(grid.LOGO, 1), grid.mask(grid.LOGO, 2), grid.mask(["101", "010"], 3), grid.mask(["1"], 0), grid.mask([], 3)].map((m) => m.map((row) => row.map(Number).join("")).join("/"));
-  out.hexcount = [1, 2, 3, 7].flatMap((n) => [hex.count(n), ...Array.from({ length: 2 * n }, (_, r) => hex.row_len(n, r))]);
-  out.project = [[0, 0, 0], [1, 2, 3], [-1.5, 2.25, 0.1], [3, 3, 3]].flatMap(([x, y, z]) => iso.project(x, y, z));
+  out.mask = [
+    grid.mask(grid.LOGO, 1),
+    grid.mask(grid.LOGO, 2),
+    grid.mask(["101", "010"], 3),
+    grid.mask(["1"], 0),
+    grid.mask([], 3),
+  ].map((m) => m.map((row) => row.map(Number).join("")).join("/"));
+  out.hexcount = [1, 2, 3, 7].flatMap((n) => [
+    hex.count(n),
+    ...Array.from({ length: 2 * n }, (_, r) => hex.row_len(n, r)),
+  ]);
+  out.project = [
+    [0, 0, 0],
+    [1, 2, 3],
+    [-1.5, 2.25, 0.1],
+    [3, 3, 3],
+  ].flatMap(([x, y, z]) => iso.project(x, y, z));
   return out;
 };
 
@@ -266,9 +387,13 @@ for (const [name, value] of Object.entries(numbers())) {
 /* THEME */
 
 test("ink from the Rust theme equals ink from the kit theme", async () => {
-  for (const [rust, kit] of [[core.colors.DARK(), dark], [core.colors.LIGHT(), light]]) {
+  for (const [rust, kit] of [
+    [core.colors.DARK(), dark],
+    [core.colors.LIGHT(), light],
+  ]) {
     const ours = ink(rust);
     const theirs = ink(kit);
-    for (const key of Object.keys(theirs)) if (Array.isArray(theirs[key])) expect([key, ours[key]]).toEqual([key, theirs[key]]);
+    for (const key of Object.keys(theirs))
+      if (Array.isArray(theirs[key])) expect([key, ours[key]]).toEqual([key, theirs[key]]);
   }
 });

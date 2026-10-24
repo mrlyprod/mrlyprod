@@ -22,7 +22,10 @@ function study() {
   const fills = math.two.fills(cell);
   const order = math.spin.turns(math.spin.harmonics(data, side, 64, 16));
   const petals = math.spin.petals(COPIES, order);
-  if (fills !== WANT.fills || order !== WANT.order || petals !== WANT.petals) throw new Error(`radial: the carpet of ${NUMBER} at level ${LEVEL} reads ${fills} fills, order ${order} and ${petals} petals over ${COPIES} copies, want ${WANT.fills}, ${WANT.order} and ${WANT.petals}`);
+  if (fills !== WANT.fills || order !== WANT.order || petals !== WANT.petals)
+    throw new Error(
+      `radial: the carpet of ${NUMBER} at level ${LEVEL} reads ${fills} fills, order ${order} and ${petals} petals over ${COPIES} copies, want ${WANT.fills}, ${WANT.order} and ${WANT.petals}`,
+    );
   const stack = math.spin.radial(data, side, OUT, COPIES, 1 / COPIES, math.spin.Blend.named("mean"), SAMPLES);
   let top = 0;
   for (const v of stack) top = Math.max(top, v);

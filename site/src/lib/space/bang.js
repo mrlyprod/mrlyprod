@@ -1,9 +1,24 @@
-import { rng } from '../rand.js';
-import { add, cross, dot, len, mix, mul, norm, rot, smooth, sub } from '../gl/vec.js';
+import { add, cross, dot, len, mix, mul, norm, rot, smooth, sub } from "../gl/vec.js";
+import { rng } from "../rand.js";
 
-const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+const DIRS = [
+  [1, 0, 0],
+  [-1, 0, 0],
+  [0, 1, 0],
+  [0, -1, 0],
+  [0, 0, 1],
+  [0, 0, -1],
+];
 
-export const NAMES = [[23, 'carpet'], [232, 'net'], [22, 'star'], [129, 'void'], [17, 'xtree'], [5, 'ytree'], [3, 'ztree']];
+export const NAMES = [
+  [23, "carpet"],
+  [232, "net"],
+  [22, "star"],
+  [129, "void"],
+  [17, "xtree"],
+  [5, "ytree"],
+  [3, "ztree"],
+];
 
 const HALF = [0.5, 0.5, 0.5];
 const ZERO = [0, 0, 0];
@@ -55,8 +70,30 @@ const GOLD = 0x9e3779b1;
 const CHOICE = 0x7a3c19e5;
 
 export const PILOTS = {
-  steady: { window: 0.6, look: 1.5, gap: 0.3, lead: 0, bank: 0.15, tilt: 0.35, roll: 0.05, ease: 0.2, bend: 2, barrel: 0 },
-  fighter: { window: 0.3, look: 1, gap: 0.5, lead: 0.5, bank: 0.4, tilt: 0.9, roll: 0.03, ease: 0.1, bend: 1, barrel: 2.5 },
+  steady: {
+    window: 0.6,
+    look: 1.5,
+    gap: 0.3,
+    lead: 0,
+    bank: 0.15,
+    tilt: 0.35,
+    roll: 0.05,
+    ease: 0.2,
+    bend: 2,
+    barrel: 0,
+  },
+  fighter: {
+    window: 0.3,
+    look: 1,
+    gap: 0.5,
+    lead: 0.5,
+    bank: 0.4,
+    tilt: 0.9,
+    roll: 0.03,
+    ease: 0.1,
+    bend: 1,
+    barrel: 2.5,
+  },
   coaster: { window: 0.1, look: 1.2, gap: 0.8, lead: 0.8, bank: 0.6, tilt: 1.2, roll: 0, ease: 0, bend: 2, barrel: 0 },
 };
 
@@ -69,7 +106,8 @@ export function cells(math, code, n) {
   if (grids.has(key)) return grids.get(key);
   const { data } = math.bang.factory.create(code, n, 3, 2, 1);
   const out = new Uint8Array(n * n * n);
-  for (let z = 0; z < n; z++) for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) out[(z * n + y) * n + x] = data[(x * n + y) * n + z];
+  for (let z = 0; z < n; z++)
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) out[(z * n + y) * n + x] = data[(x * n + y) * n + z];
   grids.set(key, out);
   return out;
 }
@@ -173,7 +211,10 @@ const tables = new WeakMap();
 const table = (math) => {
   if (!tables.has(math)) {
     const all = math.bang.bang(3).all();
-    tables.set(math, { canon: all.map((one) => Number(one.class_rep)), classes: math.bang.universe_codes(3).map(Number).filter(Boolean) });
+    tables.set(math, {
+      canon: all.map((one) => Number(one.class_rep)),
+      classes: math.bang.universe_codes(3).map(Number).filter(Boolean),
+    });
     for (const one of all) one.free();
   }
   return tables.get(math);
@@ -191,7 +232,13 @@ export function name(math, code) {
 
 export function teach(math, code, n) {
   const count = cells(math, code, n).reduce((a, b) => a + b, 0);
-  return { bits: code.toString(2).padStart(8, '0'), kept: count, fill: count / n ** 3, dimension: count ? Math.log(count) / Math.log(n) : 0, class: canon(math, code) };
+  return {
+    bits: code.toString(2).padStart(8, "0"),
+    kept: count,
+    fill: count / n ** 3,
+    dimension: count ? Math.log(count) / Math.log(n) : 0,
+    class: canon(math, code),
+  };
 }
 
 const ALL = Array.from({ length: 255 }, (_, i) => i + 1);
@@ -201,14 +248,22 @@ const gated = new Map();
 const flyable = new Map();
 
 export function codes(math, n, pick) {
-  if (pick === 'all') return ALL;
-  if (pick === 'named') return classes(math);
-  if (pick === 'family') return NAMES.map(([code]) => code);
-  if (pick === 'flyable') {
-    if (!flyable.has(n)) flyable.set(n, ALL.filter((code) => net(math, code, n).doors.some((list) => list.length)));
+  if (pick === "all") return ALL;
+  if (pick === "named") return classes(math);
+  if (pick === "family") return NAMES.map(([code]) => code);
+  if (pick === "flyable") {
+    if (!flyable.has(n))
+      flyable.set(
+        n,
+        ALL.filter((code) => net(math, code, n).doors.some((list) => list.length)),
+      );
     return flyable.get(n);
   }
-  if (!gated.has(n)) gated.set(n, Array.from({ length: 256 }, (_, code) => code).filter((code) => gate(math, code, n)));
+  if (!gated.has(n))
+    gated.set(
+      n,
+      Array.from({ length: 256 }, (_, code) => code).filter((code) => gate(math, code, n)),
+    );
   return gated.get(n);
 }
 
@@ -238,7 +293,8 @@ function face(n, g) {
   return out;
 }
 
-const lateral = (all, n, c, d) => DIRS.reduce((sum, e, g) => sum + (axis(g) !== axis(d) && read(all, n, add(c, e)) === 1 ? 1 : 0), 0);
+const lateral = (all, n, c, d) =>
+  DIRS.reduce((sum, e, g) => sum + (axis(g) !== axis(d) && read(all, n, add(c, e)) === 1 ? 1 : 0), 0);
 
 function net(math, code, n) {
   const key = `${code}:${n}`;
@@ -276,7 +332,12 @@ function net(math, code, n) {
       changed = true;
     });
   }
-  const one = { all, doors: faces.map((list) => list.filter((c) => alive[comp[index(n, c)]])), walks: new Map(), ends: new Map() };
+  const one = {
+    all,
+    doors: faces.map((list) => list.filter((c) => alive[comp[index(n, c)]])),
+    walks: new Map(),
+    ends: new Map(),
+  };
   nets.set(key, one);
   return one;
 }
@@ -338,7 +399,13 @@ function walk(web, n, g, start) {
       const steps = [];
       for (let at = best(k, dir); at >= 0; at = from[at]) steps.unshift(at);
       const moves = steps.map((at) => at % 6);
-      exits.push({ cell: c, dir, trail: steps.map((at) => unindex(n, Math.floor(at / 6))), moves, turns: [...moves, dir].filter((d, i, all) => i > 0 && d !== all[i - 1]).length });
+      exits.push({
+        cell: c,
+        dir,
+        trail: steps.map((at) => unindex(n, Math.floor(at / 6))),
+        moves,
+        turns: [...moves, dir].filter((d, i, all) => i > 0 && d !== all[i - 1]).length,
+      });
     });
   }
   const ahead = exits.filter((e) => e.dir !== flip(g));
@@ -352,7 +419,10 @@ function landing(web, n, dir, din) {
   if (!web.ends.has(key)) {
     const off = (c) => sub(add(c, HALF), [n / 2, n / 2, n / 2]).map((v, i) => (i === axis(dir) ? 0 : v));
     const rank = (c) => dot(off(c), off(c)) * n * n - dot(off(c), DIRS[din]);
-    web.ends.set(key, web.doors[dir].reduce((top, c) => (rank(c) < rank(top) - 1e-9 ? c : top)));
+    web.ends.set(
+      key,
+      web.doors[dir].reduce((top, c) => (rank(c) < rank(top) - 1e-9 ? c : top)),
+    );
   }
   return web.ends.get(key);
 }
@@ -364,7 +434,12 @@ const flatten = (u, t) => {
   return len(v) > 1e-6 ? norm(v) : norm(cross(t, Math.abs(t[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0]));
 };
 
-const basis = (u) => [(1 - u) ** 3 / 6, (3 * u ** 3 - 6 * u * u + 4) / 6, (-3 * u ** 3 + 3 * u * u + 3 * u + 1) / 6, u ** 3 / 6];
+const basis = (u) => [
+  (1 - u) ** 3 / 6,
+  (3 * u ** 3 - 6 * u * u + 4) / 6,
+  (-3 * u ** 3 + 3 * u * u + 3 * u + 1) / 6,
+  u ** 3 / 6,
+];
 
 const slope = (u) => [-((1 - u) ** 2) / 2, (3 * u * u - 4 * u) / 2, (-3 * u * u + 2 * u + 1) / 2, (u * u) / 2];
 
@@ -372,7 +447,7 @@ const weigh = (w, list) => list.reduce((acc, v, i) => add(acc, mul(v, w[i])), ZE
 
 const total = (w, list) => list.reduce((acc, v, i) => acc + v * w[i], 0);
 
-export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) {
+export function route(math, design, seed = 0, { pilot: style = "steady" } = {}) {
   const { n } = design;
   const pilot = PILOTS[style] ?? PILOTS.steady;
   const behind = pilot.window + 2 * pilot.gap - pilot.lead;
@@ -437,7 +512,10 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
     up = flatten(up, t);
     if (len(one.sink) > 0) {
       const want = flatten(mul(one.sink, -1), t);
-      up = flatten(rot(up, t, Math.min(Math.max(Math.atan2(dot(cross(up, want), t), dot(up, want)), -STEER), STEER)), t);
+      up = flatten(
+        rot(up, t, Math.min(Math.max(Math.atan2(dot(cross(up, want), t), dot(up, want)), -STEER), STEER)),
+        t,
+      );
     }
     one.up = up;
     one.dir = t;
@@ -509,8 +587,10 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
   const pace = (s, k) => {
     const { bend: reach, ease } = pilot;
     let bump = 0;
-    for (let m = k; m > base && key(m).s > s - reach; m--) bump = Math.max(bump, bend(m) * (1 - smooth(Math.abs(s - key(m).s) / reach)));
-    for (let m = k + 1; m < last() && key(m).s < s + reach; m++) bump = Math.max(bump, bend(m) * (1 - smooth(Math.abs(s - key(m).s) / reach)));
+    for (let m = k; m > base && key(m).s > s - reach; m--)
+      bump = Math.max(bump, bend(m) * (1 - smooth(Math.abs(s - key(m).s) / reach)));
+    for (let m = k + 1; m < last() && key(m).s < s + reach; m++)
+      bump = Math.max(bump, bend(m) * (1 - smooth(Math.abs(s - key(m).s) / reach)));
     return SPEED * (1 - ease * bump);
   };
   const clock = () => {
@@ -521,7 +601,8 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
       if (k === 1) key(1).t = 0;
       const t = new Float64Array(SAMPLES + 1);
       t[0] = key(k).t;
-      for (let i = 0; i < SAMPLES; i++) t[i + 1] = t[i] + (seg.s[i + 1] - seg.s[i]) / pace((seg.s[i] + seg.s[i + 1]) / 2, k);
+      for (let i = 0; i < SAMPLES; i++)
+        t[i + 1] = t[i] + (seg.s[i + 1] - seg.s[i]) / pace((seg.s[i] + seg.s[i + 1]) / 2, k);
       seg.t = t;
       key(k + 1).t = t[SAMPLES];
       if (key(k + 1).door !== undefined) cycle(key(k + 1).door).at = t[SAMPLES];
@@ -548,10 +629,17 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
     const u = (i + f) / SAMPLES;
     const lev = total(basis(u), seg.L);
     const sink = mix(key(lo).sink, key(lo + 1).sink, u);
-    return { j: seg.F, p: add(weigh(basis(u), seg.P), mul(sink, FLOOR * n ** (seg.F - lev))), lev, k: lo, u, s: seg.s[i] + f * (seg.s[i + 1] - seg.s[i]) };
+    return {
+      j: seg.F,
+      p: add(weigh(basis(u), seg.P), mul(sink, FLOOR * n ** (seg.F - lev))),
+      lev,
+      k: lo,
+      u,
+      s: seg.s[i] + f * (seg.s[i + 1] - seg.s[i]),
+    };
   };
-  const point = (t) => find(t, timed, 't');
-  const along = (s) => find(s, measured, 's');
+  const point = (t) => find(t, timed, "t");
+  const along = (s) => find(s, measured, "s");
   const recent = (k) => {
     const out = [];
     for (let i = k; i >= base && out.length < SPAN; i--) if (key(i).cell) out.push(i);
@@ -575,7 +663,10 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
   const bounds = (j) => {
     const up = cycle(j - 1);
     if (!up) return [ZERO, ZERO];
-    return [up.edge[0].map((v, i) => Math.min(v * n + up.child[i], BEYOND)), up.edge[1].map((v, i) => Math.min(v * n + n - 1 - up.child[i], BEYOND))];
+    return [
+      up.edge[0].map((v, i) => Math.min(v * n + up.child[i], BEYOND)),
+      up.edge[1].map((v, i) => Math.min(v * n + n - 1 - up.child[i], BEYOND)),
+    ];
   };
   const open = (j, g, start) => {
     const rand = rng((seed ^ SALT ^ Math.imul(j + 1, GOLD)) >>> 0);
@@ -585,7 +676,12 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
     const { exits } = walk(web, n, g, start);
     const fair = exits.filter((e) => !back(j, g, e));
     const used = [cycle(j - 1)?.exit?.dir, cycle(j - 2)?.exit?.dir];
-    const scored = (fair.length ? fair : exits).map((e) => ({ ...e, score: (1 + STRAIGHT * (e.dir === g) + FRESH * !used.includes(e.dir) + TRAIL * e.trail.length - TWIST * e.turns) * (1 - JITTER / 2 + JITTER * rand()) }));
+    const scored = (fair.length ? fair : exits).map((e) => ({
+      ...e,
+      score:
+        (1 + STRAIGHT * (e.dir === g) + FRESH * !used.includes(e.dir) + TRAIL * e.trail.length - TWIST * e.turns) *
+        (1 - JITTER / 2 + JITTER * rand()),
+    }));
     const pick = scored.reduce((top, e) => (e.score > top.score ? e : top));
     cycles.push({ j, g, pick, exit: null, child: null, door, edge: bounds(j) });
   };
@@ -628,7 +724,7 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
     const exit = one.pick;
     one.exit = exit;
     one.moves = exit.moves;
-    exit.trail.slice(1).forEach((c, i) => stay(one.j, c, exit.moves[i + 1]));
+    for (const [i, c] of exit.trail.slice(1).entries()) stay(one.j, c, exit.moves[i + 1]);
     one.child = add(exit.cell, DIRS[exit.dir]);
     const next = landing(web, n, exit.dir, exit.moves[exit.moves.length - 1]);
     push(one.j + 1, add(sub(next, DIRS[exit.dir]), HALF), one.j + 1);
@@ -638,7 +734,8 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
   };
   const camera = (t, frame) => {
     let sum = ZERO;
-    for (let i = 0; i < TAPS; i++) sum = add(sum, place(point(t - pilot.window + (pilot.window * i) / (TAPS - 1)), frame));
+    for (let i = 0; i < TAPS; i++)
+      sum = add(sum, place(point(t - pilot.window + (pilot.window * i) / (TAPS - 1)), frame));
     return mul(sum, 1 / TAPS);
   };
   const build = () => {
@@ -657,7 +754,9 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
     let g;
     if (dive) {
       const pairs = [];
-      for (let up = 0; up < 6; up++) for (let along = 0; along < 6; along++) if (axis(up) !== axis(along)) pairs.push({ face: up, along, side: 3 - axis(up) - axis(along), up: DIRS[up] });
+      for (let up = 0; up < 6; up++)
+        for (let along = 0; along < 6; along++)
+          if (axis(up) !== axis(along)) pairs.push({ face: up, along, side: 3 - axis(up) - axis(along), up: DIRS[up] });
       const layer = (one) => face(n, flip(one.face)).map((c) => all[index(n, c)]);
       const holed = pairs.filter((one) => layer(one).includes(0) && layer(one).includes(1));
       const pool = holed.length ? holed : pairs.filter((one) => layer(one).includes(1));
@@ -708,7 +807,12 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
         if (k < frame - DEPTH) break;
         const cell = add(cycle(k).child, carry);
         carry = cell.map((v) => Math.floor(v / n));
-        ok = read(all, n, cell.map((v) => ((v % n) + n) % n)) === 1;
+        ok =
+          read(
+            all,
+            n,
+            cell.map((v) => ((v % n) + n) % n),
+          ) === 1;
       }
       if (ok) words[i >> 5] |= 1 << (i & 31);
     }
@@ -736,19 +840,35 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
     let fwd = sub(local(along(here.s + pilot.look * SPEED)), pos);
     if (len(fwd) < scale * 1e-6) fwd = sub(local(along(here.s + STEP)), local(along(here.s - STEP)));
     fwd = norm(fwd);
-    const up = flatten(weigh(basis(here.u), [-1, 0, 1, 2].map((i) => key(here.k + i).up)), fwd);
-    const speed = (i) => mul(sub(eye[i], eye[i + 1]), 1 / (pilot.gap * n ** (frame - point(t + pilot.lead - pilot.gap * (i + 0.5)).lev)));
+    const up = flatten(
+      weigh(
+        basis(here.u),
+        [-1, 0, 1, 2].map((i) => key(here.k + i).up),
+      ),
+      fwd,
+    );
+    const speed = (i) =>
+      mul(sub(eye[i], eye[i + 1]), 1 / (pilot.gap * n ** (frame - point(t + pilot.lead - pilot.gap * (i + 0.5)).lev)));
     const accel = mul(sub(speed(0), speed(1)), 1 / pilot.gap);
     const bank = Math.min(Math.max(pilot.bank * dot(accel, norm(cross(fwd, up))), -pilot.tilt), pilot.tilt);
     const walls = seen.reduce((a, i) => a + key(i).walls, 0) / seen.length;
-    const mode = dive ? 'skim' : walls >= CORRIDOR ? 'corridor' : walls >= TRENCH ? 'trench' : 'pillars';
+    const mode = dive ? "skim" : walls >= CORRIDOR ? "corridor" : walls >= TRENCH ? "trench" : "pillars";
     const doors = [];
     if (!dive) {
       const next = cycle(cur.j + 1);
       const into = (here.s - cur.s) / (next.s - cur.s);
-      doors.push({ pos: local({ j: cur.j, p: hatch(cur) }), scale: n ** (frame - cur.j), glow: smooth(into / RISE) * (0.6 + 0.4 * into) * (1 - DIP * smooth((into - CLOSE) / (1 - CLOSE))) });
+      doors.push({
+        pos: local({ j: cur.j, p: hatch(cur) }),
+        scale: n ** (frame - cur.j),
+        glow: smooth(into / RISE) * (0.6 + 0.4 * into) * (1 - DIP * smooth((into - CLOSE) / (1 - CLOSE))),
+      });
       const before = cycle(cur.j - 1);
-      if (before?.exit) doors.push({ pos: local({ j: before.j, p: hatch(before) }), scale: n ** (frame - cur.j + 1), glow: (1 - DIP) * (1 - smooth((t - cur.at) / FADE)) });
+      if (before?.exit)
+        doors.push({
+          pos: local({ j: before.j, p: hatch(before) }),
+          scale: n ** (frame - cur.j + 1),
+          glow: (1 - DIP) * (1 - smooth((t - cur.at) / FADE)),
+        });
     }
     const keep = Math.min(point(t - behind).k, ...seen) - 1;
     while (base < keep) {
@@ -790,7 +910,12 @@ export function route(math, design, seed = 0, { pilot: style = 'steady' } = {}) 
       const p = sub(camera(x, state.frame), mid);
       if (!drop) return p;
       const here = point(x);
-      const up = norm(weigh(basis(here.u), [-1, 0, 1, 2].map((m) => key(here.k + m).up)));
+      const up = norm(
+        weigh(
+          basis(here.u),
+          [-1, 0, 1, 2].map((m) => key(here.k + m).up),
+        ),
+      );
       return sub(p, mul(up, drop * n ** (state.frame - here.lev)));
     });
   };

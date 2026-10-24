@@ -1,4 +1,4 @@
-import { TILT, eye, frustum } from '../../lib/designs/mesh.js';
+import { eye, frustum, TILT } from "../../lib/designs/mesh.js";
 
 const TAU = Math.PI * 2;
 export const ORBIT = 40000;
@@ -62,7 +62,7 @@ export function space(three, canvas, view) {
   const paint = new three.Color();
   const probe = new three.Vector3();
   let mesh = null;
-  let mode = 'eye';
+  let mode = "eye";
   let [swing, tilt] = START;
   let near = 1;
   let spin = 0;
@@ -72,7 +72,7 @@ export function space(three, canvas, view) {
   let last = null;
   let top = 1;
   let aim = [0, 0, 0];
-  const camera = () => (mode === 'iso' ? iso : persp);
+  const camera = () => (mode === "iso" ? iso : persp);
   const drop = () => {
     if (!mesh) return;
     world.remove(mesh.balls, mesh.rods);
@@ -145,10 +145,10 @@ export function space(three, canvas, view) {
   const reach = () => top / Math.tan((FOV * Math.PI) / 360);
   const pose = () => {
     const lens = camera();
-    const [x, y, z] = eye(swing, tilt, mode === 'iso' ? BACK : reach() / near);
+    const [x, y, z] = eye(swing, tilt, mode === "iso" ? BACK : reach() / near);
     lens.position.set(aim[0] + x, aim[1] + y, aim[2] + z);
     lens.lookAt(aim[0], aim[1], aim[2]);
-    if (mode !== 'iso') return;
+    if (mode !== "iso") return;
     iso.zoom = near;
     iso.updateProjectionMatrix();
   };
@@ -217,7 +217,7 @@ export function space(three, canvas, view) {
     render();
   };
   const lens = (next) => {
-    mode = next === 'iso' ? 'iso' : 'eye';
+    mode = next === "iso" ? "iso" : "eye";
   };
   const spinning = (on) => {
     spin = Number(on) === 1 ? 1 : 0;

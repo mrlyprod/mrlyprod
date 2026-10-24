@@ -5,7 +5,8 @@ export const units = { math };
 
 export default function draw(pen: Pen, ink: Ink) {
   const sponge = math.three.carpet(3, 1);
-  if (sponge.shape.join() !== "3,3,3") throw new Error(`paper-menger-pairwise-coprimality: sponge ${sponge.shape}, want 3,3,3`);
+  if (sponge.shape.join() !== "3,3,3")
+    throw new Error(`paper-menger-pairwise-coprimality: sponge ${sponge.shape}, want 3,3,3`);
   const types = sponge.types;
   const area = pen.frame(0.08);
   const step = area.w / 3;
@@ -19,7 +20,17 @@ export default function draw(pen: Pen, ink: Ink) {
       for (let b = 0; b < 3; b++) {
         const [x, y, w, h] = grid.cell(b, a);
         if (types[(a * 3 + b) * 3 + c] === 0) {
-          pen.polyline([[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]], 4, ink.line);
+          pen.polyline(
+            [
+              [x, y],
+              [x + w, y],
+              [x + w, y + h],
+              [x, y + h],
+              [x, y],
+            ],
+            4,
+            ink.line,
+          );
           continue;
         }
         kept++;
@@ -33,5 +44,6 @@ export default function draw(pen: Pen, ink: Ink) {
       }
     }
   }
-  if (kept !== 20 || near !== 13) throw new Error(`paper-menger-pairwise-coprimality: kept ${kept} and near ${near}, want 20 and 13`);
+  if (kept !== 20 || near !== 13)
+    throw new Error(`paper-menger-pairwise-coprimality: kept ${kept} and near ${near}, want 20 and 13`);
 }

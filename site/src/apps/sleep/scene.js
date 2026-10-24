@@ -1,39 +1,76 @@
-import { tidy } from '../../lib/app/spec.js';
-import { TINTS } from '../../lib/color.js';
-import { pick } from '../../lib/rand.js';
-import { DESIGNS, LEVELS, NUMBERS, ink, tile } from '../../lib/designs/tiles.js';
+import { tidy } from "../../lib/app/spec.js";
+import { TINTS } from "../../lib/color.js";
+import { DESIGNS, ink, LEVELS, NUMBERS, tile } from "../../lib/designs/tiles.js";
+import { pick } from "../../lib/rand.js";
 
 const HIDE = () => false;
 
 const named = (word) => word[0].toUpperCase() + word.slice(1);
 
-const MIXED = ['', 'Mixed'];
+const MIXED = ["", "Mixed"];
 
-export const TILES = [['', ''], ...DESIGNS.flatMap((design) => NUMBERS.map((n) => [design, n]))];
+export const TILES = [["", ""], ...DESIGNS.flatMap((design) => NUMBERS.map((n) => [design, n]))];
 
 export const SPEC = [
-  { key: 'design', label: 'Design', kind: 'pick', def: '', options: [MIXED, ...DESIGNS.map((design) => [design, named(design)])], group: 'Shape', when: HIDE },
-  { key: 'number', label: 'Number', kind: 'pick', def: '', options: [MIXED, ...NUMBERS.map((n) => [n, String(n)])], group: 'Shape', when: HIDE },
-  { key: 'level', label: 'Level', kind: 'pick', def: '', options: [MIXED, ...LEVELS.map((n) => [n, String(n)])], group: 'Shape' },
-  { key: 'count', label: 'Tiles', kind: 'slider', def: 8, min: 1, max: 16, step: 1, group: 'Shape' },
-  { key: 'speed', label: 'Speed', kind: 'slider', def: 180, min: 60, max: 600, step: 20, unit: 'px/s', group: 'Motion' },
-  { key: 'size', label: 'Size', kind: 'slider', def: 0.42, min: 0.1, max: 0.8, step: 0.02, group: 'Size' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  {
+    key: "design",
+    label: "Design",
+    kind: "pick",
+    def: "",
+    options: [MIXED, ...DESIGNS.map((design) => [design, named(design)])],
+    group: "Shape",
+    when: HIDE,
+  },
+  {
+    key: "number",
+    label: "Number",
+    kind: "pick",
+    def: "",
+    options: [MIXED, ...NUMBERS.map((n) => [n, String(n)])],
+    group: "Shape",
+    when: HIDE,
+  },
+  {
+    key: "level",
+    label: "Level",
+    kind: "pick",
+    def: "",
+    options: [MIXED, ...LEVELS.map((n) => [n, String(n)])],
+    group: "Shape",
+  },
+  { key: "count", label: "Tiles", kind: "slider", def: 8, min: 1, max: 16, step: 1, group: "Shape" },
+  {
+    key: "speed",
+    label: "Speed",
+    kind: "slider",
+    def: 180,
+    min: 60,
+    max: 600,
+    step: 20,
+    unit: "px/s",
+    group: "Motion",
+  },
+  { key: "size", label: "Size", kind: "slider", def: 0.42, min: 0.1, max: 0.8, step: 0.02, group: "Size" },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
 export const PAGE = {
   spec: SPEC,
   keys: [
-    { key: 'Enter', label: 'Next tile', act: 'next', button: true, menu: 'View' },
-    { key: ['ArrowLeft', 'ArrowUp'], label: 'Previous tile', act: 'prev' },
-    { key: ['ArrowRight', 'ArrowDown'], label: 'Next', act: 'next' },
+    { key: "Enter", label: "Next tile", act: "next", button: true, menu: "View" },
+    { key: ["ArrowLeft", "ArrowUp"], label: "Previous tile", act: "prev" },
+    { key: ["ArrowRight", "ArrowDown"], label: "Next", act: "next" },
   ],
   actions: { next: (scene) => scene.step?.(1), prev: (scene) => scene.step?.(-1) },
 };
 
 export const SAVERS = [
-  { id: 'crowd', title: 'Crowd', pick: (rand) => ({ design: '', count: 7 + Math.floor(rand() * 3), size: 0.42, speed: 80 }) },
-  { id: 'giants', title: 'Giants', pick: (rand) => ({ design: pick(rand, DESIGNS), count: 3, size: 0.7, speed: 60 }) },
+  {
+    id: "crowd",
+    title: "Crowd",
+    pick: (rand) => ({ design: "", count: 7 + Math.floor(rand() * 3), size: 0.42, speed: 80 }),
+  },
+  { id: "giants", title: "Giants", pick: (rand) => ({ design: pick(rand, DESIGNS), count: 3, size: 0.7, speed: 60 }) },
 ];
 
 const DEEP = 0.4;
@@ -59,7 +96,7 @@ export function bounce(p, v, max) {
 }
 
 export function make(canvas, view, opts) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const rand = () => view.rand();
   let knobs = tidy(SPEC, opts);
   let seed = opts.seed;
@@ -80,7 +117,15 @@ export function make(canvas, view, opts) {
     one.y = Math.min(one.y, Math.max(0, view.h - one.side));
   };
   const spawn = (k) => {
-    const one = { d: depth(k), mark: roll(), vx: (rand() < 0.5 ? 1 : -1) * (0.6 + 0.8 * rand()), vy: (rand() < 0.5 ? 1 : -1) * (0.6 + 0.8 * rand()), x: 0, y: 0, side: 0 };
+    const one = {
+      d: depth(k),
+      mark: roll(),
+      vx: (rand() < 0.5 ? 1 : -1) * (0.6 + 0.8 * rand()),
+      vy: (rand() < 0.5 ? 1 : -1) * (0.6 + 0.8 * rand()),
+      x: 0,
+      y: 0,
+      side: 0,
+    };
     fit(one);
     one.x = rand() * Math.max(0, view.w - one.side);
     one.y = rand() * Math.max(0, view.h - one.side);
@@ -125,7 +170,7 @@ export function make(canvas, view, opts) {
     if (next.seed !== seed) {
       seed = next.seed;
       crowd = [];
-    } else if (['design', 'number', 'level'].some((key) => knobs[key] !== was[key])) {
+    } else if (["design", "number", "level"].some((key) => knobs[key] !== was[key])) {
       for (const one of crowd) one.mark = roll();
     }
     size();

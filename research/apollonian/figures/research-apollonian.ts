@@ -1,5 +1,5 @@
 import * as num from "@mrlyprod/mrly/num";
-import { field, type Color, type Ink, type Pen, type Point } from "#view";
+import { type Color, field, type Ink, type Pen, type Point } from "#view";
 
 export const units = { num };
 
@@ -22,19 +22,24 @@ function packing() {
   const root = num.apollonian.root("strip");
   const seed = root.map((c) => ({ k: Number(c.k), x: Number(c.x), y: Number(c.y) }));
   const fords = root.slice(2).every((c) => num.apollonian.is_ford(c) && c.k === 2n);
-  root.forEach((c) => c.free());
+  for (const c of root) c.free();
   const grown = num.apollonian.grow("strip", TOP);
   const touches = num.apollonian.touches(grown);
   const phi = num.factor.totients(DEEP);
   let nodes = -1;
   for (let n = 1; n <= DEEP; n++) nodes += Number(phi[n]);
   const resting = grown.circles.filter((c) => c.y === 1);
-  if (grown.broken !== 0) throw new Error(`research-apollonian: ${grown.broken} quadruples break the Descartes form, want none`);
-  if (grown.circles.length !== CIRCLES) throw new Error(`research-apollonian: ${grown.circles.length} circles, want ${CIRCLES}`);
+  if (grown.broken !== 0)
+    throw new Error(`research-apollonian: ${grown.broken} quadruples break the Descartes form, want none`);
+  if (grown.circles.length !== CIRCLES)
+    throw new Error(`research-apollonian: ${grown.circles.length} circles, want ${CIRCLES}`);
   if (resting.length !== RESTING) throw new Error(`research-apollonian: ${resting.length} resting, want ${RESTING}`);
-  if (resting.length !== nodes) throw new Error(`research-apollonian: ${resting.length} resting, want ${nodes} Farey nodes`);
-  if (!grown.circles.every((c) => c.k > 0 && c.x > 0 && c.x < c.k)) throw new Error("research-apollonian: a circle leaves the open period");
-  if (touches.length !== resting.length) throw new Error(`research-apollonian: ${touches.length} touches, want ${resting.length}`);
+  if (resting.length !== nodes)
+    throw new Error(`research-apollonian: ${resting.length} resting, want ${nodes} Farey nodes`);
+  if (!grown.circles.every((c) => c.k > 0 && c.x > 0 && c.x < c.k))
+    throw new Error("research-apollonian: a circle leaves the open period");
+  if (touches.length !== resting.length)
+    throw new Error(`research-apollonian: ${touches.length} touches, want ${resting.length}`);
   const depth = new Map<number, number>();
   let deepest = 1;
   for (const { num: a, den: b, k } of touches) {
@@ -51,7 +56,8 @@ function packing() {
     if (!ford) throw new Error(`research-apollonian: ${c.k},${c.x},${c.y} is not a Ford circle`);
     if (!depth.has(c.k)) throw new Error(`research-apollonian: no touch at curvature ${c.k}`);
   }
-  if (!fords || seed[2].x !== 0 || seed[3].x !== 2) throw new Error("research-apollonian: the seed circles are not the Ford circles over 0 and 1");
+  if (!fords || seed[2].x !== 0 || seed[3].x !== 2)
+    throw new Error("research-apollonian: the seed circles are not the Ford circles over 0 and 1");
   depth.set(2, 1);
   memo = { seed, grown: grown.circles, resting, depth };
   return memo;
@@ -86,8 +92,12 @@ export default function draw(pen: Pen, ink: Ink) {
   const frame = pen.frame(0.08);
   const span: [number, number] = [frame.x, frame.x + frame.w];
   const over = frame.w * OVER;
-  const place = (c: Circle): [Point, number] => [[frame.x + (frame.w * c.x) / c.k, frame.y + frame.h * (1 - c.y / c.k)], frame.w / c.k];
-  for (const foot of [frame.y, frame.y + frame.h]) pen.segment([span[0] - over, foot], [span[1] + over, foot], RULE, ink.dim);
+  const place = (c: Circle): [Point, number] => [
+    [frame.x + (frame.w * c.x) / c.k, frame.y + frame.h * (1 - c.y / c.k)],
+    frame.w / c.k,
+  ];
+  for (const foot of [frame.y, frame.y + frame.h])
+    pen.segment([span[0] - over, foot], [span[1] + over, foot], RULE, ink.dim);
   const rest = ink.fade(ink.dim, 0.75);
   for (const c of grown) {
     if (c.y === 1) continue;

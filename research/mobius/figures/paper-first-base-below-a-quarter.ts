@@ -11,13 +11,15 @@ const RUNGS = 395;
 export default function draw(pen: Pen, ink: Ink) {
   const { rungs } = census as { rungs: [number, number][] };
   if (rungs.length !== RUNGS) throw new Error(`paper-first-base-below-a-quarter: ${rungs.length} rungs, want ${RUNGS}`);
-  if (rungs.some(([q]) => !Number.isInteger(q) || q < LOW || q > HIGH)) throw new Error(`paper-first-base-below-a-quarter: a rung base is outside ${LOW}..${HIGH}`);
+  if (rungs.some(([q]) => !Number.isInteger(q) || q < LOW || q > HIGH))
+    throw new Error(`paper-first-base-below-a-quarter: a rung base is outside ${LOW}..${HIGH}`);
   const lo = Math.min(...rungs.map((r) => r[1]));
   const hi = Math.max(...rungs.map((r) => r[1]));
   const pad = (hi - lo) * 0.06;
   const foot = lo - pad;
   const head = hi + pad;
-  if (!(foot < QUARTER && QUARTER < head)) throw new Error("paper-first-base-below-a-quarter: the quarter line is outside");
+  if (!(foot < QUARTER && QUARTER < head))
+    throw new Error("paper-first-base-below-a-quarter: the quarter line is outside");
 
   const frame = pen.frame(0.08);
   const slot = frame.w / (HIGH - LOW + 1);

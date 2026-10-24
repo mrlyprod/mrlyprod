@@ -34,6 +34,7 @@ NAMED = (
 )
 POP16 = np.array([i.bit_count() for i in range(1 << 16)], dtype=np.uint8)
 
+
 def corner_maps(d):
     n = 1 << d
     maps = []
@@ -48,6 +49,7 @@ def corner_maps(d):
                 m[c] = image
             maps.append([1 << target for target in m])
     return maps
+
 
 def catalog(d):
     n = 1 << d
@@ -69,11 +71,14 @@ def catalog(d):
         out.append((code, sorted(orbit)))
     return out
 
+
 def bit(f, x):
     return (f >> x) & 1
 
+
 def differing(f, x, n):
     return f ^ ((1 << n) - 1) if bit(f, x) else f
+
 
 def cubes(d):
     n = 1 << d
@@ -84,8 +89,10 @@ def cubes(d):
                 out[(fixed, vals)] = sum(1 << y for y in range(n) if y & fixed == vals)
     return out
 
+
 def constant(f, mask):
     return f & mask in (0, mask)
+
 
 def sensitivity(f, d):
     n = 1 << d
@@ -94,6 +101,7 @@ def sensitivity(f, d):
         m = differing(f, x, n)
         best = max(best, sum(bit(m, x ^ (1 << i)) for i in range(d)))
     return best
+
 
 def pack(blocks):
     memo = {}
@@ -110,6 +118,7 @@ def pack(blocks):
 
     return go(0)
 
+
 def block_sensitivity(f, d):
     n = 1 << d
     best = 0
@@ -117,6 +126,7 @@ def block_sensitivity(f, d):
         m = differing(f, x, n)
         best = max(best, pack([x ^ y for y in range(n) if bit(m, y)]))
     return best
+
 
 def certificate(f, d, cube):
     n = 1 << d
@@ -128,6 +138,7 @@ def certificate(f, d, cube):
                 best = max(best, fixed.bit_count())
                 break
     return best
+
 
 def dt_depth(f, d, cube):
     memo = {}
@@ -150,6 +161,7 @@ def dt_depth(f, d, cube):
 
     return go(0, 0)
 
+
 def mobius(f, d, gf2):
     n = 1 << d
     coef = [bit(f, x) for x in range(n)]
@@ -160,8 +172,10 @@ def mobius(f, d, gf2):
                 coef[s] = coef[s] ^ coef[s ^ step] if gf2 else coef[s] - coef[s ^ step]
     return coef
 
+
 def top_weight(coef):
     return max((s.bit_count() for s, c in enumerate(coef) if c), default=-1)
+
 
 def anf(f, d):
     words = []
@@ -170,6 +184,7 @@ def anf(f, d):
             word = "".join(LETTERS[a] for a in range(d) if (s >> (d - 1 - a)) & 1)
             words.append((len(word), word or "1"))
     return " + ".join(word for _, word in sorted(words)) or "0"
+
 
 def min_cover(primes, need):
     best = [len(primes)]
@@ -189,6 +204,7 @@ def min_cover(primes, need):
     go(need, 0)
     return best[0]
 
+
 def cover_size(f, d, cube, target):
     n = 1 << d
     need = f if target else f ^ ((1 << n) - 1)
@@ -197,10 +213,13 @@ def cover_size(f, d, cube, target):
     good = {key: mask for key, mask in cube.items() if mask & need == mask}
     primes = []
     for (fixed, vals), mask in good.items():
-        freed = ((fixed & ~(1 << i), vals & ~(1 << i)) for i in range(d) if (fixed >> i) & 1)
+        freed = (
+            (fixed & ~(1 << i), vals & ~(1 << i)) for i in range(d) if (fixed >> i) & 1
+        )
         if all(key not in good for key in freed):
             primes.append(mask)
     return min_cover(primes, need)
+
 
 def all_measures(f, d, cube):
     return {
@@ -213,6 +232,7 @@ def all_measures(f, d, cube):
         "cnf": cover_size(f, d, cube, 0),
     }
 
+
 def fingerprint(code, d):
     coef = [0] * (d + 1)
     for i in range(1 << d):
@@ -221,6 +241,7 @@ def fingerprint(code, d):
             for j in range(ones + 1):
                 coef[d - ones + j] += comb(ones, j) * (-1) ** (ones - j)
     return tuple(reversed(coef))
+
 
 def poly_text(coef):
     d = len(coef) - 1
@@ -235,10 +256,12 @@ def poly_text(coef):
         out += f" {sign} {size}{var}" if out else f"{'-' if c < 0 else ''}{size}{var}"
     return out or "0"
 
+
 def render_index(d, side):
     grid = np.indices((side,) * d).reshape(d, -1) & 1
     weights = np.array([1 << (d - 1 - a) for a in range(d)])
     return (grid * weights[:, None]).sum(axis=0)
+
 
 def fitted(code, d, renders):
     m = d + 1
@@ -258,6 +281,7 @@ def fitted(code, d, renders):
                 rows[r] = [a - factor * b for a, b in zip(rows[r], rows[col])]
     return tuple(int(row[m]) for row in rows)
 
+
 def is_levelset(code, d):
     value = [-1] * (d + 1)
     for i in range(1 << d):
@@ -267,6 +291,7 @@ def is_levelset(code, d):
         value[w] = bit(code, i)
     return True
 
+
 def is_pin(code, d):
     cells = [i for i in range(1 << d) if bit(code, i)]
     if not cells:
@@ -274,12 +299,14 @@ def is_pin(code, d):
     fixed = sum(1 for i in range(d) if len({bit(c, i) for c in cells}) == 1)
     return len(cells) == 1 << (d - fixed)
 
+
 def genus(orbit, d):
     if any(is_levelset(c, d) for c in orbit):
         return "iso"
     if any(is_pin(c, d) for c in orbit):
         return "axis"
     return "comp"
+
 
 def rows_of(d):
     cube = cubes(d)
@@ -298,10 +325,20 @@ def rows_of(d):
         out.append(row)
     return out
 
+
 def csv_cells(row):
     fp = " ".join(str(c) for c in row["fingerprint"])
-    head = [row["name"], str(row["code"]), str(row["orbit"]), row["genus"], str(row["gf2deg"]), str(row["pop"]), fp]
+    head = [
+        row["name"],
+        str(row["code"]),
+        str(row["orbit"]),
+        row["genus"],
+        str(row["gf2deg"]),
+        str(row["pop"]),
+        fp,
+    ]
     return head + [str(row[m]) for m in MEASURES]
+
 
 def csv_diff(rows, d):
     with open(os.path.join(HERE, f"measures_d{d}.csv"), newline="") as handle:
@@ -315,8 +352,10 @@ def csv_diff(rows, d):
     bad += abs(len(rows) - len(stored) + 1) * 13
     return compared, bad
 
+
 def key_of(row, fields):
     return tuple(row[field] for field in fields)
+
 
 def groups(rows, fields):
     out = {}
@@ -324,24 +363,31 @@ def groups(rows, fields):
         out.setdefault(key_of(row, fields), []).append(row)
     return out
 
+
 def splits(group, measure):
     return len({row[measure] for row in group}) > 1
+
 
 def determination(rows):
     out = {}
     for measure in MEASURES:
         out[measure] = "none"
         for fields in KEYS:
-            if not any(splits(group, measure) for group in groups(rows, fields).values()):
+            if not any(
+                splits(group, measure) for group in groups(rows, fields).values()
+            ):
                 out[measure] = " + ".join(fields)
                 break
     return out
 
+
 def pin_code(d, r):
     return sum(1 << i for i in range(1 << d) if i >> (d - r) == 0)
 
+
 def popcount(a):
     return POP16[a & 0xFFFF].astype(np.int8) + POP16[a >> 16].astype(np.int8)
+
 
 def families(d):
     out = []
@@ -362,6 +408,7 @@ def families(d):
 
     go((1 << d) - 1, [])
     return out
+
 
 def profile(d, codes):
     n = 1 << d
@@ -403,14 +450,21 @@ def profile(d, codes):
         C = np.maximum(C, cx)
     return s, bs, C
 
+
 def histogram(s, bs, C):
     keys, counts = np.unique(np.stack([s, bs, C], axis=1), axis=0, return_counts=True)
-    return [(tuple(int(v) for v in key), int(count)) for key, count in zip(keys, counts)]
+    return [
+        (tuple(int(v) for v in key), int(count)) for key, count in zip(keys, counts)
+    ]
+
 
 def print_profile(label, s, bs, C):
-    print(f"{label}: designs {len(s)}, C != bs {int((C != bs).sum())}, bs - s > 1 {int((bs - s > 1).sum())}")
+    print(
+        f"{label}: designs {len(s)}, C != bs {int((C != bs).sum())}, bs - s > 1 {int((bs - s > 1).sum())}"
+    )
     for (a, b, c), count in histogram(s, bs, C):
         print(f"  (s, bs, C) = ({a}, {b}, {c}): {count}")
+
 
 def table_line(row, d):
     cells = [row["name"], row["genus"], str(row["gf2deg"]), str(row["pop"])]
@@ -418,11 +472,13 @@ def table_line(row, d):
         cells.append(poly_text(row["fingerprint"]))
     return " | ".join(cells + [str(row[m]) for m in MEASURES])
 
+
 def counts(rows, field):
     out = {}
     for row in rows:
         out[row[field]] = out.get(row[field], 0) + 1
     return ", ".join(f"{key}: {out[key]}" for key in sorted(out))
+
 
 def influence(d):
     n = 1 << d
@@ -444,6 +500,7 @@ def influence(d):
     edges = sorted(set((total // 2).tolist()))
     return mean, var, full_share, one_edge, edges
 
+
 def sample_bits():
     rng = random.Random(SEED)
     codes = []
@@ -453,6 +510,7 @@ def sample_bits():
             f |= rng.getrandbits(1) << i
         codes.append(f)
     return np.array(codes, dtype=np.uint32)
+
 
 def sample_words():
     rng = random.Random(SEED)
@@ -467,6 +525,7 @@ def sample_words():
         thinned.append(code)
     return np.array(uniform, dtype=np.uint32), np.array(thinned, dtype=np.uint32)
 
+
 def main():
     start = time.time()
     store = {}
@@ -478,13 +537,19 @@ def main():
         print(f"D={d} csv cells compared {compared}, mismatches {bad}")
         renders = {k: render_index(d, 2 * k - 1) for k in range(1, d + 2)}
         bad = sum(fitted(row["code"], d, renders) != row["fingerprint"] for row in rows)
-        print(f"D={d} fill polynomial fitted from rendered grids against closed form, mismatches {bad} of {len(rows)}")
+        print(
+            f"D={d} fill polynomial fitted from rendered grids against closed form, mismatches {bad} of {len(rows)}"
+        )
     print("D=3 table: name | genus | gf2deg | pop | " + " | ".join(MEASURES))
     for row in store[3]:
         print("  " + table_line(row, 3))
     print(f"D=3 genus split {counts(store[3], 'genus')}")
     print(f"D=3 gf2deg histogram {counts(store[3], 'gf2deg')}")
-    deeper = [f"{row['name']} (bs {row['bs']}, dt {row['dt']})" for row in store[3] if row["dt"] > row["bs"]]
+    deeper = [
+        f"{row['name']} (bs {row['bs']}, dt {row['dt']})"
+        for row in store[3]
+        if row["dt"] > row["bs"]
+    ]
     print(f"D=3 dt > bs classes {len(deeper)}: {deeper}")
     for d in DIMS:
         cube = cubes(d)
@@ -492,62 +557,111 @@ def main():
             got = all_measures(pin_code(d, r), d, cube)
             got["gf2deg"] = top_weight(mobius(pin_code(d, r), d, True))
             six = {got[m] for m in ("s", "bs", "C", "dt", "deg", "gf2deg")}
-            print(f"D={d} pin of {r} axes: six measures {sorted(six)}, dnf {got['dnf']}, cnf {got['cnf']}")
+            print(
+                f"D={d} pin of {r} axes: six measures {sorted(six)}, dnf {got['dnf']}, cnf {got['cnf']}"
+            )
     d3 = store[3]
     d4 = store[4]
     by_name = {row["name"]: row for row in d4}
     fp3 = groups(d3, ("fingerprint",))
     shared3 = [group for group in fp3.values() if len(group) > 1]
-    print(f"D=3 distinct fill polynomials {len(fp3)} of {len(d3)}, shared by two or more {len(shared3)}")
+    print(
+        f"D=3 distinct fill polynomials {len(fp3)} of {len(d3)}, shared by two or more {len(shared3)}"
+    )
     for group in shared3:
-        names = ", ".join(f"{row['name']} ({row['genus']}, gf2deg {row['gf2deg']})" for row in group)
+        names = ", ".join(
+            f"{row['name']} ({row['genus']}, gf2deg {row['gf2deg']})" for row in group
+        )
         print(f"D=3 collision {poly_text(group[0]['fingerprint'])}: {names}")
     report = determination(d3)
-    print("D=3 coarsest key determining each measure: " + ", ".join(f"{m} {report[m]}" for m in MEASURES))
+    print(
+        "D=3 coarsest key determining each measure: "
+        + ", ".join(f"{m} {report[m]}" for m in MEASURES)
+    )
     fp4 = groups(d4, ("fingerprint",))
     shared4 = sum(1 for group in fp4.values() if len(group) > 1)
-    print(f"D=4 distinct fill polynomials {len(fp4)} of {len(d4)}, shared by two or more {shared4}")
+    print(
+        f"D=4 distinct fill polynomials {len(fp4)} of {len(d4)}, shared by two or more {shared4}"
+    )
     report = determination(d4)
-    print("D=4 coarsest key determining each measure: " + ", ".join(f"{m} {report[m]}" for m in MEASURES))
+    print(
+        "D=4 coarsest key determining each measure: "
+        + ", ".join(f"{m} {report[m]}" for m in MEASURES)
+    )
     big = [group for group in groups(d4, KEYS[-1]).values() if len(group) > 1]
     parted = sum(1 for group in big if any(splits(group, m) for m in MEASURES))
     total = sum(1 for group in big for m in MEASURES if splits(group, m))
-    print(f"D=4 full-key groups of two or more {len(big)}, splitting some measure {parted}, measure-splits {total}")
+    print(
+        f"D=4 full-key groups of two or more {len(big)}, splitting some measure {parted}, measure-splits {total}"
+    )
     pairs = [group for group in big if len(group) == 2 and splits(group, "bs")]
     pairs.sort(key=lambda group: min(row["code"] for row in group))
     first = pairs[0]
     names = " and ".join(row["name"] for row in first)
     split_names = [m for m in MEASURES if splits(first, m)]
     agree = [m for m in MEASURES if not splits(first, m)]
-    print(f"D=4 size-two full-key groups splitting bs {len(pairs)}, smallest code {first[0]['code']}: {names}")
-    print(f"  shared key genus {first[0]['genus']}, gf2deg {first[0]['gf2deg']}, pop {first[0]['pop']}, fill {poly_text(first[0]['fingerprint'])}")
+    print(
+        f"D=4 size-two full-key groups splitting bs {len(pairs)}, smallest code {first[0]['code']}: {names}"
+    )
+    print(
+        f"  shared key genus {first[0]['genus']}, gf2deg {first[0]['gf2deg']}, pop {first[0]['pop']}, fill {poly_text(first[0]['fingerprint'])}"
+    )
     print(f"  split {len(split_names)} of 7 measures {split_names}, agree {agree}")
-    print("D=4 witness table: name | genus | gf2deg | pop | fill | " + " | ".join(MEASURES))
+    print(
+        "D=4 witness table: name | genus | gf2deg | pop | fill | "
+        + " | ".join(MEASURES)
+    )
     for row in first:
         print("  " + table_line(row, 4))
     for d, rows in store.items():
         gaps = [row["name"] for row in rows if row["C"] != row["bs"]]
         print(f"D={d} C != bs classes: {gaps}")
     for d, rows in store.items():
-        seps = [f"{row['name']} (s {row['s']}, bs {row['bs']}, orbit {row['orbit']})" for row in rows if row["s"] != row["bs"]]
+        seps = [
+            f"{row['name']} (s {row['s']}, bs {row['bs']}, orbit {row['orbit']})"
+            for row in rows
+            if row["s"] != row["bs"]
+        ]
         print(f"D={d} s != bs classes: {seps}")
     both = d3 + d4
-    print(f"deg <= s^2 violations across both catalogs: {sum(1 for row in both if row['deg'] > row['s'] ** 2)} of {len(both)}")
-    tight = [f"{row['name']} (deg {row['deg']}, s {row['s']}, orbit {row['orbit']})" for row in d4 if row["s"] >= 2 and row["deg"] == row["s"] ** 2]
+    print(
+        f"deg <= s^2 violations across both catalogs: {sum(1 for row in both if row['deg'] > row['s'] ** 2)} of {len(both)}"
+    )
+    tight = [
+        f"{row['name']} (deg {row['deg']}, s {row['s']}, orbit {row['orbit']})"
+        for row in d4
+        if row["s"] >= 2 and row["deg"] == row["s"] ** 2
+    ]
     print(f"D=4 deg = s^2 with s >= 2: {tight}")
     for name in NAMED:
         print(f"{name} anf {anf(by_name[name]['code'], 4)}")
     for d in range(1, 5):
         mean, var, full_share, one_edge, edges = influence(d)
-        print(f"D={d} influence mean {mean}, variance {var}, P[s(f) = D] {full_share}, designs with one bichromatic edge {one_edge}")
+        print(
+            f"D={d} influence mean {mean}, variance {var}, P[s(f) = D] {full_share}, designs with one bichromatic edge {one_edge}"
+        )
         print(f"D={d} realised bichromatic edge counts {edges}")
     codes = np.arange(1 << 16, dtype=np.uint32)
-    print_profile("D=4 exhaustive (s, bs, C) profile by the subcube route", *profile(4, codes))
-    print_profile(f"D=5 spot check, {TRIALS} uniform designs, seed {SEED}, one bit per draw", *profile(5, sample_bits()))
+    print_profile(
+        "D=4 exhaustive (s, bs, C) profile by the subcube route", *profile(4, codes)
+    )
+    print_profile(
+        f"D=5 spot check, {TRIALS} uniform designs, seed {SEED}, one bit per draw",
+        *profile(5, sample_bits()),
+    )
     uniform, thinned = sample_words()
-    print_profile(f"D=5 spot check, {SAMPLE} uniform designs, seed {SEED}, one word per draw", *profile(5, uniform))
-    print_profile(f"D=5 spot check, {SAMPLE} thinned designs, densities {LEVELS} of 32", *profile(5, thinned))
-    print(f"domain: every design at D = 1..4, {TRIALS} + {SAMPLE} + {SAMPLE} sampled designs at D = 5, {time.time() - start:.1f} s")
+    print_profile(
+        f"D=5 spot check, {SAMPLE} uniform designs, seed {SEED}, one word per draw",
+        *profile(5, uniform),
+    )
+    print_profile(
+        f"D=5 spot check, {SAMPLE} thinned designs, densities {LEVELS} of 32",
+        *profile(5, thinned),
+    )
+    print(
+        f"domain: every design at D = 1..4, {TRIALS} + {SAMPLE} + {SAMPLE} sampled designs at D = 5, {time.time() - start:.1f} s"
+    )
+
 
 if __name__ == "__main__":
     main()

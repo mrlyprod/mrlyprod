@@ -1,4 +1,4 @@
-import { KEY, calm, minutes, read, root, stamp, subscribe } from './prefs.js';
+import { calm, KEY, minutes, read, root, stamp, subscribe } from "./prefs.js";
 
 /* WAKE */
 
@@ -7,14 +7,14 @@ const SLACK = 8;
 
 export function wakes(e, age, from) {
   if (age < DEAF) return false;
-  if (e.type !== 'pointermove') return true;
+  if (e.type !== "pointermove") return true;
   return Boolean(from) && Math.hypot(e.clientX - from.x, e.clientY - from.y) > SLACK;
 }
 
 /* TIMER */
 
 const MINUTE = 60000;
-const INPUT = ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'];
+const INPUT = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart", "scroll"];
 
 let watching = false;
 let last = 0;
@@ -25,7 +25,11 @@ const poke = () => {
   last = performance.now();
 };
 
-const free = () => !document.hidden && root().dataset.welcome !== 'open' && !('zen' in root().dataset) && !document.querySelector('dialog[open]');
+const free = () =>
+  !document.hidden &&
+  root().dataset.welcome !== "open" &&
+  !("zen" in root().dataset) &&
+  !document.querySelector("dialog[open]");
 
 function arm() {
   clearTimeout(timer);
@@ -49,7 +53,7 @@ export function watch() {
   if (watching) return;
   watching = true;
   for (const type of INPUT) addEventListener(type, poke, { capture: true, passive: true });
-  document.addEventListener('visibilitychange', poke);
+  document.addEventListener("visibilitychange", poke);
   subscribe((key) => {
     if (key === null || key === KEY.idle) arm();
   });
@@ -59,19 +63,19 @@ export function watch() {
 
 /* CLOCK */
 
-const two = (n) => String(n).padStart(2, '0');
+const two = (n) => String(n).padStart(2, "0");
 
 function dial() {
-  const node = document.createElement('div');
-  node.className = 'clock';
-  const date = document.createElement('p');
-  const time = document.createElement('time');
+  const node = document.createElement("div");
+  node.className = "clock";
+  const date = document.createElement("p");
+  const time = document.createElement("time");
   node.append(date, time);
   let tick = 0;
   const paint = () => {
     clearTimeout(tick);
     const now = new Date();
-    date.textContent = now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+    date.textContent = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
     time.textContent = stamp(now, read(KEY.hours), true);
     time.dateTime = `${two(now.getHours())}:${two(now.getMinutes())}`;
     tick = setTimeout(paint, MINUTE - (now.getSeconds() * 1000 + now.getMilliseconds()) + 50);
@@ -92,22 +96,22 @@ function dial() {
 const TURN = 90000;
 const FADE = 1600;
 const OUT = 300;
-const WAKE = ['keydown', 'pointerdown', 'pointermove', 'wheel', 'touchstart', 'click', 'contextmenu'];
+const WAKE = ["keydown", "pointerdown", "pointermove", "wheel", "touchstart", "click", "contextmenu"];
 
 const show = (node) => {
   node.getBoundingClientRect();
-  node.classList.add('on');
+  node.classList.add("on");
 };
 
 function shut() {
   try {
-    for (const one of document.querySelectorAll(':popover-open')) one.hidePopover();
+    for (const one of document.querySelectorAll(":popover-open")) one.hidePopover();
   } catch {}
 }
 
 function hear(mine, e) {
   const age = performance.now() - mine.since;
-  if (e.type === 'pointermove') {
+  if (e.type === "pointermove") {
     if (mine.gone) return;
     if (wakes(e, age, mine.from)) return stop();
     if (age < DEAF || !mine.from) mine.from = { x: e.clientX, y: e.clientY };
@@ -149,7 +153,7 @@ async function next(mine) {
   }
   const id = mine.pool[mine.at];
   mine.at += 1;
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   mine.box.insertBefore(canvas, mine.face?.node ?? null);
   const run = await mine.kit.lock(canvas, id, { pool: mine.pool }).catch(() => null);
   if (mine.gone) {
@@ -175,10 +179,10 @@ async function next(mine) {
 
 export async function start({ only } = {}) {
   if (shown || document.hidden) return false;
-  const mine = { gone: false, only: only || '', box: null };
+  const mine = { gone: false, only: only || "", box: null };
   shown = mine;
   clearTimeout(timer);
-  const [{ on, shuffle }, { lock }] = await Promise.all([import('./savers.js'), import('./lock.js')]);
+  const [{ on, shuffle }, { lock }] = await Promise.all([import("./savers.js"), import("./lock.js")]);
   const pool = only ? [only] : shuffle(on());
   if (mine.gone || shown !== mine || !pool.length || document.hidden) {
     if (shown === mine) shown = null;
@@ -188,18 +192,33 @@ export async function start({ only } = {}) {
     }
     return false;
   }
-  const box = document.createElement('div');
-  box.className = 'saver';
-  box.setAttribute('aria-hidden', 'true');
-  const face = read(KEY.clock) === 'off' ? null : dial();
+  const box = document.createElement("div");
+  box.className = "saver";
+  box.setAttribute("aria-hidden", "true");
+  const face = read(KEY.clock) === "off" ? null : dial();
   if (face) box.append(face.node);
-  Object.assign(mine, { box, face, pool, at: 0, id: '', miss: 0, live: null, old: [], cycle: 0, from: null, since: performance.now(), kit: { on, shuffle, lock }, ears: new AbortController() });
-  for (const type of WAKE) addEventListener(type, (e) => hear(mine, e), { capture: true, passive: false, signal: mine.ears.signal });
+  Object.assign(mine, {
+    box,
+    face,
+    pool,
+    at: 0,
+    id: "",
+    miss: 0,
+    live: null,
+    old: [],
+    cycle: 0,
+    from: null,
+    since: performance.now(),
+    kit: { on, shuffle, lock },
+    ears: new AbortController(),
+  });
+  for (const type of WAKE)
+    addEventListener(type, (e) => hear(mine, e), { capture: true, passive: false, signal: mine.ears.signal });
   shut();
   document.body.append(box);
-  root().dataset.saver = '';
+  root().dataset.saver = "";
   show(box);
-  dispatchEvent(new CustomEvent('saver', { detail: true }));
+  dispatchEvent(new CustomEvent("saver", { detail: true }));
   next(mine);
   return true;
 }
@@ -215,7 +234,7 @@ export function stop() {
   clearTimeout(mine.cycle);
   mine.face?.stop();
   delete root().dataset.saver;
-  dispatchEvent(new CustomEvent('saver', { detail: false }));
+  dispatchEvent(new CustomEvent("saver", { detail: false }));
   const done = () => {
     mine.ears.abort();
     for (const one of [mine.live, ...mine.old]) {
@@ -225,8 +244,8 @@ export function stop() {
     }
     mine.box.remove();
   };
-  mine.box.classList.add('out');
-  mine.box.classList.remove('on');
+  mine.box.classList.add("out");
+  mine.box.classList.remove("on");
   if (calm()) return done();
   setTimeout(done, OUT);
 }

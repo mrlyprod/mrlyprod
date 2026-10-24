@@ -22,6 +22,7 @@ IRRATIONAL = ((4, (0, 1, 2)), (16, tuple(range(16))))
 
 # FRAME
 
+
 def root_of(bases):
     for cand in range(2, min(bases) + 1):
         ok = True
@@ -36,12 +37,14 @@ def root_of(bases):
             return cand
     return None
 
+
 def exponent_of(b, r):
     e = 0
     while b % r == 0:
         b //= r
         e += 1
     return e
+
 
 def lcm(values):
     out = 1
@@ -52,13 +55,16 @@ def lcm(values):
         out = out * v // g
     return out
 
+
 def frame(cell):
     bases = [b for b, _ in cell]
     r = root_of(bases)
     exps = [exponent_of(b, r) for b in bases]
     return r, exps, lcm(exps)
 
+
 # BLOCKS
+
 
 def block_digits(cell):
     r, exps, m = frame(cell)
@@ -83,12 +89,14 @@ def block_digits(cell):
             out.append(value)
     return r, exps, m, tuple(sorted(out))
 
+
 def in_design(n, b, keep):
     while n:
         if n % b not in keep:
             return False
         n //= b
     return True
+
 
 def bottom_block(cell):
     r, _, m = frame(cell)
@@ -97,7 +105,9 @@ def bottom_block(cell):
         c for c in range(r**m) if all(in_design(c, b, keep) for b, keep in keeps)
     )
 
+
 # DIMENSION
+
 
 def log_exact(value, r):
     t, x = 0, value
@@ -106,9 +116,11 @@ def log_exact(value, r):
         t += 1
     return Fraction(t) if x == 1 else None
 
+
 def design_dim(b, allowed, r):
     t = log_exact(len(allowed), r)
     return None if t is None else t / exponent_of(b, r)
+
 
 def dim_text(count, r, m):
     t = log_exact(count, r)
@@ -116,7 +128,9 @@ def dim_text(count, r, m):
         return "log_%d(%d) / %d" % (r, count, m), log(count) / (m * log(r))
     return str(t / m), float(t / m)
 
+
 # ENUMERATION
+
 
 def walk(base, digits, limit):
     ds = sorted(digits)
@@ -135,6 +149,7 @@ def walk(base, digits, limit):
                     nxt.append(w)
         level = nxt
 
+
 def thin_side(cell, r):
     best = None
     for b, allowed in cell:
@@ -143,7 +158,9 @@ def thin_side(cell, r):
             best = (d, b, allowed)
     return best[1], best[2]
 
+
 # VERBS
+
 
 def verb_blocks():
     for name, cell in CELLS:
@@ -163,9 +180,10 @@ def verb_blocks():
         % ([b for b, _ in SHARP], exps, m, list(blocks), bad[:4])
     )
 
+
 def verb_dim():
     for name, cell in CELLS + [("I", IRRATIONAL)]:
-        r, exps, m, blocks = block_digits(cell)
+        r, _exps, m, blocks = block_digits(cell)
         text, value = dim_text(len(blocks), r, m)
         dims = [design_dim(b, allowed, r) for b, allowed in cell]
         if None in dims:
@@ -190,9 +208,10 @@ def verb_dim():
             )
         )
 
+
 def verb_check():
     for name, cell in CELLS:
-        r, exps, m, blocks = block_digits(cell)
+        r, _exps, m, blocks = block_digits(cell)
         big = r**m
         start = time.time()
         keeps = [(b, set(a)) for b, a in cell]
@@ -226,11 +245,13 @@ def verb_check():
     peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (1024 * 1024)
     print("peak resident %.0f MB" % peak)
 
+
 def main():
     verbs = sys.argv[1:] or ["blocks", "dim", "check"]
     table = {"blocks": verb_blocks, "dim": verb_dim, "check": verb_check}
     for verb in verbs:
         print("-- %s" % verb)
         table[verb]()
+
 
 main()

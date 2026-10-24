@@ -52,7 +52,10 @@ export function curve(pen, frame, xs, ys, thick, color) {
   const [ylo, yhi] = span(ys, n);
   const pts = [];
   for (let i = 0; i < n; i++) {
-    pts.push([frame.x + (frame.w * (xs[i] - xlo)) / (xhi - xlo), frame.y + frame.h * (1 - (ys[i] - ylo) / (yhi - ylo))]);
+    pts.push([
+      frame.x + (frame.w * (xs[i] - xlo)) / (xhi - xlo),
+      frame.y + frame.h * (1 - (ys[i] - ylo) / (yhi - ylo)),
+    ]);
   }
   pen.polyline(pts, thick, color);
 }
@@ -60,7 +63,17 @@ export function curve(pen, frame, xs, ys, thick, color) {
 export function axis(pen, frame, color) {
   const thick = Math.max(Math.min(frame.w, frame.h) / 512, 1);
   const { x, y, w, h } = frame;
-  pen.polyline([[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]], thick, color);
+  pen.polyline(
+    [
+      [x, y],
+      [x + w, y],
+      [x + w, y + h],
+      [x, y + h],
+      [x, y],
+    ],
+    thick,
+    color,
+  );
 }
 
 export function dashed(pen, frame, y, thick, color) {

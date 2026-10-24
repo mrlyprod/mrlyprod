@@ -1,7 +1,7 @@
-import { letters } from '../../lib/font/font.js';
-import { palette } from '../../lib/theme/palette.gen.js';
-import { rgb } from '../../lib/color.js';
-import { blend, program, quads } from '../../lib/gl/gl2.js';
+import { rgb } from "../../lib/color.js";
+import { letters } from "../../lib/font/font.js";
+import { blend, program, quads } from "../../lib/gl/gl2.js";
+import { palette } from "../../lib/theme/palette.gen.js";
 
 const CELL = 3;
 const LEAD = 3;
@@ -41,7 +41,11 @@ const PAPER = [0, 0, 0];
 export function safe(view) {
   const pad = Math.round(MARGIN * (view.dpr || 1));
   if (!view.fixed) return { top: pad, bottom: pad, side: pad };
-  return { top: Math.round(view.h * TOP), bottom: Math.round(view.h * BOTTOM), side: Math.max(pad, Math.round(view.w * SIDE)) };
+  return {
+    top: Math.round(view.h * TOP),
+    bottom: Math.round(view.h * BOTTOM),
+    side: Math.max(pad, Math.round(view.w * SIDE)),
+  };
 }
 
 export function hud(gl, view) {
@@ -56,8 +60,13 @@ export function hud(gl, view) {
     }
     return raster.get(line);
   };
-  const lines = (rows, corner = 'tl') => {
-    text = { ...text, [corner]: (rows ?? []).filter((row) => row !== null && row !== undefined && row !== '').map((row) => String(row).toUpperCase()) };
+  const lines = (rows, corner = "tl") => {
+    text = {
+      ...text,
+      [corner]: (rows ?? [])
+        .filter((row) => row !== null && row !== undefined && row !== "")
+        .map((row) => String(row).toUpperCase()),
+    };
   };
   const draw = () => {
     const edge = safe(view);
@@ -78,12 +87,20 @@ export function hud(gl, view) {
         }
       }
     };
-    const widest = Math.max(1, ...Object.values(text).flat().map((line) => glyphs(line).cols));
-    const big = Math.max(1, Math.min(Math.round(CELL * (view.dpr || 1)), Math.floor((view.w - 2 * edge.side) / widest)));
+    const widest = Math.max(
+      1,
+      ...Object.values(text)
+        .flat()
+        .map((line) => glyphs(line).cols),
+    );
+    const big = Math.max(
+      1,
+      Math.min(Math.round(CELL * (view.dpr || 1)), Math.floor((view.w - 2 * edge.side) / widest)),
+    );
     const step = big * (5 + LEAD);
     for (const [corner, rows] of Object.entries(text)) {
-      const right = corner.endsWith('r');
-      const bottom = corner.startsWith('b');
+      const right = corner.endsWith("r");
+      const bottom = corner.startsWith("b");
       rows.forEach((line, i) => {
         const wide = glyphs(line).cols * big;
         const x = right ? view.w - edge.side - wide : edge.side;
@@ -94,7 +111,7 @@ export function hud(gl, view) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, view.w, view.h);
     cells.set({ uRes: [view.w, view.h] });
-    boxes.draw(cells, count, 'alpha');
+    boxes.draw(cells, count, "alpha");
     blend(gl, null);
   };
   const drop = () => {

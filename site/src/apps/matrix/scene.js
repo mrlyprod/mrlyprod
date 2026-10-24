@@ -1,27 +1,67 @@
-import FONT from '../../lib/font/font.gen.json' with { type: 'json' };
-import { palette } from '../../lib/theme/palette.gen.js';
-import { tidy } from '../../lib/app/spec.js';
-import { board } from '../../lib/app/run.js';
-import { blend, bright, HUES, TINTS, veil } from '../../lib/color.js';
-import { pick, rng } from '../../lib/rand.js';
+import { board } from "../../lib/app/run.js";
+import { tidy } from "../../lib/app/spec.js";
+import { blend, bright, HUES, TINTS, veil } from "../../lib/color.js";
+import FONT from "../../lib/font/font.gen.json" with { type: "json" };
+import { pick, rng } from "../../lib/rand.js";
+import { palette } from "../../lib/theme/palette.gen.js";
 
 export const SPEC = [
-  { key: 'set', label: 'Set', kind: 'list', def: 'lds', sep: '', options: [['l', 'Letters'], ['d', 'Digits'], ['s', 'Specials']], group: 'Glyphs' },
-  { key: 'color', label: 'Drops', kind: 'segment', def: 'tint', options: [['tint', 'Tint'], ['rainbow', 'Rainbow']], group: 'Colour' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Colour' },
-  { key: 'tick', label: 'Tick', kind: 'slider', def: 33, min: 16, max: 120, step: 1, unit: 'ms', group: 'Motion' },
-  { key: 'cell', label: 'Size', kind: 'slider', def: 20, min: 8, max: 48, step: 2, group: 'Grid' },
+  {
+    key: "set",
+    label: "Set",
+    kind: "list",
+    def: "lds",
+    sep: "",
+    options: [
+      ["l", "Letters"],
+      ["d", "Digits"],
+      ["s", "Specials"],
+    ],
+    group: "Glyphs",
+  },
+  {
+    key: "color",
+    label: "Drops",
+    kind: "segment",
+    def: "tint",
+    options: [
+      ["tint", "Tint"],
+      ["rainbow", "Rainbow"],
+    ],
+    group: "Colour",
+  },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Colour" },
+  { key: "tick", label: "Tick", kind: "slider", def: 33, min: 16, max: 120, step: 1, unit: "ms", group: "Motion" },
+  { key: "cell", label: "Size", kind: "slider", def: 20, min: 8, max: 48, step: 2, group: "Grid" },
 ];
 
 export const PAGE = { spec: SPEC };
 
 export const SAVERS = [
-  { id: 'rain', title: 'Glyph rain', pick: (rand) => ({ set: pick(rand, ['lds', 'ld', 'd', 'l']), color: 'tint', tick: 100, cell: 14 + 2 * Math.floor(rand() * 5) }) },
-  { id: 'heavy', title: 'Heavy rain', pick: (rand) => ({ set: pick(rand, ['lds', 'ds', 's']), color: 'tint', tick: 100, cell: 22 + 2 * Math.floor(rand() * 6) }) },
+  {
+    id: "rain",
+    title: "Glyph rain",
+    pick: (rand) => ({
+      set: pick(rand, ["lds", "ld", "d", "l"]),
+      color: "tint",
+      tick: 100,
+      cell: 14 + 2 * Math.floor(rand() * 5),
+    }),
+  },
+  {
+    id: "heavy",
+    title: "Heavy rain",
+    pick: (rand) => ({
+      set: pick(rand, ["lds", "ds", "s"]),
+      color: "tint",
+      tick: 100,
+      cell: 22 + 2 * Math.floor(rand() * 6),
+    }),
+  },
 ];
 
 const SETS = { l: /^[A-Z]$/, d: /^[0-9]$/, s: /^[^\sA-Za-z0-9]$/u };
-const FACE = 'MrlyFont';
+const FACE = "MrlyFont";
 const FADE = 0.05;
 const SIDE = 5;
 const WASH = 0.12;
@@ -39,11 +79,11 @@ export function fell(y, h, roll) {
 }
 
 export function make(canvas, view, opts) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const rand = view.rand;
   const { set, color, tick, cell } = tidy(SPEC, opts);
   const pool = glyphs(set);
-  const rainbow = color === 'rainbow';
+  const rainbow = color === "rainbow";
   const hue = () => (rainbow ? palette[pick(rand, HUES)] : null);
   const drops = [];
   const hues = [];
@@ -53,7 +93,9 @@ export function make(canvas, view, opts) {
   let rows = 0;
   const look = () => {
     const { paper, accent } = view.look();
-    return bright(paper) ? { paper: blend(paper, accent, WASH), accent: blend(accent, palette.black, DEEP) } : { paper, accent };
+    return bright(paper)
+      ? { paper: blend(paper, accent, WASH), accent: blend(accent, palette.black, DEEP) }
+      : { paper, accent };
   };
   const wash = () => {
     ctx.fillStyle = look().paper;
@@ -71,7 +113,7 @@ export function make(canvas, view, opts) {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.font = `${grid.cell}px ${FACE}, monospace`;
-    ctx.textBaseline = 'alphabetic';
+    ctx.textBaseline = "alphabetic";
     wash();
   };
   const field = () => {

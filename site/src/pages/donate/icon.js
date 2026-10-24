@@ -11,7 +11,8 @@ function tangent(center, tip, r, side) {
   const dx = tip[0] - center[0];
   const dy = tip[1] - center[1];
   const d = Math.hypot(dx, dy);
-  if (d <= r) throw new Error(`donate: the tip sits inside a lobe, ${d.toFixed(1)} from its centre at radius ${r.toFixed(1)}`);
+  if (d <= r)
+    throw new Error(`donate: the tip sits inside a lobe, ${d.toFixed(1)} from its centre at radius ${r.toFixed(1)}`);
   const turn = Math.atan2(dy, dx) + side * Math.acos(r / d);
   return [center[0] + r * Math.cos(turn), center[1] + r * Math.sin(turn)];
 }

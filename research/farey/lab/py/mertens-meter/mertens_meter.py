@@ -1,6 +1,5 @@
 import numpy as np
 
-
 KNOWN = [
     14.1347,
     21.0220,
@@ -99,10 +98,16 @@ def main():
 
     print(f"domain  N_mertens = {N_MERTENS}  N_stack = {N_STACK}")
     print(f"samples {N_SAMPLES}  log step {step:.8f}  bin width {gamma[1]:.6f}")
-    print(f"stack   nodes {nodes}  brightness min {brightness.min()} max {brightness.max()}")
-    print(f"stack   sum mu(kb) equals M(floor(N/b)) at {agreements} of {N_STACK} denominators")
+    print(
+        f"stack   nodes {nodes}  brightness min {brightness.min()} max {brightness.max()}"
+    )
+    print(
+        f"stack   sum mu(kb) equals M(floor(N/b)) at {agreements} of {N_STACK} denominators"
+    )
     print(f"readout sum M(floor(x/n)) = 1 through x = {N_READOUT}, breaches {breaches}")
-    print(f"band    {BAND[0]:g} to {BAND[1]:g}  peaks {len(found)}  threshold {threshold:.4g}")
+    print(
+        f"band    {BAND[0]:g} to {BAND[1]:g}  peaks {len(found)}  threshold {threshold:.4g}"
+    )
     print(f"mertens M({N_MERTENS}) = {int(m[-1])}")
     print()
     print("known      detected  error")

@@ -18,14 +18,16 @@ function rules() {
   const found: Rule[] = [];
   for (let rule = 0; rule < 256; rule++) {
     const diagram = life.single_seed(rule, STEPS);
-    if (diagram.shape.length !== 2 || diagram.shape[0] !== STEPS + 1 || diagram.shape[1] !== WINDOW) throw new Error(`research-automata: rule ${rule} diagram ${diagram.shape}, want ${STEPS + 1},${WINDOW}`);
+    if (diagram.shape.length !== 2 || diagram.shape[0] !== STEPS + 1 || diagram.shape[1] !== WINDOW)
+      throw new Error(`research-automata: rule ${rule} diagram ${diagram.shape}, want ${STEPS + 1},${WINDOW}`);
     found.push({ degree: life.rule_degree(rule), surjective: life.surjective(rule), diagram: diagram.data });
   }
   const affine = found.filter((r) => r.degree === 1).length;
   const surjective = found.filter((r) => r.surjective).length;
   if (affine !== 14) throw new Error(`research-automata: ${affine} affine rules, want 14`);
   if (surjective !== 30) throw new Error(`research-automata: ${surjective} surjective rules, want 30`);
-  if (surjective - affine !== 16) throw new Error(`research-automata: ${surjective - affine} surjective rules beyond affine, want 16`);
+  if (surjective - affine !== 16)
+    throw new Error(`research-automata: ${surjective - affine} surjective rules beyond affine, want 16`);
   memo = found;
   return memo;
 }

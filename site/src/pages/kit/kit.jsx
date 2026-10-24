@@ -1,16 +1,20 @@
-import { Lede } from '../../shell/parts.jsx';
-import { Glass, Icons, Theme } from './look.jsx';
-import { Controls, Designs, Library } from './parts.jsx';
+import { Lede } from "../../shell/parts.jsx";
+import { Glass, Icons, Theme } from "./look.jsx";
+import { Controls, Designs, Library } from "./parts.jsx";
 
 /* SCALE */
 
 const TYPE = [1, 2, 3, 4, 5, 6, 7];
 
-const CORNERS = ['--r-window', '--r-panel', '--r-control', '--r-inset', '--round'];
+const CORNERS = ["--r-window", "--r-panel", "--r-control", "--r-inset", "--round"];
 
-const FACES = [['--sans', 'Noto Sans'], ['--serif', 'Noto Serif'], ['--mono', 'Noto Sans Mono']];
+const FACES = [
+  ["--sans", "Noto Sans"],
+  ["--serif", "Noto Serif"],
+  ["--mono", "Noto Sans Mono"],
+];
 
-const MARKS = ['proved', 'verified', 'conjecture', 'refuted'];
+const MARKS = ["proved", "verified", "conjecture", "refuted"];
 
 function Scale() {
   return (
@@ -55,13 +59,13 @@ function Scale() {
 /* KIT */
 
 const SECTIONS = [
-  { id: 'theme', title: 'Theme and tint', body: <Theme /> },
-  { id: 'glass', title: 'Glass', body: <Glass /> },
-  { id: 'icons', title: 'Icon styles', body: <Icons /> },
-  { id: 'controls', title: 'Controls', body: <Controls /> },
-  { id: 'library', title: 'Library', body: <Library /> },
-  { id: 'designs', title: 'Design picker', body: <Designs /> },
-  { id: 'type', title: 'Type and shape', body: <Scale /> },
+  { id: "theme", title: "Theme and tint", body: <Theme /> },
+  { id: "glass", title: "Glass", body: <Glass /> },
+  { id: "icons", title: "Icon styles", body: <Icons /> },
+  { id: "controls", title: "Controls", body: <Controls /> },
+  { id: "library", title: "Library", body: <Library /> },
+  { id: "designs", title: "Design picker", body: <Designs /> },
+  { id: "type", title: "Type and shape", body: <Scale /> },
 ];
 
 export function Kit({ row }) {

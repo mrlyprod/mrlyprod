@@ -1,0 +1,40 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
+  "root": true,
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": [
+      "site/**",
+      "research/**/figures/**",
+      "aws/**",
+      "!**/*.gen.*",
+      "!**/*.svg",
+      "!**/*.html",
+      "!**/*.md",
+      "!site/infra/edge.js",
+      "!site/src/styles/fonts",
+      "!research/**/figures/*.json",
+      "!site/launchpad.json",
+      "!site/src/lib/sequences/records.json",
+      "!site/src/pages/stats/fixture.json"
+    ]
+  },
+  "formatter": { "indentStyle": "space", "lineWidth": 120, "includes": ["**", "!site/src/lib/view/index.d.ts"] },
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "a11y": { "noAriaHiddenOnFocusable": "off", "noStaticElementInteractions": "off", "useSemanticElements": "off" },
+      "complexity": { "noImportantStyles": "off" },
+      "correctness": { "noComponentHookFactories": "off", "useExhaustiveDependencies": "off" },
+      "security": { "noDangerouslySetInnerHtml": "off" },
+      "style": { "noDescendingSpecificity": "off", "noNonNullAssertion": "off" }
+    }
+  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "overrides": [
+    {
+      "includes": ["site/src/shell/dock.jsx", "site/src/pages/stats/index.jsx"],
+      "linter": { "rules": { "suspicious": { "noArrayIndexKey": "off" } } }
+    }
+  ]
+}

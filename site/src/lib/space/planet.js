@@ -1,6 +1,6 @@
-import { rng } from '../rand.js';
-import { CUBE, bake, blend, fill, link, mipmap, texture, tier } from '../gl/gl2.js';
-import { BAKE, BANDS, DRAW, RING } from './planet.glsl.js';
+import { bake, blend, CUBE, fill, link, mipmap, texture, tier } from "../gl/gl2.js";
+import { rng } from "../rand.js";
+import { BAKE, BANDS, DRAW, RING } from "./planet.glsl.js";
 
 const TAU = Math.PI * 2;
 const FACES = { phone: 512, desk: 1024, big: 1024 };
@@ -74,11 +74,14 @@ function profile(ring) {
 
 /* PLANET */
 
-const glsl = (defs, body) => `#version 300 es\n${Object.entries(defs).map(([k, v]) => `#define ${k} ${v}`).join('\n')}${body}`;
+const glsl = (defs, body) =>
+  `#version 300 es\n${Object.entries(defs)
+    .map(([k, v]) => `#define ${k} ${v}`)
+    .join("\n")}${body}`;
 
 const flat = (rows, n, width) => {
   const out = new Float32Array(n * width);
-  rows.slice(0, n).forEach((row, i) => out.set(row.slice(0, width), i * width));
+  for (const [i, row] of rows.slice(0, n).entries()) out.set(row.slice(0, width), i * width);
   return out;
 };
 
@@ -98,8 +101,8 @@ export function planet(gl, view, params, { staged = false } = {}) {
   const level = tier(view);
   const size = FACES[level];
   const kind = KINDS[params.kind] ?? 0;
-  const rocky = !['gas', 'deck'].includes(params.kind);
-  const cloudy = (params.cover ?? 0) > 0 && params.kind !== 'gas';
+  const rocky = !["gas", "deck"].includes(params.kind);
+  const cloudy = (params.cover ?? 0) > 0 && params.kind !== "gas";
   const offs = rng((params.noise ?? 0) >>> 0);
   const colors = params.colors ?? [];
   const bands = params.bands ?? [];
@@ -120,13 +123,33 @@ export function planet(gl, view, params, { staged = false } = {}) {
     uFeature: params.feature ?? [0, 0, 0.01, 0],
     uTone: params.tone ?? zero,
   };
-  const maps = [0, rocky ? 1 : -1, cloudy ? 2 : -1].filter((map) => map >= 0).map((map) => ({ map, link: baker(gl, map, kind), tex: null }));
+  const maps = [0, rocky ? 1 : -1, cloudy ? 2 : -1]
+    .filter((map) => map >= 0)
+    .map((map) => ({ map, link: baker(gl, map, kind), tex: null }));
   const ring = params.ring;
   const a = params.air;
   const count = Math.min(params.moons.length, 3);
-  const drawing = link(gl, glsl({ KIND: kind, BUMPY: rocky ? 1 : 0, CLOUDY: cloudy ? 1 : 0, MOONS: count, AIR: a ? 1 : 0, RINGS: ring ? 1 : 0, STEPS: STEPS[level] }, DRAW));
+  const drawing = link(
+    gl,
+    glsl(
+      {
+        KIND: kind,
+        BUMPY: rocky ? 1 : 0,
+        CLOUDY: cloudy ? 1 : 0,
+        MOONS: count,
+        AIR: a ? 1 : 0,
+        RINGS: ring ? 1 : 0,
+        STEPS: STEPS[level],
+      },
+      DRAW,
+    ),
+  );
   const light = (params.light ?? [1, 1, 1]).map((c) => c * LIGHT);
-  const tones = flat(params.moons.map((m) => [...m.tone, m.rough]), 3, 4);
+  const tones = flat(
+    params.moons.map((m) => [...m.tone, m.rough]),
+    3,
+    4,
+  );
   const fixed = {
     uLight: light,
     uSize: DISC,
@@ -155,7 +178,12 @@ export function planet(gl, view, params, { staged = false } = {}) {
   let gone = false;
   const finish = () => {
     for (const job of maps) mipmap(gl, job.tex);
-    rings = texture(gl, { w: ring ? RING : 1, h: 1, data: ring ? profile(ring) : new Uint8Array(4), filter: ring ? 'mip' : 'linear' });
+    rings = texture(gl, {
+      w: ring ? RING : 1,
+      h: 1,
+      data: ring ? profile(ring) : new Uint8Array(4),
+      filter: ring ? "mip" : "linear",
+    });
     const map = (n) => (maps.find((job) => job.map === n) ?? maps[0]).tex;
     prog = drawing.done();
     prog.set({ ...fixed, uSurface: map(0), uRelief: map(1), uClouds: map(2), uRings: rings });
@@ -179,7 +207,18 @@ export function planet(gl, view, params, { staged = false } = {}) {
   if (!staged) build();
   const res = new Float32Array(2);
   const toward = new Float32Array(3);
-  const live = { uPos: null, uRot: null, uTan: 1, uRes: res, uSun: toward, uBody: new Float32Array(9), uSky: new Float32Array(9), uJet: 0, uMoon: new Float32Array(12), uFade: 1 };
+  const live = {
+    uPos: null,
+    uRot: null,
+    uTan: 1,
+    uRes: res,
+    uSun: toward,
+    uBody: new Float32Array(9),
+    uSky: new Float32Array(9),
+    uJet: 0,
+    uMoon: new Float32Array(12),
+    uFade: 1,
+  };
   const draw = (cam, sun, t, k = 1) => {
     if (gone) return;
     if (!prog) build();
@@ -199,7 +238,7 @@ export function planet(gl, view, params, { staged = false } = {}) {
     live.uJet = (params.jets ?? 0) * 20 * Math.sin(s / 20);
     live.uFade = k;
     prog.set(live);
-    blend(gl, 'alpha');
+    blend(gl, "alpha");
     fill(gl);
     blend(gl, null);
   };

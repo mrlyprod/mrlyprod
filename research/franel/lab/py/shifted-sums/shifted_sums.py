@@ -10,14 +10,40 @@ SHOW = 40
 CONTROL_TOP = 16
 CHECK = 18
 PAGE_T = [0, -1, -3, -4, 0, -6, -5, -27, -21, -25, -51, -118, -168, -178, -257, -169]
-PAGE_ENDPOINT = [0, -1, -1, -1, 3, -6, 0, -22, 6, -4, -27, -67, -49, -10, -78, 88, 82, 209, 543, 858, 335, -407, 3030]
+PAGE_ENDPOINT = [
+    0,
+    -1,
+    -1,
+    -1,
+    3,
+    -6,
+    0,
+    -22,
+    6,
+    -4,
+    -27,
+    -67,
+    -49,
+    -10,
+    -78,
+    88,
+    82,
+    209,
+    543,
+    858,
+    335,
+    -407,
+    3030,
+]
 LOWS = f"L=vector(2^{LOW},r,6*fromdigits(binary(r-1),3));"
 
 # PARI
 
 
 def gp(script):
-    out = subprocess.run(["gp", "-q"], input=script + "\n", capture_output=True, text=True, check=True).stdout
+    out = subprocess.run(
+        ["gp", "-q"], input=script + "\n", capture_output=True, text=True, check=True
+    ).stdout
     return [[int(x) for x in line.split()] for line in out.split("\n") if line.strip()]
 
 
@@ -53,15 +79,21 @@ def cross_script(jobs):
 
 
 def low_levels():
-    return gp(LOWS + f" p=0; s=0; for(r=1,2^{LOW}, p+=moebius(1+L[r]); if(r==2^s, print(s,\" \",p); s++));")
+    return gp(
+        LOWS
+        + f' p=0; s=0; for(r=1,2^{LOW}, p+=moebius(1+L[r]); if(r==2^s, print(s," ",p); s++));'
+    )
 
 
 def sequential(top):
-    return gp(f"p=0; ls=0; k=0; at=0; for(i=0,2^{top}-1, p+=moebius(6*fromdigits(binary(i),3)+1); if(p!=0&&sign(p)!=ls, if(ls!=0, k++; at=i+1); ls=sign(p))); print(p,\" \",k,\" \",at);")[0]
+    return gp(
+        f'p=0; ls=0; k=0; at=0; for(i=0,2^{top}-1, p+=moebius(6*fromdigits(binary(i),3)+1); if(p!=0&&sign(p)!=ls, if(ls!=0, k++; at=i+1); ls=sign(p))); print(p," ",k," ",at);'
+    )[0]
 
 
 def spread(items):
     return [items[k::WORKERS] for k in range(WORKERS) if items[k::WORKERS]]
+
 
 # THE WALK
 
@@ -121,29 +153,44 @@ def verb_walk():
         if (j + 1) & j == 0:
             level[LOW + (j + 1).bit_length() - 1] = run
     assert [level[s] for s in range(1, 17)] == PAGE_T
-    mu = dict(gp("\n".join(f'print({t}," ",moebius(3^{t}+1));' for t in range(2, TOP + 2))))
+    mu = dict(
+        gp("\n".join(f'print({t}," ",moebius(3^{t}+1));' for t in range(2, TOP + 2)))
+    )
     ends = [level[t - 1] - level[t - 2] + mu[t] for t in range(2, 25)]
     assert ends == PAGE_ENDPOINT
     early = [m for m, _, _ in flips if m <= 2**CHECK]
     assert sequential(CHECK) == [level[CHECK], len(early), early[-1]]
-    print(f"T_s = sum_(w in B_s) mu(6w + 1), B_s the 2^s base 3 {{0,1}}-strings of length s, walked in ascending w to s = {TOP}")
-    print(f"checks: T_1..T_16 equal the page's list; T_(t-1) - T_(t-2) + mu(3^t + 1) equals the page's M_F(x_t; R_t) at t = 2..24; a sequential walk to 2^{CHECK} repeats T_{CHECK}, the flip count and the last flip")
-    print("  s |        2^s |       top element |       T_s | T_s/2^(s/2) | flips n <= 2^s | share of n <= 2^s with last nonzero sign +")
+    print(
+        f"T_s = sum_(w in B_s) mu(6w + 1), B_s the 2^s base 3 {{0,1}}-strings of length s, walked in ascending w to s = {TOP}"
+    )
+    print(
+        f"checks: T_1..T_16 equal the page's list; T_(t-1) - T_(t-2) + mu(3^t + 1) equals the page's M_F(x_t; R_t) at t = 2..24; a sequential walk to 2^{CHECK} repeats T_{CHECK}, the flip count and the last flip"
+    )
+    print(
+        "  s |        2^s |       top element |       T_s | T_s/2^(s/2) | flips n <= 2^s | share of n <= 2^s with last nonzero sign +"
+    )
     for s in range(TOP + 1):
         n = 2**s
         k = sum(1 for m, _, _ in flips if m <= n)
-        print(f"{s:3d} | {n:10d} | {3 ** (s + 1) - 2:17d} | {level[s]:9d} | {level[s] / 2 ** (s / 2):11.4f} | {k:14d} | {positive_share(flips, n):.4f}")
+        print(
+            f"{s:3d} | {n:10d} | {3 ** (s + 1) - 2:17d} | {level[s]:9d} | {level[s] / 2 ** (s / 2):11.4f} | {k:14d} | {positive_share(flips, n):.4f}"
+        )
     neg = [s for s in range(1, TOP + 1) if level[s] < 0]
     pos = [s for s in range(1, TOP + 1) if level[s] > 0]
     print(f"T_s < 0 at s = {neg}")
     print(f"T_s > 0 at s = {pos}")
     print(f"T_s = 0 at s = {[s for s in range(1, TOP + 1) if level[s] == 0]}")
-    print(f"cut: n = 2^{TOP} = {2**TOP} terms, largest element 3^{TOP + 1} - 2 = {3 ** (TOP + 1) - 2}, P = {level[TOP]}")
-    print(f"sign changes of the prefix walk P_n (last nonzero sign flips): {len(flips)} in all, {todo} chunks of 2^{LOW} rewalked")
+    print(
+        f"cut: n = 2^{TOP} = {2**TOP} terms, largest element 3^{TOP + 1} - 2 = {3 ** (TOP + 1) - 2}, P = {level[TOP]}"
+    )
+    print(
+        f"sign changes of the prefix walk P_n (last nonzero sign flips): {len(flips)} in all, {todo} chunks of 2^{LOW} rewalked"
+    )
     print(f"the last {min(SHOW, len(flips))}: n, new sign, element 6w + 1")
     for m, sg, n in flips[-SHOW:]:
         print(f"  n = {m:10d}  {'+' if sg > 0 else '-'}  6w + 1 = {n}")
     print(f"walk {t1 - t0:.1f} s, rewalk {t2 - t1:.1f} s, {WORKERS} gp processes")
+
 
 # THE CONTROL
 
@@ -165,12 +212,20 @@ def verb_control():
         f"forstep(n=1,3^{CONTROL_TOP}-2,6, p+=moebius(n); c++; if(p!=0&&sign(p)!=ls, if(ls!=0,ch++); ls=sign(p)); if(ls>0,ps++); "
         'if(n==nx, print(s," ",p," ",ch," ",ps," ",c); s++; nx=3^(s+1)-2));'
     )
-    print("control: the whole class, M(x; 6, 1) = sum_(n <= x, n = 1 mod 6) mu(n), at x = 3^(s+1) - 2")
-    print("drift = 3/4 - Psi_(2,3)(x), the s = 0 residue of M(x; 6, 1) with M's constant -2 and 1/(L(0, chi_-3)(1 + 2^0)) = 3/2")
-    print("  s |                x | M(x; 6, 1) |   drift | M/sqrt(x/6) | flips to x | share with last nonzero sign +")
+    print(
+        "control: the whole class, M(x; 6, 1) = sum_(n <= x, n = 1 mod 6) mu(n), at x = 3^(s+1) - 2"
+    )
+    print(
+        "drift = 3/4 - Psi_(2,3)(x), the s = 0 residue of M(x; 6, 1) with M's constant -2 and 1/(L(0, chi_-3)(1 + 2^0)) = 3/2"
+    )
+    print(
+        "  s |                x | M(x; 6, 1) |   drift | M/sqrt(x/6) | flips to x | share with last nonzero sign +"
+    )
     for s, p, ch, ps, c in got:
         x = 3 ** (s + 1) - 2
-        print(f"{s:3d} | {x:16d} | {p:10d} | {0.75 - smooth23(x):7.2f} | {p / (x / 6) ** 0.5:11.4f} | {ch:10d} | {ps / c:.4f}")
+        print(
+            f"{s:3d} | {x:16d} | {p:10d} | {0.75 - smooth23(x):7.2f} | {p / (x / 6) ** 0.5:11.4f} | {ch:10d} | {ps / c:.4f}"
+        )
     print(f"control {time.time() - t0:.1f} s")
 
 

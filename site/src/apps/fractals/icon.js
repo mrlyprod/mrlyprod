@@ -8,7 +8,7 @@ const VIEW = { xMin: -2.05, xMax: 0.65, yMin: -1.35, yMax: 1.35 };
 const MAX = 100;
 const HALO = { from: 1, span: 22, gamma: 1.1 };
 
-function escape(cr, ci) {
+function dwell(cr, ci) {
   let zr = 0;
   let zi = 0;
   let n = 0;
@@ -27,7 +27,7 @@ function count() {
     for (let col = 0; col < SIDE; col++) {
       const x = HOME.xMin + ((col + 0.5) / SIDE) * (HOME.xMax - HOME.xMin);
       const y = HOME.yMax - ((row + 0.5) / SIDE) * (HOME.yMax - HOME.yMin);
-      if (escape(x, y) === MAX) inside++;
+      if (dwell(x, y) === MAX) inside++;
     }
   }
   return inside;
@@ -39,7 +39,7 @@ function picture(side, white, light) {
     const y = VIEW.yMax - ((row + 0.5) / side) * (VIEW.yMax - VIEW.yMin);
     for (let col = 0; col < side; col++) {
       const x = VIEW.xMin + ((col + 0.5) / side) * (VIEW.xMax - VIEW.xMin);
-      const n = escape(x, y);
+      const n = dwell(x, y);
       const i = (row * side + col) * 4;
       if (n === MAX) {
         colors[i] = white[0];

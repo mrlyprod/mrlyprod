@@ -12,7 +12,11 @@ const idx = index(rows);
 const post = (href: string) => resolve("site/src/pages/blog/x/index.md", href, idx);
 
 test("a link to a page's source lands on its route, with or without .md, its tail kept", () => {
-  expect([post("../../about/index.md"), post("../../about/index"), post("../../about/index.md#who")]).toEqual(["/about/", "/about/", "/about/#who"]);
+  expect([post("../../about/index.md"), post("../../about/index"), post("../../about/index.md#who")]).toEqual([
+    "/about/",
+    "/about/",
+    "/about/#who",
+  ]);
 });
 
 test("a README with no route of its own lands in the code viewer", () => {
@@ -24,7 +28,12 @@ test("a folder with its slash lands on its viewer listing", () => {
 });
 
 test("an absolute link, a fragment and another origin pass unchanged", () => {
-  expect([post("/git/"), post("#top"), post("https://mrly.net/x/"), post("mailto:help@mrly.net")]).toEqual(["/git/", "#top", "https://mrly.net/x/", "mailto:help@mrly.net"]);
+  expect([post("/git/"), post("#top"), post("https://mrly.net/x/"), post("mailto:help@mrly.net")]).toEqual([
+    "/git/",
+    "#top",
+    "https://mrly.net/x/",
+    "mailto:help@mrly.net",
+  ]);
 });
 
 test("an image lands on its raw bytes", () => {
@@ -32,7 +41,10 @@ test("an image lands on its raw bytes", () => {
 });
 
 test("a target in research lands in the code viewer like any other file", () => {
-  expect([post("../../../../../research/farey/README.md"), resolve("research/farey/README.md", "notes/farey.md#top", idx)]).toEqual(["/git/research/farey/README.md", "/git/research/farey/notes/farey.md#top"]);
+  expect([
+    post("../../../../../research/farey/README.md"),
+    resolve("research/farey/README.md", "notes/farey.md#top", idx),
+  ]).toEqual(["/git/research/farey/README.md", "/git/research/farey/notes/farey.md#top"]);
 });
 
 test("a script url goes nowhere and a path above the repo is left as written", () => {

@@ -8,8 +8,12 @@ export const units = {};
 export default function draw(pen: Pen, ink: Ink) {
   const { side, cells, chords } = census;
   const inside = (n: number) => Number.isInteger(n) && n >= 0 && n < side;
-  if (cells.some((cell) => cell.length !== 2 || !cell.every(inside))) throw new Error(`paper-spin-harmonics: a cell off the ${side} by ${side} lattice`);
-  if (chords.length !== (cells.length * (cells.length - 1)) / 2 || chords.some((c) => c.length !== 5 || !c.slice(0, 4).every(inside))) {
+  if (cells.some((cell) => cell.length !== 2 || !cell.every(inside)))
+    throw new Error(`paper-spin-harmonics: a cell off the ${side} by ${side} lattice`);
+  if (
+    chords.length !== (cells.length * (cells.length - 1)) / 2 ||
+    chords.some((c) => c.length !== 5 || !c.slice(0, 4).every(inside))
+  ) {
     throw new Error(`paper-spin-harmonics: ${chords.length} chords, want one for each pair of ${cells.length} cells`);
   }
   const frame = pen.frame(0.08);

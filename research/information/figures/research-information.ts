@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { Grid, frame, type Ink, type Pen } from "#view";
+import { frame, Grid, type Ink, type Pen } from "#view";
 import census from "./research-information.json" with { type: "json" };
 
 export const units = { math };
@@ -9,7 +9,8 @@ const SIDE = SPLIT * SPLIT;
 
 function whole() {
   const cells = math.two.create(495, 3, 4, 0, 3);
-  if (cells.shape[0] !== SIDE || cells.shape[1] !== SIDE) throw new Error(`research-information: level 4 is ${cells.shape}, want ${SIDE} square`);
+  if (cells.shape[0] !== SIDE || cells.shape[1] !== SIDE)
+    throw new Error(`research-information: level 4 is ${cells.shape}, want ${SIDE} square`);
   const mask: boolean[][] = [];
   let ones = 0;
   for (let row = 0; row < SIDE; row++) {
@@ -26,7 +27,8 @@ function whole() {
 
 function rearranged() {
   const rows = census.rearranged;
-  if (rows.length !== SIDE || rows.some((row) => row.length !== SIDE)) throw new Error(`research-information: the rearrangement is not ${SIDE} square`);
+  if (rows.length !== SIDE || rows.some((row) => row.length !== SIDE))
+    throw new Error(`research-information: the rearrangement is not ${SIDE} square`);
   return rows.map((row) => [...row].map((c) => c === "1"));
 }
 

@@ -1,7 +1,7 @@
-import { rng } from '../rand.js';
-import { uniforms } from '../gl/camera.js';
-import { bake, blend, fill, program, quads, tier } from '../gl/gl2.js';
-import { clamp01, norm, smooth } from '../gl/vec.js';
+import { uniforms } from "../gl/camera.js";
+import { bake, blend, fill, program, quads, tier } from "../gl/gl2.js";
+import { clamp01, norm, smooth } from "../gl/vec.js";
+import { rng } from "../rand.js";
 
 const TAU = Math.PI * 2;
 const DESK = 6000;
@@ -26,7 +26,10 @@ export function stars(seed, count) {
     const z = rand() * 2 - 1;
     const a = rand() * TAU;
     const r = Math.sqrt(1 - z * z);
-    out.set([r * Math.cos(a), r * Math.sin(a), z, Math.cbrt(rand()), rand() ** 3, Math.sqrt(rand()), rand() * TAU, 0], i * 8);
+    out.set(
+      [r * Math.cos(a), r * Math.sin(a), z, Math.cbrt(rand()), rand() ** 3, Math.sqrt(rand()), rand() * TAU, 0],
+      i * 8,
+    );
   }
   return out;
 }
@@ -131,20 +134,23 @@ void main() {
 `;
 
 export function sky(gl, view, { seed = 0, density = 1, dust = 1 } = {}) {
-  const count = Math.max(0, Math.round((tier(view) === 'phone' ? PHONE : DESK) * density));
+  const count = Math.max(0, Math.round((tier(view) === "phone" ? PHONE : DESK) * density));
   const field = stars(seed, count);
   const glow = program(gl, GLOW, STREAK);
   const batch = quads(gl, { aEnds: 4, aLook: 4 }, count);
   const tilt = rng((seed ^ SALT) >>> 0);
   const haze = dust > 0 ? program(gl, HAZE) : null;
-  const cube = dust > 0 ? bake(gl, FACE, DUST, { uGalaxy: norm([tilt() - 0.5, tilt() - 0.5, tilt() - 0.5]), uSeed: tilt() * 100 }) : null;
+  const cube =
+    dust > 0
+      ? bake(gl, FACE, DUST, { uGalaxy: norm([tilt() - 0.5, tilt() - 0.5, tilt() - 0.5]), uSeed: tilt() * 100 })
+      : null;
   const draw = (cam, flow = {}) => {
     const port = gl.getParameter(gl.VIEWPORT);
     const w = port[2];
     const h = port[3];
     const gain = flow.k ?? 1;
     if (haze) {
-      blend(gl, 'add');
+      blend(gl, "add");
       haze.set({ ...uniforms({ w, h }, cam), uDust: cube, uK: dust * gain });
       fill(gl);
     }
@@ -190,7 +196,13 @@ export function sky(gl, view, { seed = 0, density = 1, dust = 1 } = {}) {
       const sy = h / 2 - (vy / vz) * focal;
       const ex = w / 2 + (tx / tz) * focal;
       const ey = h / 2 - (ty / tz) * focal;
-      if (Math.max(sx, ex) < -PAD || Math.min(sx, ex) > w + PAD || Math.max(sy, ey) < -PAD || Math.min(sy, ey) > h + PAD) continue;
+      if (
+        Math.max(sx, ex) < -PAD ||
+        Math.min(sx, ex) > w + PAD ||
+        Math.max(sy, ey) < -PAD ||
+        Math.min(sy, ey) > h + PAD
+      )
+        continue;
       const mag = field[o + 4];
       const phase = field[o + 6];
       const near = (1 - Math.min(Math.hypot(vx, vy, vz), 1)) * (1 - away);
@@ -213,7 +225,7 @@ export function sky(gl, view, { seed = 0, density = 1, dust = 1 } = {}) {
       out[at + 7] = field[o + 5];
     }
     glow.set({ uRes: [w, h], uHalo: flow.halo ?? UNSET, uTint: flow.tint ?? WHITE });
-    batch.draw(glow, n, 'add');
+    batch.draw(glow, n, "add");
     blend(gl, null);
   };
   const drop = () => {

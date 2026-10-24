@@ -1,8 +1,8 @@
-import { startOf } from './engine.js';
+import { startOf } from "./engine.js";
 
 export const PANE = () => false;
 
-export const SOUP = (value) => startOf(value) === 'noise';
+export const SOUP = (value) => startOf(value) === "noise";
 
 const LEAST = 5;
 

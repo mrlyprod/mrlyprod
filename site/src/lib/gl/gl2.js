@@ -38,7 +38,15 @@ const park = (gl) => gl.activeTexture(gl.TEXTURE0 + SCRATCH);
 
 export function context(canvas) {
   try {
-    return canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: true }) ?? null;
+    return (
+      canvas.getContext("webgl2", {
+        alpha: false,
+        antialias: false,
+        depth: false,
+        stencil: false,
+        preserveDrawingBuffer: true,
+      }) ?? null
+    );
   } catch {
     return null;
   }
@@ -49,7 +57,7 @@ const floats = new WeakMap();
 export function hdr(gl) {
   if (floats.has(gl)) return floats.get(gl);
   let ok = false;
-  if (gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float')) {
+  if (gl.getExtension("EXT_color_buffer_float") || gl.getExtension("EXT_color_buffer_half_float")) {
     const tex = gl.createTexture();
     const fb = gl.createFramebuffer();
     park(gl);
@@ -75,27 +83,42 @@ const compile = (gl, kind, source) => {
   return shader;
 };
 
-const failed = (gl, shader) => (gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? null : gl.getShaderInfoLog(shader) || 'the shader did not compile');
+const failed = (gl, shader) =>
+  gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? null : gl.getShaderInfoLog(shader) || "the shader did not compile";
 
 const parallel = new WeakMap();
 
 const setter = (gl, type, loc, size) => {
   const many = size > 1;
   switch (type) {
-    case gl.FLOAT: return (v) => (many ? gl.uniform1fv(loc, v) : gl.uniform1f(loc, v));
-    case gl.FLOAT_VEC2: return (v) => gl.uniform2fv(loc, v);
-    case gl.FLOAT_VEC3: return (v) => gl.uniform3fv(loc, v);
-    case gl.FLOAT_VEC4: return (v) => gl.uniform4fv(loc, v);
-    case gl.INT: return (v) => (many ? gl.uniform1iv(loc, v) : gl.uniform1i(loc, v));
-    case gl.BOOL: return (v) => gl.uniform1i(loc, v ? 1 : 0);
-    case gl.UNSIGNED_INT: return (v) => gl.uniform1ui(loc, v);
-    case gl.INT_VEC2: return (v) => gl.uniform2iv(loc, v);
-    case gl.INT_VEC3: return (v) => gl.uniform3iv(loc, v);
-    case gl.INT_VEC4: return (v) => gl.uniform4iv(loc, v);
-    case gl.FLOAT_MAT2: return (v) => gl.uniformMatrix2fv(loc, false, v);
-    case gl.FLOAT_MAT3: return (v) => gl.uniformMatrix3fv(loc, false, v);
-    case gl.FLOAT_MAT4: return (v) => gl.uniformMatrix4fv(loc, false, v);
-    default: return null;
+    case gl.FLOAT:
+      return (v) => (many ? gl.uniform1fv(loc, v) : gl.uniform1f(loc, v));
+    case gl.FLOAT_VEC2:
+      return (v) => gl.uniform2fv(loc, v);
+    case gl.FLOAT_VEC3:
+      return (v) => gl.uniform3fv(loc, v);
+    case gl.FLOAT_VEC4:
+      return (v) => gl.uniform4fv(loc, v);
+    case gl.INT:
+      return (v) => (many ? gl.uniform1iv(loc, v) : gl.uniform1i(loc, v));
+    case gl.BOOL:
+      return (v) => gl.uniform1i(loc, v ? 1 : 0);
+    case gl.UNSIGNED_INT:
+      return (v) => gl.uniform1ui(loc, v);
+    case gl.INT_VEC2:
+      return (v) => gl.uniform2iv(loc, v);
+    case gl.INT_VEC3:
+      return (v) => gl.uniform3iv(loc, v);
+    case gl.INT_VEC4:
+      return (v) => gl.uniform4iv(loc, v);
+    case gl.FLOAT_MAT2:
+      return (v) => gl.uniformMatrix2fv(loc, false, v);
+    case gl.FLOAT_MAT3:
+      return (v) => gl.uniformMatrix3fv(loc, false, v);
+    case gl.FLOAT_MAT4:
+      return (v) => gl.uniformMatrix4fv(loc, false, v);
+    default:
+      return null;
   }
 };
 
@@ -117,14 +140,17 @@ export function link(gl, frag, vert = TRIANGLE) {
   };
   const ready = () => {
     if (made || gone) return true;
-    if (!parallel.has(gl)) parallel.set(gl, gl.getExtension('KHR_parallel_shader_compile'));
+    if (!parallel.has(gl)) parallel.set(gl, gl.getExtension("KHR_parallel_shader_compile"));
     const fast = parallel.get(gl);
     return !fast || Boolean(gl.getProgramParameter(prog, fast.COMPLETION_STATUS_KHR));
   };
   const done = () => {
     if (made) return made;
-    if (gone) throw new Error('the program was dropped');
-    const log = failed(gl, vs) ?? failed(gl, fs) ?? (gl.getProgramParameter(prog, gl.LINK_STATUS) ? null : gl.getProgramInfoLog(prog) || 'the program did not link');
+    if (gone) throw new Error("the program was dropped");
+    const log =
+      failed(gl, vs) ??
+      failed(gl, fs) ??
+      (gl.getProgramParameter(prog, gl.LINK_STATUS) ? null : gl.getProgramInfoLog(prog) || "the program did not link");
     if (log) {
       drop();
       throw new Error(log);
@@ -142,13 +168,17 @@ export function program(gl, frag, vert = TRIANGLE) {
 function wrap(gl, prog, drop) {
   const table = new Map();
   const attribs = new Map();
-  const samplers = new Map([[gl.SAMPLER_2D, gl.TEXTURE_2D], [gl.SAMPLER_3D, gl.TEXTURE_3D], [gl.SAMPLER_CUBE, gl.TEXTURE_CUBE_MAP]]);
+  const samplers = new Map([
+    [gl.SAMPLER_2D, gl.TEXTURE_2D],
+    [gl.SAMPLER_3D, gl.TEXTURE_3D],
+    [gl.SAMPLER_CUBE, gl.TEXTURE_CUBE_MAP],
+  ]);
   const slots = [];
   const count = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
   for (let i = 0; i < count; i++) {
     const info = gl.getActiveUniform(prog, i);
     if (!info) continue;
-    const name = info.name.replace(/\[0\]$/, '');
+    const name = info.name.replace(/\[0\]$/, "");
     const loc = gl.getUniformLocation(prog, info.name);
     const kind = samplers.get(info.type);
     if (kind) {
@@ -223,11 +253,31 @@ export function target(gl, w, h, { hdr: want = false, mips = false, extra = 0 } 
     self.h = sh;
     park(gl);
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, high ? gl.RGBA16F : gl.RGBA8, sw, sh, 0, gl.RGBA, high ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      high ? gl.RGBA16F : gl.RGBA8,
+      sw,
+      sh,
+      0,
+      gl.RGBA,
+      high ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE,
+      null,
+    );
     if (mips) gl.generateMipmap(gl.TEXTURE_2D);
     if (aux) {
       gl.bindTexture(gl.TEXTURE_2D, aux);
-      gl.texImage2D(gl.TEXTURE_2D, 0, high ? gl.RGBA16F : gl.RGBA8, sw, sh, 0, gl.RGBA, high ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE, null);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        high ? gl.RGBA16F : gl.RGBA8,
+        sw,
+        sh,
+        0,
+        gl.RGBA,
+        high ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE,
+        null,
+      );
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
@@ -247,17 +297,17 @@ export function target(gl, w, h, { hdr: want = false, mips = false, extra = 0 } 
 }
 
 const FORMATS = {
-  rgba8: ['RGBA8', 'RGBA', 'UNSIGNED_BYTE'],
-  r8: ['R8', 'RED', 'UNSIGNED_BYTE'],
-  rg32f: ['RG32F', 'RG', 'FLOAT'],
-  r32f: ['R32F', 'RED', 'FLOAT'],
-  rgba16f: ['RGBA16F', 'RGBA', 'FLOAT'],
-  rgba32f: ['RGBA32F', 'RGBA', 'FLOAT'],
+  rgba8: ["RGBA8", "RGBA", "UNSIGNED_BYTE"],
+  r8: ["R8", "RED", "UNSIGNED_BYTE"],
+  rg32f: ["RG32F", "RG", "FLOAT"],
+  r32f: ["R32F", "RED", "FLOAT"],
+  rgba16f: ["RGBA16F", "RGBA", "FLOAT"],
+  rgba32f: ["RGBA32F", "RGBA", "FLOAT"],
 };
 
-const WRAPS = { clamp: 'CLAMP_TO_EDGE', repeat: 'REPEAT', mirror: 'MIRRORED_REPEAT' };
+const WRAPS = { clamp: "CLAMP_TO_EDGE", repeat: "REPEAT", mirror: "MIRRORED_REPEAT" };
 
-export function texture(gl, { w, h, d = 0, format = 'rgba8', data = null, filter = 'linear', wrap = 'clamp' }) {
+export function texture(gl, { w, h, d = 0, format = "rgba8", data = null, filter = "linear", wrap = "clamp" }) {
   const [inner, form, type] = (FORMATS[format] ?? FORMATS.rgba8).map((key) => gl[key]);
   const kind = d ? gl.TEXTURE_3D : gl.TEXTURE_2D;
   const tex = gl.createTexture();
@@ -266,25 +316,31 @@ export function texture(gl, { w, h, d = 0, format = 'rgba8', data = null, filter
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
   if (d) gl.texImage3D(kind, 0, inner, w, h, d, 0, form, type, data);
   else gl.texImage2D(kind, 0, inner, w, h, 0, form, type, data);
-  const how = /32f$/.test(format) ? 'nearest' : filter;
-  const mips = how === 'mip';
+  const how = /32f$/.test(format) ? "nearest" : filter;
+  const mips = how === "mip";
   if (mips) gl.generateMipmap(kind);
-  gl.texParameteri(kind, gl.TEXTURE_MIN_FILTER, mips ? gl.LINEAR_MIPMAP_LINEAR : how === 'nearest' ? gl.NEAREST : gl.LINEAR);
-  gl.texParameteri(kind, gl.TEXTURE_MAG_FILTER, how === 'nearest' ? gl.NEAREST : gl.LINEAR);
+  gl.texParameteri(
+    kind,
+    gl.TEXTURE_MIN_FILTER,
+    mips ? gl.LINEAR_MIPMAP_LINEAR : how === "nearest" ? gl.NEAREST : gl.LINEAR,
+  );
+  gl.texParameteri(kind, gl.TEXTURE_MAG_FILTER, how === "nearest" ? gl.NEAREST : gl.LINEAR);
   const edge = gl[WRAPS[wrap] ?? WRAPS.clamp];
-  for (const key of d ? ['TEXTURE_WRAP_S', 'TEXTURE_WRAP_T', 'TEXTURE_WRAP_R'] : ['TEXTURE_WRAP_S', 'TEXTURE_WRAP_T']) gl.texParameteri(kind, gl[key], edge);
+  for (const key of d ? ["TEXTURE_WRAP_S", "TEXTURE_WRAP_T", "TEXTURE_WRAP_R"] : ["TEXTURE_WRAP_S", "TEXTURE_WRAP_T"])
+    gl.texParameteri(kind, gl[key], edge);
   return tex;
 }
 
 export function bake(gl, size, frag, values = {}, mips = true) {
   const tex = gl.createTexture();
   const fb = gl.createFramebuffer();
-  const own = typeof frag === 'string';
+  const own = typeof frag === "string";
   const prog = own ? program(gl, frag, CUBE) : frag;
   const port = gl.getParameter(gl.VIEWPORT);
   park(gl);
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
-  for (let face = 0; face < 6; face++) gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, gl.RGBA8, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  for (let face = 0; face < 6; face++)
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, gl.RGBA8, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -319,8 +375,8 @@ export function blend(gl, mode) {
     return;
   }
   gl.enable(gl.BLEND);
-  if (mode === 'alpha') gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  else if (mode === 'screen') gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+  if (mode === "alpha") gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  else if (mode === "screen") gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
   else gl.blendFunc(gl.ONE, gl.ONE);
 }
 
@@ -351,7 +407,7 @@ export function quads(gl, layout, max) {
     vaos.set(prog, made);
     return made;
   };
-  const draw = (prog, n, mode = 'add') => {
+  const draw = (prog, n, mode = "add") => {
     const count = Math.min(n, room);
     if (count <= 0) return;
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -373,8 +429,8 @@ export function quads(gl, layout, max) {
 /* BUDGET */
 
 export function tier(view) {
-  if (!view.fixed && Math.min(view.w, view.h) / (view.dpr || 1) < PHONE) return 'phone';
-  return view.w * view.h > BIG ? 'big' : 'desk';
+  if (!view.fixed && Math.min(view.w, view.h) / (view.dpr || 1) < PHONE) return "phone";
+  return view.w * view.h > BIG ? "big" : "desk";
 }
 
 export function governor(view, notches) {
@@ -411,8 +467,8 @@ export function governor(view, notches) {
 /* BLANK */
 
 export function blank(canvas) {
-  const gl = canvas?.getContext?.('webgl2') ?? null;
-  const pen = gl ? null : (canvas?.getContext?.('2d') ?? null);
+  const gl = canvas?.getContext?.("webgl2") ?? null;
+  const pen = gl ? null : (canvas?.getContext?.("2d") ?? null);
   const fire = (...calls) => {
     for (const call of calls) call?.();
   };
@@ -422,7 +478,7 @@ export function blank(canvas) {
       gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
     } else if (pen) {
-      pen.fillStyle = '#000';
+      pen.fillStyle = "#000";
       pen.fillRect(0, 0, canvas.width, canvas.height);
     }
   };
@@ -432,7 +488,7 @@ export function blank(canvas) {
     exit: (onDone) => fire(onDone),
     windDown: (onDone) => fire(onDone),
     hold: () => {},
-    phase: () => 'cruise',
-    stop: () => gl?.getExtension('WEBGL_lose_context')?.loseContext(),
+    phase: () => "cruise",
+    stop: () => gl?.getExtension("WEBGL_lose_context")?.loseContext(),
   };
 }

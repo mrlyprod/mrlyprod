@@ -20,8 +20,12 @@ function facts() {
   if (slice) return slice;
   const cut = math.six.cut_design(CODE, NUMBER, LEVEL, BASE);
   const tally = math.six.census(cut, false);
-  if (tally.triangles !== hex.count(SIDE)) throw new Error(`six: the cut holds ${tally.triangles} triangles, want ${hex.count(SIDE)}`);
-  if (tally.fills !== WANT.fills || tally.voids !== WANT.voids) throw new Error(`six: the carpet's cut fills ${tally.fills} and leaves ${tally.voids}, want ${WANT.fills} and ${WANT.voids}`);
+  if (tally.triangles !== hex.count(SIDE))
+    throw new Error(`six: the cut holds ${tally.triangles} triangles, want ${hex.count(SIDE)}`);
+  if (tally.fills !== WANT.fills || tally.voids !== WANT.voids)
+    throw new Error(
+      `six: the carpet's cut fills ${tally.fills} and leaves ${tally.voids}, want ${WANT.fills} and ${WANT.voids}`,
+    );
   slice = cut;
   return slice;
 }

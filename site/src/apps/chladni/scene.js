@@ -1,54 +1,144 @@
-import { tidy } from '../../lib/app/spec.js';
-import { TINTS } from '../../lib/color.js';
-import { rng } from '../../lib/rand.js';
-import { CHUNK, COUNT, HOLD, NUMBERS, POUR, RATE, REST, ROOM, TAP, TOP, base, codes, fill, highest, inks, keyOf, known, ladder, live, lowest, paint, raster, rungOf, scatter, sprinkle, stamp } from './engine.js';
-import { wasm } from '../../lib/units/index.js';
+import { tidy } from "../../lib/app/spec.js";
+import { TINTS } from "../../lib/color.js";
+import { rng } from "../../lib/rand.js";
+import { wasm } from "../../lib/units/index.js";
+import {
+  base,
+  CHUNK,
+  COUNT,
+  codes,
+  fill,
+  HOLD,
+  highest,
+  inks,
+  keyOf,
+  known,
+  ladder,
+  live,
+  lowest,
+  NUMBERS,
+  POUR,
+  paint,
+  RATE,
+  REST,
+  ROOM,
+  raster,
+  rungOf,
+  scatter,
+  sprinkle,
+  stamp,
+  TAP,
+  TOP,
+} from "./engine.js";
 
-const VIEWS = [['plate', 'Plate'], ['carpet', 'Carpet']];
-const LOOKS = [['sand', 'Sand'], ['field', 'Field'], ['lines', 'Lines']];
-const GRAINS = [[10000, '10k'], [20000, '20k'], [40000, '40k'], [80000, '80k']];
+const VIEWS = [
+  ["plate", "Plate"],
+  ["carpet", "Carpet"],
+];
+const LOOKS = [
+  ["sand", "Sand"],
+  ["field", "Field"],
+  ["lines", "Lines"],
+];
+const GRAINS = [
+  [10000, "10k"],
+  [20000, "20k"],
+  [40000, "40k"],
+  [80000, "80k"],
+];
 
 const HIDE = () => false;
 
-const plate = (value) => value.view !== 'carpet';
-const carpet = (value) => value.view === 'carpet';
-const sanded = (value) => value.look === 'sand';
+const plate = (value) => value.view !== "carpet";
+const carpet = (value) => value.view === "carpet";
+const sanded = (value) => value.look === "sand";
 
 export const SPEC = [
-  { key: 'view', label: 'View', kind: 'segment', def: 'plate', options: VIEWS, group: 'Figure' },
-  { key: 'n', label: 'n', kind: 'slider', def: 3, min: 0, max: TOP, step: 1, when: plate, group: 'Figure' },
-  { key: 'm', label: 'm', kind: 'slider', def: 5, min: 0, max: TOP, step: 1, when: plate, group: 'Figure' },
-  { key: 'sign', label: 'Sign', kind: 'segment', def: -1, options: [[1, '+'], [-1, '-']], when: (value) => plate(value) && value.n !== value.m, group: 'Figure' },
-  { key: 'number', label: 'Number', kind: 'pick', def: 3, options: NUMBERS.map((n) => [n, String(n)]), when: carpet, group: 'Figure' },
-  { key: 'code', label: 'Design', kind: 'pick', def: '7', options: codes, when: HIDE, group: 'Figure' },
-  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: lowest, max: highest, step: 1, when: carpet, group: 'Figure' },
-  { key: 'k', label: 'k', kind: 'slider', def: 8, min: 1, max: (value) => known(value) ?? COUNT, step: 1, keep: true, when: carpet, group: 'Figure' },
-  { key: 'look', label: 'Look', kind: 'segment', def: 'sand', options: LOOKS, group: 'Look' },
-  { key: 'grains', label: 'Grains', kind: 'segment', def: 40000, options: GRAINS, when: sanded, group: 'Look' },
-  { key: 'tint', label: 'Tint', kind: 'pick', def: '', options: TINTS, group: 'Look' },
+  { key: "view", label: "View", kind: "segment", def: "plate", options: VIEWS, group: "Figure" },
+  { key: "n", label: "n", kind: "slider", def: 3, min: 0, max: TOP, step: 1, when: plate, group: "Figure" },
+  { key: "m", label: "m", kind: "slider", def: 5, min: 0, max: TOP, step: 1, when: plate, group: "Figure" },
+  {
+    key: "sign",
+    label: "Sign",
+    kind: "segment",
+    def: -1,
+    options: [
+      [1, "+"],
+      [-1, "-"],
+    ],
+    when: (value) => plate(value) && value.n !== value.m,
+    group: "Figure",
+  },
+  {
+    key: "number",
+    label: "Number",
+    kind: "pick",
+    def: 3,
+    options: NUMBERS.map((n) => [n, String(n)]),
+    when: carpet,
+    group: "Figure",
+  },
+  { key: "code", label: "Design", kind: "pick", def: "7", options: codes, when: HIDE, group: "Figure" },
+  {
+    key: "level",
+    label: "Level",
+    kind: "slider",
+    def: 3,
+    min: lowest,
+    max: highest,
+    step: 1,
+    when: carpet,
+    group: "Figure",
+  },
+  {
+    key: "k",
+    label: "k",
+    kind: "slider",
+    def: 8,
+    min: 1,
+    max: (value) => known(value) ?? COUNT,
+    step: 1,
+    keep: true,
+    when: carpet,
+    group: "Figure",
+  },
+  { key: "look", label: "Look", kind: "segment", def: "sand", options: LOOKS, group: "Look" },
+  { key: "grains", label: "Grains", kind: "segment", def: 40000, options: GRAINS, when: sanded, group: "Look" },
+  { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
 const ABOUT = [
-  'A square plate rings in a figure: where it moves, sand bounces off, and where it stays still, the sand piles up. The still lines are the zero set of cos(n pi x) cos(m pi y) plus or minus cos(m pi x) cos(n pi y); n, m and the sign pick the figure, and Play walks the figures in order of pitch, the sand settling on each.',
-  'Carpet cuts the plate as a design: its cells are the plate and its holes are gone. The figures are the lowest modes of the graph of its cells, k in order of pitch; sand on a hole falls through, and a new figure pours in fresh sand to make up the loss. The status counts the nodal domains of figure k against the bound Courant gives it.',
-  'Sand shakes the grains, Field paints the signed amplitude and Lines traces the zero set alone; at a saddle Lines may join two domains. A tap or a drag sprinkles sand, and Reroll sprinkles afresh. The counts are in [the automata note](/research/automata/).',
+  "A square plate rings in a figure: where it moves, sand bounces off, and where it stays still, the sand piles up. The still lines are the zero set of cos(n pi x) cos(m pi y) plus or minus cos(m pi x) cos(n pi y); n, m and the sign pick the figure, and Play walks the figures in order of pitch, the sand settling on each.",
+  "Carpet cuts the plate as a design: its cells are the plate and its holes are gone. The figures are the lowest modes of the graph of its cells, k in order of pitch; sand on a hole falls through, and a new figure pours in fresh sand to make up the loss. The status counts the nodal domains of figure k against the bound Courant gives it.",
+  "Sand shakes the grains, Field paints the signed amplitude and Lines traces the zero set alone; at a saddle Lines may join two domains. A tap or a drag sprinkles sand, and Reroll sprinkles afresh. The counts are in [the automata note](/research/automata/).",
 ];
 
-const signed = (value) => (value.n === value.m ? '' : value.sign > 0 ? 'p' : 'm');
+const signed = (value) => (value.n === value.m ? "" : value.sign > 0 ? "p" : "m");
 
-export const named = (value) => (carpet(value) ? `chladni-${value.code}-${value.number}-${value.level}-k${value.k}-${value.seed}` : `chladni-${value.n}-${value.m}${signed(value)}-${value.seed}`);
+export const named = (value) =>
+  carpet(value)
+    ? `chladni-${value.code}-${value.number}-${value.level}-k${value.k}-${value.seed}`
+    : `chladni-${value.n}-${value.m}${signed(value)}-${value.seed}`;
 
-export const units = wasm('num', 'math');
+export const units = wasm("num", "math");
 
 export const PAGE = {
-  design: { dim: 2, base: 2, code: 'code', when: carpet },
+  design: { dim: 2, base: 2, code: "code", when: carpet },
   spec: SPEC,
   units,
   record: true,
   gestures: true,
   about: ABOUT,
   name: named,
-  keys: [{ key: 'Enter', label: (value, scene) => (scene?.walking?.() ? 'Stop' : 'Play'), act: 'walk', button: true, menu: 'Edit' }],
+  keys: [
+    {
+      key: "Enter",
+      label: (_value, scene) => (scene?.walking?.() ? "Stop" : "Play"),
+      act: "walk",
+      button: true,
+      menu: "Edit",
+    },
+  ],
   actions: { walk: (scene) => scene.walk?.() },
 };
 
@@ -56,7 +146,10 @@ const FIT = 0.94;
 const LINE = 1.5;
 const TOLD = 100;
 
-const sorts = (value) => [value.seed, value.view, value.grains, carpet(value) ? [value.code, value.number, value.level].join(' ') : ''].join('|');
+const sorts = (value) =>
+  [value.seed, value.view, value.grains, carpet(value) ? [value.code, value.number, value.level].join(" ") : ""].join(
+    "|",
+  );
 
 export function fit(view, side) {
   const most = Math.max(1, Math.floor(Math.min(view.w, view.h) * FIT));
@@ -68,9 +161,9 @@ export function fit(view, side) {
 
 export function make(canvas, view, opts = {}) {
   const { num, math } = opts;
-  if (!num) throw new Error('chladni: the scene wants @mrlyprod/mrly/num as opts.num');
+  if (!num) throw new Error("chladni: the scene wants @mrlyprod/mrly/num as opts.num");
   const units = { num, math };
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const read = (next) => ({ ...tidy(SPEC, next, units), seed: next.seed >>> 0 });
   let value = read(opts);
   let shape = null;
@@ -86,7 +179,7 @@ export function make(canvas, view, opts = {}) {
   let last = null;
   let dirty = true;
   let told = -Infinity;
-  let said = '';
+  let said = "";
   let gone = false;
   let pressed = false;
   let woke = false;
@@ -95,7 +188,7 @@ export function make(canvas, view, opts = {}) {
     if (pages[kind]?.side !== side) {
       const one = new OffscreenCanvas(side, side);
       const image = new ImageData(side, side);
-      pages[kind] = { side, canvas: one, pen: one.getContext('2d'), image, words: new Uint32Array(image.data.buffer) };
+      pages[kind] = { side, canvas: one, pen: one.getContext("2d"), image, words: new Uint32Array(image.data.buffer) };
     }
     return pages[kind];
   };
@@ -147,7 +240,10 @@ export function make(canvas, view, opts = {}) {
     dirty = true;
     if (rested) steps(REST);
   };
-  const order = () => (carpet(value) ? Array.from({ length: Math.max(0, (shape.made?.values.length ?? 0) - 1) }, (_, i) => ({ k: i + 2 })) : ladder(num).map(({ n, m, sign }) => ({ n, m, sign })));
+  const order = () =>
+    carpet(value)
+      ? Array.from({ length: Math.max(0, (shape.made?.values.length ?? 0) - 1) }, (_, i) => ({ k: i + 2 }))
+      : ladder(num).map(({ n, m, sign }) => ({ n, m, sign }));
   const place = () => (carpet(value) ? (shape.k ?? 2) - 2 : rungOf(num, value));
   const top = () => {
     const want = value.grains - live(grains);
@@ -186,10 +282,25 @@ export function make(canvas, view, opts = {}) {
     const left = live(grains);
     if (carpet(value)) {
       const i = shape.k - 1;
-      return { view: 'carpet', k: shape.k, count: shape.made.values.length, lambda: shape.made.values[i], domains: shape.made.domains[i], bound: shape.made.bound[i], grains: left };
+      return {
+        view: "carpet",
+        k: shape.k,
+        count: shape.made.values.length,
+        lambda: shape.made.values[i],
+        domains: shape.made.domains[i],
+        bound: shape.made.bound[i],
+        grains: left,
+      };
     }
     const rung = ladder(num)[rungOf(num, value)];
-    return { view: 'plate', n: value.n, m: value.m, sign: value.n === value.m ? 0 : value.sign, pitch: rung?.pitch ?? null, grains: left };
+    return {
+      view: "plate",
+      n: value.n,
+      m: value.m,
+      sign: value.n === value.m ? 0 : value.sign,
+      pitch: rung?.pitch ?? null,
+      grains: left,
+    };
   };
   const tell = (force) => {
     if (gone || (!force && view.t - told < TOLD)) return;
@@ -201,7 +312,7 @@ export function make(canvas, view, opts = {}) {
     opts.onTell?.(now);
   };
   const ground = (box) => {
-    const one = page('mask', shape.side);
+    const one = page("mask", shape.side);
     if (face !== one) {
       face = one;
       one.words.set(base(shape, ink));
@@ -212,7 +323,7 @@ export function make(canvas, view, opts = {}) {
   };
   const sand = (box) => {
     const side = Math.max(1, Math.round(box.side / view.dpr));
-    const one = page('sand', side);
+    const one = page("sand", side);
     one.words.fill(0);
     stamp(one.words, grains, side, ink.sand);
     one.pen.putImageData(one.image, 0, 0);
@@ -222,7 +333,7 @@ export function make(canvas, view, opts = {}) {
     trace ??= num.chladni.lines(shape.data, shape.side);
     ctx.strokeStyle = ink.ink;
     ctx.lineWidth = LINE * view.dpr;
-    ctx.lineCap = 'round';
+    ctx.lineCap = "round";
     ctx.beginPath();
     for (let i = 0; i < trace.length; i += 4) {
       ctx.moveTo(box.x + trace[i] * box.side, box.y + trace[i + 1] * box.side);
@@ -231,7 +342,7 @@ export function make(canvas, view, opts = {}) {
     ctx.stroke();
   };
   const amplitude = (box) => {
-    const one = page('field', shape.side);
+    const one = page("field", shape.side);
     if (field !== one) {
       field = one;
       one.image.data.set(paint(shape, ink));
@@ -246,10 +357,10 @@ export function make(canvas, view, opts = {}) {
     ctx.clearRect(0, 0, view.w, view.h);
     if (shape.error) return;
     const box = fit(view, shape.smooth ? 0 : shape.side);
-    if (value.look === 'field') amplitude(box);
+    if (value.look === "field") amplitude(box);
     else ground(box);
     if (sanded(value)) sand(box);
-    if (value.look === 'lines') lines(box);
+    if (value.look === "lines") lines(box);
   };
   const draw = () => {
     if (view.fixed && !walk) march();

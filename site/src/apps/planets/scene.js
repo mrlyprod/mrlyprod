@@ -1,43 +1,109 @@
-import { tidy } from '../../lib/app/spec.js';
-import { pick, rng } from '../../lib/rand.js';
-import { drift, ease, look } from '../../lib/gl/camera.js';
-import { blank, context, governor, tier } from '../../lib/gl/gl2.js';
-import { planet, pole } from '../../lib/space/planet.js';
-import { NAMES, world } from '../../lib/space/worlds.js';
-import { post } from '../../lib/gl/post.js';
-import { sky } from '../../lib/space/sky.js';
-import { add, cross, dot, len, mul, norm, rot, sub } from '../../lib/gl/vec.js';
+import { tidy } from "../../lib/app/spec.js";
+import { drift, ease, look } from "../../lib/gl/camera.js";
+import { blank, context, governor, tier } from "../../lib/gl/gl2.js";
+import { post } from "../../lib/gl/post.js";
+import { add, cross, dot, len, mul, norm, rot, sub } from "../../lib/gl/vec.js";
+import { pick, rng } from "../../lib/rand.js";
+import { planet, pole } from "../../lib/space/planet.js";
+import { sky } from "../../lib/space/sky.js";
+import { NAMES, world } from "../../lib/space/worlds.js";
 
 const HIDE = () => false;
 
 export const named = (word) => word[0].toUpperCase() + word.slice(1);
 
-export const CAMS = ['orbit', 'drift', 'approach', 'flyby'];
+export const CAMS = ["orbit", "drift", "approach", "flyby"];
 
 export const SPEC = [
-  { key: 'world', label: 'World', kind: 'pick', def: 'earth', options: NAMES.map((name) => [name, named(name)]), group: 'World', when: HIDE },
-  { key: 'moons', label: 'Moons', kind: 'pick', def: -1, options: [[-1, 'Own'], [0, 'None'], [1, '1'], [2, '2'], [3, '3']], group: 'World' },
-  { key: 'rings', label: 'Rings', kind: 'segment', def: '', options: [['', 'Auto'], ['on', 'On'], ['off', 'Off']], group: 'World' },
-  { key: 'cam', label: 'Camera', kind: 'pick', def: 'orbit', options: CAMS.map((cam) => [cam, named(cam)]), group: 'View' },
-  { key: 'sun', label: 'Sun', kind: 'slider', def: 60, min: 0, max: 180, step: 5, unit: 'deg', group: 'View' },
-  { key: 'speed', label: 'Speed', kind: 'slider', def: 1, min: 0, max: 4, step: 0.25, unit: 'x', group: 'View' },
+  {
+    key: "world",
+    label: "World",
+    kind: "pick",
+    def: "earth",
+    options: NAMES.map((name) => [name, named(name)]),
+    group: "World",
+    when: HIDE,
+  },
+  {
+    key: "moons",
+    label: "Moons",
+    kind: "pick",
+    def: -1,
+    options: [
+      [-1, "Own"],
+      [0, "None"],
+      [1, "1"],
+      [2, "2"],
+      [3, "3"],
+    ],
+    group: "World",
+  },
+  {
+    key: "rings",
+    label: "Rings",
+    kind: "segment",
+    def: "",
+    options: [
+      ["", "Auto"],
+      ["on", "On"],
+      ["off", "Off"],
+    ],
+    group: "World",
+  },
+  {
+    key: "cam",
+    label: "Camera",
+    kind: "pick",
+    def: "orbit",
+    options: CAMS.map((cam) => [cam, named(cam)]),
+    group: "View",
+  },
+  { key: "sun", label: "Sun", kind: "slider", def: 60, min: 0, max: 180, step: 5, unit: "deg", group: "View" },
+  { key: "speed", label: "Speed", kind: "slider", def: 1, min: 0, max: 4, step: 0.25, unit: "x", group: "View" },
 ];
 
 export const PAGE = {
   spec: SPEC,
   keys: [
-    { key: 'Enter', label: 'Next world', act: 'next', button: true, menu: 'View' },
-    { key: ['ArrowLeft', 'ArrowUp'], label: 'Previous world', act: 'prev', menu: 'View' },
-    { key: ['ArrowRight', 'ArrowDown'], label: 'Next', act: 'next' },
+    { key: "Enter", label: "Next world", act: "next", button: true, menu: "View" },
+    { key: ["ArrowLeft", "ArrowUp"], label: "Previous world", act: "prev", menu: "View" },
+    { key: ["ArrowRight", "ArrowDown"], label: "Next", act: "next" },
   ],
   actions: { next: (scene) => scene.step?.(1), prev: (scene) => scene.step?.(-1) },
   record: true,
 };
 
 export const SAVERS = [
-  { id: 'orbit', title: 'Solar system orbit', pick: (rand) => ({ world: pick(rand, ['earth', 'mars', 'jupiter', 'saturn', 'neptune', 'venus', 'moon']), cam: 'orbit', sun: pick(rand, [30, 50, 70, 90]), speed: 0.75 }) },
-  { id: 'flyby', title: 'Dawn flyby', pick: (rand) => ({ world: pick(rand, ['earth', 'mars', 'jupiter', 'neptune', 'moon']), cam: 'flyby', rings: 'off', speed: 0.75 }) },
-  { id: 'far', title: 'Far worlds', pick: (rand) => ({ world: 'exo', cam: pick(rand, ['approach', 'drift']), sun: pick(rand, [40, 60, 80, 100]), speed: 0.75 }) },
+  {
+    id: "orbit",
+    title: "Solar system orbit",
+    pick: (rand) => ({
+      world: pick(rand, ["earth", "mars", "jupiter", "saturn", "neptune", "venus", "moon"]),
+      cam: "orbit",
+      sun: pick(rand, [30, 50, 70, 90]),
+      speed: 0.75,
+    }),
+  },
+  {
+    id: "flyby",
+    title: "Dawn flyby",
+    pick: (rand) => ({
+      world: pick(rand, ["earth", "mars", "jupiter", "neptune", "moon"]),
+      cam: "flyby",
+      rings: "off",
+      speed: 0.75,
+    }),
+  },
+  {
+    id: "far",
+    title: "Far worlds",
+    pick: (rand) => ({
+      world: "exo",
+      cam: pick(rand, ["approach", "drift"]),
+      sun: pick(rand, [40, 60, 80, 100]),
+      speed: 0.75,
+    }),
+  },
 ];
 
 const TAU = Math.PI * 2;
@@ -72,7 +138,8 @@ const tilt = (params, [x, y, z]) => {
   return [c * x - s * y, s * x + c * y, z];
 };
 
-const around = (params, dist, lat, az) => tilt(params, [dist * Math.cos(lat) * Math.cos(az), dist * Math.sin(lat), dist * Math.cos(lat) * Math.sin(az)]);
+const around = (params, dist, lat, az) =>
+  tilt(params, [dist * Math.cos(lat) * Math.cos(az), dist * Math.sin(lat), dist * Math.cos(lat) * Math.sin(az)]);
 
 function fit(params, aspect) {
   if (!params.ring) return 0;
@@ -108,19 +175,25 @@ function flyby(params, az, t, pass) {
 }
 
 function eye(params, cam, seed, start, room, t, close) {
-  if (cam === 'drift') {
-    return { pos: add(around(params, Math.max(AFAR, room), LAT, start + t / 100000), drift(seed, t, 0.25)), at: drift(seed + 1, t, 0.05) };
+  if (cam === "drift") {
+    return {
+      pos: add(around(params, Math.max(AFAR, room), LAT, start + t / 100000), drift(seed, t, 0.25)),
+      at: drift(seed + 1, t, 0.05),
+    };
   }
-  if (cam === 'approach') {
+  if (cam === "approach") {
     const u = (((t % close) + close) % close) / close;
     return { pos: around(params, FAR * (NEAR / FAR) ** ease.out(u, 2), LAT * 0.6, start + t / 200000), at: [0, 0, 0] };
   }
   return { pos: around(params, Math.max(ORBIT, room), LAT, start + (TAU * t) / LOOP), at: [0, 0, 0] };
 }
 
-export function shot(params, { cam = 'orbit', sun = 60, seed = 0, t = 0, aspect = 16 / 9, close = CLOSE, pass = PASS } = {}) {
+export function shot(
+  params,
+  { cam = "orbit", sun = 60, seed = 0, t = 0, aspect = 16 / 9, close = CLOSE, pass = PASS } = {},
+) {
   const start = rng(((seed >>> 0) ^ SALT) >>> 0)() * TAU;
-  if (cam === 'flyby') return flyby(params, start, t, pass);
+  if (cam === "flyby") return flyby(params, start, t, pass);
   const room = fit(params, aspect);
   const view = (when) => {
     const { pos, at } = eye(params, cam, seed, start, room, when, close);
@@ -149,7 +222,7 @@ export function make(canvas, view, opts = {}) {
     return blank(canvas);
   }
   const gov = governor(view, NOTCHES[level]);
-  const look = level === 'phone' ? { ...LOOK, flare: 0 } : LOOK;
+  const look = level === "phone" ? { ...LOOK, flare: 0 } : LOOK;
   const lap = view.lock ? LAP : {};
   const head = view.lock ? HEAD : 0;
   let seen = opts;
@@ -169,7 +242,14 @@ export function make(canvas, view, opts = {}) {
     spun += (view.t - last) * speed;
     last = view.t;
     film.begin(gov.tick());
-    const { cam, sun } = shot(params, { cam: kind, sun: deg, seed, t: view.t + (kind === 'flyby' ? head : 0), aspect: view.w / view.h, ...lap });
+    const { cam, sun } = shot(params, {
+      cam: kind,
+      sun: deg,
+      seed,
+      t: view.t + (kind === "flyby" ? head : 0),
+      aspect: view.w / view.h,
+      ...lap,
+    });
     field.draw(cam, { k: 0.5 });
     body.draw(cam, sun, spun);
     film.end(look);
@@ -178,7 +258,7 @@ export function make(canvas, view, opts = {}) {
     body.drop();
     field.drop();
     film.drop();
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
   };
   return { draw, stop };
 }

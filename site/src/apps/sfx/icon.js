@@ -12,7 +12,9 @@ const envelope = (k) => (k < PEAK ? (k + 1) / (PEAK + 1) : Math.exp(-(k - PEAK) 
 
 export default function draw(pen, ink) {
   const { box, paint } = plate(pen, "pink", 0.16);
-  const heights = Array.from({ length: BARS }, (_, k) => Math.max(0, Math.round(REACH * envelope(k) * (0.62 + 0.38 * Math.abs(Math.cos(k * 1.9))))));
+  const heights = Array.from({ length: BARS }, (_, k) =>
+    Math.max(0, Math.round(REACH * envelope(k) * (0.62 + 0.38 * Math.abs(Math.cos(k * 1.9))))),
+  );
   const top = heights.indexOf(Math.max(...heights));
   if (top > BARS / 4) throw new Error(`sfx: the burst peaks at bar ${top}, not in its first quarter`);
   if (heights.at(-1) > 1) throw new Error("sfx: the burst does not die away");

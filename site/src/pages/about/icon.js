@@ -1,4 +1,4 @@
-import { grid, Grid } from "#view";
+import { Grid, grid } from "#view";
 import { plate } from "../../lib/plate.js";
 
 export const units = {};
@@ -11,8 +11,15 @@ function holes() {
   if (memo) return memo;
   const mask = grid.mask(grid.LOGO, 1);
   const found = [];
-  mask.forEach((row, r) => row.forEach((on, c) => on || found.push([c, r])));
-  if (mask.length !== WANT.side || found.length !== WANT.holes) throw new Error(`about: the mark is ${mask.length} a side with ${found.length} holes, want ${WANT.side} and ${WANT.holes}`);
+  mask.forEach((row, r) => {
+    row.forEach((on, c) => {
+      if (!on) found.push([c, r]);
+    });
+  });
+  if (mask.length !== WANT.side || found.length !== WANT.holes)
+    throw new Error(
+      `about: the mark is ${mask.length} a side with ${found.length} holes, want ${WANT.side} and ${WANT.holes}`,
+    );
   memo = { side: mask.length, found };
   return memo;
 }

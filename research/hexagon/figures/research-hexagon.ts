@@ -1,5 +1,5 @@
-import { hex } from "#view";
 import type { Ink, Pen } from "#view";
+import { hex } from "#view";
 import census from "./research-hexagon.json" with { type: "json" };
 
 export const units = {};
@@ -20,14 +20,17 @@ function sampled(): Sampled {
   const table = unpack(census.shades);
   const grid = unpack(census.field);
   if (!(reach > 0)) throw new Error(`research-hexagon: reach ${reach}, want above zero`);
-  if (table.byteLength % 8 !== 0) throw new Error(`research-hexagon: ${table.byteLength} shade bytes, want a multiple of 8`);
-  if (grid.byteLength !== 2 * hex.count(mesh)) throw new Error(`research-hexagon: ${grid.byteLength} field bytes, want ${2 * hex.count(mesh)}`);
+  if (table.byteLength % 8 !== 0)
+    throw new Error(`research-hexagon: ${table.byteLength} shade bytes, want a multiple of 8`);
+  if (grid.byteLength !== 2 * hex.count(mesh))
+    throw new Error(`research-hexagon: ${grid.byteLength} field bytes, want ${2 * hex.count(mesh)}`);
   const shades = new Float64Array(table.byteLength / 8);
   for (let i = 0; i < shades.length; i++) shades[i] = table.getFloat64(8 * i, true);
   const codes = new Uint16Array(grid.byteLength / 2);
   for (let i = 0; i < codes.length; i++) {
     codes[i] = grid.getUint16(2 * i, true);
-    if (codes[i] !== NONE && codes[i] >= shades.length) throw new Error(`research-hexagon: code ${codes[i]} past ${shades.length} shades`);
+    if (codes[i] !== NONE && codes[i] >= shades.length)
+      throw new Error(`research-hexagon: code ${codes[i]} past ${shades.length} shades`);
   }
   const starts: number[] = [];
   let at = 0;

@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { field, plot, type Ink, type Pen, type Point } from "#view";
+import { field, type Ink, type Pen, type Point, plot } from "#view";
 import census from "./research-spirograph.json" with { type: "json" };
 
 type Wheel = { bounds: math.spirograph.Disc; shape: math.spirograph.Cover; points: Float32Array };
@@ -36,11 +36,14 @@ function wheel(): Wheel {
   const curves = math.spirograph.distinct(path, pens, true);
   if (curves !== CURVES) throw new Error(`research-spirograph: ${curves} curves, want ${CURVES}`);
   const law = math.spirograph.nodes(path, pens, true);
-  if (law !== BigInt(CROSSINGS)) throw new Error(`research-spirograph: the law counts ${law} crossings, want ${CROSSINGS}`);
+  if (law !== BigInt(CROSSINGS))
+    throw new Error(`research-spirograph: the law counts ${law} crossings, want ${CROSSINGS}`);
   const points = math.spirograph.trace(path, pens, SAMPLES);
-  if (points.length !== 2 * CURVES * SAMPLES) throw new Error(`research-spirograph: trace of ${points.length} numbers, want ${2 * CURVES * SAMPLES}`);
+  if (points.length !== 2 * CURVES * SAMPLES)
+    throw new Error(`research-spirograph: trace of ${points.length} numbers, want ${2 * CURVES * SAMPLES}`);
   const shape = math.spirograph.cover(path, pens, true, 2, RASTER);
-  if (shape.side !== RASTER || shape.mask.length !== RASTER * RASTER) throw new Error(`research-spirograph: cover of side ${shape.side} and ${shape.mask.length} cells, want ${RASTER}`);
+  if (shape.side !== RASTER || shape.mask.length !== RASTER * RASTER)
+    throw new Error(`research-spirograph: cover of side ${shape.side} and ${shape.mask.length} cells, want ${RASTER}`);
   memo = { bounds: math.spirograph.disc(path, pens), shape, points };
   return memo;
 }
@@ -78,7 +81,8 @@ function wash(pen: Pen, ink: Ink, shape: math.spirograph.Cover, corner: Point, s
 
 export default function draw(pen: Pen, ink: Ink) {
   const { bounds, shape, points } = wheel();
-  if (census.nodes.length !== CROSSINGS || census.nodes.some((node) => node.length !== 2)) throw new Error(`research-spirograph: ${census.nodes.length} nodes, want ${CROSSINGS} pairs`);
+  if (census.nodes.length !== CROSSINGS || census.nodes.some((node) => node.length !== 2))
+    throw new Error(`research-spirograph: ${census.nodes.length} nodes, want ${CROSSINGS} pairs`);
   const area = pen.frame(MARGIN);
   const [cx, cy] = area.center();
   const scale = area.radius() / RING;
@@ -93,5 +97,10 @@ export default function draw(pen: Pen, ink: Ink) {
     });
     pen.polyline(curve, THIN, ink.blue);
   }
-  plot.dots(pen, census.nodes.map(([x, y]) => at(x, y)), DOT, ink.orange);
+  plot.dots(
+    pen,
+    census.nodes.map(([x, y]) => at(x, y)),
+    DOT,
+    ink.orange,
+  );
 }

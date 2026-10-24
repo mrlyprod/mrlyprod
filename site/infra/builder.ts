@@ -1,7 +1,7 @@
-import type { S3Client } from "bun";
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, readFileSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { cpSync, existsSync, readdirSync, readFileSync, renameSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import type { S3Client } from "bun";
 import { client, getText, need, putBytes } from "./s3.ts";
 
 /* WHERE */
@@ -60,7 +60,9 @@ async function retry<T>(label: string, work: () => Promise<T>): Promise<T> {
     } catch (error) {
       if (attempt === BACKOFF.length) throw error;
       const wait = BACKOFF[attempt] ?? 1000;
-      log(`${label} failed, retry ${attempt + 1} in ${wait}ms: ${String((error as Error).message ?? error).slice(0, 160)}`);
+      log(
+        `${label} failed, retry ${attempt + 1} in ${wait}ms: ${String((error as Error).message ?? error).slice(0, 160)}`,
+      );
       await Bun.sleep(wait);
     }
   }
@@ -91,7 +93,9 @@ async function payload(request?: Request): Promise<string> {
 export type Modules = "layer" | "stale" | "absent";
 
 export function modules(site: string, layer = LAYER_DIR): Modules {
-  const lock = createHash("sha256").update(readFileSync(join(site, "bun.lock"))).digest("hex");
+  const lock = createHash("sha256")
+    .update(readFileSync(join(site, "bun.lock")))
+    .digest("hex");
   const held = join(layer, "bun.lock.sha256");
   if (!existsSync(held)) return "absent";
   return readFileSync(held, "utf8").trim() === lock ? "layer" : "stale";
@@ -132,7 +136,10 @@ export function lambda(config: Config) {
   /* HEAD */
 
   function parseHead(text: string | null): Head {
-    const lines = (text ?? "").trim().split("\n").map((one) => one.trim());
+    const lines = (text ?? "")
+      .trim()
+      .split("\n")
+      .map((one) => one.trim());
     return { sha: lines[0] ?? "", etag: lines[1] ?? "" };
   }
 
@@ -179,7 +186,9 @@ export function lambda(config: Config) {
       log(`refused ${short(sha)} on ${slug}: ${state || "no status"}, not an ancestor of main`);
       return false;
     } catch (error) {
-      log(`refused ${short(sha)} on ${slug}: compare failed, ${String((error as Error)?.message ?? error).slice(0, 160)}`);
+      log(
+        `refused ${short(sha)} on ${slug}: compare failed, ${String((error as Error)?.message ?? error).slice(0, 160)}`,
+      );
       return false;
     }
   }
@@ -190,7 +199,9 @@ export function lambda(config: Config) {
       const stage = `${into}.stage`;
       rmSync(stage, { recursive: true, force: true });
       rmSync(into, { recursive: true, force: true });
-      const res = await fetch(`https://codeload.github.com/${slug}/tar.gz/${ref}`, { headers: { "user-agent": config.agent } });
+      const res = await fetch(`https://codeload.github.com/${slug}/tar.gz/${ref}`, {
+        headers: { "user-agent": config.agent },
+      });
       if (!res.ok) throw new Error(`codeload ${slug} ${ref}: ${res.status}`);
       const files = await new Bun.Archive(new Uint8Array(await res.arrayBuffer())).extract(stage);
       const [top] = readdirSync(stage);
@@ -208,7 +219,8 @@ export function lambda(config: Config) {
   }
 
   async function freshen(wake: Wake, stored: Head, get: Get = fetch): Promise<Head> {
-    if (wake.on === "source" && wake.sha && (await onMain(config.source, wake.sha, get))) return { sha: wake.sha, etag: "" };
+    if (wake.on === "source" && wake.sha && (await onMain(config.source, wake.sha, get)))
+      return { sha: wake.sha, etag: "" };
     return (await commit(config.source, stored.sha ? stored.etag : "", get)) ?? stored;
   }
 
@@ -246,7 +258,11 @@ export function lambda(config: Config) {
       if (said) log(said);
     }
     const out = await run([process.execPath, "run", "push", ...(force ? ["--force"] : [])], site);
-    const line = out.split("\n").map((one) => one.trim()).find((one) => one.startsWith("push:")) ?? "push: no count line";
+    const line =
+      out
+        .split("\n")
+        .map((one) => one.trim())
+        .find((one) => one.startsWith("push:")) ?? "push: no count line";
     log(line);
     await writeHead(s3, next);
     log(`head ${short(next.sha)}`);

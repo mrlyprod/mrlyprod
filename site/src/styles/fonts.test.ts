@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { brotliDecompressSync } from "node:zlib";
 import katex from "katex";
-import { front, render } from "../lib/md/md.ts";
 import { state } from "../../scripts/build.ts";
+import { front, render } from "../lib/md/md.ts";
 
 const site = resolve(import.meta.dir, "..", "..");
 const repo = resolve(site, "..");
@@ -19,15 +19,25 @@ const TAG = /<[^>]*>/g;
 const INERT = /[\s\p{Cf}]/u;
 const NAMED: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
 
-const mathml = (tex: string, display: boolean) => katex.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display });
+const mathml = (tex: string, display: boolean) =>
+  katex.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display });
 
 function pages(): [string, string][] {
-  const shell: [string, string] = ["src/shell/index.html", readFileSync(join(site, "src", "shell", "index.html"), "utf8")];
-  const code = ["src/shell", "src/lib", "src/pages", "src/apps"].flatMap((top) => [...new Bun.Glob(`${top}/**/*.{js,jsx}`).scanSync(site)].filter((file) => !file.includes(".test.")).sort());
-  return [shell, ...state().rows.map((row): [string, string] => {
-    const body = row.source ? render(front(readFileSync(join(repo, row.source), "utf8")).body, { math: mathml }) : "";
-    return [row.route, `<h1>${row.title}</h1><p>${row.lead}</p>${body}`];
-  }), ...code.map((file): [string, string] => [file, readFileSync(join(site, file), "utf8")])];
+  const shell: [string, string] = [
+    "src/shell/index.html",
+    readFileSync(join(site, "src", "shell", "index.html"), "utf8"),
+  ];
+  const code = ["src/shell", "src/lib", "src/pages", "src/apps"].flatMap((top) =>
+    [...new Bun.Glob(`${top}/**/*.{js,jsx}`).scanSync(site)].filter((file) => !file.includes(".test.")).sort(),
+  );
+  return [
+    shell,
+    ...state().rows.map((row): [string, string] => {
+      const body = row.source ? render(front(readFileSync(join(repo, row.source), "utf8")).body, { math: mathml }) : "";
+      return [row.route, `<h1>${row.title}</h1><p>${row.lead}</p>${body}`];
+    }),
+    ...code.map((file): [string, string] => [file, readFileSync(join(site, file), "utf8")]),
+  ];
 }
 
 function words(html: string): string {
@@ -103,15 +113,20 @@ function cmap(data: Buffer): Set<number> {
 
 function faces(): ((cp: number) => boolean)[] {
   const all = [...readFileSync(join(fonts, "fonts.css"), "utf8").matchAll(FACE)];
-  return all.filter((face) => face[1]!.match(FAMILY)?.[1] !== PIXEL).map((face) => {
-    const src = face[1]!.match(SRC)![1]!;
-    const drawn = cmap(table(join(fonts, src)));
-    const range = face[1]!.match(RANGE)?.[1]!.split(",").map((part) => {
-      const [a, b] = part.trim().toLowerCase().replace("u+", "").split("-");
-      return [parseInt(a!, 16), parseInt(b ?? a!, 16)] as const;
+  return all
+    .filter((face) => face[1]!.match(FAMILY)?.[1] !== PIXEL)
+    .map((face) => {
+      const src = face[1]!.match(SRC)![1]!;
+      const drawn = cmap(table(join(fonts, src)));
+      const range = face[1]!
+        .match(RANGE)?.[1]
+        ?.split(",")
+        .map((part) => {
+          const [a, b] = part.trim().toLowerCase().replace("u+", "").split("-");
+          return [parseInt(a!, 16), parseInt(b ?? a!, 16)] as const;
+        });
+      return (cp: number) => drawn.has(cp) && (!range || range.some(([a, b]) => cp >= a && cp <= b));
     });
-    return (cp: number) => drawn.has(cp) && (!range || range.some(([a, b]) => cp >= a && cp <= b));
-  });
 }
 
 test("every codepoint a route prints is drawn by a shipped face", () => {
@@ -126,5 +141,7 @@ test("every codepoint a route prints is drawn by a shipped face", () => {
     }
   }
   const hex = (cp: number) => `U+${cp.toString(16).toUpperCase().padStart(4, "0")}`;
-  expect([...gap].sort(([a], [b]) => a - b).map(([cp, route]) => `${hex(cp)} ${String.fromCodePoint(cp)} ${route}`)).toEqual([]);
+  expect(
+    [...gap].sort(([a], [b]) => a - b).map(([cp, route]) => `${hex(cp)} ${String.fromCodePoint(cp)} ${route}`),
+  ).toEqual([]);
 });

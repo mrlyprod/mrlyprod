@@ -34,7 +34,10 @@ function study() {
   }
   const counted = line.count(SPAN);
   line.free();
-  if (zeros.length !== WANT || counted !== WANT) throw new Error(`zeta: the walk to ${SPAN} crosses the origin ${zeros.length} times and the line counts ${counted}, want ${WANT}`);
+  if (zeros.length !== WANT || counted !== WANT)
+    throw new Error(
+      `zeta: the walk to ${SPAN} crosses the origin ${zeros.length} times and the line counts ${counted}, want ${WANT}`,
+    );
   const first = zeros[0];
   const end = zeros[zeros.length - 1];
   const frame = [Infinity, Infinity, -Infinity, -Infinity];

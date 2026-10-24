@@ -1,18 +1,19 @@
-import { draw as hexes } from '#view/hex.js';
-import { blend, veil } from '../color.js';
-import { measureOf, spot } from './engine.js';
+import { draw as hexes } from "#view/hex.js";
+import { blend, veil } from "../color.js";
+import { measureOf, spot } from "./engine.js";
 
 export const BUDGET = { 2: 250000, 3: 600000, cut: 60000 };
 
-const CUT = new Set(['triangles', 'cutvoids', 'holes', 'pieces']);
+const CUT = new Set(["triangles", "cutvoids", "holes", "pieces"]);
 
-const PRO = new Set(['profills', 'provoids']);
+const PRO = new Set(["profills", "provoids"]);
 
 const KINDS = { VOID: 0, FILL: 1, GRID: 2, UP: 3, LEFT: 4, RIGHT: 5 };
 
-export const view = (row) => (row.dim === 2 ? 'grid' : CUT.has(row.measure) ? 'cut' : PRO.has(row.measure) ? 'pro' : 'iso');
+export const view = (row) =>
+  row.dim === 2 ? "grid" : CUT.has(row.measure) ? "cut" : PRO.has(row.measure) ? "pro" : "iso";
 
-const budget = (row) => (view(row) === 'cut' ? BUDGET.cut : BUDGET[row.dim]);
+const budget = (row) => (view(row) === "cut" ? BUDGET.cut : BUDGET[row.dim]);
 
 export function fits(math, row, index) {
   let at = Math.max(0, index);
@@ -26,7 +27,7 @@ export function fits(math, row, index) {
 
 export function sheet(math, row, number, level) {
   const kind = view(row);
-  if (kind === 'grid') {
+  if (kind === "grid") {
     const cell = math.two.create(String(row.code), number, level, 0, row.base);
     return { kind, number, level, shape: cell.shape, types: cell.types };
   }
@@ -40,13 +41,14 @@ export function picture(math, row, index) {
   return { at, ...sheet(math, row, number, level) };
 }
 
-export const named = (one) => (one.kind === 'grid' || one.kind === 'iso' ? '' : one.kind === 'cut' ? ', the middle cut' : ', face on');
+export const named = (one) =>
+  one.kind === "grid" || one.kind === "iso" ? "" : one.kind === "cut" ? ", the middle cut" : ", face on";
 
 export const said = (one) => `side ${one.number}, level ${one.level}${named(one)}`;
 
 export function inks(row, tones, on = tones.accent) {
   const off = veil(on, 0.12);
-  const voids = measureOf(row.measure)?.slug === 'voids' || row.measure === 'cutvoids' || row.measure === 'provoids';
+  const voids = measureOf(row.measure)?.slug === "voids" || row.measure === "cutvoids" || row.measure === "provoids";
   return {
     fill: voids ? veil(on, 0.28) : on,
     void: voids ? blend(on, tones.paper, 0.15) : off,
@@ -70,7 +72,13 @@ function grid(ctx, box, one, ink) {
   ctx.beginPath();
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      if (one.types[r * cols + c]) ctx.rect(x0 + c * cell + gap / 2, y0 + r * cell + gap / 2, cell - gap + (gap ? 0 : 0.5), cell - gap + (gap ? 0 : 0.5));
+      if (one.types[r * cols + c])
+        ctx.rect(
+          x0 + c * cell + gap / 2,
+          y0 + r * cell + gap / 2,
+          cell - gap + (gap ? 0 : 0.5),
+          cell - gap + (gap ? 0 : 0.5),
+        );
     }
   }
   ctx.fill();
@@ -78,7 +86,13 @@ function grid(ctx, box, one, ink) {
 }
 
 function hex(ctx, box, one, ink) {
-  const tone = { [KINDS.FILL]: ink.fill, [KINDS.VOID]: one.kind === 'iso' ? null : ink.void, [KINDS.UP]: ink.up, [KINDS.LEFT]: ink.left, [KINDS.RIGHT]: ink.right };
+  const tone = {
+    [KINDS.FILL]: ink.fill,
+    [KINDS.VOID]: one.kind === "iso" ? null : ink.void,
+    [KINDS.UP]: ink.up,
+    [KINDS.LEFT]: ink.left,
+    [KINDS.RIGHT]: ink.right,
+  };
   const runs = new Map();
   const pen = {
     triangle: (a, b, c, color) => {
@@ -89,7 +103,13 @@ function hex(ctx, box, one, ink) {
   const [height, width] = one.cell.shape;
   const across = width > height;
   const big = (across ? box.w / width : box.h / height) * 2;
-  hexes(pen, box, { cell: one.cell, start: one.start }, big > 14 ? Math.max(0.6, big * 0.03) : 0, (type) => tone[type] ?? null);
+  hexes(
+    pen,
+    box,
+    { cell: one.cell, start: one.start },
+    big > 14 ? Math.max(0.6, big * 0.03) : 0,
+    (type) => tone[type] ?? null,
+  );
   for (const [color, pts] of runs) {
     ctx.fillStyle = color;
     ctx.strokeStyle = color;
@@ -109,5 +129,5 @@ function hex(ctx, box, one, ink) {
 
 export function draw(ctx, box, one, ink) {
   if (!one) return box;
-  return one.kind === 'grid' ? grid(ctx, box, one, ink) : hex(ctx, box, one, ink);
+  return one.kind === "grid" ? grid(ctx, box, one, ink) : hex(ctx, box, one, ink);
 }

@@ -1,4 +1,4 @@
-import { field, frame, type Frame, type Ink, type Pen, type Point } from "#view";
+import { type Frame, field, frame, type Ink, type Pen, type Point } from "#view";
 import census from "./moire-local-limit.json" with { type: "json" };
 
 const SIDE = 410;
@@ -16,7 +16,8 @@ function check() {
   if (octant.length !== folded) throw new Error(`moire-local-limit: ${octant.length} octant values, want ${folded}`);
   if (axis.length !== SIDE) throw new Error(`moire-local-limit: ${axis.length} axis values, want ${SIDE}`);
   if (arc.length !== STEPS + 1) throw new Error(`moire-local-limit: ${arc.length} arc points, want ${STEPS + 1}`);
-  if (!(scale > 0) || octant.some((n) => n < 0 || n > scale)) throw new Error(`moire-local-limit: octant values off 0..${scale}`);
+  if (!(scale > 0) || octant.some((n) => n < 0 || n > scale))
+    throw new Error(`moire-local-limit: octant values off 0..${scale}`);
 }
 
 function overlay(): Float64Array {
@@ -52,7 +53,12 @@ function smooth(): Float64Array {
 
 function arcs(pen: Pen, ink: Ink, box: Frame, thick: number, chords: boolean) {
   const kappa = census.kappa;
-  for (const [sx, sy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+  for (const [sx, sy] of [
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+  ]) {
     if (chords) {
       const a = box.at(0.5 * (1 - sx), 0.5 * (1 - sy * kappa));
       const b = box.at(0.5 * (1 - sx * kappa), 0.5 * (1 - sy));

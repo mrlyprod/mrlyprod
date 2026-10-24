@@ -1,6 +1,6 @@
 import * as math from "@mrlyprod/mrly/math";
-import { plot } from "#view";
 import type { Ink, Pen, Point } from "#view";
+import { plot } from "#view";
 
 export const units = { math };
 
@@ -32,11 +32,13 @@ function cuts() {
   if (memo) return memo;
   const profile = math.three.profile(CODE, 2, LEVEL, 2);
   memo = HEIGHTS.map((height) => {
-    if (profile[height] !== "2187") throw new Error(`research-cuts: profile ${profile[height]} at ${height}, want 2187`);
+    if (profile[height] !== "2187")
+      throw new Error(`research-cuts: profile ${profile[height]} at ${height}, want 2187`);
     const points = math.three.diagonal_slice(CODE, 2, LEVEL, 2, height);
     if (points.length !== 2187) throw new Error(`research-cuts: ${points.length} points at ${height}, want 2187`);
     const tally = pieces(points);
-    if (tally.join() !== "729,729,729") throw new Error(`research-cuts: pieces ${tally} at ${height}, want 729,729,729`);
+    if (tally.join() !== "729,729,729")
+      throw new Error(`research-cuts: pieces ${tally} at ${height}, want 729,729,729`);
     return points.map(place);
   });
   return memo;
@@ -58,6 +60,9 @@ export default function draw(pen: Pen, ink: Ink) {
   const span = [hi[0] - lo[0], hi[1] - lo[1]];
   const scale = Math.min(frame.w / span[0], frame.h / span[1]);
   const [cx, cy] = frame.center();
-  const screen = ([u, v]: Point): Point => [cx + (u - (lo[0] + hi[0]) / 2) * scale, cy - (v - (lo[1] + hi[1]) / 2) * scale];
-  slices.forEach((cut, i) => plot.dots(pen, cut.map(screen), 2.2, [ink.blue, ink.orange][i]));
+  const screen = ([u, v]: Point): Point => [
+    cx + (u - (lo[0] + hi[0]) / 2) * scale,
+    cy - (v - (lo[1] + hi[1]) / 2) * scale,
+  ];
+  for (const [i, cut] of slices.entries()) plot.dots(pen, cut.map(screen), 2.2, [ink.blue, ink.orange][i]);
 }

@@ -8,10 +8,14 @@ export const units = {};
 export default function draw(pen: Pen, ink: Ink) {
   const { three, others } = census as { three: number[]; others: number[][] };
   if (three.length !== DIMS) throw new Error(`paper-slice-sign-even-half: ${three.length} depths, want ${DIMS}`);
-  if (others.length !== 4 || others.some((row) => row.length !== DIMS)) throw new Error("paper-slice-sign-even-half: others are not four rows of 20");
+  if (others.length !== 4 || others.some((row) => row.length !== DIMS))
+    throw new Error("paper-slice-sign-even-half: others are not four rows of 20");
   const frame = pen.frame(0.08);
   const peak = three[DIMS - 1];
-  const at = (dim: number, depth: number): Point => [frame.x + (frame.w * (dim - 2)) / 38, frame.y + frame.h * (1 - depth / peak)];
+  const at = (dim: number, depth: number): Point => [
+    frame.x + (frame.w * (dim - 2)) / 38,
+    frame.y + frame.h * (1 - depth / peak),
+  ];
   pen.rect(frame.x, frame.y + frame.h, frame.w, 2, ink.line);
 
   others.forEach((row, order) => {

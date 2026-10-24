@@ -1,42 +1,84 @@
-import { tidy } from '../../lib/app/spec.js';
-import { veil } from '../../lib/color.js';
-import { KEYS, pattern, tempo } from '../../lib/audio/audio.js';
+import { tidy } from "../../lib/app/spec.js";
+import { KEYS, pattern, tempo } from "../../lib/audio/audio.js";
+import { veil } from "../../lib/color.js";
 
-const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 export const SPEC = [
-  { key: 'bpm', label: 'Tempo', kind: 'slider', def: 128, min: 118, max: 140, step: 1, unit: 'bpm', group: 'Song' },
-  { key: 'key', label: 'Key', kind: 'pick', def: 'a', options: KEYS.map((key, i) => [key, NOTES[i]]), group: 'Song' },
-  { key: 'scale', label: 'Scale', kind: 'segment', def: 'minor', options: [['minor', 'Min'], ['dorian', 'Dor'], ['phrygian', 'Phr']], group: 'Song' },
-  { key: 'bars', label: 'Bars', kind: 'segment', def: 32, options: [8, 16, 32, 64].map((n) => [n, String(n)]), group: 'Song' },
-  { key: 'density', label: 'Density', kind: 'slider', def: 0.6, min: 0, max: 1, step: 0.05, group: 'Feel' },
-  { key: 'drive', label: 'Drive', kind: 'slider', def: 0.4, min: 0, max: 1, step: 0.05, group: 'Feel' },
-  { key: 'swing', label: 'Swing', kind: 'slider', def: 0.1, min: 0, max: 0.3, step: 0.01, group: 'Feel' },
+  { key: "bpm", label: "Tempo", kind: "slider", def: 128, min: 118, max: 140, step: 1, unit: "bpm", group: "Song" },
+  { key: "key", label: "Key", kind: "pick", def: "a", options: KEYS.map((key, i) => [key, NOTES[i]]), group: "Song" },
+  {
+    key: "scale",
+    label: "Scale",
+    kind: "segment",
+    def: "minor",
+    options: [
+      ["minor", "Min"],
+      ["dorian", "Dor"],
+      ["phrygian", "Phr"],
+    ],
+    group: "Song",
+  },
+  {
+    key: "bars",
+    label: "Bars",
+    kind: "segment",
+    def: 32,
+    options: [8, 16, 32, 64].map((n) => [n, String(n)]),
+    group: "Song",
+  },
+  { key: "density", label: "Density", kind: "slider", def: 0.6, min: 0, max: 1, step: 0.05, group: "Feel" },
+  { key: "drive", label: "Drive", kind: "slider", def: 0.4, min: 0, max: 1, step: 0.05, group: "Feel" },
+  { key: "swing", label: "Swing", kind: "slider", def: 0.1, min: 0, max: 0.3, step: 0.01, group: "Feel" },
 ];
 
 export const PAGE = {
   spec: SPEC,
   keys: [
-    { key: 'Enter', label: (value, handle) => (handle?.going?.() ? 'Stop' : 'Play'), does: 'Again to stop', act: 'go', button: true, menu: 'Edit' },
-    { key: 'm', label: 'Sound', act: 'mute' },
+    {
+      key: "Enter",
+      label: (_value, handle) => (handle?.going?.() ? "Stop" : "Play"),
+      does: "Again to stop",
+      act: "go",
+      button: true,
+      menu: "Edit",
+    },
+    { key: "m", label: "Sound", act: "mute" },
   ],
   actions: { go: (scene) => scene.go?.(), mute: (scene) => scene.mute?.() },
 };
 
-export const FEEL = ['bpm', 'key', 'scale', 'density', 'drive', 'swing'];
+export const FEEL = ["bpm", "key", "scale", "density", "drive", "swing"];
 
 export const STYLES = [
-  { id: 'acid', name: 'Acid', song: { bpm: 128, key: 'a', scale: 'minor', density: 0.6, drive: 0.4, swing: 0.1 } },
-  { id: 'warehouse', name: 'Warehouse', song: { bpm: 134, key: 'd', scale: 'phrygian', density: 0.75, drive: 0.6, swing: 0.05 } },
-  { id: 'dub', name: 'Dub', song: { bpm: 120, key: 'f', scale: 'dorian', density: 0.35, drive: 0.2, swing: 0.15 } },
-  { id: 'peak', name: 'Peak time', song: { bpm: 138, key: 'c', scale: 'minor', density: 0.9, drive: 0.7, swing: 0 } },
-  { id: 'hypnotic', name: 'Hypnotic', song: { bpm: 124, key: 'e', scale: 'minor', density: 0.45, drive: 0.3, swing: 0.08 } },
-  { id: 'detroit', name: 'Detroit', song: { bpm: 126, key: 'ds', scale: 'dorian', density: 0.55, drive: 0.25, swing: 0.12 } },
-  { id: 'rave', name: 'Rave', song: { bpm: 140, key: 'g', scale: 'dorian', density: 0.8, drive: 0.55, swing: 0.02 } },
-  { id: 'slow', name: 'Slow burn', song: { bpm: 118, key: 'a', scale: 'phrygian', density: 0.3, drive: 0.5, swing: 0.2 } },
+  { id: "acid", name: "Acid", song: { bpm: 128, key: "a", scale: "minor", density: 0.6, drive: 0.4, swing: 0.1 } },
+  {
+    id: "warehouse",
+    name: "Warehouse",
+    song: { bpm: 134, key: "d", scale: "phrygian", density: 0.75, drive: 0.6, swing: 0.05 },
+  },
+  { id: "dub", name: "Dub", song: { bpm: 120, key: "f", scale: "dorian", density: 0.35, drive: 0.2, swing: 0.15 } },
+  { id: "peak", name: "Peak time", song: { bpm: 138, key: "c", scale: "minor", density: 0.9, drive: 0.7, swing: 0 } },
+  {
+    id: "hypnotic",
+    name: "Hypnotic",
+    song: { bpm: 124, key: "e", scale: "minor", density: 0.45, drive: 0.3, swing: 0.08 },
+  },
+  {
+    id: "detroit",
+    name: "Detroit",
+    song: { bpm: 126, key: "ds", scale: "dorian", density: 0.55, drive: 0.25, swing: 0.12 },
+  },
+  { id: "rave", name: "Rave", song: { bpm: 140, key: "g", scale: "dorian", density: 0.8, drive: 0.55, swing: 0.02 } },
+  {
+    id: "slow",
+    name: "Slow burn",
+    song: { bpm: 118, key: "a", scale: "phrygian", density: 0.3, drive: 0.5, swing: 0.2 },
+  },
 ];
 
-export const styled = (value) => STYLES.find((one) => FEEL.every((key) => String(one.song[key]) === String(value[key])))?.id ?? '';
+export const styled = (value) =>
+  STYLES.find((one) => FEEL.every((key) => String(one.song[key]) === String(value[key])))?.id ?? "";
 
 const TAIL = 2;
 const HEARD = 50;
@@ -53,7 +95,7 @@ export const song = (value) => ({ ...tidy(SPEC, value), seed: value.seed >>> 0 }
 
 export const seconds = (value) => (song(value).bars * tempo(song(value)).bar) / 1000 + TAIL;
 
-export const score = (value) => ({ seed: value.seed >>> 0, mood: { name: 'drive', song: song(value) } });
+export const score = (value) => ({ seed: value.seed >>> 0, mood: { name: "drive", song: song(value) } });
 
 function at(tune, t) {
   const time = tempo(tune);
@@ -81,9 +123,9 @@ export function stamp(ctx, w, h, p, accent) {
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const tune = song(opts);
-  const mood = { name: 'drive', song: tune };
+  const mood = { name: "drive", song: tune };
   const audio = opts.audio;
   const kept = new Map();
   const bar = (b) => {
@@ -113,7 +155,7 @@ export function make(canvas, view, opts = {}) {
       for (let s = 0; s < 16; s++) {
         const hit = hits[r][s];
         const here = s === now.step;
-        const tone = hit ? (here ? 'on' : 'near') : here ? 'lit' : 'off';
+        const tone = hit ? (here ? "on" : "near") : here ? "lit" : "off";
         const i = inset(r, s);
         put(tone, xs[s] + i, ys[r] + i, pad - 2 * i, pad - 2 * i);
         if (r !== 3 || !hit?.slide || !p.bass[s - 1]) continue;
@@ -127,7 +169,7 @@ export function make(canvas, view, opts = {}) {
     for (let b = 0; b < tune.bars; b++) {
       const a = x0 + Math.round((b * long) / tune.bars);
       const z = x0 + Math.round(((b + 1) * long) / tune.bars) - Math.max(1, Math.round(gap / 2));
-      put(b === now.bar ? 'on' : b < now.bar ? 'lit' : 'off', a, strip, Math.max(1, z - a), thin);
+      put(b === now.bar ? "on" : b < now.bar ? "lit" : "off", a, strip, Math.max(1, z - a), thin);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, w, h);

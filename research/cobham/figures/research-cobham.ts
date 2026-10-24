@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { Grid, frame as boxed, type Ink, type Pen } from "#view";
+import { frame as boxed, type Color, Grid, type Ink, type Pen } from "#view";
 
 export const units = { math };
 
@@ -18,8 +18,10 @@ function gaskets() {
   if (memo) return memo;
   const two = math.two.create(7, 2, K, 0, 2);
   const three = math.two.create(11, 3, M, 0, 3);
-  if (two.shape[0] !== SIDE || two.shape[1] !== SIDE) throw new Error(`research-cobham: the base 2 gasket is ${two.shape}, want ${SIDE},${SIDE}`);
-  if (three.shape[0] < SIDE || three.shape[1] < SIDE) throw new Error(`research-cobham: the base 3 gasket is ${three.shape}, want at least ${SIDE},${SIDE}`);
+  if (two.shape[0] !== SIDE || two.shape[1] !== SIDE)
+    throw new Error(`research-cobham: the base 2 gasket is ${two.shape}, want ${SIDE},${SIDE}`);
+  if (three.shape[0] < SIDE || three.shape[1] < SIDE)
+    throw new Error(`research-cobham: the base 3 gasket is ${three.shape}, want at least ${SIDE},${SIDE}`);
   memo = { two, three };
   return memo;
 }
@@ -44,7 +46,7 @@ export default function draw(pen: Pen, ink: Ink) {
       if (inB) b++;
       if (a && inB) both++;
       if (a && inB && (col === 0 || y === 0)) axes++;
-      let tone;
+      let tone: Color;
       if (a && inB) tone = ink.yellow;
       else if (inB) tone = ink.blue;
       else if (a) tone = ink.fade(ink.dim, 0.45);

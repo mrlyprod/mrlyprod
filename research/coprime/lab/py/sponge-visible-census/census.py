@@ -13,7 +13,7 @@ DIGITS = [v for v in product(range(Q), repeat=D) if tuple(c % 2 for c in v) in P
 K = len(DIGITS)
 WALK = 12
 BASE_LOCAL = Fraction(sum(1 for v in DIGITS if any(v)), K)
-BRACKET = BASE_LOCAL * Fraction(Q ** D, Q ** D - 1)
+BRACKET = BASE_LOCAL * Fraction(Q**D, Q**D - 1)
 LEGAL = np.zeros((Q,) * D, dtype=bool)
 for _v in DIGITS:
     LEGAL[_v] = True
@@ -71,7 +71,7 @@ def primitive_box(side):
 
 
 def visible_count(n, cutoff):
-    span = Q ** n
+    span = Q**n
     mu = mobius(cutoff)
     head = 0
     for d in range(1, cutoff + 1):
@@ -103,7 +103,7 @@ def brute_count(n):
 
 
 def ladder(n):
-    return max(8, min(int(round(Q ** (n / 2))), 120))
+    return max(8, min(round(Q ** (n / 2)), 120))
 
 
 def main():
@@ -111,7 +111,7 @@ def main():
     mp.dps = 30
     delta = mp.mpf(BRACKET.numerator) / BRACKET.denominator / zeta(D)
     print(f"design q={Q} D={D} k={K} bracket={BRACKET} delta={mp.nstr(delta, 10)}")
-    print(f"domain n=1..{top} coordinates 0..{Q ** top - 1}")
+    print(f"domain n=1..{top} coordinates 0..{Q**top - 1}")
     for n in range(1, top + 1):
         cut = ladder(n)
         clock = time.time()

@@ -1,15 +1,45 @@
-import { blend, veil } from '../../lib/color.js';
-import { draw as art, inks } from '../../lib/sequences/design.js';
-import { FACE, caption, chart, clear, drawRibbon, fit, font, growth, ribbon, tones, wrap } from '../../lib/sequences/paint.js';
-import { CARDS, pick, shown } from './cards.js';
+import { blend, veil } from "../../lib/color.js";
+import { draw as art, inks } from "../../lib/sequences/design.js";
+import {
+  caption,
+  chart,
+  clear,
+  drawRibbon,
+  FACE,
+  fit,
+  font,
+  growth,
+  ribbon,
+  tones,
+  wrap,
+} from "../../lib/sequences/paint.js";
+import { CARDS, pick, shown } from "./cards.js";
 
 const at = (value) => CARDS[pick(value).card];
 
 const HIDE = () => false;
 
 export const SPEC = [
-  { key: 'card', label: 'Card', kind: 'pick', def: 0, options: CARDS.map((one, i) => [i, `${i + 1} · ${one.title}`]), group: 'Card', when: HIDE },
-  { key: 'step', label: (value) => at(value).label, kind: 'slider', def: CARDS[0].first, min: (value) => at(value).min, max: (value) => at(value).max, step: 1, show: (v, value) => shown(pick(value).card, v), group: 'Card' },
+  {
+    key: "card",
+    label: "Card",
+    kind: "pick",
+    def: 0,
+    options: CARDS.map((one, i) => [i, `${i + 1} · ${one.title}`]),
+    group: "Card",
+    when: HIDE,
+  },
+  {
+    key: "step",
+    label: (value) => at(value).label,
+    kind: "slider",
+    def: CARDS[0].first,
+    min: (value) => at(value).min,
+    max: (value) => at(value).max,
+    step: 1,
+    show: (v, value) => shown(pick(value).card, v),
+    group: "Card",
+  },
 ];
 
 export const named = (value) => {
@@ -21,19 +51,19 @@ export const PAGE = {
   spec: SPEC,
   name: named,
   about: [
-    'A design is a rule on the corners of a square or a cube. Grown level by level or widened side by side it counts something, and the count is an integer sequence in the OEIS, some of them new entries.',
-    'Every card draws its design live, reads its terms and names the record. Slide the step or tap the picture, and the picture and the terms grow together; Enter turns to the next card.',
-    'A line that is a row of the ledger opens in Sequences with its terms filled in. The counts of designs, of fractals, of slice vertices, of gasket points and of Farey nodes are not ledger rows. The record after the terms is found from the terms alone, as a window of the record, with the record index of the first term shown.',
+    "A design is a rule on the corners of a square or a cube. Grown level by level or widened side by side it counts something, and the count is an integer sequence in the OEIS, some of them new entries.",
+    "Every card draws its design live, reads its terms and names the record. Slide the step or tap the picture, and the picture and the terms grow together; Enter turns to the next card.",
+    "A line that is a row of the ledger opens in Sequences with its terms filled in. The counts of designs, of fractals, of slice vertices, of gasket points and of Farey nodes are not ledger rows. The record after the terms is found from the terms alone, as a window of the record, with the record index of the first term shown.",
   ],
   keys: [
-    { key: 'Enter', label: 'Next card', act: 'next', button: true, menu: 'View' },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Card', act: 'card' },
-    { key: ['ArrowUp', 'ArrowDown'], label: 'Step', act: 'step' },
+    { key: "Enter", label: "Next card", act: "next", button: true, menu: "View" },
+    { key: ["ArrowLeft", "ArrowRight"], label: "Card", act: "card" },
+    { key: ["ArrowUp", "ArrowDown"], label: "Step", act: "step" },
   ],
   actions: {
     next: (scene) => scene.turn?.(1),
-    card: (scene, e) => scene.turn?.(e.key === 'ArrowLeft' ? -1 : 1),
-    step: (scene, e) => scene.walk?.(e.key === 'ArrowDown' ? -1 : 1),
+    card: (scene, e) => scene.turn?.(e.key === "ArrowLeft" ? -1 : 1),
+    step: (scene, e) => scene.walk?.(e.key === "ArrowDown" ? -1 : 1),
   },
 };
 
@@ -41,7 +71,7 @@ const STORY = 4;
 
 const LINES = 2;
 
-const PRIME = '#f5b400';
+const PRIME = "#f5b400";
 
 const within = (box, x, y) => box && x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h;
 
@@ -49,15 +79,19 @@ const within = (box, x, y) => box && x >= box.x && x <= box.x + box.w && y >= bo
 
 export function forms(line) {
   const out = [line.closed, line.records.formula].filter((form, i, all) => form && all.indexOf(form) === i);
-  const said = line.records.short ? 'three terms name the record' : line.records.found.length ? line.records.found.map(({ record, at }) => `${record.id} ${record.name}, from index ${at}`).join(' · ') : 'no curated record holds these terms';
-  return [...out, said].join(' · ');
+  const said = line.records.short
+    ? "three terms name the record"
+    : line.records.found.length
+      ? line.records.found.map(({ record, at }) => `${record.id} ${record.name}, from index ${at}`).join(" · ")
+      : "no curated record holds these terms";
+  return [...out, said].join(" · ");
 }
 
 /* ART */
 
 function ink(kind, t) {
-  if (kind === 'voids') return { fill: blend(t.accent, t.paper, 0.55), void: blend('#ff8a00', t.paper, 0.1) };
-  if (kind === 'edges') return { fill: blend(PRIME, t.paper, 0.1), void: veil(PRIME, 0.1) };
+  if (kind === "voids") return { fill: blend(t.accent, t.paper, 0.55), void: blend("#ff8a00", t.paper, 0.1) };
+  if (kind === "edges") return { fill: blend(PRIME, t.paper, 0.1), void: veil(PRIME, 0.1) };
   return null;
 }
 
@@ -65,12 +99,14 @@ function rows(ctx, box, one, t) {
   const n = one.rows.length;
   const cols = Math.max(1, ...one.rows.map((row) => row.sheets.length));
   ctx.font = font(t, 0.95);
-  const name = Math.round(Math.min(box.w * 0.4, Math.max(t.px * 9, ...one.rows.map((row) => ctx.measureText(row.name).width + t.px))));
+  const name = Math.round(
+    Math.min(box.w * 0.4, Math.max(t.px * 9, ...one.rows.map((row) => ctx.measureText(row.name).width + t.px))),
+  );
   ctx.font = font(t);
   const cell = Math.min((box.h - (n - 1) * t.px * 0.5) / n, (box.w - name) / cols);
   one.rows.forEach((row, i) => {
     const y = box.y + i * (cell + t.px * 0.5);
-    caption(ctx, row.name, box.x, y + cell / 2 + t.px * 0.35, name - t.px * 0.5, t, 'left');
+    caption(ctx, row.name, box.x, y + cell / 2 + t.px * 0.35, name - t.px * 0.5, t, "left");
     row.sheets.forEach((sheet, j) => {
       const slot = { x: box.x + name + j * cell, y, w: cell * 0.9, h: cell * 0.9 };
       art(ctx, slot, sheet, inks({}, t));
@@ -84,7 +120,12 @@ function gallery(ctx, box, one, t) {
   const lines = Math.ceil(n / cols);
   const cell = Math.min(box.w / cols, box.h / lines);
   one.sheets.forEach((sheet, i) => {
-    const slot = { x: box.x + (i % cols) * cell + cell * 0.05, y: box.y + Math.floor(i / cols) * cell + cell * 0.05, w: cell * 0.9, h: cell * 0.9 };
+    const slot = {
+      x: box.x + (i % cols) * cell + cell * 0.05,
+      y: box.y + Math.floor(i / cols) * cell + cell * 0.05,
+      w: cell * 0.9,
+      h: cell * 0.9,
+    };
     art(ctx, slot, sheet, inks({}, t));
   });
 }
@@ -124,18 +165,23 @@ function farey(ctx, box, one, t) {
 
 function picture(ctx, box, one, t, shown) {
   if (!one) return;
-  if (one.kind === 'sheet') art(ctx, box, one.sheet, ink(one.ink, t) ?? inks({}, t));
-  else if (one.kind === 'rows') rows(ctx, box, one, t);
-  else if (one.kind === 'gallery') gallery(ctx, box, one, t);
-  else if (one.kind === 'dots') dots(ctx, box, one, t);
-  else if (one.kind === 'farey') farey(ctx, box, one, t);
-  else if (one.kind === 'pins') chart(ctx, box, [{ key: 'pins', terms: one.terms, start: 1, say: one.say }], [t.accent], t, { kind: 'log', at: -1, shown: () => shown({ key: 'pins', terms: one.terms }) });
+  if (one.kind === "sheet") art(ctx, box, one.sheet, ink(one.ink, t) ?? inks({}, t));
+  else if (one.kind === "rows") rows(ctx, box, one, t);
+  else if (one.kind === "gallery") gallery(ctx, box, one, t);
+  else if (one.kind === "dots") dots(ctx, box, one, t);
+  else if (one.kind === "farey") farey(ctx, box, one, t);
+  else if (one.kind === "pins")
+    chart(ctx, box, [{ key: "pins", terms: one.terms, start: 1, say: one.say }], [t.accent], t, {
+      kind: "log",
+      at: -1,
+      shown: () => shown({ key: "pins", terms: one.terms }),
+    });
 }
 
 /* SCENE */
 
 export function make(canvas, view, opts = {}) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const feed = () => opts.live?.current ?? opts;
   const grown = growth(view);
   let seen = null;
@@ -150,20 +196,20 @@ export function make(canvas, view, opts = {}) {
     const made = data.made;
     if (!made) {
       ctx.fillStyle = t.dim;
-      ctx.textAlign = 'center';
-      ctx.fillText('reading', view.w / 2, view.h / 2);
-      ctx.textAlign = 'left';
+      ctx.textAlign = "center";
+      ctx.fillText("reading", view.w / 2, view.h / 2);
+      ctx.textAlign = "left";
       pic = null;
       return;
     }
     const card = CARDS[data.card];
     const width = view.w - 2 * pad;
-    ctx.font = font(t, 1.45, '600');
+    ctx.font = font(t, 1.45, "600");
     ctx.fillStyle = t.accent;
     ctx.fillText(fit(ctx, `${data.card + 1} · ${card.title}`, width), pad, high + px * 1.3);
     ctx.font = font(t);
     ctx.fillStyle = t.dim;
-    ctx.fillText(fit(ctx, [data.shown, made.sub].filter(Boolean).join(' · '), width), pad, high + px * 2.9);
+    ctx.fillText(fit(ctx, [data.shown, made.sub].filter(Boolean).join(" · "), width), pad, high + px * 2.9);
     const top = high + px * 4;
     const wide = width > (view.h - top) * 1.2;
     const text = wide ? { x: pad + width * 0.5 + px * 1.5, w: width * 0.5 - px * 1.5 } : { x: pad, w: width };
@@ -172,7 +218,9 @@ export function make(canvas, view, opts = {}) {
     const lay = made.lines.map((line) => ribbon(ctx, line, t, text.w, LINES));
     const tall = lay.reduce((sum, one) => sum + one.height + px * 3.2, 0);
     const words = story.length * px * 1.45 + px * 0.8;
-    pic = wide ? { x: pad, y: top, w: width * 0.5, h: view.h - top - low } : { x: pad, y: top + words, w: width, h: Math.max(px * 6, view.h - top - words - tall - low - px) };
+    pic = wide
+      ? { x: pad, y: top, w: width * 0.5, h: view.h - top - low }
+      : { x: pad, y: top + words, w: width, h: Math.max(px * 6, view.h - top - words - tall - low - px) };
     picture(ctx, pic, made.art, t, (row) => grown.shown(row));
     let y = wide ? top + px : top + px;
     ctx.font = font(t, 0.95);
@@ -186,7 +234,7 @@ export function make(canvas, view, opts = {}) {
       if (y > view.h - low) return;
       ctx.font = font(t, 0.85);
       ctx.fillStyle = t.dim;
-      ctx.fillText(fit(ctx, `${line.label}${line.capped ? ', to the budget' : ''}`, text.w), text.x, y);
+      ctx.fillText(fit(ctx, `${line.label}${line.capped ? ", to the budget" : ""}`, text.w), text.x, y);
       drawRibbon(ctx, lay[i], text.x, y + px * 0.2, t, -1, t.accent);
       y += lay[i].height + px * 1.3;
       ctx.font = font(t, 0.8);
@@ -203,7 +251,7 @@ export function make(canvas, view, opts = {}) {
   const draw = () => {
     const data = feed();
     const version = data.version ?? 0;
-    const rows = data.made?.art?.kind === 'pins' ? [{ key: 'pins', terms: data.made.art.terms }] : [];
+    const rows = data.made?.art?.kind === "pins" ? [{ key: "pins", terms: data.made.art.terms }] : [];
     const busy = grown.busy(rows);
     if (!view.still && !dirty && version === seen && !busy && !moving) return;
     moving = busy;

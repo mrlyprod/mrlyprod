@@ -1,18 +1,41 @@
-import { afterAll, expect, mock, spyOn, test } from 'bun:test';
+import { afterAll, expect, mock, spyOn, test } from "bun:test";
 
-const ROOT = 'https://mrly.net';
+const ROOT = "https://mrly.net";
 
-const SITE = { title: 'mrly', root: ROOT, tagline: 'designs', prefix: 'mrly-', company: 'MrlyProd', since: 2026, doors: [] };
+const SITE = {
+  title: "mrly",
+  root: ROOT,
+  tagline: "designs",
+  prefix: "mrly-",
+  company: "MrlyProd",
+  since: 2026,
+  doors: [],
+};
 
 const ROWS = [
-  { route: '/', kind: 'app', title: 'mrly', source: null, lead: 'home', meta: { id: 'home' } },
-  { route: '/about/', kind: 'prose', title: 'About', source: 'site/README.md', lead: 'who', meta: { id: 'about' } },
-  { route: '/git/', kind: 'app', title: 'Code', source: null, lead: 'code', meta: { id: 'git', deep: true } },
-  { route: '/life/', kind: 'app', title: 'Life', source: null, lead: 'cells', meta: { id: 'life', scene: true } },
-  { route: '/404.html', kind: 'app', title: 'Nothing here', source: null, lead: '', meta: { id: 'missing' } },
+  { route: "/", kind: "app", title: "mrly", source: null, lead: "home", meta: { id: "home" } },
+  { route: "/about/", kind: "prose", title: "About", source: "site/README.md", lead: "who", meta: { id: "about" } },
+  { route: "/git/", kind: "app", title: "Code", source: null, lead: "code", meta: { id: "git", deep: true } },
+  { route: "/life/", kind: "app", title: "Life", source: null, lead: "cells", meta: { id: "life", scene: true } },
+  { route: "/404.html", kind: "app", title: "Nothing here", source: null, lead: "", meta: { id: "missing" } },
 ];
 
-const KEPT = ['document', 'window', 'location', 'history', 'matchMedia', 'sessionStorage', 'requestAnimationFrame', 'scrollTo', 'scrollY', 'fetch', 'addEventListener', 'Element', 'HTMLAnchorElement', 'MutationObserver'];
+const KEPT = [
+  "document",
+  "window",
+  "location",
+  "history",
+  "matchMedia",
+  "sessionStorage",
+  "requestAnimationFrame",
+  "scrollTo",
+  "scrollY",
+  "fetch",
+  "addEventListener",
+  "Element",
+  "HTMLAnchorElement",
+  "MutationObserver",
+];
 
 const kept = Object.fromEntries(KEPT.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
 
@@ -35,7 +58,16 @@ const matches = (one, selector) => {
 class Node extends Element {
   constructor(tag) {
     super();
-    Object.assign(this, { tag, kids: [], attrs: {}, dataset: {}, parent: null, className: '', hidden: false, scrollTop: 0 });
+    Object.assign(this, {
+      tag,
+      kids: [],
+      attrs: {},
+      dataset: {},
+      parent: null,
+      className: "",
+      hidden: false,
+      scrollTop: 0,
+    });
   }
 
   get childNodes() {
@@ -97,14 +129,14 @@ class Node extends Element {
 const el = (tag) => new Node(tag);
 
 const heard = { click: [], wire: [], gone: [], unmounts: 0, form: null };
-const body = el('body');
-const main = el('main');
-const head = el('head');
-const describe = Object.assign(el('meta'), { name: 'description' });
+const body = el("body");
+const main = el("main");
+const head = el("head");
+const describe = Object.assign(el("meta"), { name: "description" });
 head.append(describe);
-body.append(main, el('aside'));
+body.append(main, el("aside"));
 const panes = { main, right: body.kids[1] };
-const texts = { '/raw/site/README.md': '# About' };
+const texts = { "/raw/site/README.md": "# About" };
 const breaks = new Set();
 const store = new Map();
 
@@ -113,11 +145,34 @@ let at = new URL(`${ROOT}/`);
 Object.assign(globalThis, {
   Element,
   HTMLAnchorElement,
-  document: { documentElement: el('html'), head, body, createElement: el, getElementById: (id) => panes[id] ?? null, querySelector: () => null, addEventListener: (type, fn) => type === 'click' && heard.click.push(fn) },
-  window: { dispatchEvent: (event) => event.type === 'wire' && heard.wire.push(event.detail.route), addEventListener: () => {} },
-  history: { state: null, pushState: (state, title, href) => (at = new URL(href, at)), replaceState: (state, title, href) => href && (at = new URL(href, at)) },
+  document: {
+    documentElement: el("html"),
+    head,
+    body,
+    createElement: el,
+    getElementById: (id) => panes[id] ?? null,
+    querySelector: () => null,
+    addEventListener: (type, fn) => type === "click" && heard.click.push(fn),
+  },
+  window: {
+    dispatchEvent: (event) => event.type === "wire" && heard.wire.push(event.detail.route),
+    addEventListener: () => {},
+  },
+  history: {
+    state: null,
+    pushState: (_state, _title, href) => {
+      at = new URL(href, at);
+    },
+    replaceState: (_state, _title, href) => {
+      if (href) at = new URL(href, at);
+    },
+  },
   matchMedia: () => ({ matches: true }),
-  sessionStorage: { getItem: (key) => store.get(key) ?? null, setItem: (key, value) => store.set(key, value), removeItem: (key) => store.delete(key) },
+  sessionStorage: {
+    getItem: (key) => store.get(key) ?? null,
+    setItem: (key, value) => store.set(key, value),
+    removeItem: (key) => store.delete(key),
+  },
   requestAnimationFrame: (fn) => setTimeout(fn, 0),
   scrollTo: () => {},
   scrollY: 0,
@@ -132,13 +187,16 @@ Object.assign(globalThis, {
   fetch: async (url) => ({ ok: url in texts, status: url in texts ? 200 : 404, text: async () => texts[url] }),
 });
 
-Object.defineProperty(globalThis, 'location', { configurable: true, get: () => Object.assign(at, { reload: () => heard.gone.push(at.href), assign: (href) => heard.gone.push(href) }) });
+Object.defineProperty(globalThis, "location", {
+  configurable: true,
+  get: () => Object.assign(at, { reload: () => heard.gone.push(at.href), assign: (href) => heard.gone.push(href) }),
+});
 
 const shell = () => ({
   page: (row) => ({
     layout: {},
-    render: (one, site, host, { text }) => {
-      if (breaks.has(row.route)) throw new Error('no chunk');
+    render: (one, _site, host, { text }) => {
+      if (breaks.has(row.route)) throw new Error("no chunk");
       Object.assign(host, { row: one, text, form: document.documentElement.dataset.form });
     },
     unmount: () => heard.unmounts++,
@@ -147,12 +205,12 @@ const shell = () => ({
 
 const app = () => ({ ...shell(), gated: (row) => Boolean(row.meta.scene) });
 
-mock.module('site:css', () => ({ css: {} }));
-mock.module('site:routes', () => ({ rows: ROWS, site: SITE }));
-mock.module('./app.jsx', app);
-mock.module('./prose.jsx', shell);
+mock.module("site:css", () => ({ css: {} }));
+mock.module("site:routes", () => ({ rows: ROWS, site: SITE }));
+mock.module("./app.jsx", app);
+mock.module("./prose.jsx", shell);
 
-const { go } = await import('./router.js');
+const { go } = await import("./router.js");
 
 const visit = (path) => go(new URL(path, ROOT));
 
@@ -162,65 +220,104 @@ const canonical = () => head.querySelector('link[rel="canonical"]')?.href;
 
 const robots = () => head.querySelector('meta[name="robots"]')?.content ?? null;
 
-test('a known route renders its row with its raw source, names the page, pushes the url and wires the route', async () => {
-  await visit('/about/');
-  expect([shown().row.route, shown().text, document.title, describe.getAttribute('content'), canonical(), location.pathname, robots(), heard.wire.at(-1)]).toEqual(['/about/', '# About', 'About · mrly', 'who', `${ROOT}/about/`, '/about/', null, '/about/']);
+test("a known route renders its row with its raw source, names the page, pushes the url and wires the route", async () => {
+  await visit("/about/");
+  expect([
+    shown().row.route,
+    shown().text,
+    document.title,
+    describe.getAttribute("content"),
+    canonical(),
+    location.pathname,
+    robots(),
+    heard.wire.at(-1),
+  ]).toEqual(["/about/", "# About", "About · mrly", "who", `${ROOT}/about/`, "/about/", null, "/about/"]);
 });
 
-test('/index.html renders home, the title alone when it is the site title', async () => {
-  await visit('/index.html');
-  expect([shown().row.route, document.title, canonical(), heard.wire.at(-1)]).toEqual(['/', 'mrly', `${ROOT}/`, '/']);
+test("/index.html renders home, the title alone when it is the site title", async () => {
+  await visit("/index.html");
+  expect([shown().row.route, document.title, canonical(), heard.wire.at(-1)]).toEqual(["/", "mrly", `${ROOT}/`, "/"]);
 });
 
-test('a path under git renders the git row with the path itself as canonical', async () => {
-  await visit('/git/site/src/shell/router.js');
-  expect([shown().row.route, canonical(), location.pathname, heard.wire.at(-1)]).toEqual(['/git/', `${ROOT}/git/site/src/shell/router.js`, '/git/site/src/shell/router.js', '/git/']);
+test("a path under git renders the git row with the path itself as canonical", async () => {
+  await visit("/git/site/src/shell/router.js");
+  expect([shown().row.route, canonical(), location.pathname, heard.wire.at(-1)]).toEqual([
+    "/git/",
+    `${ROOT}/git/site/src/shell/router.js`,
+    "/git/site/src/shell/router.js",
+    "/git/",
+  ]);
 });
 
-test('an unknown path renders the missing row with noindex, and the next known page drops it', async () => {
-  await visit('/gone/');
+test("an unknown path renders the missing row with noindex, and the next known page drops it", async () => {
+  await visit("/gone/");
   const lost = [shown().row.meta.id, robots(), canonical(), location.pathname];
-  await visit('/about/');
-  expect([...lost, robots()]).toEqual(['missing', 'noindex', `${ROOT}/404.html`, '/gone/', null]);
+  await visit("/about/");
+  expect([...lost, robots()]).toEqual(["missing", "noindex", `${ROOT}/404.html`, "/gone/", null]);
 });
 
-test('a click takes a page link and leaves a raw file, another origin and a modified click to the browser', () => {
+test("a click takes a page link and leaves a raw file, another origin and a modified click to the browser", () => {
   const link = (href) => {
     const url = new URL(href, at);
-    return Object.assign(new HTMLAnchorElement(), { href: url.href, origin: url.origin, pathname: url.pathname, search: url.search, hash: url.hash, target: '', hasAttribute: () => false, closest: () => null });
+    return Object.assign(new HTMLAnchorElement(), {
+      href: url.href,
+      origin: url.origin,
+      pathname: url.pathname,
+      search: url.search,
+      hash: url.hash,
+      target: "",
+      hasAttribute: () => false,
+      closest: () => null,
+    });
   };
   const click = (href, more = {}) => {
     const a = link(href);
     a.closest = () => a;
     let taken = false;
-    for (const fn of heard.click) fn({ target: a, button: 0, defaultPrevented: false, preventDefault: () => (taken = true), ...more });
+    for (const fn of heard.click)
+      fn({ target: a, button: 0, defaultPrevented: false, preventDefault: () => (taken = true), ...more });
     return taken;
   };
-  expect([click('/git/'), click('/raw/site/src/shell/router.js'), click('https://oeis.org/A000001'), click('/about/', { metaKey: true })]).toEqual([true, false, false, false]);
+  expect([
+    click("/git/"),
+    click("/raw/site/src/shell/router.js"),
+    click("https://oeis.org/A000001"),
+    click("/about/", { metaKey: true }),
+  ]).toEqual([true, false, false, false]);
 });
 
-test('a page that fails to load reloads once, then shows the error page', async () => {
-  const quiet = spyOn(console, 'error').mockImplementation(() => {});
-  breaks.add('/about/');
+test("a page that fails to load reloads once, then shows the error page", async () => {
+  const quiet = spyOn(console, "error").mockImplementation(() => {});
+  breaks.add("/about/");
   heard.gone.length = 0;
-  await visit('/about/');
-  await visit('/about/');
+  await visit("/about/");
+  await visit("/about/");
   breaks.clear();
   quiet.mockRestore();
-  expect([heard.gone, shown().className, shown().innerHTML.includes('did not load')]).toEqual([[`${ROOT}/about/`], 'lede', true]);
+  expect([heard.gone, shown().className, shown().innerHTML.includes("did not load")]).toEqual([
+    [`${ROOT}/about/`],
+    "lede",
+    true,
+  ]);
 });
 
-test('a gated app redraws when the form turns, and any other page stays', async () => {
+test("a gated app redraws when the form turns, and any other page stays", async () => {
   const { dataset } = document.documentElement;
-  dataset.form = 'desk';
-  await visit('/about/');
-  dataset.form = 'phone';
+  dataset.form = "desk";
+  await visit("/about/");
+  dataset.form = "phone";
   await heard.form();
   const about = shown().form;
-  await visit('/life/');
+  await visit("/life/");
   const before = heard.unmounts;
-  dataset.form = 'desk';
+  dataset.form = "desk";
   await heard.form();
   delete dataset.form;
-  expect([about, shown().row.route, shown().form, heard.unmounts - before, location.pathname]).toEqual(['desk', '/life/', 'desk', 1, '/life/']);
+  expect([about, shown().row.route, shown().form, heard.unmounts - before, location.pathname]).toEqual([
+    "desk",
+    "/life/",
+    "desk",
+    1,
+    "/life/",
+  ]);
 });

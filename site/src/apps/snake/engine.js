@@ -64,22 +64,22 @@ export function step(state, rand) {
   const queue = state.queue.slice();
   const dir = queue.length ? queue.shift() : state.dir;
   const head = ahead(size, wrap, state.snake[0], dir);
-  if (head < 0) return { ...state, dir, queue, over: 'wall' };
+  if (head < 0) return { ...state, dir, queue, over: "wall" };
   const eat = state.foods.indexOf(head);
   const body = eat >= 0 ? state.snake : state.snake.slice(0, -1);
-  if (body.includes(head)) return { ...state, dir, queue, over: 'bite' };
+  if (body.includes(head)) return { ...state, dir, queue, over: "bite" };
   const snake = [head, ...body];
   if (eat < 0) return { ...state, snake, dir, queue, hunger: state.hunger + 1 };
   const foods = state.foods.slice();
   const spot = drop(size, [...snake, ...foods.filter((_, i) => i !== eat)], rand);
   if (spot < 0) foods.splice(eat, 1);
   else foods[eat] = spot;
-  const over = snake.length === size * size ? 'won' : null;
+  const over = snake.length === size * size ? "won" : null;
   return { ...state, snake, dir, queue, foods, score: state.score + 1, hunger: 0, over };
 }
 
 export function starve(state) {
-  return state.over ? state : { ...state, over: 'starved' };
+  return state.over ? state : { ...state, over: "starved" };
 }
 
 /* ROUNDS */

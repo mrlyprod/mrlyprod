@@ -26,19 +26,32 @@ DESIGNS = {
 SAME = {"antidiagonal": "diagonal"}
 
 PASS_A = [
-    ("gasket", 5, 400), ("gasket", 6, 400),
-    ("antidiagonal", 5, 400), ("antidiagonal", 6, 400),
-    ("seven-of-eight", 3, 400), ("seven-of-eight", 4, 400),
-    ("carpet", 3, 400), ("carpet", 4, 200),
-    ("sponge", 3, 200), ("sponge", 4, 25),
+    ("gasket", 5, 400),
+    ("gasket", 6, 400),
+    ("antidiagonal", 5, 400),
+    ("antidiagonal", 6, 400),
+    ("seven-of-eight", 3, 400),
+    ("seven-of-eight", 4, 400),
+    ("carpet", 3, 400),
+    ("carpet", 4, 200),
+    ("sponge", 3, 200),
+    ("sponge", 4, 25),
 ]
 
 PASS_B = [
-    ("gasket", 5, 400), ("gasket", 6, 400), ("gasket", 7, 200), ("gasket", 8, 100),
-    ("diagonal", 5, 400), ("diagonal", 6, 400), ("diagonal", 7, 200),
-    ("seven-of-eight", 3, 400), ("seven-of-eight", 4, 200),
-    ("carpet", 3, 400), ("carpet", 4, 200),
-    ("sponge", 3, 100), ("sponge", 4, 20),
+    ("gasket", 5, 400),
+    ("gasket", 6, 400),
+    ("gasket", 7, 200),
+    ("gasket", 8, 100),
+    ("diagonal", 5, 400),
+    ("diagonal", 6, 400),
+    ("diagonal", 7, 200),
+    ("seven-of-eight", 3, 400),
+    ("seven-of-eight", 4, 200),
+    ("carpet", 3, 400),
+    ("carpet", 4, 200),
+    ("sponge", 3, 100),
+    ("sponge", 4, 20),
 ]
 
 
@@ -95,8 +108,7 @@ def union_stats(n, ea, eb):
         parent[j] = i
         weight[i] += weight[j]
         count -= 1
-        if weight[i] > largest:
-            largest = weight[i]
+        largest = max(largest, weight[i])
     return count, largest
 
 
@@ -112,16 +124,19 @@ def kron_stats(occupied, grid, dimension):
 def substitution(base, dimension, cells, level):
     out = [(0,) * dimension]
     for _ in range(level):
-        out = [tuple(c[a] * base + f[a] for a in range(dimension))
-               for c in out for f in cells]
+        out = [
+            tuple(c[a] * base + f[a] for a in range(dimension))
+            for c in out
+            for f in cells
+        ]
     return out
 
 
 def digit_rule(base, dimension, cells, level):
     keep = set(cells)
-    side = base ** level
+    side = base**level
     out = []
-    for index in range(side ** dimension):
+    for index in range(side**dimension):
         coord = []
         left = index
         for _ in range(dimension):
@@ -129,7 +144,7 @@ def digit_rule(base, dimension, cells, level):
             left //= side
         ok = True
         for position in range(level):
-            if tuple((c // base ** position) % base for c in coord) not in keep:
+            if tuple((c // base**position) % base for c in coord) not in keep:
                 ok = False
                 break
         if ok:
@@ -187,8 +202,7 @@ def bfs_stats(occupied, flat, step, dimension):
                 if occupied[neighbour] and not seen[neighbour]:
                     seen[neighbour] = 1
                     queue.append(neighbour)
-        if size > largest:
-            largest = size
+        largest = max(largest, size)
     return n, components, largest / n, (2 * dimension * n - 2 * edges) / n
 
 
@@ -206,15 +220,28 @@ def run_a(name, level, seeds):
         comps.append(float(c))
         frac.append(f)
         bound.append(b)
-    return pack(name, level, base ** level, dimension, n, design.size, seeds,
-                dc, df, db, comps, frac, bound,
-                lambda v: (float(np.mean(v)), float(np.std(v, ddof=1))))
+    return pack(
+        name,
+        level,
+        base**level,
+        dimension,
+        n,
+        design.size,
+        seeds,
+        dc,
+        df,
+        db,
+        comps,
+        frac,
+        bound,
+        lambda v: (float(np.mean(v)), float(np.std(v, ddof=1))),
+    )
 
 
 def draw_b(name, level, seeds):
     base, dimension, cells = DESIGNS[name]
-    side = base ** level
-    total = side ** dimension
+    side = base**level
+    total = side**dimension
     step = padded_steps(side, dimension)
     design = substitution(base, dimension, cells, level)
     occupied, flat = place(design, side, dimension, step)
@@ -230,18 +257,52 @@ def draw_b(name, level, seeds):
         comps.append(float(c))
         frac.append(f)
         bound.append(b)
-    return pack(name, level, side, dimension, n, total, seeds,
-                dc, df, db, comps, frac, bound,
-                lambda v: (statistics.mean(v), statistics.stdev(v)))
+    return pack(
+        name,
+        level,
+        side,
+        dimension,
+        n,
+        total,
+        seeds,
+        dc,
+        df,
+        db,
+        comps,
+        frac,
+        bound,
+        lambda v: (statistics.mean(v), statistics.stdev(v)),
+    )
 
 
-def pack(name, level, side, dimension, n, total, seeds, dc, df, db,
-         comps, frac, bound, moments):
+def pack(
+    name,
+    level,
+    side,
+    dimension,
+    n,
+    total,
+    seeds,
+    dc,
+    df,
+    db,
+    comps,
+    frac,
+    bound,
+    moments,
+):
     return {
-        "name": name, "level": level, "side": side, "dimension": dimension,
-        "cells": n, "density": n / total, "seeds": seeds,
+        "name": name,
+        "level": level,
+        "side": side,
+        "dimension": dimension,
+        "cells": n,
+        "density": n / total,
+        "seeds": seeds,
         "design": (dc, df, db),
-        "comps": moments(comps), "frac": moments(frac), "bound": moments(bound),
+        "comps": moments(comps),
+        "frac": moments(frac),
+        "bound": moments(bound),
         "tie_comps": sum(1 for v in comps if v <= dc),
         "tie_bound": sum(1 for v in bound if v >= db),
     }
@@ -249,18 +310,40 @@ def pack(name, level, side, dimension, n, total, seeds, dc, df, db,
 
 def show(result):
     grid = "x".join([str(result["side"])] * result["dimension"])
-    print("  {:<15} L={} grid {:<12} cells {:>7} density {:.4f} seeds {}".format(
-        result["name"], result["level"], grid, result["cells"],
-        result["density"], result["seeds"]))
+    print(
+        "  {:<15} L={} grid {:<12} cells {:>7} density {:.4f} seeds {}".format(
+            result["name"],
+            result["level"],
+            grid,
+            result["cells"],
+            result["density"],
+            result["seeds"],
+        )
+    )
     dc, df, db = result["design"]
-    print("    components  design {:>10}   random {:12.4f} +/- {:.4f}   ties {}/{}".format(
-        dc, result["comps"][0], result["comps"][1],
-        result["tie_comps"], result["seeds"]))
-    print("    largest     design {:>10.4f}   random {:12.4f} +/- {:.4f}".format(
-        df, result["frac"][0], result["frac"][1]))
-    print("    boundary    design {:>10.4f}   random {:12.4f} +/- {:.4f}   ties {}/{}".format(
-        db, result["bound"][0], result["bound"][1],
-        result["tie_bound"], result["seeds"]))
+    print(
+        "    components  design {:>10}   random {:12.4f} +/- {:.4f}   ties {}/{}".format(
+            dc,
+            result["comps"][0],
+            result["comps"][1],
+            result["tie_comps"],
+            result["seeds"],
+        )
+    )
+    print(
+        "    largest     design {:>10.4f}   random {:12.4f} +/- {:.4f}".format(
+            df, result["frac"][0], result["frac"][1]
+        )
+    )
+    print(
+        "    boundary    design {:>10.4f}   random {:12.4f} +/- {:.4f}   ties {}/{}".format(
+            db,
+            result["bound"][0],
+            result["bound"][1],
+            result["tie_bound"],
+            result["seeds"],
+        )
+    )
 
 
 def main():
@@ -268,7 +351,9 @@ def main():
     print("DOMAIN")
     print("  pass A: 2D grids to 81x81, 3D to 81^3, 400 seeds thinning to 25")
     print("  pass B: 2D grids to 256x256, 3D to 81^3, 400 seeds thinning to 20")
-    print("  ties: random draws at or below the design count, at or above the design boundary")
+    print(
+        "  ties: random draws at or below the design count, at or above the design boundary"
+    )
     print()
 
     print("SUBSTITUTION AGAINST DIGIT RULE")
@@ -276,15 +361,14 @@ def main():
     for name in ("gasket", "diagonal", "seven-of-eight", "carpet", "sponge"):
         base, dimension, cells = DESIGNS[name]
         for level in (1, 2, 3):
-            side = base ** level
+            side = base**level
             a = sorted(digit_rule(base, dimension, cells, level))
             raw = substitution(base, dimension, cells, level)
-            b = sorted({sum(c[x] * side ** x for x in range(dimension)) for c in raw})
+            b = sorted({sum(c[x] * side**x for x in range(dimension)) for c in raw})
             same = a == b and len(a) == len(cells) ** level
             agree = agree and same
-            print("  {:<15} L={} cells {:>7}  routes agree {}".format(
-                name, level, len(a), same))
-    print("  every route agrees and the fill count is multiplicative: {}".format(agree))
+            print(f"  {name:<15} L={level} cells {len(a):>7}  routes agree {same}")
+    print(f"  every route agrees and the fill count is multiplicative: {agree}")
     print()
 
     print("PASS A - KRONECKER POWERS, UNION-FIND, NUMPY PCG64")
@@ -306,17 +390,33 @@ def main():
     print("DISPERSING EXTREME - COMPONENTS ARE NOT THE METRIC")
     for level in (5, 6, 7):
         result = b_results[("diagonal", level)]
-        print("  diagonal L={} side {:>4} cells {:>5} seeds {:>3}  design comps {:>5}   random comps {:10.4f} +/- {:.4f}".format(
-            level, result["side"], result["cells"], result["seeds"],
-            result["design"][0], result["comps"][0], result["comps"][1]))
+        print(
+            "  diagonal L={} side {:>4} cells {:>5} seeds {:>3}  design comps {:>5}   random comps {:10.4f} +/- {:.4f}".format(
+                level,
+                result["side"],
+                result["cells"],
+                result["seeds"],
+                result["design"][0],
+                result["comps"][0],
+                result["comps"][1],
+            )
+        )
     print()
 
     print("MAXIMUM BOUNDARY")
-    for key in (("diagonal", 6), ("gasket", 6), ("carpet", 4),
-                ("sponge", 3), ("seven-of-eight", 4)):
+    for key in (
+        ("diagonal", 6),
+        ("gasket", 6),
+        ("carpet", 4),
+        ("sponge", 3),
+        ("seven-of-eight", 4),
+    ):
         result = b_results[key]
-        print("  {:<15} L={} boundary per cell {:.4f} of the maximum {}".format(
-            key[0], key[1], result["design"][2], 2 * result["dimension"]))
+        print(
+            "  {:<15} L={} boundary per cell {:.4f} of the maximum {}".format(
+                key[0], key[1], result["design"][2], 2 * result["dimension"]
+            )
+        )
     print()
 
     print("THE TWO PASSES AGAINST EACH OTHER")
@@ -327,28 +427,40 @@ def main():
             gap = abs(left[field][0] - right[field][0])
             sd = max(left[field][1], right[field][1])
             worst = max(worst, gap / sd if sd else 0.0)
-            print("  {:<15} L={} {:<6} pass A {:12.4f}   pass B {:12.4f}   gap {:.4f} sd".format(
-                key[0], key[1], field, left[field][0], right[field][0],
-                gap / sd if sd else 0.0))
-    print("  every comparison agrees to within one standard deviation: {}".format(worst <= 1.0))
-    print("  the widest gap is {:.4f} standard deviations".format(worst))
+            print(
+                f"  {key[0]:<15} L={key[1]} {field:<6} pass A {left[field][0]:12.4f}   pass B {right[field][0]:12.4f}   gap {gap / sd if sd else 0.0:.4f} sd"
+            )
+    print(f"  every comparison agrees to within one standard deviation: {worst <= 1.0}")
+    print(f"  the widest gap is {worst:.4f} standard deviations")
     print()
 
     print("WITNESSES")
     gasket8 = b_results[("gasket", 8)]
     gasket5 = b_results[("gasket", 5)]
     sponge4 = b_results[("sponge", 4)]
-    print("  gasket 256x256   design comps {}   random {:.2f} +/- {:.2f}".format(
-        gasket8["design"][0], gasket8["comps"][0], gasket8["comps"][1]))
-    print("  gasket 256x256   design boundary {:.4f}   random {:.4f} +/- {:.4f}".format(
-        gasket8["design"][2], gasket8["bound"][0], gasket8["bound"][1]))
-    print("  sponge 81^3      design comps {}   random {:.2f} +/- {:.2f}".format(
-        sponge4["design"][0], sponge4["comps"][0], sponge4["comps"][1]))
-    print("  gasket 32x32     random draws reaching one component {}/{}".format(
-        gasket5["tie_comps"], gasket5["seeds"]))
+    print(
+        "  gasket 256x256   design comps {}   random {:.2f} +/- {:.2f}".format(
+            gasket8["design"][0], gasket8["comps"][0], gasket8["comps"][1]
+        )
+    )
+    print(
+        "  gasket 256x256   design boundary {:.4f}   random {:.4f} +/- {:.4f}".format(
+            gasket8["design"][2], gasket8["bound"][0], gasket8["bound"][1]
+        )
+    )
+    print(
+        "  sponge 81^3      design comps {}   random {:.2f} +/- {:.2f}".format(
+            sponge4["design"][0], sponge4["comps"][0], sponge4["comps"][1]
+        )
+    )
+    print(
+        "  gasket 32x32     random draws reaching one component {}/{}".format(
+            gasket5["tie_comps"], gasket5["seeds"]
+        )
+    )
     print()
-    print("  every check passed: {}".format(agree and worst <= 1.0))
-    print("  wall {:.1f} s".format(time.time() - start))
+    print(f"  every check passed: {agree and worst <= 1.0}")
+    print(f"  wall {time.time() - start:.1f} s")
     if not agree or worst > 1.0:
         raise SystemExit(1)
 

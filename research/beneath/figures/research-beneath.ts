@@ -40,12 +40,16 @@ function fit(pts: Point[], frame: Frame): Point[] {
 export default function draw(pen: Pen, ink: Ink) {
   const design = math.radix.koch();
   if (design.size() !== DIGITS) throw new Error(`research-beneath: ${design.size()} digits, want ${DIGITS}`);
-  if (design.base().norm() !== NORM) throw new Error(`research-beneath: base norm ${design.base().norm()}, want ${NORM}`);
-  if (design.fill(LEVEL) !== String(POINTS)) throw new Error(`research-beneath: fill ${design.fill(LEVEL)}, want ${POINTS}`);
+  if (design.base().norm() !== NORM)
+    throw new Error(`research-beneath: base norm ${design.base().norm()}, want ${NORM}`);
+  if (design.fill(LEVEL) !== String(POINTS))
+    throw new Error(`research-beneath: fill ${design.fill(LEVEL)}, want ${POINTS}`);
 
   const probe = design.plane(PROBE);
-  if (probe.length !== DIGITS * DIGITS) throw new Error(`research-beneath: ${probe.length} probe points, want ${DIGITS * DIGITS}`);
-  if (!steps(probe).every((s) => Math.abs(s - STEP) < TOL)) throw new Error(`research-beneath: the probe steps are not ${STEP}`);
+  if (probe.length !== DIGITS * DIGITS)
+    throw new Error(`research-beneath: ${probe.length} probe points, want ${DIGITS * DIGITS}`);
+  if (!steps(probe).every((s) => Math.abs(s - STEP) < TOL))
+    throw new Error(`research-beneath: the probe steps are not ${STEP}`);
 
   const curve = design.plane(LEVEL);
   if (curve.length !== POINTS) throw new Error(`research-beneath: ${curve.length} points, want ${POINTS}`);

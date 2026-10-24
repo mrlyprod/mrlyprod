@@ -3,7 +3,20 @@
 const RATIO = 0.8660254037844386;
 
 export const EDGES = Object.freeze(
-  [[0, 1], [0, 2], [0, 4], [1, 3], [1, 5], [2, 3], [2, 6], [3, 7], [4, 5], [4, 6], [5, 7], [6, 7]].map((edge) => Object.freeze(edge)),
+  [
+    [0, 1],
+    [0, 2],
+    [0, 4],
+    [1, 3],
+    [1, 5],
+    [2, 3],
+    [2, 6],
+    [3, 7],
+    [4, 5],
+    [4, 6],
+    [5, 7],
+    [6, 7],
+  ].map((edge) => Object.freeze(edge)),
 );
 
 export function project(x, y, z) {

@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { Grid, frame as boxed, type Ink, type Pen } from "#view";
+import { frame as boxed, Grid, type Ink, type Pen } from "#view";
 
 export const units = { math };
 
@@ -17,11 +17,13 @@ function designs() {
   memo = CODES.map((code) =>
     SIDES.map((number) => {
       const cells = math.two.create(code, number, 1, 0, 2);
-      if (cells.shape[1] !== number) throw new Error(`research-sequences: code ${code} is ${cells.shape[1]} wide, want ${number}`);
+      if (cells.shape[1] !== number)
+        throw new Error(`research-sequences: code ${code} is ${cells.shape[1]} wide, want ${number}`);
       let sum = 0n;
       for (const kind of cells.types) sum += BigInt(kind);
       const fill = BigInt(math.counts.fill(code, number, 2, 1, 2));
-      if (sum !== fill) throw new Error(`research-sequences: code ${code} at ${number} holds ${sum} cells, want ${fill}`);
+      if (sum !== fill)
+        throw new Error(`research-sequences: code ${code} at ${number} holds ${sum} cells, want ${fill}`);
       return cells;
     }),
   );

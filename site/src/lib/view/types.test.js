@@ -4,7 +4,7 @@ import { dark } from "../theme/theme.js";
 import * as view from "./index.js";
 
 const lines = readFileSync(new URL("./index.d.ts", import.meta.url), "utf8").split("\n");
-const SPACES = ["grid", "hex", "iso", "plot", "field"];
+const SPACES = { grid: view.grid, hex: view.hex, iso: view.iso, plot: view.plot, field: view.field };
 
 /* READ */
 
@@ -18,13 +18,20 @@ function block(open) {
 function names(body, indent) {
   const out = [];
   for (const line of body) {
-    const m = line.match(new RegExp(`^ {${indent}}(?:export )?(?:readonly )?(?:function |class |const |namespace |import )?(\\w+)[(:?]|^ {${indent}}(?:export )?(?:function|class|const|namespace|import) (\\w+)`));
+    const m = line.match(
+      new RegExp(
+        `^ {${indent}}(?:export )?(?:readonly )?(?:function |class |const |namespace |import )?(\\w+)[(:?]|^ {${indent}}(?:export )?(?:function|class|const|namespace|import) (\\w+)`,
+      ),
+    );
     if (m && !line.trim().startsWith("/**") && !/^ *(export )?(interface|type) /.test(line)) out.push(m[1] ?? m[2]);
   }
   return out.filter((name) => name !== "constructor" && name !== "new").sort();
 }
 
-const top = lines.filter((line) => /^export (function|class|const|namespace|import) /.test(line)).map((line) => line.match(/^export (?:function|class|const|namespace|import) (\w+)/)[1]).sort();
+const top = lines
+  .filter((line) => /^export (function|class|const|namespace|import) /.test(line))
+  .map((line) => line.match(/^export (?:function|class|const|namespace|import) (\w+)/)[1])
+  .sort();
 
 function params(signature) {
   const inside = signature.slice(signature.indexOf("(") + 1, signature.lastIndexOf(")"));
@@ -52,7 +59,8 @@ test("view.d.ts declares the values view exports, no more and no fewer", () => {
 });
 
 test("each namespace of view.d.ts declares the values its module exports", () => {
-  for (const space of SPACES) expect([space, Object.keys(view[space]).sort()]).toEqual([space, names(block(`export namespace ${space} {`), 4)]);
+  for (const [space, one] of Object.entries(SPACES))
+    expect([space, Object.keys(one).sort()]).toEqual([space, names(block(`export namespace ${space} {`), 4)]);
 });
 
 test("each pen declares the verbs it has", () => {
@@ -65,15 +73,24 @@ test("each pen declares the verbs it has", () => {
 
 test("the frame, the ink, the ramp and the patch declare the members they have", () => {
   const box = view.frame(0, 0, 1, 1);
-  const own = [...Object.keys(box), ...Object.getOwnPropertyNames(Object.getPrototypeOf(box)).filter((k) => k !== "constructor")];
+  const own = [
+    ...Object.keys(box),
+    ...Object.getOwnPropertyNames(Object.getPrototypeOf(box)).filter((k) => k !== "constructor"),
+  ];
   expect(own.sort()).toEqual(names(block("export interface Frame {"), 4));
   const theme = view.ink(dark);
   expect(Object.keys(theme).sort()).toEqual(names(block("export interface Ink {"), 4));
-  expect(Object.getOwnPropertyNames(theme.Ramp).filter((k) => !["length", "name", "prototype"].includes(k)).sort()).toEqual(["diverge", "fire", "heat", "tone"]);
+  expect(
+    Object.getOwnPropertyNames(theme.Ramp)
+      .filter((k) => !["length", "name", "prototype"].includes(k))
+      .sort(),
+  ).toEqual(["diverge", "fire", "heat", "tone"]);
   expect(names(block("export interface Ramps {"), 4)).toEqual(["diverge", "fire", "heat", "tone"]);
   expect(Object.keys(new view.Ramp([])).sort()).toEqual(["ground", "stops"]);
   expect(names(block("export class Ramp {"), 4)).toEqual(["at", "ground", "stops"]);
-  expect(Object.keys(view.field.patch(0, 0, 1, 1)).sort()).toEqual([...names(block("export interface Patch extends Pixels {"), 4), "shape"].sort());
+  expect(Object.keys(view.field.patch(0, 0, 1, 1)).sort()).toEqual(
+    [...names(block("export interface Patch extends Pixels {"), 4), "shape"].sort(),
+  );
 });
 
 /* SIGNATURES */
@@ -84,18 +101,27 @@ test("each function of view.d.ts takes the arguments the function wants", () => 
     seen.push(label);
     expect([label, fn.length]).toEqual([label, required(signature)]);
   };
+  const all = { ...view };
   for (const line of lines) {
     const top = line.match(/^export function (\w+)\(.*\): /);
-    if (top) check(top[1], view[top[1]], line);
+    if (top) check(top[1], all[top[1]], line);
   }
-  for (const space of SPACES) {
+  for (const [space, one] of Object.entries(SPACES)) {
     for (const line of block(`export namespace ${space} {`)) {
       const m = line.match(/^ {4}export function (\w+)\(.*\): /);
-      if (m) check(`${space}.${m[1]}`, view[space][m[1]], line);
+      if (m) check(`${space}.${m[1]}`, one[m[1]], line);
     }
   }
-  check("Ramp", view.Ramp, lines.find((line) => line.trim().startsWith("constructor(stops")));
-  check("Grid", view.Grid, lines.find((line) => line.trim().startsWith("constructor(frame")));
+  check(
+    "Ramp",
+    view.Ramp,
+    lines.find((line) => line.trim().startsWith("constructor(stops")),
+  );
+  check(
+    "Grid",
+    view.Grid,
+    lines.find((line) => line.trim().startsWith("constructor(frame")),
+  );
   expect(seen.length).toBe(lines.filter((line) => /^\s*export function /.test(line)).length + 2);
 });
 

@@ -1,20 +1,29 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Btn, Group, Icon, Pick, Segment, Slider, Toggle } from '../../lib/app/controls.jsx';
-import { HUES, paints } from '../../lib/color.js';
-import { useTheme } from '../../lib/designs/pick.jsx';
-import { fed, source } from '../../lib/glass/feed.js';
-import { tints } from '../../lib/theme/hues.js';
-import { palette } from '../../lib/theme/palette.gen.js';
-import { glass, icons, KEY, read, subscribe, theme, tint } from '../../shell/prefs.js';
-import { Tile } from '../../shell/tile.jsx';
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Btn, Group, Icon, Pick, Segment, Slider, Toggle } from "../../lib/app/controls.jsx";
+import { HUES, paints } from "../../lib/color.js";
+import { useTheme } from "../../lib/designs/pick.jsx";
+import { fed, source } from "../../lib/glass/feed.js";
+import { tints } from "../../lib/theme/hues.js";
+import { palette } from "../../lib/theme/palette.gen.js";
+import { glass, icons, KEY, read, subscribe, theme, tint } from "../../shell/prefs.js";
+import { Tile } from "../../shell/tile.jsx";
 
-const usePref = (key) => useSyncExternalStore(subscribe, () => read(key), () => '');
+const usePref = (key) =>
+  useSyncExternalStore(
+    subscribe,
+    () => read(key),
+    () => "",
+  );
 
 /* THEME */
 
-const SHADES = [['light', 'Light'], ['dark', 'Dark'], ['', 'Auto']];
+const SHADES = [
+  ["light", "Light"],
+  ["dark", "Dark"],
+  ["", "Auto"],
+];
 
-const TINTS = tints('Auto');
+const TINTS = tints("Auto");
 
 export function Theme() {
   const shade = usePref(KEY.theme);
@@ -28,9 +37,19 @@ export function Theme() {
         </Group>
       </div>
       <div className="hues" role="group" aria-label="Tint">
-        <Btn on={hue === ''} onClick={() => tint('')}>Auto</Btn>
+        <Btn on={hue === ""} onClick={() => tint("")}>
+          Auto
+        </Btn>
         {HUES.map((one) => (
-          <Btn key={one} className="hue" style={{ '--hue': `var(--${one})` }} aria-pressed={hue === one} aria-label={one} title={one} onClick={() => tint(one)} />
+          <Btn
+            key={one}
+            className="hue"
+            style={{ "--hue": `var(--${one})` }}
+            aria-pressed={hue === one}
+            aria-label={one}
+            title={one}
+            onClick={() => tint(one)}
+          />
         ))}
       </div>
     </div>
@@ -41,7 +60,11 @@ export function Theme() {
 
 const WIDTH = 960;
 const HEIGHT = 360;
-const STRIPES = [[0.14, 0.1, 'paper'], [0.5, 0.06, 'ink'], [0.8, 0.1, 'paper']];
+const STRIPES = [
+  [0.14, 0.1, "paper"],
+  [0.5, 0.06, "ink"],
+  [0.8, 0.1, "paper"],
+];
 const WAKE = 120;
 
 export function bands(ctx, w, h, tones) {
@@ -60,37 +83,52 @@ export function bands(ctx, w, h, tones) {
 
 function visible(canvas) {
   const box = canvas.getBoundingClientRect();
-  const view = canvas.closest('main')?.getBoundingClientRect();
+  const view = canvas.closest("main")?.getBoundingClientRect();
   if (!view) return box;
   const left = Math.max(box.left, view.left);
   const top = Math.max(box.top, view.top);
-  return new DOMRect(left, top, Math.max(0, Math.min(box.right, view.right) - left), Math.max(0, Math.min(box.bottom, view.bottom) - top));
+  return new DOMRect(
+    left,
+    top,
+    Math.max(0, Math.min(box.right, view.right) - left),
+    Math.max(0, Math.min(box.bottom, view.bottom) - top),
+  );
 }
 
 function Backdrop({ stage }) {
   const tick = useTheme();
   useEffect(() => {
     const canvas = stage.current;
-    bands(canvas.getContext('2d'), canvas.width, canvas.height, paints(canvas));
+    bands(canvas.getContext("2d"), canvas.width, canvas.height, paints(canvas));
     fed(canvas);
   }, [tick]);
   useEffect(() => source(stage.current, () => visible(stage.current)), []);
   useEffect(() => {
-    const main = stage.current.closest('main');
-    const wake = () => dispatchEvent(new CustomEvent('shift', { detail: WAKE }));
-    main?.addEventListener('scroll', wake, { passive: true });
-    return () => main?.removeEventListener('scroll', wake);
+    const main = stage.current.closest("main");
+    const wake = () => dispatchEvent(new CustomEvent("shift", { detail: WAKE }));
+    main?.addEventListener("scroll", wake, { passive: true });
+    return () => main?.removeEventListener("scroll", wake);
   }, []);
   return <canvas ref={stage} width={WIDTH} height={HEIGHT} aria-hidden="true" />;
 }
 
 /* GLASS */
 
-const STYLES = [['clear', 'Clear'], ['', 'Tinted'], ['frosted', 'Frosted'], ['off', 'Off']];
+const STYLES = [
+  ["clear", "Clear"],
+  ["", "Tinted"],
+  ["frosted", "Frosted"],
+  ["off", "Off"],
+];
 
-const ROUND = [['info', 'Info'], ['ios_share', 'Share'], ['keyboard', 'Keys'], ['download', 'Save']];
+const ROUND = [
+  ["info", "Info"],
+  ["ios_share", "Share"],
+  ["keyboard", "Keys"],
+  ["download", "Save"],
+];
 
-const MENU = ['Copy link', 'Duplicate', 'Move to', 'Delete'];
+const MENU = ["Copy link", "Duplicate", "Move to", "Delete"];
 
 export function Glass() {
   const style = usePref(KEY.glass);
@@ -148,15 +186,27 @@ export function Glass() {
 
 /* ICONS */
 
-const LOOKS = [['', 'Default'], ['dark', 'Dark'], ['clear-light', 'Clear light'], ['clear-dark', 'Clear dark'], ['tinted-light', 'Tinted light'], ['tinted-dark', 'Tinted dark']];
+const LOOKS = [
+  ["", "Default"],
+  ["dark", "Dark"],
+  ["clear-light", "Clear light"],
+  ["clear-dark", "Clear dark"],
+  ["tinted-light", "Tinted light"],
+  ["tinted-dark", "Tinted dark"],
+];
 
-const KINDS = [['', 'Default'], ['dark', 'Dark'], ['clear', 'Clear'], ['tinted', 'Tinted']];
+const KINDS = [
+  ["", "Default"],
+  ["dark", "Dark"],
+  ["clear", "Clear"],
+  ["tinted", "Tinted"],
+];
 
-const APPS = ['about', 'blog', 'moire', 'spin', 'three', 'polygons'];
+const APPS = ["about", "blog", "moire", "spin", "three", "polygons"];
 
 export function Icons() {
   const style = usePref(KEY.icons);
-  const always = usePref(KEY.always) === '1';
+  const always = usePref(KEY.always) === "1";
   return (
     <>
       <div className="controls">

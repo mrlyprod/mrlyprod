@@ -2,7 +2,7 @@ import subprocess
 import sys
 import time
 from fractions import Fraction
-from math import ceil, floor, log
+from math import ceil, floor, log, log2
 
 
 def in_gasket(x, y, b):
@@ -16,7 +16,7 @@ def in_gasket(x, y, b):
 
 
 def direct(m):
-    n = 3 ** m
+    n = 3**m
     c = 0
     for x in range(n):
         for y in range(n):
@@ -26,7 +26,7 @@ def direct(m):
 
 
 def count(m):
-    pw = [3 ** i for i in range(m + 1)]
+    pw = [3**i for i in range(m + 1)]
     bl = [p.bit_length() for p in pw]
     total = 0
 
@@ -64,7 +64,10 @@ def terms(lo, hi):
         assert c >= axis(m)
         r = c / prev if prev else float("nan")
         e = log(c, 3) / m if m else float("nan")
-        print("%-2d %-13d %-11d %-9.5f %-11.6f %.1f" % (m, c, axis(m), r, e, time.time() - t0))
+        print(
+            "%-2d %-13d %-11d %-9.5f %-11.6f %.1f"
+            % (m, c, axis(m), r, e, time.time() - t0)
+        )
         sys.stdout.flush()
         prev = c
 
@@ -79,15 +82,15 @@ def control(hi):
 
 
 def down(x, k=6):
-    return floor(x * 10 ** k) / 10 ** k
+    return floor(x * 10**k) / 10**k
 
 
 def up(x, k=6):
-    return ceil(x * 10 ** k) / 10 ** k
+    return ceil(x * 10**k) / 10**k
 
 
 def budget():
-    da = log(3, 2)
+    da = log2(3)
     db = 1.0
     ax = log(2, 3)
     print("dim A = log_2 3 = %.6f" % da)
@@ -122,7 +125,9 @@ def bareiss(rows):
 
 
 def solve(rows, rhs, r):
-    aug = [[Fraction(v) for v in rows[i]] + [Fraction(rhs[i])] for i in range(len(rows))]
+    aug = [
+        [Fraction(v) for v in rows[i]] + [Fraction(rhs[i])] for i in range(len(rows))
+    ]
     piv = []
     row = 0
     for col in range(r):
@@ -156,8 +161,13 @@ def charpoly_string(c):
 
 def dominant_root(c):
     p = charpoly_string(c)
-    out = subprocess.run(["gp", "-q"], input="v=polroots(%s); vecmax(abs(v))\n" % p,
-                         capture_output=True, text=True)
+    out = subprocess.run(
+        ["gp", "-q"],
+        input="v=polroots(%s); vecmax(abs(v))\n" % p,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
     return out.stdout.strip()
 
 
@@ -170,7 +180,9 @@ def hankel(hi, rmax):
     for k in range(1, rmax + 2):
         if 2 * k - 1 > len(a):
             break
-        print("%-2d %d" % (k, bareiss([[a[i + j] for j in range(k)] for i in range(k)])))
+        print(
+            "%-2d %d" % (k, bareiss([[a[i + j] for j in range(k)] for i in range(k)]))
+        )
     print()
     print("r  eqs spare fit    coefficients c_1..c_r of a(n) = sum c_i a(n-i), n >= r")
     found = []
@@ -178,14 +190,24 @@ def hankel(hi, rmax):
         rows = [[a[n - 1 - j] for j in range(r)] for n in range(r, len(a))]
         rhs = [a[n] for n in range(r, len(a))]
         st, c = solve(rows, rhs, r)
-        print("%-2d %-3d %-5d %-6s %s" % (r, len(rows), len(rows) - r, st,
-                                          "" if c is None else " ".join(str(v) for v in c)))
+        print(
+            "%-2d %-3d %-5d %-6s %s"
+            % (
+                r,
+                len(rows),
+                len(rows) - r,
+                st,
+                "" if c is None else " ".join(str(v) for v in c),
+            )
+        )
         if st != "none":
             found.append((r, c))
     print()
     if not found:
-        print("no linear recurrence with constant coefficients of order r <= %d fits all %d terms"
-              % (rmax, len(a)))
+        print(
+            "no linear recurrence with constant coefficients of order r <= %d fits all %d terms"
+            % (rmax, len(a))
+        )
         print("last reading log_3 C(3^%d) / %d = %.6f" % (hi, hi, log(a[hi], 3) / hi))
         return
     for r, c in found:
@@ -196,7 +218,10 @@ def hankel(hi, rmax):
             print("order %d log(root)/log(3) = %.6f" % (r, log(float(rho), 3)))
         except ValueError:
             print("order %d dominant root is not positive real" % r)
-        print("order %d last reading log_3 C(3^%d) / %d = %.6f" % (r, hi, hi, log(a[hi], 3) / hi))
+        print(
+            "order %d last reading log_3 C(3^%d) / %d = %.6f"
+            % (r, hi, hi, log(a[hi], 3) / hi)
+        )
 
 
 def first_order(a, rmax):
@@ -230,15 +255,18 @@ def selftest():
     r, c = first_order(fib, 6)
     report("fibonacci first order", 2, r)
     report("fibonacci charpoly", "x^2 - (1)*x^1 - (1)*x^0", charpoly_string(c))
-    mix = [2 ** n + 3 ** n + 1 for n in range(20)]
+    mix = [2**n + 3**n + 1 for n in range(20)]
     r, c = first_order(mix, 6)
     report("2^n + 3^n + 1 first order", 3, r)
     report("2^n + 3^n + 1 dominant root", "3.0000000", dominant_root(c)[:9])
-    cube = [n ** 3 + 2 ** n for n in range(20)]
+    cube = [n**3 + 2**n for n in range(20)]
     r, c = first_order(cube, 8)
     report("n^3 + 2^n first order", 5, r)
-    report("n^3 + 2^n charpoly", "x^5 - (6)*x^4 - (-14)*x^3 - (16)*x^2 - (-9)*x^1 - (2)*x^0",
-           charpoly_string(c))
+    report(
+        "n^3 + 2^n charpoly",
+        "x^5 - (6)*x^4 - (-14)*x^3 - (16)*x^2 - (-9)*x^1 - (2)*x^0",
+        charpoly_string(c),
+    )
     print()
     print("all pass %s" % ok)
 

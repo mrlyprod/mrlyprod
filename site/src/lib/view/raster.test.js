@@ -55,7 +55,11 @@ test("segment strokes its width with round caps", () => {
 
 test("polyline blends its joint once where two segments blend twice", () => {
   const glass = [255, 255, 255, 128];
-  const pts = [[10, 20.5], [40.5, 20.5], [40.5, 50]];
+  const pts = [
+    [10, 20.5],
+    [40.5, 20.5],
+    [40.5, 50],
+  ];
   const one = board((p) => p.polyline(pts, 4, glass));
   const two = board((p) => {
     p.segment(pts[0], pts[1], 4, glass);
@@ -70,20 +74,47 @@ test("triangle feathers its edge by the signed distance", () => {
 });
 
 test("polygon fills by the even-odd rule", () => {
-  const star = [0, 1, 2, 3, 4].map((i) => [32 + 28 * Math.cos(-Math.PI / 2 + (i * 4 * Math.PI) / 5), 32 + 28 * Math.sin(-Math.PI / 2 + (i * 4 * Math.PI) / 5)]);
+  const star = [0, 1, 2, 3, 4].map((i) => [
+    32 + 28 * Math.cos(-Math.PI / 2 + (i * 4 * Math.PI) / 5),
+    32 + 28 * Math.sin(-Math.PI / 2 + (i * 4 * Math.PI) / 5),
+  ]);
   const pen = board((p) => p.polygon(star, WHITE));
   expect([red(pen, 31, 12), red(pen, 32, 32)]).toEqual([255, 0]);
 });
 
 test("polygon paints the bytes its signed distance paints, a repeated vertex taking the slow road", () => {
   let seed = 11;
-  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const rand = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
   const shapes = [
-    [[3.2, 7.9], [60.1, 3.3], [58.4, 61.7], [6.6, 55.2]],
-    [[32, 2.25], [61.3, 32], [32, 61.75], [2.7, 32]],
-    [[0.5, 30.5], [63.5, 30.5], [63.5, 31.25], [0.5, 31.25]],
-    [[10, 10], [54, 11], [12, 12.5]],
-    ...Array.from({ length: 12 }, () => Array.from({ length: 3 + Math.floor(rand() * 5) }, () => [rand() * 80 - 8, rand() * 80 - 8])),
+    [
+      [3.2, 7.9],
+      [60.1, 3.3],
+      [58.4, 61.7],
+      [6.6, 55.2],
+    ],
+    [
+      [32, 2.25],
+      [61.3, 32],
+      [32, 61.75],
+      [2.7, 32],
+    ],
+    [
+      [0.5, 30.5],
+      [63.5, 30.5],
+      [63.5, 31.25],
+      [0.5, 31.25],
+    ],
+    [
+      [10, 10],
+      [54, 11],
+      [12, 12.5],
+    ],
+    ...Array.from({ length: 12 }, () =>
+      Array.from({ length: 3 + Math.floor(rand() * 5) }, () => [rand() * 80 - 8, rand() * 80 - 8]),
+    ),
   ];
   for (const pts of shapes) {
     for (const color of [WHITE, [255, 143, 44, 153]]) {
@@ -100,28 +131,59 @@ test("arc strokes its sweep alone with round caps", () => {
 });
 
 test("image paints whole pixels nearest sampled and blends its alpha", () => {
-  const pixels = { shape: [2, 2], colors: Uint8Array.from([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 128]) };
+  const pixels = {
+    shape: [2, 2],
+    colors: Uint8Array.from([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 128]),
+  };
   const pen = board((p) => p.image(8, 8, 4, 4, pixels));
-  expect([at(pen, 8, 8), at(pen, 11, 8), at(pen, 8, 11), at(pen, 10, 10)]).toEqual([[255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255], [128, 128, 128, 255]]);
+  expect([at(pen, 8, 8), at(pen, 11, 8), at(pen, 8, 11), at(pen, 10, 10)]).toEqual([
+    [255, 0, 0, 255],
+    [0, 255, 0, 255],
+    [0, 0, 255, 255],
+    [128, 128, 128, 255],
+  ]);
   const shifted = board((p) => p.image(8.5, 8, 4, 4, pixels));
-  expect([red(shifted, 8, 8), red(shifted, 9, 8), at(shifted, 11, 8), red(shifted, 12, 8)]).toEqual([0, 255, [0, 255, 0, 255], 0]);
+  expect([red(shifted, 8, 8), red(shifted, 9, 8), at(shifted, 11, 8), red(shifted, 12, 8)]).toEqual([
+    0,
+    255,
+    [0, 255, 0, 255],
+    0,
+  ]);
 });
 
 test("image blends each pixel at its own cover, clamped, and leaves a cover of zero alone", () => {
   const white = [255, 255, 255, 255];
-  const pixels = { shape: [1, 4], colors: Uint8Array.from([...white, ...white, ...white, ...white]), cover: [1, 0.5, 0, 2] };
+  const pixels = {
+    shape: [1, 4],
+    colors: Uint8Array.from([...white, ...white, ...white, ...white]),
+    cover: [1, 0.5, 0, 2],
+  };
   const pen = board((p) => p.image(8, 8, 4, 1, pixels));
   expect([red(pen, 8, 8), red(pen, 9, 8), red(pen, 10, 8), red(pen, 11, 8)]).toEqual([255, 128, 0, 255]);
 });
 
 test("a cover scales the alpha of its color and lets the ground's alpha show", () => {
   const pen = raster(4, 2);
-  pen.image(0, 0, 2, 1, { shape: [1, 2], colors: Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 128]), cover: [0.5, 0.5] });
-  expect([at(pen, 0, 0), at(pen, 1, 0), at(pen, 2, 0)]).toEqual([[128, 128, 128, 128], [64, 64, 64, 64], [0, 0, 0, 0]]);
+  pen.image(0, 0, 2, 1, {
+    shape: [1, 2],
+    colors: Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 128]),
+    cover: [0.5, 0.5],
+  });
+  expect([at(pen, 0, 0), at(pen, 1, 0), at(pen, 2, 0)]).toEqual([
+    [128, 128, 128, 128],
+    [64, 64, 64, 64],
+    [0, 0, 0, 0],
+  ]);
 });
 
 test("image with a short cover paints nothing", () => {
-  const pen = board((p) => p.image(8, 8, 2, 1, { shape: [1, 2], colors: Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 255]), cover: [1] }));
+  const pen = board((p) =>
+    p.image(8, 8, 2, 1, {
+      shape: [1, 2],
+      colors: Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 255]),
+      cover: [1],
+    }),
+  );
   expect(red(pen, 8, 8)).toBe(0);
 });
 
@@ -131,7 +193,11 @@ test("the ground floods every pixel, its channels rounded half up", () => {
   const { colors } = raster(7, 5, [1, 2, 3, 4]).pixels();
   for (let i = 0; i < colors.length; i += 4) expect(Array.from(colors.slice(i, i + 4))).toEqual([1, 2, 3, 4]);
   expect(Array.from(raster(1, 1, [1.5, 2.5, 3.4, 254.6]).pixels().colors)).toEqual([2, 3, 3, 255]);
-  expect(raster(3, 3).pixels().colors.every((v) => v === 0)).toBe(true);
+  expect(
+    raster(3, 3)
+      .pixels()
+      .colors.every((v) => v === 0),
+  ).toBe(true);
 });
 
 test("frame cells tile the frame exactly", () => {
@@ -155,13 +221,17 @@ test("a polyline covers its stroke area", () => {
   });
   pen.polyline(pts, thick, theme.fg);
   let length = 0;
-  for (let i = 1; i < pts.length; i++) length += Math.sqrt((pts[i][0] - pts[i - 1][0]) ** 2 + (pts[i][1] - pts[i - 1][1]) ** 2);
+  for (let i = 1; i < pts.length; i++)
+    length += Math.sqrt((pts[i][0] - pts[i - 1][0]) ** 2 + (pts[i][1] - pts[i - 1][1]) ** 2);
   const want = length * thick + Math.PI * (thick / 2) ** 2;
   expect(Math.abs(lit(pen) - want) / want).toBeLessThan(0.03);
 });
 
 test("a two point polyline is a segment", () => {
-  const [a, b] = [[17.3, 40.9], [190.7, 123.4]];
+  const [a, b] = [
+    [17.3, 40.9],
+    [190.7, 123.4],
+  ];
   const one = raster(256, 192, theme.ground);
   one.segment(a, b, 7, theme.fg);
   const two = raster(256, 192, theme.ground);

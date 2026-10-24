@@ -8,7 +8,14 @@ BOUNDS = [50, 200, 800, 1200, 2000, 3200, 12800, 51200, 102400]
 SET_BOUNDS = [50, 200, 800]
 PUBLISHED = {
     "Q(i)": {50: 672, 200: 10608, 800: 168088},
-    "Q(sqrt -3)": {50: 630, 200: 9606, 800: 151020, 1200: 337026, 2000: 945486, 3200: 2419950},
+    "Q(sqrt -3)": {
+        50: 630,
+        200: 9606,
+        800: 151020,
+        1200: 337026,
+        2000: 945486,
+        3200: 2419950,
+    },
 }
 FIELDS = [
     {"name": "Q(i)", "ram": 2, "mod": 4, "w": 4, "disc": 4, "D": -4},
@@ -18,6 +25,7 @@ DISCS = [-4, -3, -20, -23]
 EULER_M = 60
 EULER_J = 10
 
+
 def bernoulli(m):
     b = [Fraction(0)] * (m + 1)
     b[0] = Fraction(1)
@@ -26,8 +34,10 @@ def bernoulli(m):
         b[n] = -s / (n + 1)
     return b
 
+
 def dec(f):
     return Decimal(f.numerator) / Decimal(f.denominator)
+
 
 def hurwitz2(a, bern):
     base = dec(a)
@@ -37,6 +47,7 @@ def hurwitz2(a, bern):
     for j in range(1, EULER_J + 1):
         s += dec(bern[2 * j]) / x ** (2 * j + 1)
     return s
+
 
 def arctan_inv(n):
     total = Decimal(0)
@@ -51,8 +62,10 @@ def arctan_inv(n):
         term /= sq
         k += 1
 
+
 def dpi():
     return 16 * arctan_inv(5) - 4 * arctan_inv(239)
+
 
 def jacobi(a, n):
     a %= n
@@ -68,6 +81,7 @@ def jacobi(a, n):
         a %= n
     return r if n == 1 else 0
 
+
 def kron(d, n):
     if n == 0:
         return 0
@@ -79,17 +93,21 @@ def kron(d, n):
         r *= 1 if d % 8 in (1, 7) else -1
     return r * jacobi(d % n, n) if n > 1 else r
 
+
 def units(d):
     return 4 if d == -4 else (6 if d == -3 else 2)
+
 
 def class_number(d):
     q = -d
     return units(d) * -sum(kron(d, a) * a for a in range(1, q)) // (2 * q)
 
+
 def lvalue(d, bern):
     q = -d
     s = sum(kron(d, a) * hurwitz2(Fraction(a, q), bern) for a in range(1, q))
     return s / (q * q)
+
 
 def spf_sieve(n):
     spf = list(range(n + 1))
@@ -99,6 +117,7 @@ def spf_sieve(n):
                 if spf[m] == m:
                     spf[m] = p
     return spf
+
 
 def factor(n, spf):
     out = []
@@ -111,10 +130,12 @@ def factor(n, spf):
         out.append((p, e))
     return out
 
+
 def kind(fld, p):
     if p == fld["ram"]:
         return "r"
     return "s" if p % fld["mod"] == 1 else "i"
+
 
 def mulc(fld, u, v):
     x, y = u
@@ -123,17 +144,22 @@ def mulc(fld, u, v):
         return (x * c - y * d, x * d + y * c)
     return (x * c - y * d, x * d + y * c - y * d)
 
+
 def conjc(fld, z):
     a, b = z
     return (a, -b) if fld["ram"] == 2 else (a - b, -b)
+
 
 def nrm(fld, z):
     a, b = z
     return a * a + b * b if fld["ram"] == 2 else a * a - a * b + b * b
 
+
 def classes(fld, m):
     if fld["ram"] == 2:
-        return [(a, b) for a in range(1, isqrt(m) + 1) for b in range(isqrt(m - a * a) + 1)]
+        return [
+            (a, b) for a in range(1, isqrt(m) + 1) for b in range(isqrt(m - a * a) + 1)
+        ]
     r = isqrt(4 * m // 3) + 1
     out = []
     for a in range(-r, r + 1):
@@ -149,6 +175,7 @@ def classes(fld, m):
                     out.append((a, b))
     return out
 
+
 def totient(fld, z, n, spf):
     v = n
     a, b = z
@@ -163,6 +190,7 @@ def totient(fld, z, n, spf):
             if a % p == 0 and b % p == 0:
                 v = v // p * (p - 1)
     return v
+
 
 def mobius(fld, z, n, spf):
     v = 1
@@ -186,6 +214,7 @@ def mobius(fld, z, n, spf):
                 return 0
     return v
 
+
 def tables(fld, m, spf):
     cls = classes(fld, m)
     phi = [0] * (m + 1)
@@ -200,6 +229,7 @@ def tables(fld, m, spf):
         phi[n] += phi[n - 1]
         nsum[n] += nsum[n - 1]
     return cls, phi, nsum, mob
+
 
 def norm_arrays(d, m):
     chi = [kron(d, n) for n in range(m + 1)]
@@ -233,14 +263,18 @@ def norm_arrays(d, m):
         tt[n] = tt[n - 1] + n * ideals[n]
     return mk, tt
 
+
 def norm_totient_sum(n, mk, tt):
     return sum(mk[k] * tt[n // k] for k in range(1, n + 1) if mk[k])
+
 
 def totient_sum(phi, m):
     return phi[m]
 
+
 def convolution_sum(m, nsum, mob):
     return sum(mob[n] * nsum[m // n] for n in range(1, m + 1) if mob[n])
+
 
 def hnf(r1, r2):
     a1, b1 = r1
@@ -256,13 +290,14 @@ def hnf(r1, r2):
         d, x, y = -d, -x, -y
     return d, x * b1 + y * b2, abs((a2 // d) * b1 - (a1 // d) * b2)
 
+
 def farey_set(fld, m):
     seen = set()
     for z in classes(fld, m):
         n = nrm(fld, z)
         r1 = mulc(fld, (1, 0), z)
         r2 = mulc(fld, (0, 1), z)
-        h11, h12, h22 = hnf(r1, r2)
+        h11, _h12, h22 = hnf(r1, r2)
         cj = conjc(fld, z)
         for x in range(h11):
             for y in range(h22):
@@ -273,8 +308,10 @@ def farey_set(fld, m):
                 seen.add((u // g, v // g, n // g))
     return len(seen)
 
+
 def d12(x):
     return str(+x.quantize(Decimal("1.000000000000")))
+
 
 def main():
     bern = bernoulli(2 * EULER_J)
@@ -296,7 +333,12 @@ def main():
         print("  zeta_K(2)", d12(zk))
         print("  rho_K", d12(rho))
         print("  c = rho_K/(2 zeta_K(2))", d12(c))
-        print("  Sayous c_K = pi/(sqrt|D| zeta_K(2))", d12(pi / (Decimal(dk).sqrt() * zk)), "= w c", d12(fld["w"] * c))
+        print(
+            "  Sayous c_K = pi/(sqrt|D| zeta_K(2))",
+            d12(pi / (Decimal(dk).sqrt() * zk)),
+            "= w c",
+            d12(fld["w"] * c),
+        )
     spf = spf_sieve(max(BOUNDS))
     byclass = {}
     for fld in FIELDS:
@@ -312,13 +354,35 @@ def main():
             ratio = Decimal(s) / main_term
             dev = Decimal(s) - main_term
             mark = PUBLISHED[name].get(m)
-            tag = "published " + str(mark) + " match " + str(mark == s) if mark else "new"
-            print("  N", m, "count", s, "count/(c N^2)", d12(ratio), "dev/N^1.5", d12(dev / (dn * dn.sqrt())), "dev/(N ln N)", d12(dev / (dn * dn.ln())), tag)
-        bad = [m for m in BOUNDS if convolution_sum(m, nsum, mob) != totient_sum(phi, m)]
+            tag = (
+                "published " + str(mark) + " match " + str(mark == s) if mark else "new"
+            )
+            print(
+                "  N",
+                m,
+                "count",
+                s,
+                "count/(c N^2)",
+                d12(ratio),
+                "dev/N^1.5",
+                d12(dev / (dn * dn.sqrt())),
+                "dev/(N ln N)",
+                d12(dev / (dn * dn.ln())),
+                tag,
+            )
+        bad = [
+            m for m in BOUNDS if convolution_sum(m, nsum, mob) != totient_sum(phi, m)
+        ]
         print("  convolution identity mismatches", len(bad))
         for m in SET_BOUNDS:
             k = farey_set(fld, m)
-            print("  Farey set size at N", m, k, "equals totient sum", k == totient_sum(phi, m))
+            print(
+                "  Farey set size at N",
+                m,
+                k,
+                "equals totient sum",
+                k == totient_sum(phi, m),
+            )
     mx = max(BOUNDS)
     for d in DISCS:
         h = class_number(d)
@@ -327,12 +391,39 @@ def main():
         rho = 2 * pi * h / (w * Decimal(-d).sqrt())
         c = rho / (2 * zk)
         mk, tt = norm_arrays(d, mx)
-        print("discriminant", d, "h", h, "w", w, "L(2, chi_D)", d12(lv[d]), "rho_K", d12(rho), "c", d12(c))
+        print(
+            "discriminant",
+            d,
+            "h",
+            h,
+            "w",
+            w,
+            "L(2, chi_D)",
+            d12(lv[d]),
+            "rho_K",
+            d12(rho),
+            "c",
+            d12(c),
+        )
         for m in BOUNDS:
             s = norm_totient_sum(m, mk, tt)
             dn = Decimal(m)
             main_term = c * dn * dn
-            tail = " class route " + str(s == totient_sum(byclass[d], m)) if d in byclass else ""
-            print("  N", m, "count", s, "count/(c N^2)", d12(s / main_term), "dev/N^1.5", d12((s - main_term) / (dn * dn.sqrt())) + tail)
+            tail = (
+                " class route " + str(s == totient_sum(byclass[d], m))
+                if d in byclass
+                else ""
+            )
+            print(
+                "  N",
+                m,
+                "count",
+                s,
+                "count/(c N^2)",
+                d12(s / main_term),
+                "dev/N^1.5",
+                d12((s - main_term) / (dn * dn.sqrt())) + tail,
+            )
+
 
 main()

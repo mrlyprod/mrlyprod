@@ -1,5 +1,5 @@
-import { flushSync } from 'react-dom';
-import { createRoot } from 'react-dom/client';
+import { flushSync } from "react-dom";
+import { createRoot } from "react-dom/client";
 
 const FEW = 3;
 
@@ -22,10 +22,10 @@ export function hide(host) {
 
 /* FIGURE */
 
-export function Figure({ name, label = '', className, caption }) {
+export function Figure({ name, label = "", className, caption }) {
   return (
     <figure className={className} data-figure={name}>
-      <canvas role={label ? 'img' : undefined} aria-label={label || undefined} aria-hidden={label ? undefined : true} />
+      <canvas role={label ? "img" : undefined} aria-label={label || undefined} aria-hidden={label ? undefined : true} />
       {caption !== undefined && <figcaption>{caption}</figcaption>}
     </figure>
   );
@@ -47,12 +47,18 @@ export function Lede({ id, title, lead, children }) {
 
 function Dates({ dates }) {
   if (!dates?.length) return null;
-  return <p className="dates">{dates.map((date) => <span key={date}>{date}</span>)}</p>;
+  return (
+    <p className="dates">
+      {dates.map((date) => (
+        <span key={date}>{date}</span>
+      ))}
+    </p>
+  );
 }
 
 export function Card({ node }) {
   return (
-    <a className={node.figure ? 'tile' : 'tile plain'} href={node.href}>
+    <a className={node.figure ? "tile" : "tile plain"} href={node.href}>
       {node.figure && <Figure name={node.figure} />}
       <h2>{node.name}</h2>
       {node.text && <p>{node.text}</p>}
@@ -63,41 +69,58 @@ export function Card({ node }) {
 
 export function Grid({ nodes = [] }) {
   if (!nodes.length) return null;
-  return <div className="gallery grid">{nodes.map((node) => <Card key={node.href} node={node} />)}</div>;
+  return (
+    <div className="gallery grid">
+      {nodes.map((node) => (
+        <Card key={node.href} node={node} />
+      ))}
+    </div>
+  );
 }
 
 /* GLYPH */
 
 export const ART = {
-  plus: '..#.. ..#.. ##### ..#.. ..#..',
-  find: '####. #..#. #..#. ####. ....#',
-  apps: '##.## ##.## ..... ##.## ##.##',
-  minus: '..... ..... ##### ..... .....',
+  plus: "..#.. ..#.. ##### ..#.. ..#..",
+  find: "####. #..#. #..#. ####. ....#",
+  apps: "##.## ##.## ..... ##.## ##.##",
+  minus: "..... ..... ##### ..... .....",
 };
 
-export function Glyph({ art, className = 'glyphs' }) {
-  const rows = ART[art].split(' ');
+export function Glyph({ art, className = "glyphs" }) {
+  const rows = ART[art].split(" ");
+  const cells = rows.flatMap((line, y) => [...line].flatMap((c, x) => (c === "#" ? [{ x, y }] : [])));
   return (
-    <svg className={className} viewBox={`0 0 ${rows[0].length} ${rows.length}`} style={{ '--rows': rows.length, '--cols': rows[0].length }} aria-hidden="true">
-      {rows.flatMap((line, y) => [...line].map((c, x) => (c === '#' ? <rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" /> : null)))}
+    <svg
+      className={className}
+      viewBox={`0 0 ${rows[0].length} ${rows.length}`}
+      style={{ "--rows": rows.length, "--cols": rows[0].length }}
+      aria-hidden="true"
+    >
+      {cells.map(({ x, y }) => (
+        <rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" />
+      ))}
     </svg>
   );
 }
 
 /* LOST */
 
-export function Lost({ site, rows, row = rows.find((one) => one.meta?.id === 'missing') }) {
+export function Lost({ site, rows, row = rows.find((one) => one.meta?.id === "missing") }) {
   return (
     <div className="lede">
       <h1 id="lost">{row.title}</h1>
-      <p className="lead">{row.lead} The <a href={site.menu}>Launchpad</a> holds every door of this site. A page that moved is on <a href="/redirects/">Redirects</a>.</p>
+      <p className="lead">
+        {row.lead} The <a href={site.menu}>Launchpad</a> holds every door of this site. A page that moved is on{" "}
+        <a href="/redirects/">Redirects</a>.
+      </p>
     </div>
   );
 }
 
 /* SETTINGS */
 
-export { PANES } from './panes.js';
+export { PANES } from "./panes.js";
 
 /* CONTENTS */
 
@@ -119,4 +142,9 @@ export function Contents({ items = [] }) {
   );
 }
 
-export const heads = (root) => [...root.querySelectorAll('h2[id], h3[id]')].map((one) => ({ id: one.id, level: Number(one.tagName[1]), text: one.textContent }));
+export const heads = (root) =>
+  [...root.querySelectorAll("h2[id], h3[id]")].map((one) => ({
+    id: one.id,
+    level: Number(one.tagName[1]),
+    text: one.textContent,
+  }));

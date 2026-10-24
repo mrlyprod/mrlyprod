@@ -5,7 +5,9 @@ import { client, list, need } from "./s3.ts";
 /* HASH */
 
 function wasmFiles(dir: string): string[] {
-  return (readdirSync(dir, { recursive: true }) as string[]).filter((rel) => statSync(join(dir, rel)).isFile()).sort((a, b) => Buffer.compare(Buffer.from(a, "utf8"), Buffer.from(b, "utf8")));
+  return (readdirSync(dir, { recursive: true }) as string[])
+    .filter((rel) => statSync(join(dir, rel)).isFile())
+    .sort((a, b) => Buffer.compare(Buffer.from(a, "utf8"), Buffer.from(b, "utf8")));
 }
 
 export function wasmHash(dir: string): string {

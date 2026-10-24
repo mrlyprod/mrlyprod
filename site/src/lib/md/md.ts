@@ -7,7 +7,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { SKIP, visit } from "unist-util-visit";
-import { escape } from "./text.ts";
+import { esc } from "./text.ts";
 
 /* TYPES */
 
@@ -23,9 +23,31 @@ type Raw = { type: "raw"; value: string };
 
 /* TEXT */
 
-export const slug = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N} _-]/gu, "").replace(/ /g, "-");
+export const slug = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N} _-]/gu, "")
+    .replace(/ /g, "-");
 
-const TEX: Record<string, string> = { lceil: "⌈", rceil: "⌉", lfloor: "⌊", rfloor: "⌋", ne: "≠", neq: "≠", le: "≤", leq: "≤", ge: "≥", geq: "≥", times: "×", infty: "∞", pi: "π", cdot: "·", to: "→", left: "", right: "" };
+const TEX: Record<string, string> = {
+  lceil: "⌈",
+  rceil: "⌉",
+  lfloor: "⌊",
+  rfloor: "⌋",
+  ne: "≠",
+  neq: "≠",
+  le: "≤",
+  leq: "≤",
+  ge: "≥",
+  geq: "≥",
+  times: "×",
+  infty: "∞",
+  pi: "π",
+  cdot: "·",
+  to: "→",
+  left: "",
+  right: "",
+};
 
 export function plain(text: string): string {
   return text
@@ -51,7 +73,10 @@ export function summary(md: string, max = 200): string {
   const text = plain(line.replace(/^(- |\d+\. |> )/, ""));
   if (text.length <= max) return text;
   const ends = [...text.matchAll(STOP)].filter((hit) => hit[0] !== "." || !SHORT.test(text.slice(0, hit.index + 3)));
-  const stop = ends.map((hit) => hit.index + hit[0].length).filter((end) => end <= max).at(-1);
+  const stop = ends
+    .map((hit) => hit.index + hit[0].length)
+    .filter((end) => end <= max)
+    .at(-1);
   if (stop !== undefined) return text.slice(0, stop);
   const cut = text.lastIndexOf(" ", max);
   return text.slice(0, cut > 0 ? cut : max);
@@ -94,10 +119,11 @@ const STAR = {
 
 function stars(this: { data: () => { micromarkExtensions?: unknown[] } }) {
   const data = this.data();
-  (data.micromarkExtensions ??= []).push({ text: { 42: STAR } });
+  data.micromarkExtensions ??= [];
+  data.micromarkExtensions.push({ text: { 42: STAR } });
 }
 
-const unescape = (tex: string) => tex.replace(/\\\\([!-\/:-@[-`{-~])/g, "\\$1");
+const unesc = (tex: string) => tex.replace(/\\\\([!-/:-@[-`{-~])/g, "\\$1");
 
 const FIGURE = /^!\[((?:\\.|[^[\]\\]|\[(?:\\.|[^[\]\\])*\])*)\]\(([^)]*)\)$/;
 
@@ -106,22 +132,35 @@ export const NAME = /^[a-z0-9-]+$/;
 const source = (src: string, node: Nodes) => src.slice(node.position!.start.offset, node.position!.end.offset);
 
 const headingText = (src: string, node: Heading) =>
-  source(src, node).replace(/^#{1,6}[ \t]+/, "").replace(/[ \t]+#+[ \t]*$/, "").replace(/\n[ \t]*[=-]+[ \t]*$/, "").trim();
+  source(src, node)
+    .replace(/^#{1,6}[ \t]+/, "")
+    .replace(/[ \t]+#+[ \t]*$/, "")
+    .replace(/\n[ \t]*[=-]+[ \t]*$/, "")
+    .trim();
 
 const LAZY = ' loading="lazy" decoding="async"';
 
 const lone = (src: string, node: Paragraph) =>
-  node.children.length === 1 && node.children[0]!.type === "image" ? (source(src, node).match(FIGURE)?.slice(1) ?? null) : null;
+  node.children.length === 1 && node.children[0]!.type === "image"
+    ? (source(src, node).match(FIGURE)?.slice(1) ?? null)
+    : null;
 
 function figure(src: string, node: Paragraph, opts: Options, lazy: boolean): Raw | null {
   const found = lone(src, node);
   if (!found) return null;
   const caption = `<figcaption>${inline(found[0]!, opts)}</figcaption>`;
   const target = found[1]!.trim();
-  const alt = escape((node.children[0] as { alt?: string }).alt ?? "");
-  if (NAME.test(target)) return { type: "raw", value: `<figure data-figure="${target}"><canvas role="img" aria-label="${alt}"></canvas>${caption}</figure>` };
+  const alt = esc((node.children[0] as { alt?: string }).alt ?? "");
+  if (NAME.test(target))
+    return {
+      type: "raw",
+      value: `<figure data-figure="${target}"><canvas role="img" aria-label="${alt}"></canvas>${caption}</figure>`,
+    };
   const href = opts.link?.(target, true) ?? target;
-  return { type: "raw", value: `<figure><img src="${escape(href)}" alt="${alt}"${lazy ? LAZY : ""}>${caption}</figure>` };
+  return {
+    type: "raw",
+    value: `<figure><img src="${esc(href)}" alt="${alt}"${lazy ? LAZY : ""}>${caption}</figure>`,
+  };
 }
 
 function shape(src: string, opts: Options) {
@@ -182,10 +221,16 @@ function tables() {
         const align = node.properties.align;
         delete node.properties.align;
         if (align === "center" || align === "right") node.properties.className = [align];
-      } else if (node.tagName === "tr" || node.tagName === "thead") node.children = node.children.filter((kid) => !blank(kid));
+      } else if (node.tagName === "tr" || node.tagName === "thead")
+        node.children = node.children.filter((kid) => !blank(kid));
       else if (node.tagName === "table" && parent && index !== undefined) {
         node.children = node.children.filter((kid) => !blank(kid));
-        parent.children[index] = { type: "element", tagName: "div", properties: { className: ["table"] }, children: [node] };
+        parent.children[index] = {
+          type: "element",
+          tagName: "div",
+          properties: { className: ["table"] },
+          children: [node],
+        };
       }
     });
   };
@@ -193,7 +238,7 @@ function tables() {
 
 /* RENDER */
 
-const code = (tex: string) => `<code>${escape(tex)}</code>`;
+const code = (tex: string) => `<code>${esc(tex)}</code>`;
 
 function parser(opts: Options) {
   const chain = unified().use(remarkParse).use(remarkGfm).use(stars);
@@ -204,8 +249,8 @@ export function render(md: string, opts: Options = {}): string {
   const src = md.replace(/\r\n?/g, "\n");
   const math = opts.math ?? code;
   const handlers = {
-    math: (_: unknown, node: { value: string }) => ({ type: "raw", value: math(unescape(node.value), true) }),
-    inlineMath: (_: unknown, node: { value: string }) => ({ type: "raw", value: math(unescape(node.value), false) }),
+    math: (_: unknown, node: { value: string }) => ({ type: "raw", value: math(unesc(node.value), true) }),
+    inlineMath: (_: unknown, node: { value: string }) => ({ type: "raw", value: math(unesc(node.value), false) }),
     html: (_: unknown, node: { value: string }) => ({ type: "text", value: node.value }),
     raw: (_: unknown, node: { value: string }) => ({ type: "raw", value: node.value }),
   };

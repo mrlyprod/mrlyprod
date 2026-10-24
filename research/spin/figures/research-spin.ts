@@ -14,11 +14,15 @@ export const units = { core, math };
 
 function mirror() {
   const carpet = math.two.create(495, 3, LEVEL, 0, 3);
-  if (carpet.shape[0] !== SIDE || carpet.shape[1] !== SIDE) throw new Error(`research-spin: carpet ${carpet.shape}, want ${SIDE} square`);
+  if (carpet.shape[0] !== SIDE || carpet.shape[1] !== SIDE)
+    throw new Error(`research-spin: carpet ${carpet.shape}, want ${SIDE} square`);
   const flat = { shape: carpet.shape, data: carpet.types };
   const down = core.tensor.flip(flat, 0);
   const quarters = [core.tensor.flip(down, 1), down, core.tensor.flip(flat, 1), flat];
-  const whole = core.cell.merge(quarters.map((q) => ({ shape: q.shape, types: q.data })), new Uint32Array([2, 2]));
+  const whole = core.cell.merge(
+    quarters.map((q) => ({ shape: q.shape, types: q.data })),
+    new Uint32Array([2, 2]),
+  );
   return Float32Array.from(whole.types);
 }
 

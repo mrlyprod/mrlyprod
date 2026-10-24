@@ -1,82 +1,113 @@
-import { rows } from 'site:routes';
-import { ICONS, VIEWBOX } from '../lib/icons.gen.js';
-import { label } from '../lib/app/menus.js';
-import { app, notes, recent, shelves } from './catalog.js';
-import { siblings } from './launch.js';
+import { rows } from "site:routes";
+import { label } from "../lib/app/menus.js";
+import { ICONS, VIEWBOX } from "../lib/icons.gen.js";
+import { app, notes, recent, shelves } from "./catalog.js";
+import { siblings } from "./launch.js";
 
 const RECENT = 5;
 const DROP = 6;
-const SVG = 'http://www.w3.org/2000/svg';
+const SVG = "http://www.w3.org/2000/svg";
 
 /* MODEL */
 
 let held = null;
 let topics = [];
 
-const here = () => rows.find((row) => row.route === location.pathname)?.meta?.id ?? '';
+const here = () => rows.find((row) => row.route === location.pathname)?.meta?.id ?? "";
 
 function trips(id, sections = shelves(), last = recent()) {
-  const visited = last.filter((one) => one.id !== id && app(one.id)).slice(0, RECENT).map((one) => ({ label: app(one.id).title, href: one.url }));
-  const near = siblings(sections, id).filter(app).map((one) => ({ label: app(one).title, href: app(one).route }));
-  const parts = [[{ label: 'Home', href: '/' }, { label: 'Launchpad', href: '/menu/' }], visited, near].filter((part) => part.length);
+  const visited = last
+    .filter((one) => one.id !== id && app(one.id))
+    .slice(0, RECENT)
+    .map((one) => ({ label: app(one.id).title, href: one.url }));
+  const near = siblings(sections, id)
+    .filter(app)
+    .map((one) => ({ label: app(one).title, href: app(one).route }));
+  const parts = [
+    [
+      { label: "Home", href: "/" },
+      { label: "Launchpad", href: "/menu/" },
+    ],
+    visited,
+    near,
+  ].filter((part) => part.length);
   return parts.flatMap((part, n) => (n ? [null, ...part] : part));
 }
 
 function full(model) {
   const id = here();
   const note = topics.find((one) => one.slug === id);
-  const go = { name: 'Go', items: trips(id) };
-  const out = model.menus.map((one) => (one.name === 'Help' && note ? { ...one, items: [...one.items, null, { label: `${note.title} Note`, href: note.href }] } : one));
-  const at = out.findIndex((one) => one.name === 'Help');
+  const go = { name: "Go", items: trips(id) };
+  const out = model.menus.map((one) =>
+    one.name === "Help" && note
+      ? { ...one, items: [...one.items, null, { label: `${note.title} Note`, href: note.href }] }
+      : one,
+  );
+  const at = out.findIndex((one) => one.name === "Help");
   return [...out.slice(0, at < 0 ? out.length : at), go, ...out.slice(at < 0 ? out.length : at)];
 }
 
 /* DRAW */
 
-const mac = () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '');
+const mac = () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
 
 function glyph(name) {
-  const svg = document.createElementNS(SVG, 'svg');
-  svg.setAttribute('viewBox', VIEWBOX);
-  svg.setAttribute('aria-hidden', 'true');
-  const path = document.createElementNS(SVG, 'path');
-  path.setAttribute('d', ICONS[name]);
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("viewBox", VIEWBOX);
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(SVG, "path");
+  path.setAttribute("d", ICONS[name]);
   svg.append(path);
   return svg;
 }
 
 function chord(keys) {
-  const out = document.createElement('span');
-  out.className = 'chord';
+  const out = document.createElement("span");
+  out.className = "chord";
   const apple = mac();
-  const parts = keys.map((one) => (one === 'mod' ? (apple ? glyph('keyboard_command_key') : 'Ctrl') : one === 'shift' ? (apple ? glyph('shift') : 'Shift') : label(one)));
+  const parts = keys.map((one) =>
+    one === "mod"
+      ? apple
+        ? glyph("keyboard_command_key")
+        : "Ctrl"
+      : one === "shift"
+        ? apple
+          ? glyph("shift")
+          : "Shift"
+        : label(one),
+  );
   parts.forEach((part, n) => {
-    if (n && !apple) out.append('+');
+    if (n && !apple) out.append("+");
     out.append(part);
   });
-  out.setAttribute('aria-label', keys.map((one) => (one === 'mod' ? (apple ? 'Command' : 'Control') : one === 'shift' ? 'Shift' : label(one))).join(' '));
+  out.setAttribute(
+    "aria-label",
+    keys
+      .map((one) => (one === "mod" ? (apple ? "Command" : "Control") : one === "shift" ? "Shift" : label(one)))
+      .join(" "),
+  );
   return out;
 }
 
 function item(row) {
   if (!row) {
-    const rule = document.createElement('hr');
-    rule.setAttribute('role', 'separator');
+    const rule = document.createElement("hr");
+    rule.setAttribute("role", "separator");
     return rule;
   }
-  const one = document.createElement(row.href ? 'a' : 'button');
+  const one = document.createElement(row.href ? "a" : "button");
   if (row.href) one.href = row.href;
-  else one.type = 'button';
-  one.setAttribute('role', row.radio ? 'menuitemradio' : 'on' in row ? 'menuitemcheckbox' : 'menuitem');
-  if ('on' in row) one.setAttribute('aria-checked', String(Boolean(row.on)));
-  if (row.off) one.setAttribute('aria-disabled', 'true');
+  else one.type = "button";
+  one.setAttribute("role", row.radio ? "menuitemradio" : "on" in row ? "menuitemcheckbox" : "menuitem");
+  if ("on" in row) one.setAttribute("aria-checked", String(Boolean(row.on)));
+  if (row.off) one.setAttribute("aria-disabled", "true");
   one.tabIndex = -1;
   if (row.act) one.dataset.act = row.act;
-  const tick = document.createElement('span');
-  tick.className = 'tick';
-  if (row.on) tick.append(glyph('check'));
-  const text = document.createElement('span');
-  text.className = 'label';
+  const tick = document.createElement("span");
+  tick.className = "tick";
+  if (row.on) tick.append(glyph("check"));
+  const text = document.createElement("span");
+  text.className = "label";
   text.textContent = row.label;
   one.append(tick, text);
   if (row.keys?.length) one.append(chord(row.keys));
@@ -85,10 +116,10 @@ function item(row) {
 
 /* OPEN */
 
-const bar = () => document.querySelector('.trio .menus');
-const drops = () => [...document.querySelectorAll('.pulldown[data-menu]')];
-const buttons = () => [...(bar()?.querySelectorAll('button') ?? [])];
-const shown = () => drops().find((one) => one.matches(':popover-open')) ?? null;
+const bar = () => document.querySelector(".trio .menus");
+const drops = () => [...document.querySelectorAll(".pulldown[data-menu]")];
+const buttons = () => [...(bar()?.querySelectorAll("button") ?? [])];
+const shown = () => drops().find((one) => one.matches(":popover-open")) ?? null;
 const live = (drop) => [...drop.querySelectorAll('[role^="menuitem"]:not([aria-disabled="true"])')];
 
 function place(drop, button) {
@@ -97,15 +128,15 @@ function place(drop, button) {
   drop.style.top = `${at.bottom + DROP}px`;
 }
 
-function show(n, focus = '') {
+function show(n, focus = "") {
   const button = buttons()[n];
   const drop = drops()[n];
   if (!button || !drop) return;
-  if (!drop.matches(':popover-open')) drop.showPopover();
+  if (!drop.matches(":popover-open")) drop.showPopover();
   place(drop, button);
   const items = live(drop);
-  if (focus === 'first') items[0]?.focus();
-  if (focus === 'last') items.at(-1)?.focus();
+  if (focus === "first") items[0]?.focus();
+  if (focus === "last") items.at(-1)?.focus();
 }
 
 function hide() {
@@ -140,32 +171,32 @@ function render() {
   nav.replaceChildren();
   if (!held) return;
   full(held).forEach((menu, n) => {
-    const button = document.createElement('button');
-    button.type = 'button';
+    const button = document.createElement("button");
+    button.type = "button";
     button.textContent = menu.name;
-    button.setAttribute('aria-haspopup', 'menu');
-    button.setAttribute('aria-expanded', 'false');
-    const drop = document.createElement('div');
-    drop.className = 'pulldown';
+    button.setAttribute("aria-haspopup", "menu");
+    button.setAttribute("aria-expanded", "false");
+    const drop = document.createElement("div");
+    drop.className = "pulldown";
     drop.id = `menu-${menu.name.toLowerCase()}`;
     drop.dataset.menu = menu.name;
-    drop.dataset.lens = 'menu';
-    drop.popover = 'auto';
-    drop.setAttribute('role', 'menu');
-    drop.setAttribute('aria-label', menu.name);
-    button.setAttribute('aria-controls', drop.id);
+    drop.dataset.lens = "menu";
+    drop.popover = "auto";
+    drop.setAttribute("role", "menu");
+    drop.setAttribute("aria-label", menu.name);
+    button.setAttribute("aria-controls", drop.id);
     drop.append(...menu.items.map(item));
-    drop.addEventListener('toggle', (e) => {
-      const open = e.newState === 'open';
-      button.setAttribute('aria-expanded', String(open));
-      button.classList.toggle('on', open);
+    drop.addEventListener("toggle", (e) => {
+      const open = e.newState === "open";
+      button.setAttribute("aria-expanded", String(open));
+      button.classList.toggle("on", open);
       if (!open) return;
       place(drop, button);
-      dispatchEvent(new CustomEvent('shift', { detail: 300 }));
+      dispatchEvent(new CustomEvent("shift", { detail: 300 }));
     });
     button.popoverTargetElement = drop;
-    button.addEventListener('pointerenter', () => {
-      if (shown() && !drop.matches(':popover-open')) {
+    button.addEventListener("pointerenter", () => {
+      if (shown() && !drop.matches(":popover-open")) {
         hide();
         show(n);
       }
@@ -183,23 +214,37 @@ function render() {
 function pick(e) {
   const one = e.target instanceof Element ? e.target.closest('.pulldown[data-menu] [role^="menuitem"]') : null;
   if (!one) return;
-  if (one.getAttribute('aria-disabled') === 'true') return e.preventDefault();
+  if (one.getAttribute("aria-disabled") === "true") return e.preventDefault();
   hide();
   if (one.dataset.act) held?.run(one.dataset.act);
 }
 
 function press(e) {
   const drop = shown();
-  const inBar = e.target instanceof Element && e.target.closest('.trio .menus');
+  const inBar = e.target instanceof Element && e.target.closest(".trio .menus");
   if (!drop && !inBar) return;
-  const keys = drop ? { ArrowDown: () => step(drop, 1), ArrowUp: () => step(drop, -1), ArrowRight: () => turn(1, 'first'), ArrowLeft: () => turn(-1, 'first'), Home: () => live(drop)[0]?.focus(), End: () => live(drop).at(-1)?.focus() } : { ArrowDown: () => show(buttons().indexOf(e.target), 'first'), ArrowUp: () => show(buttons().indexOf(e.target), 'last'), ArrowRight: () => turn(1), ArrowLeft: () => turn(-1) };
+  const keys = drop
+    ? {
+        ArrowDown: () => step(drop, 1),
+        ArrowUp: () => step(drop, -1),
+        ArrowRight: () => turn(1, "first"),
+        ArrowLeft: () => turn(-1, "first"),
+        Home: () => live(drop)[0]?.focus(),
+        End: () => live(drop).at(-1)?.focus(),
+      }
+    : {
+        ArrowDown: () => show(buttons().indexOf(e.target), "first"),
+        ArrowUp: () => show(buttons().indexOf(e.target), "last"),
+        ArrowRight: () => turn(1),
+        ArrowLeft: () => turn(-1),
+      };
   const fn = keys[e.key];
   if (fn) {
     e.preventDefault();
     fn();
     return;
   }
-  if (drop && e.key === 'Escape') {
+  if (drop && e.key === "Escape") {
     e.preventDefault();
     const at = drops().indexOf(drop);
     hide();
@@ -219,14 +264,14 @@ function learn() {
 }
 
 export function menus() {
-  addEventListener('menus', (e) => {
+  addEventListener("menus", (e) => {
     held = e.detail ?? null;
     if (held) learn();
     render();
   });
-  addEventListener('wire', () => {
+  addEventListener("wire", () => {
     if (held) render();
   });
-  document.addEventListener('click', pick);
-  document.addEventListener('keydown', press);
+  document.addEventListener("click", pick);
+  document.addEventListener("keydown", press);
 }

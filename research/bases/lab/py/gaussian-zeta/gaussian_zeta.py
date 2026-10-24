@@ -3,7 +3,7 @@ import time
 from fractions import Fraction
 
 import numpy as np
-from mpmath import mp, mpf, bernoulli, catalan, zeta
+from mpmath import bernoulli, catalan, mp, mpf, zeta
 
 DIGITS = 90
 CORNERS = [(0, 0), (0, 1), (1, 0), (1, 1)]
@@ -14,9 +14,21 @@ LIMITS = [49, 199, 999]
 SHELL_MAX = 1000000
 RADIUS = 6000
 STATED = {
-    1: "1/24", 2: "1/4", 3: "7/24", 4: "1/4", 5: "7/24", 6: "1/2", 7: "13/24",
-    8: "1/8", 9: "1/6", 10: "3/8", 11: "5/12", 12: "3/8", 13: "5/12",
-    14: "5/8", 15: "2/3",
+    1: "1/24",
+    2: "1/4",
+    3: "7/24",
+    4: "1/4",
+    5: "7/24",
+    6: "1/2",
+    7: "13/24",
+    8: "1/8",
+    9: "1/6",
+    10: "3/8",
+    11: "5/12",
+    12: "3/8",
+    13: "5/12",
+    14: "5/8",
+    15: "2/3",
 }
 
 
@@ -87,7 +99,9 @@ def lambda_part():
         fluctuation(MATE, n) == (0 if n % 2 == 0 else Fraction(-1, 2 * n * n))
         for n in range(1, 41)
     )
-    print(f"  orbit mate code {code_of(MATE)} fluctuation -1/(2n^2) on odd n <= 40: {mate_ok}")
+    print(
+        f"  orbit mate code {code_of(MATE)} fluctuation -1/(2n^2) on odd n <= 40: {mate_ok}"
+    )
     print()
 
     print("EXACT RATIONAL REDUCTION")
@@ -111,7 +125,7 @@ def lambda_part():
     cases = ((2, 4, 192, "0.50733901580"), (4, 6, 1920, "0.50072353832"))
     for s, power, denom, prefix in cases:
         left = odd_zeta(s + 2) / 2
-        right = machin ** power / denom
+        right = machin**power / denom
         targets[s] = right
         text = mp.nstr(left, 50)
         print(f"  Z({s}) = lambda({s + 2})/2  {text}")
@@ -129,7 +143,9 @@ def lambda_part():
                 total += mpf(value.numerator) / value.denominator / mpf(n) ** s
             if n in LIMITS:
                 gap = abs(total - targets[s])
-                print(f"  s={s}  n <= {n:4d}  partial {mp.nstr(total, 16)}  gap {mp.nstr(gap, 2)}")
+                print(
+                    f"  s={s}  n <= {n:4d}  partial {mp.nstr(total, 16)}  gap {mp.nstr(gap, 2)}"
+                )
     print()
 
 
@@ -179,7 +195,9 @@ def gaussian_part():
     print(f"SHELL IDENTITIES ON Z^2, n <= {SHELL_MAX}")
     ee, eo, oe, oo = shell_counts(SHELL_MAX)
     r2 = ee + eo + oe + oo
-    print(f"  r2(n) = 4(d1(n) - d3(n)): {bool(np.all(r2[1:] == 4 * chi4_excess(SHELL_MAX)[1:]))}")
+    print(
+        f"  r2(n) = 4(d1(n) - d3(n)): {bool(np.all(r2[1:] == 4 * chi4_excess(SHELL_MAX)[1:]))}"
+    )
     want = np.zeros(SHELL_MAX + 1, dtype=np.int64)
     want[4::4] = r2[1 : SHELL_MAX // 4 + 1]
     print(f"  S_ee(4m) = r2(m), zero elsewhere: {bool(np.all(ee[1:] == want[1:]))}")
@@ -187,7 +205,9 @@ def gaussian_part():
     want[2::2] = (eo + oe)[1 : SHELL_MAX // 2 + 1]
     print(f"  S_oo(2m) = S_mix(m), zero elsewhere: {bool(np.all(oo[1:] == want[1:]))}")
     print(f"  S_eo = S_oe: {bool(np.all(eo == oe))}")
-    print("  so S_mix = (1-t) S and Q_c(t) = a_ee t^2 + a_oo t(1-t) + (a_eo + a_oe)(1-t)/2")
+    print(
+        "  so S_mix = (1-t) S and Q_c(t) = a_ee t^2 + a_oo t(1-t) + (a_eo + a_oe)(1-t)/2"
+    )
     print()
 
     print("THE FIFTEEN NONEMPTY DESIGNS AT s = 2, Z_c(2) / (pi^2 G)")
@@ -195,15 +215,17 @@ def gaussian_part():
     for code in range(1, 16):
         value = q_poly(indicators(code), Fraction(1, 4)) * Fraction(2, 3)
         ok = str(value) == STATED[code]
-        print(f"  code {code:2d}  {str(value):>5}  page {STATED[code]:>5}  {ok}")
-    z7 = mpf(13) / 24 * mp.pi ** 2 * catalan
-    print(f"  code 7 (Sierpinski) 13 pi^2 G / 24 = {mp.nstr(z7, 20)}  page 4.8967847822")
+        print(f"  code {code:2d}  {value!s:>5}  page {STATED[code]:>5}  {ok}")
+    z7 = mpf(13) / 24 * mp.pi**2 * catalan
+    print(
+        f"  code 7 (Sierpinski) 13 pi^2 G / 24 = {mp.nstr(z7, 20)}  page 4.8967847822"
+    )
     print()
 
     print(f"TRUNCATED LATTICE SUMS, RADIUS {RADIUS}, TAIL pi/(4 R^2) PER CLASS")
     sums = lattice_class_sums(RADIUS)
     tail = math.pi / (4.0 * RADIUS * RADIUS)
-    base = 4.0 * (math.pi ** 2 / 6.0) * float(catalan)
+    base = 4.0 * (math.pi**2 / 6.0) * float(catalan)
     worst = 0.0
     for code in range(1, 16):
         a = indicators(code)
@@ -211,7 +233,9 @@ def gaussian_part():
         predicted = base * float(q_poly(a, Fraction(1, 4)))
         gap = abs(measured - predicted)
         worst = max(worst, gap)
-        print(f"  code {code:2d}  predicted {predicted:.12f}  measured {measured:.12f}  gap {gap:.1e}")
+        print(
+            f"  code {code:2d}  predicted {predicted:.12f}  measured {measured:.12f}  gap {gap:.1e}"
+        )
     print(f"  worst gap {worst:.1e}")
     print()
 
@@ -220,8 +244,10 @@ def main():
     start = time.time()
     lambda_part()
     gaussian_part()
-    print(f"DOMAIN  fluctuation n <= {EXACT_TO}, series n <= {LIMITS[-1]}, "
-          f"shells n <= {SHELL_MAX}, radius {RADIUS}")
+    print(
+        f"DOMAIN  fluctuation n <= {EXACT_TO}, series n <= {LIMITS[-1]}, "
+        f"shells n <= {SHELL_MAX}, radius {RADIUS}"
+    )
     print(f"WALL {time.time() - start:.1f} s")
 
 

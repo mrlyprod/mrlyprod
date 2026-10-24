@@ -1,17 +1,25 @@
-import { useId } from 'react';
-import { Icon } from '../../lib/app/controls.jsx';
+import { useId } from "react";
+import { Icon } from "../../lib/app/controls.jsx";
 
 /* WORDS */
 
-const told = (...ids) => ids.filter(Boolean).join(' ') || undefined;
+const told = (...ids) => ids.filter(Boolean).join(" ") || undefined;
 
 function Words({ label, hint, id, of }) {
   if (!label && !hint) return null;
-  const Name = of ? 'label' : 'span';
+  const Name = of ? "label" : "span";
   return (
     <span className="words">
-      {label && <Name className="name" id={`${id}-name`} htmlFor={of}>{label}</Name>}
-      {hint && <span className="hint" id={`${id}-hint`}>{hint}</span>}
+      {label && (
+        <Name className="name" id={`${id}-name`} htmlFor={of}>
+          {label}
+        </Name>
+      )}
+      {hint && (
+        <span className="hint" id={`${id}-hint`}>
+          {hint}
+        </span>
+      )}
     </span>
   );
 }
@@ -76,7 +84,13 @@ export function Action({ label, hint, onClick, danger, disabled, children }) {
   return (
     <Line label={label} hint={hint} id={id}>
       <span className="end">
-        <button type="button" className={danger ? 'push danger' : 'push'} disabled={disabled} aria-describedby={told(label && `${id}-name`, hint && `${id}-hint`)} onClick={onClick}>
+        <button
+          type="button"
+          className={danger ? "push danger" : "push"}
+          disabled={disabled}
+          aria-describedby={told(label && `${id}-name`, hint && `${id}-hint`)}
+          onClick={onClick}
+        >
           {children}
         </button>
       </span>
@@ -91,7 +105,16 @@ export function Switch({ label, hint, value, onChange, disabled }) {
   return (
     <Line label={label} hint={hint} id={id} of={id}>
       <span className="end">
-        <input id={id} type="checkbox" role="switch" checked={Boolean(value)} disabled={disabled} aria-describedby={told(hint && `${id}-hint`)} onChange={(e) => onChange(e.target.checked)} />
+        <input
+          id={id}
+          type="checkbox"
+          role="switch"
+          checked={Boolean(value)}
+          aria-checked={Boolean(value)}
+          disabled={disabled}
+          aria-describedby={told(hint && `${id}-hint`)}
+          onChange={(e) => onChange(e.target.checked)}
+        />
       </span>
     </Line>
   );
@@ -102,8 +125,18 @@ export function Select({ label, hint, value, options, onChange, disabled }) {
   return (
     <Line label={label} hint={hint} id={id} of={id}>
       <span className="end menu">
-        <select id={id} value={value} disabled={disabled} aria-describedby={told(hint && `${id}-hint`)} onChange={(e) => onChange(e.target.value)}>
-          {options.map(([v, text]) => <option key={v} value={v}>{text}</option>)}
+        <select
+          id={id}
+          value={value}
+          disabled={disabled}
+          aria-describedby={told(hint && `${id}-hint`)}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          {options.map(([v, text]) => (
+            <option key={v} value={v}>
+              {text}
+            </option>
+          ))}
         </select>
         <Icon name="expand_more" size={16} />
       </span>
@@ -115,10 +148,22 @@ export function Segment({ label, hint, value, options, onChange, disabled }) {
   const id = useId();
   return (
     <Line label={label} hint={hint} id={id}>
-      <span className="end seg" role="radiogroup" aria-labelledby={told(label && `${id}-name`)} aria-describedby={told(hint && `${id}-hint`)}>
+      <span
+        className="end seg"
+        role="radiogroup"
+        aria-labelledby={told(label && `${id}-name`)}
+        aria-describedby={told(hint && `${id}-hint`)}
+      >
         {options.map(([v, text]) => (
           <label key={v}>
-            <input type="radio" name={id} value={v} checked={String(v) === String(value)} disabled={disabled} onChange={() => onChange(v)} />
+            <input
+              type="radio"
+              name={id}
+              value={v}
+              checked={String(v) === String(value)}
+              disabled={disabled}
+              onChange={() => onChange(v)}
+            />
             <span>{text}</span>
           </label>
         ))}
@@ -134,7 +179,13 @@ export function Tiles({ label, value, options, onChange, disabled }) {
       {label && <legend className="visually-hidden">{label}</legend>}
       {options.map((one) => (
         <label key={one.value} className="choice">
-          <input type="radio" name={id} value={one.value} checked={one.value === value} onChange={() => onChange(one.value)} />
+          <input
+            type="radio"
+            name={id}
+            value={one.value}
+            checked={one.value === value}
+            onChange={() => onChange(one.value)}
+          />
           <span className="art">{one.art}</span>
           <span className="text">{one.text}</span>
         </label>
@@ -149,12 +200,31 @@ export function Swatches({ label, hint, value, options, onChange, disabled }) {
   return (
     <Line label={label} hint={hint} id={id}>
       <span className="end swatches">
-        <span className="dots" role="radiogroup" aria-labelledby={told(label && `${id}-name`)} aria-describedby={told(hint && `${id}-hint`)}>
+        <span
+          className="dots"
+          role="radiogroup"
+          aria-labelledby={told(label && `${id}-name`)}
+          aria-describedby={told(hint && `${id}-hint`)}
+        >
           {options.map(([v, text, color]) => (
-            <input key={v} type="radio" name={id} value={v} className={v ? 'dot' : 'dot auto'} style={color ? { '--dot': color } : undefined} title={text} aria-label={text} checked={v === value} disabled={disabled} onChange={() => onChange(v)} />
+            <input
+              key={v}
+              type="radio"
+              name={id}
+              value={v}
+              className={v ? "dot" : "dot auto"}
+              style={color ? { "--dot": color } : undefined}
+              title={text}
+              aria-label={text}
+              checked={v === value}
+              disabled={disabled}
+              onChange={() => onChange(v)}
+            />
           ))}
         </span>
-        <span className="chosen" aria-hidden="true">{chosen ? chosen[1] : ''}</span>
+        <span className="chosen" aria-hidden="true">
+          {chosen ? chosen[1] : ""}
+        </span>
       </span>
     </Line>
   );

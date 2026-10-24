@@ -43,7 +43,7 @@ export function clock(phases) {
   return { at, start, end, spans };
 }
 
-const curve = (speed) => (typeof speed === 'number' ? [speed, speed, 1] : (speed ?? [0, 0, 1]));
+const curve = (speed) => (typeof speed === "number" ? [speed, speed, 1] : (speed ?? [0, 0, 1]));
 
 export function flown(clock, speeds, t) {
   let s = 0;

@@ -12,16 +12,28 @@ let memo: Gasket | undefined;
 
 function gasket() {
   if (memo) return memo;
-  const cell = math.two.from_corners([[0, 0], [1, 0], [0, 1]], 3, LEVEL, 0, 3);
+  const cell = math.two.from_corners(
+    [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+    ],
+    3,
+    LEVEL,
+    0,
+    3,
+  );
   const side = 3 ** LEVEL;
-  if (cell.shape.length !== 2 || cell.shape[0] !== side || cell.shape[1] !== side) throw new Error(`paper-gasket-ray-machine: gasket ${cell.shape}, want ${side} square`);
+  if (cell.shape.length !== 2 || cell.shape[0] !== side || cell.shape[1] !== side)
+    throw new Error(`paper-gasket-ray-machine: gasket ${cell.shape}, want ${side} square`);
   const points: Point[] = [];
   for (let row = 0; row < side; row++) {
     for (let col = 0; col < side; col++) {
       if (cell.types[row * side + col] !== 0) points.push([row, col]);
     }
   }
-  if (points.length !== 3 ** LEVEL) throw new Error(`paper-gasket-ray-machine: ${points.length} points, want ${3 ** LEVEL}`);
+  if (points.length !== 3 ** LEVEL)
+    throw new Error(`paper-gasket-ray-machine: ${points.length} points, want ${3 ** LEVEL}`);
   const rays = new Map<string, { ray: Point; on: Point[] }>();
   for (const point of points) {
     if (point[0] === 0 && point[1] === 0) continue;
@@ -34,8 +46,10 @@ function gasket() {
   }
   const ladder = num.series.fibonacci(1000);
   const shift = rays.get("1,3")?.on.length;
-  if (shift !== ladder[LEVEL] - 1) throw new Error(`paper-gasket-ray-machine: ray 1,3 holds ${shift}, want ${ladder[LEVEL] - 1}`);
-  if (rays.get("3,1")?.on.length !== shift) throw new Error(`paper-gasket-ray-machine: ray 3,1 holds ${rays.get("3,1")?.on.length}, want ${shift}`);
+  if (shift !== ladder[LEVEL] - 1)
+    throw new Error(`paper-gasket-ray-machine: ray 1,3 holds ${shift}, want ${ladder[LEVEL] - 1}`);
+  if (rays.get("3,1")?.on.length !== shift)
+    throw new Error(`paper-gasket-ray-machine: ray 3,1 holds ${rays.get("3,1")?.on.length}, want ${shift}`);
   memo = { points, rays };
   return memo;
 }
@@ -48,7 +62,9 @@ export default function draw(pen: Pen, ink: Ink) {
   const step = frame.w / reach;
   const at = (point: Point): Point => [frame.x + point[1] * step, frame.y + frame.h - point[0] * step];
   const origin = at([0, 0]);
-  const order = [...rays.values()].sort((a, b) => a.on.length - b.on.length || a.ray[0] - b.ray[0] || a.ray[1] - b.ray[1]);
+  const order = [...rays.values()].sort(
+    (a, b) => a.on.length - b.on.length || a.ray[0] - b.ray[0] || a.ray[1] - b.ray[1],
+  );
   for (const { ray, on } of order) {
     let far = on[0];
     for (const point of on) if (point[0] + point[1] >= far[0] + far[1]) far = point;

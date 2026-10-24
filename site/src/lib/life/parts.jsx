@@ -1,14 +1,14 @@
-import { useEffect, useRef } from 'react';
-import { Bar } from '../app/frame.jsx';
-import { Fold } from '../app/controls.jsx';
-import { Knob, gist } from '../app/knobs.jsx';
-import { paints, veil } from '../color.js';
-import { useTheme } from '../designs/pick.jsx';
-import { runs } from './scene.js';
-import { useUnits } from '../app/hooks.js';
-import { wasm } from '../units/index.js';
+import { useEffect, useRef } from "react";
+import { Fold } from "../app/controls.jsx";
+import { Bar } from "../app/frame.jsx";
+import { useUnits } from "../app/hooks.js";
+import { gist, Knob } from "../app/knobs.jsx";
+import { paints, veil } from "../color.js";
+import { useTheme } from "../designs/pick.jsx";
+import { wasm } from "../units/index.js";
+import { runs } from "./scene.js";
 
-const LIFE = wasm('life', 'math');
+const LIFE = wasm("life", "math");
 
 const SPOT = 160;
 
@@ -46,11 +46,11 @@ export function Pane({ spec, value, onChange, folds }) {
   return (
     <Bar side="right">
       {folds.filter(Boolean).map(({ name, items = [], live }) => {
-        const rows = items.filter((item) => typeof item === 'string').map((key) => spec.find((row) => row.key === key));
+        const rows = items.filter((item) => typeof item === "string").map((key) => spec.find((row) => row.key === key));
         return (
           <Fold key={name} name={name} live={live ?? gist(rows, value)}>
             {items.map((item) => {
-              if (typeof item !== 'string') return item;
+              if (typeof item !== "string") return item;
               const row = rows.find((one) => one.key === item);
               return row ? <Knob key={item} row={row} value={value[item]} values={value} onChange={onChange} /> : null;
             })}
@@ -61,7 +61,7 @@ export function Pane({ spec, value, onChange, folds }) {
   );
 }
 
-export function MaskView({ mask, dot = DOT, label = 'The neighbourhood mask' }) {
+export function MaskView({ mask, dot = DOT, label = "The neighbourhood mask" }) {
   const at = useRef(null);
   const tick = useTheme();
   useEffect(() => {
@@ -75,12 +75,12 @@ export function MaskView({ mask, dot = DOT, label = 'The neighbourhood mask' }) 
     canvas.height = rows * high;
     canvas.style.width = `${(cols * cell) / dpr}px`;
     canvas.style.height = `${(rows * high) / dpr}px`;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     const { accent } = paints(canvas);
     ctx.fillStyle = veil(accent, GROUND);
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = accent;
     runs(ctx, mask.data, cols, rows, 0, 0, cell, high);
   }, [mask, dot, tick]);
-  return <canvas ref={at} className="mask" role="img" aria-label={label} style={{ display: 'block' }} />;
+  return <canvas ref={at} className="mask" role="img" aria-label={label} style={{ display: "block" }} />;
 }

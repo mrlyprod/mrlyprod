@@ -13,7 +13,13 @@ test("an extension maps to its type in any case, an unknown or inherited one to 
 });
 
 test("raw bytes are plain text when text or svg, keep a passive type, else octet-stream", () => {
-  expect([rawKind("a.rs", true), rawKind("logo.svg", false), rawKind("logo.png", false), rawKind("page.html", false), rawKind("x.constructor", false)]).toEqual([
+  expect([
+    rawKind("a.rs", true),
+    rawKind("logo.svg", false),
+    rawKind("logo.png", false),
+    rawKind("page.html", false),
+    rawKind("x.constructor", false),
+  ]).toEqual([
     "text/plain; charset=utf-8",
     "text/plain; charset=utf-8",
     "image/png",

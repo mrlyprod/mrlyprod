@@ -21,14 +21,22 @@ function cells() {
   if (carpet) return carpet;
   const cell = math.two.create(CODE, 3, LEVEL, 0, 2);
   const fills = [...cell.types].filter(Boolean).length;
-  if (cell.shape[0] !== SIDE || fills !== FILLS) throw new Error(`tour: the carpet at level ${LEVEL} is ${cell.shape[0]} wide and fills ${fills}, want ${SIDE} and ${FILLS}`);
+  if (cell.shape[0] !== SIDE || fills !== FILLS)
+    throw new Error(
+      `tour: the carpet at level ${LEVEL} is ${cell.shape[0]} wide and fills ${fills}, want ${SIDE} and ${FILLS}`,
+    );
   carpet = { shape: cell.shape, types: cell.types };
   return carpet;
 }
 
 function turned(cx, cy, w, h, angle) {
   const [c, s] = [Math.cos(angle), Math.sin(angle)];
-  return [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map(([x, y]) => [cx + x * c - y * s, cy + x * s + y * c]);
+  return [
+    [-w / 2, -h / 2],
+    [w / 2, -h / 2],
+    [w / 2, h / 2],
+    [-w / 2, h / 2],
+  ].map(([x, y]) => [cx + x * c - y * s, cy + x * s + y * c]);
 }
 
 export default function draw(pen) {
@@ -45,5 +53,6 @@ export default function draw(pen) {
   const floor = cy + h / 2 - w * INSET;
   const room = floor - (art.y + side) - w * INSET * 0.7;
   const bar = side / (PINS.length * 2 - 1);
-  PINS.forEach((t, k) => pen.round_rect(art.x + k * 2 * bar, floor - room * t, bar, room * t, bar / 2, paint.tone));
+  for (const [k, t] of PINS.entries())
+    pen.round_rect(art.x + k * 2 * bar, floor - room * t, bar, room * t, bar / 2, paint.tone);
 }

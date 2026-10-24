@@ -2,10 +2,10 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
-import { raster, svg, type Color, type Ink, type Pen } from "../src/lib/view/index.js";
+import SITE from "../site.json";
 import { inked, SIZE } from "../src/lib/figure.js";
 import { palette } from "../src/lib/theme/palette.gen.js";
-import SITE from "../site.json";
+import { type Color, type Ink, type Pen, raster, svg } from "../src/lib/view/index.js";
 import { mrly, plates, roster } from "./build.ts";
 
 /* PATHS */
@@ -26,7 +26,12 @@ const USAGE = "usage: bun run draw <name...> | --all [--svg] [--png] [--theme da
 type Theme = (typeof THEMES)[number];
 type Kind = (typeof KINDS)[number];
 type Unit = { initSync: (options: { module: WebAssembly.Module }) => unknown };
-type Figure = { default: (pen: Pen, ink: Ink, t: number) => void; size?: number[]; still?: number; units?: Record<string, Unit> };
+type Figure = {
+  default: (pen: Pen, ink: Ink, t: number) => void;
+  size?: number[];
+  still?: number;
+  units?: Record<string, Unit>;
+};
 type Pixels = { shape: [number, number]; colors: Uint8Array | Uint8ClampedArray };
 export type Ask = { names: string[]; all?: boolean; kinds: Kind[]; themes: Theme[]; size: number | null; out: string };
 
@@ -60,7 +65,12 @@ function png({ shape: [height, width], colors }: Pixels) {
   view.setUint32(0, width);
   view.setUint32(4, height);
   head.set([8, 6], 8);
-  return Buffer.concat([SIGNATURE, chunk("IHDR", head), chunk("IDAT", deflateSync(rows)), chunk("IEND", new Uint8Array())]);
+  return Buffer.concat([
+    SIGNATURE,
+    chunk("IHDR", head),
+    chunk("IDAT", deflateSync(rows)),
+    chunk("IEND", new Uint8Array()),
+  ]);
 }
 
 function straight({ shape, colors }: Pixels): Pixels {
@@ -77,7 +87,8 @@ function straight({ shape, colors }: Pixels): Pixels {
 const compiled = new Map<string, WebAssembly.Module>();
 
 function wasm(unit: string) {
-  if (!compiled.has(unit)) compiled.set(unit, new WebAssembly.Module(readFileSync(join(MRLY, "pkg", unit, `mrly_js_${unit}_bg.wasm`))));
+  if (!compiled.has(unit))
+    compiled.set(unit, new WebAssembly.Module(readFileSync(join(MRLY, "pkg", unit, `mrly_js_${unit}_bg.wasm`))));
   return compiled.get(unit)!;
 }
 
@@ -100,7 +111,13 @@ async function load(files: string[]): Promise<Figure[]> {
 
 /* DRAW */
 
-async function paint(figure: Figure, kind: Kind, [width, height]: [number, number], ink: Ink, ground: Color | undefined) {
+async function paint(
+  figure: Figure,
+  kind: Kind,
+  [width, height]: [number, number],
+  ink: Ink,
+  ground: Color | undefined,
+) {
   const t = figure.still ?? 0;
   if (kind === "png") {
     const pen = raster(width, height, ground);
@@ -133,7 +150,9 @@ export async function* draw({ names, all, kinds, themes, size, out }: Ask) {
         try {
           writeFileSync(file, await paint(figure, kind, box, ink, clear.has(one.name) ? undefined : ink.ground));
         } catch (error) {
-          failed.push(`draw: ${one.name} failed in ${theme} ${kind}: ${error instanceof Error ? error.message : String(error)}`);
+          failed.push(
+            `draw: ${one.name} failed in ${theme} ${kind}: ${error instanceof Error ? error.message : String(error)}`,
+          );
           continue;
         }
         yield file;
@@ -156,10 +175,19 @@ export function parse(argv: string[]): Ask {
   if (odd) throw new Error(`draw: ${odd} is no flag; ${USAGE}`);
   if (all === names.length > 0) throw new Error(`draw: name figures or pass --all; ${USAGE}`);
   if (!THEMES.includes(theme as Theme)) throw new Error(`draw: --theme takes dark or light, not ${theme}`);
-  if (size !== null && !(Number.isInteger(Number(size)) && Number(size) > 0)) throw new Error(`draw: --size takes a whole number of pixels, not ${size}`);
-  if (out !== null && (!out || out.startsWith("--"))) throw new Error(`draw: --out takes a folder, not ${out || "nothing"}`);
+  if (size !== null && !(Number.isInteger(Number(size)) && Number(size) > 0))
+    throw new Error(`draw: --size takes a whole number of pixels, not ${size}`);
+  if (out !== null && (!out || out.startsWith("--")))
+    throw new Error(`draw: --out takes a folder, not ${out || "nothing"}`);
   const kinds = KINDS.filter((kind) => argv.includes(`--${kind}`));
-  return { names, all, kinds: kinds.length ? kinds : ["svg"], themes: [theme as Theme], size: size === null ? null : Number(size), out: resolve(out ?? join(DATA_DIR, "draw")) };
+  return {
+    names,
+    all,
+    kinds: kinds.length ? kinds : ["svg"],
+    themes: [theme as Theme],
+    size: size === null ? null : Number(size),
+    out: resolve(out ?? join(DATA_DIR, "draw")),
+  };
 }
 
 /* MAIN */

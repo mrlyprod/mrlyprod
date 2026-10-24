@@ -1,48 +1,82 @@
-import { defaults, tidy } from '../../lib/app/spec.js';
-import { rgb } from '../../lib/color.js';
-import { pick } from '../../lib/rand.js';
-import { BEAT, LIMIT, NEEDLES, PRESETS, RPM, cells, edge, key, layout, pace, paint, rings, seen, spun, step, stops, study } from '../../lib/spin/engine.js';
-import { LOOK, PAD, SOURCE, TAU, place, rim, sheet, tag } from '../../lib/spin/scene.js';
-import { wasm } from '../../lib/units/index.js';
+import { defaults, tidy } from "../../lib/app/spec.js";
+import { rgb } from "../../lib/color.js";
+import { pick } from "../../lib/rand.js";
+import {
+  BEAT,
+  cells,
+  edge,
+  key,
+  LIMIT,
+  layout,
+  NEEDLES,
+  PRESETS,
+  pace,
+  paint,
+  RPM,
+  rings,
+  seen,
+  spun,
+  step,
+  stops,
+  study,
+} from "../../lib/spin/engine.js";
+import { LOOK, PAD, place, rim, SOURCE, sheet, TAU, tag } from "../../lib/spin/scene.js";
+import { wasm } from "../../lib/units/index.js";
 
-export const VIEWS = [['table', 'Turntable'], ['wheel', 'Wheel']];
+export const VIEWS = [
+  ["table", "Turntable"],
+  ["wheel", "Wheel"],
+];
 
-export const spinning = (value) => value?.view !== 'wheel';
+export const spinning = (value) => value?.view !== "wheel";
 
-const ramped = (value) => !spinning(value) || value.source === 'moire';
+const ramped = (value) => !spinning(value) || value.source === "moire";
 
 export const SPEC = [
-  { key: 'view', label: 'View', kind: 'segment', def: 'table', options: VIEWS },
-  { key: 'rpm', label: 'Speed', kind: 'slider', def: 33, min: 0, max: RPM, step: 1, unit: 'rpm', when: spinning },
-  { key: 'glow', label: 'Afterglow', kind: 'slider', def: 1, min: 1, max: 120, step: 1, when: spinning },
-  ...LOOK.map((row) => (row.key === 'tint' ? row : { ...row, when: ramped })),
+  { key: "view", label: "View", kind: "segment", def: "table", options: VIEWS },
+  { key: "rpm", label: "Speed", kind: "slider", def: 33, min: 0, max: RPM, step: 1, unit: "rpm", when: spinning },
+  { key: "glow", label: "Afterglow", kind: "slider", def: 1, min: 1, max: 120, step: 1, when: spinning },
+  ...LOOK.map((row) => (row.key === "tint" ? row : { ...row, when: ramped })),
 ];
 
 const SPEED = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: 10, ArrowDown: -10 };
 
 const ABOUT = [
-  'A design on a turntable, drawn once a screen frame. The screen strobes it: at 60 Hz the carpet freezes at 900 rpm, a quarter turn a frame, and just off that speed it drifts slowly backwards.',
-  'Afterglow blends each new frame into the old ones, the way the eye does.',
-  'The Wheel view spins the design infinitely fast: every pixel becomes the mean of the design on its own circle. It is exact: each circle is cut at the grid lines it crosses, and the rings carry the mass of the design.',
-  'A plane wave averaged over a turn is the Bessel function J0, so the wheel is the Hankel transform of the radially averaged spectrum. The identities are in [the spin topic](/research/spin/) of Research.',
+  "A design on a turntable, drawn once a screen frame. The screen strobes it: at 60 Hz the carpet freezes at 900 rpm, a quarter turn a frame, and just off that speed it drifts slowly backwards.",
+  "Afterglow blends each new frame into the old ones, the way the eye does.",
+  "The Wheel view spins the design infinitely fast: every pixel becomes the mean of the design on its own circle. It is exact: each circle is cut at the grid lines it crosses, and the rings carry the mass of the design.",
+  "A plane wave averaged over a turn is the Bessel function J0, so the wheel is the Hankel transform of the radially averaged spectrum. The identities are in [the spin topic](/research/spin/) of Research.",
 ];
 
 export const name = (value, units) => `spin-${tag(value, units?.math)}-${value.view}`;
 
-export const units = wasm('math');
+export const units = wasm("math");
 
 export const PAGE = {
   defaults: defaults(SOURCE),
   spec: SPEC,
   units,
-  design: { dim: 'dim', base: 'base', code: 'code', when: (value) => value.source !== 'moire' },
+  design: { dim: "dim", base: "base", code: "code", when: (value) => value.source !== "moire" },
   record: true,
   about: ABOUT,
   name,
   keys: [
-    { key: 'Enter', label: (value, handle) => (handle?.playing?.() === false ? 'Spin' : 'Stop'), act: 'spin', button: true, menu: 'Edit', when: spinning },
-    { key: Object.keys(SPEED), label: 'Speed', act: 'speed', when: spinning },
-    { key: NEEDLES.map((_, i) => String(i + 1)), label: 'Needle', act: 'needle', does: `${NEEDLES.join(', ')} rpm`, when: spinning },
+    {
+      key: "Enter",
+      label: (_value, handle) => (handle?.playing?.() === false ? "Spin" : "Stop"),
+      act: "spin",
+      button: true,
+      menu: "Edit",
+      when: spinning,
+    },
+    { key: Object.keys(SPEED), label: "Speed", act: "speed", when: spinning },
+    {
+      key: NEEDLES.map((_, i) => String(i + 1)),
+      label: "Needle",
+      act: "needle",
+      does: `${NEEDLES.join(", ")} rpm`,
+      when: spinning,
+    },
   ],
   actions: {
     spin: (scene) => scene.toggle?.(),
@@ -59,13 +93,13 @@ const DEPTH = { 3: 4, 5: 3 };
 
 const TRIES = 16;
 
-const lit = (code) => code.toString(2).replaceAll('0', '').length;
+const lit = (code) => code.toString(2).replaceAll("0", "").length;
 
 const odd = (rand, from, to) => from + 2 * Math.floor(rand() * ((to - from) / 2 + 1));
 
 function carve(rand, base) {
   const [least, most] = FILLS[base];
-  const total = 2 ** base ** 2 - 2;
+  const total = 2 ** (base ** 2) - 2;
   let code = 1 + Math.floor(rand() * total);
   for (let n = 0; n < TRIES && (lit(code) < least || lit(code) > most); n++) code = 1 + Math.floor(rand() * total);
   return String(code);
@@ -73,31 +107,47 @@ function carve(rand, base) {
 
 export const SAVERS = [
   {
-    id: 'table',
-    title: 'Turntable',
+    id: "table",
+    title: "Turntable",
     pick: (rand) => {
       const base = rand() < 0.75 ? 3 : 2;
       const number = pick(rand, [3, 3, 5]);
-      return { source: 'design', dim: 2, base, code: carve(rand, base), number, level: DEPTH[number], rpm: 6, glow: 12 };
+      return {
+        source: "design",
+        dim: 2,
+        base,
+        code: carve(rand, base),
+        number,
+        level: DEPTH[number],
+        rpm: 6,
+        glow: 12,
+      };
     },
   },
   {
-    id: 'moire',
-    title: 'Moire disc',
-    pick: (rand) => ({ source: 'moire', preset: pick(rand, PRESETS), limit: odd(rand, 9, LIMIT), ramp: 'tint', levels: pick(rand, [12, 24, 64]), rpm: 4 }),
+    id: "moire",
+    title: "Moire disc",
+    pick: (rand) => ({
+      source: "moire",
+      preset: pick(rand, PRESETS),
+      limit: odd(rand, 9, LIMIT),
+      ramp: "tint",
+      levels: pick(rand, [12, 24, 64]),
+      rpm: 4,
+    }),
   },
 ];
 
 const GROUND = 36;
 
-const LOOKS = ['ramp', 'levels', 'invert', 'tint'];
+const LOOKS = ["ramp", "levels", "invert", "tint"];
 
 export const read = (value) => ({ ...tidy(SOURCE, value), ...tidy(SPEC, value) });
 
 /* SCENE */
 
 function blank(canvas, view) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const draw = () => {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, view.w, view.h);
@@ -105,12 +155,23 @@ function blank(canvas, view) {
   return { draw };
 }
 
-export const facts = (plan) => ({ kind: plan.kind, code: plan.code, name: plan.name, side: plan.side, fills: plan.fills, mass: plan.mass, disc: plan.disc, peak: plan.peak, reach: plan.reach, order: plan.order });
+export const facts = (plan) => ({
+  kind: plan.kind,
+  code: plan.code,
+  name: plan.name,
+  side: plan.side,
+  fills: plan.fills,
+  mass: plan.mass,
+  disc: plan.disc,
+  peak: plan.peak,
+  reach: plan.reach,
+  order: plan.order,
+});
 
 export function make(canvas, view, opts = {}) {
   const math = opts.math;
   if (!math) return blank(canvas, view);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   let given = opts;
   let value = read(given);
   let plan = null;
@@ -139,10 +200,15 @@ export function make(canvas, view, opts = {}) {
   };
   const press = () => {
     const { side, data } = plan;
-    const raw = sheet(plan.binary ? cells(data, rgb(look.accent), GROUND) : paint(data, plan.top, stops(value.ramp, look), value.levels, value.invert), side);
+    const raw = sheet(
+      plan.binary
+        ? cells(data, rgb(look.accent), GROUND)
+        : paint(data, plan.top, stops(value.ramp, look), value.levels, value.invert),
+      side,
+    );
     const unit = Math.max(1, Math.ceil((disc.r * Math.SQRT2) / side));
     stamp = new OffscreenCanvas(unit * side, unit * side);
-    const pen = stamp.getContext('2d');
+    const pen = stamp.getContext("2d");
     pen.imageSmoothingEnabled = false;
     pen.drawImage(raw, 0, 0, unit * side, unit * side);
     const d = Math.ceil(disc.r * 2);
@@ -152,7 +218,7 @@ export function make(canvas, view, opts = {}) {
     if (!stamp) press();
     const { x, y, r } = disc;
     const d = table.width;
-    const pen = table.getContext('2d');
+    const pen = table.getContext("2d");
     pen.setTransform(1, 0, 0, 1, 0, 0);
     if (value.glow === 1 || view.still || dt < 0) pen.clearRect(0, 0, d, d);
     else {

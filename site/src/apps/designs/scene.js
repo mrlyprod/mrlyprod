@@ -1,12 +1,24 @@
-import { tidy } from '../../lib/app/spec.js';
-import { board } from '../../lib/app/run.js';
-import { TINTS, paints } from '../../lib/color.js';
-import { rects } from '../../lib/app/svg.js';
-import { DESIGN, SIDE, canon, cap, census, dimension, distinct, facts, grow, sequence, total } from '../../lib/designs/engine.js';
-import { mesh } from '../../lib/designs/mesh.js';
-import { space } from './stage.js';
-import { flat, hue, iso } from '../../lib/designs/thumb.js';
-import { wasm } from '../../lib/units/index.js';
+import { board } from "../../lib/app/run.js";
+import { tidy } from "../../lib/app/spec.js";
+import { rects } from "../../lib/app/svg.js";
+import { paints, TINTS } from "../../lib/color.js";
+import {
+  canon,
+  cap,
+  census,
+  DESIGN,
+  dimension,
+  distinct,
+  facts,
+  grow,
+  SIDE,
+  sequence,
+  total,
+} from "../../lib/designs/engine.js";
+import { mesh } from "../../lib/designs/mesh.js";
+import { flat, hue, iso } from "../../lib/designs/thumb.js";
+import { wasm } from "../../lib/units/index.js";
+import { space } from "./stage.js";
 
 const cube = (value) => Number(value.dim) === 3;
 
@@ -14,16 +26,38 @@ const HIDE = () => false;
 
 export const SPEC = [
   ...DESIGN.map((row) => ({ ...row, when: HIDE })),
-  { key: 'level', label: 'Level', kind: 'slider', def: 3, min: 1, max: (value, units) => units && cap(units.math, value.dim), step: 1, group: 'Design' },
-  { key: 'tint', label: 'Colour', kind: 'pick', def: 'degree', options: [['degree', 'By degree'], ['site', 'Site'], ...TINTS.slice(1)], group: 'Look' },
-  { key: 'spin', label: 'Spin', kind: 'toggle', def: 0, group: 'Look', when: cube },
+  {
+    key: "level",
+    label: "Level",
+    kind: "slider",
+    def: 3,
+    min: 1,
+    max: (value, units) => units && cap(units.math, value.dim),
+    step: 1,
+    group: "Design",
+  },
+  {
+    key: "tint",
+    label: "Colour",
+    kind: "pick",
+    def: "degree",
+    options: [["degree", "By degree"], ["site", "Site"], ...TINTS.slice(1)],
+    group: "Look",
+  },
+  { key: "spin", label: "Spin", kind: "toggle", def: 0, group: "Look", when: cube },
 ];
 
-export const units = wasm('math');
+export const units = wasm("math");
 
 export const named = (value) => {
-  const code = String(value.code ?? '').replace(/\W+/g, '');
-  return ['designs', `${value.dim}d`, ...(Number(value.base) === 3 ? ['base3'] : []), ...(code ? [code] : []), `level${value.level}`].join('-');
+  const code = String(value.code ?? "").replace(/\W+/g, "");
+  return [
+    "designs",
+    `${value.dim}d`,
+    ...(Number(value.base) === 3 ? ["base3"] : []),
+    ...(code ? [code] : []),
+    `level${value.level}`,
+  ].join("-");
 };
 
 export const PAGE = {
@@ -31,22 +65,22 @@ export const PAGE = {
   units,
   name: named,
   gestures: true,
-  design: { dim: 'dim', base: 'base', code: 'code' },
+  design: { dim: "dim", base: "base", code: "code" },
   about: [
-    'A code is a bitmask over the corners of a square or a cube. Each level substitutes that rule into itself: code 7 in the plane grows the carpet, code 23 in the cube the sponge.',
-    'Turning and mirroring fold the codes into classes, and one design per class is all there is. The gallery shows one per class, and Info counts them for each dimension; the counts are Burnside averages over the hyperoctahedral group, and walking the orbits agrees with them.',
-    'Tap a design in the gallery, or tap the picture for the next one. Grow and the up and down arrows change the level, Reroll draws a class from the seed, and a cube turns when you drag it. The colour follows the degree of the normal form.',
-    'The two moves are written up in the [core note](/research/core/).',
+    "A code is a bitmask over the corners of a square or a cube. Each level substitutes that rule into itself: code 7 in the plane grows the carpet, code 23 in the cube the sponge.",
+    "Turning and mirroring fold the codes into classes, and one design per class is all there is. The gallery shows one per class, and Info counts them for each dimension; the counts are Burnside averages over the hyperoctahedral group, and walking the orbits agrees with them.",
+    "Tap a design in the gallery, or tap the picture for the next one. Grow and the up and down arrows change the level, Reroll draws a class from the seed, and a cube turns when you drag it. The colour follows the degree of the normal form.",
+    "The two moves are written up in the [core note](/research/core/).",
   ],
   keys: [
-    { key: 'Enter', label: 'Grow', act: 'grow', button: true, menu: 'Edit' },
-    { key: ['ArrowLeft', 'ArrowRight'], label: 'Design', act: 'design' },
-    { key: 'ArrowUp', label: 'Level', act: 'up', menu: 'View' },
-    { key: 'ArrowDown', label: 'Level', act: 'down', menu: 'View' },
+    { key: "Enter", label: "Grow", act: "grow", button: true, menu: "Edit" },
+    { key: ["ArrowLeft", "ArrowRight"], label: "Design", act: "design" },
+    { key: "ArrowUp", label: "Level", act: "up", menu: "View" },
+    { key: "ArrowDown", label: "Level", act: "down", menu: "View" },
   ],
   actions: {
     grow: (scene) => scene.grow?.(),
-    design: (scene, e) => scene.step?.(e.key === 'ArrowLeft' ? -1 : 1),
+    design: (scene, e) => scene.step?.(e.key === "ArrowLeft" ? -1 : 1),
     up: (scene) => scene.deeper?.(1),
     down: (scene) => scene.deeper?.(-1),
   },
@@ -66,14 +100,30 @@ export function plan(math, value, was) {
   if (was?.key === key) return { ...was, value };
   const cell = grow(math, dim, base, code, level);
   const { upto, terms } = sequence(math, base);
-  const info = { dim, base, code, level, side: cell.shape[0], name: math.name.of(code, dim, base) ?? '', ...facts(math, dim, base, code), ...census(math, dim, cell), grid: Number(math.counts.grid(SIDE, dim, level)), dimension: dimension(math, dim, base, code), ratio: math.counts.ratio(code, SIDE, dim, level, base), codes: total(math, dim, base), classes: distinct(math, dim, base), upto, terms };
+  const info = {
+    dim,
+    base,
+    code,
+    level,
+    side: cell.shape[0],
+    name: math.name.of(code, dim, base) ?? "",
+    ...facts(math, dim, base, code),
+    ...census(math, dim, cell),
+    grid: Number(math.counts.grid(SIDE, dim, level)),
+    dimension: dimension(math, dim, base, code),
+    ratio: math.counts.ratio(code, SIDE, dim, level, base),
+    codes: total(math, dim, base),
+    classes: distinct(math, dim, base),
+    upto,
+    terms,
+  };
   return { key, value, cell, info };
 }
 
 /* STAGES */
 
 function plane(canvas, view, cell, colour) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   let dirty = true;
   const draw = () => {
     if (!dirty) return;
@@ -112,14 +162,15 @@ export function make(canvas, view, opts = {}) {
   const { math, three, tell } = opts;
   let now = plan(math, tidy(SPEC, opts, { math }));
   const dim = now.info.dim;
-  let ink = '';
+  let ink = "";
   const tone = () => {
     ink = paints(canvas, hue(now.value.tint, now.info.degree)).accent;
   };
   tone();
   const colour = () => ink;
   const spin = () => dim === 3 && now.value.spin === 1;
-  const stage = dim === 3 ? solid(canvas, view, three, now.cell, math, colour, spin) : plane(canvas, view, now.cell, colour);
+  const stage =
+    dim === 3 ? solid(canvas, view, three, now.cell, math, colour, spin) : plane(canvas, view, now.cell, colour);
   const draw = () => {
     if (spin() && view.still) view.wake?.();
     stage.draw();
@@ -137,8 +188,20 @@ export function make(canvas, view, opts = {}) {
     theme();
     tell?.(now.info);
   };
-  const svg = () => (dim === 3 ? stage.pose && iso(math, now.cell, ...stage.pose(), view.look().paper, colour()) : stage.svg());
+  const svg = () =>
+    dim === 3 ? stage.pose && iso(math, now.cell, ...stage.pose(), view.look().paper, colour()) : stage.svg();
   const obj = () => math.three.to_obj(now.cell);
   tell?.(now.info);
-  return { draw, size: stage.size, turn: stage.turn, stop: stage.stop, pose: stage.pose, theme, set, svg, still: true, ...(dim === 3 ? { obj } : {}) };
+  return {
+    draw,
+    size: stage.size,
+    turn: stage.turn,
+    stop: stage.stop,
+    pose: stage.pose,
+    theme,
+    set,
+    svg,
+    still: true,
+    ...(dim === 3 ? { obj } : {}),
+  };
 }

@@ -1,4 +1,4 @@
-import { hex, rgb } from '../color.js';
+import { hex, rgb } from "../color.js";
 
 const bytes = (...unit) => hex(unit.map((v) => v * 255));
 

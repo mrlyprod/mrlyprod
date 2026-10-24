@@ -3,9 +3,21 @@ import { plate } from "../../lib/plate.js";
 export const units = {};
 
 const STROKE = 0.075;
-const HANDLE = [[0.03, 0.1], [0.19, 0.1], [0.33, 0.64]];
-const BASKET = [[0.24, 0.3], [0.97, 0.3], [0.86, 0.64], [0.33, 0.64]];
-const WHEELS = [[0.43, 0.86], [0.78, 0.86]];
+const HANDLE = [
+  [0.03, 0.1],
+  [0.19, 0.1],
+  [0.33, 0.64],
+];
+const BASKET = [
+  [0.24, 0.3],
+  [0.97, 0.3],
+  [0.86, 0.64],
+  [0.33, 0.64],
+];
+const WHEELS = [
+  [0.43, 0.86],
+  [0.78, 0.86],
+];
 const WHEEL = 0.1;
 const HUB = 0.028;
 

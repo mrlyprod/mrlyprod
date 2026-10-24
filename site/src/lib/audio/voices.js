@@ -1,4 +1,4 @@
-import { rng } from '../rand.js';
+import { rng } from "../rand.js";
 
 /* NUMBERS */
 
@@ -9,7 +9,7 @@ export const ARP_LEVEL = 0.16;
 const ARP_SPACE = 0.35;
 const ARP_ECHO = 0.3;
 
-export const CUT = 'cut';
+export const CUT = "cut";
 
 /* NOISE */
 
@@ -17,7 +17,10 @@ const NOISES = new WeakMap();
 
 export function noise(ctx, seed = 1) {
   let kept = NOISES.get(ctx);
-  if (!kept) NOISES.set(ctx, (kept = new Map()));
+  if (!kept) {
+    kept = new Map();
+    NOISES.set(ctx, kept);
+  }
   if (!kept.has(seed)) {
     const rand = rng(seed);
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -95,7 +98,10 @@ function osc(ctx, type, frequency, detune = 0) {
 }
 
 function sends(ctx, node, args) {
-  for (const [to, amount] of [[args.verb, args.space], [args.echo, args.echoes]]) {
+  for (const [to, amount] of [
+    [args.verb, args.space],
+    [args.echo, args.echoes],
+  ]) {
     if (!to || !(amount > 0)) continue;
     const g = ctx.createGain();
     g.gain.value = amount;
@@ -116,7 +122,7 @@ function dip(param, when) {
 export function kick(ctx, out, when, args = {}) {
   const level = args.level ?? 1;
   const k = tune(args);
-  const body = osc(ctx, 'sine', 150 * k);
+  const body = osc(ctx, "sine", 150 * k);
   body.frequency.setValueAtTime(150 * k, when);
   body.frequency.exponentialRampToValueAtTime(45 * k, when + 0.06);
   const amp = ctx.createGain();
@@ -127,7 +133,10 @@ export function kick(ctx, out, when, args = {}) {
   const click = source(ctx, args);
   const snap = ctx.createGain();
   env(snap.gain, when, 0.35 * level, 0.001, 0, 0.012);
-  click.connect(filter(ctx, 'highpass', 3000 * shine(args))).connect(snap).connect(out);
+  click
+    .connect(filter(ctx, "highpass", 3000 * shine(args)))
+    .connect(snap)
+    .connect(out);
   click.start(when, args.at ?? 0);
   click.stop(when + 0.03);
   if (args.duck) dip(args.duck, when);
@@ -138,7 +147,9 @@ export function hat(ctx, out, when, args = {}) {
   const s = source(ctx, args);
   const amp = ctx.createGain();
   const end = env(amp.gain, when, args.level ?? 0.12, 0.001, 0, decay);
-  s.connect(filter(ctx, 'highpass', 7000 * shine(args))).connect(amp).connect(out);
+  s.connect(filter(ctx, "highpass", 7000 * shine(args)))
+    .connect(amp)
+    .connect(out);
   s.start(when, args.at ?? 0);
   s.stop(end + 0.02);
 }
@@ -155,7 +166,9 @@ export function clap(ctx, out, when, args = {}) {
   }
   g.linearRampToValueAtTime(level, when + 0.023);
   g.exponentialRampToValueAtTime(FLOOR, when + 0.2);
-  s.connect(filter(ctx, 'bandpass', 1500 * shine(args), 1.5)).connect(amp).connect(out);
+  s.connect(filter(ctx, "bandpass", 1500 * shine(args), 1.5))
+    .connect(amp)
+    .connect(out);
   sends(ctx, amp, args);
   s.start(when, args.at ?? 0);
   s.stop(when + 0.22);
@@ -168,12 +181,12 @@ export function acid(ctx, out, when, args = {}) {
   const cutoff = (args.cutoff ?? 400) * shine(args) * (accent ? 1.6 : 1);
   const level = (args.level ?? 0.2) * (accent ? Math.SQRT2 : 1);
   const to = hz(args.note ?? 45) * k;
-  const o = osc(ctx, args.wave ?? 'sawtooth', to);
+  const o = osc(ctx, args.wave ?? "sawtooth", to);
   if (args.from !== undefined) {
     o.frequency.setValueAtTime(hz(args.from) * k, when);
     o.frequency.exponentialRampToValueAtTime(to, when + 0.06);
   } else o.frequency.setValueAtTime(to, when);
-  const low = [filter(ctx, 'lowpass', cutoff, args.q ?? 10), filter(ctx, 'lowpass', cutoff, args.q ?? 10)];
+  const low = [filter(ctx, "lowpass", cutoff, args.q ?? 10), filter(ctx, "lowpass", cutoff, args.q ?? 10)];
   for (const f of low) {
     f.frequency.setValueAtTime(cutoff * (accent ? 6 : 4), when);
     f.frequency.exponentialRampToValueAtTime(cutoff, when + Math.max(0.05, dur));
@@ -193,7 +206,7 @@ export function pad(ctx, out, when, args = {}) {
   const level = args.level ?? 0.05;
   const attack = args.attack ?? Math.min(0.9, dur * 0.3);
   const release = args.release ?? 1.2;
-  const f = filter(ctx, 'lowpass', 700 * lit);
+  const f = filter(ctx, "lowpass", 700 * lit);
   f.frequency.setValueAtTime(700 * lit, when);
   f.frequency.linearRampToValueAtTime(1600 * lit, when + dur * 0.6);
   f.frequency.linearRampToValueAtTime(600 * lit, when + dur + release);
@@ -204,7 +217,7 @@ export function pad(ctx, out, when, args = {}) {
   amp.gain.linearRampToValueAtTime(FLOOR, when + dur + release);
   for (const note of args.notes ?? [57, 60, 64, 67]) {
     for (const cents of [-9, 9]) {
-      const o = osc(ctx, 'sawtooth', hz(note) * k, cents);
+      const o = osc(ctx, "sawtooth", hz(note) * k, cents);
       o.connect(f);
       o.start(when);
       o.stop(when + dur + release + 0.05);
@@ -217,13 +230,13 @@ export function pad(ctx, out, when, args = {}) {
 export function arp(ctx, out, when, args = {}) {
   const k = tune(args);
   const cutoff = (args.cutoff ?? 1600) * shine(args);
-  const low = filter(ctx, 'lowpass', cutoff, 2);
+  const low = filter(ctx, "lowpass", cutoff, 2);
   low.frequency.setValueAtTime(cutoff, when);
   low.frequency.exponentialRampToValueAtTime(Math.max(200, cutoff * 0.3), when + 0.25);
   const amp = ctx.createGain();
   env(amp.gain, when, args.level ?? ARP_LEVEL, 0.003, 0.02, 0.22);
   for (const cents of [-7, 7]) {
-    const o = osc(ctx, 'sawtooth', hz(args.note ?? 69) * k, cents);
+    const o = osc(ctx, "sawtooth", hz(args.note ?? 69) * k, cents);
     o.connect(low);
     o.start(when);
     o.stop(when + 0.4);
@@ -237,13 +250,13 @@ export function bass(ctx, out, when, args = {}) {
   const dur = args.dur ?? 0.2;
   const cutoff = (args.cutoff ?? 400) * shine(args);
   const note = hz(args.note ?? 33) * k;
-  const low = [filter(ctx, 'lowpass', cutoff, 3), filter(ctx, 'lowpass', cutoff, 3)];
+  const low = [filter(ctx, "lowpass", cutoff, 3), filter(ctx, "lowpass", cutoff, 3)];
   for (const f of low) {
     f.frequency.setValueAtTime(cutoff * 2.5, when);
     f.frequency.exponentialRampToValueAtTime(cutoff * 0.6, when + dur);
   }
-  const saw = osc(ctx, 'sawtooth', note);
-  const square = osc(ctx, 'square', note / 2);
+  const saw = osc(ctx, "sawtooth", note);
+  const square = osc(ctx, "square", note / 2);
   const half = ctx.createGain();
   half.gain.value = 0.5;
   const amp = ctx.createGain();
@@ -264,7 +277,7 @@ export function riser(ctx, out, when, args = {}) {
   const dur = args.dur ?? 1.8;
   const level = args.level ?? 0.4;
   const s = source(ctx, args, true);
-  const band = filter(ctx, 'bandpass', 200, 1.5);
+  const band = filter(ctx, "bandpass", 200, 1.5);
   band.frequency.setValueAtTime(200, when);
   band.frequency.exponentialRampToValueAtTime(5000 * lit, when + dur);
   const air = ctx.createGain();
@@ -273,13 +286,13 @@ export function riser(ctx, out, when, args = {}) {
   sends(ctx, air, args);
   s.start(when);
   s.stop(end + 0.02);
-  const low = filter(ctx, 'lowpass', 300, 4);
+  const low = filter(ctx, "lowpass", 300, 4);
   low.frequency.setValueAtTime(300, when);
   low.frequency.exponentialRampToValueAtTime(6000 * lit, when + dur);
   const whine = ctx.createGain();
   rise(whine.gain, when, level * 0.35, dur);
   for (const cents of [-14, 0, 14]) {
-    const o = osc(ctx, 'sawtooth', hz(43) * k, cents);
+    const o = osc(ctx, "sawtooth", hz(43) * k, cents);
     o.frequency.setValueAtTime(hz(43) * k, when);
     o.frequency.exponentialRampToValueAtTime(hz(67) * k, when + dur);
     o.connect(low);
@@ -295,8 +308,8 @@ export function drone(ctx, out, when, args = {}) {
   const dur = Math.max(1, args.dur ?? 4);
   const level = args.level ?? 0.3;
   const end = when + dur;
-  const low = filter(ctx, 'lowpass', 380 * lit, 4);
-  const wobble = osc(ctx, 'sine', 0.23);
+  const low = filter(ctx, "lowpass", 380 * lit, 4);
+  const wobble = osc(ctx, "sine", 0.23);
   const depth = ctx.createGain();
   depth.gain.value = 220 * lit;
   wobble.connect(depth).connect(low.frequency);
@@ -305,11 +318,11 @@ export function drone(ctx, out, when, args = {}) {
   amp.gain.linearRampToValueAtTime(level, when + 0.4);
   amp.gain.setValueAtTime(level, end - 0.6);
   amp.gain.linearRampToValueAtTime(FLOOR, end);
-  const saws = [-8, 0, 8].map((cents) => osc(ctx, 'sawtooth', 55 * k, cents));
+  const saws = [-8, 0, 8].map((cents) => osc(ctx, "sawtooth", 55 * k, cents));
   for (const o of saws) o.connect(low);
   const s = source(ctx, args, true);
-  const band = filter(ctx, 'bandpass', 900 * lit, 0.8);
-  const drift = osc(ctx, 'sine', 0.11);
+  const band = filter(ctx, "bandpass", 900 * lit, 0.8);
+  const drift = osc(ctx, "sine", 0.11);
   const sway = ctx.createGain();
   sway.gain.value = 500 * lit;
   drift.connect(sway).connect(band.frequency);
@@ -328,7 +341,7 @@ export function hit(ctx, out, when, args = {}) {
   const k = tune(args);
   const level = args.level ?? 0.9;
   const white = args.white ? 1 : 0;
-  const sub = osc(ctx, 'sine', 60 * k);
+  const sub = osc(ctx, "sine", 60 * k);
   sub.frequency.setValueAtTime(60 * k, when);
   sub.frequency.exponentialRampToValueAtTime(30 * k, when + 0.6);
   const body = ctx.createGain();
@@ -337,7 +350,7 @@ export function hit(ctx, out, when, args = {}) {
   sub.start(when);
   sub.stop(end + 0.02);
   const s = source(ctx, args);
-  const low = filter(ctx, 'lowpass', 8000 * shine(args));
+  const low = filter(ctx, "lowpass", 8000 * shine(args));
   low.frequency.setValueAtTime(8000 * shine(args), when);
   low.frequency.exponentialRampToValueAtTime(300, when + 0.3 + 0.4 * white);
   const crack = ctx.createGain();
@@ -351,7 +364,7 @@ export function hit(ctx, out, when, args = {}) {
 export function swell(ctx, out, when, args = {}) {
   const dur = args.dur ?? 0.4;
   const s = source(ctx, args, true);
-  const band = filter(ctx, 'bandpass', 5000, 2);
+  const band = filter(ctx, "bandpass", 5000, 2);
   band.frequency.setValueAtTime(5000 * shine(args), when);
   band.frequency.exponentialRampToValueAtTime(200, when + dur);
   const amp = ctx.createGain();
@@ -363,7 +376,7 @@ export function swell(ctx, out, when, args = {}) {
 }
 
 export function tick(ctx, out, when, args = {}) {
-  const o = osc(ctx, 'sine', 2400 * tune(args));
+  const o = osc(ctx, "sine", 2400 * tune(args));
   const amp = ctx.createGain();
   env(amp.gain, when, args.level ?? 0.3, 0.001, 0, 0.007);
   o.connect(amp).connect(out);
@@ -393,5 +406,8 @@ export const EFFECTS = {
   },
   hit: { span: () => 0.8, play: hit },
   tick: { span: () => 0.02, play: tick },
-  arrive: { span: (n) => 4 * n + 1.2, play: (ctx, out, when, a) => pad(ctx, out, when, { level: 0.09, ...a, dur: 4 * a.length }) },
+  arrive: {
+    span: (n) => 4 * n + 1.2,
+    play: (ctx, out, when, a) => pad(ctx, out, when, { level: 0.09, ...a, dur: 4 * a.length }),
+  },
 };

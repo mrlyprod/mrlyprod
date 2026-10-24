@@ -14,7 +14,10 @@ let heights = null;
 function terms() {
   if (heights) return heights;
   const read = Array.from({ length: PINS }, (_, k) => Number(math.counts.fill(CODE, 2 * (k + 2) - 1, 2, 1, 2)));
-  if (read.join() !== OCTAGONAL.join()) throw new Error(`sequences: the carpet fills by odd side read ${read.join(", ")}, want the octagonal numbers ${OCTAGONAL.join(", ")}`);
+  if (read.join() !== OCTAGONAL.join())
+    throw new Error(
+      `sequences: the carpet fills by odd side read ${read.join(", ")}, want the octagonal numbers ${OCTAGONAL.join(", ")}`,
+    );
   heights = read.map((v) => v / read[PINS - 1]);
   return heights;
 }

@@ -1,9 +1,9 @@
-import { blend, rgb, veil } from '../color.js';
-import { clamp01 } from '../gl/vec.js';
-import { decade, diffs, digits as expand, label, negative, ratios, scale, sums, ticks } from './chart.js';
-import { axisOf, measureOf } from './engine.js';
+import { blend, veil } from "../color.js";
+import { clamp01 } from "../gl/vec.js";
+import { decade, diffs, digits as expand, label, negative, ratios, scale, sums, ticks } from "./chart.js";
+import { axisOf, measureOf } from "./engine.js";
 
-export const FACE = 'Noto Sans Mono';
+export const FACE = "Noto Sans Mono";
 
 export const GROW = 300;
 
@@ -29,19 +29,21 @@ export function tones(view) {
   return { accent, paper, dim: blend(accent, paper, 0.5), hair: veil(accent, 0.14), px, dpr, edge };
 }
 
-export const font = (tones, k = 1, weight = '') => `${weight ? `${weight} ` : ''}${Math.round(tones.px * k)}px "${FACE}", ui-monospace, monospace`;
+export const font = (tones, k = 1, weight = "") =>
+  `${weight ? `${weight} ` : ""}${Math.round(tones.px * k)}px "${FACE}", ui-monospace, monospace`;
 
 export function clear(ctx, view, tones) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, view.w, view.h);
   ctx.font = font(tones);
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
 }
 
-export const title = (row) => row.title ?? `${row.label ?? row.name} · ${measureOf(row.measure)?.label ?? row.measure} by ${row.axis}`;
+export const title = (row) =>
+  row.title ?? `${row.label ?? row.name} · ${measureOf(row.measure)?.label ?? row.measure} by ${row.axis}`;
 
 /* GROWTH */
 
@@ -62,10 +64,12 @@ export function growth(view) {
     }
     return at(g);
   };
-  const busy = (rows) => !view.still && rows.some((row) => {
-    const g = seen.get(row.key);
-    return !g || g.to !== row.terms.length || view.t - g.t < GROW;
-  });
+  const busy = (rows) =>
+    !view.still &&
+    rows.some((row) => {
+      const g = seen.get(row.key);
+      return !g || g.to !== row.terms.length || view.t - g.t < GROW;
+    });
   return { shown, busy };
 }
 
@@ -73,7 +77,7 @@ export function growth(view) {
 
 export function wrap(ctx, text, width) {
   const lines = [];
-  let line = '';
+  let line = "";
   for (const word of String(text).split(/\s+/).filter(Boolean)) {
     const next = line ? `${line} ${word}` : word;
     if (line && ctx.measureText(next).width > width) {
@@ -110,7 +114,10 @@ function mark(ctx, cells, x, y, unit, shade, hair) {
   });
 }
 
-const said = (hit) => (hit ? `${hit.id}${hit.shift ? ` ${hit.shift > 0 ? '+' : ''}${hit.shift}` : ''} · ${hit.status === 'Collision' ? 'a collision with ' : ''}${hit.name}` : 'no curated record holds these terms');
+const said = (hit) =>
+  hit
+    ? `${hit.id}${hit.shift ? ` ${hit.shift > 0 ? "+" : ""}${hit.shift}` : ""} · ${hit.status === "Collision" ? "a collision with " : ""}${hit.name}`
+    : "no curated record holds these terms";
 
 export function legend(ctx, rows, shades, tones, x0, y0, width, notes = true) {
   const { px, dpr, hair, dim } = tones;
@@ -120,8 +127,8 @@ export function legend(ctx, rows, shades, tones, x0, y0, width, notes = true) {
   const hits = [];
   let x = x0;
   let y = y0 + px;
-  ctx.textAlign = 'left';
-  ctx.font = font(tones, 1.1, '500');
+  ctx.textAlign = "left";
+  ctx.font = font(tones, 1.1, "500");
   rows.forEach((row, i) => {
     const text = title(row);
     const shape = glyph(row.cells);
@@ -142,7 +149,7 @@ export function legend(ctx, rows, shades, tones, x0, y0, width, notes = true) {
     x += w + px * 1.4;
   });
   ctx.font = font(tones);
-  if (notes && rows.length === 1 && 'hit' in rows[0]) {
+  if (notes && rows.length === 1 && "hit" in rows[0]) {
     y += Math.round(px * 1.5);
     ctx.fillStyle = dim;
     ctx.fillText(fit(ctx, said(rows[0].hit), width), x0, y);
@@ -150,19 +157,22 @@ export function legend(ctx, rows, shades, tones, x0, y0, width, notes = true) {
   return { height: y - y0 + Math.round(px * 0.9) + dpr, hits };
 }
 
-export function caption(ctx, text, x, y, width, tones, align = 'center') {
+export function caption(ctx, text, x, y, width, tones, align = "center") {
   ctx.font = font(tones, 0.95);
   ctx.fillStyle = tones.dim;
   ctx.textAlign = align;
-  ctx.fillText(fit(ctx, text, width), align === 'center' ? x + width / 2 : x, y);
-  ctx.textAlign = 'left';
+  ctx.fillText(fit(ctx, text, width), align === "center" ? x + width / 2 : x, y);
+  ctx.textAlign = "left";
   ctx.font = font(tones);
 }
 
 const marks = (rows, n) => {
   const axes = new Set(rows.map((row) => row.axis));
   const axis = axes.size === 1 && rows[0].axis ? axisOf(rows[0].axis) : null;
-  return { marks: axis ? ticks(n, axis.start, axis.step) : ticks(n, rows[0]?.start ?? 1, 1), say: axis ? axis.say : (rows[0]?.say ?? 'term index') };
+  return {
+    marks: axis ? ticks(n, axis.start, axis.step) : ticks(n, rows[0]?.start ?? 1, 1),
+    say: axis ? axis.say : (rows[0]?.say ?? "term index"),
+  };
 };
 
 export function index(ctx, box, rows, tones, n, lead = 0) {
@@ -170,11 +180,11 @@ export function index(ctx, box, rows, tones, n, lead = 0) {
   const { marks: at, say } = marks(rows, n - lead);
   const slot = box.w / n;
   ctx.fillStyle = dim;
-  ctx.textAlign = 'center';
+  ctx.textAlign = "center";
   for (const [i, text] of at) ctx.fillText(text, box.x + (i + lead + 0.5) * slot, box.y + box.h + px * 1.4);
-  ctx.textAlign = 'right';
+  ctx.textAlign = "right";
   ctx.fillText(say, box.x + box.w, box.y + box.h + px * 2.9);
-  ctx.textAlign = 'left';
+  ctx.textAlign = "left";
 }
 
 function rules(ctx, box, tones, sc) {
@@ -182,9 +192,19 @@ function rules(ctx, box, tones, sc) {
   ctx.strokeStyle = hair;
   ctx.lineWidth = dpr;
   ctx.fillStyle = dim;
-  ctx.textAlign = 'right';
+  ctx.textAlign = "right";
   const top = label(sc.max);
-  const lines = sc.log ? Array.from({ length: sc.top - sc.floor + 1 }, (_, i) => [sc.at(`1${'0'.repeat(sc.floor + i)}`), decade(sc.floor + i)]) : top === '0' ? [[0, '0']] : [[0, '0'], [1, top]];
+  const lines = sc.log
+    ? Array.from({ length: sc.top - sc.floor + 1 }, (_, i) => [
+        sc.at(`1${"0".repeat(sc.floor + i)}`),
+        decade(sc.floor + i),
+      ])
+    : top === "0"
+      ? [[0, "0"]]
+      : [
+          [0, "0"],
+          [1, top],
+        ];
   for (const [f, text] of lines) {
     const y = box.y + box.h * (1 - f);
     ctx.beginPath();
@@ -193,8 +213,8 @@ function rules(ctx, box, tones, sc) {
     ctx.stroke();
     ctx.fillText(text, box.x - px * 0.5, y + px * 0.35);
   }
-  ctx.textAlign = 'left';
-  ctx.fillText(sc.log ? 'log scale' : 'linear scale', box.x - px * 3.4, box.y - px * 1.05);
+  ctx.textAlign = "left";
+  ctx.fillText(sc.log ? "log scale" : "linear scale", box.x - px * 3.4, box.y - px * 1.05);
 }
 
 function band(ctx, box, slot, at, tones) {
@@ -209,7 +229,7 @@ function pins(ctx, box, rows, shades, tones, opts) {
   const { px, dpr, accent } = tones;
   const n = Math.max(1, ...rows.map((row) => row.terms.length));
   const m = rows.length;
-  const sc = scale(rows, opts.kind === 'log');
+  const sc = scale(rows, opts.kind === "log");
   const slot = box.w / n;
   band(ctx, box, slot, opts.at, tones);
   rules(ctx, box, tones, sc);
@@ -217,7 +237,7 @@ function pins(ctx, box, rows, shades, tones, opts) {
   const spread = m > 1 ? (slot * 0.5) / (m - 1) : 0;
   const width = Math.max(1.5 * dpr, Math.min(4 * dpr, (slot * 0.14) / m));
   const head = Math.max(2.5 * dpr, Math.min(5 * dpr, (slot * 0.11) / m));
-  const room = m === 1 && slot >= ctx.measureText(label(rows[0].terms[n - 1] ?? '')).width + px * 0.5;
+  const room = m === 1 && slot >= ctx.measureText(label(rows[0].terms[n - 1] ?? "")).width + px * 0.5;
   rows.forEach((row, i) => {
     const have = opts.shown(i);
     ctx.strokeStyle = shades[i];
@@ -242,14 +262,14 @@ function pins(ctx, box, rows, shades, tones, opts) {
         ctx.stroke();
       } else ctx.fill();
       if ((room || (j === opts.at && i === 0)) && g >= 1) {
-        ctx.textAlign = 'center';
+        ctx.textAlign = "center";
         ctx.fillStyle = accent;
         ctx.fillText(label(t), x, Math.max(box.y - px * 0.9, y - head - px * 0.5));
         ctx.fillStyle = shades[i];
       }
     });
   });
-  ctx.textAlign = 'left';
+  ctx.textAlign = "left";
   return { x: box.x, slot, n, lead: 0 };
 }
 
@@ -305,9 +325,11 @@ function ratioPlot(ctx, box, rows, shades, tones, opts) {
   ctx.strokeStyle = hair;
   ctx.lineWidth = dpr;
   ctx.fillStyle = dim;
-  ctx.textAlign = 'right';
+  ctx.textAlign = "right";
   const whole = Math.ceil(hi) - Math.floor(lo) <= 10;
-  const lines = whole ? Array.from({ length: Math.ceil(hi) - Math.floor(lo) + 1 }, (_, i) => Math.floor(lo) + i) : [lo, hi];
+  const lines = whole
+    ? Array.from({ length: Math.ceil(hi) - Math.floor(lo) + 1 }, (_, i) => Math.floor(lo) + i)
+    : [lo, hi];
   for (const v of lines) {
     const y = at(v);
     ctx.beginPath();
@@ -316,8 +338,8 @@ function ratioPlot(ctx, box, rows, shades, tones, opts) {
     ctx.stroke();
     ctx.fillText(whole ? String(v) : v.toFixed(2), box.x - px * 0.5, y + px * 0.35);
   }
-  ctx.textAlign = 'left';
-  ctx.fillText('each term over the one before', box.x - px * 3.4, box.y - px * 1.05);
+  ctx.textAlign = "left";
+  ctx.fillText("each term over the one before", box.x - px * 3.4, box.y - px * 1.05);
   index(ctx, box, rows, tones, n + 1);
   series.forEach((one, i) => {
     const shown = Math.ceil(opts.shown(i)) - 1;
@@ -382,15 +404,15 @@ function triangles(ctx, box, rows, shades, tones, opts) {
         const text = label(v);
         if (cell >= ctx.measureText(text).width + px * 0.4) {
           ctx.fillStyle = f > 0.5 && !negative(v) ? paper : shades[i];
-          ctx.textAlign = 'center';
+          ctx.textAlign = "center";
           ctx.fillText(text, x + cell / 2, y + cell / 2 + px * 0.35);
         }
       });
     });
   });
-  ctx.textAlign = 'left';
+  ctx.textAlign = "left";
   ctx.fillStyle = tones.dim;
-  ctx.fillText('each row the differences of the row above', box.x, box.y + box.h + px * 1.4);
+  ctx.fillText("each row the differences of the row above", box.x, box.y + box.h + px * 1.4);
   return { x: box.x, slot: cellOf || 1, n: Math.max(1, ...rows.map((row) => row.terms.length)), lead: 0 };
 }
 
@@ -433,11 +455,16 @@ export const KIND = {
   digits: heat,
 };
 
-export const gutter = (kind, tones) => (kind === 'diffs' || kind === 'digits' ? 0 : Math.round(tones.px * 3.8));
+export const gutter = (kind, tones) => (kind === "diffs" || kind === "digits" ? 0 : Math.round(tones.px * 3.8));
 
 export function chart(ctx, box, rows, shades, tones, opts) {
   const room = gutter(opts.kind, tones);
-  const inner = { x: box.x + room, y: box.y + Math.round(tones.px * 1.4), w: Math.max(1, box.w - room), h: Math.max(1, box.h - Math.round(tones.px * 4.4)) };
+  const inner = {
+    x: box.x + room,
+    y: box.y + Math.round(tones.px * 1.4),
+    w: Math.max(1, box.w - room),
+    h: Math.max(1, box.h - Math.round(tones.px * 4.4)),
+  };
   const slots = (KIND[opts.kind] ?? pins)(ctx, inner, rows, shades, tones, opts);
   return slots && { ...slots, y0: inner.y, y1: inner.y + inner.h + tones.px * 2 };
 }
@@ -494,14 +521,14 @@ export function drawRibbon(ctx, laid, x, y, tones, at = -1, color = tones.accent
       ctx.font = font(tones, 0.75);
       ctx.fillStyle = tones.dim;
       ctx.fillText(one.head, x + one.x, top + px * 0.8);
-      ctx.font = font(tones, 1, on ? '700' : '');
-      ctx.fillStyle = one.prime ? blend(color, '#f5b400', 0.85) : on ? color : blend(color, tones.paper, 0.15);
+      ctx.font = font(tones, 1, on ? "700" : "");
+      ctx.fillStyle = one.prime ? blend(color, "#f5b400", 0.85) : on ? color : blend(color, tones.paper, 0.15);
       ctx.fillText(one.text, x + one.x, top + px * 1.9);
     }
   });
   if (laid.cut) {
     ctx.fillStyle = tones.dim;
-    ctx.fillText('…', x, y + laid.height + px * 0.6);
+    ctx.fillText("…", x, y + laid.height + px * 0.6);
   }
   ctx.font = font(tones);
 }

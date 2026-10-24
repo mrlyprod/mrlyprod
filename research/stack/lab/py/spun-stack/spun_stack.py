@@ -1,11 +1,20 @@
 from fractions import Fraction
 from math import gcd, isqrt, lcm
+
 from sympy import Catalan as SCatalan
 from sympy import N as N_
-from sympy import Poly, Rational, Symbol, cos, cyclotomic_poly, minimal_polynomial, sin
+from sympy import (
+    Poly,
+    Rational,
+    Symbol,
+    cos,
+    cyclotomic_poly,
+    minimal_polynomial,
+    sin,
+    sympify,
+)
 from sympy import pi as spi
 from sympy import sqrt as ssqrt
-from sympy import sympify
 from sympy import zeta as szeta
 
 pi = spi
@@ -36,35 +45,43 @@ INCREMENTS = [
 ]
 BASE_DEPTH = 8
 
+
 def norm(z):
     return z[0] * z[0] + z[1] * z[1]
+
 
 def gmul(z, w):
     return (z[0] * w[0] - z[1] * w[1], z[0] * w[1] + z[1] * w[0])
 
+
 def gconj(z):
     return (z[0], -z[1])
+
 
 def gdivides(w, z):
     p = gmul(z, gconj(w))
     n = norm(w)
     return p[0] % n == 0 and p[1] % n == 0
 
+
 def gquo(z, w):
     p = gmul(z, gconj(w))
     n = norm(w)
     return (p[0] // n, p[1] // n)
+
 
 def gnearest(z, w):
     p = gmul(z, gconj(w))
     n = norm(w)
     return ((2 * p[0] + n) // (2 * n), (2 * p[1] + n) // (2 * n))
 
+
 def ggcd(z, w):
     while w != (0, 0):
         q = gnearest(z, w)
         z, w = w, (z[0] - gmul(q, w)[0], z[1] - gmul(q, w)[1])
     return z
+
 
 def canon(z):
     if z == (0, 0):
@@ -74,12 +91,14 @@ def canon(z):
             return c
     return z
 
+
 def classes_up_to(n):
     out = []
     for a in range(1, isqrt(n) + 1):
-        for b in range(0, isqrt(n - a * a) + 1):
+        for b in range(isqrt(n - a * a) + 1):
             out.append((a, b))
     return sorted(out, key=lambda z: (norm(z), z))
+
 
 def circle_classes_jacobi(t):
     s = 0
@@ -89,8 +108,10 @@ def circle_classes_jacobi(t):
         j += 1
     return s
 
+
 def circle_classes_direct(t):
     return len(classes_up_to(t))
+
 
 def gauss_primes_dividing(z):
     n = norm(z)
@@ -123,6 +144,7 @@ def gauss_primes_dividing(z):
             primes.append(canon(gconj(p)))
     return [p for p in primes if gdivides(p, z)]
 
+
 def gauss_totient(z):
     v = norm(z)
     if v == 1:
@@ -131,8 +153,10 @@ def gauss_totient(z):
         v = v // norm(p) * (norm(p) - 1)
     return v
 
+
 def totient_sum(n_max):
     return sum(gauss_totient(z) for z in classes_up_to(n_max))
+
 
 def cyc_reduce(terms):
     acc = {}
@@ -144,7 +168,9 @@ def cyc_reduce(terms):
         return Poly(0, X, domain="QQ")
     return Poly(acc, X, domain="QQ").rem(PHI360)
 
+
 RATIONAL_CACHE = {}
+
 
 def rational_cos_sin(d):
     d = d % CYC
@@ -154,8 +180,10 @@ def rational_cos_sin(d):
         RATIONAL_CACHE[d] = (c.degree() <= 0, s.degree() <= 0)
     return RATIONAL_CACHE[d]
 
+
 def rational_angle_degrees():
     return [d for d in range(CYC) if all(rational_cos_sin(d))]
+
 
 def spot_check_degrees():
     out = []
@@ -164,6 +192,7 @@ def spot_check_degrees():
         s = minimal_polynomial(sin(pi * Rational(d, 180)), X, polys=True).degree()
         out.append((d, c == 1, s == 1, rational_cos_sin(d)))
     return out
+
 
 def primes(k):
     out = []
@@ -174,8 +203,10 @@ def primes(k):
         n += 1
     return out
 
+
 def prime_schedule(k):
     return list(zip(range(1, k + 1), [0] + primes(k - 1)))
+
 
 def dead_spin_pairs(schedule):
     hits = []
@@ -187,15 +218,21 @@ def dead_spin_pairs(schedule):
                 hits.append((m, a, n, b))
     return hits
 
+
 def shared_witness(m, a, n, b):
     g = gcd(m, n)
     q = ((a - b) % CYC) // 90
     v = [(1, 0), (0, 1), (-1, 0), (0, -1)][q]
     return (Fraction(v[0], g), Fraction(v[1], g))
 
+
 def rot(d):
-    from math import cos as fc, radians, sin as fs
+    from math import cos as fc
+    from math import radians
+    from math import sin as fs
+
     return fc(radians(d)), fs(radians(d))
+
 
 def near_miss(schedule, box):
     best = None
@@ -219,6 +256,7 @@ def near_miss(schedule, box):
                         best = (d, m, a, n, b, u, v)
     return best
 
+
 def layer_nodes(z):
     a, b = z
     n = norm(z)
@@ -231,12 +269,14 @@ def layer_nodes(z):
             out.add((x - int(x // 1), y - int(y // 1)))
     return out
 
+
 def literal_stack(n_max):
     hits = {}
     for z in classes_up_to(n_max):
         for p in layer_nodes(z):
             hits[p] = hits.get(p, 0) + 1
     return hits
+
 
 def reduced_denominator(node):
     x, y = node
@@ -245,8 +285,10 @@ def reduced_denominator(node):
     g = ggcd(u, (d, 0))
     return canon(gquo((d, 0), g))
 
+
 def closed_brightness(n_max, d):
     return circle_classes_jacobi(n_max // norm(d))
+
 
 def pythagorean_hits(bound, reach):
     seen = set()
@@ -266,6 +308,7 @@ def pythagorean_hits(bound, reach):
                     direct.add((Fraction(p, r), Fraction(t, r)))
     return len(direct), direct <= seen
 
+
 def base_c_overlap(c, box):
     best = None
     count = 0
@@ -282,11 +325,13 @@ def base_c_overlap(c, box):
                 best = d
     return count, best
 
+
 def base_layer(c, k):
     z = (1, 0)
     for _ in range(k):
         z = gmul(z, c)
     return layer_nodes(canon(z))
+
 
 def unit_square_shares(g, a):
     c, s = rot(a)
@@ -301,17 +346,20 @@ def unit_square_shares(g, a):
                 count += 1
     return count
 
+
 def is_whole_turn(ratio, d):
     v = d * ratio
     if isinstance(v, Fraction):
         return v.denominator == 1
     return bool(sympify(v).is_integer)
 
+
 def increment_period(ratio, layers):
     for q in range(1, layers + 1):
         if is_whole_turn(ratio, q):
             return q
     return None
+
 
 def increment_classes(theta_deg, layers):
     ratio = theta_deg / 90
@@ -337,8 +385,10 @@ def increment_classes(theta_deg, layers):
         )
     return q, sizes, closed, pairwise, niven
 
+
 def share_count_spread(g):
     return sorted({unit_square_shares(g, a) for a in range(1, 90)})
+
 
 def base_depth_check(c, depth):
     layers = [base_layer(c, k) for k in range(depth + 1)]
@@ -351,13 +401,16 @@ def base_depth_check(c, depth):
             bad += 1
     return nested, len(layers[depth]), bad
 
+
 def main():
     rats = rational_angle_degrees()
     print("rational rotation degrees", *rats)
     print("rational rotation count", len(rats))
     spots = spot_check_degrees()
     print("spot degrees", len(spots))
-    print("spot minpoly agrees with cyclotomic", all((c, s) == r for _, c, s, r in spots))
+    print(
+        "spot minpoly agrees with cyclotomic", all((c, s) == r for _, c, s, r in spots)
+    )
 
     hits, covered = pythagorean_hits(60, 12)
     print("rational unit-circle points denominator <= 60", hits)
@@ -373,8 +426,26 @@ def main():
         g = gcd(m, n)
         ok = (a - b) % 90 == 0 and n % g == 0 and m % g == 0
         w = shared_witness(m, a, n, b)
-        print("share", m, a, n, b, "gcd", g, "exact", ok, "witness", str(w[0]), str(w[1]), "open square nodes", unit_square_shares(g, a))
-    print("all sharing pairs congruent mod 90", all((a - b) % 90 == 0 for _, a, _, b in pairs))
+        print(
+            "share",
+            m,
+            a,
+            n,
+            b,
+            "gcd",
+            g,
+            "exact",
+            ok,
+            "witness",
+            str(w[0]),
+            str(w[1]),
+            "open square nodes",
+            unit_square_shares(g, a),
+        )
+    print(
+        "all sharing pairs congruent mod 90",
+        all((a - b) % 90 == 0 for _, a, _, b in pairs),
+    )
     print("shared node window", "open unit square, origin excluded")
     print("shared lattice density per unit area", "g^2")
     for g in (2, 3, 7):
@@ -384,12 +455,18 @@ def main():
     for theta, name in INCREMENTS:
         q, sizes, closed, pairwise, niven = increment_classes(theta, odds)
         print(
-            "increment", name,
-            "classes", "none" if q is None else q,
-            "sizes", *(["all 1"] if q is None else sizes),
-            "pairs", closed,
-            "pairwise equal", closed == pairwise,
-            "niven equal", "skipped" if niven is None else closed == niven,
+            "increment",
+            name,
+            "classes",
+            "none" if q is None else q,
+            "sizes",
+            *(["all 1"] if q is None else sizes),
+            "pairs",
+            closed,
+            "pairwise equal",
+            closed == pairwise,
+            "niven equal",
+            "skipped" if niven is None else closed == niven,
         )
     d, m, a, n, b, u, v = near_miss(sched, NEAR_BOX)
     print("near miss box", NEAR_BOX)
@@ -407,19 +484,57 @@ def main():
             bad += 1
     print("brightness comparisons", len(stack))
     print("brightness mismatches", bad)
-    print("brightest node", max(stack.values()), "at 0", stack[(Fraction(0), Fraction(0))])
-    print("circle count jacobi equals direct", all(circle_classes_jacobi(t) == circle_classes_direct(t) for t in range(0, 401)))
+    print(
+        "brightest node", max(stack.values()), "at 0", stack[(Fraction(0), Fraction(0))]
+    )
+    print(
+        "circle count jacobi equals direct",
+        all(circle_classes_jacobi(t) == circle_classes_direct(t) for t in range(401)),
+    )
     print("circle counts t=1..12", *[circle_classes_jacobi(t) for t in range(1, 13)])
     for n in COUNT_NS:
         s = totient_sum(n)
         print("node count N", n, "=", s, "ratio N^2", "%.6f" % (s / (n * n)))
-    print("pi / (8 zeta(2) Catalan)", "%.6f" % float(N_(spi / (8 * szeta(2) * SCatalan))))
+    print(
+        "pi / (8 zeta(2) Catalan)", "%.6f" % float(N_(spi / (8 * szeta(2) * SCatalan)))
+    )
 
     for c, name, depth in (((1, 1), "1+i", BASE_DEPTH), ((2, 1), "2+i", 4)):
         nested, size, bad = base_depth_check(c, depth)
-        print("base", name, "depth", depth, "nested", nested, "deepest layer nodes", size, "address mismatches", bad)
-    for c, name in (((1.0, 1.0), "1+i"), ((1.5, 0.5), "3/2+i/2"), ((2 ** 0.5 * __import__("math").cos(1.0), 2 ** 0.5 * __import__("math").sin(1.0)), "sqrt2 e^i")):
+        print(
+            "base",
+            name,
+            "depth",
+            depth,
+            "nested",
+            nested,
+            "deepest layer nodes",
+            size,
+            "address mismatches",
+            bad,
+        )
+    for c, name in (
+        ((1.0, 1.0), "1+i"),
+        ((1.5, 0.5), "3/2+i/2"),
+        (
+            (
+                2**0.5 * __import__("math").cos(1.0),
+                2**0.5 * __import__("math").sin(1.0),
+            ),
+            "sqrt2 e^i",
+        ),
+    ):
         count, best = base_c_overlap(c, BASE_BOX)
-        print("base", name, "box", BASE_BOX, "overlaps", count, "min distance", "%.6g" % best)
+        print(
+            "base",
+            name,
+            "box",
+            BASE_BOX,
+            "overlaps",
+            count,
+            "min distance",
+            "%.6g" % best,
+        )
+
 
 main()

@@ -1,4 +1,4 @@
-import { Lost, hide, show } from '../../shell/parts.jsx';
+import { hide, Lost, show } from "../../shell/parts.jsx";
 
 export const layout = { bare: true };
 

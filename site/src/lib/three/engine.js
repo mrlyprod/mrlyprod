@@ -1,10 +1,10 @@
-import { hex } from '../color.js';
-import { canon } from '../designs/engine.js';
+import { hex } from "../color.js";
+import { canon } from "../designs/engine.js";
 
 export const DIM = 3;
-export const CARPET = '23';
+export const CARPET = "23";
 export const NUMBERS = [2, 3, 4, 5];
-export const SHAPES = ['ball', 'box', 'diamond', 'octahedron', 'tetrahedron', 'pyramid'];
+export const SHAPES = ["ball", "box", "diamond", "octahedron", "tetrahedron", "pyramid"];
 export const DEN = 120;
 export const REACH = 108;
 export const SIDE = 128;
@@ -14,12 +14,25 @@ export const CUBES = 250000;
 export const TALLY = 600000;
 export const COUNTED = 600000;
 export const LAYERS = 21;
-export const COMBINES = [['sum', 'Sum'], ['xor', 'Xor'], ['and', 'And']];
+export const COMBINES = [
+  ["sum", "Sum"],
+  ["xor", "Xor"],
+  ["and", "And"],
+];
 export const SIZES = [48, 64, 80];
-export const RAMPS = [['fire', 'Fire'], ['heat', 'Heat'], ['diverge', 'Diverge']];
-export const PLANES = [['x', 'X plane', [1, 0, 0]], ['y', 'Y plane', [0, 1, 0]], ['z', 'Z plane', [0, 0, 1]], ['d', 'Diagonal', [1, 1, 1]]];
+export const RAMPS = [
+  ["fire", "Fire"],
+  ["heat", "Heat"],
+  ["diverge", "Diverge"],
+];
+export const PLANES = [
+  ["x", "X plane", [1, 0, 0]],
+  ["y", "Y plane", [0, 1, 0]],
+  ["z", "Z plane", [0, 0, 1]],
+  ["d", "Diagonal", [1, 1, 1]],
+];
 export const WIDE = { x: 256, y: 256, z: 256, d: 384 };
-const MERGE = { sum: 'Sum', xor: 'Xor', and: 'And' };
+const MERGE = { sum: "Sum", xor: "Xor", and: "And" };
 
 const n = (v) => Number(v);
 
@@ -67,21 +80,21 @@ export const side = (math, number, level) => n(math.counts.grid(number, 1, level
 
 export function top(math, number, count, centre) {
   const edge = side(math, number, Math.min(count, counted(math, number)));
-  return centre === 'centre' ? Math.floor((edge - 1) / 2) : edge - 1;
+  return centre === "centre" ? Math.floor((edge - 1) / 2) : edge - 1;
 }
 
 export function design(math, value) {
   const base = Number(value.base) === 3 ? 3 : 2;
-  const text = String(value.code ?? '').trim();
+  const text = String(value.code ?? "").trim();
   return { base, code: canon(math, DIM, base, text) };
 }
 
 export function named(math, code, base) {
-  return math.name.of(code, DIM, base) ?? '';
+  return math.name.of(code, DIM, base) ?? "";
 }
 
 export function tag(name, code, base) {
-  return `${base === 3 ? 'b3 ' : ''}${name || 'code'} ${code}`;
+  return `${base === 3 ? "b3 " : ""}${name || "code"} ${code}`;
 }
 
 export function grown(math, code, base, number, level) {
@@ -128,7 +141,7 @@ export function cropped(math, cell, value) {
   const { crop, radius, anti, policy } = value;
   return derived(`crop ${keyOf(cell)} ${crop} ${radius} ${anti} ${policy}`, () => {
     const shape = region(math, crop, radius, Number(anti) === 1);
-    const kept = math.shape.crop(tensor(cell), shape, policy !== 'inside');
+    const kept = math.shape.crop(tensor(cell), shape, policy !== "inside");
     const { filled } = math.shape.census(shape, tensor(cell));
     const out = flat(kept);
     return { cell: out, out: n(filled[0]), cut: n(filled[1]), in: n(filled[2]), after: n(math.three.surface(out)) };
@@ -145,7 +158,7 @@ export function circle(math, made, value) {
     const cell = grown(math, code, base, number, level);
     const edge = cell.shape[0];
     const last = top(math, number, level, centre);
-    const origin = centre === 'centre' ? [edge, edge, edge] : [0, 0, 0];
+    const origin = centre === "centre" ? [edge, edge, edge] : [0, 0, 0];
     const rows = math.shape.radial_census(tensor(cell), origin, last);
     return {
       side: edge,
@@ -175,7 +188,14 @@ export function field(math, made, value) {
     const spec = math.moire.Spec.new(code, base, DIM);
     const scales = Uint32Array.from(odd(limit));
     const volume = math.moire.volume(spec, scales, MERGE[combine] ?? MERGE.sum, depth, size);
-    return { volume, layers: scales.length, voxels: volume.data.length, min: volume.min(), max: volume.max(), free: () => volume.free() };
+    return {
+      volume,
+      layers: scales.length,
+      voxels: volume.data.length,
+      min: volume.min(),
+      max: volume.max(),
+      free: () => volume.free(),
+    };
   });
 }
 
@@ -186,28 +206,43 @@ export function most(math, value) {
 export function colorizer(ink, ramp, levels) {
   const line = (ink.Ramp[ramp] ?? ink.Ramp.fire)();
   const count = Math.max(2, Math.floor(levels));
-  return { Bins: { background: hex(line.at(0)), ramp: Array.from({ length: count }, (_, i) => hex(line.at(i / (count - 1)))) } };
+  return {
+    Bins: { background: hex(line.at(0)), ramp: Array.from({ length: count }, (_, i) => hex(line.at(i / (count - 1)))) },
+  };
 }
 
 export function plane(math, made, key, offset, paint) {
-  return derived(`plane ${keyOf(made)} ${key} ${offset} ${paint.levels} ${paint.invert} ${JSON.stringify(paint.colorizer)}`, () => {
-    const [, , normal] = PLANES.find(([one]) => one === key);
-    const frame = math.moire.frame(normal, offset);
-    const wide = WIDE[key];
-    const [values, mask] = made.volume.plane(frame, wide);
-    const sheet = math.moire.Field.from_data(values, wide);
-    const image = math.moire.render(sheet, paint.colorizer, Math.max(2, Math.floor(paint.levels)), false, Number(paint.invert) === 1, 1);
-    sheet.free();
-    const colors = Uint8Array.from(image.colors);
-    for (let i = 0; i < mask.length; i++) if (!mask[i]) colors[i * 4 + 3] = 0;
-    return { key, offset, frame, pixels: { shape: image.shape, colors } };
-  });
+  return derived(
+    `plane ${keyOf(made)} ${key} ${offset} ${paint.levels} ${paint.invert} ${JSON.stringify(paint.colorizer)}`,
+    () => {
+      const [, , normal] = PLANES.find(([one]) => one === key);
+      const frame = math.moire.frame(normal, offset);
+      const wide = WIDE[key];
+      const [values, mask] = made.volume.plane(frame, wide);
+      const sheet = math.moire.Field.from_data(values, wide);
+      const image = math.moire.render(
+        sheet,
+        paint.colorizer,
+        Math.max(2, Math.floor(paint.levels)),
+        false,
+        Number(paint.invert) === 1,
+        1,
+      );
+      sheet.free();
+      const colors = Uint8Array.from(image.colors);
+      for (let i = 0; i < mask.length; i++) if (!mask[i]) colors[i * 4 + 3] = 0;
+      return { key, offset, frame, pixels: { shape: image.shape, colors } };
+    },
+  );
 }
 
 export function shell(math, made, value) {
-  return derived(`shell ${keyOf(made)} ${value.threshold} ${value.crop} ${value.radius} ${value.anti} ${value.policy}`, () => {
-    const solid = flat(made.volume.solid(value.threshold));
-    const cell = value.crop ? cropped(math, solid, value).cell : solid;
-    return { cell, count: made.volume.count(value.threshold), faces: n(math.three.surface(cell)) };
-  });
+  return derived(
+    `shell ${keyOf(made)} ${value.threshold} ${value.crop} ${value.radius} ${value.anti} ${value.policy}`,
+    () => {
+      const solid = flat(made.volume.solid(value.threshold));
+      const cell = value.crop ? cropped(math, solid, value).cell : solid;
+      return { cell, count: made.volume.count(value.threshold), faces: n(math.three.surface(cell)) };
+    },
+  );
 }

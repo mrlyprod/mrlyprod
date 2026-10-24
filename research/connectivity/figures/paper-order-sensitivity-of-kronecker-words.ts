@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { frame as box, Grid, type Color, type Frame, type Ink, type Pen } from "#view";
+import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "#view";
 
 export const units = { math };
 
@@ -22,7 +22,8 @@ function lattice(pen: Pen, frame: Frame, side: number, thick: number, ink: Ink) 
 
 function panel(pen: Pen, frame: Frame, order: [number, number], tone: Color, ink: Ink) {
   const picture = math.bang.magic([letter(order[0]), letter(order[1])]);
-  if (picture.shape.join() !== "4,4") throw new Error(`paper-order-sensitivity-of-kronecker-words: picture ${picture.shape}, want 4 square`);
+  if (picture.shape.join() !== "4,4")
+    throw new Error(`paper-order-sensitivity-of-kronecker-words: picture ${picture.shape}, want 4 square`);
   lattice(pen, frame, 4, 2.5, ink);
   const grid = new Grid(frame, 4, 4, 0);
   let filled = 0;
@@ -46,8 +47,10 @@ export default function draw(pen: Pen, ink: Ink) {
   const low = box(frame.x + half, frame.y + half, half, half);
   const first = panel(pen, top, [3, 6], ink.blue, ink);
   const second = panel(pen, low, [6, 3], ink.orange, ink);
-  if (first !== 4 || second !== 4) throw new Error(`paper-order-sensitivity-of-kronecker-words: panels fill ${first} and ${second}, want 4 and 4`);
+  if (first !== 4 || second !== 4)
+    throw new Error(`paper-order-sensitivity-of-kronecker-words: panels fill ${first} and ${second}, want 4 and 4`);
   const forward = math.bang.word.components([letter(3), letter(6)]);
   const backward = math.bang.word.components([letter(6), letter(3)]);
-  if (forward !== "4" || backward !== "2") throw new Error(`paper-order-sensitivity-of-kronecker-words: components ${forward} and ${backward}, want 4 and 2`);
+  if (forward !== "4" || backward !== "2")
+    throw new Error(`paper-order-sensitivity-of-kronecker-words: components ${forward} and ${backward}, want 4 and 2`);
 }

@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { frame as box, Grid, type Color, type Frame, type Ink, type Pen } from "#view";
+import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "#view";
 
 export const units = { math };
 
@@ -24,7 +24,8 @@ function outline(pen: Pen, frame: Frame, thick: number, ink: Ink) {
 
 function panel(pen: Pen, frame: Frame, code: number, tone: Color, ink: Ink) {
   const design = math.two.create(code, SIDE, 1, 0, 2);
-  if (design.shape.join() !== `${SIDE},${SIDE}`) throw new Error(`paper-sequence-census: design ${design.shape}, want ${SIDE} square`);
+  if (design.shape.join() !== `${SIDE},${SIDE}`)
+    throw new Error(`paper-sequence-census: design ${design.shape}, want ${SIDE} square`);
   const grid = new Grid(frame, SIDE, SIDE, GAP);
   let filled = 0;
   for (let row = 0; row < SIDE; row++) {

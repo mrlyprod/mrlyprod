@@ -1,6 +1,6 @@
-import { rgb } from '../../lib/color.js';
-import { blend, program, quads } from '../../lib/gl/gl2.js';
-import { dot, len, mix, sub } from '../../lib/gl/vec.js';
+import { rgb } from "../../lib/color.js";
+import { blend, program, quads } from "../../lib/gl/gl2.js";
+import { dot, len, mix, sub } from "../../lib/gl/vec.js";
 
 const RATE = 6;
 const PERIOD = 1.5;
@@ -78,7 +78,8 @@ function rail(one, age) {
   const step = one.step ?? 1;
   const last = points.length - 1;
   const head = age >= 0 ? ((age % PERIOD) * RATE) / step : -1;
-  const at = (x) => (Number.isInteger(x) ? points[x] : mix(points[Math.floor(x)], points[Math.floor(x) + 1], x - Math.floor(x)));
+  const at = (x) =>
+    Number.isInteger(x) ? points[x] : mix(points[Math.floor(x)], points[Math.floor(x) + 1], x - Math.floor(x));
   const glow = (x) => {
     const fade = Math.min(1, ((last - x) * step) / END);
     const pulse = x <= head ? HEAD * Math.exp(((x - head) * step) / TAIL) : 0;
@@ -96,7 +97,11 @@ export function trails(gl, view) {
   let colour = null;
   const eye = (cam) => {
     const m = cam.rot;
-    return [[m[0], m[1], m[2]], [m[3], m[4], m[5]], [m[6], m[7], m[8]]];
+    return [
+      [m[0], m[1], m[2]],
+      [m[3], m[4], m[5]],
+      [m[6], m[7], m[8]],
+    ];
   };
   const place = (cam, port, p) => {
     const [r, u, f] = eye(cam);
@@ -110,9 +115,13 @@ export function trails(gl, view) {
     const za = dot(sub(a[0], cam.pos), f);
     const zb = dot(sub(b[0], cam.pos), f);
     if (za <= NEAR && zb <= NEAR) return null;
-    const cut = (p, q, zp, zq) => (zp > NEAR ? p : [mix(p[0], q[0], (NEAR - zp) / (zq - zp)), p[1] + (q[1] - p[1]) * ((NEAR - zp) / (zq - zp))]);
+    const cut = (p, q, zp, zq) =>
+      zp > NEAR ? p : [mix(p[0], q[0], (NEAR - zp) / (zq - zp)), p[1] + (q[1] - p[1]) * ((NEAR - zp) / (zq - zp))];
     const [p, q] = [cut(a, b, za, zb), cut(b, a, zb, za)];
-    return [[...place(cam, port, p[0]), p[1]], [...place(cam, port, q[0]), q[1]]];
+    return [
+      [...place(cam, port, p[0]), p[1]],
+      [...place(cam, port, q[0]), q[1]],
+    ];
   };
   const pieces = (one, cam, port) => {
     if (!cam || (one.points ?? []).length < 2) return [];
@@ -140,8 +149,16 @@ export function trails(gl, view) {
       }
     }
     if (!count) return 0;
-    prog.set({ uRes: [port[2], port[3]], uOrigin: [port[0], port[1]], uWidth: WIDTH * Math.min(port[2], port[3]), uColor: colour, uK: k, uHide: depth ? 1 : 0, uDepth: depth });
-    batch.draw(prog, count, 'add');
+    prog.set({
+      uRes: [port[2], port[3]],
+      uOrigin: [port[0], port[1]],
+      uWidth: WIDTH * Math.min(port[2], port[3]),
+      uColor: colour,
+      uK: k,
+      uHide: depth ? 1 : 0,
+      uDepth: depth,
+    });
+    batch.draw(prog, count, "add");
     blend(gl, null);
     return count;
   };

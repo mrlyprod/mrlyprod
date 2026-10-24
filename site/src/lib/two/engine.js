@@ -1,10 +1,10 @@
-import { tidy } from '../app/spec.js';
-import { DESIGN, canon } from '../designs/engine.js';
-import { runs } from '../app/svg.js';
+import { tidy } from "../app/spec.js";
+import { runs } from "../app/svg.js";
+import { canon, DESIGN } from "../designs/engine.js";
 
 export const DIM = 2;
 export const BUDGET = 262144;
-const MIME = { png: 'image/png', webp: 'image/webp' };
+const MIME = { png: "image/png", webp: "image/webp" };
 
 /* ROOM */
 
@@ -30,9 +30,9 @@ export const read = (value) => tidy(DESIGN, value);
 
 export const design = (math, base, code) => canon(math, DIM, base, code);
 
-export const named = (math, code, base) => math.name.of(code, DIM, base) ?? '';
+export const named = (math, code, base) => math.name.of(code, DIM, base) ?? "";
 
-export const tag = (facts) => `${facts.name || 'code'} ${facts.code}`;
+export const tag = (facts) => `${facts.name || "code"} ${facts.code}`;
 
 export const tensor = (cell) => ({ shape: cell.shape, data: cell.types });
 
@@ -41,7 +41,13 @@ export const cell = (grid) => ({ shape: grid.shape, types: grid.data });
 /* SHEET */
 
 export function sheet(math, tile, x, y) {
-  return x * y === 1 ? tile : math.two.merge(Array.from({ length: x * y }, () => tile), x, y);
+  return x * y === 1
+    ? tile
+    : math.two.merge(
+        Array.from({ length: x * y }, () => tile),
+        x,
+        y,
+      );
 }
 
 export function joins([rows, cols], side) {
@@ -116,11 +122,11 @@ export function stroke(pen, lines, box, color, thick) {
 
 /* SHOT */
 
-export function shot(cols, rows, size, paint, kind = 'png') {
+export function shot(cols, rows, size, paint, kind = "png") {
   const long = Math.max(cols, rows);
   const w = Math.round((size * cols) / long);
   const h = Math.round((size * rows) / long);
   const page = new OffscreenCanvas(w, h);
-  paint(page.getContext('2d'), { px: size / long, x: 0, y: 0 }, w, h);
+  paint(page.getContext("2d"), { px: size / long, x: 0, y: 0 }, w, h);
   return page.convertToBlob({ type: MIME[kind] ?? MIME.png });
 }

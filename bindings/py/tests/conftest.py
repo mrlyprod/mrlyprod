@@ -21,6 +21,9 @@ def row(request):
 @pytest.fixture
 def pixels():
     def pin(image):
-        return {"shape": list(image.shape[:2]), "sha256": hashlib.sha256(image.tobytes()).hexdigest()}
+        return {
+            "shape": list(image.shape[:2]),
+            "sha256": hashlib.sha256(image.tobytes()).hexdigest(),
+        }
 
     return pin

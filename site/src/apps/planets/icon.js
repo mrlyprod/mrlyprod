@@ -3,7 +3,10 @@ import { plate } from "../../lib/plate.js";
 export const units = {};
 
 const BODY = 0.56;
-const RINGS = [[0.72, 0.9], [0.93, 1]];
+const RINGS = [
+  [0.72, 0.9],
+  [0.93, 1],
+];
 const SQUASH = 0.3;
 const TILT = -0.32;
 const SUN = [-0.72, -0.42, 0.55];
@@ -110,10 +113,14 @@ export default function draw(pen) {
     const k = d > BODY ? BODY / d : 1;
     return at([x * k, y * k]);
   };
-  RINGS.forEach((r, i) => band(pen, at, r, Math.PI, 2 * Math.PI, tones[i]));
+  for (const [i, r] of RINGS.entries()) band(pen, at, r, Math.PI, 2 * Math.PI, tones[i]);
   pen.disc(cx, cy, BODY * R, paint.white);
   cap(pen, at, paint.light);
   const shadow = [...paint.ink.slice(0, 3), 90];
-  for (const r of RINGS) pen.polygon(outline(r, 0, Math.PI).map(([x, y]) => pull([x + SHADOW[0], y + SHADOW[1]])), shadow);
-  RINGS.forEach((r, i) => band(pen, at, r, 0, Math.PI, tones[i]));
+  for (const r of RINGS)
+    pen.polygon(
+      outline(r, 0, Math.PI).map(([x, y]) => pull([x + SHADOW[0], y + SHADOW[1]])),
+      shadow,
+    );
+  for (const [i, r] of RINGS.entries()) band(pen, at, r, 0, Math.PI, tones[i]);
 }

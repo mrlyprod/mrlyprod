@@ -1,8 +1,8 @@
-import { glyph } from '../lib/font/font.js';
+import { glyph } from "../lib/font/font.js";
 
-export const WORD = 'MRLYPROD';
+export const WORD = "MRLYPROD";
 
-const lit = (rows, left) => rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === '1' ? [[left + x, y]] : [])));
+const lit = (rows, left) => rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === "1" ? [[left + x, y]] : [])));
 
 export function welcome(word = WORD) {
   const glyphs = [...word].map(glyph);
@@ -28,11 +28,13 @@ export function welcome(word = WORD) {
     return { track, cells: lit(rows, starts[i]) };
   });
   const left = (cols - 5) >> 1;
-  const x = lit(glyph('X'), left);
+  const x = lit(glyph("X"), left);
   const stacked = new Set(letters.flatMap(({ track, cells }) => cells.map(([cx, cy]) => `${cx + track.at(-1)},${cy}`)));
   const want = new Set(x.map(([cx, cy]) => `${cx},${cy}`));
-  if (stacked.size !== want.size || [...want].some((cell) => !stacked.has(cell))) throw new Error(`welcome: ${word} does not fold into the X`);
-  if (letters.some(({ track }) => track.length !== 4)) throw new Error(`welcome: ${word} folds in ${letters[0].track.length} beats, the css holds 4`);
+  if (stacked.size !== want.size || [...want].some((cell) => !stacked.has(cell)))
+    throw new Error(`welcome: ${word} does not fold into the X`);
+  if (letters.some(({ track }) => track.length !== 4))
+    throw new Error(`welcome: ${word} folds in ${letters[0].track.length} beats, the css holds 4`);
   return { cols, left, letters, x };
 }
 
@@ -40,10 +42,10 @@ const rect = (x, y, k) => `<rect x="${x}" y="${y}" width="1" height="1" style="-
 
 export function markup({ left, letters, x } = welcome()) {
   const groups = letters.map(({ track: [a, b, c, d], cells }) => {
-    const body = cells.map(([cx, cy]) => rect(cx, cy, cx + cy)).join('');
+    const body = cells.map(([cx, cy]) => rect(cx, cy, cx + cy)).join("");
     return `<g class="l" style="--a:${a};--b:${b};--c:${c};--d:${d}">${body}<g class="glint">${body}</g></g>`;
   });
-  const path = x.map(([cx, cy]) => `M${cx} ${cy}h1v1h-1z`).join('');
-  const glint = x.map(([cx, cy]) => rect(cx, cy, (cx - left + cy) * 5)).join('');
-  return `${groups.join('')}<g class="x"><path d="${path}"/><g class="glint">${glint}</g></g>`;
+  const path = x.map(([cx, cy]) => `M${cx} ${cy}h1v1h-1z`).join("");
+  const glint = x.map(([cx, cy]) => rect(cx, cy, (cx - left + cy) * 5)).join("");
+  return `${groups.join("")}<g class="x"><path d="${path}"/><g class="glint">${glint}</g></g>`;
 }

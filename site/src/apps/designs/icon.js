@@ -23,7 +23,8 @@ function facts() {
   const total = Number(math.bang.factory.total_codes(DIM, BASE));
   if (total !== COLS * COLS) throw new Error(`designs: ${total} codes do not fill a ${COLS} by ${COLS} board`);
   if (leaders.size !== CLASSES) throw new Error(`designs: ${leaders.size} classes, want ${CLASSES}`);
-  if (SHOW.length !== ACROSS * ACROSS || SHOW[Math.floor(SHOW.length / 2)] !== CARPET) throw new Error(`designs: the ${ACROSS} by ${ACROSS} board must centre the carpet ${CARPET}`);
+  if (SHOW.length !== ACROSS * ACROSS || SHOW[Math.floor(SHOW.length / 2)] !== CARPET)
+    throw new Error(`designs: the ${ACROSS} by ${ACROSS} board must centre the carpet ${CARPET}`);
   if (!leaders.has(String(CARPET))) throw new Error(`designs: the carpet ${CARPET} does not lead its class`);
   rows = Array.from({ length: total }, (_, code) => ({ code, cell: math.two.create(code, SIDE, LEVEL, 0, BASE) }));
   const lit = rows.reduce((sum, row) => sum + math.two.fills(row.cell), 0);

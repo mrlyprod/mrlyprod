@@ -1,5 +1,5 @@
 import * as math from "@mrlyprod/mrly/math";
-import { Grid, frame } from "#view";
+import { frame, Grid } from "#view";
 import { plate } from "../../lib/plate.js";
 
 export const units = { math };
@@ -20,7 +20,10 @@ function figure() {
   const cells = math.two.create(CODE, BASE, LEVEL, 0, BASE);
   const side = cells.shape[1];
   const fills = math.two.fills(cells);
-  if (side !== WANT.side || fills !== WANT.fills) throw new Error(`research: the carpet at level ${LEVEL} is ${side} a side with ${fills} fills, want ${WANT.side} and ${WANT.fills}`);
+  if (side !== WANT.side || fills !== WANT.fills)
+    throw new Error(
+      `research: the carpet at level ${LEVEL} is ${side} a side with ${fills} fills, want ${WANT.side} and ${WANT.fills}`,
+    );
   memo = cells;
   return memo;
 }
@@ -40,9 +43,22 @@ export default function draw(pen) {
   const y = box.y;
   const r = w * ROUND;
   const f = w * FOLD;
-  const sheet = [...corner(x + r, y + r, r, Math.PI), [x + w - f, y], [x + w, y + f], ...corner(x + w - r, y + h - r, r, 0), ...corner(x + r, y + h - r, r, Math.PI / 2)];
+  const sheet = [
+    ...corner(x + r, y + r, r, Math.PI),
+    [x + w - f, y],
+    [x + w, y + f],
+    ...corner(x + w - r, y + h - r, r, 0),
+    ...corner(x + r, y + h - r, r, Math.PI / 2),
+  ];
   pen.polygon(sheet, paint.white);
-  pen.polygon([[x + w - f, y], [x + w - f, y + f], [x + w, y + f]], paint.light);
+  pen.polygon(
+    [
+      [x + w - f, y],
+      [x + w - f, y + f],
+      [x + w, y + f],
+    ],
+    paint.light,
+  );
   const pad = w * 0.16;
   const span = w - 2 * pad;
   const bar = w * 0.06;
@@ -53,6 +69,10 @@ export default function draw(pen) {
   const head = y + (h - content) / 2;
   pen.round_rect(x + pad, head, w * 0.4, bar, bar / 2, paint.deep);
   const top = head + bar + gap;
-  new Grid(frame(x + pad, top, span, span), WANT.side, WANT.side, 0).paint(pen, figure(), (kind) => (kind !== 0 ? paint.light : null));
-  lines.forEach((share, i) => pen.round_rect(x + pad, top + span + gap + i * step, span * share, bar, bar / 2, paint.light));
+  new Grid(frame(x + pad, top, span, span), WANT.side, WANT.side, 0).paint(pen, figure(), (kind) =>
+    kind !== 0 ? paint.light : null,
+  );
+  lines.forEach((share, i) => {
+    pen.round_rect(x + pad, top + span + gap + i * step, span * share, bar, bar / 2, paint.light);
+  });
 }

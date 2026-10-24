@@ -14,7 +14,8 @@ let memo: Board | undefined;
 
 function board() {
   if (memo) return memo;
-  if (SET.length !== 7 || Math.max(...SET) !== TOP || SET.some((a, i) => i > 0 && a <= SET[i - 1])) throw new Error(`${NAME}: the set is not seven increasing elements up to ${TOP}`);
+  if (SET.length !== 7 || Math.max(...SET) !== TOP || SET.some((a, i) => i > 0 && a <= SET[i - 1]))
+    throw new Error(`${NAME}: the set is not seven increasing elements up to ${TOP}`);
   const total = SET.reduce((s, a) => s + a, 0);
   const span = 2 * total + 1;
   const ternary = new Uint8Array(span);
@@ -30,16 +31,19 @@ function board() {
   for (const a of SET) plain = plain.flatMap((s) => [s, s + a]);
   for (const s of plain) subset[s] = 1;
   const listed = [...subset.keys()].filter((s) => subset[s]);
-  if (listed.length !== 2 ** SET.length) throw new Error(`${NAME}: ${listed.length} subset sums, want ${2 ** SET.length}`);
+  if (listed.length !== 2 ** SET.length)
+    throw new Error(`${NAME}: ${listed.length} subset sums, want ${2 ** SET.length}`);
   for (let i = 0; i < listed.length; i++)
     for (let j = i + 1; j < listed.length; j++) {
       const twice = listed[i] + listed[j];
-      if (twice % 2 === 0 && subset[twice / 2]) throw new Error(`${NAME}: ${listed[i]}, ${twice / 2}, ${listed[j]} is a 3-term progression`);
+      if (twice % 2 === 0 && subset[twice / 2])
+        throw new Error(`${NAME}: ${listed[i]}, ${twice / 2}, ${listed[j]} is a 3-term progression`);
     }
   for (const s of listed) if (!ternary[s]) throw new Error(`${NAME}: the subset sum ${s} is no ternary sum`);
   const pad = Math.floor((SIDE * SIDE - span) / 2);
   if (pad < 0 || SIDE * SIDE - span >= SIDE) throw new Error(`${NAME}: ${span} integers do not fill a ${SIDE}-square`);
-  if (sums.some((s) => s + pad < 0 || s + pad >= SIDE * SIDE)) throw new Error(`${NAME}: a ternary sum falls outside the ${SIDE}-square`);
+  if (sums.some((s) => s + pad < 0 || s + pad >= SIDE * SIDE))
+    throw new Error(`${NAME}: a ternary sum falls outside the ${SIDE}-square`);
   memo = { pad, span, ternary, subset };
   return memo;
 }

@@ -4,6 +4,7 @@ import sympy as sp
 DPS = 50
 SAMPLES = 50
 
+
 def symbolic_residuals():
     a, u = sp.symbols("a u", positive=True)
     r = 1 - a**2 + a**2 * u**2
@@ -23,11 +24,16 @@ def symbolic_residuals():
     closed = sp.simplify(sp.integrate(cube, (u, -1, 1)))
     return res, boundary, closed
 
+
 def inner_integral(a):
-    return mp.quad(lambda u: (-a * u + mp.sqrt(1 - a**2 + a**2 * u**2)) ** 3, [-1, 0, 1])
+    return mp.quad(
+        lambda u: (-a * u + mp.sqrt(1 - a**2 + a**2 * u**2)) ** 3, [-1, 0, 1]
+    )
+
 
 def chord(a, phi):
     return -a * mp.cos(phi) + mp.sqrt(1 - a**2 * mp.sin(phi) ** 2)
+
 
 def i_diam_direct():
     half = mp.pi / 2
@@ -36,6 +42,7 @@ def i_diam_direct():
         [-1, 0, 1],
         [0, half, mp.pi],
     )
+
 
 def main():
     mp.mp.dps = DPS
@@ -65,10 +72,13 @@ def main():
     prob = mp.mpf(4) / (3 * area**2)
     exact = 16 / (3 * mp.pi**2)
     print(f"  Area(H) = pi/2, Area(H)^2 = pi^2/4 = {mp.nstr(area**2, 20)}")
-    print(f"  P(chord crosses the diameter) = I_diam/(3 Area(H)^2) = {mp.nstr(prob, 20)}")
+    print(
+        f"  P(chord crosses the diameter) = I_diam/(3 Area(H)^2) = {mp.nstr(prob, 20)}"
+    )
     print(f"  16/(3 Pi^2) = {mp.nstr(exact, 20)}")
     print(f"  16/(3 Pi^2) to 16 places = {mp.nstr(exact, 16)}")
     print(f"  1 - 16/(3 Pi^2) to 16 places = {mp.nstr(1 - exact, 16)}")
     print(f"  |P - 16/(3 Pi^2)| = {mp.nstr(abs(prob - exact), 5)}")
+
 
 main()

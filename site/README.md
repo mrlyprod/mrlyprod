@@ -124,6 +124,7 @@ request /about/
 - A fresh clone runs, in order: `../scripts/wasm.sh` (cargo and wasm-bindgen build `../bindings/js/pkg/`), `bun install`, `bun test`; `package.json` pins bun.
 - `bun run check` runs `scripts/check.ts`: it reports the wasm pin, then runs `test/content.test.ts`, the content gate: every markdown link in a page, a post or a source lands, a rooted one on a route; every research link lands; the house rules over pages, posts and notes (no two blank lines, no em or en dash, a blank line after a heading); over a fresh build in a temp dir, every link on a built page lands and every redirect goes from a gone path to a route.
 - `bun run types` runs `tsc` over every `.ts` file of `site/`; the `.js` and `.jsx` files are not type-checked.
+- `bun run lint` runs Biome (`../biome.json`: format, lint, import order) over `site/`, the research figures and `../aws/`; `bun run fix` writes the format and the safe fixes. `../scripts/check.sh` runs it, and Ruff over every `.py` of the repo (`../pyproject.toml`).
 - `bun run shots` and `bun run film` drive Chrome; `scripts/README.md` has them.
 
 ## PUBLIC

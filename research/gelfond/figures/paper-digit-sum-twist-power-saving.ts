@@ -45,9 +45,11 @@ function facts() {
   const beta = norm((BASE - 1) * TWIST);
   const reach = beta / (BASE + 1);
   const c = constant(beta);
-  if (Math.abs(reach - 1 / 22) > 1e-15) throw new Error(`paper-digit-sum-twist-power-saving: reach ${reach}, want 1/22`);
+  if (Math.abs(reach - 1 / 22) > 1e-15)
+    throw new Error(`paper-digit-sum-twist-power-saving: reach ${reach}, want 1/22`);
   if (!(c >= 0.15)) throw new Error(`paper-digit-sum-twist-power-saving: c = ${c}, want at least 0.15`);
-  if (Math.abs(digit(0) * digit(0) - FILL * FILL) > 1e-9) throw new Error("paper-digit-sum-twist-power-saving: corner not full");
+  if (Math.abs(digit(0) * digit(0) - FILL * FILL) > 1e-9)
+    throw new Error("paper-digit-sum-twist-power-saving: corner not full");
   let far = 1;
   let share = 0;
   for (let i = 0; i < PATH; i++) {
@@ -57,8 +59,10 @@ function facts() {
     far = Math.min(far, Math.max(norm(v1), norm(v2)));
     share = Math.max(share, (digit(v1) * digit(v2)) / (FILL * FILL));
   }
-  if (far < reach - 1e-12) throw new Error(`paper-digit-sum-twist-power-saving: path within ${far} of the corner, want ${reach}`);
-  if (share > 1 - c + 1e-12) throw new Error(`paper-digit-sum-twist-power-saving: path keeps ${share}, above 1 - c = ${1 - c}`);
+  if (far < reach - 1e-12)
+    throw new Error(`paper-digit-sum-twist-power-saving: path within ${far} of the corner, want ${reach}`);
+  if (share > 1 - c + 1e-12)
+    throw new Error(`paper-digit-sum-twist-power-saving: path keeps ${share}, above 1 - c = ${1 - c}`);
 }
 
 function segments(shift: number) {
@@ -72,7 +76,10 @@ function segments(shift: number) {
   for (let i = 0; i + 1 < cuts.length; i++) {
     const [p, q] = [cuts[i], cuts[i + 1]];
     const n = Math.round(BASE * ((p + q) / 2) - shift);
-    out.push([[p, BASE * p - shift - n], [q, BASE * q - shift - n]]);
+    out.push([
+      [p, BASE * p - shift - n],
+      [q, BASE * q - shift - n],
+    ]);
   }
   return out;
 }
@@ -94,8 +101,13 @@ export default function draw(pen: Pen, ink: Ink) {
   const at = ([v1, v2]: [number, number]): Point => [frame.x + frame.w * (v1 + 0.5), frame.y + frame.h * (0.5 - v2)];
   const lattice = segments(0);
   const twisted = segments(((BASE - 1) * TWIST) % 1);
-  if (lattice.length !== BASE + 1 || twisted.length !== BASE) throw new Error(`paper-digit-sum-twist-power-saving: ${lattice.length} and ${twisted.length} segments, want ${BASE + 1} and ${BASE}`);
-  const through = lattice.some(([p, q]) => p[0] < 0 && q[0] > 0 && Math.abs(p[1] - (p[0] * (q[1] - p[1])) / (q[0] - p[0])) < 1e-12);
+  if (lattice.length !== BASE + 1 || twisted.length !== BASE)
+    throw new Error(
+      `paper-digit-sum-twist-power-saving: ${lattice.length} and ${twisted.length} segments, want ${BASE + 1} and ${BASE}`,
+    );
+  const through = lattice.some(
+    ([p, q]) => p[0] < 0 && q[0] > 0 && Math.abs(p[1] - (p[0] * (q[1] - p[1])) / (q[0] - p[0])) < 1e-12,
+  );
   if (!through) throw new Error("paper-digit-sum-twist-power-saving: no lattice segment through the centre");
   for (const [p, q] of lattice) pen.segment(at(p), at(q), 2.6, ink.dim);
   for (const [p, q] of twisted) pen.segment(at(p), at(q), 4.4, ink.orange);
