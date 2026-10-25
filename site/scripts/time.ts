@@ -1,8 +1,8 @@
 import { readFileSync, rmSync } from "node:fs";
 import { cpus, tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
-import { dark, light } from "../src/lib/theme/theme.js";
-import { type Ink, ink, type Pen, raster } from "../src/lib/view/index.js";
+import { dark, light } from "../src/lib/theme/theme.ts";
+import { type Ink, ink, type Pen, raster } from "../src/lib/view/index.ts";
 import { mrly, roster } from "./build.ts";
 
 /* RECIPE */

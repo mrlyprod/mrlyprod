@@ -9,7 +9,7 @@
 - `time.ts` (`time`): every figure drawn cold and warm in a worker; `../README.md` has the gate.
 - `draw.ts` (`draw`): `bun run draw <name...> | --all [--svg] [--png] [--theme dark|light] [--size px] [--out dir]` draws roster figures without the site, through the `mrly` plugin and the svg or raster pen, in the shell ink of the theme and the `site.json` tint; svg, dark and the figure size by default, into `data/site/scripts/draw/<name>.<theme>.<ext>`, one path a line.
 - `vendor.ts` (`vendor`): the fonts and the icons, below.
-- Modules of the build beside them: `git.ts` (the raw list and `git.json`), `llms.ts` (`llms.txt`), `links.ts` (the links of a built `dist/`, for the content gate); `film/page.js` is the page `film.ts` drives.
+- Modules of the build beside them: `git.ts` (the raw list and `git.json`), `llms.ts` (`llms.txt`), `links.ts` (the links of a built `dist/`, for the content gate); `film/page.ts` is the page `film.ts` drives.
 
 ## SHOTS
 
@@ -25,7 +25,7 @@
 
 ## FILM
 
-- `bun run film <scene.js> --name <n>` plays one app scene into a contact sheet, or a video with `--video`, under `data/site/scripts/film/<name>/`.
+- `bun run film <scene.ts> --name <n>` plays one app scene into a contact sheet, or a video with `--video`, under `data/site/scripts/film/<name>/`.
 
 ## VENDOR
 

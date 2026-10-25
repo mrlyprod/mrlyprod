@@ -3,9 +3,9 @@ import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
 import SITE from "../site.json";
-import { inked, SIZE } from "../src/lib/figure.js";
+import { inked, SIZE } from "../src/lib/figure.ts";
 import { palette } from "../src/lib/theme/palette.gen.js";
-import { type Color, type Ink, type Pen, raster, svg } from "../src/lib/view/index.js";
+import { type Color, type Ink, type Pen, raster, svg } from "../src/lib/view/index.ts";
 import { mrly, plates, roster } from "./build.ts";
 
 /* PATHS */

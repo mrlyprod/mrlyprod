@@ -5,13 +5,13 @@
 
 ## UNIT
 
-- A new app is 5 files: `app.json`, `icon.svg` (the app icon, `../lib/appicon.js`), `icon.js` (the figure, the app's still, a plate by `../lib/plate.js`), `scene.js` (`SPEC`, `PAGE`, `make`; no React, no DOM beyond its canvas) and `widget.jsx` (the React around it).
-- No app holds an `index.jsx`: the build writes each entry as the virtual module `app:<id>`, `page(Widget, { seed: 0, ...PAGE.defaults }, PAGE)` (`entry` in `../../scripts/build.ts`).
+- A new app is 5 files: `app.json`, `icon.svg` (the app icon, `../lib/appicon.ts`), `icon.ts` (the figure, the app's still, a plate by `../lib/plate.ts`), `scene.ts` (`SPEC`, `PAGE`, `make`; no React, no DOM beyond its canvas) and `widget.tsx` (the React around it).
+- No app holds an `index.tsx`: the build writes each entry as the virtual module `app:<id>`, `page(Widget, { seed: 0, ...PAGE.defaults }, PAGE)` (`entry` in `../../scripts/build.ts`).
 - `PAGE.defaults` holds any url key outside the spec (`base`, `code`, a design); the seed is always 0.
-- `scene.js` names its wasm units with `export const units = wasm('math', ...)` from `../lib/units/`; a widget that needs one before the page hands it over takes it with `useUnit(name, given)` from `../lib/app/hooks.js`; no scene, engine or widget imports a unit, a figure names its own, and the test preload initialises them.
-- A family shares its code through `../lib/<family>/`, the head app included: two (crop), three (cuts, slices), sequences (plot, tour), spin (radial), moire (star, tourbillon), life (wolfram); no app imports another (`../../test/imports.test.js`).
-- `../lib/designs/` is the shared design kit: the rules and `DESIGN` in `engine.js`, the picker (`Pick`, `Picker`, `Thumbs`) in `pick.jsx`.
-- An id is typed nowhere but its folder: the chrome and the lock name no saver (`apps.test.js`).
+- `scene.ts` names its wasm units with `export const units = wasm('math', ...)` from `../lib/units/`; a widget that needs one before the page hands it over takes it with `useUnit(name, given)` from `../lib/app/hooks.ts`; no scene, engine or widget imports a unit, a figure names its own, and the test preload initialises them.
+- A family shares its code through `../lib/<family>/`, the head app included: two (crop), three (cuts, slices), sequences (plot, tour), spin (radial), moire (star, tourbillon), life (wolfram); no app imports another (`../../test/imports.test.ts`).
+- `../lib/designs/` is the shared design kit: the rules and `DESIGN` in `engine.ts`, the picker (`Pick`, `Picker`, `Thumbs`) in `pick.tsx`.
+- An id is typed nowhere but its folder: the chrome and the lock name no saver (`apps.test.ts`).
 
 ## SCENE
 
@@ -24,7 +24,7 @@
 - `still: true` (or `PAGE.still`): no frame loop, no Space, no `paused`; drawn on make, set, size and theme; `view.wake()` starts the loop for a replay.
 - `every`: the milliseconds between draws of a ticking scene; `font`: a face loaded before the first draw.
 - The lock reads `hold()` and `windDown(onDone)`, and a saver's `units`, whose `ready` it awaits before spreading the units into `opts`.
-- `run(canvas, make, opts, { still, lock })` in `../lib/app/run.js` drives a scene and returns `stop`, with `pause`, `play`, `coast`, `fix`, `set` and `scene`.
+- `run(canvas, make, opts, { still, lock })` in `../lib/app/run.ts` drives a scene and returns `stop`, with `pause`, `play`, `coast`, `fix`, `set` and `scene`.
 - `stop.fix({ frame, step, dpr })` pins the store and the step for a take or a sized export: `view.fixed` true for a take; a frame with its own `dpr` is a still; `stop.fix()` returns to the box.
 
 ## WIDGET
@@ -33,16 +33,16 @@
 - `value` comes tidied; `onChange(patch)` merges, tidies and writes the url.
 - `onReady(handle)`: the `Scene` handle up, or `null` when the canvas goes; the lib reads `canvas`, `toggle`, `playing`, `still`, `fix`, `draw` and `sound` on it, and `PAGE.actions` receive it.
 - `onStatus(rows)` takes `[label, value]` readouts; `onExport(rows)` takes `[label, fn]` rows for the Export dialog (SVG, JSON, CSV, OBJ, WAV).
-- `<Scene make value onReady ...canvas props />` (`../lib/app/page.jsx`) is one canvas and one `run` per `make`, so a widget binds its units into `make` with `useCallback`.
+- `<Scene make value onReady ...canvas props />` (`../lib/app/page.tsx`) is one canvas and one `run` per `make`, so a widget binds its units into `make` with `useCallback`.
 - `<Bar side>` portals into a slot: `left` (the Library panel), `right` (folds beside the spec's), `status`, `hints`, `actions`.
-- `Library`, `Shelf`, `Item` and `Art` (`../lib/app/library.jsx`) fill the left panel: a title, an optional search field and filter chips, then named shelves of rows or thumb tiles; `Art` draws a cheap thumb lazily, one a frame.
-- `useReroll(seed, fn)` (`../lib/app/hooks.js`) runs `fn(next)` when the user rerolls (the key, the button, the menu), never when the url or Undo changes the seed; a widget that writes on a reroll uses it.
-- `Fold` from `../lib/app/controls.jsx` with no `open` joins the accordion; `Knob` from `../lib/app/knobs.jsx` draws one spec row inside a widget fold.
+- `Library`, `Shelf`, `Item` and `Art` (`../lib/app/library.tsx`) fill the left panel: a title, an optional search field and filter chips, then named shelves of rows or thumb tiles; `Art` draws a cheap thumb lazily, one a frame.
+- `useReroll(seed, fn)` (`../lib/app/hooks.ts`) runs `fn(next)` when the user rerolls (the key, the button, the menu), never when the url or Undo changes the seed; a widget that writes on a reroll uses it.
+- `Fold` from `../lib/app/controls.tsx` with no `open` joins the accordion; `Knob` from `../lib/app/knobs.tsx` draws one spec row inside a widget fold.
 
 ## PAGE
 
-- `PAGE` in `scene.js` holds the `page()` options: `defaults`, `spec` (`SPEC`), `units` (the `wasm()` thunk), `keys`, `actions` (an `act` to `(handle, event)`), `gestures`, `record`, `about`, `still`, `name`, `design`.
-- `design` is the slot of an app that takes a design: `{ dim, base, code, dims, bases, spaces }`, a string naming the url key, a number fixing it, `dims` may include 1 (a line design grown as a one-row strip), `spaces` the `[dim, base]` pairs when not every pair works, `holds(design, value)` keeps only the designs that work with the other knobs, `when(value)` hides the chip, `blank` names an empty code that means something else than the home design (`Random`); the chip in the actions pill picks through it, and a url with no code opens on the current design (`../lib/designs/store.js`).
+- `PAGE` in `scene.ts` holds the `page()` options: `defaults`, `spec` (`SPEC`), `units` (the `wasm()` thunk), `keys`, `actions` (an `act` to `(handle, event)`), `gestures`, `record`, `about`, `still`, `name`, `design`.
+- `design` is the slot of an app that takes a design: `{ dim, base, code, dims, bases, spaces }`, a string naming the url key, a number fixing it, `dims` may include 1 (a line design grown as a one-row strip), `spaces` the `[dim, base]` pairs when not every pair works, `holds(design, value)` keeps only the designs that work with the other knobs, `when(value)` hides the chip, `blank` names an empty code that means something else than the home design (`Random`); the chip in the actions pill picks through it, and a url with no code opens on the current design (`../lib/designs/store.ts`).
 - `gestures: true` hands touch to the canvas; `record: true` adds the Video exports, `v` and Stop.
 - `about`: plain paragraphs at the top of Info; `[text](/route/)` is a link.
 - `name(value, units)` names the PNG, WebP and video exports; the default is `<id>-<seed>`.
@@ -63,16 +63,16 @@
 
 ## CHROME
 
-- `Frame` (`../lib/app/frame.jsx`): the canvas fills the app window; the Library panel on the left and the Knobs panel on the right (280px by default, an inner edge resizes each, kept in localStorage) float as glass and push the canvas by the wider open one on both sides, so the picture stays centered; Cmd or Ctrl with `[` and `]` toggle them; when the canvas would fall under 360px they float over it.
+- `Frame` (`../lib/app/frame.tsx`): the canvas fills the app window; the Library panel on the left and the Knobs panel on the right (280px by default, an inner edge resizes each, kept in localStorage) float as glass and push the canvas by the wider open one on both sides, so the picture stays centered; Cmd or Ctrl with `[` and `]` toggle them; when the canvas would fall under 360px they float over it.
 - Actions pill, top center: the design chip, the `view` segment (phone), Stop (recording), the primary, Reroll, Export, Share (copy link).
 - Status pill, bottom center: the Info button, `seed`, `paused`, `rec`, `link copied`, the first readouts; then the first three key hints and the keyboard button for the keys card.
 - Right panel: the spec's groups and the widget's folds in one accordion, the open set kept per app in sessionStorage `knobs:<id>`, the first fold met open, Seed last; a summary shows its live values.
-- Bar menus (`../lib/app/menus.js`, drawn by `../shell/menus.js`): File (Export, its rows, Copy Link), Edit (Undo, Redo, Reroll, Reset Knobs), View (the view segment, Show Library, Show Knobs, Zen), Go (Home, Launchpad, recent apps, the section's other apps), Help (Keys, Info, the topic's research note); a keys row with `menu` joins its menu.
+- Bar menus (`../lib/app/menus.ts`, drawn by `../shell/menus.ts`): File (Export, its rows, Copy Link), Edit (Undo, Redo, Reroll, Reset Knobs), View (the view segment, Show Library, Show Knobs, Zen), Go (Home, Launchpad, recent apps, the section's other apps), Help (Keys, Info, the topic's research note); a keys row with `menu` joins its menu.
 - Undo and Redo (Cmd or Ctrl with Z, Shift for Redo): an in-app stack of url values, changes closer than 500 ms one step; a text field keeps its own.
 - Reset Knobs puts every spec row back to its default but the design's keys.
-- Export: a dialog of PNG or WebP, a size pick, the app's rows and the Video rows; `../lib/app/export.js` saves, `../lib/app/svg.js` writes every SVG.
+- Export: a dialog of PNG or WebP, a size pick, the app's rows and the Video rows; `../lib/app/export.ts` saves, `../lib/app/svg.ts` writes every SVG.
 - Info: `about`, then every readout; offered when the app has either.
-- Keys (`../lib/app/keys.jsx`): Space pause, the app's rows, `r` reroll, `e` export, `i` info, `z` zen, `?` the keys card; an app row on a base key replaces it.
+- Keys (`../lib/app/keys.tsx`): Space pause, the app's rows, `r` reroll, `e` export, `i` info, `z` zen, `?` the keys card; an app row on a base key replaces it.
 - A key in the knobs pane, a field or a select stays there; a pointer-changed control lets go of focus, so keys reach the page.
 - Zen (`z`, the View menu, Escape or the corner button out): `data-zen` on `html`, the canvas alone; never kept.
 - The glass reads the app canvas mirrored past its edge, so the panels and pills bend the picture beside them.

@@ -9,11 +9,11 @@
 
 - Palette first (`palette.gen.css`, and `../lib/theme/palette.gen.js` for JS), roles second (`tokens.css`), one class per idea, semantic HTML, AA contrast in both themes, 44px targets on coarse pointers, no motion under `prefers-reduced-motion`.
 - Corners come from one concentric scale: `--r-window` 18, `--r-panel` 14, `--r-control` 10, `--r-inset` 6 (kbd, inline code, thumbs), `--round` for pills and chips.
-- Phone or desk is `html[data-form]`, set by `../shell/boot.js`; a rule for the phone reads `[data-form="phone"]`, never a media query of its own.
+- Phone or desk is `html[data-form]`, set by `../shell/boot.ts`; a rule for the phone reads `[data-form="phone"]`, never a media query of its own.
 - Glass: a `[data-lens]` element is solid (`--solid`, `--rim`, `--lift`) until the WebGL engine (`../lib/glass/`) lights it (`data-lit`) and paints its `canvas.lens`; `.frost` is the CSS glass for glass on glass; `html[data-glass="off"]` keeps everything solid.
 - Light on `:root`, dark twice: `prefers-color-scheme` guarded by `:root:not([data-theme="light"])`, then `:root[data-theme="dark"]`.
 - `--art` is the ground of every canvas and figure.
-- Tint is a runtime setting: `data-tint` on `html` names a hue; the shell's `<style id="tint">` holds `tintCss(site.tint)` from `../lib/theme/tint.js`, filled by the build and dev, the default as `:root:not([data-tint])` because Bun puts the stylesheet link after it.
+- Tint is a runtime setting: `data-tint` on `html` names a hue; the shell's `<style id="tint">` holds `tintCss(site.tint)` from `../lib/theme/tint.ts`, filled by the build and dev, the default as `:root:not([data-tint])` because Bun puts the stylesheet link after it.
 - `page.css` is the one sheet the shell links; the router wears `git.css` on `/git/` and `../lib/app/mrly.css` on an app.
 
 ## FONTS

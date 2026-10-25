@@ -1,0 +1,172 @@
+import { expect, test } from "bun:test";
+import * as math from "@mrlyprod/mrly/math";
+import { renderToStaticMarkup } from "react-dom/server";
+import type { Readout } from "../../lib/app/hooks.ts";
+import { Knobs } from "../../lib/app/knobs.tsx";
+import type { Scene } from "../../lib/app/run.ts";
+import type { Value } from "../../lib/app/spec.ts";
+import { defaults } from "../../lib/app/spec.ts";
+import { rng } from "../../lib/rand.ts";
+import type { Cuts, Info } from "./scene.ts";
+import { heights, layout, lid, make, name, near, plot, profile, SPEC, scrub, shelf, study, thumb } from "./scene.ts";
+
+type Call = [string | symbol, ...unknown[]];
+
+const value = (over: Value) => ({ ...defaults(SPEC), seed: 1, base: 2, code: "126", height: "", ...over });
+
+const row = (rows: Readout[], name: string) => rows.find(([one]) => one === name)?.[1];
+
+const pen = (log: Call[]) =>
+  new Proxy({} as CanvasRenderingContext2D, {
+    get: (_, key) => (key === "measureText" ? () => ({ width: 10 }) : (...args: unknown[]) => log.push([key, ...args])),
+    set: (_, key, v: unknown) => {
+      log.push([`${String(key)}=`, v]);
+      return true;
+    },
+  });
+
+const open = (over: Value = {}) => {
+  const log: Call[] = [];
+  const told: Info[] = [];
+  const view = {
+    rand: rng(1),
+    look: () => ({ paper: "#000000", accent: "#008cff" }),
+    still: false,
+    w: 800,
+    h: 600,
+    dpr: 1,
+    t: 0,
+  };
+  const scene: Cuts & Scene = make(Object.assign({} as HTMLCanvasElement, { getContext: () => pen(log) }), view, {
+    ...value(over),
+    math,
+    tell: (one) => told.push(one),
+  });
+  return { log, told, scene, count: (name: string) => log.filter(([key]) => key === name).length };
+};
+
+test("the gasket cube meets 3^level cells at every height of its support, and opens on the central height", () => {
+  const cut = profile(math, "126", 2, 5);
+  expect([cut.low, cut.high, cut.least, cut.most, cut.central, cut.side]).toEqual([31, 62, 243, 243, [46, 47], 32]);
+  expect([
+    heights(cut, {}),
+    heights(cut, { height: "3" }),
+    heights(cut, { height: "50" }),
+    heights(cut, { height: "99", both: 0 }),
+    heights(cut, { both: 1 }),
+  ]).toEqual([[46], [31], [50], [62], [46, 47]]);
+});
+
+test("the readings name the height, its count and its offset in binary, and count the points drawn", () => {
+  const plan = study(math, value({ height: 50 }));
+  expect(plan.rows.slice(0, 4)).toEqual([
+    ["name", "code 126"],
+    ["height", "50"],
+    ["this slice", "243"],
+    ["offset in binary", "10011"],
+  ]);
+  expect([
+    row(plan.rows, "non-empty"),
+    row(plan.rows, "points drawn"),
+    row(study(math, value({ both: 1 })).rows, "points drawn"),
+  ]).toEqual(["32 of 32", "243", "486"]);
+  expect([
+    row(study(math, value({ view: "section" })).rows, "points drawn"),
+    study(math, value({ code: "0" })).rows.at(-1),
+  ]).toEqual(["-", ["support", "none"]]);
+});
+
+test("points reach level 9 and the section level 6", () => {
+  expect([lid(math, "points"), lid(math, "section")]).toEqual([9, 6]);
+  const html = (view: string) =>
+    /<span>Level<\/span><span class="num">\d+<\/span><input type="range" min="1" max="(\d)"/.exec(
+      renderToStaticMarkup(<Knobs spec={SPEC} value={value({ view })} units={{ math }} onChange={() => {}} />),
+    )![1];
+  expect([html("points"), html("section")]).toEqual(["9", "6"]);
+});
+
+test("the scene is still, and the stage holds the cut alone: no bars beside the points, and the section paints as triangles", () => {
+  const live = open();
+  expect([live.scene.still, live.scene.every]).toEqual([true, undefined]);
+  live.scene.draw();
+  expect([live.count("fillRect"), live.count("fillText")]).toEqual([0, 0]);
+  const section = open({ view: "section", level: 3 });
+  section.scene.draw();
+  expect([section.count("fillRect"), section.count("fill") >= 27]).toEqual([0, true]);
+});
+
+test("the picture takes the whole stage at any aspect, a phone included", () => {
+  const tall = layout(390, 844);
+  expect([tall.x, tall.y, tall.w, tall.h].map((v) => +v.toFixed(1))).toEqual([15.6, 15.6, 358.8, 812.8]);
+});
+
+test("a drag across the stage picks the height under it, and the points export as the crate drew them", async () => {
+  const live = open();
+  const cut = profile(math, "126", 2, 5);
+  expect([
+    scrub(cut, 0, 800),
+    scrub(cut, 800, 800),
+    scrub(cut, -9, 800),
+    live.scene.seek(400),
+    scrub({ empty: true }, 10, 800),
+  ]).toEqual([31, 62, 31, 47, null]);
+  expect(await live.scene.svg()).toBe(math.three.diagonal_svg("126", 2, 5, 2, Uint32Array.of(46), 16));
+});
+
+test("a new height keeps the last points on the stage until its own picture lands", () => {
+  const loads: Fake[] = [];
+  const known: readonly unknown[] = loads;
+  const was = globalThis.Image;
+  class Fake {
+    onload?: () => void;
+    constructor() {
+      Object.assign(this, { naturalWidth: 512, naturalHeight: 512 });
+      loads.push(this);
+    }
+  }
+  Object.assign(globalThis, { Image: Fake });
+  try {
+    const live = open();
+    loads[0].onload!();
+    live.log.length = 0;
+    live.scene.set(value({ height: 50 }));
+    const drawn = () => live.log.filter(([key]) => key === "drawImage").map(([, one]) => known.indexOf(one));
+    expect([loads.length, drawn()]).toEqual([2, [0]]);
+    loads[1].onload!();
+    expect(drawn()).toEqual([0, 1]);
+  } finally {
+    globalThis.Image = was;
+  }
+});
+
+test("the shelf lists every height of a small support and an even spread of a deep one, and a height lights the nearest", () => {
+  const [small, deep] = [profile(math, "126", 2, 5), profile(math, "126", 2, 9)];
+  expect([
+    shelf(small).length,
+    shelf(small)[0],
+    shelf(small).at(-1),
+    shelf(deep).length,
+    shelf(deep)[0],
+    shelf(deep).at(-1),
+    shelf({ empty: true }),
+  ]).toEqual([32, 31, 62, 48, deep.low, deep.high, []]);
+  expect([near(shelf(deep), shelf(deep)[7] + 1), near(shelf(small), 50)]).toEqual([shelf(deep)[7], 50]);
+});
+
+test("a thumb is one path with a dot a cell of its height", () => {
+  const log: Call[] = [];
+  thumb(pen(log), 56, plot(math, "126", 2, 3, 10), 8, "#008cff");
+  expect([log.filter(([key]) => key === "arc").length, log.filter(([key]) => key === "fill").length]).toEqual([27, 1]);
+});
+
+test("tint shows only for the section, since the crate colours the points itself", () => {
+  const tint = SPEC.find((one) => one.key === "tint")!;
+  expect([tint.when?.({ view: "points" }), tint.when?.({ view: "section" })]).toEqual([false, true]);
+});
+
+test("an export is named by the design, the level and the view it shows", () => {
+  expect([name(value({})), name(value({ view: "section", level: 3 }))]).toEqual([
+    "cuts-126-l5-points",
+    "cuts-126-l3-section",
+  ]);
+});

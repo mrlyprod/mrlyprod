@@ -6,7 +6,6 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "types": ["bun"],
     "strict": true,
-    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "allowJs": true,
     "jsx": "react-jsx",
@@ -14,10 +13,18 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": false,
     "paths": {
-      "@mrlyprod/mrly/*": ["../bindings/js/*.js"],
-      "#view": ["./src/lib/view/index.d.ts"],
+      "@mrlyprod/mrly/*": ["../bindings/js/*"],
+      "#view": ["./src/lib/view/index.ts"],
       "#view/*": ["./src/lib/view/*"]
     }
   },
-  "include": ["scripts/**/*.ts", "infra/**/*.ts", "src/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "scripts/**/*.ts",
+    "infra/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "test/**/*.ts",
+    "../research/**/figures/*.ts",
+    "../aws/*.ts"
+  ]
 }

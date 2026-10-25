@@ -1,21 +1,27 @@
 import { beforeAll, expect, test } from "bun:test";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import SITE from "../site.json";
 import { figures as named } from "../src/lib/md/md.ts";
-import { tintCss } from "../src/lib/theme/tint.js";
+import { tintCss } from "../src/lib/theme/tint.ts";
 import { dist, out } from "../test/dist.ts";
 import {
+  apps,
   type Built,
+  entry,
   type Host,
+  hosts,
   launchable,
   launchpad,
+  NAMES,
+  own,
   type Pad,
   plates,
   roster,
   SHELL,
   savers,
+  spells,
   state,
 } from "./build.ts";
 
@@ -30,7 +36,7 @@ const host = (id: string, title: string, saver?: true): Host => ({
   id,
   title,
   saver,
-  file: join(repo, "site", "src", "apps", id, "scene.js"),
+  file: join(repo, "site", "src", "apps", id, "scene.ts"),
 });
 
 const scene = (SAVERS?: unknown) => () => ({ SPEC: [{ key: "hue" }], PAGE: { defaults: { code: "7" } }, SAVERS });
@@ -110,13 +116,14 @@ test("the roster is every page and app icon by its id, every post icon as blog-<
           .map((name) => name.slice(0, -3))
       : [],
   );
+  const drawn = (dir: string) => existsSync(join(dir, NAMES.icon));
   const routes = ["pages", "apps"].flatMap((root) =>
-    folders(join(src, root)).filter((id) => existsSync(join(src, root, id, "icon.js"))),
+    folders(join(src, root)).filter((id) => drawn(join(src, root, id))),
   );
   const want = [
     ...routes,
     ...folders(join(src, "pages", "blog"))
-      .filter((slug) => existsSync(join(src, "pages", "blog", slug, "icon.js")))
+      .filter((slug) => drawn(join(src, "pages", "blog", slug)))
       .map((slug) => `blog-${slug}`),
     ...research,
   ].sort();
@@ -130,7 +137,51 @@ test("an app icon is a plate on a clear ground; a post or research figure keeps 
   const flat = plates(all);
   expect(flat).toContain("life");
   expect(flat.some((name) => name.startsWith("blog-"))).toBe(false);
-  expect(flat.length).toBe(all.filter((one) => one.file.endsWith("icon.js") && !one.name.startsWith("blog-")).length);
+  expect(flat.length).toBe(
+    all.filter((one) => /\/icon\.[jt]s$/.test(one.file) && !one.name.startsWith("blog-")).length,
+  );
+});
+
+test("a route is accepted with the TypeScript spelling of its page, parts and icon, which wins over a stale JavaScript spelling beside it", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mrly-route-"));
+  const place = (id: string, files: Record<string, string>) => {
+    mkdirSync(join(dir, id));
+    for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, id, name), text);
+    return { id, dir: join(dir, id) };
+  };
+  const app = JSON.stringify({ title: "A", line: "A line." });
+  const draw = "export default () => null;\n";
+  try {
+    const list = apps([
+      place("home", {
+        "app.json": app,
+        "icon.svg": "<svg/>",
+        "icon.ts": draw,
+        "index.tsx":
+          "export function render(root: HTMLElement) {}\nexport function unmount() {}\nexport const layout = {};\n",
+      }),
+      place("parts", {
+        "app.json": app,
+        "icon.svg": "<svg/>",
+        "icon.ts": draw,
+        "scene.ts": "export const PAGE = { defaults: {} };\n",
+        "widget.tsx": "export const Widget = () => null;\n",
+      }),
+    ]);
+    expect(list.map((one) => [one.id, one.page, one.icon])).toEqual([
+      ["home", "index.tsx", true],
+      ["parts", "scene.ts", true],
+    ]);
+    expect(own(list)).toEqual(["home"]);
+    expect(list.filter((one) => spells(one.page, "scene")).map((one) => one.id)).toEqual(["parts"]);
+    expect(hosts(list).map((one) => one.file)).toContain(join(dir, "parts", "scene.ts"));
+    expect(entry(join(dir, "parts"))).toContain(join(dir, "parts", "widget.tsx"));
+    expect(() => apps([place("none", { "app.json": app, "icon.svg": "<svg/>", "icon.ts": draw })])).toThrow(
+      "index.tsx, index.md, a source, or scene.ts with widget.tsx, and has none",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("an app row wears its own id, a post blog-<slug>, a hidden app may wear none and a shown one always does", () => {

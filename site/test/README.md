@@ -3,7 +3,7 @@
 - What the tests share, and the suites that span routes; every other test sits beside the file it covers.
 - `preload.ts` (named in `../bunfig.toml`) initialises every wasm unit from `../../bindings/js/pkg`, so a test imports `@mrlyprod/mrly/<unit>` with no init line; without the pkg it stops with one line: run `scripts/wasm.sh` first.
 - `dist.ts` builds the site once into a temp dir for every test that reads a `dist/`, and removes it on exit.
-- Fixtures: `dom.js` (a small DOM to mount React into), `fake.js` (a WebGL2 context, with its own test), `pen.js` (a canvas pen that logs its calls, for the sequences family).
-- `routes.test.js`: every folder of `src/pages/` and `src/apps/` is a route, a root word with a title and a line of at most 90 characters.
-- `imports.test.js`: the import rules of `src/`, which `../README.md` states.
+- Fixtures: `dom.ts` (a small DOM to mount React into), `fake.ts` (a WebGL2 context, with its own test), `pen.ts` (a canvas pen that logs its calls, for the sequences family).
+- `routes.test.ts`: every folder of `src/pages/` and `src/apps/` is a route, a root word with a title and a line of at most 90 characters.
+- `imports.test.ts`: the import rules of `src/`, which `../README.md` states.
 - `content.test.ts`: the content gate `bun run check` runs: prose links, research links, the house rules, built links and redirects.

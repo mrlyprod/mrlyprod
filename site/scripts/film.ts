@@ -2,13 +2,13 @@ import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:f
 import { join, relative, resolve } from "node:path";
 import SITE from "../site.json";
 import { palette } from "../src/lib/theme/palette.gen.js";
-import { SIZE, sheet } from "./film/page.js";
+import { SIZE, sheet } from "./film/page.ts";
 import { main } from "./shots.ts";
 
 const root = resolve(import.meta.dir, "..");
 const repo = resolve(root, "..");
 const DATA_DIR = join(repo, "data", relative(repo, import.meta.dir));
-const PAGE = join(import.meta.dir, "film", "page.js");
+const PAGE = join(import.meta.dir, "film", "page.ts");
 const FPS = 30;
 const LONGEST = 30;
 const TALL = 6000;
@@ -37,7 +37,7 @@ function parse(argv: string[]) {
     step: Number(flag("--step", "100")),
     frames: Number(flag("--frames", "60")),
   };
-  if (!scene) throw new Error("film: name a scene module, as apps/lightspeed/scene.js");
+  if (!scene) throw new Error("film: name a scene module, as apps/lightspeed/scene.ts");
   if (!/^[a-z0-9-]+$/.test(name)) throw new Error("film: --name takes lowercase letters, digits and hyphens");
   if (!Number.isInteger(numbers.seed) || numbers.seed < 0) throw new Error("film: --seed takes a whole number");
   if (!Number.isFinite(numbers.from) || !(numbers.step > 0) || !Number.isInteger(numbers.frames) || numbers.frames < 1)

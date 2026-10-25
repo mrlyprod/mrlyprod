@@ -1,0 +1,297 @@
+import { rng } from "../rand.ts";
+import type { Lit, World, Zone } from "./exo.ts";
+import { air, exo, lin, moonOf, ringOf } from "./exo.ts";
+
+/* TYPES */
+
+export type WorldOptions = { moons?: number; rings?: string; type?: string };
+
+export type Named = Lit & { name: string };
+
+type Stop = [number, string];
+
+const TAU = Math.PI * 2;
+const EXTRA = 0x3c6ef372;
+
+/* WORLDS */
+
+const EARTH_AIR = air({
+  h: 0.004,
+  hm: 0.0012,
+  g: 0.76,
+  ray: [0.046, 0.108, 0.265],
+  mie: [0.015, 0.015, 0.015],
+  dust: [0.017, 0.017, 0.017],
+  top: 1.03,
+});
+
+const SATURN_RINGS: Zone[] = [
+  [1.11, 1.236, 0.004, 0.9, 0.3],
+  [1.239, 1.45, 0.07, 0.12, 0.2],
+  [1.45, 1.527, 0.12, 0.1, 0.3],
+  [1.527, 1.64, 0.9, 0.02, 0.62],
+  [1.64, 1.951, 2.6, 0, 0.9],
+  [1.951, 2.025, 0.09, 0.2, 0.35],
+  [2.025, 2.214, 0.65, 0.04, 0.72],
+  [2.214, 2.219, 0.01, 0.6, 0.5],
+  [2.219, 2.262, 0.45, 0.06, 0.66],
+  [2.318, 2.334, 0.25, 1, 0.75],
+];
+
+const WORLDS = {
+  earth: {
+    kind: "terran",
+    noise: 11,
+    tilt: 0.41,
+    spin: 0.045,
+    phase: 0.6,
+    freq: 0.95,
+    sea: 0.165,
+    bump: 0.035,
+    cover: 0.5,
+    lights: 1,
+    colors: ["#16488a", "#134656", "#2a3a1a", "#c4a283", "#6f604f"].map((c) => lin(c)),
+    cloud: lin("#f6f8fb", 0.88),
+    drift: 0.004,
+    city: [1, 0.62, 0.3].map((c) => c * 1.4),
+    glow: [0, 0, 0],
+    air: EARTH_AIR,
+    spec: 1,
+    rough: 0.42,
+    limb: 0,
+    flat: 0,
+    ring: null,
+    moons: [{ r: 0.273, a: 7.5, incl: 0.09, rate: 0.03, tone: lin("#a6a29c", 0.25), rough: 0.55 }],
+  },
+  mars: {
+    kind: "desert",
+    noise: 23,
+    tilt: 0.44,
+    spin: 0.044,
+    phase: 2.3,
+    freq: 1.1,
+    sea: 0,
+    bump: 0.05,
+    cover: 0,
+    lights: 0,
+    colors: ["#b4703e", "#584232", "#f0ebe6", "#c89064", "#6e4a36"].map((c) => lin(c)),
+    feature: [-0.14, 0.3, 1.25, 0.3],
+    cloud: lin("#e4e2e6", 0.55),
+    drift: 0.003,
+    city: [0, 0, 0],
+    glow: [0, 0, 0],
+    air: air({
+      h: 0.0018,
+      hm: 0.0038,
+      g: 0.62,
+      ray: [0.002, 0.004, 0.01],
+      mie: [0.12, 0.08, 0.055],
+      dust: [0.13, 0.12, 0.11],
+      top: 1.015,
+    }),
+    spec: 0,
+    rough: 0,
+    limb: 0,
+    flat: 0.45,
+    ring: null,
+    moons: [
+      { r: 0.032, a: 2.76, incl: 0.02, rate: 0.3, tone: lin("#55493f", 0.5), rough: 0.9 },
+      { r: 0.022, a: 6.9, incl: 0.03, rate: 0.08, tone: lin("#6a5d52", 0.5), rough: 0.8 },
+    ],
+  },
+  jupiter: {
+    kind: "gas",
+    noise: 31,
+    tilt: 0.055,
+    spin: 0.12,
+    phase: 1.1,
+    freq: 1,
+    jets: 0.0025,
+    bump: 1,
+    bands: (
+      [
+        [-1, "#4a443e"],
+        [-0.85, "#6a6052"],
+        [-0.66, "#a89474"],
+        [-0.54, "#9a8866"],
+        [-0.42, "#dccdb0"],
+        [-0.3, "#a08a64"],
+        [-0.14, "#b49c74"],
+        [0.02, "#ebe2d0"],
+        [0.12, "#d8c49a"],
+        [0.22, "#a08664"],
+        [0.36, "#ddd0b4"],
+        [0.46, "#a08c6a"],
+        [0.6, "#c2ae8a"],
+        [1, "#4e473f"],
+      ] satisfies Stop[]
+    ).map(([y, c]) => [y, ...lin(c)]),
+    feature: [-0.39, 1.4, 0.11, 0.85],
+    tone: lin("#c06a44"),
+    cover: 0.12,
+    limb: 0.45,
+    flat: 0,
+    air: null,
+    ring: null,
+    moons: [
+      { r: 0.026, a: 4.2, incl: 0.01, rate: 0.12, tone: lin("#d8c070", 0.7), rough: 0.6 },
+      { r: 0.022, a: 5.6, incl: 0.01, rate: 0.08, tone: lin("#d8d0c0", 0.75), rough: 0.35 },
+      { r: 0.037, a: 7.5, incl: 0.01, rate: 0.05, tone: lin("#9a8e80", 0.5), rough: 0.6 },
+    ],
+  },
+  saturn: {
+    kind: "gas",
+    noise: 37,
+    tilt: 0.466,
+    spin: 0.11,
+    phase: 0.4,
+    freq: 0.8,
+    jets: 0.0018,
+    bump: 0.35,
+    bands: (
+      [
+        [-1, "#7c6c54"],
+        [-0.75, "#a89068"],
+        [-0.5, "#c8ad7c"],
+        [-0.3, "#d9c290"],
+        [-0.12, "#c9aa76"],
+        [0, "#e2cc98"],
+        [0.12, "#d6bc88"],
+        [0.28, "#bfa070"],
+        [0.45, "#d4bc8a"],
+        [0.62, "#b89c70"],
+        [0.8, "#a09478"],
+        [1, "#8a8676"],
+      ] satisfies Stop[]
+    ).map(([y, c]) => [y, ...lin(c)]),
+    feature: [0, 0, 0.01, 0],
+    tone: lin("#e8dcb8"),
+    cover: 0.05,
+    limb: 0.35,
+    flat: 0,
+    air: null,
+    ring: {
+      inner: 1.11,
+      outer: 2.34,
+      zones: SATURN_RINGS,
+      seed: 61,
+      dark: lin("#6e6458"),
+      bright: lin("#dccbab"),
+      halo: 0.004,
+    },
+    moons: [
+      { r: 0.012, a: 3.95, incl: 0.0, rate: 0.14, tone: lin("#f4f4f4", 0.95), rough: 0.15 },
+      { r: 0.018, a: 6.1, incl: 0.01, rate: 0.07, tone: lin("#d0ccc6", 0.75), rough: 0.4 },
+      { r: 0.043, a: 9, incl: 0.006, rate: 0.03, tone: lin("#c4904a", 0.6), rough: 0.12 },
+    ],
+  },
+  moon: {
+    kind: "moon",
+    noise: 41,
+    tilt: 0.03,
+    spin: 0.012,
+    phase: 0.2,
+    freq: 1.3,
+    sea: 0,
+    bump: 0.11,
+    cover: 0,
+    lights: 0,
+    colors: ["#b0a99f", "#60646a", "#ebe6dc", "#8e8880", "#706e6a"].map((c) => lin(c, 0.4)),
+    city: [0, 0, 0],
+    glow: [0, 0, 0],
+    air: null,
+    spec: 0,
+    rough: 0,
+    limb: 0,
+    flat: 1,
+    ring: null,
+    moons: [],
+  },
+  venus: {
+    kind: "deck",
+    noise: 43,
+    tilt: 0.05,
+    spin: 0.018,
+    phase: 0.9,
+    freq: 1,
+    sea: 0,
+    bump: 0,
+    cover: 0,
+    lights: 0,
+    colors: ["#f0e8da", "#d8c6a4", "#e8dcc4", "#c8b48c", "#f4eee4"].map((c) => lin(c, 0.9)),
+    city: [0, 0, 0],
+    glow: [0, 0, 0],
+    air: air({
+      h: 0.012,
+      hm: 0.008,
+      g: 0.7,
+      ray: [0.004, 0.008, 0.016],
+      mie: [0.06, 0.055, 0.045],
+      dust: [0.065, 0.065, 0.065],
+      top: 1.07,
+    }),
+    spec: 0,
+    rough: 0,
+    limb: 0.15,
+    flat: 0,
+    ring: null,
+    moons: [],
+  },
+  neptune: {
+    kind: "gas",
+    noise: 47,
+    tilt: 0.49,
+    spin: 0.09,
+    phase: 2.6,
+    freq: 0.9,
+    jets: 0.003,
+    bump: 0.5,
+    bands: (
+      [
+        [-1, "#2a44b0"],
+        [-0.7, "#3456c8"],
+        [-0.4, "#3e64dc"],
+        [-0.25, "#2e4cbc"],
+        [0, "#4068e0"],
+        [0.3, "#3a5fd6"],
+        [0.6, "#4a70e2"],
+        [1, "#3050c0"],
+      ] satisfies Stop[]
+    ).map(([y, c]) => [y, ...lin(c)]),
+    feature: [-0.36, 2.2, 0.08, 0.8],
+    tone: lin("#1c2c86"),
+    cover: 0.22,
+    limb: 0.3,
+    flat: 0,
+    air: null,
+    ring: null,
+    moons: [{ r: 0.055, a: 6, incl: 2.73, rate: 0.04, tone: lin("#d8c8c0", 0.7), rough: 0.35 }],
+  },
+} satisfies Record<string, World>;
+
+const worlds: Partial<Record<string, World>> = WORLDS;
+
+export const NAMES = [...Object.keys(WORLDS), "exo"];
+
+/* WORLD */
+
+export function world(name: string, seed = 0, { moons: count = -1, rings = "", type = "" }: WorldOptions = {}): Named {
+  const own: Lit =
+    name === "exo" ? exo(seed >>> 0, type) : { light: [1, 1, 1], ...structuredClone(worlds[name] ?? WORLDS.earth) };
+  const rand = rng(((seed >>> 0) ^ EXTRA) >>> 0);
+  own.name = worlds[name] ? name : "exo";
+  own.moons = own.moons.map((m) => ({ ...m, phase: rand() * TAU }));
+  if (count >= 0) {
+    while (own.moons.length < count) own.moons.push({ ...moonOf(rand), phase: rand() * TAU });
+    own.moons = own.moons.slice(0, Math.min(count, 3));
+  }
+  own.moons = own.moons.slice(0, 3);
+  if (rings === "off") own.ring = null;
+  if (rings === "on" && !own.ring)
+    own.ring = ringOf(
+      rand,
+      (seed ^ EXTRA) >>> 0,
+      own.bands ? own.bands[Math.floor(own.bands.length / 2)].slice(1) : null,
+    );
+  return own as Named;
+}

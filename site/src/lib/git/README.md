@@ -4,7 +4,7 @@
 - The input is always this repo's own tree, never another; the `git` block in `site.json` is `{ root, slug, branch }`, `branch` defaulting to `main`.
 - `/git/` is the `git` app with `deep`: the router answers every path under it with that row, and the browser draws each file and folder.
 - `../../../scripts/git.ts` is the build half, with `fs` and `git ls-files`; `view.ts` draws, with neither; `client.ts` runs the page; `code.ts` paints.
-- `../../../scripts/build.ts` calls `tree()` for the raw list and `forest()` for `git.json`; `../../pages/git/git.js` calls `start()`.
+- `../../../scripts/build.ts` calls `tree()` for the raw list and `forest()` for `git.json`; `../../pages/git/git.ts` calls `start()`.
 
 ## TREE
 

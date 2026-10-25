@@ -11,7 +11,7 @@
 ```
 site/
   package.json  bun.lock  bunfig.toml       deps, the bun run verbs, the dev plugin, the test preload
-  tsconfig.json                             tsc over every .ts file; paths: @mrlyprod/mrly/* -> ../bindings/js, #view -> its index.d.ts
+  tsconfig.json                             tsc over every .ts file; paths: @mrlyprod/mrly/* -> ../bindings/js, #view -> src/lib/view/index.ts
   site.json  redirects.json  wasm.lock      identity and tool blocks; moved urls; the wasm pin
   launchpad.json                            the Launchpad sections and the default dock
   public/                                   copied to the site root
@@ -27,33 +27,33 @@ site/
 
 request /about/
   edge   infra/edge.js: no dot in the last segment -> /index.html
-  shell  src/shell/index.html: boot.js, page.css, the tint style, the bar and the window, chrome.js + router.js
-  router the site:routes row -> src/shell/app.jsx (a page's index.jsx or an app's app:<id>) or src/shell/prose.jsx + /raw/<source> -> #main
-  figure src/lib/figure.js draws each host from an intersection queue
+  shell  src/shell/index.html: boot.ts, page.css, the tint style, the bar and the window, chrome.ts + router.ts
+  router the site:routes row -> src/shell/app.tsx (a page's index.tsx or an app's app:<id>) or src/shell/prose.tsx + /raw/<source> -> #main
+  figure src/lib/figure.ts draws each host from an intersection queue
 ```
 
-- Imports run one way (`test/imports.test.js`): an app imports `lib/`; a page `lib/` and `shell/`; the shell `lib/` and `styles/`; `lib/` only `lib/`; no route imports another.
+- Imports run one way (`test/imports.test.ts`): an app imports `lib/`; a page `lib/` and `shell/`; the shell `lib/` and `styles/`; `lib/` only `lib/`; no route imports another.
 
 ## THE UNIT
 
 - A route is the only unit: one folder, `/<id>/`, under `src/pages/` for a site page or `src/apps/` for an app; an id is taken once across both; `home` is `/`.
 - `app.json`: `title`, `line` (the lead), and `saver`, `hidden`, `deep` (each `true` or absent), `source` (a repo path of a markdown page), `route` (`/404.html` for `missing`). No other field; nothing else is configured.
-- The page is exactly one of `index.jsx`, `index.md` or `source`; a folder with none of them and both `scene.js` and `widget.jsx` is an app whose entry the build writes (`app:<id>`, `src/apps/README.md`).
-- `index.jsx` exports `mount(at)` and `unmount(at)`, an island under the still (title, figure, `<noscript>`), wide, bare, in a wide window and wearing `src/lib/app/mrly.css`; or `render(row, site, host, { text, rows, url, left, right })`, `unmount(host)`, optional `mount(host)`, a page drawn before the swap; an optional `layout` (`left`, `right`, `wide`, `bare`, `sheet`, `window`) overrides the island's.
-- `index.md` and `source` are prose, rendered by `src/shell/prose.jsx` from `/raw/<source>`; front matter `opener: true` (draws the route's icon above the lede), `button` and `link`, `legal: true` (the copyright line at the end).
-- `icon.js` is the route's figure, named by the id; a hidden route may omit it, a shown one may not.
-- `icon.svg` is the route's app icon: viewBox `0 0 1024 1024`, an optional `<defs>` first, the plate as the first shape with `class="back"`, then the glyph; no text, images, style or class; `data-dark`, `data-dark-stroke`, `data-mono` (`full`, `dim`, `hide`) and `data-key` steer the Dark, Clear and Tinted looks. The build checks each with `src/lib/appicon.js` and serves them all in `site:icons`.
-- `scene.js` and `widget.jsx`: every app has them; `src/apps/README.md` has the app contract.
-- Savers: a scene declares them as `export const SAVERS = [{ id, title, pick }]`, 1 to 3; `id` a slug once in the app, `title` at most 32 characters, `pick(rand)` a plain patch of `SPEC` or `PAGE.defaults` keys, never `seed`, `still` an optional capture time in ms (1 to 10000, default 1000) for the Screensavers grid. A saver's id is `<app>/<id>`; the shell's live in `src/shell/tiles.js` as `mrly`.
+- The page is exactly one of `index.tsx`, `index.md` or `source`; a folder with none of them and both `scene.ts` and `widget.tsx` is an app whose entry the build writes (`app:<id>`, `src/apps/README.md`).
+- `index.tsx` exports `mount(at)` and `unmount(at)`, an island under the still (title, figure, `<noscript>`), wide, bare, in a wide window and wearing `src/lib/app/mrly.css`; or `render(row, site, host, { text, rows, url, left, right })`, `unmount(host)`, optional `mount(host)`, a page drawn before the swap; an optional `layout` (`left`, `right`, `wide`, `bare`, `sheet`, `window`) overrides the island's.
+- `index.md` and `source` are prose, rendered by `src/shell/prose.tsx` from `/raw/<source>`; front matter `opener: true` (draws the route's icon above the lede), `button` and `link`, `legal: true` (the copyright line at the end).
+- `icon.ts` is the route's figure, named by the id; a hidden route may omit it, a shown one may not.
+- `icon.svg` is the route's app icon: viewBox `0 0 1024 1024`, an optional `<defs>` first, the plate as the first shape with `class="back"`, then the glyph; no text, images, style or class; `data-dark`, `data-dark-stroke`, `data-mono` (`full`, `dim`, `hide`) and `data-key` steer the Dark, Clear and Tinted looks. The build checks each with `src/lib/appicon.ts` and serves them all in `site:icons`.
+- `scene.ts` and `widget.tsx`: every app has them; `src/apps/README.md` has the app contract.
+- Savers: a scene declares them as `export const SAVERS = [{ id, title, pick }]`, 1 to 3; `id` a slug once in the app, `title` at most 32 characters, `pick(rand)` a plain patch of `SPEC` or `PAGE.defaults` keys, never `seed`, `still` an optional capture time in ms (1 to 10000, default 1000) for the Screensavers grid. A saver's id is `<app>/<id>`; the shell's live in `src/shell/tiles.ts` as `mrly`.
 - `saver: true` in `app.json` is the bridge: with no `SAVERS`, the app is one saver, `<app>/<app>`, named after it; the flag beside `SAVERS` stops the build.
-- Blog posts: `src/pages/blog/<slug>/index.md` is `/blog/<slug>/` (front matter `title`, `date` YYYY-MM-DD, `lead`), with its `icon.js`, the figure `blog-<slug>`.
+- Blog posts: `src/pages/blog/<slug>/index.md` is `/blog/<slug>/` (front matter `title`, `date` YYYY-MM-DD, `lead`), with its `icon.ts`, the figure `blog-<slug>`.
 - `site.json` `desk` names the desktop saver: an app (its first saver) or a full saver id.
 - `launchpad.json` is where every shown route lives: `sections`, each `{ name, apps }` in order, every route but home and the Launchpad itself in exactly one; `dock`, the groups of the default dock. The Launchpad's Export JSON writes this file byte for byte; the build stops on an unknown id, an id twice, a left-out route and a name twice.
 
 ## ROUTES
 
 - `scripts/build.ts` collects the rows from `src/pages/*/app.json` and `src/apps/*/app.json`, home first, then by id: `{ route, kind, title, source, date, lead, figure, hidden, meta }`.
-- `kind` is `app` (an `index.jsx` or a written entry) or `prose` (a markdown source); `meta` holds `id`, `scene` (an app of `scene.js` and `widget.jsx`), `deep`, and `prose` (`page`, `post` or `source`).
+- `kind` is `app` (an `index.tsx` or a written entry) or `prose` (a markdown source); `meta` holds `id`, `scene` (an app of `scene.ts` and `widget.tsx`), `deep`, and `prose` (`page`, `post` or `source`).
 - `source` is the repo path served at `/raw/<source>` for a prose row, null otherwise; no row carries a body.
 - `/mrlymath/` renders `crates/mrly-core/src/name/NAMES.md`, so the page and the crate never disagree.
 - `research.json` is built from `../research/*/README.md` (a folder with a front matter `title`; `shared/` never): `{ topics: [{ slug, title, date, lead, figure, figures }] }`, `date` (YYYY-MM-DD, required) and `lead` the README's front matter, `figure` the README's, `figures` every figure of `<topic>/figures/`.
@@ -64,14 +64,14 @@ request /about/
 
 ## FIGURES
 
-- The roster: `src/{pages,apps}/*/icon.js` (name = id), `src/pages/blog/*/icon.js` (name `blog-<slug>`), `../research/*/figures/*.ts` and `../research/shared/figures/*.ts` (name = stem); a name is lowercase words and digits joined by hyphens, taken once, and the file exports `default`.
+- The roster: `src/{pages,apps}/*/icon.ts` (name = id), `src/pages/blog/*/icon.ts` (name `blog-<slug>`), `../research/*/figures/*.ts` and `../research/shared/figures/*.ts` (name = stem); a name is lowercase words and digits joined by hyphens, taken once, and the file exports `default`.
 - A figure exports `default function draw(pen, ink, t)`, `t` in [0, 1) over one loop.
 - `size`: `[width, height]`, default `[1024, 1024]`; a non-square size keeps its aspect in the host.
 - `still`: the `t` a still figure draws, default 0.
 - `loop` in seconds, with `frames`: an animated figure only; none in the live set.
 - `units`: the `@mrlyprod/mrly` wasm units it imports, e.g. `{ math }`; the caller initialises them before the first draw.
 - `ink` is `ink(tinted(dark | light, ...))` from `src/lib/theme`: the tint's hue sits in the blue slot.
-- A route icon is a plate drawn with `src/lib/plate.js` on a clear ground: the build lists every `src/{pages,apps}/<id>/icon.js` as a plate; a research or blog figure keeps the ink ground.
+- A route icon is a plate drawn with `src/lib/plate.ts` on a clear ground: the build lists every `src/{pages,apps}/<id>/icon.ts` as a plate; a research or blog figure keeps the ink ground.
 - A figure is a pure function of its inputs: no file, DOM, Date or Math.random.
 - A figure asserts its facts and throws when one breaks; heavy facts are memoised at module level; pixels are never cached.
 - The pen and the kit live in `src/lib/view`, imported as `#view`: `canvas` in the browser, `raster` in Bun and the tests.
@@ -82,9 +82,9 @@ request /about/
 ## BUILD
 
 - `bun run build` runs `scripts/build.ts` into `dist/`, or into `MRLY_DIST`; pure Bun, no Chrome, no cargo.
-- Prime: bundle `src/shell/boot.js`, `src/styles/git.css` and `src/lib/app/mrly.css`; each woff2 ships as `/fonts/<stem>-<sha8>.woff2`.
-- Collect: the routes, the rows, the figure roster, the wasm units, the kept redirects, the raw list (`git ls-files`), the research topics, the savers (every `scene.js` that exports `SAVERS`, loaded in Bun with `require`).
-- Bundle: one `Bun.build` with splitting over `src/shell/index.html`, `src/shell/app.jsx`, `src/shell/prose.jsx`, `src/pages/git/git.js`, every live figure, every `src/pages/<id>/index.jsx` and `src/shell/lock.js`; each `app:<id>` is a chunk of the `site:apps` thunks.
+- Prime: bundle `src/shell/boot.ts`, `src/styles/git.css` and `src/lib/app/mrly.css`; each woff2 ships as `/fonts/<stem>-<sha8>.woff2`.
+- Collect: the routes, the rows, the figure roster, the wasm units, the kept redirects, the raw list (`git ls-files`), the research topics, the savers (every `scene.ts` that exports `SAVERS`, loaded in Bun with `require`).
+- Bundle: one `Bun.build` with splitting over `src/shell/index.html`, `src/shell/app.tsx`, `src/shell/prose.tsx`, `src/pages/git/git.ts`, every live figure, every `src/pages/<id>/index.tsx` and `src/shell/lock.ts`; each `app:<id>` is a chunk of the `site:apps` thunks.
 - Names: entries `[name]-[hash]`, chunks `lib-[hash]`; the build refuses a bundled file with no hash.
 - Shell: the bundled `index.html` with the hashed boot script swapped in for `/boot.js` and its empty `<style id="tint">` filled with `tintCss(site.tint)` (`withTint`, which dev uses too); `404.html` is its copy.
 - Copy: `raw/<path>` for every listed file, `public/`, the font licences.
@@ -96,10 +96,10 @@ request /about/
 - `scripts/build.ts` is one Bun plugin; Bun cannot import a computed path, so each lazy family is a module of `() => import()` thunks.
 - `site:routes`: `{ site, rows }`; `site` carries `savers` (`{ id, app, name, title }`, the desk app's first, then the apps by name, the shell's last), `desk` (a saver id), `version` (of `@mrlyprod/mrly`), `units` (the live wasm units) and `licences` (`{ name, href }`, each licence under `/fonts/` and the repo `LICENSE`).
 - `site:figures`: name to figure chunk, the wasm urls of the live units, and the plates.
-- `site:apps`: id to route chunk, `own` (the routes whose index.jsx exports `render`), plus `lock`, the desk and its lock screen.
-- `app:<id>`: an app's entry, `entry(dir)`: `page(Widget, { seed: 0, ...PAGE.defaults }, PAGE)` from its `scene.js` and `widget.jsx`.
+- `site:apps`: id to route chunk, `own` (the routes whose index.tsx exports `render`), plus `lock`, the desk and its lock screen.
+- `app:<id>`: an app's entry, `entry(dir)`: `page(Widget, { seed: 0, ...PAGE.defaults }, PAGE)` from its `scene.ts` and `widget.tsx`.
 - `site:css`: the `git` and `mrly` sheet urls.
-- `apps:scenes`: app id to its scene chunk, for every app with a saver, and `mrly` for `src/shell/tiles.js`.
+- `apps:scenes`: app id to its scene chunk, for every app with a saver, and `mrly` for `src/shell/tiles.ts`.
 - `@mrlyprod/mrly/<door>` resolves through `tsconfig.json` paths onto `../bindings/js` and `#view` through the `imports` of `package.json`; the `mrly` plugin, also used by the figure test and `time`, maps both for research figures outside `site/`; `wasm/<unit>/mrly_js_<unit>*` resolves to `site/wasm/`.
 
 ## WASM

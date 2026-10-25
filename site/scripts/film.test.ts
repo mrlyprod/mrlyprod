@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { roll, sheet, tile } from "./film/page.js";
+import { roll, sheet, tile } from "./film/page.ts";
 
 test("the harness plays each cue at its own t before the frame that passes it, then draws at from + i x step", async () => {
   const seen: [string, number][] = [];

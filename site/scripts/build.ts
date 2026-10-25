@@ -4,14 +4,36 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import type { BuildArtifact, BunPlugin } from "bun";
 import { rawKind } from "../infra/mime.ts";
 import SITE from "../site.json";
-import { appicon } from "../src/lib/appicon.js";
+import { appicon } from "../src/lib/appicon.ts";
 import { ext, HUGE, IMAGE, reads } from "../src/lib/git/view.ts";
 import { front, NAME, figures as named, plain, summary } from "../src/lib/md/md.ts";
 import { esc } from "../src/lib/md/text.ts";
-import { rng } from "../src/lib/rand.js";
-import { tintCss } from "../src/lib/theme/tint.js";
+import { rng } from "../src/lib/rand.ts";
+import { tintCss } from "../src/lib/theme/tint.ts";
 import { forest, config as gitConfig, TREE, tree } from "./git.ts";
 import { llms, type Shelf } from "./llms.ts";
+
+/* NAMES */
+
+export const NAMES = {
+  index: "index.tsx",
+  scene: "scene.ts",
+  widget: "widget.tsx",
+  icon: "icon.ts",
+  page: "page.tsx",
+  lock: "lock.ts",
+  tiles: "tiles.ts",
+  boot: "boot.ts",
+  app: "app.tsx",
+  prose: "prose.tsx",
+  git: "git.ts",
+} as const;
+
+type Name = keyof typeof NAMES;
+
+const under = (dir: string, name: Name) => join(dir, NAMES[name]);
+
+export const spells = <N extends Name>(file: string | null, name: N): file is (typeof NAMES)[N] => file === NAMES[name];
 
 /* PATHS */
 
@@ -25,8 +47,9 @@ const ROOTS = ["pages", "apps"].map((name) => join(org, "src", name));
 const BLOG = join(org, "src", "pages", "blog");
 const RESEARCH = join(repo, "research");
 const LAUNCHPAD = join(org, "launchpad.json");
-const SHELLS = ["app", "prose"].map((name) => join(org, "src", "shell", `${name}.jsx`));
-const LOCK = join(org, "src", "shell", "lock.js");
+const shellFile = (name: Name) => under(join(org, "src", "shell"), name);
+const SHELLS = [shellFile("app"), shellFile("prose")];
+const LOCK = shellFile("lock");
 const TINT = '<style id="tint"></style>';
 const HASHED = /-[0-9a-z]{8}\.[^./]+$/;
 const NAMING = { entry: "[name]-[hash].[ext]", chunk: "lib-[hash].[ext]", asset: "[name]-[hash].[ext]" };
@@ -52,7 +75,7 @@ export type Row = {
   lead: string;
   figure: string | null;
   hidden: boolean;
-  meta: Record<string, unknown>;
+  meta: { id?: string; scene?: true; deep?: true; prose?: "source" | "page" | "post"; date?: string };
 };
 
 export type Out = { path: string; bytes: Uint8Array | string; type?: string; fixed?: boolean };
@@ -113,6 +136,15 @@ const scanner = new Bun.Transpiler({ loader: "ts" });
 
 const jsx = new Bun.Transpiler({ loader: "jsx" });
 
+const scanners = new Map<string, Bun.Transpiler>([
+  ["js", jsx],
+  ["jsx", jsx],
+  ["ts", scanner],
+  ["tsx", new Bun.Transpiler({ loader: "tsx" })],
+]);
+
+const scan = (file: string) => (scanners.get(ext(file)) ?? scanner).scan(read(file));
+
 const UNITS = readdirSync(join(MRLY, "units")).sort();
 
 const UNIT = /(?:@mrlyprod\/mrly\/|mrly_js_)([a-z]+)/g;
@@ -144,8 +176,8 @@ export const plates = (figures: Figure[]) =>
 
 export function roster(): Figure[] {
   const found = [
-    ...places().map(({ id, dir }) => ({ name: id, file: join(dir, "icon.js") })),
-    ...folders(BLOG).map((slug) => ({ name: `blog-${slug}`, file: join(BLOG, slug, "icon.js") })),
+    ...places().map(({ id, dir }) => ({ name: id, file: under(dir, "icon") })),
+    ...folders(BLOG).map((slug) => ({ name: `blog-${slug}`, file: under(join(BLOG, slug), "icon") })),
     ...folders(RESEARCH).flatMap((topic) =>
       drawn(join(RESEARCH, topic, "figures")).map((name) => ({
         name: name.slice(0, -3),
@@ -162,8 +194,7 @@ export function roster(): Figure[] {
     if (seen.has(one.name))
       throw new Error(`site: two figures take the name ${one.name}: ${seen.get(one.name)} and ${rel(one.file)}`);
     seen.set(one.name, rel(one.file));
-    if (!scanner.scan(read(one.file)).exports.includes("default"))
-      throw new Error(`site: ${rel(one.file)} exports no default draw`);
+    if (!scan(one.file).exports.includes("default")) throw new Error(`site: ${rel(one.file)} exports no default draw`);
   }
   return found.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -251,14 +282,12 @@ function topics(known: Set<string>): Topic[] {
 
 const FIELDS = new Set(["title", "line", "saver", "hidden", "deep", "source", "route"]);
 
-const PAGES = ["index.jsx", "index.md"];
+const PARTS: Name[] = ["scene", "widget"];
 
-const PARTS = ["scene.js", "widget.jsx"];
+const PAGER = under(join(org, "src", "lib", "app"), "page");
 
-const PAGER = join(org, "src", "lib", "app", "page.jsx");
-
-function apps(): App[] {
-  const list = places().map(({ id, dir }): App => {
+export function apps(found = places()): App[] {
+  const list = found.map(({ id, dir }): App => {
     const at = (...parts: string[]) => join(dir, ...parts);
     if (!existsSync(at("app.json")))
       throw new Error(`site: ${rel(dir)}/ holds no app.json; every folder of src/pages/ and src/apps/ is a route`);
@@ -274,18 +303,21 @@ function apps(): App[] {
     if (one.route !== undefined && !one.route.startsWith("/")) throw say(`routes to ${one.route}, which is not rooted`);
     if (one.source !== undefined && !existsSync(join(repo, one.source)))
       throw say(`reads ${one.source}, which does not exist`);
-    const parts = PARTS.every((name) => existsSync(at(name)));
-    const given = [...PAGES.filter((name) => existsSync(at(name))), ...(one.source ? ["source"] : [])];
-    const pages = given.length || !parts ? given : [PARTS[0]!];
+    const parts = PARTS.every((name) => existsSync(at(NAMES[name])));
+    const given = [
+      ...[NAMES.index, "index.md"].filter((name) => existsSync(at(name))),
+      ...(one.source ? ["source"] : []),
+    ];
+    const pages = given.length || !parts ? given : [NAMES.scene];
     if (pages.length !== 1)
       throw say(
-        `needs exactly one page of index.jsx, index.md, a source, or scene.js with widget.jsx, and has ${pages.length ? pages.join(" and ") : "none"}`,
+        `needs exactly one page of ${NAMES.index}, index.md, a source, or ${NAMES.scene} with ${NAMES.widget}, and has ${pages.length ? pages.join(" and ") : "none"}`,
       );
-    const lost = one.saver ? ["scene.js", "widget.jsx"].find((name) => !existsSync(at(name))) : undefined;
-    if (lost) throw say(`is a saver, and ${rel(at(lost))} is missing`);
-    const icon = existsSync(at("icon.js"));
+    const lost = one.saver ? PARTS.find((name) => !existsSync(at(NAMES[name]))) : undefined;
+    if (lost) throw say(`is a saver, and ${rel(dir)}/${NAMES[lost]} is missing`);
+    const icon = existsSync(at(NAMES.icon));
     if (!icon && !one.hidden)
-      throw say(`shows on the site, and ${rel(at("icon.js"))} is missing; only a hidden app goes without an icon`);
+      throw say(`shows on the site, and ${rel(dir)}/${NAMES.icon} is missing; only a hidden app goes without an icon`);
     if (!one.hidden && !existsSync(at("icon.svg")))
       throw say(`shows on the site, and ${rel(at("icon.svg"))} is missing; every shown app wears an app icon`);
     return { id, dir, ...one, page: pages[0] === "source" ? null : pages[0]!, icon };
@@ -300,20 +332,20 @@ export type Saver = { id: string; app: string; name: string; title: string };
 
 export type Host = { id: string; title: string; saver?: true; file: string };
 
-export const SHELL: Host = { id: "mrly", title: "Mrly", file: join(org, "src", "shell", "tiles.js") };
+export const SHELL: Host = { id: "mrly", title: "Mrly", file: shellFile("tiles") };
 
 const record = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && [Object.prototype, null].includes(Object.getPrototypeOf(value));
 
 export const hosts = (list: App[]): Host[] => [
   ...list
-    .filter((one) => existsSync(join(one.dir, PARTS[0]!)))
-    .map((one) => ({ id: one.id, title: one.title, saver: one.saver, file: join(one.dir, PARTS[0]!) })),
+    .filter((one) => existsSync(under(one.dir, "scene")))
+    .map((one) => ({ id: one.id, title: one.title, saver: one.saver, file: under(one.dir, "scene") })),
   SHELL,
 ];
 
 function evaluate(file: string): Record<string, unknown> {
-  if (!jsx.scan(read(file)).exports.includes("SAVERS")) return {};
+  if (!scan(file).exports.includes("SAVERS")) return {};
   try {
     return require(file);
   } catch (error) {
@@ -431,15 +463,15 @@ function rows(list: App[], blog: Post[]): Row[] {
   for (const app of list) {
     const route = app.route ?? (app.id === "home" ? "/" : `/${app.id}/`);
     const source = app.page === "index.md" ? rel(join(app.dir, "index.md")) : (app.source ?? null);
-    const meta = {
+    const meta: Row["meta"] = {
       id: app.id,
-      ...(app.page === PARTS[0] ? { scene: true } : {}),
+      ...(spells(app.page, "scene") ? { scene: true } : {}),
       ...(app.deep ? { deep: true } : {}),
       ...(source ? { prose: app.source ? "source" : "page" } : {}),
     };
     out.push({
       route,
-      kind: app.page === "index.jsx" || app.page === PARTS[0] ? "app" : "prose",
+      kind: spells(app.page, "index") || spells(app.page, "scene") ? "app" : "prose",
       title: app.title,
       source,
       date: null,
@@ -501,6 +533,8 @@ export function state(): State {
     for (const name of named(read(join(repo, row.source))))
       if (!known.has(name)) throw new Error(`site: ${row.source} shows the figure ${name}, which no roster file draws`);
   }
+  if (!all.some((row) => row.meta.id === "missing"))
+    throw new Error("site: src/pages/missing/ is missing, and its row draws every path that is no route");
   const units = live(figures);
   for (const unit of units)
     if (!existsSync(unitWasm(unit)))
@@ -549,9 +583,9 @@ const thunks = (list: [string, string][]) =>
 
 const appFiles = (list: App[]): [string, string][] =>
   list.flatMap((one): [string, string][] =>
-    one.page === "index.jsx"
-      ? [[one.id, join(one.dir, "index.jsx")]]
-      : one.page === PARTS[0]
+    spells(one.page, "index")
+      ? [[one.id, join(one.dir, one.page)]]
+      : spells(one.page, "scene")
         ? [[one.id, `app:${one.id}`]]
         : [],
   );
@@ -564,14 +598,14 @@ const scenes = (ready: State): [string, string][] => {
 export const entry = (dir: string) =>
   [
     `import { page } from ${JSON.stringify(PAGER)};`,
-    `import { PAGE } from ${JSON.stringify(join(dir, PARTS[0]!))};`,
-    `import { Widget } from ${JSON.stringify(join(dir, PARTS[1]!))};`,
+    `import { PAGE } from ${JSON.stringify(under(dir, "scene"))};`,
+    `import { Widget } from ${JSON.stringify(under(dir, "widget"))};`,
     "export const { mount, unmount } = page(Widget, { seed: 0, ...PAGE.defaults }, PAGE);",
   ].join("\n");
 
 export const own = (list: App[]) =>
   list
-    .filter((one) => one.page === "index.jsx" && jsx.scan(read(join(one.dir, "index.jsx"))).exports.includes("render"))
+    .filter((one) => spells(one.page, "index") && scan(join(one.dir, one.page)).exports.includes("render"))
     .map((one) => one.id);
 
 export function icons(list: App[]): string {
@@ -595,7 +629,7 @@ export function modules(ready: Ready): Record<string, string> {
     "site:icons": icons(ready.apps),
     "apps:scenes": `export const scenes = ${thunks(scenes(ready))};`,
     ...Object.fromEntries(
-      ready.apps.filter((one) => one.page === PARTS[0]).map((one) => [`app:${one.id}`, entry(one.dir)]),
+      ready.apps.filter((one) => spells(one.page, "scene")).map((one) => [`app:${one.id}`, entry(one.dir)]),
     ),
   };
 }
@@ -665,11 +699,9 @@ function credits(raw: string[]) {
 }
 
 async function prime(seen: Map<string, string>) {
-  const boot = join(org, "src", "shell", "boot.js");
+  const boot = shellFile("boot");
   if (scanner.scanImports(read(boot)).length)
-    throw new Error(
-      "site: src/shell/boot.js imports nothing; it runs alone as the blocking classic script of the shell",
-    );
+    throw new Error(`site: ${rel(boot)} imports nothing; it runs alone as the blocking classic script of the shell`);
   const sheets = { git: join(org, "src", "styles", "git.css"), mrly: join(org, "src", "lib", "app", "mrly.css") };
   const built = await Bun.build({
     entrypoints: [boot, ...Object.values(sheets)],
@@ -831,7 +863,7 @@ export async function build(out = DIST): Promise<Built> {
   const entries = [
     join(org, "src", "shell", "index.html"),
     ...SHELLS,
-    join(org, "src", "pages", "git", "git.js"),
+    under(join(org, "src", "pages", "git"), "git"),
     ...ready.figures.map((one) => one.file),
     ...appFiles(ready.apps).flatMap(([, file]) => (file.startsWith("/") ? [file] : [])),
     LOCK,

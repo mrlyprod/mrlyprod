@@ -19,7 +19,7 @@
       "!site/src/pages/stats/fixture.json"
     ]
   },
-  "formatter": { "indentStyle": "space", "lineWidth": 120, "includes": ["**", "!site/src/lib/view/index.d.ts"] },
+  "formatter": { "indentStyle": "space", "lineWidth": 120, "includes": ["**"] },
   "linter": {
     "rules": {
       "preset": "recommended",
@@ -33,7 +33,7 @@
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "overrides": [
     {
-      "includes": ["site/src/shell/dock.jsx", "site/src/pages/stats/index.jsx"],
+      "includes": ["site/src/shell/dock.tsx", "site/src/pages/stats/index.tsx"],
       "linter": { "rules": { "suspicious": { "noArrayIndexKey": "off" } } }
     }
   ]

@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "bun@1.4.3",
   "imports": {
-    "#view": "./src/lib/view/index.js",
+    "#view": "./src/lib/view/index.ts",
     "#view/*": "./src/lib/view/*"
   },
   "scripts": {
@@ -42,6 +42,9 @@
   "devDependencies": {
     "@biomejs/biome": "2.6.3",
     "@types/bun": "^1.4.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
     "typescript": "^7.0.2"
   }
 }
