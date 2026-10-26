@@ -140,7 +140,7 @@ short of the full grid by `24*k - 16`. (Proved; Verified by brute force at `k = 
 
 ## The slice ink, proved order by order
 
-The Walsh spectrometer - the exact quasipolynomial that reads a 3D parity design's slice ink off its Walsh spectrum, level by level, `ink_dim(side) = S0 - (1/2) S3 s + [(2/3) S1 - (1/3) S2 s]/side + [(2/3) S2 - ((1/3) S1 + (1/2) S3) s]/side^2` at `s = (-1)^((3*side-1)/2)`, with `S_j` the design's level-`j` Walsh sum, proved in the [walsh-spectrometer](https://github.com/carlomitchener/carlomitchener/tree/main/research/walsh-spectrometer) lane - has all three orders proved: the constant terms and the `1/n` and `1/n^2` terms alike. **(Proved.)**
+The Walsh spectrometer - the exact quasipolynomial that reads a 3D parity design's slice ink off its Walsh spectrum, level by level, `ink_dim(side) = S0 - (1/2) S3 s + [(2/3) S1 - (1/3) S2 s]/side + [(2/3) S2 - ((1/3) S1 + (1/2) S3) s]/side^2` at `s = (-1)^((3*side-1)/2)`, with `S_j` the design's level-`j` Walsh sum, proved in the [walsh-spectrometer](../../hexagon/claims/diagonal-slice-stack.md) lane - has all three orders proved: the constant terms and the `1/n` and `1/n^2` terms alike. **(Proved.)**
 
 Fix odd `side` and let
 

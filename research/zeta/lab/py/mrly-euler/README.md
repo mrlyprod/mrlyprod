@@ -7,7 +7,7 @@
 - `dual`: the periodic zeta rebuilt from Hurwitz's formula, DLMF 25.13.3, solved for `F(-t, s)`.
 - `fibre`: the Lerch-Mobius series `M(s, a/Q) = sum_(n>=1) mu(n) e(-n a/Q) n^(-s)` written as a finite combination of inverse Dirichlet L-functions of modulus dividing `Q`, checked as a coefficient identity.
 - `word`: the free-monoid zeta `1/(1 - fill base^(-s))` expanded as an Euler product over Lyndon words in the digit alphabet.
-- `beurling`: the free semigroup `N_F` on the primes lying in `S_F`, with `pi_F(x)`, `N_F(x)`, the Mertens `M_B(x)` and its exponent by residue class of `log_base x`, to `x = 10^6`.
+- `beurling`: the free semigroup `N_B` on the primes lying in `S_F`, with `pi_F(x)`, `N_B(x)`, the Mertens `M_B(x)` and its exponent by residue class of `log_base x`, to `x = 10^6`.
 - Domain: `base <= 12` for the wall, minimal witnesses searched to product `4000`; coefficients to `n = 4000` for the pair; `level <= 5` for the position identity; `n = 3000` for the fibre identity; `u^16` for the word product; `x = 10^6` for the Beurling census.
 
 ## RUN
@@ -30,7 +30,7 @@
 - Hurwitz reflection error below `2.1e-30` at `s = 3.3`, `2.7 + 1.9i` and `0.6 + 4.1i`
 - fibre identity maximum coefficient error `2.6e-12` over eleven pairs `(Q, a)` including `Q = 3, 9, 27, 100`, Euler-factor step below `7.4e-16`
 - Lyndon expansion equals `1/(1 - fill u)` through `u^16` at `fill 2, 3, 4, 9, 10`; `c_2(level) = 2, 1, 2, 3, 6, 9, 18, 30, 56, 99`, [A001037](https://oeis.org/A001037)
-- Beurling census: base 3 `{0,2}` has the single prime `2` and `M_B(x) = 0` for `x >= 2`; base 3 `{0,1}` has `525` primes, `N_F(920483) = 2198`, running `max abs(M_B) = 98`, exponent `0.3339` against `alpha/2 = 0.3155`; base 10 missing `9` has `35139` primes, `N_F(10^6) = 488864` against `x^alpha = 531441`, `M_B(10^6) = 1860`, running max `1866`, exponent `0.5452` against `alpha/2 = 0.4771`, climbing `0.4203, 0.4882, 0.5452` at `10^4, 10^5, 10^6`
+- Beurling census: base 3 `{0,2}` has the single prime `2` and `M_B(x) = 0` for `x >= 2`; base 3 `{0,1}` has `525` primes, `N_B(920483) = 2198`, running `max abs(M_B) = 98`, exponent `0.3339` against `alpha/2 = 0.3155`; base 10 missing `9` has `35139` primes, `N_B(10^6) = 488864` against `x^alpha = 531441`, `M_B(10^6) = 1860`, running max `1866`, exponent `0.5452` against `alpha/2 = 0.4771`, climbing `0.4203, 0.4882, 0.5452` at `10^4, 10^5, 10^6`
 - the full base-10 control reproduces `M(10^4) = -23`, `M(10^5) = -48`, `M(10^6) = 212`, [A084237](https://oeis.org/A084237)
 
 ## SOURCES

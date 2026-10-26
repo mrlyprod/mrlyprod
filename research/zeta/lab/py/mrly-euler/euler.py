@@ -704,9 +704,9 @@ def generated(P, X):
 def beurling(X=10**6):
     from math import log
 
-    print("BEURLING SYSTEM ON A DESIGN: N_F is the free semigroup on the primes of S_F")
+    print("BEURLING SYSTEM ON A DESIGN: N_B is the free semigroup on the primes of S_F")
     print(
-        "N_F is not S_F. mu_B is the restriction of mu, M_B(x) = sum of mu over N_F below x"
+        "N_B is not S_F. mu_B is the restriction of mu, M_B(x) = sum of mu over N_B below x"
     )
     allp = primes_to(X)
     cases = [
@@ -726,7 +726,7 @@ def beurling(X=10**6):
             % (name, k, alpha, alpha / 2, X, len(P))
         )
         print(
-            "  x            pi_F(x)   N_F(x)     M_B(x)    max abs M_B   log max / log x  log max / log N_F  log_q x"
+            "  x            pi_F(x)   N_B(x)     M_B(x)    max abs M_B   log max / log x  log max / log N_B  log_q x"
         )
         idx = 0
         run = 0

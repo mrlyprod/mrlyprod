@@ -31,5 +31,5 @@
 
 | ref | title | url |
 |---|---|---|
-| order-sensitivity-of-kronecker-words | Order Sensitivity of Kronecker Design Words: What the Perfect Shuffle Cannot See; the shelf paper of the order half of the Kronecker word order paper, with its verification script | https://github.com/carlomitchener/carlomitchener/tree/main/research/order-sensitivity-of-kronecker-words |
-| component-exponent-of-kronecker-words | The Component Exponent of a Two-Letter Kronecker Word; the shelf paper of the exponent half, with its verification script | https://github.com/carlomitchener/carlomitchener/tree/main/research/component-exponent-of-kronecker-words |
+| order-sensitivity-of-kronecker-words | Order Sensitivity of Kronecker Design Words: What the Perfect Shuffle Cannot See; the shelf paper of the order half of the Kronecker word order paper, with its verification script | papers/kronecker-word-order.md |
+| component-exponent-of-kronecker-words | The Component Exponent of a Two-Letter Kronecker Word; the shelf paper of the exponent half, with its verification script | papers/kronecker-word-order.md |

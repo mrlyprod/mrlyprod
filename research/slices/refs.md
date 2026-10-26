@@ -17,4 +17,4 @@
 
 | ref | title | url |
 |---|---|---|
-| slice-recurrence-order | Menger Diagonal Slices: A Recurrence of Order ceil(D/2); the shelf paper of the order law, the product formula over 3-adic angle towers and the pinning of rho_dim | https://github.com/carlomitchener/carlomitchener/tree/main/research/slice-recurrence-order |
+| slice-recurrence-order | Menger Diagonal Slices: A Recurrence of Order ceil(D/2); the shelf paper of the order law, the product formula over 3-adic angle towers and the pinning of rho_dim | ../cuts/papers/slice-sign-law.md |

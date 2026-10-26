@@ -536,5 +536,5 @@ What the tree does not regenerate, and only that, rests on the two shelf papers 
 - Hocking 2023, Three-Dimensional Diagonal Cross-Sections of Four-Dimensional Menger Sponges, Bridges 2023 Conference Proceedings, 291-294. [archive.bridgesmathart.org](https://archive.bridgesmathart.org/2023/bridges2023-291.pdf)
 - OEIS A299916, the `D = 3` slice census up to an index shift, signature `(9, -12)`. [oeis.org/A299916](https://oeis.org/A299916)
 - OEIS A001045, the Jacobsthal numbers `(2^n - (-1)^n)/3`. [oeis.org/A001045](https://oeis.org/A001045)
-- The shelf paper of the order law, the product formula and the odd half, with its verification script. [github.com/carlomitchener/carlomitchener](https://github.com/carlomitchener/carlomitchener/tree/main/research/slice-recurrence-order)
-- The shelf paper of the even half at bases `3` and `5`, the certificate machines, the transient constant, the tent rank law and the layer-two window law, with its verification and certification scripts. [github.com/carlomitchener/carlomitchener](https://github.com/carlomitchener/carlomitchener/tree/main/research/slice-sign-even-half)
+- The shelf paper of the order law, the product formula and the odd half, with its verification script.
+- The shelf paper of the even half at bases `3` and `5`, the certificate machines, the transient constant, the tent rank law and the layer-two window law, with its verification and certification scripts.

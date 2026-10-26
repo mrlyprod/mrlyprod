@@ -300,5 +300,5 @@ Every count in this paper is printed by one of two studies of the tree, each run
 - Jungers 2009, The Joint Spectral Radius: Theory and Applications, Springer LNCIS 385; cited for the asymptotic invariant of a noncommuting product along an arbitrary word. [doi.org/10.1007/978-3-540-95980-9](https://doi.org/10.1007/978-3-540-95980-9)
 - Blondel and Nesterov 2005, Computationally efficient approximations of the joint spectral radius, SIAM J. Matrix Anal. Appl. 27, 256-272; read at source: equation (1.3) and Theorem 3, the Kronecker lifting bracket. [arxiv.org/abs/math/0407485](https://arxiv.org/abs/math/0407485)
 - OEIS A010060, the Thue-Morse sequence, the parity of the binary digit sum of `n`. [oeis.org/A010060](https://oeis.org/A010060)
-- The shelf paper of the order-sensitivity half, with its verification script. [github.com/carlomitchener/carlomitchener](https://github.com/carlomitchener/carlomitchener/tree/main/research/order-sensitivity-of-kronecker-words)
-- The shelf paper of the component-exponent half, with its verification script. [github.com/carlomitchener/carlomitchener](https://github.com/carlomitchener/carlomitchener/tree/main/research/component-exponent-of-kronecker-words)
+- The shelf paper of the order-sensitivity half, with its verification script. [claims/order-sensitivity.md](../claims/order-sensitivity.md)
+- The shelf paper of the component-exponent half, with its verification script. [claims/component-exponent.md](../claims/component-exponent.md)

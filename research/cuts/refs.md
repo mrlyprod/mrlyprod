@@ -20,8 +20,8 @@
 | Diaconis and Fulman 2009 | Carries, shuffling, and an amazing matrix, Amer. Math. Monthly 116, 788-803; read in the arXiv version: the introduction recalls Holte's carries chain on `{0, ..., n-1}` for `n` summands with uniform digits in base `b`, its transition matrix (H1) `P(i, j) = b^(-n) sum_r (-1)^r C(n+1, r) C(n - 1 - i + (j + 1 - r) b, n)` and the base-2 form (H2); the eigenvalue and eigenvector properties were not read here | https://arxiv.org/abs/0806.3583 |
 | Holte 1997 | Carries, combinatorics, and an amazing matrix, Amer. Math. Monthly 104, 138-149; carried from Diaconis and Fulman 2009, not read at its source | https://doi.org/10.2307/2974981 |
 | Glaisher 1899 | On the residue of a binomial-theorem coefficient with respect to a prime modulus, Quart. J. Pure Appl. Math. 30, 150-156 | https://babel.hathitrust.org/cgi/pt?id=hvd.32044102924578 |
-| slice-recurrence-order | Menger Diagonal Slices: A Recurrence of Order ceil(D/2); the shelf paper of the order law, the product formula over 3-adic angle towers and the pinning of rho_dim | https://github.com/carlomitchener/carlomitchener/tree/main/research/slice-recurrence-order |
-| slice-sign-even-half | The Even Half of the Slice Sign Law; the shelf paper of the even half at bases 3 and 5, the certificate machines, the transient constant ln(R)/4, the tent rank law and the layer-2 window law | https://github.com/carlomitchener/carlomitchener/tree/main/research/slice-sign-even-half |
+| slice-recurrence-order | Menger Diagonal Slices: A Recurrence of Order ceil(D/2); the shelf paper of the order law, the product formula over 3-adic angle towers and the pinning of rho_dim | papers/slice-sign-law.md |
+| slice-sign-even-half | The Even Half of the Slice Sign Law; the shelf paper of the even half at bases 3 and 5, the certificate machines, the transient constant ln(R)/4, the tent rank law and the layer-2 window law | papers/slice-sign-law.md |
 
 ## REFERENCE PAGES
 

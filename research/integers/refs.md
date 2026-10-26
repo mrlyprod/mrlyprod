@@ -24,7 +24,7 @@
 | Hunter 1957 | The minimum discriminants of quintic fields | https://doi.org/10.1017/S2040618500033463 |
 | Pohst 1982 | On the computation of number fields of small discriminants including the minimum discriminants of sixth degree fields | https://doi.org/10.1016/0022-314X(82)90061-0 |
 | Jones and Roberts 2014 | A database of number fields | https://arxiv.org/abs/1404.0266 |
-| divisor avatars | Divisor Avatars: Which Parity Designs Count the Divisors of a Power | https://github.com/carlomitchener/carlomitchener/tree/main/research/divisor-avatars |
+| divisor avatars | Divisor Avatars: Which Parity Designs Count the Divisors of a Power | claims/divisor-avatars.md |
 | Tan 2018 | Degree bound of Polya Positivstellensatz, arXiv 1802.02752; the univariate statement, P(x) > 0 for x >= 0 gives (1 + x)^m P(x) with positive coefficients for m large, and the Powers-Reznick exponent m > (d^2 - d) L(P) / (2 lambda(P)) - d with L(P) = max_j abs(a_j) / C(d, j) and lambda(P) = inf over x >= 0 of P(x) / (1 + x)^d, read at source | https://arxiv.org/abs/1802.02752 |
 | Powers and Reznick 2001 | A new bound for Polya's Theorem with applications to polynomials positive on polyhedra, Journal of Pure and Applied Algebra 164, 221-229; the explicit exponent in Polya's theorem. The original is paywalled at Elsevier; the bound is read through Tan 2018 and the metadata verified in the Crossref record of the DOI, authors Powers and Reznick, volume 164, pages 221-229, year 2001 | https://doi.org/10.1016/S0022-4049(00)00155-9 |
 
