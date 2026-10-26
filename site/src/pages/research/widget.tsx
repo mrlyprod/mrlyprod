@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Row, Topic } from "../../../scripts/build.ts";
 import { Btn, Icon } from "../../lib/app/controls.tsx";
 import { Bar, usePanes } from "../../lib/app/frame.tsx";
+import { state } from "../../lib/app/history.ts";
 import { Item, Library, Shelf } from "../../lib/app/library.tsx";
 import { COPY, library, Reader, rule, useCopy } from "../../lib/app/reader.tsx";
 import { index, resolve } from "../../lib/md/links.ts";
@@ -117,7 +118,7 @@ export function Widget({ rows, site, draw }: Props) {
       if (a.hash && a.pathname === location.pathname) return;
       e.preventDefault();
       if (a.pathname === location.pathname) return;
-      history.pushState({ depth: (history.state?.depth ?? 0) + 1 }, "", a.pathname);
+      history.pushState({ depth: (state().depth ?? 0) + 1 }, "", a.pathname);
       setPath(a.pathname);
     };
     const pop = () => {

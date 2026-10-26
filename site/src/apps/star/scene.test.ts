@@ -5,8 +5,8 @@ import type { Value } from "../../lib/app/spec.ts";
 import { defaults } from "../../lib/app/spec.ts";
 import { rng } from "../../lib/rand.ts";
 import { MOST } from "./engine.ts";
+import type { Facts, Reading } from "./scene.ts";
 import { make, PAGE, SPEC } from "./scene.ts";
-import type { Told } from "./widget.tsx";
 
 type Call = [string | symbol, ...unknown[]];
 
@@ -89,7 +89,7 @@ const open = (over: Value = {}) => {
     dpr: 1,
     t: 0,
   };
-  const told: Told[] = [];
+  const told: Facts[] = [];
   const made = make(Object.assign({} as HTMLCanvasElement, { getContext: () => pen(log) }), view as View, {
     ...start,
     ...over,
@@ -103,7 +103,11 @@ const open = (over: Value = {}) => {
     return log;
   };
   const set = (patch: Value) => made.set!({ ...start, ...over, ...patch });
-  return { scene: made, at, calls, told, set, last: () => told.at(-1) };
+  const last = (): Reading | null => {
+    const f = told.at(-1);
+    return f && !("error" in f) ? f : null;
+  };
+  return { scene: made, at, calls, told, set, last };
 };
 
 const blits = (log: Call[]) => log.filter(([name]) => name === "drawImage");
@@ -137,10 +141,10 @@ test("moving L adds or drops cuts without recutting, W reads again without resta
   page.at(16);
   page.set({ layers: 4 });
   page.at(32);
-  expect([page.calls.volume, page.last()!.layers]).toEqual([8, 4]);
+  expect([page.calls.volume, page.last()?.layers]).toEqual([8, 4]);
   page.set({ layers: 4, half: 2 });
   page.at(48);
-  expect([page.calls.volume, page.calls.render, page.last()!.target]).toEqual([8, 3, -1 / 6]);
+  expect([page.calls.volume, page.calls.render, page.last()?.target]).toEqual([8, 3, -1 / 6]);
   page.set({ layers: 4, half: 2, ramp: "heat" });
   expect(blits(page.at(64))).toHaveLength(1);
   expect(page.calls.render).toBe(4);

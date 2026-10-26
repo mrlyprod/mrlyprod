@@ -5,7 +5,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Opts, View } from "../../lib/app/run.ts";
-import type { Scalar, Units } from "../../lib/app/spec.ts";
+import type { Scalar, Seeded, Units } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
 import type { Door } from "../../lib/life/engine.ts";
@@ -17,7 +17,7 @@ import { card, FAMOUS, make, SPEC } from "./scene.ts";
 
 /* TYPES */
 
-type Props = Partial<WidgetProps<Units, Wolfram>> & Pick<WidgetProps<Units, Wolfram>, "value" | "onChange">;
+type Props = Partial<WidgetProps<Units, Wolfram>> & Pick<WidgetProps<Units, Wolfram>, "onChange"> & { value: Seeded };
 
 const RULES = 256;
 const STEPS = 20;
@@ -84,7 +84,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     />
   );
   useStatus(onStatus, status(rule, read, stat));
-  useReroll(value.seed as number, (seed) => change.current({ rule: Math.floor(rng(seed)() * RULES) }));
+  useReroll(value.seed, (seed) => change.current({ rule: Math.floor(rng(seed)() * RULES) }));
   const folds = [
     read && {
       name: "Card",

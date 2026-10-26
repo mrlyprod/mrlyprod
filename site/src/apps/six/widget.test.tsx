@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/mrly/math";
+import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Frame } from "../../lib/app/frame.tsx";
 import type { Mathy } from "../../lib/app/page.tsx";
@@ -67,6 +68,10 @@ test("the library holds the sheets with their copies, the one in use lit, and a 
     'aria-current="true" class="on" role="listitem"><canvas width="56" height="56" aria-hidden="true"></canvas><span class="label">disc(2)',
   );
   const wrote: Patch[] = [];
-  Sheets({ math, value: VALUE, tick: 0, onChange: (patch) => wrote.push(patch) }).props.children[1].props.onPick();
+  (
+    Sheets({ math, value: VALUE, tick: 0, onChange: (patch) => wrote.push(patch) }).props as {
+      children: ReactElement<{ onPick: () => void }>[];
+    }
+  ).children[1].props.onPick();
   expect(wrote).toEqual([{ sheet: "rect", x: 3, y: 9 }]);
 });

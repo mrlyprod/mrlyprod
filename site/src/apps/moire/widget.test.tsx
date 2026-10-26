@@ -22,7 +22,16 @@ const items = (value: Partial<Moire>) =>
 test("the field reads name the stack, and the r-matrix reads name the pair on trial", () => {
   expect(
     Object.fromEntries(
-      rows({ view: "field", name: "carpet", code: "495", layers: 5, scales: [1, 3, 5, 7, 9], size: 384 }),
+      rows({
+        view: "field",
+        name: "carpet",
+        code: "495",
+        base: 3,
+        level: 1,
+        layers: 5,
+        scales: [1, 3, 5, 7, 9],
+        size: 384,
+      }),
     ),
   ).toEqual({ design: "carpet 495", layers: 5, scales: "1 3 5 7 9", pixels: "384 by 384" });
   expect(

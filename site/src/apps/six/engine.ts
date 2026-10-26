@@ -224,7 +224,7 @@ export function mesh(math: Mrly, sheet: Cell6d, turn: boolean): Built {
   return { groups, box: bounds(groups), across };
 }
 
-export function fit(box: readonly number[], w: number, h: number, pad: number) {
+export function fit(box: Box, w: number, h: number, pad: number) {
   const [x0, y0, x1, y1] = box;
   const k = Math.min((w - 2 * pad) / (x1 - x0 || 1), (h - 2 * pad) / (y1 - y0 || 1));
   return { k, ox: w / 2 - ((x0 + x1) / 2) * k, oy: h / 2 - ((y0 + y1) / 2) * k };

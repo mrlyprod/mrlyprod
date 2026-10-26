@@ -190,7 +190,7 @@ test("every window is a whole crop the knobs accept, and the shape pick is left 
     [0, 1].includes(one.edge);
   expect(WINDOWS.every(fits)).toBe(true);
   expect(Object.keys(WINDOWS[0][1]).sort()).toEqual(["edge", "mode", "policy", "radius", "shape"]);
-  expect(row("shape").when?.({})).toBe(false);
+  expect(row("shape").when!({})).toBe(false);
 });
 
 test("a crop thumb is small, touching and uncounted, and lays the kept cells in the accent inside the stage", () => {

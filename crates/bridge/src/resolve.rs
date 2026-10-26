@@ -550,6 +550,7 @@ impl Builder<'_> {
                 "str" => return Ty::Str,
                 "Vec" => return arg(0).map_or_else(unknown, |item| Ty::Vec { item }),
                 "Option" => return arg(0).map_or_else(unknown, |item| Ty::Option { item }),
+                "Box" => return arg(0).map_or_else(unknown, |item| *item),
                 "Result" => {
                     let crate_error = args.len() == 1
                         || (args.len() == 2

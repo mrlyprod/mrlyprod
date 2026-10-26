@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { fresh, MERGE, patch, record, redo, undo } from "./history.ts";
+import { fresh, MERGE, patch, record, redo, state, undo } from "./history.ts";
 
 test("changes closer than the merge window are one step, and a new change clears the redo side", () => {
   let stack = record(fresh(), { a: 1 }, 0);
@@ -21,6 +21,25 @@ test("undo then redo comes back to where it was, and an empty side answers null"
     null,
     null,
   ]);
+});
+
+test("history.state reads as itself when well formed and as absent when null or malformed", () => {
+  const was = Object.getOwnPropertyDescriptor(globalThis, "history");
+  const read = (one: unknown) => {
+    Object.defineProperty(globalThis, "history", { configurable: true, value: { state: one } });
+    return state();
+  };
+  try {
+    expect([read({ depth: 2, y: 40, up: true }), read(null), read({ depth: "3", y: "far" }), read(7)]).toEqual([
+      { depth: 2, y: 40, up: true },
+      {},
+      {},
+      {},
+    ]);
+  } finally {
+    if (was) Object.defineProperty(globalThis, "history", was);
+    else Reflect.deleteProperty(globalThis, "history");
+  }
 });
 
 test("a patch holds every key whose value differs, gone keys as undefined", () => {

@@ -7939,8 +7939,8 @@
               "serde": [],
               "serde_skip": false,
               "ty": {
-                "t": "unknown",
-                "text": "unknown type Box < Shape >"
+                "t": "plain",
+                "path": "math::shape::Shape"
               }
             }
           ]
@@ -7962,8 +7962,8 @@
               "serde": [],
               "serde_skip": false,
               "ty": {
-                "t": "unknown",
-                "text": "unknown type Box < Shape >"
+                "t": "plain",
+                "path": "math::shape::Shape"
               }
             },
             {

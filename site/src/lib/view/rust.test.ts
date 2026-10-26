@@ -407,6 +407,6 @@ test("ink from the Rust theme equals ink from the kit theme", async () => {
     const ours = new Map(Object.entries(ink(rust)));
     const theirs = ink(kit);
     for (const [key, value] of Object.entries(theirs))
-      if (typeof value !== "function") expect([key, ours.get(key)]).toEqual([key, value]);
+      if (Array.isArray(value)) expect([key, ours.get(key)]).toEqual([key, value]);
   }
 });

@@ -19,8 +19,6 @@ import type { Option, Scalar } from "./spec.ts";
 
 export type IconName = keyof typeof ICONS;
 
-export type Pair = [Scalar, Scalar];
-
 export type Action = readonly [string, () => void];
 
 export type MenuRow = readonly [string, () => void, IconName?];
@@ -90,11 +88,11 @@ export type ToggleProps = Omit<ComponentProps<"input">, "value" | "onChange"> & 
   onChange: (v: 0 | 1) => void;
 };
 
-export type SegmentProps = Omit<HTMLAttributes<HTMLElement>, "onChange"> & {
+export type SegmentProps<V extends Scalar> = Omit<HTMLAttributes<HTMLElement>, "onChange"> & {
   label: string;
-  value: Scalar;
-  onChange: (v: Scalar) => void;
-  options: readonly Option[];
+  value: V;
+  onChange: (v: V) => void;
+  options: readonly (V | [V, Scalar])[];
 };
 
 export type BtnProps = ComponentProps<"button"> & { primary?: boolean; on?: boolean };
@@ -116,7 +114,8 @@ type Valued = { value: string };
 
 type Loose = { detail: number; currentTarget: { blur: () => void } };
 
-export const pair = (option: Option): Pair => (Array.isArray(option) ? option : [option, option]);
+export const pair = <V extends Scalar>(option: V | [V, Scalar]): [V, Scalar] =>
+  Array.isArray(option) ? option : [option, option];
 
 export const number = (input: Valued) => +input.value;
 
@@ -317,9 +316,9 @@ export function useRoom<T extends HTMLElement>(key: string, anywhere = false): [
   return [at, narrow];
 }
 
-export function Segment({ label, value, onChange, options, ...rest }: SegmentProps) {
+export function Segment<V extends Scalar>({ label, value, onChange, options, ...rest }: SegmentProps<V>) {
   const name = useId();
-  const pairs = options.map(pair);
+  const pairs = options.map((option) => pair(option));
   const [at, narrow] = useRoom<HTMLElement>([label, ...pairs.map(([v, text]) => `${v}:${text}`)].join("\n"));
   const hold = (el: HTMLElement | null) => {
     at.current = el;
@@ -331,7 +330,10 @@ export function Segment({ label, value, onChange, options, ...rest }: SegmentPro
         label={label}
         value={value}
         options={pairs}
-        onChange={(picked) => onChange(pairs.find(([v]) => String(v) === picked)?.[0] ?? picked)}
+        onChange={(picked) => {
+          const found = pairs.find(([v]) => String(v) === picked);
+          if (found) onChange(found[0]);
+        }}
         {...rest}
       />
     );
@@ -410,12 +412,12 @@ export function Menu({ rows, children, ...rest }: MenuProps) {
   );
 }
 
-const FORMATS: Pair[] = [
+const FORMATS: [string, string][] = [
   ["png", "PNG"],
   ["webp", "WebP"],
 ];
 
-const SCALES: Pair[] = [
+const SCALES: [number, string][] = [
   [1, "1x"],
   [2, "2x"],
   [4, "4x"],
@@ -434,8 +436,8 @@ export function Export({ canvas, name, draw, fix, more = [], title = "Export" }:
   return (
     <Modal ref={at} className="export" title={title}>
       <div className="rows">
-        <Segment label="Format" value={kind} options={FORMATS} onChange={(v) => setKind(String(v))} />
-        {fix && <Segment label="Size" value={scale} options={SCALES} onChange={(v) => setScale(Number(v))} />}
+        <Segment label="Format" value={kind} options={FORMATS} onChange={setKind} />
+        {fix && <Segment label="Size" value={scale} options={SCALES} onChange={setScale} />}
       </div>
       <Btn primary onClick={take}>
         Save {FORMATS.find(([one]) => one === kind)![1]}

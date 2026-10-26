@@ -24,9 +24,11 @@ export type Hands = { go: () => void; mute: () => void; going: () => boolean };
 
 export type Held = Techno & Hands;
 
-type Tone = "on" | "near" | "lit" | "off";
+type Tone = (typeof TONES)[number];
 
 type Rect = [number, number, number, number];
+
+const TONES = ["on", "near", "lit", "off"] as const;
 
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
@@ -177,7 +179,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     const y0 = Math.floor((h - TALL * cell) / 2);
     const xs = Array.from({ length: 16 }, (_, s) => x0 + Math.round((s + Math.floor(s / 4) * 0.5) * cell));
     const ys = Array.from({ length: ROWS }, (_, r) => y0 + Math.round(r * PITCH * cell));
-    const tones: Record<string, string> = {
+    const tones: Record<Tone, string> = {
       on: accent,
       near: veil(accent, 0.55),
       lit: veil(accent, 0.22),
@@ -212,10 +214,10 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    for (const [tone, list] of Object.entries(rects)) {
+    for (const tone of TONES) {
       ctx.fillStyle = tones[tone];
       ctx.beginPath();
-      for (const [x, y, a, b] of list) ctx.rect(x, y, a, b);
+      for (const [x, y, a, b] of rects[tone]) ctx.rect(x, y, a, b);
       ctx.fill();
     }
   };

@@ -106,8 +106,10 @@ const SWELL_HZ = 3200;
 const BASS_SHARE = 0.5;
 const OCTAVE = 12;
 
-const SCALES: Record<string, number[]> = {
-  minor: [0, 2, 3, 5, 7, 8, 10],
+const MINOR = [0, 2, 3, 5, 7, 8, 10];
+
+const SCALES: Partial<Record<string, number[]>> = {
+  minor: MINOR,
   dorian: [0, 2, 3, 5, 7, 9, 10],
   phrygian: [0, 1, 3, 5, 7, 8, 10],
 };
@@ -123,7 +125,7 @@ const PROGRESSIONS = [
 
 const DEGREES = [0, 0, 0, 0, 7, 2, 4, 5, 7, 0];
 
-const MOODS: Record<string, Parts> = {
+const MOODS: Partial<Record<string, Parts>> = {
   drift: { pad: 1, sub: 1, hat: 0.5 },
   build: { pad: 1, kick: 1, hat: 1, roll: 1 },
   drive: { kick: 1, hat: 1, clap: 1, acid: 1, pad: 1 },
@@ -132,7 +134,7 @@ const MOODS: Record<string, Parts> = {
   acid: { kick: 1, hat: 1, clap: 1, acid: 1 },
 };
 
-const FILM: Record<string, Parts> = {
+const FILM: Partial<Record<string, Parts>> = {
   intro: { pad: 1, sub: 1 },
   rise: { pad: 1, sub: 1, arp: 2 },
   hats: { pad: 1, sub: 1, arp: 2, hat: 1 },
@@ -148,7 +150,7 @@ const FILM: Record<string, Parts> = {
 export function pattern(seed: number, knobs: Partial<Song> = {}, bar = 0): Pattern {
   const { key, scale, density } = { ...SONG, ...knobs };
   const rand = rng(seed);
-  const steps = SCALES[scale] ?? SCALES.minor;
+  const steps = SCALES[scale] ?? MINOR;
   const root = ROOT + Math.max(0, KEYS.indexOf(key));
   const progression = PROGRESSIONS[Math.floor(rand() * PROGRESSIONS.length)];
   const rolls = Array.from({ length: STEPS }, () => [rand(), rand(), rand(), rand(), rand()]);
@@ -189,7 +191,7 @@ export function pattern(seed: number, knobs: Partial<Song> = {}, bar = 0): Patte
 
 const section = (part: Part): Parts | undefined =>
   part.name === "outro"
-    ? { ...FILM.outro, kick: part.kick ? 1 : 0, hat: part.hat ? 1 : 0, arp: part.arp ? FILM.outro.arp : 0 }
+    ? { ...FILM.outro, kick: part.kick ? 1 : 0, hat: part.hat ? 1 : 0, arp: part.arp ? FILM.outro?.arp : 0 }
     : FILM[part.name ?? ""];
 
 function edge(inside: (t: number) => boolean, a: number, b: number): number {
@@ -264,7 +266,7 @@ function ramp(param: AudioParam, to: number, now: number, over: number): void {
   param.linearRampToValueAtTime(to, now + over);
 }
 
-const named = (mood: string | Mood | null | undefined) => (typeof mood === "string" ? mood : (mood?.name ?? null));
+const named = (mood: Mood | null | undefined) => mood?.name ?? null;
 
 function player(ctx: Context, seed: number) {
   const g = graph(ctx, seed);
@@ -390,7 +392,7 @@ function player(ctx: Context, seed: number) {
       out = shaper;
     }
     if (effect) effect.play(ctx, out, when, { notes: bar(0).chord, ...a });
-    else voice(ctx, out, when, a);
+    else if (voice) voice(ctx, out, when, a);
   };
   const feel = (m: Mood | undefined, now: number) => {
     want = named(m);

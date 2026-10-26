@@ -20,7 +20,7 @@ const pen = (log: Call[]) =>
   new Proxy({} as CanvasRenderingContext2D, {
     get: (_, key) => (key === "measureText" ? () => ({ width: 10 }) : (...args: unknown[]) => log.push([key, ...args])),
     set: (_, key, v: unknown) => {
-      log.push([`${String(key)}=`, v]);
+      log.push([`${key as string}=`, v]);
       return true;
     },
   });

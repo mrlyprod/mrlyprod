@@ -2,9 +2,10 @@ import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/mrly/math";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PRESETS } from "./engine.ts";
+import type { Look } from "./scene.ts";
 import { Moires, toMoire } from "./shelves.tsx";
 
-const look = { ramp: "heat", levels: 64, invert: 0, tint: "" };
+const look: Look = { ramp: "heat", levels: 64, invert: 0, tint: "" };
 
 test("the moire shelf lists the four presets, the one in hand lit, and a pick turns the source to it", () => {
   const html = renderToStaticMarkup(

@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { FakeNode } from "../../../test/dom.ts";
 import { all, classed, find, mount, text } from "../../../test/dom.ts";
 import type { Design, Slot } from "../designs/store.ts";
+import type { Unit } from "../units/index.ts";
 import { Fold, Group } from "./controls.tsx";
 import { Bar } from "./frame.tsx";
 import type { Readout } from "./hooks.ts";
@@ -278,12 +279,13 @@ test("a url with no design takes the current one when it fits the slot, and keep
 
 test("the widget is handed the units the page loaded", async () => {
   const seen: unknown[] = [];
+  const math = {} as Unit<"math">;
   const Widget = ({ units }: WidgetProps<unknown>) => {
     seen.push(units);
     return null;
   };
-  await open({ Widget, units: async () => ({ ready: Promise.resolve(), top: "m" }) }, () => {});
-  expect(seen.at(-1)).toEqual({ top: "m" });
+  await open({ Widget, units: async () => ({ ready: Promise.resolve(), math }) }, () => {});
+  expect(seen.at(-1)).toEqual({ math });
 });
 
 test("a view row also draws as the phone view switch in the actions bar, only while its when holds", async () => {

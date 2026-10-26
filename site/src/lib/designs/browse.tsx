@@ -65,16 +65,24 @@ const SEEN: CSSProperties = { contentVisibility: "visible" };
 
 /* WORDS */
 
-const cache = new Map<string, unknown>();
+const totals = new Map<string, number>();
 
-const kept = <T,>(kind: string, { dim, base, code }: Loose, fn: () => T): T => {
-  const key = `${kind}:${dim}:${base}:${code}`;
-  if (!cache.has(key)) cache.set(key, fn());
-  return cache.get(key) as T;
+const names = new Map<string, string>();
+
+const forms = new Map<string, string>();
+
+const kept = <T,>(cache: Map<string, T>, { dim, base, code }: Loose, fn: () => T): T => {
+  const key = `${dim}:${base}:${code}`;
+  let one = cache.get(key);
+  if (one === undefined) {
+    one = fn();
+    cache.set(key, one);
+  }
+  return one;
 };
 
 const size = (math: Mrly, dim: number, base: number) =>
-  kept("total", { dim, base, code: "" }, () => total(math, dim, base));
+  kept(totals, { dim, base, code: "" }, () => total(math, dim, base));
 
 export const valid = (math: Mrly | null, design: Loose) =>
   Boolean(math && design) &&
@@ -83,12 +91,12 @@ export const valid = (math: Mrly | null, design: Loose) =>
 
 export const called = (math: Mrly | null, design: Loose) =>
   valid(math, design)
-    ? kept("name", design, () => math!.name.of(String(design.code), Number(design.dim), Number(design.base)) ?? "")
+    ? kept(names, design, () => math!.name.of(String(design.code), Number(design.dim), Number(design.base)) ?? "")
     : "";
 
 const form = (math: Mrly, design: Loose) =>
   Number(design.base) === 2 && valid(math, design)
-    ? kept("anf", design, () => facts(math, Number(design.dim), 2, String(design.code)).anf)
+    ? kept(forms, design, () => facts(math, Number(design.dim), 2, String(design.code)).anf)
     : "";
 
 export function named(math: Mrly | null, design: Loose): string {
@@ -480,7 +488,7 @@ export function Browser({ slot, value, math, onPick, compact }: BrowserProps) {
                   label="Dim"
                   value={dim}
                   options={spaces.map((one) => [one, `${one}D`])}
-                  onChange={(v) => move({ dim: v as number })}
+                  onChange={(v) => move({ dim: v })}
                 />
               )}
               {kinds.length > 1 && (
@@ -488,11 +496,11 @@ export function Browser({ slot, value, math, onPick, compact }: BrowserProps) {
                   label="Base"
                   value={base}
                   options={kinds.map((one) => [one, String(one)])}
-                  onChange={(v) => move({ base: v as number })}
+                  onChange={(v) => move({ base: v })}
                 />
               )}
               {options.length > 1 && (
-                <Segment label="Show" value={show} options={options} onChange={(v) => move({ show: v as string })} />
+                <Segment label="Show" value={show} options={options} onChange={(v) => move({ show: v })} />
               )}
             </div>
           )}

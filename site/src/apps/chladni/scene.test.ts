@@ -1,7 +1,7 @@
 import { afterAll, expect, test } from "bun:test";
 import * as math from "@mrlyprod/mrly/math";
 import * as num from "@mrlyprod/mrly/num";
-import type { Had } from "../../lib/app/hooks.ts";
+import type { Stroke } from "../../../test/pen.ts";
 import type { Scene, View } from "../../lib/app/run.ts";
 import type { Patch } from "../../lib/app/spec.ts";
 import { defaults, maxOf, tidy } from "../../lib/app/spec.ts";
@@ -29,13 +29,10 @@ import {
 } from "./engine.ts";
 import type { Knobs, Stat, Step } from "./scene.ts";
 import { fit, make, PAGE, SPEC } from "./scene.ts";
+import type { Held } from "./widget.tsx";
 import { rows } from "./widget.tsx";
 
-type Call = [string | symbol, ...unknown[]];
-
 type Sheet = { width: number; height: number; bytes: Uint8ClampedArray | null };
-
-type Held = Had<"num" | "math">;
 
 type Options = { still?: boolean; w?: number; h?: number; dpr?: number; units?: Held };
 
@@ -43,7 +40,7 @@ type Field = { side: number; data: ArrayLike<number> };
 
 type Woken = View & { woke: number };
 
-const pen = (log: Call[]) =>
+const pen = (log: Stroke[]) =>
   new Proxy({} as CanvasRenderingContext2D, {
     get:
       (_, key) =>
@@ -100,7 +97,7 @@ const VALUE = { ...defaults(SPEC), seed: 7, grains: G } as Knobs;
 const LOOK = { paper: "#000000", accent: "#008cff", ink: "#ffffff" };
 
 const open = (value: Patch = {}, { still = false, w = 800, h = 600, dpr = 1, units = { num, math } }: Options = {}) => {
-  const log: Call[] = [];
+  const log: Stroke[] = [];
   const tells: Stat[] = [];
   const walks: Step[] = [];
   const view = { rand: rng(7), look: () => LOOK, still, lock: false, w, h, dpr, t: 0, fixed: false, woke: 0 } as Woken;
@@ -155,7 +152,7 @@ const counted = (): [{ steps: number }, Held] => {
   return [tally, { num: { ...num, chladni: { ...num.chladni, shake } }, math }];
 };
 
-const blits = (log: Call[]) => log.filter(([name]) => name === "drawImage");
+const blits = (log: Stroke[]) => log.filter(([name]) => name === "drawImage");
 
 const lit = (bytes: ArrayLike<number>) => {
   let n = 0;
@@ -169,7 +166,7 @@ test("the plate opens on (3, 5, -) as sand, the plate and one sheet of css pixel
   const live = open();
   const log = live.at(0);
   const box = fit(live.view, 0);
-  const blit: Call = ["drawImage", "page", box.x, box.y, box.side, box.side];
+  const blit: Stroke = ["drawImage", "page", box.x, box.y, box.side, box.side];
   expect(blits(log)).toEqual([blit, blit]);
   expect(log).toContainEqual(["imageSmoothingEnabled", false]);
   expect(log.some(([name]) => (["stroke", "fillText", "arc"] as (string | symbol)[]).includes(name))).toBe(false);
@@ -448,7 +445,7 @@ test("the carpet opens as a page of one pixel a cell, its holes the ground, blit
   const log = live.at(0);
   const box = fit(live.view, 27);
   expect([box.side % 27, (box.side / 2) % 27 > 0]).toEqual([0, true]);
-  const blit: Call = ["drawImage", "page", box.x, box.y, box.side, box.side];
+  const blit: Stroke = ["drawImage", "page", box.x, box.y, box.side, box.side];
   expect(blits(log)).toEqual([blit, blit]);
   expect(log).toContainEqual(["imageSmoothingEnabled", false]);
   const cells = live.cells()!;

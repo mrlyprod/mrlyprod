@@ -8,7 +8,7 @@ import { unit } from "../../lib/fractal/shader.ts";
 import { spanOf } from "../../lib/fractal/view.ts";
 import { rng } from "../../lib/rand.ts";
 import { PLACES } from "./places.ts";
-import type { Flight, Given } from "./scene.ts";
+import type { Fractal, Given } from "./scene.ts";
 import { go, make, SAVERS, SPEC } from "./scene.ts";
 
 const canvas = (fake: FakeGl) =>
@@ -29,6 +29,11 @@ const VIEW = {
 } as View;
 
 const LOCK = { ...VIEW, lock: true };
+
+const full = (scene: Fractal) => {
+  if ("set" in scene && scene.set) return scene;
+  throw new Error("fractals: the scene fell back");
+};
 
 const paints = (fake: FakeGl) => fake.draws().filter((one) => "uAlpha" in one.uniforms && one.fb === null);
 
@@ -102,7 +107,7 @@ test("the page opens still on the whole set, holds it as time runs, and asks to 
   const fake = gl();
   const rests: (Value | null)[] = [];
   const at = { ...VIEW };
-  const scene = make(canvas(fake), at, { seed: 7, onRest: (place) => rests.push(place) }) as Flight;
+  const scene = full(make(canvas(fake), at, { seed: 7, onRest: (place) => rests.push(place) }));
   scene.draw();
   at.t = 60000;
   scene.draw();
@@ -120,7 +125,7 @@ test("Depth caps the zoom: the scene gets the cap, the url keeps the asked zoom,
   ]).toEqual([20, 20, 40, 40]);
   const rests: (Value | null)[] = [];
   const at = { ...VIEW };
-  const scene = make(canvas(gl()), at, { seed: 7, onRest: (place) => rests.push(place) }) as Flight;
+  const scene = full(make(canvas(gl()), at, { seed: 7, onRest: (place) => rests.push(place) }));
   scene.fly();
   at.t = 120000;
   scene.draw();
@@ -134,7 +139,7 @@ test("Depth caps the zoom: the scene gets the cap, the url keeps the asked zoom,
 test("a place picked mid-flight jumps there and stops, a palette change keeps flying from where it is", () => {
   const at = { ...VIEW };
   const start = { seed: 7, ...tidy(SPEC, {}) };
-  const scene = make(canvas(gl()), at, start) as Flight;
+  const scene = full(make(canvas(gl()), at, start));
   scene.fly();
   at.t = 4000;
   scene.draw();

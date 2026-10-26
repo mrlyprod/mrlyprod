@@ -6,7 +6,7 @@ export type Color = [number, number, number, number];
 
 export type Swatch = string | ArrayLike<number> | { r: number; g: number; b: number; a?: number };
 
-const NAMES = [
+export const NAMES = [
   "ground",
   "panel",
   "line",
@@ -29,7 +29,7 @@ const NAMES = [
 
 export type Name = (typeof NAMES)[number];
 
-export type Palette = Partial<Record<Name, Swatch>>;
+export type Palette = Record<Name, Swatch>;
 
 export type Ramps = {
   new (stops: Color[]): Ramp;
@@ -62,7 +62,8 @@ function color(value: Swatch, name: string): Color {
   }
   if (value && typeof value === "object" && "r" in value)
     return Object.freeze<Color>([value.r, value.g, value.b, value.a ?? 255]) as Color;
-  if (value && value.length >= 3) return Object.freeze([value[0], value[1], value[2], value[3] ?? 255]) as Color;
+  if (value && typeof value !== "string" && value.length >= 3)
+    return Object.freeze([value[0], value[1], value[2], value[3] ?? 255]) as Color;
   throw new Error(`ink: ${name} is not a color: ${value}`);
 }
 

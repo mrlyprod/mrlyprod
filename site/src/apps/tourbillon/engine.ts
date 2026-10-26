@@ -1,7 +1,7 @@
-import type { tourbillon } from "@mrlyprod/mrly/math";
+import type { Image, tourbillon } from "@mrlyprod/mrly/math";
 import type { Scalar } from "../../lib/app/spec.ts";
 import type { Mrly } from "../../lib/designs/engine.ts";
-import type { Held, Look, Painted, Ramp } from "../../lib/moire/engine.ts";
+import type { Held, Look, Ramp } from "../../lib/moire/engine.ts";
 import { colorizer, paint } from "../../lib/moire/engine.ts";
 
 /* TYPES */
@@ -148,7 +148,7 @@ export function shade(value: Tones, stats: tourbillon.Stats | null): Shade {
   return { ramp, levels: Math.max(2, Number(value.levels) || (stats?.layers ?? 1) + 1), signed };
 }
 
-export function swatch(math: Mrly, value: Swatched, at: number, size: number, look: Look): Painted {
+export function swatch(math: Mrly, value: Swatched, at: number, size: number, look: Look): Image {
   const held = spin(math, value, at, size);
   const how = shade(value, reading(math, value, held));
   const out = paint(math, held, colorizer(how.ramp, how.levels, look), how.levels, value.invert, how.signed);

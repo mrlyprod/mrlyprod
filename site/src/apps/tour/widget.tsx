@@ -1,5 +1,6 @@
-import type { PointerEvent, ReactNode } from "react";
+import type { PointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import type { Readout } from "../../lib/app/hooks.ts";
 import { useReroll, useUnits } from "../../lib/app/hooks.ts";
 import { Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
@@ -16,14 +17,11 @@ import { make } from "./scene.ts";
 
 /* TYPES */
 
-export type Note = readonly [string, ReactNode];
-
 export type Asked = Picked & { seed: number };
 
-type Props = Pick<WidgetProps<Units, Tour>, "value" | "onChange" | "onReady"> & {
-  value: Asked;
-  onStatus?: (rows: Note[]) => void;
-};
+type Contract = WidgetProps<Units, Tour>;
+
+type Props = Pick<Contract, "value" | "onChange" | "onReady"> & Partial<Pick<Contract, "onStatus">> & { value: Asked };
 
 const UNITS = wasm("math", "num");
 
@@ -73,7 +71,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const toldKey = made ? `${card}|${step}|${made.lines.map((line) => line.terms.join()).join("|")}` : "";
   useEffect(() => {
     if (!made) return onStatus?.([]);
-    const rows: Note[] = [[CARDS[card].label.toLowerCase(), said]];
+    const rows: Readout[] = [[CARDS[card].label.toLowerCase(), said]];
     for (const line of made.lines)
       rows.push([line.label, `${line.terms.join(", ")}${line.capped ? ", to the budget" : ""}`]);
     if (link)

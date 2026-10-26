@@ -1,3 +1,4 @@
+import { state } from "../app/history.ts";
 import { type Code, decode, draw, type Paint, type Tools, type View, type Wood } from "./view.ts";
 
 /* TYPES */
@@ -44,12 +45,10 @@ const roller = () => document.querySelector<HTMLElement>(".frame > .canvas > .pa
 
 const roll = (top: number) => roller()?.scrollTo({ top, behavior: "instant" });
 
-type Kept = { y?: number; depth?: number } | null;
-
 function settle() {
   const id = decode(location.hash.slice(1));
   const spot = id ? document.getElementById(id) : null;
-  const kept = (history.state as Kept)?.y;
+  const kept = state().y;
   if (spot) spot.scrollIntoView();
   else if (kept !== undefined) roll(kept);
 }
@@ -173,9 +172,9 @@ function wire(data: Wood, options: Options, brand: string): () => void {
     if (a.pathname === location.pathname && a.hash) return;
     event.preventDefault();
     if (a.pathname === location.pathname) return roll(0);
-    const was = history.state as Kept;
+    const was = state();
     history.replaceState({ ...was, y: Math.round(roller()?.scrollTop ?? 0) }, "");
-    history.pushState({ depth: (was?.depth ?? 0) + 1 }, "", a.href);
+    history.pushState({ depth: (was.depth ?? 0) + 1 }, "", a.href);
     roll(0);
     go();
   };

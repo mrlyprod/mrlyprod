@@ -1,5 +1,5 @@
 import type { PointerEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Had, Readout } from "../../lib/app/hooks.ts";
 import { useUnit } from "../../lib/app/hooks.ts";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
@@ -13,17 +13,15 @@ import { make, PAGE } from "./scene.ts";
 
 /* TYPES */
 
-export type Seen = Pick<Knobs, "view"> & Partial<Pick<Knobs, "speed">>;
-
 type Props = WidgetProps<Had<"font">, Writer> & { value: Knobs };
 
-export function status(value: Seen, plan: Told | null, known: Facts | null): Readout[] {
+export function status(value: Pick<Knobs, "view" | "speed">, plan: Told | null, known: Facts | null): Readout[] {
   if (value.view === "text")
     return plan
       ? [
           ["board", `${plan.cols}x${plan.rows}`],
           ["frames", plan.frames],
-          ["time", `${(plan.frames / plan.fps / value.speed!).toFixed(1)} s`],
+          ["time", `${(plan.frames / plan.fps / value.speed).toFixed(1)} s`],
         ]
       : [];
   return known
@@ -46,9 +44,11 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
   const live = useRef<Handle<Writer> | null>(null);
   const kinds = useMemo(() => (font ? gallery(font) : null), [font]);
   const known = useMemo(() => (kinds ? facts(kinds) : null), [kinds]);
-  const made = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
-      make(canvas, view, { ...opts, font, kinds, onPlan: setPlan }),
+  const made = useMemo(
+    () =>
+      font &&
+      ((canvas: HTMLCanvasElement, view: View, opts: Opts) =>
+        make(canvas, view, { ...opts, font, kinds, onPlan: setPlan })),
     [font, kinds],
   );
   const ready = (handle: Handle<Writer> | null) => {
@@ -82,7 +82,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
   };
   return (
     <>
-      {font && <Scene make={made} value={value} onReady={ready} onPointerDown={tap} />}
+      {made && <Scene make={made} value={value} onReady={ready} onPointerDown={tap} />}
       {kinds && <Pens kinds={kinds} tint={value.tint} onPick={(char) => onChange(added(value, plan, char))} />}
     </>
   );

@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
+import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { text } from "../../lib/app/export.ts";
 import { Bar } from "../../lib/app/frame.tsx";
@@ -40,14 +40,11 @@ import { make } from "./scene.ts";
 
 /* TYPES */
 
-export type Note = readonly [string, ReactNode];
-
 export type Asked = Knobs & { seed: number; q: string; pick: string };
 
 type Contract = WidgetProps<Units, Held>;
 
-export type Props = Pick<Contract, "value" | "onChange"> &
-  Partial<Pick<Contract, "onReady" | "onExport">> & { onStatus?: (rows: Note[]) => void };
+export type Props = Pick<Contract, "value" | "onChange"> & Partial<Pick<Contract, "onReady" | "onExport" | "onStatus">>;
 
 const SLICE = 8;
 const PULSE = 90;
@@ -234,10 +231,10 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
     if (!handle?.tap) return;
     const box = e.currentTarget.getBoundingClientRect();
     const k = e.currentTarget.width / (box.width || 1);
-    const got = handle.tap((e.clientX - box.left) * k, (e.clientY - box.top) * k);
-    if (got?.row && got.row > 0) {
+    const row = handle.tap((e.clientX - box.left) * k, (e.clientY - box.top) * k)?.row ?? 0;
+    if (row > 0) {
       const had = chosen.current.map((one) => one.key);
-      write([had[got.row], ...had.filter((_, i) => i !== got.row)]);
+      write([had[row], ...had.filter((_, i) => i !== row)]);
     }
   };
   const sheet = (kind: string) => {

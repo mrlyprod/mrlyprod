@@ -8,6 +8,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Opts, View } from "../../lib/app/run.ts";
+import type { Seeded } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import type { Mrly } from "../../lib/designs/engine.ts";
 import { roll } from "../../lib/designs/engine.ts";
@@ -19,7 +20,7 @@ import { make, name, near, plot, shelf, thumb } from "./scene.ts";
 
 /* TYPES */
 
-type Props = WidgetProps<Mathy, Handled> & { unit?: Mrly | null };
+type Props = WidgetProps<Mathy, Handled> & { value: Seeded; unit?: Mrly | null };
 
 type Live = { seek?: (x: number, y: number) => number | null; svg?: () => Promise<string> };
 
@@ -43,7 +44,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: P
     if (was.key !== next.key && was.height === next.height && next.height !== "") onChange({ height: "" });
   }, [value.code, value.base, value.level, value.height]);
   useReroll(
-    Number(value.seed),
+    value.seed,
     (seed) => math && onChange({ code: roll(math, DIM, read(now.current).base, rng(seed)), height: "" }),
   );
   const cut = info?.cut;

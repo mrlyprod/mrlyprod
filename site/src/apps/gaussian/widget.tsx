@@ -7,7 +7,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Opts, View } from "../../lib/app/run.ts";
-import type { Scalar, Units } from "../../lib/app/spec.ts";
+import type { Scalar, Seeded, Units } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
 import { rng } from "../../lib/rand.ts";
@@ -18,7 +18,7 @@ import { make, named, sketch } from "./scene.ts";
 
 /* TYPES */
 
-type Props = WidgetProps<Units, Handled> & { unit?: Num | null };
+type Props = WidgetProps<Units, Handled> & { value: Seeded; unit?: Num | null };
 
 const TAP = 8;
 
@@ -85,7 +85,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const key = JSON.stringify(value);
   useEffect(() => setMissed(false), [key]);
   const tick = useTheme();
-  useReroll(value.seed as number, (seed) => change.current(rerolled(seed)));
+  useReroll(value.seed, (seed) => change.current(rerolled(seed)));
   useStatus(onStatus, rows(plan?.facts, point, missed, value.look));
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, num: unit }),

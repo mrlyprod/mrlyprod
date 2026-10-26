@@ -279,7 +279,8 @@ export function fit(w: number, h: number, frame: Frame): [number, number, number
 
 export function picture(page: Pen, frame: Frame, plan: Pick<Study, "art">, paint: Paint, image: Drawn | null) {
   if (plan.art?.mesh) {
-    const faint = [...paint.accent.slice(0, 3), FAINT] as Color;
+    const [r, g, b] = paint.accent;
+    const faint: Color = [r, g, b, FAINT];
     hex.draw(page, frame, plan.art.mesh, 0, (type) =>
       type === paint.fill ? paint.accent : type === paint.void ? faint : null,
     );
@@ -290,8 +291,8 @@ export function picture(page: Pen, frame: Frame, plan: Pick<Study, "art">, paint
 
 /* SCENE */
 
-const settle = (opts: Given) => ({
-  ...tidy(SPEC, opts, opts.math ? { math: opts.math } : undefined),
+const settle = (opts: Given & { math: Mrly }) => ({
+  ...tidy(SPEC, opts, { math: opts.math }),
   seed: opts.seed,
   base: opts.base,
   code: opts.code,
@@ -306,12 +307,12 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   if (!math) throw new Error("cuts: the scene wants @mrlyprod/mrly/math as opts.math");
   const ctx = canvas.getContext("2d")!;
   const codes = { fill: math.six.FILL(), void: math.six.VOID() };
-  let value = settle(opts);
+  let value = settle({ ...opts, math });
   let plan = study(math, value);
   let dirty = true;
   let img: HTMLImageElement | null = null;
   let wanted = "";
-  const paint = (): Paint => ({ ...codes, accent: [...rgb(view.look().accent), 255] as Color });
+  const paint = (): Paint => ({ ...codes, accent: [...rgb(view.look().accent), 255] });
   const draw = () => {
     if (!dirty) return;
     dirty = false;

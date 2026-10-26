@@ -18,7 +18,7 @@ export type SourceProps = RowsProps & { math?: Mrly | null };
 
 export const read = (value: Raw) => tidy(SOURCE, value) as Src;
 
-const option = (key: string) => SOURCE.find((row) => row.key === key)!.options as readonly Option[];
+const option = (key: "number" | "tile") => SOURCE.find((row) => row.key === key)!.options as readonly Option[];
 
 export const useReroll = (seed: number, roll: (rand: Rng) => void) => rerolled(seed, (next) => roll(rng(next)));
 

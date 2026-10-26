@@ -34,9 +34,10 @@ function facts() {
 
 export default function draw(pen: Pen) {
   const { box, paint } = plate(pen, "teal", INSET);
+  const [r, g, b] = paint.white;
   const tones: Partial<Record<number, Color>> = {
     [math.six.FILL()]: paint.white,
-    [math.six.VOID()]: [...paint.white.slice(0, 3), GHOST] as Color,
+    [math.six.VOID()]: [r, g, b, GHOST],
   };
   hex.draw(pen, box, facts(), GAP, (type) => tones[type] ?? null);
 }

@@ -26,7 +26,7 @@ test("the picture draws the design at the term it is asked for: a plane grid at 
     view(row(3, "23", "profills", "level")),
   ]).toEqual(["iso", "cut", "pro"]);
   const sponge = picture(math, row(3, "23", "surface", "level"), 1);
-  expect([sponge.kind, sponge.level, sponge.cell!.shape.length]).toEqual(["iso", 2, 2]);
+  expect([sponge.kind, sponge.level, sponge.cell?.shape.length]).toEqual(["iso", 2, 2]);
   expect(said(picture(math, row(3, "23", "triangles", "level"), 0))).toBe("side 3, level 1, the middle cut");
 });
 

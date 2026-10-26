@@ -117,7 +117,8 @@ export default function draw(pen: Pen) {
   for (const [i, r] of RINGS.entries()) band(pen, at, r, Math.PI, 2 * Math.PI, tones[i]);
   pen.disc(cx, cy, BODY * R, paint.white);
   cap(pen, at, paint.light);
-  const shadow = [...paint.ink.slice(0, 3), 90] as Color;
+  const [r, g, b] = paint.ink;
+  const shadow: Color = [r, g, b, 90];
   for (const r of RINGS)
     pen.polygon(
       outline(r, 0, Math.PI).map(([x, y]) => pull([x + SHADOW[0], y + SHADOW[1]])),

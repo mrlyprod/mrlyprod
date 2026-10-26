@@ -48,7 +48,9 @@ export default function draw(pen: Pen) {
   const { box, paint, size } = plate(pen, "cyan", 0.17);
   const [cx, cy] = box.center();
   const r = box.radius();
-  pen.disc(cx, cy, r, [...paint.deep.slice(0, 3), 110] as Color);
+  const [dr, dg, db] = paint.deep;
+  const deep: Color = [dr, dg, db, 110];
+  pen.disc(cx, cy, r, deep);
   pen.image(cx - r, cy - r, 2 * r, 2 * r, spun());
   pen.ring(cx, cy, r, size * RIM, paint.light);
 }

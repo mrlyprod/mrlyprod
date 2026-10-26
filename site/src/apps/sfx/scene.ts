@@ -38,6 +38,12 @@ export const named = (word: string) => word[0].toUpperCase() + word.slice(1);
 
 export const NAMES = Object.keys(EFFECTS);
 
+const effect = (name: string) => {
+  const one = EFFECTS[name];
+  if (!one) throw new Error(`sfx: no effect ${name}`);
+  return one;
+};
+
 export const SPEC: Spec = [
   {
     key: "effect",
@@ -102,7 +108,7 @@ export const preset = (value: Knobs) =>
   PRESETS.find((one) => one.set.effect === value.effect && SHAPE.every((key) => one.set[key] === value[key]))?.id ?? "";
 
 export function lasts(name: string, length = 1) {
-  const span = EFFECTS[name].span(length);
+  const span = effect(name).span(length);
   return span < 0.1 ? `${Math.round(span * 1000)} ms` : `${span.toFixed(1)} s`;
 }
 
@@ -135,7 +141,7 @@ const shape = (value: Shape): Shape => ({
   space: value.space,
 });
 
-export const seconds = (value: Pick<Knobs, "effect" | "length">) => EFFECTS[value.effect].span(value.length) + TAIL;
+export const seconds = (value: Pick<Knobs, "effect" | "length">) => effect(value.effect).span(value.length) + TAIL;
 
 export const score = (value: Sound): Score => ({ seed: value.seed >>> 0, cues: [[value.effect, 0, shape(value)]] });
 

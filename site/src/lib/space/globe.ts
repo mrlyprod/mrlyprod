@@ -1,5 +1,5 @@
 import { rng } from "../rand.ts";
-import type { Air, Ring, World } from "./exo.ts";
+import type { Air, Kind, Ring, World } from "./exo.ts";
 
 const TAU = Math.PI * 2;
 const GAIN = 1.12;
@@ -17,7 +17,7 @@ const SUN = 0.45;
 const tone = (rgb: readonly number[], a = 1) =>
   `rgba(${rgb.map((c) => Math.round(Math.min(1, c ** GAMMA * GAIN) * 255)).join(",")},${a})`;
 
-const halo = (air: Air, kind: string) => {
+const halo = (air: Air, kind: Kind) => {
   const rgb = kind === "terran" || kind === "ice" ? air.ray : air.mie;
   const top = Math.max(...rgb) || 1;
   return rgb.map((c) => Math.round(255 * (c / top) ** 0.5));

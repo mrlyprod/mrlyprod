@@ -4,7 +4,7 @@ import { rng } from "../rand.ts";
 import type { State } from "./bang.ts";
 import { canon, cells, classes, codes, doors, gate, name, PILOTS, pickCode, route, teach } from "./bang.ts";
 
-const at = (n: number, ...c: number[]) => (c[2] * n + c[1]) * n + c[0];
+const at = (n: number, ...[x, y, z]: number[]) => (z * n + y) * n + x;
 
 const DIVE = [15, 51, 63, 85, 95, 119, 127, 255];
 

@@ -45,7 +45,7 @@ export function Theme() {
     <div className="lanes">
       <div className="controls">
         <Group name="Appearance">
-          <Segment label="Theme" value={shade} options={SHADES} onChange={(v) => theme(v as string)} />
+          <Segment label="Theme" value={shade} options={SHADES} onChange={theme} />
           <Pick label="Tint" value={hue} options={TINTS} onChange={tint} />
         </Group>
       </div>
@@ -152,7 +152,7 @@ export function Glass() {
     <>
       <div className="controls">
         <Group name="Glass">
-          <Segment label="Style" value={style} options={STYLES} onChange={(v) => glass(v as string)} />
+          <Segment label="Style" value={style} options={STYLES} onChange={glass} />
         </Group>
       </div>
       <div className="backdrop">
@@ -224,7 +224,7 @@ export function Icons() {
     <>
       <div className="controls">
         <Group name="Icons">
-          <Segment label="Style" value={style} options={KINDS} onChange={(next) => icons(next as string, always)} />
+          <Segment label="Style" value={style} options={KINDS} onChange={(next) => icons(next, always)} />
           <Toggle label="Always dark" value={always ? 1 : 0} onChange={(on) => icons(style, on === 1)} />
         </Group>
       </div>

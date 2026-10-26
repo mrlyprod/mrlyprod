@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/mrly/math";
 import * as num from "@mrlyprod/mrly/num";
+import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Knobs } from "../../lib/app/knobs.tsx";
 import type { Patch, Raw } from "../../lib/app/spec.ts";
@@ -59,12 +60,8 @@ test("the library holds every picture by shelf, the lifts with their formulas, t
     lit({ view: "design", read: "filter" }),
   ]).toEqual(["Parity", "Sum", "Runs", "Filter"]);
   const wrote: Patch[] = [];
-  Pictures({
-    units,
-    value: value({}),
-    tick: 0,
-    onChange: (patch) => wrote.push(patch),
-  })[2].props.children[1].props.onPick();
+  const shelf = Pictures({ units, value: value({}), tick: 0, onChange: (patch) => wrote.push(patch) })[2];
+  (shelf.props as { children: ReactElement<{ onPick: () => void }>[] }).children[1].props.onPick();
   expect(wrote).toEqual([{ view: "design", read: "filter" }]);
 });
 

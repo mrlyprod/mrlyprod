@@ -20,7 +20,9 @@ export type Film = Record<Beat, number>;
 
 export type Stage = View & { still?: boolean; look: () => { accent: string } };
 
-export type Audio = { cue: (name: string, at: number, args: Record<string, unknown>) => void };
+export type CueArgs = { dur?: number; white?: boolean };
+
+export type Audio = { cue: (name: string, at: number, args: CueArgs) => void };
 
 export type HyperOptions = {
   seed?: number;
@@ -95,7 +97,7 @@ type Quiet = {
 
 type Moment = Quiet & { stage: string; k: number; since: number; s: number; shutter: number; flicker: number };
 
-type Cue = [number, string, Record<string, unknown>];
+type Cue = [number, string, CueArgs];
 
 type Trip = {
   from: number;
@@ -719,7 +721,7 @@ export function hyper(
     }
     return o;
   };
-  const cue = (t: number, name: string, args: Record<string, unknown>) => {
+  const cue = (t: number, name: string, args: CueArgs) => {
     if (audio) trip!.cues.push([t, name, args]);
   };
   const begin = (at: number, stay: number): Trip => {

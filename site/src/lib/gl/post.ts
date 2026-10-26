@@ -18,9 +18,9 @@ export type Post = { begin: (scale?: number) => Target; end: (look?: Partial<Loo
 /* POST */
 
 const LOOK: Look = { ev: 0, bloom: 1, aberration: 0, vignette: 0.3, grain: 0.015, flare: 0, fade: 1 };
-const KNEE = [1, 0.5];
-const DIM = [0.6, 0.3];
-const TINT = [0.033, 0.181, 1];
+const KNEE: [number, number] = [1, 0.5];
+const DIM: [number, number] = [0.6, 0.3];
+const TINT: [number, number, number] = [0.033, 0.181, 1];
 const FRAME = 16.67;
 const LOOP = 997;
 

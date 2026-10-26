@@ -61,6 +61,10 @@ const measures = (value: Value) =>
 
 const mixed = (value: Value) => Number(value.mix) === 1;
 
+const paired = (value: Value) => typeof value.op === "string" && PAIRED.includes(value.op);
+
+const takes = (value: Value) => typeof value.op === "string" && TAKES.includes(value.op);
+
 const HIDE = () => false;
 
 export const SPEC: Spec = [
@@ -100,7 +104,7 @@ export const SPEC: Spec = [
     kind: "text",
     def: "3",
     group: "Mix",
-    when: (value) => mixed(value) && PAIRED.includes(value.op),
+    when: (value) => mixed(value) && paired(value),
   },
   {
     key: "smeasure",
@@ -109,7 +113,7 @@ export const SPEC: Spec = [
     def: "fills",
     options: measures,
     group: "Mix",
-    when: (value) => mixed(value) && PAIRED.includes(value.op),
+    when: (value) => mixed(value) && paired(value),
   },
   {
     key: "arg",
@@ -120,7 +124,7 @@ export const SPEC: Spec = [
     max: ARG.max,
     step: 1,
     group: "Mix",
-    when: (value) => mixed(value) && TAKES.includes(value.op),
+    when: (value) => mixed(value) && takes(value),
   },
 ];
 

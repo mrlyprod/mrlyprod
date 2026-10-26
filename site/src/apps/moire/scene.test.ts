@@ -5,9 +5,8 @@ import type { View } from "../../lib/app/run.ts";
 import { asked, defaults, describe, places, tidy } from "../../lib/app/spec.ts";
 import { BEAT, colorizer, field, odd, paint, study, TOP } from "../../lib/moire/engine.ts";
 import { rng } from "../../lib/rand.ts";
-import type { Given, Moire, Player } from "./scene.ts";
+import type { Facts, Field, Given, Matrix, Moire, Player } from "./scene.ts";
 import { cellAt, cells, DESIGN, make, PAGE, SPEC } from "./scene.ts";
-import type { Told } from "./widget.tsx";
 
 type Call = [string | symbol, ...unknown[]];
 
@@ -92,7 +91,7 @@ const open = (over: Partial<Moire> = {}, hooks: Given = {}) => {
     t: 0,
     wake: () => {},
   });
-  const told: { facts: Told[]; limits: number[] } = { facts: [], limits: [] };
+  const told: { facts: Facts[]; limits: number[] } = { facts: [], limits: [] };
   const scene = make(Object.assign({} as HTMLCanvasElement, { getContext: () => pen(log) }), view, {
     ...start,
     ...over,
@@ -108,7 +107,15 @@ const open = (over: Partial<Moire> = {}, hooks: Given = {}) => {
     return log;
   };
   const set = (patch: Partial<Moire>) => scene.set!({ ...start, ...over, ...patch });
-  return { view, scene, log, at, calls, told, set };
+  const field = (): Field | null => {
+    const f = told.facts.at(-1);
+    return f && "view" in f && f.view === "field" ? f : null;
+  };
+  const trial = (): Matrix | null => {
+    const f = told.facts.at(-1);
+    return f && "view" in f && f.view === "matrix" ? f : null;
+  };
+  return { view, scene, log, at, calls, told, set, field, trial };
 };
 
 const blits = (log: Call[]) => log.filter(([name]) => name === "drawImage");
@@ -166,7 +173,7 @@ test("play climbs two scales a beat from the limit on screen, tells the page eac
   page.at(BEAT - 1);
   page.at(BEAT);
   expect(page.told.limits).toEqual([11, 13]);
-  expect([page.told.facts.at(-1)!.layers, page.scene.playing!()]).toEqual([7, true]);
+  expect([page.field()?.layers, page.scene.playing!()]).toEqual([7, true]);
   page.set({ limit: 13 });
   page.at(BEAT * 2);
   expect(page.told.limits).toEqual([11, 13, 15]);
@@ -201,15 +208,15 @@ test("a paint key repaints the held field, a plan key restacks it, both keep the
   expect([page.calls.stack, page.calls.render]).toEqual([1, 2]);
   page.set({ limit: 21 });
   page.at(32);
-  expect([page.calls.stack, page.told.facts.at(-1)!.layers]).toEqual([2, 11]);
+  expect([page.calls.stack, page.field()?.layers]).toEqual([2, 11]);
   page.set({ view: "matrix", limit: 21, combine: "xor", levels: 8, scale: 15, mate: 9 });
   page.at(48);
   expect([
     page.calls.stack,
     page.calls.render,
-    page.told.facts.at(-1)!.row,
-    page.told.facts.at(-1)!.mate,
-    page.told.facts.at(-1)!.r! > 0,
+    page.trial()?.row,
+    page.trial()?.mate,
+    (page.trial()?.r ?? 0) > 0,
   ]).toEqual([2, 3, 15, 9, true]);
 });
 

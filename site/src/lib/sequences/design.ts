@@ -1,5 +1,5 @@
-import type { Cell6d } from "@mrlyprod/mrly/math";
-import type { Cell, Point } from "#view";
+import type { Cell as Tile } from "@mrlyprod/mrly/math";
+import type { Point } from "#view";
 import { draw as hexes } from "#view/hex.ts";
 import { blend, veil } from "../color.ts";
 import type { Mrly } from "./engine.ts";
@@ -17,7 +17,7 @@ export type Grid = {
   number: number;
   level: number;
   shape: number[];
-  types: Cell6d["cell"]["types"];
+  types: Tile["types"];
   cell?: never;
   start?: never;
 };
@@ -26,7 +26,7 @@ export type Hex = {
   kind: Exclude<Kind, "grid">;
   number: number;
   level: number;
-  cell: Cell6d["cell"];
+  cell: Tile;
   start: number;
   shape?: never;
   types?: never;
@@ -37,14 +37,6 @@ export type Sheet = Grid | Hex;
 export type Picture = Sheet & { at: number };
 
 export type Inks = { fill: string; void: string; up?: string; left?: string; right?: string };
-
-type Hexes = <C>(
-  pen: { triangle: (a: Point, b: Point, c: Point, color: C) => void },
-  frame: Rect,
-  cell: { cell: Cell; start: number },
-  gap: number,
-  ink: (type: number) => C | null | undefined,
-) => void;
 
 export const BUDGET: Record<number | "cut", number> = { 2: 250000, 3: 600000, cut: 60000 };
 
@@ -151,7 +143,7 @@ function hex(ctx: CanvasRenderingContext2D, box: Rect, one: Hex, ink: Inks): Rec
   const [height, width] = one.cell.shape;
   const across = width > height;
   const big = (across ? box.w / width : box.h / height) * 2;
-  (hexes as Hexes)(
+  hexes(
     pen,
     box,
     { cell: one.cell, start: one.start },

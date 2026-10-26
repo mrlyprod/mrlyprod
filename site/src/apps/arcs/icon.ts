@@ -69,7 +69,8 @@ export default function draw(pen: Pen) {
   const { span, cells, arcs } = study();
   const unit = box.w / span;
   const gap = unit * GAP;
-  const ghost = [...paint.white.slice(0, 3), GHOST] as Color;
+  const [r, g, b] = paint.white;
+  const ghost: Color = [r, g, b, GHOST];
   for (const [x, y] of cells)
     pen.rect(box.x + x * unit + gap, box.y + y * unit + gap, unit - 2 * gap, unit - 2 * gap, ghost);
   for (const [x, y, mid] of arcs)

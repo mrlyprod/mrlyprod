@@ -422,11 +422,24 @@ export function tick(ctx: BaseAudioContext, out: AudioNode, when: number, args: 
   o.stop(when + 0.01);
 }
 
-export const VOICES: Record<string, Voice> = { kick, hat, clap, acid, pad, arp, bass, riser, drone, hit, swell, tick };
+export const VOICES: Partial<Record<string, Voice>> = {
+  kick,
+  hat,
+  clap,
+  acid,
+  pad,
+  arp,
+  bass,
+  riser,
+  drone,
+  hit,
+  swell,
+  tick,
+};
 
 /* EFFECTS */
 
-export const EFFECTS: Record<string, Effect> = {
+export const EFFECTS: Partial<Record<string, Effect>> = {
   jump: {
     span: (n) => 1.8 * n + 0.8,
     play: (ctx, out, when, a) => {

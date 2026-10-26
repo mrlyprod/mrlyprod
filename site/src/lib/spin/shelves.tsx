@@ -13,7 +13,7 @@ import { read } from "./source.tsx";
 
 export type MoiresProps = { value: Look & Raw; onChange: (value: Src) => void; math?: Mrly | null };
 
-const NOTES: Record<string, string> = {
+const NOTES: Partial<Record<string, string>> = {
   heatmap: "sum of layers",
   weave: "parity of layers",
   hive: "hex lattice",
@@ -32,13 +32,13 @@ export function Moires({ value, onChange, math }: MoiresProps) {
   const src = read(value);
   const tick = useTheme();
   const look = { ramp: value.ramp, levels: value.levels, invert: value.invert, tint: value.tint };
-  const art = (name: string) => (
+  const art = (unit: Mrly, name: string) => (
     <Art
       paint={(ctx, w, _h, dpr) => {
-        const values = field(math!, name, src.limit, w);
+        const values = field(unit, name, src.limit, w);
         stamp(ctx, { values, top: peak(values) || 1, side: w }, look, dpr);
       }}
-      deps={[math, name, src.limit, look.ramp, look.levels, look.invert, look.tint, tick]}
+      deps={[unit, name, src.limit, look.ramp, look.levels, look.invert, look.tint, tick]}
     />
   );
   return (
@@ -50,7 +50,7 @@ export function Moires({ value, onChange, math }: MoiresProps) {
           sub={NOTES[name]}
           on={src.source === "moire" && src.preset === name}
           onPick={() => onChange(toMoire(value, name))}
-          art={math ? art(name) : undefined}
+          art={math ? art(math, name) : undefined}
         />
       ))}
     </Shelf>

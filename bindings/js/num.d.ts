@@ -24,7 +24,7 @@ export interface Cell6d {
 /** An image: its height and width, and its flat rgba colors row by row. */
 export interface Image {
     shape: [number, number];
-    colors: Uint8Array;
+    colors: Uint8Array<ArrayBuffer>;
 }
 /** A color inside plain data, serde's form. */
 export interface ColorData {

@@ -25,7 +25,7 @@ export type Told = Partial<Fault & Reading>;
 
 export type ShelvesProps = { value: Tourbillon; onChange: (patch: Patch) => void; math?: Mrly | null };
 
-type Props = WidgetProps<Mathy, Player> & { value: Tourbillon; unit?: Mrly | null };
+export type Props = WidgetProps<Mathy, Player> & { value: Tourbillon; unit?: Mrly | null };
 
 export function rows(f: Told | null): Readout[] {
   if (!f) return [];

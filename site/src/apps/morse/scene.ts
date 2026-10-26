@@ -281,7 +281,8 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   let plan = study(units, value);
   let ink: Inks | null = null;
   let source: OffscreenCanvas | null = null;
-  let box: Grid | Bar[] | null = null;
+  let grid: Grid | null = null;
+  let stack: Bar[] | null = null;
   let dirty = true;
   const paint = () => {
     ink = inks(canvas);
@@ -296,38 +297,34 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   };
   const fit = () => {
     const { w, h, dpr } = view;
-    box = plan.rows.length ? tower(w, h, plan.rows, dpr) : lay(w, h, plan.side, value.cell * dpr, PAD * dpr);
+    if (plan.rows.length) {
+      stack = tower(w, h, plan.rows, dpr);
+      grid = null;
+    } else {
+      grid = lay(w, h, plan.side, value.cell * dpr, PAD * dpr);
+      stack = null;
+    }
   };
-  const letters = () =>
+  const letters = (box: Bar[]) =>
     bars(
       ctx,
       plan.rows,
-      box as Bar[],
+      box,
       PAINTS[plan.paint].map((key) => ink![key]),
     );
   const draw = () => {
     if (!dirty) return;
     dirty = false;
-    if (!box) fit();
+    if (!grid && !stack) fit();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, view.w, view.h);
     ctx.imageSmoothingEnabled = false;
-    if (source)
-      ctx.drawImage(
-        source,
-        0,
-        0,
-        plan.side,
-        plan.side,
-        (box as Grid).x,
-        (box as Grid).y,
-        (box as Grid).size,
-        (box as Grid).size,
-      );
-    else letters();
+    if (source && grid) ctx.drawImage(source, 0, 0, plan.side, plan.side, grid.x, grid.y, grid.size, grid.size);
+    else if (stack) letters(stack);
   };
   const size = () => {
-    box = null;
+    grid = null;
+    stack = null;
     dirty = true;
   };
   const theme = () => {
@@ -340,7 +337,8 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const was = plan;
     plan = study(units, value);
     if (plan !== was) paint();
-    box = null;
+    grid = null;
+    stack = null;
     dirty = true;
   };
   const svg = () => (fits(plan) ? picture(plan, ink!) : null);

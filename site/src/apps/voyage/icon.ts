@@ -3,6 +3,8 @@ import type { Color, Frame, Pen, Pixels } from "#view";
 import { frame, iso } from "#view";
 import { plate } from "../../lib/plate.ts";
 
+/* TYPES */
+
 type Arc = { x0: number; y0: number; w: number; h: number; top: number; image: Pixels };
 
 export const units = { math };

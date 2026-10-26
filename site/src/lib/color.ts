@@ -7,15 +7,17 @@ import { light as DAY, dark as NIGHT } from "./theme/theme.ts";
 
 export type Paints = { paper: string; accent: string; ink: string };
 
-export function rgb(value: string | readonly number[]): number[] {
+export type Rgb = [number, number, number];
+
+export function rgb(value: string | readonly number[]): Rgb {
   const text = String(value).trim();
   if (text.startsWith("#")) {
     const hex = text.length < 7 ? [...text.slice(1, 4)].map((c) => c + c).join("") : text.slice(1, 7);
     const n = Number.parseInt(hex, 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
-  const parts = text.match(/-?\d+(\.\d+)?/g);
-  return parts ? parts.slice(0, 3).map(Number) : [0, 0, 0];
+  const [r = "0", g = "0", b = "0"] = text.match(/-?\d+(\.\d+)?/g) ?? [];
+  return [Number(r), Number(g), Number(b)];
 }
 
 export const bright = (color: string | readonly number[]) => rgb(color).reduce((a, b) => a + b, 0) > 384;

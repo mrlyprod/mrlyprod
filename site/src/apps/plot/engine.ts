@@ -1,4 +1,3 @@
-import type { Scalar } from "../../lib/app/spec.ts";
 import type { Unit } from "../../lib/units/index.ts";
 
 /* TYPES */
@@ -33,9 +32,9 @@ export const OPS: [string, string][] = [
   ["scale", "Scale"],
 ];
 
-export const PAIRED: Scalar[] = ["add", "sub", "hadamard", "cauchy"];
+export const PAIRED: readonly string[] = ["add", "sub", "hadamard", "cauchy"];
 
-export const TAKES: Scalar[] = ["shift", "decimate", "scale"];
+export const TAKES: readonly string[] = ["shift", "decimate", "scale"];
 
 export const ARG = { min: -8, max: 12 };
 

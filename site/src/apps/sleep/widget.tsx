@@ -3,7 +3,7 @@ import type { Paint } from "../../lib/app/library.tsx";
 import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
-import type { Scalar, Units } from "../../lib/app/spec.ts";
+import type { Units } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
 import { DESIGNS, ink, NUMBERS, tile } from "../../lib/designs/tiles.ts";
@@ -19,9 +19,9 @@ type ShelvesProps = Pick<WidgetProps<Units, Sleep>, "value" | "onChange">;
 const named = (word: string) => word[0].toUpperCase() + word.slice(1);
 
 const paint =
-  (tint: Scalar, draw: (ctx: CanvasRenderingContext2D, w: number) => void): Paint =>
+  (tint: string, draw: (ctx: CanvasRenderingContext2D, w: number) => void): Paint =>
   (ctx, w) => {
-    ctx.fillStyle = paints(ctx.canvas, String(tint)).accent;
+    ctx.fillStyle = paints(ctx.canvas, tint).accent;
     draw(ctx, w);
   };
 
@@ -39,7 +39,8 @@ const heap = (ctx: CanvasRenderingContext2D, w: number) => {
 
 export function Shelves({ value, onChange }: ShelvesProps) {
   const tick = useTheme();
-  const { design, number, tint } = value;
+  const { design, number } = value;
+  const tint = value.tint as string;
   return (
     <Library>
       <Shelf name="Random" grid>

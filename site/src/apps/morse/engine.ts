@@ -27,13 +27,13 @@ export type Inks = Record<Ink, string>;
 export type Paint = "sign" | "diff" | "runs";
 
 export type Knobs = {
-  view: string;
-  read: string;
+  view: "word" | "plane" | "design";
+  read: "power" | "filter";
   round: number;
-  colour: string;
+  colour: "letters" | "runs";
   lift: Lift;
   level: number;
-  fold: string;
+  fold: "sign" | "design";
   number: number;
   power: number;
   depth: number;

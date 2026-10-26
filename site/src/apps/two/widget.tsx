@@ -6,7 +6,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Opts, View } from "../../lib/app/run.ts";
-import type { Patch, Value } from "../../lib/app/spec.ts";
+import type { Patch, Seeded, Value } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import type { Mrly } from "../../lib/designs/engine.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
@@ -21,7 +21,7 @@ import { name as called, make, SHEETS, SPEC, sketch } from "./scene.ts";
 
 export type SheetsProps = { value: Value; onChange: (patch: Patch) => void; unit: Mrly };
 
-type Props = WidgetProps<Mathy, Handled>;
+type Props = WidgetProps<Mathy, Handled> & { value: Seeded };
 
 /* ROWS */
 

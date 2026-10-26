@@ -49,7 +49,7 @@ Three censuses run on that principle, and their honesty is uneven in a way worth
 
 The tags are a claim about evidence, not about confidence.
 
-- **Proved.** A proof is given or restated on the page, and the reader can follow it without running anything. The design count, the fill law, the bijection onto Boolean functions up to NP-equivalence.
+- **Proved.** A proof is given or restated on the page, and the reader can follow it without running anything. A finite computation in exact or certified interval arithmetic, with its code in the tree and named on the page, counts as a proof, as it does for the four colour theorem. The design count, the fill law, the bijection onto Boolean functions up to NP-equivalence.
 - **Verified.** Recomputed from scratch, usually more than once and usually including a route that shares no method with the first. Some claims can never be more than this: that a particular OEIS entry counts what we say it counts is a fact about the entry, checkable against its stated definition and its terms, not provable from our side.
 - **Conjecture.** Neither - a fitted pattern or a limit with a proved mechanism and an unclosed step. The coprime densities are conjectures with proved Euler factors. The two multiplicity laws of the triangle's [Laplacian](https://en.wikipedia.org/wiki/Laplacian_matrix) on [the complexity page](../../complexity/notes/complexity.md) fit eight levels, and they are tagged as such even though they look inevitable.
 

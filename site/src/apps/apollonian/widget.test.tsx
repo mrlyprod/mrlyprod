@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import * as num from "@mrlyprod/mrly/num";
-import type { Scalar } from "../../lib/app/spec.ts";
+import type { ReactNode } from "react";
 import { study } from "./engine.ts";
 import { rows } from "./widget.tsx";
 
@@ -31,7 +31,7 @@ test("the readouts tell the census, the Ford count against the line, the stack a
 });
 
 test("a bounded root says it has no line", () => {
-  const round: Partial<Record<string, Scalar>> = Object.fromEntries(rows(study(num, "-1,2,2,3", 32).facts));
+  const round: Partial<Record<string, ReactNode>> = Object.fromEntries(rows(study(num, "-1,2,2,3", 32).facts));
   expect([round.line, round.Ford, round["off-Ford"], round.stack, round.brightness]).toEqual([
     "none in this root, so no Ford circles and no stack",
     undefined,

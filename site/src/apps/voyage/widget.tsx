@@ -10,7 +10,7 @@ import { engine } from "../../lib/audio/audio.ts";
 import { paints, veil } from "../../lib/color.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
 import { globe } from "../../lib/space/globe.ts";
-import type { Flying, Held, Knobs, Voyage } from "./scene.ts";
+import type { Held, Knobs, Voyage } from "./scene.ts";
 import { make, PLACES, quiet, stand } from "./scene.ts";
 import type { Ears } from "./score.ts";
 import { levels, mixer } from "./score.ts";
@@ -107,7 +107,7 @@ export function Widget({ value, onChange, onReady, units }: Props) {
         ...handle,
         again: () => {
           hear();
-          return (handle as Handle<Flying>).again();
+          return handle.again();
         },
         mute: () => flip("sound"),
         sound: () => {

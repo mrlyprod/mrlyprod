@@ -88,8 +88,10 @@ export function axis(pen: Pen, frame: Frame, color: Color): void {
 
 export function dashed(pen: Pen, frame: Frame, y: number, thick: number, color: Color): void {
   const step = frame.w / 48;
-  for (let x = frame.x; x < frame.x + frame.w; x += step) {
-    const to = Math.min(x + step * 0.55, frame.x + frame.w);
+  const count = frame.w > 0 ? 48 : 0;
+  for (let i = 0; i < count; i++) {
+    const x = frame.x + i * step;
+    const to = x + step * 0.55;
     pen.segment([x, y], [to, y], thick, color);
   }
 }

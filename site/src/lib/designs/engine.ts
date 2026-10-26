@@ -23,6 +23,17 @@ export type Facts = { rep: string; orbit: number; anf: string; degree: number };
 
 export type Run = { upto: number; terms: string[] };
 
+export type Census = {
+  fills: number;
+  voids: number;
+  vertices: number;
+  edges: number;
+  euler: number;
+  perimeter?: number;
+  surface?: number;
+  faces?: number;
+};
+
 export const DESIGN: Rows = [
   {
     key: "dim",
@@ -54,7 +65,9 @@ export const LIMIT = 512;
 const BUDGET = 60000;
 const ROTATION = 0;
 const HOME = "carpet";
-const UPTO: Record<number, number> = { 2: 4, 3: 2 };
+const UPTO = { 2: 4, 3: 2 };
+
+export type Base = keyof typeof UPTO;
 
 const worlds = new Map<number, bang.Universe>();
 const groups = new Map<string, Uint32Array[]>();
@@ -112,10 +125,10 @@ export function drawn(
   return others.length ? pick(rand, others) : roll(math, dim, base, rand);
 }
 
-export function sequence(math: Mrly, base: number) {
+export function sequence(math: Mrly, base: Base): Run {
   if (!runs.has(base))
     runs.set(base, { upto: UPTO[base], terms: math.bang.baseq.sequence(base, UPTO[base]).map(String) });
-  return runs.get(base);
+  return runs.get(base)!;
 }
 
 /* CLASSES */
@@ -142,10 +155,10 @@ function orbits(math: Mrly, dim: number, base: number): Orbit[] | null {
   }
 }
 
-export function classes(math: Mrly, dim: number, base: number) {
+export function classes(math: Mrly, dim: number, base: number): Orbit[] | null {
   const key = `${dim}:${base}`;
   if (!reps.has(key)) reps.set(key, orbits(math, dim, base));
-  return reps.get(key);
+  return reps.get(key)!;
 }
 
 export function facts(math: Mrly, dim: number, base: number, code: Code): Facts {
@@ -182,9 +195,13 @@ export function grow(math: Mrly, dim: number, base: number, code: Code, level: n
   return dim === 2 ? math.two.create(code, SIDE, level, ROTATION, base) : math.three.create(code, SIDE, level, base);
 }
 
-export function census(math: Mrly, dim: number, cell: Cell): Record<string, number> {
-  const read = dim === 2 ? math.two.census(cell) : math.three.census(cell);
-  return Object.fromEntries(Object.entries(read).map(([key, value]) => [key, Number(value)]));
+export function census(math: Mrly, dim: number, cell: Cell): Census {
+  if (dim === 2) {
+    const { fills, voids, perimeter, vertices, edges, euler } = math.two.census(cell);
+    return { fills, voids, vertices, edges, euler, perimeter: Number(perimeter) };
+  }
+  const { fills, voids, surface, vertices, edges, faces, euler } = math.three.census(cell);
+  return { fills, voids, vertices, edges, euler, surface: Number(surface), faces };
 }
 
 export function dimension(math: Mrly, dim: number, base: number, code: Code): number {

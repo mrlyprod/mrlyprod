@@ -82,7 +82,7 @@
 - Canvas first (Carlo, 2026-10-12): an app is artistic first, a brush for a future studio app; the canvas is the app, one picture filling the stage at any aspect.
 - One view at a time: several pictures of one thing are a `view` segment, never side by side.
 - Charts only in chart-first or explainer apps (`sequences`, `plot`, `tour`), or as a view of its own when the chart is the app's whole point; no chart, profile, spectrum, trace or strip beside a picture.
-- Readouts are numbers in `onStatus` and Info.
+- A readout is a label and a ReactNode in `onStatus` and Info.
 - A design and its numbers come through an `@mrlyprod/mrly` door; a missing door is a door gap, left out, never typed in JS.
 - Two exceptions are drawn in JS: the deep zoom of fractals (`lib/fractal/`) and the flight paths of zoom and voyage (`lib/space/`), which take their cells and classes from the math door.
 - A saver is what a good app turns out to be: never built as one; an app exports `SAVERS` (`{ id, title, pick(rand), still }`, 1 to 3; `still` is optional, the ms `/screensavers/` plays it before its capture, a whole number from 1 to 10000, default 1000) only when it is pretty with no hands at a random seed; one that needs a hand is an instrument.

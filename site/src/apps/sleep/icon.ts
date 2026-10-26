@@ -42,6 +42,7 @@ function study(): Cell {
 
 export default function draw(pen: Pen) {
   const { box, paint } = plate(pen, "indigo", 0.16);
-  const tones = [null, ...ALPHA.map((a) => [...paint.white.slice(0, 3), a] as Color)];
+  const [r, g, b] = paint.white;
+  const tones = [null, ...ALPHA.map((a): Color => [r, g, b, a])];
   new Grid(box, SIDE, SIDE, 0).paint(pen, study(), (type) => tones[type]);
 }

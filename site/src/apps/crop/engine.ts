@@ -2,7 +2,6 @@ import type * as mrly from "@mrlyprod/mrly/math";
 import type { Run } from "../../lib/app/svg.ts";
 import { runs } from "../../lib/app/svg.ts";
 import type { Code, Mrly } from "../../lib/designs/engine.ts";
-import type { Region } from "../../lib/three/engine.ts";
 import { cell, DIM, tensor } from "../../lib/two/engine.ts";
 
 /* TYPES */
@@ -99,12 +98,12 @@ export const exposed = (math: Mrly, types: mrly.Tensor) => Number(math.two.perim
 
 /* CENSUS */
 
-export function census(math: Mrly, types: mrly.Tensor, made: Region): Census {
+export function census(math: Mrly, types: mrly.Tensor, made: mrly.shape.Shape): Census {
   const { cells, filled } = math.shape.census(made, types);
   return { cells, filled, after: exposed(math, math.shape.crop(types, made, true)) };
 }
 
-export function keep(math: Mrly, types: mrly.Tensor, made: Region, policy: string, number: number): Kept {
+export function keep(math: Mrly, types: mrly.Tensor, made: mrly.shape.Shape, policy: string, number: number): Kept {
   const extra = EXTRA[policy] ?? 0;
   if (!extra) return { grid: math.shape.crop(types, made, policy === "touching"), extra: 0, over: false };
   const side = types.shape[0] * number ** extra;

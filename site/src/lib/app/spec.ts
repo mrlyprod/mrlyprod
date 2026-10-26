@@ -8,6 +8,8 @@ export type Value = Record<string, Scalar>;
 
 export type Patch = Partial<Value>;
 
+export type Seeded = Value & { seed: number };
+
 export type Raw = Record<string, unknown>;
 
 export type Units = { [N in Name]?: Unit<N> };
@@ -41,8 +43,6 @@ export type Row<U = Units> = {
 };
 
 export type Spec<U = Units> = readonly Row<U>[];
-
-export type Keyed = Pick<Row, "key" | "def">;
 
 export type Group<U = Units> = { name: string; rows: Row<U>[] };
 

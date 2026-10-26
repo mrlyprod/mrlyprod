@@ -11,7 +11,7 @@ export type Change = (patch: Value) => void;
 
 export type Flip = (name: string, on: boolean) => void;
 
-export type KnobProps<U = Units> = { row: Row<U>; value: Scalar; values?: Value; units?: U; onChange: Change };
+export type KnobProps<U = Units> = { row: Row<U>; value?: Scalar; values?: Value; units?: U; onChange: Change };
 
 export type KnobsProps<U = Units> = { spec: Spec<U>; value: Value; units?: U; onChange: Change; id?: string };
 
@@ -109,7 +109,7 @@ const KNOB: Record<Kind, Renderer> = {
 };
 
 export function Knob<U = Units>({ row, value, values, units, onChange }: KnobProps<U>) {
-  const all = values ?? { [row.key]: value };
+  const all: Value = values ?? (value === undefined ? {} : { [row.key]: value });
   return KNOB[row.kind](
     row,
     {

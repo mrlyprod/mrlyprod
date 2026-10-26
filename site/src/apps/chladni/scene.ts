@@ -71,6 +71,8 @@ export type Chladni = ReturnType<typeof make>;
 
 export type Fit = { x: number; y: number; side: number };
 
+type Leaf = "mask" | "sand" | "field";
+
 type Sheet = {
   side: number;
   canvas: OffscreenCanvas;
@@ -235,14 +237,21 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   let gone = false;
   let pressed = false;
   let woke = false;
-  const pages: Record<string, Sheet> = {};
-  const page = (kind: string, side: number) => {
-    if (pages[kind]?.side !== side) {
-      const one = new OffscreenCanvas(side, side);
-      const image = new ImageData(side, side);
-      pages[kind] = { side, canvas: one, pen: one.getContext("2d")!, image, words: new Uint32Array(image.data.buffer) };
-    }
-    return pages[kind];
+  const pages: Partial<Record<Leaf, Sheet>> = {};
+  const page = (kind: Leaf, side: number) => {
+    const was = pages[kind];
+    if (was?.side === side) return was;
+    const one = new OffscreenCanvas(side, side);
+    const image = new ImageData(side, side);
+    const made: Sheet = {
+      side,
+      canvas: one,
+      pen: one.getContext("2d")!,
+      image,
+      words: new Uint32Array(image.data.buffer),
+    };
+    pages[kind] = made;
+    return made;
   };
   const calm = () => view.still || (woke && !walk);
   const dress = () => {

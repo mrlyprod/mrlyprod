@@ -11,7 +11,7 @@ export type Song = {
   bars: number;
   density: number;
   drive: number;
-  swing: number;
+  swing?: number;
 };
 
 export type Tempo = {

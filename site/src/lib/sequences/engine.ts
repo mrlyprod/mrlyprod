@@ -1,5 +1,4 @@
 import type * as mrly from "@mrlyprod/mrly/math";
-import type { tile } from "@mrlyprod/mrly/math";
 
 /* TYPES */
 
@@ -81,8 +80,6 @@ export type Finders = {
 type Census = { vertices: number; edges: number; faces?: number; euler: number };
 
 type Names = { exact: Map<number, string>; orbits: Map<number, string> };
-
-type Classic = { design: tile.recipe.Design };
 
 export const SPACES: [number, number][] = [
   [2, 2],
@@ -264,20 +261,25 @@ export function ledger(math: Mrly) {
   const slices = new Map<string, mrly.Cell6d>();
   const profiles = new Map<string, bigint[]>();
   const rows = new Map<string, Row>();
-  const memos = new Map<string, unknown>();
+  const titles = new Map<number, Names>();
+  const books = new Map<string, Design[]>();
+  const shelves = new Map<string, Row[]>();
   const swept = new Map<string, number>();
   const tile = (dim: number, base: number, code: string, side: number, level: number): mrly.Cell =>
     dim === 2 ? math.two.create(code, side, level, 0, base) : math.three.create(code, side, level, base);
-  const memo = <T>(map: Map<string, unknown>, id: string, make: () => T): T => {
-    if (!map.has(id)) map.set(id, make());
-    return map.get(id) as T;
+  const memo = <K, T>(map: Map<K, T>, id: K, make: () => T): T => {
+    const held = map.get(id);
+    if (held !== undefined) return held;
+    const made = make();
+    map.set(id, made);
+    return made;
   };
   const names = (dim: number) =>
-    memo(memos, `names-${dim}`, (): Names => {
+    memo(titles, dim, (): Names => {
       const total = 1 << (1 << dim);
       const cells = Array.from({ length: total }, (_, code) => tile(dim, 2, String(code), 3, 1).types.join(""));
       const named = [
-        ...(math.bang.sources("Classics", dim) as Classic[]).map((one) => one.design),
+        ...math.bang.sources("Classics", dim).flatMap((one) => ("design" in one ? [one.design] : [])),
         ...math.bang.catalog.antis(dim),
       ];
       const exact = new Map([
@@ -312,7 +314,7 @@ export function ledger(math: Mrly) {
     };
   };
   const designs = (dim: number, base: number) =>
-    memo(memos, `${dim}-${base}`, (): Design[] => {
+    memo(books, `${dim}-${base}`, (): Design[] => {
       const codes =
         base === 2 ? math.bang.universe_codes(dim) : math.bang.baseq.representatives(base, dim).map(([code]) => code);
       const made = codes.map((code) => design(dim, base, code));
@@ -327,7 +329,7 @@ export function ledger(math: Mrly) {
     }
   };
   const space = (dim: number, base: number) =>
-    memo(memos, `keys-${dim}-${base}`, () => {
+    memo(shelves, `${dim}-${base}`, () => {
       const out: Row[] = [];
       for (const one of designs(dim, base)) out.push(...lines(dim, base, one.code));
       return out;
@@ -368,14 +370,8 @@ export function ledger(math: Mrly) {
   const file = (text: string) => {
     try {
       const named = math.name.Sequence.from_file(String(text).trim()).toJSON();
-      const key = {
-        dim: named.dim,
-        base: named.base ?? 2,
-        code: String(named.code),
-        measure: named.measure as Slug,
-        axis: named.axis,
-      };
-      return parse(print(key)) ? row(key) : null;
+      const parsed = parse(`${named.dim}-${named.base ?? 2}-${named.code}-${named.measure}-${named.axis}`);
+      return parsed ? row(parsed) : null;
     } catch {
       return null;
     }
@@ -451,8 +447,13 @@ export function ledger(math: Mrly) {
   };
   const capped = (one: Row, count: number, cells: number) =>
     one.terms.length < count && (one.stop === Infinity || one.stop > cells);
+  const find = (key: string) => {
+    const parsed = parse(key);
+    if (!parsed) throw new Error(`sequences: bad key ${key}`);
+    return row(parsed);
+  };
   const read = (key: string | Row, count: number, cells: number) => {
-    const one = typeof key === "string" ? row(parse(key)!) : key;
+    const one = typeof key === "string" ? find(key) : key;
     while (step(one, count, cells));
     return { terms: one.terms.slice(0, count), capped: capped(one, count, cells) };
   };

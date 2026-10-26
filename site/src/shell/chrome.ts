@@ -1,3 +1,4 @@
+import { state } from "../lib/app/history.ts";
 import { handle } from "../lib/handle.ts";
 import { track, type } from "./catalog.ts";
 import { desk, greeting, knock, listen, mark, route, visit } from "./desk.ts";
@@ -62,7 +63,7 @@ function resumed() {
 }
 
 function land() {
-  const at = saved() || Number(history.state?.y) || 0;
+  const at = saved() || state().y || 0;
   if (at > 0 && resumed() && !location.hash) main()?.scrollTo({ top: at, behavior: "instant" });
 }
 
@@ -235,7 +236,7 @@ function zoom(button: Element) {
 
 function close(e: MouseEvent) {
   if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  if (!(history.state?.depth > 0)) return;
+  if (!((state().depth ?? 0) > 0)) return;
   e.preventDefault();
   history.back();
 }

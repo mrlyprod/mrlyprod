@@ -2,10 +2,13 @@ import { css } from "site:css";
 import type { Site } from "site:routes";
 import { rows, site } from "site:routes";
 import type { Row } from "../../scripts/build.ts";
+import { state } from "../lib/app/history.ts";
 import { drawn, figures } from "./figures.ts";
 import { calm } from "./prefs.ts";
 import type { Place, Wired } from "./route.ts";
 import { deeps, match, named, sort, walled } from "./route.ts";
+
+export { state };
 
 /* TYPES */
 
@@ -34,8 +37,6 @@ type Sheet = { link: HTMLLinkElement; ready: Promise<unknown> };
 
 type Cached = { born: number; text: Promise<string> };
 
-type State = { depth?: number; y?: number };
-
 type Next = {
   row: Row;
   layout: Layout;
@@ -63,7 +64,6 @@ const drawer = document.getElementById("right")!;
 const DEEP = deeps(rows);
 const place = (at: Place) => walled(at.pathname, DEEP) || at.pathname;
 const key = (at: Place) => walled(at.pathname, DEEP) || at.pathname + at.search;
-const state = (): State => (history.state && typeof history.state === "object" ? history.state : {});
 const frame = () => new Promise<number>((done) => requestAnimationFrame(done));
 const roll = (top: number) => main.scrollTo({ top, behavior: "instant" });
 let here = key(location);
@@ -341,7 +341,7 @@ function hint(event: Event) {
 }
 
 function pop(event: PopStateEvent) {
-  const y = typeof state().y === "number" ? state().y : null;
+  const y = state().y ?? null;
   if (key(location) !== here) return go(new URL(location.href), "pop", y ?? 0, event.hasUAVisualTransition || calm());
   turn++;
   html.removeAttribute("aria-busy");

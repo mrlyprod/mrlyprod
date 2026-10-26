@@ -34,7 +34,7 @@ import {
 
 export type Given = Opts & { math?: Mrly | null; onFacts?: (facts: Facts) => void };
 
-export type Tones = Record<Shade, number[]> & Partial<Record<string, number[]>>;
+export type Tones = Record<Shade, Color> & Partial<Record<string, Color>>;
 
 export type Hands = { crop: () => void; view: (step: number) => void; deeper: (step: number) => void };
 
@@ -139,13 +139,16 @@ const RIGHT = 0.5;
 export function tones(look: Pick<Paints, "accent" | "paper">): Tones {
   const a = rgb(look.accent);
   const p = rgb(look.paper);
-  const toward = (k: number) => a.map((v, i) => Math.round(p[i] + (v - p[i]) * k));
+  const toward = (k: number): Color => {
+    const at = (i: number) => Math.round(p[i] + (a[i] - p[i]) * k);
+    return [at(0), at(1), at(2), 255];
+  };
   return {
     FILL: [...a, 255],
     VOID: [...a, Math.round(255 * VOID)],
     UP: [...a, 255],
-    LEFT: [...toward(LEFT), 255],
-    RIGHT: [...toward(RIGHT), 255],
+    LEFT: toward(LEFT),
+    RIGHT: toward(RIGHT),
   };
 }
 
@@ -211,10 +214,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const custom = () => {
     const look = tones(view.look());
     return Object.fromEntries(
-      Object.entries(codes).map(([name, type]): [string, Color[]] => [
-        String(type),
-        [(look[name] ?? [0, 0, 0, 0]) as Color],
-      ]),
+      Object.entries(codes).map(([name, type]): [string, Color[]] => [String(type), [look[name] ?? [0, 0, 0, 0]]]),
     );
   };
   const svg = () =>

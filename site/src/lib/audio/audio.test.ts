@@ -210,8 +210,13 @@ test("the hum follows the flicker only when its target moves by over 0.01", () =
 
 test("render books the bar the live engine plays, at the same offsets", async () => {
   const mood = { name: "drive", song: { ...SONG, bars: 1, swing: 0 } };
-  let off = null as FakeAudio | null;
-  await render(2, { seed: 5, mood }, (_channels, length, rate) => (off = audio({ rate, length })));
+  const made: FakeAudio[] = [];
+  await render(2, { seed: 5, mood }, (_channels, length, rate) => {
+    const one = audio({ rate, length });
+    made.push(one);
+    return one;
+  });
+  const [off] = made;
   const ctx = audio();
   const one = engine({ seed: 5, make: () => ctx });
   one.start();
@@ -220,8 +225,8 @@ test("render books the bar the live engine plays, at the same offsets", async ()
     one.at(t, mood);
   }
   const bar = 1.875;
-  expect(starts(ctx, 0.05, bar)).toEqual(starts(off!, 0, bar));
-  expect(starts(off!, 0, bar).length).toBeGreaterThan(16);
+  expect(starts(ctx, 0.05, bar)).toEqual(starts(off, 0, bar));
+  expect(starts(off, 0, bar).length).toBeGreaterThan(16);
 });
 
 test("the intro books the progression pad once a bar: the chord, then its root an octave up", () => {

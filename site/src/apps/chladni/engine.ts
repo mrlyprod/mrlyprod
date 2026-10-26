@@ -184,17 +184,18 @@ export function raster(units: { num: Num; math?: Mrly | null }, value: Asked): R
     const made = figures(units.math, value);
     const key = keyOf(value);
     if (made.error) return { error: made.error, key };
-    if (!made.values!.length) return { error: "the design has no figures", key };
+    const ok = made as Made;
+    if (!ok.values.length) return { error: "the design has no figures", key };
     const k = kOf(value);
-    const size = made.side! * made.side!;
+    const size = ok.side * ok.side;
     return {
-      side: made.side!,
-      data: made.fields!.subarray((k - 1) * size, k * size),
+      side: ok.side,
+      data: ok.fields.subarray((k - 1) * size, k * size),
       smooth: false,
       mask: `carpet ${design(value)}`,
       key,
       k,
-      made: made as Made,
+      made: ok,
     };
   }
   const { n, m } = value;

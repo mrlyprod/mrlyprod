@@ -15,7 +15,7 @@ import type { Titled } from "../../lib/two/parts.tsx";
 import { second } from "../../lib/two/scene.ts";
 import type { Units as Loaded } from "../../lib/units/index.ts";
 import { wasm } from "../../lib/units/index.ts";
-import type { Census, Circle, Kept, Look, Masked, Outline, Plane } from "./engine.ts";
+import type { Census, Circle, Kept, Look, Masked, Outline } from "./engine.ts";
 import {
   CUT,
   census,
@@ -254,7 +254,7 @@ export function plan(math: Mrly, next: Raw, stages: Stages = {}) {
   const before = at("before")(one, () => exposed(math, types));
   const form = [value.shape, radius, anti].join();
   const made = at("shape")(form, () => shape(math, value.shape, radius, anti));
-  const edges = at("outline")(form, () => outline(anti ? (made as { Anti: Plane }).Anti : (made as Plane)));
+  const edges = at("outline")(form, () => outline("Anti" in made ? made.Anti : made));
   const both = `${one}|${form}`;
   const tally = at("census")(both, () => census(math, types, made));
   const regions = at("regions")(both, () => math.shape.regions(made, types.shape).data);

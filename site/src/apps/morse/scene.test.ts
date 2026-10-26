@@ -164,7 +164,7 @@ test("the svg is written in the hues on screen, and offered up to a budget of ce
 });
 
 test("Enter plays and stops the rounds on the word view alone, its label following the play", () => {
-  const enter = (view: string, on?: boolean) =>
+  const enter = (view: string, on = false) =>
     labels(keymap(live(PAGE.keys, { view })), { view }, { playing: () => on } as Handle<Handled>).find(
       (row) => row.key === "Enter",
     );

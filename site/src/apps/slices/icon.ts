@@ -42,8 +42,8 @@ function facts() {
     );
   const tones: Partial<Record<number, Color>> = { [math.six.FILL()]: LIT, [math.six.VOID()]: HOLE };
   const tris: [Point[], Color][] = [];
-  hex.draw(
-    { triangle: (a, b, c, tone) => tris.push([[a, b, c], tone]) } as Pick<Pen, "triangle"> as Pen,
+  hex.draw<Color>(
+    { triangle: (a, b, c, tone) => tris.push([[a, b, c], tone]) },
     frame(-FLAT, -FLAT, 2 * FLAT, 2 * FLAT),
     cut,
     GAP,
@@ -126,6 +126,7 @@ export default function draw(pen: Pen) {
   }
   for (const edge of EDGES.filter((e) => !meets(FAR)(e) && !meets(NEAR)(e))) line(edge, EDGE, [255, 255, 255, RIM]);
   const spine = EDGES.filter(meets(NEAR));
-  for (const edge of spine) line(edge, EDGE * 2.2, [...paint.deep.slice(0, 3), HALO] as Color);
+  const [r, g, b] = paint.deep;
+  for (const edge of spine) line(edge, EDGE * 2.2, [r, g, b, HALO]);
   for (const edge of spine) line(edge, EDGE, paint.white);
 }

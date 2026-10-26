@@ -40,7 +40,7 @@ test("every chart kind draws the rows without a throw, and the pins name their a
     expect([kind, log.length > 20]).toEqual([kind, true]);
   }
   const log: Stroke[] = [];
-  chart(pen(log), BOX, ROWS.slice(0, 1), ["#008cff"], tones(VIEW), { kind: "pins", at: -1, shown: () => 5 });
+  chart(pen(log), BOX, ROWS.slice(0, 1), ["#008cff"], tones(VIEW), { kind: "pins", base: 10, at: -1, shown: () => 5 });
   expect(said(log)).toContain("level L");
   expect(said(log)).toContain("log scale");
   expect(Object.keys(KIND)).toEqual(KINDS.map(([kind]) => kind));
@@ -49,14 +49,24 @@ test("every chart kind draws the rows without a throw, and the pins name their a
 test("an all-zero chart draws its one rule, a chart with a top draws two, and log pins force the log scale", () => {
   const rules = (rows: Series[], kind = "steps") => {
     const log: Stroke[] = [];
-    chart(pen(log), BOX, rows, ["#008cff"], tones(VIEW), { kind, at: -1, shown: () => 9 });
+    chart(pen(log), BOX, rows, ["#008cff"], tones(VIEW), { kind, base: 10, at: -1, shown: () => 9 });
     return log
-      .filter(([key, text, x]) => key === "fillText" && (x as number) < 90 && /^\d/.test(text as string))
+      .filter(
+        ([key, text, x]) =>
+          key === "fillText" && typeof x === "number" && x < 90 && typeof text === "string" && /^\d/.test(text),
+      )
       .map(([, text]) => text);
   };
   expect(rules([{ ...ROWS[0], terms: ["0", "0", "0", "0", "0"] }])).toEqual(["0"]);
   expect(rules([{ ...ROWS[0], terms: ["8", "21", "40", "65"] }])).toEqual(["0", "65"]);
   expect(rules([{ ...ROWS[0], terms: ["8", "21", "40", "65"] }], "log")).toEqual(["1", "10", "100"]);
+});
+
+test("the digits chart spells every term in the base it is given", () => {
+  const log: Stroke[] = [];
+  chart(pen(log), BOX, ROWS.slice(0, 1), ["#008cff"], tones(VIEW), { kind: "digits", base: 2, at: -1, shown: () => 5 });
+  expect(said(log)).toContain("every term spelt in base 2, one row a term");
+  expect(log.filter(([key]) => key === "fillRect").length).toBe(4 + 7 + 10 + 13 + 16);
 });
 
 test("a growth eases in new rows and only the new terms of a row, and a still shows every term at once", () => {

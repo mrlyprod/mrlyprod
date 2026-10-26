@@ -63,20 +63,24 @@ export function usePaint(handle: RefObject<Touched<unknown> | null | undefined>)
 export function Pane<U = Units>({ spec, value, onChange, folds }: PaneProps<U>) {
   return (
     <Bar side="right">
-      {(folds.filter(Boolean) as Section[]).map(({ name, items = [], live }) => {
-        const rows = items
-          .filter((item) => typeof item === "string")
-          .map((key) => spec.find((row) => row.key === key)!);
-        return (
-          <Fold key={name} name={name} live={live ?? gist(rows, value)}>
-            {items.map((item) => {
-              if (typeof item !== "string") return item;
-              const row = rows.find((one) => one.key === item);
-              return row ? <Knob key={item} row={row} value={value[item]} values={value} onChange={onChange} /> : null;
-            })}
-          </Fold>
-        );
-      })}
+      {folds
+        .filter((fold): fold is Section => Boolean(fold))
+        .map(({ name, items = [], live }) => {
+          const rows = items
+            .filter((item) => typeof item === "string")
+            .map((key) => spec.find((row) => row.key === key)!);
+          return (
+            <Fold key={name} name={name} live={live ?? gist(rows, value)}>
+              {items.map((item) => {
+                if (typeof item !== "string") return item;
+                const row = rows.find((one) => one.key === item);
+                return row ? (
+                  <Knob key={item} row={row} value={value[item]} values={value} onChange={onChange} />
+                ) : null;
+              })}
+            </Fold>
+          );
+        })}
     </Bar>
   );
 }

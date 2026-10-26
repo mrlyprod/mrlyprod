@@ -1,6 +1,7 @@
 import { rows, site } from "site:routes";
 import type { Row, Topic } from "../../scripts/build.ts";
 import type { Shelf } from "../../scripts/llms.ts";
+import { state } from "../lib/app/history.ts";
 import { arrange, docked, recents, visited } from "./launch.ts";
 import { KEY, read, write } from "./prefs.ts";
 import type { Wired } from "./route.ts";
@@ -107,4 +108,4 @@ export const take = () => {
 };
 
 export const away = () =>
-  history.state?.depth > 0 ? history.back() : dispatchEvent(new CustomEvent("go", { detail: "/" }));
+  (state().depth ?? 0) > 0 ? history.back() : dispatchEvent(new CustomEvent("go", { detail: "/" }));

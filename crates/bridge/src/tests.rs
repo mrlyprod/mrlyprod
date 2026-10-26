@@ -239,12 +239,34 @@ fn an_image_crosses_by_hand_as_one_shaped_array_and_a_list_of_them() {
     assert!(core.contains("let image = hand::image_from_js(&image)?;"));
     let dts = read(&root, "bindings/js/life.d.ts");
     assert!(dts.contains(
-        "export interface Image {\n    shape: [number, number];\n    colors: Uint8Array;\n}"
+        "export interface Image {\n    shape: [number, number];\n    colors: Uint8Array<ArrayBuffer>;\n}"
     ));
     assert!(dts.contains("export function frame(scale: number): Image;"));
     assert!(dts.contains("export function frames(scale: number): Image[];"));
     let cli: String = read(&root, cli::DOORS).split_whitespace().collect();
     assert!(cli.contains("name:\"life.frames\",signature:\"(scale:usize)->[Image]\""));
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_boxed_self_reference_crosses_as_the_type_itself() {
+    let lib = "pub mod shape { #[derive(Clone, Serialize, Deserialize)] pub enum Shape { Ball { radius: u8 }, Anti(Box<Shape>), Window { inner: Box<Shape>, low: Vec<u8> } } pub fn area(shape: &Shape) -> u8 { 0 } }";
+    let m = manifest(lib);
+    let shape = m
+        .types
+        .iter()
+        .find(|t| t.path == "shape::Shape")
+        .expect("the shape");
+    let inner = || Ty::Plain {
+        path: "shape::Shape".into(),
+    };
+    assert_eq!(shape.variants[1].fields[0].ty, inner());
+    assert_eq!(shape.variants[2].fields[0].ty, inner());
+    let root = scratch("boxed", lib);
+    let dts = read(&root, "bindings/js/shape.d.ts");
+    assert!(dts.contains(
+        "export type Shape = { Ball: { radius: number } } | { Anti: Shape } | { Window: { inner: Shape; low: number[] } };"
+    ));
     std::fs::remove_dir_all(root).ok();
 }
 

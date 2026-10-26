@@ -12,6 +12,7 @@ import { hide, Lede, show } from "../../shell/parts.tsx";
 import { calm, KEY, offs, read, savers as save, screen, subscribe } from "../../shell/prefs.ts";
 import { named } from "../../shell/route.ts";
 import type { Context, Layout } from "../../shell/router.ts";
+import { state } from "../../shell/router.ts";
 import { all, find } from "../../shell/savers.ts";
 import { shooter, shots } from "./shots.ts";
 
@@ -375,8 +376,10 @@ function Screensavers({ row, rows, site, from, live }: PageProps) {
   const list = all();
   const at = spot(path);
   const go = useCallback((to: string) => {
-    if (to !== location.pathname)
-      history.pushState({ ...history.state, depth: (history.state?.depth ?? 0) + 1 }, "", to);
+    if (to !== location.pathname) {
+      const was = state();
+      history.pushState({ ...was, depth: (was.depth ?? 0) + 1 }, "", to);
+    }
     setPath(to);
     document.getElementById("main")?.scrollTo({ top: 0, behavior: "instant" });
   }, []);

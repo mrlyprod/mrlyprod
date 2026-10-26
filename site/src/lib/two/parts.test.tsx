@@ -2,13 +2,13 @@ import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/mrly/math";
 import { mount } from "../../../test/dom.ts";
 import { Rolls, rolls } from "../app/hooks.ts";
-import type { Patch, Value } from "../app/spec.ts";
+import type { Patch, Seeded } from "../app/spec.ts";
 import { roll } from "../designs/engine.ts";
 import { rng } from "../rand.ts";
 import { DIM } from "./engine.ts";
 import { useReroll } from "./parts.tsx";
 
-type ProbeProps = { value: Value; onChange: (patch: Patch) => void };
+type ProbeProps = { value: Seeded; onChange: (patch: Patch) => void };
 
 function Probe({ value, onChange }: ProbeProps) {
   useReroll(value, onChange, math);

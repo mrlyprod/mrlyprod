@@ -242,7 +242,7 @@ export function space(three: Three, canvas: HTMLCanvasElement, view: Seen) {
     material.opacity = opacity;
     material.depthWrite = !clear;
     material.clippingPlanes = clip
-      ? clip.map(({ normal, constant }) => new three.Plane(new three.Vector3(...(normal as Triple)), constant))
+      ? clip.map(({ normal, constant }) => new three.Plane(new three.Vector3(...normal), constant))
       : null;
     material.side = clip ? three.DoubleSide : three.FrontSide;
     material.needsUpdate = true;

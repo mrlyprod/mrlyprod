@@ -3,12 +3,12 @@ import { tidy } from "../app/spec.ts";
 import { TINTS } from "../color.ts";
 import type { Mrly } from "../designs/engine.ts";
 import { canon } from "../designs/engine.ts";
-import type { Disc, Src } from "./engine.ts";
+import type { Disc, Ramp, Src } from "./engine.ts";
 import { BASES, CUT, cap, cube, DIMS, LIMIT, NUMBERS, PRESETS, RAMPS, SOURCES, TILES } from "./engine.ts";
 
 /* TYPES */
 
-export type Look = { ramp: string; levels: number; invert: number; tint: string };
+export type Look = { ramp: Ramp; levels: number; invert: number; tint: string };
 
 export const SOURCE: Spec = [
   { key: "source", label: "Source", kind: "segment", def: "design", options: SOURCES },

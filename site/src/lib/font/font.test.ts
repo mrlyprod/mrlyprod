@@ -4,8 +4,6 @@ import FONT from "./font.gen.json" with { type: "json" };
 import type { Book } from "./font.ts";
 import { animate, fold, letters, merge } from "./font.ts";
 
-type Drawn = { char: string; rows: string[] };
-
 const book: Book = FONT;
 
 const WORDMARK = "MRLYPROD";
@@ -62,7 +60,7 @@ test("the kit matches the crate frame for frame", () => {
 });
 
 test("font.gen.json is the crate: every glyph, its rows and its path", () => {
-  const all: Drawn[] = crate.all();
+  const all = crate.all();
   expect(Object.keys(FONT).sort()).toEqual(all.map((one) => one.char).sort());
   for (const one of all)
     expect([one.char, book[one.char]]).toEqual([one.char, { rows: one.rows, path: crate.path(one.char) }]);

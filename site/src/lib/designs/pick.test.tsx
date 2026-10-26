@@ -8,6 +8,8 @@ import { Pick, Picker, Thumbs, watch } from "./pick.tsx";
 
 type Tell = (rows: { target: Element; isIntersecting: boolean }[]) => void;
 
+type Knob = ReactElement<{ onChange: (v: string) => void }>;
+
 const options = (html: string) =>
   [...html.matchAll(/<option value="([^"]*)"[^>]*>([^<]*)<\/option>/g)].map((found) => [found[1], found[2]]);
 
@@ -19,10 +21,13 @@ test("Pick renders the named options of 2D base 2 and writes a chosen code", () 
   expect(named).toContainEqual(["8", "point"]);
   expect(html).toContain('<option value="7" selected="">carpet</option>');
   const wrote: Value[] = [];
-  const tree = Picker({ value: { dim: 2, base: 2, code: "7" }, onChange: (patch) => wrote.push(patch), math }).props
-    .children;
-  tree.find((node: ReactElement | false) => node && node.type === Select).props.onChange("14");
-  tree.find((node: ReactElement | false) => node && node.type === Text).props.onChange(" 3 ");
+  const tree = (
+    Picker({ value: { dim: 2, base: 2, code: "7" }, onChange: (patch) => wrote.push(patch), math }) as ReactElement<{
+      children: (Knob | false)[];
+    }>
+  ).props.children;
+  tree.find((node): node is Knob => node !== false && node.type === Select)!.props.onChange("14");
+  tree.find((node): node is Knob => node !== false && node.type === Text)!.props.onChange(" 3 ");
   expect(wrote).toEqual([
     { dim: 2, base: 2, code: "14" },
     { dim: 2, base: 2, code: "3" },

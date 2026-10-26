@@ -7,14 +7,14 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Opts, View } from "../../lib/app/run.ts";
-import type { Patch, Row, Scalar, Value } from "../../lib/app/spec.ts";
-import { maxOf } from "../../lib/app/spec.ts";
+import type { Patch, Row, Scalar, Seeded, Value } from "../../lib/app/spec.ts";
+import { maxOf, minOf } from "../../lib/app/spec.ts";
 import type { Mrly } from "../../lib/designs/engine.ts";
 import { next } from "../../lib/designs/engine.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
 import type { Rng } from "../../lib/rand.ts";
 import { rng } from "../../lib/rand.ts";
-import type { Doors, Facts, FactsOf, Kind } from "./engine.ts";
+import type { Doors, FactsOf, Kind } from "./engine.ts";
 import {
   based,
   COLOURS,
@@ -39,11 +39,7 @@ import { file, inks, make, SPEC, sketch, tidied } from "./scene.ts";
 
 export type PicturesProps = { units: Doors; value: Value; tick: number; onChange: (patch: Patch) => void };
 
-type Props = WidgetProps<Doors, Handled>;
-
-type Knob = Row & { min: number };
-
-type Told = (f: Facts) => Readout[];
+type Props = WidgetProps<Doors, Handled> & { value: Seeded };
 
 type Entry = [string, Patch, string?];
 
@@ -51,7 +47,7 @@ const STEP = 700;
 
 const SMALL = { round: 5, level: 4, power: 2, depth: 1 };
 
-const row = (key: string) => SPEC.find((one) => one.key === key) as Knob;
+const row = (key: string): Row => SPEC.find((one) => one.key === key)!;
 
 export const KNOBS: Record<Kind, string> = { word: "round", plane: "level", power: "power", filter: "depth" };
 
@@ -60,9 +56,10 @@ const within = (n: number, low: number, high: number) => Math.max(low, Math.min(
 export function shift(value: Value, by: number, wrap = false) {
   const key = KNOBS[pictureOf(value)];
   const spec = row(key);
+  const low = minOf(spec, value)!;
   const top = maxOf(spec, value)!;
   const to = (value[key] as number) + by;
-  return { [key]: wrap ? (to > top ? spec.min : to < spec.min ? top : to) : within(to, spec.min, top) };
+  return { [key]: wrap ? (to > top ? low : to < low ? top : to) : within(to, low, top) };
 }
 
 export const tapped = (value: Value) =>
@@ -105,8 +102,8 @@ const sized = (f: { side: number }) => `${f.side} by ${f.side}`;
 
 const design = (f: FactsOf<"power" | "filter">) => (f.name ? `${f.name} ${f.code}` : f.title);
 
-export const ROWS = {
-  word: (f: FactsOf<"word">): Readout[] => [
+export const ROWS: { [K in Kind]: (f: FactsOf<K>) => Readout[] } = {
+  word: (f) => [
     ["letters", f.letters],
     ...(f.colour === "runs"
       ? ([
@@ -128,7 +125,7 @@ export const ROWS = {
           ["periodic control", f.control.toFixed(9)],
         ] satisfies Readout[])),
   ],
-  plane: (f: FactsOf<"plane">): Readout[] => [
+  plane: (f) => [
     ["lift", `${f.kind}, ${f.formula}`],
     ["side", sized(f)],
     ["plus", f.plus],
@@ -142,7 +139,7 @@ export const ROWS = {
       ? []
       : [["off its fold", `${f.faults} of ${f.cells} sites, first at ${site(f.first)}`] satisfies Readout]),
   ],
-  power: (f: FactsOf<"power">): Readout[] => [
+  power: (f) => [
     ["design", design(f)],
     ["tile", f.tile],
     ["side", sized(f)],
@@ -151,7 +148,7 @@ export const ROWS = {
     ["agree", `${f.agree} of ${f.cells}`],
     ["thue-morse grid", yes(f.exact)],
   ],
-  filter: (f: FactsOf<"filter">): Readout[] => [
+  filter: (f) => [
     ["design", design(f)],
     ["tile", f.kin ? `${f.tile}, the Thue-Morse tile` : f.tile],
     ["side", sized(f)],
@@ -166,6 +163,8 @@ export const ROWS = {
     ],
   ],
 };
+
+const tell = <K extends Kind>(view: K, f: FactsOf<K>) => ROWS[view](f);
 
 /* LIBRARY */
 
@@ -210,8 +209,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const timer = useRef<ReturnType<typeof setInterval> | 0>(0);
   const wrote = useRef<Scalar | null>(null);
   const plan = units ? study(units, tidied(value)) : null;
-  const f = plan?.facts;
-  const told = plan ? (ROWS[plan.view] as Told)(f!) : [];
+  const told = plan ? tell(plan.view, plan.facts) : [];
   const sheet = Boolean(plan && fits(plan));
   const word = value.view === "word";
   const play = (on: boolean) => {
@@ -235,7 +233,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   useEffect(() => {
     if (!word || (timer.current && value.round !== wrote.current)) play(false);
   }, [word, value.round]);
-  useReroll(value.seed as number, (seed) => units && onChange(rerolled(units.math, value, rng(seed))));
+  useReroll(value.seed, (seed) => units && onChange(rerolled(units.math, value, rng(seed))));
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units }),
     [units],

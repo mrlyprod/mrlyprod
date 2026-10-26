@@ -24,7 +24,7 @@ export interface Cell6d {
 /** An image: its height and width, and its flat rgba colors row by row. */
 export interface Image {
     shape: [number, number];
-    colors: Uint8Array;
+    colors: Uint8Array<ArrayBuffer>;
 }
 /** A color inside plain data, serde's form. */
 export interface ColorData {
@@ -1764,7 +1764,7 @@ export declare namespace shape {
         flip(region: shape.Region): shape.Region;
     };
     /** An exact region of the unit box, scaled onto the lattice by the side. */
-    export type Shape = { Ball: { center: shape.FracData[]; radius: shape.FracData } } | { Polytope: { walls: shape.Half[] } } | { Anti: string } | { Window: { inner: string; low: shape.FracData[]; high: shape.FracData[] } };
+    export type Shape = { Ball: { center: shape.FracData[]; radius: shape.FracData } } | { Polytope: { walls: shape.Half[] } } | { Anti: shape.Shape } | { Window: { inner: shape.Shape; low: shape.FracData[]; high: shape.FracData[] } };
     /** The per-region tallies of a shape over a design, indexed Out, Cut, In. */
     export interface ShapeCensus {
         /** The cell count of each region. */

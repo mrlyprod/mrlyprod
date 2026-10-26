@@ -8,7 +8,7 @@ export type Role = "ground" | "bg" | "panel" | "deep" | "line" | "fg" | "dim" | 
 
 export type Roles = Record<Name | Role, string>;
 
-export type Tint = { accent?: string | null; link?: string | null; theme?: string };
+export type Tint = { accent?: string; link?: string; theme?: "dark" | "light" };
 
 /* ROLES */
 

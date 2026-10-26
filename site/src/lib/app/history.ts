@@ -6,6 +6,27 @@ export type Stack = { past: Value[]; future: Value[]; at: number };
 
 export type Moved = { stack: Stack; to: Value };
 
+export type State = { depth?: number; y?: number; up?: boolean };
+
+/* BROWSER */
+
+const typed = (s: object, field: keyof State, type: "number" | "boolean") => {
+  const v: unknown = Reflect.get(s, field);
+  return v === undefined || typeof v === type;
+};
+
+const isState = (s: unknown): s is State =>
+  typeof s === "object" &&
+  s !== null &&
+  typed(s, "depth", "number") &&
+  typed(s, "y", "number") &&
+  typed(s, "up", "boolean");
+
+export const state = (): State => {
+  const s: unknown = history.state;
+  return isState(s) ? s : {};
+};
+
 /* HISTORY */
 
 export const MERGE = 500;

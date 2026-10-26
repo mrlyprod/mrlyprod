@@ -24,13 +24,11 @@ export type Merge = "sum" | "xor" | "and";
 
 export type Made = { base: number; code: string };
 
-export type Coded = { base: Scalar; code?: Code | null };
+export type Coded = { base?: Scalar; code?: Code | null };
 
 export type Crop = "ball" | "box" | "diamond" | "octahedron" | "tetrahedron" | "pyramid";
 
-export type Region = shape.Shape | { Anti: shape.Shape };
-
-export type Wall = { normal: number[]; constant: number };
+export type Wall = { normal: Normal; constant: number };
 
 export type Cropping = { crop: Crop; radius: number; anti: Scalar; policy: Policy };
 
@@ -111,12 +109,15 @@ export const PLANES: [Axis, string, Normal][] = [
   ["d", "Diagonal", [1, 1, 1]],
 ];
 export const WIDE: Record<Axis, number> = { x: 256, y: 256, z: 256, d: 384 };
-const MERGE: Partial<Record<string, moire.Combine>> & { sum: moire.Combine } = { sum: "Sum", xor: "Xor", and: "And" };
+const MERGE: Record<Merge, moire.Combine> = { sum: "Sum", xor: "Xor", and: "And" };
 
 const n = (v: string | number | bigint) => Number(v);
 
 const frees = (one: unknown): one is Free =>
-  typeof one === "object" && one !== null && "free" in one && typeof one.free === "function";
+  (typeof one === "object" || typeof one === "function") &&
+  one !== null &&
+  "free" in one &&
+  typeof one.free === "function";
 
 /* MEMO */
 
@@ -202,21 +203,21 @@ export function load(math: Mrly, cell: Cell, cubes: boolean): number {
 
 /* CROP */
 
-export function region(math: Mrly, name: string, radius: number, anti: boolean, den = DEN): Region {
+export function region(math: Mrly, name: string, radius: number, anti: boolean, den = DEN): shape.Shape {
   const frac = new math.shape.Frac(radius, den);
   const core = math.shape.named(name, DIM, frac);
   frac.free();
   return anti ? { Anti: core } : core;
 }
 
-export function walls(core: Region | null | undefined): Wall[] | null {
+export function walls(core: shape.Shape | null | undefined): Wall[] | null {
   const list = core && "Polytope" in core ? core.Polytope.walls : null;
   if (!list) return null;
-  return list.map(({ normal, offset }) => {
-    const size = Math.hypot(...normal);
+  return list.map(({ normal: [x, y, z], offset }): Wall => {
+    const size = Math.hypot(x, y, z);
     const reach = n(offset.num) / n(offset.den);
-    const sum = normal.reduce((a, b) => a + b, 0);
-    return { normal: normal.map((one) => -one / size), constant: (2 * reach - sum) / size };
+    const sum = x + y + z;
+    return { normal: [-x / size, -y / size, -z / size], constant: (2 * reach - sum) / size };
   });
 }
 

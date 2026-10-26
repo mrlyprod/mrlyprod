@@ -117,14 +117,14 @@ test("a seed leads with a row that draws a picture: the empty design and flat re
   const list = book.keys(2, 2);
   const at = (id: string) => list.findIndex((row) => row.key === id);
   expect(lead(book, list, 0)).toBe(list[0]);
-  expect(lead(book, list, at("2-2-15-voids-level"))!.key).toBe("2-2-15-surface-level");
-  expect(lead(book, list, at("2-2-0-fills-level"))!.key).toBe(list[0].key);
+  expect(lead(book, list, at("2-2-15-voids-level"))?.key).toBe("2-2-15-surface-level");
+  expect(lead(book, list, at("2-2-0-fills-level"))?.key).toBe(list[0].key);
   expect(
     lead(
       book,
       list.filter((row) => row.code === "0"),
       3,
-    )!.key,
+    )?.key,
   ).toBe("2-2-0-voids-side");
   expect(lead(book, list, 0, list[0].key)).not.toBe(list[0]);
 });
@@ -166,8 +166,13 @@ test("identify finds the records holding a window and badge prefers the row the 
   expect(badge(RECORDS, mate, mate.terms)).toMatchObject({ id: "A000290", at: 1, status: "Collision" });
   expect(badge(RECORDS, mate, mate.terms.slice(0, 3))).toBe(null);
   const own = book.typed(2, 2, "9").find((row) => row.measure === "fills" && row.axis === "level");
-  book.read(own!, 8, DEEP.cells);
-  expect(badge(RECORDS, own!, own!.terms)).toMatchObject({ id: "A000351", at: 1, status: "Proved" });
+  if (!own) throw new Error("no 2-2-9 fills row");
+  book.read(own, 8, DEEP.cells);
+  expect(badge(RECORDS, own, own.terms)).toMatchObject({ id: "A000351", at: 1, status: "Proved" });
+});
+
+test("reading a key that does not parse throws an error naming the key", () => {
+  expect(() => book.read("2-2-7-nonsense-level", 8, DEEP.cells)).toThrow("2-2-7-nonsense-level");
 });
 
 test("search takes a window of terms, a name, a code, a measure or a record id", () => {
@@ -200,7 +205,9 @@ test("the ledger spans every space when the space is any: a typed code reads in 
 test("a sequence name or a record names its row before the sweep reads it", () => {
   const fresh = ledger(math);
   const named = (needle: string) =>
-    [fresh.file(needle), ...keyed(RECORDS, needle).map((record) => fresh.file(record.key))].filter(Boolean) as Row[];
+    [fresh.file(needle), ...keyed(RECORDS, needle).map((record) => fresh.file(record.key))].filter(
+      (row): row is Row => row !== null,
+    );
   const names = (q: string) => search(fresh.keys("", ""), q, { named }).map((row) => row.key);
   expect(names("sequence_dim=3_code=23_measure=surface_axis=level")[0]).toBe("3-2-23-surface-level");
   expect(names("A000567")[0]).toBe(CANON);

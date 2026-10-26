@@ -7,7 +7,7 @@ import type { Readout } from "../app/hooks.ts";
 import { useReroll as onRoll } from "../app/hooks.ts";
 import { Knob } from "../app/knobs.tsx";
 import type { Mathy } from "../app/page.tsx";
-import type { Patch, Row, Spec, Value } from "../app/spec.ts";
+import type { Patch, Row, Seeded, Spec, Value } from "../app/spec.ts";
 import type { Mrly } from "../designs/engine.ts";
 import { canon, roll } from "../designs/engine.ts";
 import { rng } from "../rand.ts";
@@ -28,8 +28,8 @@ export type Titled<U> = Row<U> & { label: string };
 
 const WAIT = 90;
 
-export function useReroll(value: Value, onChange: (patch: Patch) => void, math: Mrly | null | undefined) {
-  onRoll(Number(value.seed), (seed) => math && onChange({ code: roll(math, DIM, read(value).base, rng(seed)) }));
+export function useReroll(value: Seeded, onChange: (patch: Patch) => void, math: Mrly | null | undefined) {
+  onRoll(value.seed, (seed) => math && onChange({ code: roll(math, DIM, read(value).base, rng(seed)) }));
 }
 
 export function useStatus<F>(

@@ -3,11 +3,11 @@ import type { Had, Three } from "../../lib/app/hooks.ts";
 import type { Page } from "../../lib/app/page.tsx";
 import type { Opts, Scene, View } from "../../lib/app/run.ts";
 import { board } from "../../lib/app/run.ts";
-import type { Raw, Scalar, Spec, Value } from "../../lib/app/spec.ts";
+import type { Raw, Spec, Value } from "../../lib/app/spec.ts";
 import { tidy } from "../../lib/app/spec.ts";
 import { rects } from "../../lib/app/svg.ts";
 import { paints, TINTS } from "../../lib/color.ts";
-import type { Facts, Mrly } from "../../lib/designs/engine.ts";
+import type { Base, Census, Facts, Mrly } from "../../lib/designs/engine.ts";
 import {
   canon,
   cap,
@@ -25,44 +25,47 @@ import { mesh } from "../../lib/designs/mesh.ts";
 import { flat, hue, iso } from "../../lib/designs/thumb.ts";
 import type { Units as Loaded } from "../../lib/units/index.ts";
 import { wasm } from "../../lib/units/index.ts";
-import type { Built, Seen } from "./stage.ts";
+import type { Seen } from "./stage.ts";
 import { space } from "./stage.ts";
 
 /* TYPES */
 
-export type Knobs = { dim: number; base: number; code: string; level: number; tint: string; spin: number };
+export type Knobs = { dim: number; base: Base; code: string; level: number; tint: string; spin: number };
 
-export type Info = Facts & {
-  dim: number;
-  base: number;
-  code: string;
-  level: number;
-  side: number;
-  name: string;
-  grid: number;
-  dimension: number;
-  ratio: number;
-  codes: number;
-  classes: number;
-  upto: number;
-  terms: string[];
-  [count: string]: Scalar | string[];
-};
+export type Info = Facts &
+  Census & {
+    dim: number;
+    base: number;
+    code: string;
+    level: number;
+    side: number;
+    name: string;
+    grid: number;
+    dimension: number;
+    ratio: number;
+    codes: number;
+    classes: number;
+    upto: number;
+    terms: string[];
+  };
 
 export type Plan = { key: string; value: Knobs; cell: Cell; info: Info };
 
-export type Given = Opts & { math: Mrly; three?: Three | null | false; tell?: (info: Info) => void };
+export type Given = Opts & { math: Mrly; three?: Three | null; tell?: (info: Info) => void };
 
 export type Stage = {
   draw: () => void;
   theme: () => void;
-  swap(next: Cell | Built): void;
   size?: () => void;
   svg?: () => string;
   turn?: (dx: number, dy: number) => void;
   pose?: () => [number, number];
   stop?: () => void;
 };
+
+type Room = ReturnType<typeof space>;
+
+type Staged = { dim: 2; stage: ReturnType<typeof plane> } | { dim: 3; stage: ReturnType<typeof solid> };
 
 export type Hands = { grow: () => void; step: (by: number) => void; deeper: (by: number) => void };
 
@@ -149,7 +152,7 @@ export function plan(math: Mrly, value: Knobs, was?: Plan): Plan {
   const key = shape(value, code);
   if (was?.key === key) return { ...was, value };
   const cell = grow(math, dim, base, code, level);
-  const { upto, terms } = sequence(math, base)!;
+  const { upto, terms } = sequence(math, base);
   const info = {
     dim,
     base,
@@ -199,13 +202,17 @@ function plane(canvas: HTMLCanvasElement, view: View, cell: Cell, colour: () => 
 function solid(
   canvas: HTMLCanvasElement,
   view: Seen,
-  three: Three | null | false | undefined,
+  three: Three | null | undefined,
   cell: Cell,
   math: Mrly,
   colour: () => string,
   spin: () => boolean,
 ) {
-  const blank = { draw: () => {}, theme: () => {}, swap: () => {} };
+  const blank: Pick<Room, "draw" | "theme" | "swap"> & Partial<Room> = {
+    draw: () => {},
+    theme: () => {},
+    swap: () => {},
+  };
   if (!three) return blank;
   try {
     return space(three, canvas, view, mesh(math.three.quads(cell)), colour, spin);
@@ -227,8 +234,15 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
   tone();
   const colour = () => ink;
   const spin = () => dim === 3 && now.value.spin === 1;
-  const stage: Stage =
-    dim === 3 ? solid(canvas, view, three, now.cell, math, colour, spin) : plane(canvas, view, now.cell, colour);
+  const staged: Staged =
+    dim === 3
+      ? { dim: 3, stage: solid(canvas, view, three, now.cell, math, colour, spin) }
+      : { dim: 2, stage: plane(canvas, view, now.cell, colour) };
+  const stage: Stage = staged.stage;
+  const swap = () => {
+    if (staged.dim === 3) staged.stage.swap(mesh(math.three.quads(now.cell)));
+    else staged.stage.swap(now.cell);
+  };
   const draw = () => {
     if (spin() && view.still) view.wake?.();
     stage.draw();
@@ -242,12 +256,14 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
     if (value.dim !== dim) return false;
     const was = now;
     now = plan(math, value, was);
-    if (now.cell !== was.cell) stage.swap(dim === 3 ? mesh(math.three.quads(now.cell)) : now.cell);
+    if (now.cell !== was.cell) swap();
     theme();
     tell?.(now.info);
   };
   const svg = () =>
-    dim === 3 ? stage.pose && iso(math, now.cell, ...stage.pose(), view.look().paper, colour()) : stage.svg!();
+    staged.dim === 3
+      ? staged.stage.pose && iso(math, now.cell, ...staged.stage.pose(), view.look().paper, colour())
+      : staged.stage.svg();
   const obj = () => math.three.to_obj(now.cell);
   tell?.(now.info);
   return {

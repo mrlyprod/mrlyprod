@@ -91,7 +91,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
                 onPick={() => onChange({ [part]: design })}
                 art={
                   <Art
-                    paint={(ctx, w) => sample(ctx, design, w, paints(ctx.canvas, String(value.tint)).accent)}
+                    paint={(ctx, w) => sample(ctx, design, w, paints(ctx.canvas, value.tint as string).accent)}
                     deps={[design, value.tint, tick]}
                   />
                 }

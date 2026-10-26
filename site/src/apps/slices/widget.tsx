@@ -7,6 +7,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Opts, View } from "../../lib/app/run.ts";
+import type { Seeded } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import type { Mrly } from "../../lib/designs/engine.ts";
 import { roll } from "../../lib/designs/engine.ts";
@@ -18,7 +19,7 @@ import { codesOf, glance, make, name, TOP, thumb } from "./scene.ts";
 
 /* TYPES */
 
-type Props = WidgetProps<Mathy, Handled> & { unit?: Mrly | null };
+type Props = WidgetProps<Mathy, Handled> & { value: Seeded; unit?: Mrly | null };
 
 type Live = { seek?: (x: number, y: number) => number; svg?: () => Promise<string> };
 
@@ -34,10 +35,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: P
   now.current = value;
   const tell = useCallback((next: Told) => setRows(next.rows), []);
   useEffect(() => onStatus?.(rows), [rows]);
-  useReroll(
-    Number(value.seed),
-    (seed) => math && onChange({ code: roll(math, DIM, read(now.current).base, rng(seed)) }),
-  );
+  useReroll(value.seed, (seed) => math && onChange({ code: roll(math, DIM, read(now.current).base, rng(seed)) }));
   const ready = (handle: Handle<Slices> | null) => {
     live.current = handle;
     const hands: Hands = {

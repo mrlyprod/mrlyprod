@@ -338,8 +338,7 @@ export function target(
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   }
-  const self = { fb, tex, aux, w: 0, h: 0 } as Target;
-  self.size = (nw, nh) => {
+  const size = (nw: number, nh: number): Target => {
     const sw = Math.max(1, Math.round(nw));
     const sh = Math.max(1, Math.round(nh));
     if (sw === self.w && sh === self.h) return self;
@@ -382,11 +381,12 @@ export function target(
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return self;
   };
-  self.drop = () => {
+  const drop = () => {
     gl.deleteFramebuffer(fb);
     gl.deleteTexture(tex);
     if (aux) gl.deleteTexture(aux);
   };
+  const self: Target = { fb, tex, aux, w: 0, h: 0, size, drop };
   return self.size(w, h);
 }
 

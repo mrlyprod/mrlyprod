@@ -24,11 +24,11 @@ const brief = (arg: unknown) =>
           ? Object.keys(arg).join(",")
           : arg;
 
-function target() {}
+const stub: Three = Object.assign(function target() {}, {} as Three);
 
 const fake = (log: Line[]): Three => {
   const any = (path: string): Three =>
-    new Proxy(Object.assign(target, {} as Three), {
+    new Proxy(stub, {
       get: (_, key) => (typeof key === "symbol" ? undefined : any(`${path}.${key}`)),
       set: (_, key: string, value: unknown) => {
         log.push([`${path}.${key}=`, brief(value)]);

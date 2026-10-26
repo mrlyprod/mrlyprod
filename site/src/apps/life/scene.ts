@@ -104,7 +104,7 @@ export const SPEC: Rows = [
     kind: "pick",
     def: 1,
     options: (value) =>
-      LEVELS.filter((n) => Number(value.number) ** n <= SPANS[dimOf(value)]).map((n): Option => [n, String(n)]),
+      LEVELS.filter((n) => (value.number as number) ** n <= SPANS[dimOf(value)]).map((n): Option => [n, String(n)]),
     group: "Mask",
     when: PANE,
   },

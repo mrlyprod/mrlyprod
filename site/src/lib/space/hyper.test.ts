@@ -3,7 +3,7 @@ import type { Call, FakeGl } from "../../../test/fake.ts";
 import { gl } from "../../../test/fake.ts";
 import { look } from "../gl/camera.ts";
 import { rng } from "../rand.ts";
-import type { Hyper, HyperOptions, Stage, Where } from "./hyper.ts";
+import type { CueArgs, Hyper, HyperOptions, Stage, Where } from "./hyper.ts";
 import { FILM, film, hyper } from "./hyper.ts";
 import { sky } from "./sky.ts";
 
@@ -289,7 +289,7 @@ test("the saver voyages after 12 s with yes and seeded gaps of 6 to 30 s with mi
 });
 
 test("the cues reach the audio bus 120 ms ahead of their phases", () => {
-  const heard: [string, number, number, Record<string, unknown>][] = [];
+  const heard: [string, number, number, CueArgs][] = [];
   const live = open({ audio: { cue: (name, at, args) => heard.push([name, at, live.view.t, args]) } });
   live.trip.trigger();
   for (let t = 0; t <= 3000; t += 20) play(live, [t]);

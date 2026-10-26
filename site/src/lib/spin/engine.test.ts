@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/mrly/math";
 import type { Value } from "../app/spec.ts";
 import { rng } from "../rand.ts";
-import type { Src } from "./engine.ts";
+import type { Src, Stack } from "./engine.ts";
 import {
   CUT,
   cap,
@@ -146,7 +146,7 @@ test("a full turn shares the copies over one turn and shows lcm petals; a partia
 
 test("the rosette is kept per plan and stack, its step in turns, its top the peak of the stack", () => {
   const plan = study(math, value({ level: 2 }));
-  const stack = { copies: 4, full: 1, step: 60, blend: "mean", samples: 2 };
+  const stack: Stack = { copies: 4, full: 1, step: 60, blend: "mean", samples: 2 };
   const mean = rosette(math, plan, stack);
   expect([mean.values.length, mean.side, mean.top]).toEqual([OUT * OUT, OUT, 1]);
   expect(rosette(math, plan, stack)).toBe(mean);
@@ -156,7 +156,7 @@ test("the rosette is kept per plan and stack, its step in turns, its top the pea
 
 test("a thumb is the same stack at any side, and a moire field is the preset at the side asked", () => {
   const plan = study(math, value({ level: 2 }));
-  const stack = { copies: 6, full: 1, step: 60, blend: "mean", samples: 2 };
+  const stack: Stack = { copies: 6, full: 1, step: 60, blend: "mean", samples: 2 };
   const small = sketch(math, plan, stack, 40);
   expect([small.values.length, small.side, small.top]).toEqual([1600, 40, 1]);
   expect(field(math, "weave", 9, 40)).toHaveLength(1600);

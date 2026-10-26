@@ -22,8 +22,6 @@ type Options = { still?: boolean; w?: number; h?: number; unit?: Mrly | null };
 
 type Frame = { main: Call[]; sheets: Call[][] };
 
-type Turn = (value: Value, handle: Pick<Spun, "playing"> | null) => string;
-
 const brief = (arg: unknown) => (arg && typeof arg === "object" ? "layer" : arg);
 
 const pen = (log: Call[]) =>
@@ -232,11 +230,12 @@ test("Enter is the primary, Stop or Spin as the scene plays, and 1 to 5 set the 
   PAGE.actions.spin(hands);
   expect(got).toEqual([900, 33, "toggle"]);
   const enter = PAGE.keys.find((row) => row.key === "Enter")!;
+  if (typeof enter.label !== "function") throw new Error("Enter wants a live label");
   expect([
     enter.button,
     enter.menu,
-    (enter.label as Turn)({}, { playing: () => true }),
-    (enter.label as Turn)({}, { playing: () => false }),
+    enter.label({}, Object.assign({} as Handle<Spun>, { playing: () => true })),
+    enter.label({}, Object.assign({} as Handle<Spun>, { playing: () => false })),
   ]).toEqual([true, "Edit", "Stop", "Spin"]);
   expect(PAGE.keys.map((row) => [row.when({ view: "table" }), row.when({ view: "wheel" })])).toEqual([
     [true, false],

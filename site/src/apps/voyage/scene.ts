@@ -5,7 +5,7 @@ import { tidy } from "../../lib/app/spec.ts";
 import type { Bus, Song } from "../../lib/audio/tempo.ts";
 import type { Cam } from "../../lib/gl/camera.ts";
 import { look as aim, drift, ease, project } from "../../lib/gl/camera.ts";
-import type { Blank, Program } from "../../lib/gl/gl2.ts";
+import type { Program } from "../../lib/gl/gl2.ts";
 import { blank, blend, context, fill, governor, program, tier } from "../../lib/gl/gl2.ts";
 import type { Vec, Vec3 } from "../../lib/gl/vec.ts";
 import { add, basis, clamp01, cross, dot, len, mat3, mix, mul, norm, rot, sub } from "../../lib/gl/vec.ts";
@@ -15,7 +15,7 @@ import type { Door, Route, State } from "../../lib/space/bang.ts";
 import { codes, route } from "../../lib/space/bang.ts";
 import type { Hyper, Over } from "../../lib/space/hyper.ts";
 import { FILM, hyper } from "../../lib/space/hyper.ts";
-import type { Frame, March, Tone } from "../../lib/space/march.ts";
+import type { Frame, Grade, March, Tone } from "../../lib/space/march.ts";
 import { GRADES, march, tone } from "../../lib/space/march.ts";
 import type { Planet } from "../../lib/space/planet.ts";
 import { planet } from "../../lib/space/planet.ts";
@@ -83,8 +83,6 @@ export type Path = { way: Route; door: Entrance; drop?: undefined };
 export type Given = Opts & { math?: Door | null; audio?: Pick<Bus, "at" | "cue"> | null };
 
 export type Voyage = ReturnType<typeof make>;
-
-export type Flying = Exclude<Voyage, Blank>;
 
 export type Hands = { again: () => void; mute: () => void; sound: () => MediaStream | null };
 
@@ -629,11 +627,13 @@ const outer = (door: Entrance) => ({
   fog: 0,
 });
 
+const unlit = (canvas: HTMLCanvasElement) => ({ ...blank(canvas), again: () => {} });
+
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const { math } = opts;
   if (!math) throw new Error("voyage: the scene wants @mrlyprod/mrly/math as opts.math");
   const gl = context(canvas);
-  if (!gl) return blank(canvas);
+  if (!gl) return unlit(canvas);
   const value = tidy(SPEC, opts) as Knobs;
   const seed = Number.isFinite(Number(opts.seed)) ? Number(opts.seed) >>> 0 : 0;
   const length = value.length * 1000;
@@ -662,7 +662,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     veil?.drop();
     point?.drop();
     console.error(error);
-    return blank(canvas);
+    return unlit(canvas);
   }
   const gov = governor(view, NOTCHES[view.lock ? "big" : tier(view)]);
   const timed: Timer = (r, start, span) => {
@@ -827,10 +827,16 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     return r.tone!;
   };
   const scale = () => (BUSY.includes(trip.stage()) ? gov.scale() : gov.tick());
-  const ramp = (a: number) => {
+  const ramp = (a: number): Grade => {
     const k = ease.smooth(a / INTO);
-    const raw: Record<string, number> = { ...RAW, ev: RAW.ev * (1 - ease.smooth(a / SETTLE)) };
-    return Object.fromEntries(Object.entries(grade).map(([key, v]): [string, number] => [key, mix(raw[key], v, k)]));
+    const raw: Grade = { ...RAW, ev: RAW.ev * (1 - ease.smooth(a / SETTLE)) };
+    return {
+      ev: mix(raw.ev, grade.ev, k),
+      bloom: mix(raw.bloom, grade.bloom, k),
+      aberration: mix(raw.aberration, grade.aberration, k),
+      vignette: mix(raw.vignette, grade.vignette, k),
+      grain: mix(raw.grain, grade.grain, k),
+    };
   };
   const body = (r: Run, flight: March, eye: Cam, frame: Frame, lit: Lit) => {
     flight.draw(eye, frame, paints(r));

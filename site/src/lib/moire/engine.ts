@@ -33,8 +33,6 @@ export type Held = { field: moire.Field; data: Float32Array; size: number };
 
 export type Preset = { name: string; base: number; code: string; level: number; combine: Combine };
 
-export type Painted = Omit<Image, "colors"> & { colors: Uint8Array<ArrayBuffer> };
-
 export type Drawn = Omit<Preset, "name"> & { seed: number; limit: number };
 
 export type Table = { scales: number[]; grid: number[][] };
@@ -145,9 +143,9 @@ export function paint(
   levels: number,
   invert: Scalar,
   symmetric = false,
-): Painted {
+): Image {
   const image = math.moire.render(made, colors, Math.max(2, Math.floor(levels)), symmetric, Number(invert) === 1, 1);
-  const out = image.colors as Uint8Array<ArrayBuffer>;
+  const out = image.colors;
   for (let i = 0; i < data.length; i++) if (Number.isNaN(data[i])) out[i * 4 + 3] = 0;
   return { shape: image.shape, colors: out };
 }

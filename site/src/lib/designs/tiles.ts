@@ -12,8 +12,10 @@ export const LEVELS = [1, 2];
 
 /* RULES */
 
-const RULES: Record<string, Rule> = {
-  carpet: (r, c) => (r & 1) + (c & 1) <= 1,
+const CARPET: Rule = (r, c) => (r & 1) + (c & 1) <= 1;
+
+const RULES: Partial<Record<string, Rule>> = {
+  carpet: CARPET,
   net: (r, c) => (r & 1) + (c & 1) >= 1,
   htree: (r) => (r & 1) === 0,
   vtree: (_r, c) => (c & 1) === 0,
@@ -21,7 +23,7 @@ const RULES: Record<string, Rule> = {
 };
 
 export function seed(design: string, n: number): Tile {
-  const rule = RULES[design] ?? RULES.carpet;
+  const rule = RULES[design] ?? CARPET;
   const cells = new Uint8Array(n * n);
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) cells[r * n + c] = rule(r, c) ? 1 : 0;
   return { size: n, cells };

@@ -1981,7 +1981,7 @@ impl<'a> Unit<'a> {
         .ok();
         writeln!(
             out,
-            "export interface Image {{\n    shape: [number, number];\n    colors: Uint8Array;\n}}"
+            "export interface Image {{\n    shape: [number, number];\n    colors: Uint8Array<ArrayBuffer>;\n}}"
         )
         .ok();
         writeln!(out, "/** A color inside plain data, serde's form. */").ok();

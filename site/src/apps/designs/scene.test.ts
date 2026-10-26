@@ -77,7 +77,7 @@ const open = (seed: number, value: Raw, three?: boolean) => {
     ...defaults(SPEC),
     ...value,
     math,
-    three: three && fake(log),
+    three: three ? fake(log) : undefined,
     tell: (info) => told.push(info),
   });
   return {

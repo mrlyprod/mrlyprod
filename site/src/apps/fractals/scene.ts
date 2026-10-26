@@ -233,7 +233,7 @@ export const go = (one: Goal): Value => ({
 
 export const at = (value: Value, one: Goal) => where({ ...value, ...go(one) }) === where(value);
 
-export const limits = (value: Value) => [spanOf(cap(value)), spanOf(OUT)];
+export const limits = (value: Value): [number, number] => [spanOf(cap(value)), spanOf(OUT)];
 
 const read = (opts: Opts): Knobs => ({
   ...(tidy(SPEC, opts) as Knobs),
@@ -244,9 +244,22 @@ const tone = (palette: string) => (palette === "seeded" ? "" : palette || "class
 
 /* SCENE */
 
+function rest(canvas: HTMLCanvasElement, opts: Given) {
+  const value = read(opts);
+  const { draw, stop } = blank(canvas);
+  return {
+    draw,
+    stop,
+    fly: () => {},
+    halt: () => spot(value.kind, seat(value)),
+    flying: () => false,
+    at: () => seat(value),
+  };
+}
+
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const gl = context(canvas);
-  if (!gl) return blank(canvas);
+  if (!gl) return rest(canvas, opts);
   let value = read(opts);
   const lock = view.lock;
   const build = (still: Sight) => {
@@ -269,7 +282,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     space = build(seat(value));
   } catch (error) {
     console.error(error);
-    return blank(canvas);
+    return rest(canvas, opts);
   }
   const stop = () => {
     space.drop();

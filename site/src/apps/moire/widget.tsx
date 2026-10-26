@@ -15,12 +15,10 @@ import { useTheme } from "../../lib/designs/pick.tsx";
 import type { Preset } from "../../lib/moire/engine.ts";
 import { drawn, matrix, presetOf, presets, swatch } from "../../lib/moire/engine.ts";
 import { stamp } from "../../lib/moire/sheet.ts";
-import type { Fault, Field, Matrix, Moire, Player } from "./scene.ts";
+import type { Facts, Moire, Player } from "./scene.ts";
 import { make } from "./scene.ts";
 
 /* TYPES */
-
-export type Told = Partial<Fault & Omit<Matrix, "view"> & Omit<Field, "view"> & { view: string }>;
 
 export type ShelvesProps = { value: Moire; onChange: (patch: Patch) => void; math?: Mrly | null };
 
@@ -28,24 +26,24 @@ type Props = WidgetProps<Mathy, Player> & { value: Moire; unit?: Mrly | null };
 
 const exact = (r: number) => (r === 0 ? "0" : r.toFixed(9));
 
-export function rows(f: Told | null): Readout[] {
+export function rows(f: Facts | null): Readout[] {
   if (!f) return [];
-  if (f.error) return [["error", f.error]];
+  if ("error" in f) return [["error", f.error]];
   if (f.view === "field") {
     return [
       ["design", f.name ? `${f.name} ${f.code}` : `code ${f.code}`],
-      ["layers", f.layers!],
-      ["scales", f.scales!.join(" ")],
+      ["layers", f.layers],
+      ["scales", f.scales.join(" ")],
       ["pixels", `${f.size} by ${f.size}`],
     ];
   }
   return [
     ["scale m", f.row || "none"],
     ["scale n", f.mate || "none earlier"],
-    ["r", f.r === null ? "none" : exact(f.r!)],
+    ["r", f.r === null ? "none" : exact(f.r)],
     [
       "row of m",
-      !f.row ? "none" : f.prime ? "clear against every earlier scale" : `largest ${exact(f.max!)} at scale ${f.at}`,
+      !f.row ? "none" : f.prime ? "clear against every earlier scale" : `largest ${exact(f.max)} at scale ${f.at}`,
     ],
     ["matrix", `${f.k} by ${f.k}`],
   ];
@@ -101,7 +99,7 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
 
 export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
   const math = useUnit("math", unit);
-  const [facts, setFacts] = useState<Told | null>(null);
+  const [facts, setFacts] = useState<Facts | null>(null);
   const handle = useRef<Handle<Player> | null>(null);
   const change = useLatest(onChange);
   const made = useCallback(

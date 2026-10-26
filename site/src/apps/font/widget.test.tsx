@@ -6,7 +6,7 @@ const PLAN = { text: "hi", rows: 7, cols: 11, frames: 100, fps: 25 };
 const FACTS = { pens: 108, strokes: 328, flagged: "D L" };
 
 test("the status reads the pens, their strokes and the flagged ones on the wall, and the board, frames and time of the text", () => {
-  expect(status({ view: "pens" }, PLAN, FACTS)).toEqual([
+  expect(status({ view: "pens", speed: 1 }, PLAN, FACTS)).toEqual([
     ["pens", 108],
     ["strokes", 328],
     ["flagged", "D L"],
@@ -16,7 +16,7 @@ test("the status reads the pens, their strokes and the flagged ones on the wall,
     ["frames", 100],
     ["time", "2.0 s"],
   ]);
-  expect(status({ view: "pens" }, PLAN, null)).toEqual([]);
+  expect(status({ view: "pens", speed: 1 }, PLAN, null)).toEqual([]);
   expect(status({ view: "text", speed: 1 }, null, FACTS)).toEqual([]);
 });
 

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import * as font from "@mrlyprod/mrly/font";
+import type { Stroke } from "../../../test/pen.ts";
 import type { View } from "../../lib/app/run.ts";
 import type { Patch } from "../../lib/app/spec.ts";
 import { defaults } from "../../lib/app/spec.ts";
@@ -7,8 +8,6 @@ import { rng } from "../../lib/rand.ts";
 import { gallery, SAMPLES, slug } from "./engine.ts";
 import type { Tile, Told } from "./scene.ts";
 import { layout, make, named, PAGE, place, SPEC, tile } from "./scene.ts";
-
-type Call = [string | symbol, ...unknown[]];
 
 type Options = { still?: boolean; w?: number; h?: number; dpr?: number };
 
@@ -19,7 +18,7 @@ const PENS = KINDS.flatMap((kind) => kind.glyphs);
 const FLAGGED = PENS.filter((one) => one.flag).length;
 
 const open = (value: Patch, { still = false, w = 800, h = 600, dpr = 2 }: Options = {}) => {
-  const log: Call[] = [];
+  const log: Stroke[] = [];
   const plans: Told[] = [];
   const ctx = new Proxy({} as CanvasRenderingContext2D, {
     get:

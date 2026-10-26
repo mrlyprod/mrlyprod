@@ -12,7 +12,7 @@ import type { Viewer } from "./scene.ts";
 import { HOLD, make, PAGE, SPEC, tones } from "./scene.ts";
 import { detail, ORBIT, START, VIEWS } from "./space.ts";
 
-type Line = [string, ...unknown[]];
+type Line = [string | symbol, ...unknown[]];
 
 const brief = (arg: unknown) =>
   ArrayBuffer.isView(arg)
@@ -26,10 +26,10 @@ const brief = (arg: unknown) =>
 const pen = (log: Line[]) =>
   new Proxy({} as CanvasRenderingContext2D, {
     get:
-      (_, key: string) =>
+      (_, key) =>
       (...args: unknown[]) =>
         log.push([key, ...args]),
-    set: (_, key: string, v: unknown) => {
+    set: (_, key, v: unknown) => {
       log.push([key, v]);
       return true;
     },
@@ -429,8 +429,10 @@ test("the camera pick renders through the perspective eye or the isometric box",
     const live = open({ ...CUBE, camera }, { three: true });
     return (
       live.at(0).filter(([key]) => key === "three.WebGLRenderer.render").length &&
-      live.log.some(([key]) =>
-        key.startsWith(camera === "iso" ? "three.OrthographicCamera.position" : "three.PerspectiveCamera.position"),
+      live.log.some(
+        ([key]) =>
+          typeof key === "string" &&
+          key.startsWith(camera === "iso" ? "three.OrthographicCamera.position" : "three.PerspectiveCamera.position"),
       )
     );
   };

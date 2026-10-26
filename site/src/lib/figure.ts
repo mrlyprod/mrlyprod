@@ -131,7 +131,7 @@ export function queue<T>({
 
 let table: Table = { figures: {}, units: {}, plates: [] };
 
-export const inked = (theme: string, accent?: string | null, link?: string | null) =>
+export const inked = (theme: "dark" | "light", accent?: string, link?: string) =>
   ink(tinted(theme === "dark" ? dark : light, { accent, link, theme }));
 
 let shade: Shade | null = null;

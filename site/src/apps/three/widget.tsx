@@ -7,7 +7,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Make } from "../../lib/app/run.ts";
-import type { Patch, Value } from "../../lib/app/spec.ts";
+import type { Patch, Seeded, Value } from "../../lib/app/spec.ts";
 import type { Spot } from "../../lib/app/touch.ts";
 import { paints } from "../../lib/color.ts";
 import type { Mrly } from "../../lib/designs/engine.ts";
@@ -22,8 +22,9 @@ import { CROPS, make, name } from "./scene.ts";
 
 /* TYPES */
 
-export type Props = Pick<WidgetProps<Had<"math">, Held>, "value" | "onChange"> &
-  Partial<Pick<WidgetProps<Had<"math">, Held>, "onReady" | "onExport" | "onStatus">> & {
+export type Props = Pick<WidgetProps<Had<"math">, Held>, "onChange"> & { value: Seeded } & Partial<
+    Pick<WidgetProps<Had<"math">, Held>, "onReady" | "onExport" | "onStatus">
+  > & {
     unit?: Mrly | null;
     three?: Three | null;
   };
@@ -77,7 +78,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
     if (now.current.source === "field") patch.combine = COMBINE[Math.floor(rand() * COMBINE.length)];
     onChange(patch);
   };
-  useReroll(value.seed as number, rolled);
+  useReroll(value.seed, rolled);
   const mode = useRef(`${value.source} ${Boolean(value.crop)}`);
   useEffect(() => {
     const next = `${value.source} ${Boolean(value.crop)}`;

@@ -7,7 +7,7 @@ export * as grid from "./grid.ts";
 export { Grid } from "./grid.ts";
 export * as hex from "./hex.ts";
 export type { Color, Ink, Name, Palette, Ramps, Swatch } from "./ink.ts";
-export { fade, ink, mix, Ramp } from "./ink.ts";
+export { fade, ink, mix, NAMES, Ramp } from "./ink.ts";
 export * as iso from "./iso.ts";
 export type { Patch, Pixels } from "./pixels.ts";
 export * as plot from "./plot.ts";

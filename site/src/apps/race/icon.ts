@@ -96,9 +96,9 @@ export default function draw(pen: Pen) {
     return Math.hypot(x - hx, y - hy) < finish - unit;
   };
   const clip = (seen: Uint8Array) => Uint8Array.from(seen, (on, i) => (on && inside(i) ? 1 : 0));
-  cells.paint(pen, { shape, types: clip(slow.seen) }, (type) =>
-    type ? ([...paint.light.slice(0, 3), TRAIL] as Color) : null,
-  );
+  const [r, g, b] = paint.light;
+  const trail: Color = [r, g, b, TRAIL];
+  cells.paint(pen, { shape, types: clip(slow.seen) }, (type) => (type ? trail : null));
   cells.paint(pen, { shape, types: clip(fast.seen) }, (type) => (type ? [255, 255, 255, TRAIL] : null));
   for (const walker of slow.at) {
     if (!inside(walker)) continue;

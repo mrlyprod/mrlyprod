@@ -197,6 +197,7 @@ function picture(ctx: CanvasRenderingContext2D, box: Rect, one: Art | null, t: T
   else if (one.kind === "pins")
     chart(ctx, box, [{ key: "pins", terms: one.terms, start: 1, say: one.say }], [t.accent], t, {
       kind: "log",
+      base: 10,
       at: -1,
       shown: () => shown({ key: "pins", terms: one.terms }),
     });

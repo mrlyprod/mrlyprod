@@ -3,6 +3,7 @@ import * as math from "@mrlyprod/mrly/math";
 import { renderToStaticMarkup } from "react-dom/server";
 import { rng } from "../../lib/rand.ts";
 import type { Facts } from "./scene.ts";
+import type { RosettesProps } from "./widget.tsx";
 import { lit, Rosettes, rolled, rows, wrap } from "./widget.tsx";
 
 test("a reroll draws the design, the copies and a blend other than meet, on a full turn", () => {
@@ -43,7 +44,7 @@ test("the readouts are the demo stats and the share of order zero, then the lead
 });
 
 test("the library lists the six blends and the stacks, the one in hand lit, a stack lit only by its copies and its turn", () => {
-  const value = {
+  const value: RosettesProps["value"] = {
     source: "design",
     blend: "sum",
     copies: 6,

@@ -61,6 +61,7 @@ test("the riser sweeps its noise band from 200 Hz to 5 kHz over 1.8 s", () => {
 
 test("every voice opens and closes its envelopes at the floor and stops no source before its envelope ends", () => {
   for (const [name, voice] of Object.entries(VOICES)) {
+    if (!voice) continue;
     const ctx = lone(voice);
     const shaped = ctx.find("Gain").filter((g) => g.gain.calls.length);
     const edges = shaped.map((g) => [

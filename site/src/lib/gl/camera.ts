@@ -58,10 +58,10 @@ export function project(view: Pick<View, "w" | "h">, cam: Cam, p: Vec): Vec3 | n
 
 const waves = (seed: number, n: number, lo: number, hi: number) => {
   const rand = rng(seed >>> 0);
-  return Array.from({ length: n }, () => [lo + rand() * (hi - lo), rand() * TAU]);
+  return Array.from({ length: n }, (): [number, number] => [lo + rand() * (hi - lo), rand() * TAU]);
 };
 
-const sum = (list: number[][], t: number) =>
+const sum = (list: readonly [number, number][], t: number) =>
   list.reduce((acc, [hz, ph]) => acc + Math.sin((TAU * hz * t) / 1000 + ph), 0) / list.length;
 
 export function drift(seed: number, t: number, amp: number): Vec3 {

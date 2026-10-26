@@ -20,7 +20,7 @@ const pen = (log: Call[]) =>
   new Proxy({} as CanvasRenderingContext2D, {
     get: (_, key) => (key === "measureText" ? () => ({ width: 10 }) : (...args: unknown[]) => log.push([key, ...args])),
     set: (_, key, v: unknown) => {
-      log.push([`${String(key)}=`, v]);
+      log.push([`${key as string}=`, v]);
       return true;
     },
   });
@@ -161,7 +161,7 @@ test("a thumb is one path with a dot a cell of its height", () => {
 
 test("tint shows only for the section, since the crate colours the points itself", () => {
   const tint = SPEC.find((one) => one.key === "tint")!;
-  expect([tint.when?.({ view: "points" }), tint.when?.({ view: "section" })]).toEqual([false, true]);
+  expect([tint.when!({ view: "points" }), tint.when!({ view: "section" })]).toEqual([false, true]);
 });
 
 test("an export is named by the design, the level and the view it shows", () => {

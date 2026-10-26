@@ -6,7 +6,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Opts, View } from "../../lib/app/run.ts";
-import type { Option, Scalar, Units } from "../../lib/app/spec.ts";
+import type { Option, Scalar, Seeded, Units } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
 import type { Start } from "../../lib/life/engine.ts";
@@ -19,7 +19,7 @@ import { make, PRESETS, RULES, SPEC, wears } from "./scene.ts";
 
 /* TYPES */
 
-type Props = Partial<WidgetProps<Units, Life>> & Pick<WidgetProps<Units, Life>, "value" | "onChange">;
+type Props = Partial<WidgetProps<Units, Life>> & Pick<WidgetProps<Units, Life>, "onChange"> & { value: Seeded };
 
 type Act = "step" | "doom" | "reset" | "clear";
 
@@ -84,7 +84,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     />
   );
   useStatus(onStatus, status(stat));
-  useReroll(value.seed as number, () => onChange({ from: "noise" }));
+  useReroll(value.seed, () => onChange({ from: "noise" }));
   const folds = [
     {
       name: "Board",

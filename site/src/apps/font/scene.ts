@@ -45,7 +45,7 @@ export type Knobs = {
 
 export type Told = { text: string; rows: number; cols: number; frames: number; fps: number };
 
-export type Given = Opts & { font?: Font | null; kinds?: readonly Shelved[] | null; onPlan?: (plan: Told) => void };
+export type Given = Opts & { font: Font; kinds?: readonly Shelved[] | null; onPlan?: (plan: Told) => void };
 
 export type Tile = {
   across: number;
@@ -201,15 +201,15 @@ export function place(box: Pick<Tile, "across" | "down" | "n">, i: number): [num
 
 /* SCENE */
 
-export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
+export function make(canvas: HTMLCanvasElement, view: View, opts: Given) {
   const ctx = canvas.getContext("2d")!;
   const { font, onPlan } = opts;
-  const pens = (opts.kinds ?? gallery(font!)).flatMap((kind) => kind.glyphs);
+  const pens = (opts.kinds ?? gallery(font)).flatMap((kind) => kind.glyphs);
   const starts = pens.map(() => 0);
   let value = { ...tidy(SPEC, opts), seed: opts.seed } as Knobs;
   let said = sample(view.rand);
-  let made = written(font!, value.text || said, value.pad);
-  let show = plan(font!, value, made);
+  let made = written(font, value.text || said, value.pad);
+  let show = plan(font, value, made);
   let start = 0;
   let base = 0;
   let from = view.t;
@@ -225,8 +225,8 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const told = () =>
     onPlan?.({ text: show.text, rows: show.rows, cols: show.cols, frames: show.frames.length, fps: show.fps });
   const build = (words: string) => {
-    if (made.text !== words || made.pad !== value.pad) made = written(font!, words, value.pad);
-    show = plan(font!, value, made);
+    if (made.text !== words || made.pad !== value.pad) made = written(font, words, value.pad);
+    show = plan(font, value, made);
   };
   const frame = (k: number) => (view.still ? show.still : index(k - start, show.frames.length, value.loop));
   const at = (k: number, i: number) => {
@@ -314,7 +314,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     const j = index(k - start, old.frames.length, was.loop);
     build(words);
     if (show.text !== old.text) {
-      const kept = cells(font!, common(old.text, show.text), value.pad);
+      const kept = cells(font, common(old.text, show.text), value.pad);
       return k - (j > old.still ? kept : Math.min(j, kept));
     }
     if (value.loop !== was.loop) return k - Math.min(j, show.still);

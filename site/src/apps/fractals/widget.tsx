@@ -6,7 +6,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Fix, Opts, View } from "../../lib/app/run.ts";
-import type { Units, Value } from "../../lib/app/spec.ts";
+import type { Seeded, Units, Value } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
 import type { Pair } from "../../lib/fractal/orbit.ts";
@@ -20,7 +20,7 @@ import { at, go, limits, make, seat, spot, where } from "./scene.ts";
 
 /* TYPES */
 
-type Props = Partial<WidgetProps<Units, Steered>> & Pick<WidgetProps<Units, Steered>, "value" | "onChange">;
+type Props = Partial<WidgetProps<Units, Steered>> & Pick<WidgetProps<Units, Steered>, "onChange"> & { value: Seeded };
 
 type PlacesProps = Pick<WidgetProps<Units, Steered>, "value" | "onChange">;
 
@@ -46,12 +46,12 @@ export function point(box: Rect, e: Pointer): Pair {
   return [(e.clientX - box.left - box.width / 2) / side, (box.top + box.height / 2 - e.clientY) / side];
 }
 
-export function scale(v: Sight, p: readonly number[], k: number, [least, most]: readonly number[]) {
+export function scale(v: Sight, p: readonly number[], k: number, [least, most]: readonly [number, number]) {
   const span = Math.min(most, Math.max(least, v.span / k));
   return zoomAt(v, p, v.span / span);
 }
 
-export function pinch(from: Sight, [a, b]: readonly Pair[], [c, d]: readonly Pair[], edges: readonly number[]) {
+export function pinch(from: Sight, [a, b]: readonly Pair[], [c, d]: readonly Pair[], edges: readonly [number, number]) {
   const mid = (p: Pair, q: Pair): Pair => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
   const gap = (p: Pair, q: Pair) => Math.hypot(p[0] - q[0], p[1] - q[1]) || 1e-9;
   const [m0, m1] = [mid(a, b), mid(c, d)];
@@ -119,7 +119,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const [flight, setFlight] = useState<Sight | null>(null);
   if (mine.current.view && !mine.current.wrote.includes(where(value))) forget();
   useStatus(onStatus, rows(value, flight ?? seat(value)));
-  useReroll(value.seed as number, (seed) => onChange(go(roll(now.current.kind, seed))));
+  useReroll(value.seed, (seed) => onChange(go(roll(now.current.kind as Kind, seed))));
   const rest = useCallback((place: Value | null) => {
     live.current?.pause();
     setFlight(null);
@@ -128,11 +128,11 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     change.current(place);
   }, []);
   const tell = useCallback((v: Sight) => setFlight(v), []);
-  const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
-      make(canvas, view, { ...opts, onRest: rest, onTell: tell }) as Flight,
-    [],
-  );
+  const scene = useCallback((canvas: HTMLCanvasElement, view: View, opts: Opts) => {
+    const made = make(canvas, view, { ...opts, onRest: rest, onTell: tell });
+    if (!made.fly) throw new Error("fractals: the page never locks");
+    return made;
+  }, []);
   const base = () => mine.current.view ?? live.current?.at();
   const put = (v: Sight) => {
     const patch = spot(now.current.kind as Kind, v);

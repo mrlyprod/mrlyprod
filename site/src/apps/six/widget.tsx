@@ -6,7 +6,7 @@ import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import type { Opts, View } from "../../lib/app/run.ts";
-import type { Patch, Value } from "../../lib/app/spec.ts";
+import type { Patch, Seeded, Value } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import type { Mrly } from "../../lib/designs/engine.ts";
 import { read, useTheme } from "../../lib/designs/pick.tsx";
@@ -17,7 +17,7 @@ import { make, name, sketch } from "./scene.ts";
 
 /* TYPES */
 
-type Props = Partial<WidgetProps<Mathy, Held>> & Pick<WidgetProps<Mathy, Held>, "value" | "onChange">;
+type Props = Partial<WidgetProps<Mathy, Held>> & Pick<WidgetProps<Mathy, Held>, "onChange"> & { value: Seeded };
 
 type SheetsProps = { math: Mrly; value: Value; tick: number; onChange: (patch: Patch) => void };
 
@@ -101,7 +101,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const change = useRef(onChange);
   now.current = value;
   change.current = onChange;
-  useReroll(value.seed as number, (seed) => unit && onChange({ code: reroll(unit, read(value).base, seed) }));
+  useReroll(value.seed, (seed) => unit && onChange({ code: reroll(unit, read(value).base, seed) }));
   useEffect(() => onStatus?.(rows(facts)), [facts]);
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>

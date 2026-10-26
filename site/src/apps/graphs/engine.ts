@@ -13,6 +13,10 @@ export type Graph = "core" | "edge" | "tunnel" | "dual";
 
 export type Plain = Exclude<Graph, "dual">;
 
+export type Hexed = Exclude<Graph, "tunnel">;
+
+export type Site = { space: "flat" | "cube"; graph: Plain } | { space: "hex"; graph: Hexed };
+
 export type Knobs = {
   dim: number;
   view: string;
@@ -84,7 +88,7 @@ export const NAMES: Record<Graph, string> = {
   tunnel: "Tunnel, empty cells",
   dual: "Dual, fills and voids",
 };
-export const KINDS: Record<Space, Graph[]> = {
+export const KINDS: { flat: Plain[]; cube: Plain[]; hex: Hexed[] } = {
   flat: ["core", "edge", "tunnel"],
   cube: ["core", "edge", "tunnel"],
   hex: ["core", "dual", "edge"],
@@ -143,15 +147,21 @@ export const design = (value: Seed) => ({
   code: String(value?.code ?? "").trim(),
 });
 
-export const kindOf = (value: Raw): Graph =>
-  (KINDS[spaceOf(value)] as readonly unknown[]).includes(value?.graph)
-    ? (value.graph as Graph)
-    : KINDS[spaceOf(value)][0];
+const among = <G extends Graph>(list: readonly G[], graph: unknown): G => list.find((one) => one === graph) ?? list[0];
+
+export function siteOf(value: Raw): Site {
+  const space = spaceOf(value);
+  return space === "hex"
+    ? { space, graph: among(KINDS.hex, value?.graph) }
+    : { space, graph: among(KINDS[space], value?.graph) };
+}
+
+export const kindOf = (value: Raw): Graph => siteOf(value).graph;
 
 export const graphs = (value: Raw): [Graph, string][] => KINDS[spaceOf(value)].map((one) => [one, NAMES[one]]);
 
 export function turn(value: Raw, by: number): Graph {
-  const list = KINDS[spaceOf(value)];
+  const list: readonly Graph[] = KINDS[spaceOf(value)];
   return list[(list.indexOf(kindOf(value)) + by + list.length) % list.length];
 }
 
@@ -206,33 +216,27 @@ function aspect(math: Mrly, net: graph.Network): graph.Network {
   });
 }
 
-export function build(
-  math: Mrly,
-  space: Space,
-  base: number,
-  code: string,
-  number: number,
-  level: number,
-  graph: Graph,
-): Built {
-  if (space === "flat") {
+export function build(math: Mrly, site: Site, base: number, code: string, number: number, level: number): Built {
+  if (site.space === "flat") {
     const cell = math.two.create(code, number, level, 0, base);
     return {
       side: cell.shape[0],
-      net: math.graph[`${graph as Plain}_graph`]({ shape: cell.shape, data: cell.types }),
+      net: math.graph[`${site.graph}_graph`]({ shape: cell.shape, data: cell.types }),
       euler: count(math.two.census(cell).euler),
     };
   }
   const cell = math.three.create(code, number, level, base);
-  if (space === "cube")
+  if (site.space === "cube")
     return {
       side: cell.shape[0],
-      net: math.graph[`${graph as Plain}_graph`]({ shape: cell.shape, data: cell.types }),
+      net: math.graph[`${site.graph}_graph`]({ shape: cell.shape, data: cell.types }),
       euler: count(math.three.census(cell).euler),
     };
   const cut = math.six.cut(cell);
   const net =
-    graph === "edge" ? math.six.slice_edge_graph(cut, math.six.FILL()) : math.six[`slice_${graph}_graph`](cut);
+    site.graph === "edge"
+      ? math.six.slice_edge_graph(cut, math.six.FILL())
+      : math.six[`slice_${site.graph}_graph`](cut);
   return { side: cell.shape[0], net: aspect(math, net), euler: count(math.six.fills_only(cut).euler) };
 }
 
@@ -255,12 +259,12 @@ export function flatten(net: graph.Network): Flat {
 const sights = new Map<string, Flat>();
 
 export function glimpse(math: Mrly, value: Seed, graph: Graph): Flat {
-  const space = spaceOf(value);
+  const site = siteOf({ ...value, graph });
   const { dim, base, code } = design(value);
-  const at = [space, base, code, graph].join(":");
+  const at = [site.space, base, code, site.graph].join(":");
   if (!sights.has(at)) {
     if (sights.size >= KEPT) sights.clear();
-    const { net } = build(math, space, base, canon(math, dim, base, code), SEEN, DEPTH, graph);
+    const { net } = build(math, site, base, canon(math, dim, base, code), SEEN, DEPTH);
     sights.set(at, flatten(net));
     net.free();
   }
@@ -301,6 +305,9 @@ export function giant(math: Mrly, net: graph.Network): number {
 
 /* DEAL */
 
+const dealt = (space: Space, rand: Rng): Site =>
+  space === "hex" ? { space, graph: pick(rand, KINDS.hex) } : { space, graph: pick(rand, KINDS[space]) };
+
 export function deal(
   math: Mrly,
   value: Knobs,
@@ -313,7 +320,8 @@ export function deal(
   let best: Best | null = null;
   for (let go = 0; go < ROLLS; go++) {
     const code = ask.code ? roll(math, dim, base, rand) : canon(math, dim, base, kept);
-    const graph = ask.graph ? pick(rand, KINDS[space]) : kindOf(value);
+    const site = ask.graph ? dealt(space, rand) : siteOf(value);
+    const graph = site.graph;
     const layout = ask.layout ? pick(rand, ["lattice", "force"]) : value.layout;
     const asked = { ...value, code, graph, layout };
     const most = top(math, asked, room);
@@ -321,12 +329,11 @@ export function deal(
     const level = ask.level ? low + Math.floor(rand() * (most - low + 1)) : Math.min(value.level, most);
     const { net } = build(
       math,
-      space,
+      site,
       base,
       code,
       value.number,
       Math.min(level, top(math, { ...asked, layout: "force" })),
-      graph,
     );
     const role = roles(math, net);
     const big = giant(math, net);
@@ -342,13 +349,13 @@ export function deal(
 /* STUDY */
 
 export function study(math: Mrly, value: Knobs): Plan {
-  const space = spaceOf(value);
+  const site = siteOf(value);
+  const { space, graph } = site;
   const { dim, base, code: asked } = design(value);
   const code = canon(math, dim, base, asked);
-  const graph = kindOf(value);
   const most = top(math, { ...value, code });
   const level = Math.max(1, Math.min(value.level, most));
-  const { side, net, euler } = build(math, space, base, code, value.number, level, graph);
+  const { side, net, euler } = build(math, site, base, code, value.number, level);
   const census = math.graph.census(net);
   const { dim: drawn, count: nodes, positions, pairs } = flatten(net);
   const role = roles(math, net);

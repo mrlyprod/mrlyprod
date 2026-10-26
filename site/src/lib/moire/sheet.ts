@@ -1,5 +1,5 @@
+import type { Image } from "@mrlyprod/mrly/math";
 import type { Box } from "../app/run.ts";
-import type { Painted } from "./engine.ts";
 
 /* TYPES */
 
@@ -7,7 +7,7 @@ export type Square = { x: number; y: number; side: number };
 
 export type Pad = {
   ctx: CanvasRenderingContext2D;
-  put: (image: Pick<Painted, "colors">, size: number) => void;
+  put: (image: Pick<Image, "colors">, size: number) => void;
   clear: () => void;
   blit: (size: number, box: Square, smooth: boolean) => void;
 };
@@ -33,7 +33,7 @@ export function shell(canvas: HTMLCanvasElement, view: Box): Pad {
     if (!sheets.has(size)) sheets.set(size, new OffscreenCanvas(size, size));
     return sheets.get(size)!;
   };
-  const put = ({ colors }: Pick<Painted, "colors">, size: number) => {
+  const put = ({ colors }: Pick<Image, "colors">, size: number) => {
     sheet(size)
       .getContext("2d")!
       .putImageData(
@@ -53,7 +53,7 @@ export function shell(canvas: HTMLCanvasElement, view: Box): Pad {
   return { ctx, put, clear, blit };
 }
 
-export function stamp(ctx: Surface, { colors }: Pick<Painted, "colors">, size: number) {
+export function stamp(ctx: Surface, { colors }: Pick<Image, "colors">, size: number) {
   const image = new ImageData(new Uint8ClampedArray(colors.buffer, colors.byteOffset, colors.length), size, size);
   const side = ctx.canvas.width;
   if (side === size) {

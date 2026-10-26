@@ -1,16 +1,17 @@
 import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/mrly/math";
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Frame } from "../../lib/app/frame.tsx";
 import type { Three } from "../../lib/app/hooks.ts";
-import type { Scalar, Value } from "../../lib/app/spec.ts";
+import type { Value } from "../../lib/app/spec.ts";
 import type { Mrly } from "../../lib/designs/engine.ts";
 import { classes } from "../../lib/designs/engine.ts";
 import type { Knobs } from "./scene.ts";
 import { plan } from "./scene.ts";
 import { rows, steps, Widget } from "./widget.tsx";
 
-const value = { seed: 1, dim: 2, base: 2, code: "", level: 3, tint: "degree", spin: 0 };
+const value: Knobs & { seed: number } = { seed: 1, dim: 2, base: 2, code: "", level: 3, tint: "degree", spin: 0 };
 
 test("a cube mounts its stage only once three is in hand too", () => {
   const page = (unit: Mrly, three: Three | undefined, patch: Value = {}) =>
@@ -34,7 +35,7 @@ test("the side arrows step through the classes, and through the named where the 
 });
 
 test("the readouts name the design, its class, orbit, form and fill out of the grid, the codes and classes of its space, and the distinct counts by dimension", () => {
-  const read = (patch: Partial<Knobs>): Partial<Record<string, Scalar>> =>
+  const read = (patch: Partial<Knobs>): Partial<Record<string, ReactNode>> =>
     Object.fromEntries(rows(plan(math, { ...value, ...patch }).info));
   expect(read({ code: "7" })).toMatchObject({
     Design: "carpet 7",

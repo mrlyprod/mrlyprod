@@ -1,4 +1,3 @@
-import type { Scalar } from "../../lib/app/spec.ts";
 import type { Paints } from "../../lib/color.ts";
 import { rgb } from "../../lib/color.ts";
 import { ESCAPE } from "../../lib/fractal/consts.ts";
@@ -66,7 +65,7 @@ export const DIVES: Pair[] = [
   [0.355, 0.355],
 ];
 
-export const roll = (kind: Scalar, seed: number) => {
+export const roll = (kind: Kind, seed: number) => {
   const list = PLACES.filter((one) => one.kind === kind);
   return list[Math.floor(rng(seed)() * list.length)];
 };

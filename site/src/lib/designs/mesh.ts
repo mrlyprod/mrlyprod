@@ -27,7 +27,7 @@ export function mesh(quads: three.Quad[]) {
   return { position, normal, index, faces };
 }
 
-export function eye(theta: number, phi: number, reach: number) {
+export function eye(theta: number, phi: number, reach: number): [number, number, number] {
   const flat = Math.cos(phi) * reach;
   return [Math.cos(theta) * flat, Math.sin(theta) * flat, Math.sin(phi) * reach];
 }

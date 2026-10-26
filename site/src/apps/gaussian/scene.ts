@@ -5,7 +5,7 @@ import type { Spec, Units, Value } from "../../lib/app/spec.ts";
 import { tidy } from "../../lib/app/spec.ts";
 import type { Paints } from "../../lib/color.ts";
 import { TINTS } from "../../lib/color.ts";
-import type { Box, Ink, Num, Pair, Plan, Point, Setting, Word } from "./engine.ts";
+import type { Box, Num, Pair, Plan, Point, Setting, Word } from "./engine.ts";
 import {
   cap,
   coords,
@@ -34,7 +34,7 @@ import {
 export type Knobs = {
   ring: Word;
   limit: number;
-  look: string;
+  look: "fate" | "norm" | "plain";
   tint: string;
   faint: number;
   units: number;
@@ -55,6 +55,8 @@ export type Gaussian = ReturnType<typeof make>;
 export type Handled = Omit<Gaussian, keyof Hands> & Hands;
 
 type Pen = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
+type Sheet = { layer: OffscreenCanvas; pen: OffscreenCanvasRenderingContext2D; box: Box };
 
 const plain = (value: Value) => value.look === "plain";
 
@@ -184,30 +186,39 @@ export function sketch(
 
 /* SCENE */
 
+const styled = (plan: Plan, value: Knobs) => {
+  const style = new Uint8Array(plan.count);
+  for (let p = 0; p < plan.count; p++)
+    style[p] = styleOf(value.look, value.faint, plan.fate[p], plan.norm[p], plan.top);
+  return style;
+};
+
+const chosen = (num: Num, plan: Plan, value: Knobs) => {
+  const at = parse(value.click);
+  return at ? hit(num, plan, at[0], at[1]) : null;
+};
+
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   const num = opts.num;
   if (!num) throw new Error("gaussian: the scene wants @mrlyprod/mrly/num as opts.num");
   const ctx = canvas.getContext("2d")!;
   let value = tidy(SPEC, opts) as Knobs;
-  let plan: Plan | null = null;
-  let style: Uint8Array | null = null;
-  let ink: Ink | null = null;
-  let tone: (string | null)[] = [];
+  let plan = study(num, value.ring, value.limit);
+  let style = styled(plan, value);
+  let pick = chosen(num, plan, value);
+  let ink = inks(view.look());
+  let tone = tones(ink);
   let box: Box | null = null;
-  let layer: OffscreenCanvas | null = null;
-  let pen: OffscreenCanvasRenderingContext2D | null = null;
+  let sheet: Sheet | null = null;
   let drawn = -1;
   let origin: number | null = null;
-  let pick: Point | null = null;
   let dirty = true;
   const paint = () => {
     ink = inks(view.look());
     tone = tones(ink);
   };
   const restyle = () => {
-    style = new Uint8Array(plan!.count);
-    for (let p = 0; p < plan!.count; p++)
-      style[p] = styleOf(value.look, value.faint, plan!.fate[p], plan!.norm[p], plan!.top);
+    style = styled(plan, value);
   };
   const restudy = () => {
     plan = study(num, value.ring, value.limit);
@@ -215,15 +226,15 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     restyle();
   };
   const choose = () => {
-    const at = parse(value.click);
-    pick = at ? hit(num, plan!, at[0], at[1]) : null;
+    pick = chosen(num, plan, value);
   };
   const fit = () => {
-    box = lay(plan!.frame, view.w, view.h, PAD * view.dpr, value.cell * view.dpr);
+    box = lay(plan.frame, view.w, view.h, PAD * view.dpr, value.cell * view.dpr);
+    return box;
   };
-  const spot = (x: number, y: number) => place(plan!, box!, x, y);
-  const half = () => bulk(box!.k, view.dpr);
-  const lays = (target: OffscreenCanvasRenderingContext2D, from: number, to: number, h: number) => {
+  const spot = (frame: Box, x: number, y: number) => place(plan, frame, x, y);
+  const half = (frame: Box) => bulk(frame.k, view.dpr);
+  const lays = (target: OffscreenCanvasRenderingContext2D, frame: Box, from: number, to: number, h: number) => {
     tone.forEach((color, s) => {
       if (!color) return;
       let open = 0;
@@ -233,29 +244,31 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
         open = 0;
       };
       for (let p = from; p <= to; p++) {
-        if (style![p] !== s) continue;
+        if (style[p] !== s) continue;
         if (!open) {
           target.fillStyle = color;
           target.beginPath();
         }
-        const [x, y] = spot(plan!.a[p], plan!.b[p]);
-        mark(target, plan!.word, x, y, h);
+        const [x, y] = spot(frame, plan.a[p], plan.b[p]);
+        mark(target, plan.word, x, y, h);
         if (++open >= CHUNK) flush();
       }
       flush();
     });
   };
   const reset = () => {
-    fit();
-    layer = new OffscreenCanvas(view.w, view.h);
-    pen = layer.getContext("2d")!;
+    const frame = fit();
+    const layer = new OffscreenCanvas(view.w, view.h);
+    const pen = layer.getContext("2d")!;
     pen.setTransform(1, 0, 0, 1, 0, 0);
     pen.clearRect(0, 0, view.w, view.h);
     drawn = -1;
+    sheet = { layer, pen, box: frame };
+    return sheet;
   };
-  const extend = (to: number) => {
+  const extend = (page: Sheet, to: number) => {
     if (to <= drawn) return;
-    lays(pen!, drawn + 1, to, half());
+    lays(page.pen, page.box, drawn + 1, to, half(page.box));
     drawn = to;
   };
   const ring = (x: number, y: number, radius: number, width: number, color: string, dash: number[]) => {
@@ -267,37 +280,37 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     ctx.stroke();
     ctx.setLineDash([]);
   };
-  const overlay = () => {
+  const overlay = (point: Point, frame: Box) => {
     const dpr = view.dpr;
-    const radius = half() + RING * dpr;
-    if (value.units && pick!.norm > 1) {
-      for (const [x, y] of pick!.associates.slice(1)) ring(...spot(x, y), radius, THIN * dpr, ink!.dim, []);
+    const radius = half(frame) + RING * dpr;
+    if (value.units && point.norm > 1) {
+      for (const [x, y] of point.associates.slice(1)) ring(...spot(frame, x, y), radius, THIN * dpr, ink.dim, []);
       ring(
-        ...spot(pick!.conjugate[0], pick!.conjugate[1]),
+        ...spot(frame, point.conjugate[0], point.conjugate[1]),
         radius,
         THIN * dpr,
-        ink!.ramified,
+        ink.ramified,
         DASH.map((d) => d * dpr),
       );
     }
-    ring(...spot(pick!.a, pick!.b), radius, RING * dpr, ink!.fg, []);
+    ring(...spot(frame, point.a, point.b), radius, RING * dpr, ink.fg, []);
   };
   const draw = () => {
-    if (origin === null && !dirty && layer) return;
+    if (origin === null && !dirty && sheet) return;
     dirty = false;
     const part = origin === null ? 1 : share(view.t - origin, GROW);
     if (part >= 1) origin = null;
-    const i = reached(part, plan!.count);
-    if (!layer || i < drawn) reset();
-    extend(i);
+    const i = reached(part, plan.count);
+    const page = sheet && i >= drawn ? sheet : reset();
+    extend(page, i);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, view.w, view.h);
-    ctx.drawImage(layer!, 0, 0);
-    if (pick) overlay();
+    ctx.drawImage(page.layer, 0, 0);
+    if (pick) overlay(pick, page.box);
   };
   const touch = () => {
     box = null;
-    layer = null;
+    sheet = null;
     dirty = true;
   };
   const theme = () => {
@@ -310,10 +323,10 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     if (value.ring !== was.ring || value.limit !== was.limit) {
       restudy();
       origin = null;
-      layer = null;
+      sheet = null;
     } else if (value.look !== was.look || value.faint !== was.faint) {
       restyle();
-      layer = null;
+      sheet = null;
     }
     if (value.cell !== was.cell) touch();
     if (value.tint !== was.tint) theme();
@@ -326,24 +339,21 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     if (view.still) view.wake?.();
   };
   const at = (u: number, v: number) => {
-    if (!box) fit();
-    const x = (u * view.w - box!.ox) / box!.k;
-    const y = (box!.oy - v * view.h) / box!.k;
-    const [p, q] = num.gauss.Ring.nearest(plan!.ring, x, y);
-    return hit(num, plan!, Number(p), Number(q));
+    const { ox, oy, k } = box ?? fit();
+    const x = (u * view.w - ox) / k;
+    const y = (oy - v * view.h) / k;
+    const [p, q] = num.gauss.Ring.nearest(plan.ring, x, y);
+    return hit(num, plan, Number(p), Number(q));
   };
   const along = (dir: number) => {
-    const next = walk(plan!, pick ? pick.index : 0, dir);
+    const next = walk(plan, pick ? pick.index : 0, dir);
     return next && coords(...next);
   };
   const turn = (dir: number) => {
     const next = pick && turned(pick, dir);
     return next && coords(...next);
   };
-  const svg = () => picture(plan!, style!, tone);
-  const csv = () => table(plan!);
-  restudy();
-  choose();
-  paint();
+  const svg = () => picture(plan, style, tone);
+  const csv = () => table(plan);
   return { draw, size: touch, theme, set, grow, at, walk: along, turn, svg, csv, still: true };
 }

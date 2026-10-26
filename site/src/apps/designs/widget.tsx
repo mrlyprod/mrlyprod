@@ -11,7 +11,7 @@ import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
 import { share } from "../../lib/app/query.ts";
 import type { Opts, View } from "../../lib/app/run.ts";
-import type { Units } from "../../lib/app/spec.ts";
+import type { Seeded, Units } from "../../lib/app/spec.ts";
 import { Browser } from "../../lib/designs/browse.tsx";
 import type { Mrly } from "../../lib/designs/engine.ts";
 import { cap, drawn, gallery, next } from "../../lib/designs/engine.ts";
@@ -23,7 +23,7 @@ import { make, named, PAGE } from "./scene.ts";
 /* TYPES */
 
 type Props = Partial<WidgetProps<Units, Held>> &
-  Pick<WidgetProps<Units, Held>, "value" | "onChange"> & { unit?: Mrly | null; three?: Three | null };
+  Pick<WidgetProps<Units, Held>, "onChange"> & { value: Seeded; unit?: Mrly | null; three?: Three | null };
 
 type Press = { x: number; y: number; far: number };
 
@@ -74,7 +74,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   now.current = { list, at, code: here?.code ?? code, level: value.level as number, dim, base };
   useEffect(() => onStatus?.(here ? rows(here) : []), [here]);
   useReroll(
-    value.seed as number,
+    value.seed,
     (seed) =>
       math && onChange({ code: drawn(math, dim, base, gallery(math, dim, base, "classes"), now.current!.code, seed) }),
   );

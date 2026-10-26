@@ -11,8 +11,14 @@ import { palette } from "../theme/palette.gen.js";
 
 export type Kind = "flat" | "slice" | "moire";
 
+export type SourceName = "design" | "moire";
+
+export type Blend = "mean" | "sum" | "union" | "meet" | "parity" | "difference";
+
+export type Ramp = "heat" | "fire" | "tint";
+
 export type Src = {
-  source: string;
+  source: SourceName;
   dim: number;
   base: number;
   code: string;
@@ -55,7 +61,7 @@ export type Drawn = Pick<Src, "preset" | "limit"> | Pick<Src, "code">;
 
 export type Titled = { name: string; code: string; kind: string };
 
-export type Stack = { copies: number; full: Scalar; step: number; blend: string; samples: number };
+export type Stack = { copies: number; full: Scalar; step: number; blend: Blend; samples: number };
 
 export type Raster = { values: Float32Array; top: number; side: number };
 
@@ -67,7 +73,7 @@ export type Stops = readonly (readonly number[])[];
 
 export type Disc = { x: number; y: number; r: number };
 
-export const SOURCES: [string, string][] = [
+export const SOURCES: [SourceName, string][] = [
   ["design", "Design"],
   ["moire", "Moire"],
 ];
@@ -82,7 +88,7 @@ export const BASES: [number, string][] = [
 export const NUMBERS = [3, 5, 7, 9];
 export const TILES = [3, 5];
 export const PRESETS = ["heatmap", "weave", "hive", "carpet"];
-export const BLENDS: [string, string][] = [
+export const BLENDS: [Blend, string][] = [
   ["mean", "Mean"],
   ["sum", "Sum"],
   ["union", "Union"],
@@ -90,7 +96,7 @@ export const BLENDS: [string, string][] = [
   ["parity", "Parity"],
   ["difference", "Difference"],
 ];
-export const RAMPS: [string, string][] = [
+export const RAMPS: [Ramp, string][] = [
   ["heat", "Heat"],
   ["fire", "Fire"],
   ["tint", "Tint"],
@@ -188,13 +194,13 @@ export function drawn(math: Mrly, value: Src, rand: Rng): Drawn {
 
 /* FACTS */
 
-export function shares(power: Iterable<number>): number[] {
+export function shares(power: ArrayLike<number> & Iterable<number>): number[] {
   let sum = 0;
   for (const p of power) sum += p;
   return Array.from(power, (p) => (sum > 0 ? p / sum : 0));
 }
 
-export function leading(power: Iterable<number>, n = LEAD): Lead[] {
+export function leading(power: ArrayLike<number> & Iterable<number>, n = LEAD): Lead[] {
   return shares(power)
     .map((share, order) => ({ order, share }))
     .slice(1)
@@ -285,7 +291,7 @@ const contrast = ([r, g, b]: readonly number[]) =>
 
 export const edge = ({ paper }: Pick<Paints, "paper">) => `rgba(${contrast(rgb(paper)).join(", ")}, 0.2)`;
 
-export function stops(ramp: string, { paper, accent }: Pick<Paints, "paper" | "accent">): number[][] {
+export function stops(ramp: Ramp, { paper, accent }: Pick<Paints, "paper" | "accent">): number[][] {
   const ground = rgb(paper);
   const top = contrast(ground);
   if (ramp === "tint") return [ground, rgb(accent)];

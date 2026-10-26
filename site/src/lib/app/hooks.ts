@@ -1,12 +1,11 @@
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { Units as Loaded, Name, Unit } from "../units/index.ts";
 import { wasm } from "../units/index.ts";
-import type { Scalar } from "./spec.ts";
 
 /* TYPES */
 
-export type Readout = readonly [string, Scalar];
+export type Readout = readonly [string, ReactNode];
 
 export type Ear = (seed: number) => void;
 

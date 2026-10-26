@@ -16,18 +16,6 @@ const FILL = [
 ];
 const globals: { OffscreenCanvas?: typeof OffscreenCanvas; ImageData?: typeof ImageData } = {};
 
-class Image {
-  data: Uint8ClampedArray;
-  w: number;
-  h: number;
-
-  constructor(data: Uint8ClampedArray, w: number, h: number) {
-    this.data = data;
-    this.w = w;
-    this.h = h;
-  }
-}
-
 class Surface {
   static made = 0;
   width: number;
@@ -42,6 +30,18 @@ class Surface {
 
   getContext() {
     return { putImageData: (image: Image) => (this.image = image) };
+  }
+}
+
+class Image {
+  data: Uint8ClampedArray;
+  w: number;
+  h: number;
+
+  constructor(data: Uint8ClampedArray, w: number, h: number) {
+    this.data = data;
+    this.w = w;
+    this.h = h;
   }
 }
 

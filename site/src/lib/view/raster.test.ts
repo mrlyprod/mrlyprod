@@ -134,6 +134,11 @@ test("arc strokes its sweep alone with round caps", () => {
   expect([red(pen, 42, 32), red(pen, 38, 39), red(pen, 42, 31), red(pen, 21, 32)]).toEqual([255, 255, 97, 0]);
 });
 
+test("an arc whose lower angle is below -pi paints its body", () => {
+  const pen = board((p) => p.arc([32, 32.5], 10, [-4, -3.5], 2, WHITE));
+  expect([red(pen, 23, 38), red(pen, 22, 31)]).toEqual([255, 0]);
+});
+
 test("image paints whole pixels nearest sampled and blends its alpha", () => {
   const pixels: Pixels = {
     shape: [2, 2],

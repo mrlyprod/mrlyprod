@@ -14,7 +14,7 @@ import { tints } from "../../lib/theme/hues.ts";
 import { palette } from "../../lib/theme/palette.gen.js";
 import type { Units as Loaded } from "../../lib/units/index.ts";
 import { wasm } from "../../lib/units/index.ts";
-import type { Ask, Graph, Knobs, Laid, Plan } from "./engine.ts";
+import type { Ask, Graph, Knobs, Laid, Plan, Seed } from "./engine.ts";
 import {
   bounds,
   CAMERAS,
@@ -126,7 +126,7 @@ export const SPEC: Spec = [
 ];
 
 export const name = (value: Value, loaded?: Mathy) => {
-  const { dim, base, code } = design(value as Knobs);
+  const { dim, base, code } = design(value as Seed);
   return `graphs-${loaded?.math ? canon(loaded.math, dim, base, code) : code || "carpet"}-${spaceOf(value)}-${kindOf(value)}`;
 };
 

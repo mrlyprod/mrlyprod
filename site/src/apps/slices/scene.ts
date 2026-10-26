@@ -192,7 +192,8 @@ export const scrub = (x: number, w: number) => Math.min(TOP, Math.max(1, Math.fl
 
 export function picture(page: Pen, frame: Frame, plan: { mesh: Cell6d }, paint: Paint) {
   const fill = paint.accent;
-  const faint = [...fill.slice(0, 3), FAINT] as Color;
+  const [r, g, b] = fill;
+  const faint: Color = [r, g, b, FAINT];
   const codes = { [paint.fill]: fill, [paint.void]: faint };
   hex.draw(page, frame, plan.mesh, 0, (type) => codes[type] ?? null);
 }
@@ -200,13 +201,13 @@ export function picture(page: Pen, frame: Frame, plan: { mesh: Cell6d }, paint: 
 export function thumb(ctx: CanvasRenderingContext2D, side: number, mesh: Cell6d, codes: Codes, accent: string) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, side, side);
-  picture(pen(ctx, side, side), layout(side, side), { mesh }, { ...codes, accent: [...rgb(accent), 255] as Color });
+  picture(pen(ctx, side, side), layout(side, side), { mesh }, { ...codes, accent: [...rgb(accent), 255] });
 }
 
 /* SCENE */
 
-const settle = (opts: Given) => ({
-  ...tidy(SPEC, opts, opts.math ? { math: opts.math } : undefined),
+const settle = (opts: Given & { math: Mrly }) => ({
+  ...tidy(SPEC, opts, { math: opts.math }),
   seed: opts.seed,
   base: opts.base,
   code: opts.code,
@@ -217,10 +218,10 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   if (!math) throw new Error("slices: the scene wants @mrlyprod/mrly/math as opts.math");
   const ctx = canvas.getContext("2d")!;
   const codes = codesOf(math);
-  let value = settle(opts);
+  let value = settle({ ...opts, math });
   let plan = study(math, value);
   let dirty = true;
-  const paint = (): Paint => ({ ...codes, accent: [...rgb(view.look().accent), 255] as Color });
+  const paint = (): Paint => ({ ...codes, accent: [...rgb(view.look().accent), 255] });
   const draw = () => {
     if (!dirty) return;
     dirty = false;

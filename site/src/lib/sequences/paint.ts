@@ -49,7 +49,7 @@ export type Grown = { key: string; terms: string[] };
 
 export type Spot = { i: number; x0: number; y0: number; x1: number; y1: number };
 
-export type Opts = { kind: string; base?: number; at: number; shown: (i: number) => number };
+export type Opts = { kind: string; base: number; at: number; shown: (i: number) => number };
 
 export type Span = { x: number; slot: number; n: number; lead: number };
 
@@ -556,7 +556,7 @@ function heat(
   opts: Opts,
 ): null {
   const { px, dpr, hair } = tones;
-  const base = opts.base!;
+  const base = opts.base;
   const lanes = bands(rows, box, px);
   rows.forEach((row, i) => {
     const lines = row.terms.map((t) => expand(t, base));
@@ -583,7 +583,7 @@ function heat(
   return null;
 }
 
-export const KIND: Record<string, Plot> = {
+export const KIND: Partial<Record<string, Plot>> = {
   pins,
   log: pins,
   steps: (ctx, box, rows, shades, tones, opts) => steps(ctx, box, rows, shades, tones, opts, false),

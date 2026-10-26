@@ -13,6 +13,7 @@ import { decode, pack, share, unpack } from "../../shell/prefs.ts";
 import type { Titled } from "../../shell/route.ts";
 import { named } from "../../shell/route.ts";
 import type { Context, Layout } from "../../shell/router.ts";
+import { state } from "../../shell/router.ts";
 import About, { FIND as about } from "./about.tsx";
 import Accessibility, { FIND as accessibility } from "./accessibility.tsx";
 import Appearance, { FIND as appearance } from "./appearance.tsx";
@@ -23,8 +24,6 @@ import Screensaver, { FIND as screensaver } from "./screensaver.tsx";
 import { useForm } from "./use.ts";
 
 /* TYPES */
-
-type State = { y?: number; depth?: number; up?: boolean };
 
 type How = "push" | "replace";
 
@@ -75,7 +74,6 @@ function spot(path: string) {
 
 /* PAGE */
 
-const state = (): State => (history.state && typeof history.state === "object" ? history.state : {});
 const main = () => document.getElementById("main");
 const roll = (top: number) => main()?.scrollTo({ top, behavior: "instant" });
 
@@ -221,7 +219,7 @@ function Settings({ row, site, start }: SettingsProps) {
   const pop = () => {
     const fresh = spot(location.pathname);
     flushSync(() => setHere(fresh + location.search));
-    roll(typeof state().y === "number" ? state().y! : 0);
+    roll(state().y ?? 0);
     head(row, site, fresh);
     refocus();
   };

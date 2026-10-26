@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { dark, light } from "../theme/theme.ts";
-import type { Color, Pen, Point } from "./index.ts";
-import { fade, field, frame, Grid, grid, hex, ink, iso, mix, plot, raster } from "./index.ts";
+import type { Color, Name, Palette, Pen, Point, Swatch } from "./index.ts";
+import { fade, field, frame, Grid, grid, hex, ink, iso, mix, NAMES, plot, raster } from "./index.ts";
 
 const HUES = {
   red: [255, 61, 64],
@@ -18,7 +18,7 @@ const HUES = {
   brown: [177, 132, 98],
   gray: [142, 142, 147],
 };
-const RUST: Record<string, Record<string, number[]>> = {
+const RUST = {
   dark: {
     ground: [0, 0, 0],
     panel: [17, 17, 18],
@@ -35,8 +35,11 @@ const RUST: Record<string, Record<string, number[]>> = {
     dim: [85, 85, 88],
     ...HUES,
   },
-};
+} satisfies Record<"dark" | "light", Record<string, number[]>>;
 const theme = ink(dark);
+
+const swatches = <T extends Swatch>(make: (color: Color) => T) =>
+  Object.fromEntries(NAMES.map((name) => [name, make(theme[name])])) as Record<Name, T>;
 
 function recorder() {
   const calls: unknown[][] = [];
@@ -76,16 +79,19 @@ test("the dark and light inks are ink.rs's", () => {
 });
 
 test("ink reads hex strings, byte arrays and serde colors alike", () => {
-  const bytes = Object.fromEntries(
-    Object.entries(theme).filter(
-      (entry): entry is [string, Color] =>
-        typeof entry[1] !== "function" && entry[1].length === 4 && typeof entry[1][0] === "number",
-    ),
-  );
-  const serde = Object.fromEntries(Object.entries(bytes).map(([k, [r, g, b, a]]) => [k, { r, g, b, a }]));
+  const bytes = swatches((color) => [...color]);
+  const serde = swatches(([r, g, b, a]) => ({ r, g, b, a }));
   expect(ink(bytes).blue).toEqual(theme.blue);
   expect(ink(serde).dim).toEqual(theme.dim);
-  expect(() => ink({ ...bytes, fg: undefined })).toThrow("no fg");
+  expect(() => ink({ ...bytes, fg: "" })).toThrow("fg is not a color");
+  const missing: Palette = { ...bytes };
+  Reflect.deleteProperty(missing, "fg");
+  expect(() => ink(missing)).toThrow("no fg");
+});
+
+test("ink throws on a string that is no hex color", () => {
+  const bytes = swatches((color) => [...color]);
+  expect(() => ink({ ...bytes, fg: "abc" })).toThrow("fg is not a color");
 });
 
 test("ramp ends are its end stops", () => {
@@ -370,7 +376,8 @@ test("a patch holds a color and a cover a pixel and paints them as one image", (
   patch.blend(7, 6, theme.fg, 1);
   patch.blend(5, 8, theme.fg, 1);
   patch.paint(pen);
-  expect(calls[0]).toEqual(["image", 4, 6, 3, 2, patch]);
+  expect(calls[0].slice(0, 5)).toEqual(["image", 4, 6, 3, 2]);
+  expect(calls[0][5]).toBe(patch);
   expect(patch.shape).toEqual([2, 3]);
   expect(Array.from(patch.cover)).toEqual([0, 0, 1, 0, 0.25, 0]);
   expect(Array.from(patch.colors.slice(16, 20))).toEqual(theme.blue);
@@ -446,6 +453,12 @@ test("a dashed rule lays forty eight dashes along one height", () => {
   expect(calls.map((call) => point(call[1])[0])).toEqual(Array.from({ length: 48 }, (_, i) => 10 + 2 * i));
   expect(point(calls[0][2])[0]).toBeCloseTo(11.1, 9);
   expect(calls[47]).toMatchObject(["segment", [104, 7], [expect.any(Number), 7], 2.5, theme.fg]);
+});
+
+test("a dashed rule lays forty eight dashes when the step is no whole number", () => {
+  const { pen, calls } = recorder();
+  plot.dashed(pen, frame(10, 0, 100, 20), 7, 2.5, theme.fg);
+  expect(calls.length).toBe(48);
 });
 
 /* FIELD */

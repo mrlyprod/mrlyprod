@@ -95,7 +95,7 @@ export type Knobs = Record<`c${Axis}` | `p${Axis}`, number> & {
   tint: string;
 } & ({ crop: "" } | { crop: Crop });
 
-export type Solid = Knobs & { seed?: number; base: Scalar; code?: Code | null };
+export type Solid = Knobs & { seed?: number; base?: Scalar; code?: Code | null };
 
 export type Told = { rows: Readout[]; error: string };
 
@@ -482,10 +482,10 @@ export function painter(view: Pick<Viewer, "look">, value: Solid): Paint {
 
 /* SCENE */
 
-const settle = (opts: Given): Solid => ({
-  ...(tidy(SPEC, opts, opts.math! && { math: opts.math }) as Knobs),
+const settle = (opts: Given & { math: Mrly }): Solid => ({
+  ...(tidy(SPEC, opts, { math: opts.math }) as Knobs),
   seed: opts.seed,
-  base: opts.base!,
+  base: opts.base,
   code: opts.code,
 });
 
@@ -494,7 +494,7 @@ const same = (a: Plane[] = [], b: Plane[] = []) => a.length === b.length && a.ev
 export function make(canvas: HTMLCanvasElement, view: Viewer, opts: Given = {}) {
   const { math, three, tell } = opts;
   if (!math) throw new Error("three: the scene wants @mrlyprod/mrly/math as opts.math");
-  let value = settle(opts);
+  let value = settle({ ...opts, math });
   let plan: Study | null = null;
   let stage: Stage | null = null;
   if (three) {

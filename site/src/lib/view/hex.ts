@@ -2,6 +2,12 @@ import type { Frame, Pen, Point } from "./frame.ts";
 import type { Cell } from "./grid.ts";
 import type { Color } from "./ink.ts";
 
+/* TYPES */
+
+export type Rect = Pick<Frame, "x" | "y" | "w" | "h">;
+
+export type Brush<C> = { triangle(a: Point, b: Point, c: Point, color: C): void };
+
 /* GEOMETRY */
 
 const RATIO = 0.8660254037844386;
@@ -39,7 +45,7 @@ function shrink(pts: Point[], gap: number): Point[] {
   return pts.map((p) => [cx + (p[0] - cx) * k, cy + (p[1] - cy) * k]);
 }
 
-function fit(mesh: Point[][], frame: Frame): (p: Point) => Point {
+function fit(mesh: Point[][], frame: Rect): (p: Point) => Point {
   let [lx, ly, hx, hy] = [Number.MAX_VALUE, Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE];
   for (const tri of mesh) {
     for (const p of tri) {
@@ -59,19 +65,19 @@ function fit(mesh: Point[][], frame: Frame): (p: Point) => Point {
 
 /* DRAWING */
 
-export function draw(
-  pen: Pen,
-  frame: Frame,
+export function draw<C>(
+  pen: Brush<C>,
+  frame: Rect,
   cell: { cell: Cell; start: number },
   gap: number,
-  ink: (type: number) => Color | null | undefined,
+  ink: (type: number) => C | null | undefined,
 ): void {
   const [height, width] = cell.cell.shape;
   if (width === height) throw new Error("Cell must be a hexagon.");
   const across = width > height;
   const types = cell.cell.types;
   const mesh: Point[][] = [];
-  const paint: Color[] = [];
+  const paint: C[] = [];
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const color = ink(types[y * width + x] & 255);

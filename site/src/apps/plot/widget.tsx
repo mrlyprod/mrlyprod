@@ -1,8 +1,8 @@
-import type { PointerEvent, ReactNode } from "react";
+import type { PointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { text } from "../../lib/app/export.ts";
 import { Bar } from "../../lib/app/frame.tsx";
-import type { Had } from "../../lib/app/hooks.ts";
+import type { Had, Readout } from "../../lib/app/hooks.ts";
 import { useReroll } from "../../lib/app/hooks.ts";
 import { Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
@@ -34,8 +34,6 @@ import { filed, make } from "./scene.ts";
 
 /* TYPES */
 
-export type Note = readonly [string, ReactNode];
-
 export type Asked = Knobs & { seed: number; dim: number; base: number; code: string };
 
 export type Asking = Pick<Asked, "dim" | "base" | "code" | "measure" | "axis">;
@@ -43,7 +41,7 @@ export type Asking = Pick<Asked, "dim" | "base" | "code" | "measure" | "axis">;
 type Contract = WidgetProps<Had<"math" | "num">, Held>;
 
 export type Props = Pick<Contract, "value" | "onChange"> &
-  Partial<Pick<Contract, "onReady" | "onExport" | "units">> & { onStatus?: (rows: Note[]) => void };
+  Partial<Pick<Contract, "onReady" | "onExport" | "onStatus" | "units">>;
 
 const AXES: [string, string][] = [
   ["level", "By level"],
@@ -176,10 +174,12 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: un
     got.tap((e.clientX - box.left) * k, (e.clientY - box.top) * k);
   };
   const sheet = (kind: string) => {
-    const rows = ([a, b].filter(Boolean) as Row[]).map((row) => ({
-      ...row,
-      terms: row.terms.slice(0, now.current.terms),
-    }));
+    const rows = [a, b]
+      .filter((row): row is Row => Boolean(row))
+      .map((row) => ({
+        ...row,
+        terms: row.terms.slice(0, now.current.terms),
+      }));
     if (rows.length) text(kind === "csv" ? csv(rows) : json(rows), filed(now.current), kind);
   };
   const have = Boolean(a);
@@ -204,7 +204,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: un
     : "";
   useEffect(() => {
     if (!told || !lead) return onStatus?.([]);
-    const rows: Note[] = [
+    const rows: Readout[] = [
       ["order", lead.rule.order ?? "none fits"],
       ["growth", decimal(lead.rule.growth)],
       ["closed form", told.closed],

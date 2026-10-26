@@ -63,7 +63,7 @@ export function space(
     last = view.t;
     if (!dirty) return;
     dirty = false;
-    camera.position.set(...(eye(SWING + swing, lean(TILT + tilt), REACH) as Triple));
+    camera.position.set(...eye(SWING + swing, lean(TILT + tilt), REACH));
     camera.lookAt(0, 0, 0);
     renderer.render(world, camera);
   };
