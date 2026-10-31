@@ -43,6 +43,7 @@ The algebra of the stack: stacking is Dirichlet convolution and the group knows 
 - [lab/py/stack-dilations/](lab/py/stack-dilations/): The parity stack's layers read as a system of dilated functions in `L^2(0,1)`, and the Dirichlet series that is its symbol.
 - [lab/py/stack-levels/](lab/py/stack-levels/): The correlation law of two stacked layers when the layers are different designs, or the same design at different levels, computed exactly.
 - [lab/py/totient-constant/](lab/py/totient-constant/): The node count of the spun stacks is a totient sum over ideals, and this study proves its constant instead of fitting it.
+- [lab/rs/node-error/](lab/rs/node-error/): The error of the spun stacks' node count, recounted to norm bound 8388607 in Rust and read over dyadic windows, Gaussian and Eisenstein.
 - [figures/moire-local-limit.ts](figures/moire-local-limit.ts): moire-local-limit
 - [figures/moire-local-limit.json](figures/moire-local-limit.json): moire-local-limit census
 - [figures/paper-moire-correlation-laws.ts](figures/paper-moire-correlation-laws.ts): paper-moire-correlation-laws
@@ -56,3 +57,4 @@ The algebra of the stack: stacking is Dirichlet convolution and the group knows 
 - The smoothed novelty meter as a route to the Riemann hypothesis: on a finite range it renders the first zeros, so it can neither certify nor refute the hypothesis; the Refuted row in [claims/novelty-meter.md](claims/novelty-meter.md).
 - The design horocycle as a route: no semigroup orbit carries a density-zero design, the horocycle sampled on the design's Cantor set puts the digits on the position and not on the cusp index, and the meter gives back only holomorphy of `Z_F` (The design horocycle).
 - Reweighting the layers: they form a dilation system with symbol `zeta(1 + s)`, so no reweighting moves the line (The layers as a dilation system).
+- The `N log N` size of the spun stacks' node-count error, the integers' totient error carried over: it climbs where `N^(5/4)` is flat, the circle problem's exponent on the `b = 1` term; the error is `O(N^(4/3))` Proved, `O(N^(5/4))` in mean square Proved, and reads `N^(5/4)` (the final rows of [claims/spun-stack.md](claims/spun-stack.md)).

@@ -16,6 +16,7 @@ Randomness from designs: the rounds, where every round that writes two cells or 
 - [notes/major-arcs.md](notes/major-arcs.md): The major arcs
 - [notes/mess.md](notes/mess.md): The mess
 - [notes/mixing.md](notes/mixing.md): The mixing
+- [notes/pascal-images.md](notes/pascal-images.md): Pascal images
 - [notes/primes.md](notes/primes.md): Along the primes
 - [notes/readings.md](notes/readings.md): The readings
 - [notes/schedules.md](notes/schedules.md): The schedules

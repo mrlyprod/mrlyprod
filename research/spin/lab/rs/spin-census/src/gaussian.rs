@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+pub const LANDAU_RAMANUJAN: f64 = 0.764_223_653_589_220_66;
+
 pub fn least_factors(limit: usize) -> Vec<u32> {
     let mut out = vec![0u32; limit + 1];
     for value in 2..=limit {
@@ -90,7 +92,22 @@ pub fn jordan(scale: usize, least: &[u32]) -> f64 {
         .product()
 }
 
-fn reduce(mut top: u64, mut bottom: u64) -> (u64, u64) {
+pub fn radical(value: usize, least: &[u32]) -> usize {
+    factorise(value, least)
+        .iter()
+        .map(|(prime, _)| prime)
+        .product()
+}
+
+pub fn landau_target(scale: usize, least: &[u32]) -> f64 {
+    2f64.sqrt() * LANDAU_RAMANUJAN * jordan(scale, least)
+}
+
+pub fn scaled(scale: usize, count: usize) -> f64 {
+    count as f64 * (scale as f64).ln().sqrt() / (scale * scale) as f64
+}
+
+pub fn reduce(mut top: u64, mut bottom: u64) -> (u64, u64) {
     let mut a = top;
     let mut b = bottom;
     while b != 0 {

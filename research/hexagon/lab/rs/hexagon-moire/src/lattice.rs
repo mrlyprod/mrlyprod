@@ -1,5 +1,5 @@
-use mrly::tile::recipe::Design;
 use mrly::math::three::Cell3d;
+use mrly::tile::recipe::Design;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Family {

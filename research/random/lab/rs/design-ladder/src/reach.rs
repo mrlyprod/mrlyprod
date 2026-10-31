@@ -889,4 +889,78 @@ pub fn lemma() {
         }
     }
     println!("  rule 22 base case x_1 = 111 from the block code of the row 0: {first}");
+    pascal_images(horizon);
+}
+
+fn rho(t: i64, n: i64) -> i64 {
+    if (t + n).rem_euclid(2) == 0 {
+        n
+    } else if n >= 0 {
+        n + 1
+    } else {
+        n - 1
+    }
+}
+
+fn step_bg(rule: u8, cur: &[u8], bg: u8) -> Vec<u8> {
+    let w = cur.len();
+    (0..w)
+        .map(|n| {
+            let l = if n > 0 { cur[n - 1] } else { bg };
+            let r = if n + 1 < w { cur[n + 1] } else { bg };
+            cell(rule, l, cur[n], r)
+        })
+        .collect()
+}
+
+fn pascal_images(horizon: usize) {
+    let w = 2 * horizon + 16;
+    let off = (horizon + 8) as i64;
+    let mut seed = vec![0u8; w];
+    seed[off as usize] = 1;
+    let (mut a126, mut a129, mut a161) = (seed.clone(), seed.clone(), seed);
+    let mut bg = 0u8;
+    let (mut form, mut comp, mut same, mut lone) = (0usize, 0usize, 0usize, 0usize);
+    for t in 0..=horizon as i64 {
+        for n in 0..w {
+            let nn = n as i64 - off;
+            form += usize::from(a126[n] != pascal(t, rho(t, nn)));
+            let want = if t == 0 {
+                u8::from(nn == 0)
+            } else {
+                1 ^ a126[n]
+            };
+            comp += usize::from(a129[n] != want);
+            same += usize::from(a161[n] != a129[n]);
+            if t >= 1 && n > 0 && n + 1 < w {
+                lone += usize::from(a126[n - 1] == 0 && a126[n] == 1 && a126[n + 1] == 0);
+            }
+        }
+        a126 = step_bg(126, &a126, 0);
+        a129 = step_bg(129, &a129, bg);
+        a161 = step_bg(161, &a161, bg);
+        bg = cell(129, bg, bg, bg);
+    }
+    println!("  rule 126 against P(t, rho_t(n)), rho_t(n) = n if t + n is even and n + sgn(n) if odd, t <= {horizon}: {form} cells differ");
+    println!("  rule 129 against 1 + rule 126 for t >= 1 (the seed at t = 0), background tracked, t <= {horizon}: {comp} cells differ");
+    println!("  rule 161 against rule 129, t <= {horizon}: {same} cells differ");
+    println!("  rule 126 rows t >= 1 holding an isolated one (window 010), t <= {horizon}: {lone}");
+    let steps = 1usize << 15;
+    let probes: Vec<i64> = (-8..=8).collect();
+    let cols = columns(126, Seed::Cell, steps, 0, &probes);
+    let mut diff = 0usize;
+    let mut worst = 0usize;
+    let mut counts = Vec::new();
+    for (j, &n0) in probes.iter().enumerate() {
+        let sig = if n0 >= 0 { 1 } else { -1 };
+        for t in 0..steps {
+            let want = pascal(t as i64, n0) ^ pascal(t as i64, n0 + sig);
+            diff += usize::from(cols[j][t] != want);
+        }
+        let last = *super::kernel_counts(&cols[j], 2, 24).last().unwrap();
+        worst = worst.max(last);
+        counts.push(last);
+    }
+    println!("  rule 126 columns -8..8 against P(t, n0) + P(t, n0 + sgn(n0)), t < 2^15: {diff} cells differ");
+    println!("  rule 126 kernel words at depth 10 over columns -8..8: {counts:?}, largest {worst}");
 }

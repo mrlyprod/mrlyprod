@@ -1,6 +1,6 @@
 ---
 title: The hexagon moire
-lead: The moire of the stacked diagonal slices: the exact cut-ink laws, the doubling sign law, the quarter-line bands, and the ghost star, whose cell-frame decay is a closed form at every band width, `-1/4` at the arm and `-1/8` in the limit, every layer-pair constant an exact rational, and no frame-free coefficient.
+lead: The moire of the stacked diagonal slices: the exact cut-ink laws, the doubling sign law, the quarter-line bands, and the ghost star, whose cell-frame decay is a closed form at every band width, `-1/4` at the arm and `-1/8` in the limit, each layer-pair limit along an affine phase map an exact rational, and no frame-free coefficient.
 figure: research-hexagon
 slug: hexagon
 date: 2026-09-06
@@ -8,7 +8,7 @@ date: 2026-09-06
 
 # The hexagon moire
 
-The moire of the stacked diagonal slices: the exact cut-ink laws, the doubling sign law, the quarter-line bands, and the ghost star, whose cell-frame decay is a closed form at every band width, `-1/4` at the arm and `-1/8` in the limit, every layer-pair constant an exact rational, and no frame-free coefficient.
+The moire of the stacked diagonal slices: the exact cut-ink laws, the doubling sign law, the quarter-line bands, and the ghost star, whose cell-frame decay is a closed form at every band width, `-1/4` at the arm and `-1/8` in the limit, each layer-pair limit along an affine phase map an exact rational, and no frame-free coefficient.
 
 - [notes/hexagon.md](notes/hexagon.md): The hexagon moire
 - [claims/carpet-star.md](claims/carpet-star.md): Carpet star

@@ -50,7 +50,7 @@ Spectral `d_w` from the `lambda_2` ratio at levels 4 to 5; walker `d_w` from MSD
 | `bang dim 2, code 7` | 3 of 4 | 1.5850 | 2.586 | 2.755 (drifting) | 1.15 to 1.23 |
 | `bang dim 3, base 3, code 23` (sponge) | 20 | 2.7268 | 2.164 | 2.169 | 2.51 to 2.52 |
 
-The spectral column is the `lambda_2` reading throughout; the means over modes `k = 1..4` for reps 79 and 95 are 2.4667 and 2.5452. The walker column is reproducible to about 0.01 across random streams; the spectral column to every printed digit.
+Two rows are exact. The graphs of code 79 and of the base-2 design are trees at every level, so `d_w = log 15 / log 3 = 2.4650` and `d_w = log 6 / log 2 = 2.5850`, on Barlow's ceiling `d_w <= 1 + d_f`; the spectral values above sit 0.0012 and 0.0015 over them, the walker values 1.1% and 6.2% over ([the trees chapter](trees.md); **Proved**, using Barlow, Coulhon and Kumagai's theorem for trees). The spectral column is the `lambda_2` reading throughout; the means over modes `k = 1..4` for reps 79 and 95 are 2.4667 and 2.5452. The walker column is reproducible to about 0.01 across random streams; the spectral column to every printed digit.
 
 The [carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet) row lands where the literature points: rigorous carpet analysis is Barlow-Bass, and the accepted numerics sit near `d_w ~ 2.10`, `d_s ~ 1.80` - measured here as 2.097 to 2.124 and 1.78 to 1.81 without tuning anything. (**Verified** against stated literature values, not re-derived.)
 
@@ -58,7 +58,7 @@ The [carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet) row lands whe
 
 Codes 127 and 239 share fill 7, hence dimension `log(7)/log(3) = 1.7712` exactly, identical density at every level, identical leading fill behaviour. Their bulk walk dimensions separate by `~0.39` - 2.25 against 2.64 - with both readings agreeing on each side and every drift bar an order of magnitude smaller than the gap. The spectral dimensions land at 1.58 against 1.34: same mass, different music, and not by a little. (**Verified**, `lab/rs/walk-dimension`.) The fractal dimension does not determine the walk dimension, exhibited inside one fill class of one base - the walk analogue of what [the complexity page](../../complexity/notes/complexity.md) shows for Boolean measures at dim 4.
 
-The same split appears across constructions: the base-2 3-of-4 design and the corner-glued gasket share the dimension `log(3)/log(2)` and separate cleanly in `d_w` - 2.59 measured against 2.3219 exact. (**Verified**; the gasket side is **Proved**, classical.)
+The same split appears across constructions: the base-2 3-of-4 design and the corner-glued gasket share the dimension `log(3)/log(2)` and separate cleanly in `d_w` - 2.5850 exact for the tree against 2.3219 exact for the gasket. (**Proved**, both sides; the tree side in [the trees chapter](trees.md), the gasket side classical.)
 
 ## Finding two: the wrap caveat turns physical
 
@@ -72,17 +72,18 @@ Code 127 refuses to be one number. Its low eigenvalue ratios split into two stab
 
 ## Music never beats mass
 
-Every subject measures `d_w >= 2`, equivalently `d_s <= log(fill) / log(base)`, with the solid attaining equality. A design can only slow a walker down, never speed it up past free diffusion - holes at every scale are obstacles, whatever else they are. (**Verified** across the census; stated as measurement, not theorem - the general inequality for this family is not proved here.)
+Every subject measures `d_w >= 2`, equivalently `d_s <= log(fill) / log(base)`, with the solid attaining equality. A design can only slow a walker down, never speed it up past free diffusion - holes at every scale are obstacles, whatever else they are. (**Verified** across the census; stated as measurement, not theorem - the general inequality for this family is not proved here. For a tree of polynomial volume growth `alpha` it is a theorem, `d_w = alpha + 1 >= 2`, and that covers the two exact rows only.)
 
 ![The census](research-walks)
 
 ## Chapters
 
 - [Shortest paths](shortest-paths.md): Shortest paths on the carpet at odd side and level: the two limits, side to infinity and level to infinity, do not commute.
+- [Trees](trees.md): Two designs of the census are trees, so `d_w = log 15 / log 3` for code 79 and `log 6 / log 2` for the base-2 design, exactly; the uniform sibling tree designs of bases 2, 3 and 4 close with them.
 - [Conduction at large side](conduction.md): Conduction on the carpet at large side and level: the cell is an L, the resistance scale per side tends to `sqrt(3)`, duality holds at every side, and the walk-dimension law is bounded.
 
 ## Where the honest line falls
 
-Everything in the walk census is finite-level measurement. The scaling windows reach side 243 in 2D (level pair 4 to 5) and side 81 in 3D; the base-2 subject's walker estimate is still drifting at side 256 and its spectral value is the one to quote; heat-trace and staircase estimators carry a known finite-size bias (about 5% low on the solid, where the answer is 2 exactly; **Conjecture**, no lab study regenerates that figure) and serve only as consistency checks. The Einstein relation is imported as a definition of `d_s` outside the classical cases. No claim of the walk census is a limit theorem, and its two open questions - the class split's fate and 127's second exponent - are tagged as such; the limit theorems of the page are those on shortest paths and on conduction at large side. Readings, gates, census table and figure: `lab/rs/walk-dimension`, about six minutes.
+Apart from the two tree rows, everything in the walk census is finite-level measurement. The scaling windows reach side 243 in 2D (level pair 4 to 5) and side 81 in 3D; the base-2 subject's walker estimate is still drifting at side 256 and its spectral value is the one to quote; heat-trace and staircase estimators carry a known finite-size bias (about 5% low on the solid, where the answer is 2 exactly; **Conjecture**, no lab study regenerates that figure) and serve only as consistency checks. The Einstein relation is imported as a definition of `d_s` outside the classical cases. No claim of the walk census is a limit theorem except the exact values of the two tree rows, and its two open questions - the class split's fate and 127's second exponent - are tagged as such; the limit theorems of the page are those on shortest paths and on conduction at large side. Readings, gates, census table and figure: `lab/rs/walk-dimension`, about six minutes.
 
 > Weigh two shapes and the scale reads the same; drop a walker on each and one of them is twice as far from home. The mass is one number. The music is another.

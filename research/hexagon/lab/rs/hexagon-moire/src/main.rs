@@ -1,4 +1,6 @@
 mod constants;
+mod eternal;
+mod flat;
 mod frame;
 mod lattice;
 mod pairs;
@@ -41,4 +43,11 @@ fn main() {
     star::cell_width_ladders(&carpet);
     header("constants");
     constants::run();
+    header("flat carpet stack");
+    flat::rays();
+    flat::crosshairs();
+    flat::solid();
+    flat::sums();
+    header("eternal points of the xor pair");
+    eternal::run();
 }

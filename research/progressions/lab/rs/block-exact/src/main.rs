@@ -11,8 +11,11 @@ const KEEP: usize = 4096;
 struct Grid {
     m: usize,
     n: usize,
+    k: usize,
+    free: bool,
     mid: Vec<u8>,
     sub: Vec<u8>,
+    ext: Vec<u8>,
     line_pts: Vec<u8>,
     line_mask: Vec<Mask>,
     mats: Vec<Vec<u8>>,
@@ -31,44 +34,59 @@ fn bits(mask: Mask, out: &mut [u8; 128]) -> usize {
     k
 }
 
-fn peelable_1d(m: usize, set: usize) -> bool {
+fn inner_1d(m: usize, k: usize, live: usize) -> usize {
     let inv2 = m.div_ceil(2);
-    let mut live = set;
-    while live != 0 {
-        let mut mids = 0usize;
-        for x in 0..m {
-            for z in x + 1..m {
-                if live >> x & 1 == 1 && live >> z & 1 == 1 {
-                    mids |= 1 << ((x + z) * inv2 % m);
-                }
+    let mut inner = 0usize;
+    for x in 0..m {
+        for z in x + 1..m {
+            if live >> x & 1 == 0 || live >> z & 1 == 0 {
+                continue;
+            }
+            if k == 3 {
+                inner |= 1 << ((x + z) * inv2 % m);
+            } else if live >> ((2 * x + m - z) % m) & 1 == 1
+                && live >> ((2 * z + m - x) % m) & 1 == 1
+            {
+                inner |= 1 << x | 1 << z;
             }
         }
-        if live & !mids == 0 {
+    }
+    inner & live
+}
+
+fn peelable_1d(m: usize, k: usize, free: bool, set: usize) -> bool {
+    let mut live = set;
+    while live != 0 {
+        let inner = inner_1d(m, k, live);
+        if inner == live || (free && inner != 0) {
             return false;
         }
-        live &= mids;
+        live = inner;
     }
     true
 }
 
 impl Grid {
-    fn new(m: usize) -> Grid {
+    fn new(m: usize, k: usize, free: bool) -> Grid {
         assert!(
             m % 2 == 1 && m >= 3 && (2..m).all(|d| !m.is_multiple_of(d)),
             "m must be an odd prime"
         );
+        assert!(k == 3 || (k == 4 && m >= 5), "k is 3, or 4 at m >= 5");
         let n = m * m;
         let inv2 = m.div_ceil(2);
         let at = |a: usize, b: usize| (a % m) * m + (b % m);
         let coord = |i: usize| (i / m, i % m);
         let mut mid = vec![0u8; n * n];
         let mut sub = vec![0u8; n * n];
+        let mut ext = vec![0u8; n * n];
         for x in 0..n {
             for z in 0..n {
                 let (xa, xb) = coord(x);
                 let (za, zb) = coord(z);
                 mid[x * n + z] = at((xa + za) * inv2, (xb + zb) * inv2) as u8;
                 sub[x * n + z] = at(xa + m - za, xb + m - zb) as u8;
+                ext[x * n + z] = at(2 * xa + m - za, 2 * xb + m - zb) as u8;
             }
         }
         let mut line_pts = vec![0u8; n * n * m];
@@ -126,7 +144,7 @@ impl Grid {
         let full = 1usize << m;
         let mut maxpeel = vec![0u8; full * full];
         for p in 0..full {
-            if !peelable_1d(m, p) {
+            if !peelable_1d(m, k, free, p) {
                 continue;
             }
             let k = p.count_ones() as u8;
@@ -153,8 +171,11 @@ impl Grid {
         Grid {
             m,
             n,
+            k,
+            free,
             mid,
             sub,
+            ext,
             line_pts,
             line_mask,
             mats,
@@ -167,22 +188,34 @@ impl Grid {
         (self.n * (self.n - 1) * (self.n - self.m)) as u128
     }
 
-    fn peelable(&self, set: Mask) -> bool {
+    fn inner(&self, live: Mask) -> Mask {
         let mut pts = [0u8; 128];
-        let mut live = set;
-        while live != 0 {
-            let k = bits(live, &mut pts);
-            let mut mids: Mask = 0;
-            for i in 0..k {
-                let row = pts[i] as usize * self.n;
-                for &pj in &pts[i + 1..k] {
-                    mids |= 1 << self.mid[row + pj as usize];
+        let c = bits(live, &mut pts);
+        let mut inner: Mask = 0;
+        for i in 0..c {
+            let x = pts[i] as usize;
+            for &z in &pts[i + 1..c] {
+                let z = z as usize;
+                if self.k == 3 {
+                    inner |= 1 << self.mid[x * self.n + z];
+                } else if live >> self.ext[x * self.n + z] & 1 == 1
+                    && live >> self.ext[z * self.n + x] & 1 == 1
+                {
+                    inner |= 1 << x | 1 << z;
                 }
             }
-            if live & !mids == 0 {
+        }
+        inner & live
+    }
+
+    fn peelable(&self, set: Mask) -> bool {
+        let mut live = set;
+        while live != 0 {
+            let inner = self.inner(live);
+            if inner == live || (self.free && inner != 0) {
                 return false;
             }
-            live &= mids;
+            live = inner;
         }
         true
     }
@@ -193,23 +226,16 @@ impl Grid {
         let mut live = set;
         let mut r = 0u8;
         while live != 0 {
-            let k = bits(live, &mut pts);
-            let mut mids: Mask = 0;
-            for i in 0..k {
-                let row = pts[i] as usize * self.n;
-                for &pj in &pts[i + 1..k] {
-                    mids |= 1 << self.mid[row + pj as usize];
-                }
-            }
-            let rem = live & !mids;
-            if rem == 0 {
+            let inner = self.inner(live);
+            let rem = live & !inner;
+            if rem == 0 || (self.free && inner != 0) {
                 return None;
             }
             let kr = bits(rem, &mut pts);
             for i in 0..kr {
                 level[pts[i] as usize] = r;
             }
-            live &= mids;
+            live = inner;
             r += 1;
         }
         Some(level)
@@ -291,14 +317,21 @@ impl Grid {
         best
     }
 
-    fn triples_hold(&self, set: Mask, g: &[u64]) -> bool {
+    fn cert_holds(&self, set: Mask, g: &[u64]) -> bool {
         let mut pts = [0u8; 128];
-        let k = bits(set, &mut pts);
-        for i in 0..k {
-            for j in i + 1..k {
+        let c = bits(set, &mut pts);
+        for i in 0..c {
+            for j in i + 1..c {
                 let (x, z) = (pts[i] as usize, pts[j] as usize);
-                let y = self.mid[x * self.n + z] as usize;
-                if set >> y & 1 == 1 && g[x] + g[z] <= 2 * g[y] {
+                let ok = if self.k == 3 {
+                    let y = self.mid[x * self.n + z] as usize;
+                    set >> y & 1 == 0 || g[x] + g[z] > 2 * g[y]
+                } else {
+                    let u = self.ext[x * self.n + z] as usize;
+                    let w = self.ext[z * self.n + x] as usize;
+                    set >> u & 1 == 0 || set >> w & 1 == 0 || g[u] + g[w] > g[x] + g[z]
+                };
+                if !ok {
                     return false;
                 }
             }
@@ -570,18 +603,22 @@ fn gcd(a: usize, b: usize) -> usize {
 // THE CLIMB
 
 struct Cube {
+    m: usize,
     d: usize,
     n: usize,
+    k: usize,
     coords: Vec<u8>,
     sum: Vec<u16>,
+    ext: Vec<u16>,
     half_off: Vec<u32>,
     half: Vec<u16>,
 }
 
 impl Cube {
-    fn new(m: usize, d: usize) -> Cube {
+    fn new(m: usize, d: usize, k: usize) -> Cube {
         let n = m.pow(d as u32);
         assert!(m >= 2 && d >= 1 && n <= 1 << 16, "m^d must fit in 16 bits");
+        assert!(k == 3 || (k == 4 && m >= 4), "k is 3, or 4 at m >= 4");
         let mut coords = vec![0u8; n * d];
         for v in 0..n {
             let mut r = v;
@@ -599,9 +636,12 @@ impl Cube {
                 .sum::<usize>()
         };
         let mut sum = vec![0u16; n * n];
+        let mut ext = vec![0u16; n * n];
+        let neg: Vec<usize> = (0..n).map(|z| add(z, 0, m - 1)).collect();
         for x in 0..n {
             for z in 0..n {
                 sum[x * n + z] = add(x, z, 1) as u16;
+                ext[x * n + z] = add(x, neg[z], 2) as u16;
             }
         }
         let mut buckets: Vec<Vec<u16>> = vec![Vec::new(); n];
@@ -615,10 +655,13 @@ impl Cube {
             half_off.push(half.len() as u32);
         }
         Cube {
+            m,
             d,
             n,
+            k,
             coords,
             sum,
+            ext,
             half_off,
             half,
         }
@@ -629,30 +672,48 @@ impl Cube {
         &self.half[self.half_off[v] as usize..self.half_off[v + 1] as usize]
     }
 
+    fn ext(&self, x: usize, z: usize) -> usize {
+        self.ext[x * self.n + z] as usize
+    }
+
+    fn distinct(t: [usize; 4]) -> bool {
+        t[0] != t[1] && t[0] != t[2] && t[0] != t[3] && t[1] != t[2] && t[1] != t[3] && t[2] != t[3]
+    }
+
+    fn inner_pair(&self, a: usize, b: usize, has: impl Fn(usize) -> bool) -> bool {
+        let (u, w) = (self.ext(a, b), self.ext(b, a));
+        has(u) && has(w) && Cube::distinct([u, a, b, w])
+    }
+
     fn rounds(&self, set: &[usize]) -> Result<Vec<u32>, Vec<usize>> {
-        let k = set.len();
+        let c = set.len();
         let mut pos = vec![usize::MAX; self.n];
         for (i, &v) in set.iter().enumerate() {
             pos[v] = i;
         }
-        let mut cnt = vec![0u32; k];
-        for a in 0..k {
-            for b in a + 1..k {
-                for &w in self.mids(set[a], set[b]) {
-                    if pos[w as usize] != usize::MAX {
-                        cnt[pos[w as usize]] += 1;
+        let mut cnt = vec![0u32; c];
+        for a in 0..c {
+            for b in a + 1..c {
+                if self.k == 3 {
+                    for &w in self.mids(set[a], set[b]) {
+                        if pos[w as usize] != usize::MAX {
+                            cnt[pos[w as usize]] += 1;
+                        }
                     }
+                } else if self.inner_pair(set[a], set[b], |v| pos[v] != usize::MAX) {
+                    cnt[a] += 1;
+                    cnt[b] += 1;
                 }
             }
         }
-        let mut live = vec![true; k];
-        let mut round = vec![u32::MAX; k];
-        let mut left = k;
+        let mut live = vec![true; c];
+        let mut round = vec![u32::MAX; c];
+        let mut left = c;
         let mut r = 0;
         while left > 0 {
-            let out: Vec<usize> = (0..k).filter(|&i| live[i] && cnt[i] == 0).collect();
+            let out: Vec<usize> = (0..c).filter(|&i| live[i] && cnt[i] == 0).collect();
             if out.is_empty() {
-                return Err((0..k).filter(|&i| live[i]).collect());
+                return Err((0..c).filter(|&i| live[i]).collect());
             }
             for &i in &out {
                 round[i] = r;
@@ -660,19 +721,62 @@ impl Cube {
             for &i in &out {
                 live[i] = false;
                 left -= 1;
-                for j in 0..k {
-                    if live[j] {
-                        for &w in self.mids(set[i], set[j]) {
+                let alive = |v: usize| pos[v] != usize::MAX && live[pos[v]];
+                for j in 0..c {
+                    if !live[j] {
+                        continue;
+                    }
+                    let (x, y) = (set[i], set[j]);
+                    if self.k == 3 {
+                        for &w in self.mids(x, y) {
                             if pos[w as usize] != usize::MAX {
                                 cnt[pos[w as usize]] -= 1;
                             }
                         }
+                        continue;
+                    }
+                    if self.inner_pair(x, y, alive) {
+                        cnt[j] -= 1;
+                    }
+                    let b = self.ext(y, x);
+                    let e = self.ext(b, y);
+                    if alive(b) && alive(e) && Cube::distinct([x, y, b, e]) {
+                        cnt[j] -= 1;
+                        cnt[pos[b]] -= 1;
                     }
                 }
             }
             r += 1;
         }
         Ok(round)
+    }
+
+    fn touched(&self, q: usize, set: &[usize], ins: &[bool], mut f: impl FnMut(usize)) {
+        for &c in set {
+            if self.k == 3 {
+                for &w in self.mids(q, c) {
+                    f(w as usize);
+                }
+                continue;
+            }
+            let w = self.ext(q, c);
+            let x = self.ext(w, q);
+            if ins[x] && Cube::distinct([x, w, q, c]) {
+                f(w);
+            }
+            for &w in self.mids(q, c) {
+                let w = w as usize;
+                let x = self.ext(c, w);
+                if ins[x] && Cube::distinct([q, w, c, x]) {
+                    f(w);
+                }
+            }
+            let w = self.ext(c, q);
+            let x = self.ext(w, c);
+            if ins[x] && Cube::distinct([x, w, c, q]) {
+                f(w);
+            }
+        }
     }
 
     fn point(&self, v: usize) -> String {
@@ -724,11 +828,8 @@ impl<'a> Climber<'a> {
     }
 
     fn insert(&mut self, p: usize) {
-        for i in 0..self.set.len() {
-            for &w in self.cube.mids(p, self.set[i]) {
-                self.cov[w as usize] += 1;
-            }
-        }
+        let cov = &mut self.cov;
+        self.cube.touched(p, &self.set, &self.ins, |w| cov[w] += 1);
         self.ins[p] = true;
         self.set.push(p);
     }
@@ -736,25 +837,20 @@ impl<'a> Climber<'a> {
     fn remove(&mut self, i: usize) {
         let p = self.set.swap_remove(i);
         self.ins[p] = false;
-        for j in 0..self.set.len() {
-            for &w in self.cube.mids(p, self.set[j]) {
-                self.cov[w as usize] -= 1;
-            }
-        }
+        let cov = &mut self.cov;
+        self.cube.touched(p, &self.set, &self.ins, |w| cov[w] -= 1);
     }
 
     fn score(&mut self, p: usize) -> u32 {
         self.tick += 1;
+        let (ins, cov, stamp, tick) = (&self.ins, &self.cov, &mut self.stamp, self.tick);
         let mut c = 0;
-        for i in 0..self.set.len() {
-            for &w in self.cube.mids(p, self.set[i]) {
-                let w = w as usize;
-                if !self.ins[w] && self.cov[w] == 0 && w != p && self.stamp[w] != self.tick {
-                    self.stamp[w] = self.tick;
-                    c += 1;
-                }
+        self.cube.touched(p, &self.set, ins, |w| {
+            if !ins[w] && cov[w] == 0 && w != p && stamp[w] != tick {
+                stamp[w] = tick;
+                c += 1;
             }
-        }
+        });
         c
     }
 
@@ -888,52 +984,149 @@ fn climb_thread(
     (best, moves)
 }
 
-fn slice_key(e: &[u32], a: usize, b: usize) -> (u32, u32) {
-    (e[a].min(e[b]), e[a].max(e[b]))
+fn lift_step(cube: &Cube, blocks: usize, a: usize, b: usize) -> usize {
+    let n = cube.n;
+    let (mut a, mut b, mut v, mut place) = (a, b, 0, 1);
+    for _ in 0..blocks {
+        v += cube.ext(b % n, a % n) * place;
+        place *= n;
+        a /= n;
+        b /= n;
+    }
+    v
 }
 
-fn lift_check(cube: &Cube, set: &[usize], e: &[u32]) -> (usize, usize, usize) {
-    let k = set.len();
-    let mut pos = vec![usize::MAX; cube.n];
-    for (i, &v) in set.iter().enumerate() {
-        pos[v] = i;
-    }
-    let mut slices: std::collections::BTreeMap<(u32, u32), Vec<(usize, usize)>> =
-        Default::default();
-    for a in 0..k {
-        for b in 0..k {
-            slices.entry(slice_key(e, a, b)).or_default().push((a, b));
+fn lift_point(cube: &Cube, blocks: usize, v: usize) -> String {
+    let mut r = v;
+    (0..blocks)
+        .map(|_| {
+            let p = cube.point(r % cube.n);
+            r /= cube.n;
+            p
+        })
+        .collect()
+}
+
+fn lift_check(
+    cube: &Cube,
+    set: &[usize],
+    g: &[u128],
+    blocks: usize,
+) -> (usize, usize, usize, Option<String>) {
+    let (c, n, k) = (set.len(), cube.n, cube.k);
+    let total = c.pow(blocks as u32);
+    let size = n.pow(blocks as u32);
+    assert!(size <= 1 << 28, "the lift must fit in memory");
+    let tuple = |t: usize| {
+        let (mut r, mut s, mut v, mut place) = (t, 0u128, 0usize, 1usize);
+        for _ in 0..blocks {
+            s += g[r % c];
+            v += set[r % c] * place;
+            place *= n;
+            r /= c;
         }
+        (s, v)
+    };
+    let mut keys: Vec<u128> = (0..total).map(|t| tuple(t).0).collect();
+    keys.sort();
+    keys.dedup();
+    let mut slot = vec![u32::MAX; size];
+    let mut members: Vec<Vec<usize>> = vec![Vec::new(); keys.len()];
+    for t in 0..total {
+        let (s, v) = tuple(t);
+        let id = keys.binary_search(&s).unwrap();
+        slot[v] = id as u32;
+        members[id].push(v);
     }
-    let mut largest = 0;
     let mut found = 0;
-    for (&s, pts) in &slices {
-        largest = largest.max(pts.len());
-        for i in 0..pts.len() {
-            for j in i + 1..pts.len() {
-                let (xa, xb) = (set[pts[i].0], set[pts[i].1]);
-                let (za, zb) = (set[pts[j].0], set[pts[j].1]);
-                for &ya in cube.mids(xa, za) {
-                    let pa = pos[ya as usize];
-                    if pa == usize::MAX {
-                        continue;
+    let mut first = None;
+    for (id, pts) in members.iter().enumerate() {
+        for &x0 in pts {
+            for &x1 in pts {
+                if x0 == x1 {
+                    continue;
+                }
+                let mut t = [x0, x1, 0, 0];
+                let mut ok = true;
+                for j in 2..k {
+                    t[j] = lift_step(cube, blocks, t[j - 2], t[j - 1]);
+                    if slot[t[j]] != id as u32 {
+                        ok = false;
+                        break;
                     }
-                    for &yb in cube.mids(xb, zb) {
-                        let pb = pos[yb as usize];
-                        if pb != usize::MAX && slice_key(e, pa, pb) == s {
-                            found += 1;
-                        }
+                }
+                let distinct = (0..k).all(|i| (i + 1..k).all(|j| t[i] != t[j]));
+                if ok && distinct && t[0] < t[k - 1] {
+                    found += 1;
+                    if first.is_none() {
+                        let terms: Vec<String> = t[..k]
+                            .iter()
+                            .map(|&v| lift_point(cube, blocks, v))
+                            .collect();
+                        first = Some(format!("slice {}, terms {}", keys[id], terms.join(" ")));
                     }
                 }
             }
         }
     }
-    (slices.len(), largest, found)
+    let largest = members.iter().map(Vec::len).max().unwrap_or(0);
+    (keys.len(), largest, found, first)
 }
 
-fn climb(m: usize, d: usize, seconds: f64, seed: u64) {
+fn report(cube: &Cube, best: &[usize], blocks: usize) -> usize {
+    let (m, d, k) = (cube.m, cube.d, best.len());
+    let level = cube.rounds(best).expect("the set peels");
+    let r = level.iter().max().map_or(0, |&l| l + 1);
+    assert!(r <= 80, "the certificate must fit in 128 bits");
+    let g: Vec<u128> = level.iter().map(|&l| 3u128.pow(r - 1 - l)).collect();
+    let pos: std::collections::HashMap<usize, usize> =
+        best.iter().enumerate().map(|(i, &v)| (v, i)).collect();
+    let mut progs = 0u64;
+    for a in 0..k {
+        for b in a + 1..k {
+            let (x, z) = (best[a], best[b]);
+            if cube.k == 3 {
+                for &w in cube.mids(x, z) {
+                    if let Some(&c) = pos.get(&(w as usize)) {
+                        progs += 1;
+                        assert!(g[a] + g[b] > 2 * g[c], "certificate fails");
+                    }
+                }
+            } else if cube.inner_pair(x, z, |v| pos.contains_key(&v)) {
+                progs += 1;
+                let (u, w) = (pos[&cube.ext(x, z)], pos[&cube.ext(z, x)]);
+                assert!(g[u] + g[w] > g[a] + g[b], "certificate fails");
+            }
+        }
+    }
+    let what = if cube.k == 3 {
+        "triples x + z = 2y with x != z"
+    } else {
+        "four-term progressions with distinct terms"
+    };
+    println!("  peel rounds {r}, certificate g = 3^({} - round) checked in exact integers on all {progs} {what} inside the set", r.saturating_sub(1));
+    let pts: Vec<String> = best.iter().map(|&v| cube.point(v)).collect();
+    println!("  points {}", pts.join(" "));
+    let rs: Vec<String> = level.iter().map(|l| l.to_string()).collect();
+    println!("  rounds {}", rs.join(" "));
+    if k.pow(blocks as u32) > 4_000_000 {
+        return 0;
+    }
+    let (slices, largest, found, first) = lift_check(cube, best, &g, blocks);
+    println!(
+        "  lift to Z_{m}^{}: {slices} slices of T^{blocks} by the sum of g, the largest {largest} points, {found} {}-term progressions with distinct terms inside the slices by brute force over pairs",
+        d * blocks,
+        cube.k
+    );
+    if let Some(w) = first {
+        println!("  first: {w}");
+    }
+    found
+}
+
+fn climb(m: usize, d: usize, k: usize, seconds: f64, seed: u64, blocks: usize) {
     let t0 = Instant::now();
-    let cube = Cube::new(m, d);
+    let cube = Cube::new(m, d, k);
     let n = cube.n;
     let deadline = t0 + std::time::Duration::from_secs_f64(seconds);
     let tries = if n <= 400 { n } else { 48 };
@@ -954,56 +1147,48 @@ fn climb(m: usize, d: usize, seconds: f64, seed: u64) {
         .max_by_key(|s| s.len())
         .unwrap();
     best.sort();
-    let k = best.len();
-    let base = m / 2 + 1;
+    let c = best.len();
+    let what = if k == 3 {
+        format!("peelable set, against the digit base {}", m / 2 + 1)
+    } else {
+        "4-peelable set".to_string()
+    };
     println!(
-        "m = {m}, d = {d}: best peelable set {k} of {n} points, constant card^(1/d) = {:.4} against the digit base {base}; per-thread bests {}, {moves} kicks, {THREADS} threads, {:.1} s, seed {seed}",
-        (k as f64).powf(1.0 / d as f64),
+        "m = {m}, d = {d}: best {what}: {c} of {n} points, constant card^(1/d) = {:.4}; per-thread bests {}, {moves} kicks, {THREADS} threads, {:.1} s, seed {seed}",
+        (c as f64).powf(1.0 / d as f64),
         sizes.join(" "),
         t0.elapsed().as_secs_f64()
     );
-    let level = cube.rounds(&best).expect("the best set peels");
-    let r = level.iter().max().map_or(0, |&l| l + 1);
-    let e: Vec<u32> = level.iter().map(|&l| r - 1 - l).collect();
-    let pos: std::collections::HashMap<usize, usize> =
-        best.iter().enumerate().map(|(i, &v)| (v, i)).collect();
-    let mut triples = 0u64;
-    for a in 0..k {
-        for b in a + 1..k {
-            for &w in cube.mids(best[a], best[b]) {
-                if let Some(&c) = pos.get(&(w as usize)) {
-                    triples += 1;
-                    assert!(e[a].max(e[b]) > e[c], "certificate fails");
-                }
-            }
-        }
-    }
-    println!("  peel rounds {r}, certificate g = 3^({} - round) checked as exponents (3^i + 3^j > 2 3^k exactly when max(i, j) > k) on all {triples} triples x + z = 2y with x != z inside the set", r.saturating_sub(1));
-    let pts: Vec<String> = best.iter().map(|&v| cube.point(v)).collect();
-    println!("  points {}", pts.join(" "));
-    let rs: Vec<String> = level.iter().map(|l| l.to_string()).collect();
-    println!("  rounds {}", rs.join(" "));
-    if k * k <= 250000 {
-        let (slices, largest, found) = lift_check(&cube, &best, &e);
+    let found = report(&cube, &best, blocks);
+    if k == 3 || !m.is_multiple_of(3) {
         assert_eq!(found, 0, "a lifted slice holds a progression");
-        println!(
-            "  lift to Z_{m}^{}: {slices} slices of T^2 by the sum of g, the largest {largest} points, every slice progression-free by brute force over pairs",
-            2 * d
-        );
     }
+}
+
+fn control() {
+    let cube = Cube::new(9, 1, 4);
+    println!("m = 9, d = 1, k = 4: the set {{0, 1, 2, 3, 4, 7}}, lifted to Z_9^4");
+    let found = report(&cube, &[0, 1, 2, 3, 4, 7], 4);
+    assert!(found > 0, "the negative control must break");
 }
 
 // THE VERBS
 
-fn optimum(m: usize, target: Option<usize>, seconds: Option<f64>) {
+fn optimum(m: usize, k: usize, free: bool, target: Option<usize>, seconds: Option<f64>) {
     let t0 = Instant::now();
-    let grid = Grid::new(m);
+    let grid = Grid::new(m, k, free);
+    let what = match (k, free) {
+        (3, false) => "peelable".to_string(),
+        (_, false) => format!("{k}-peelable"),
+        (_, true) => format!("{k}-term-progression-free"),
+    };
     let n = grid.n;
     let lower = greedy(&grid, 200);
     let mut target = target.unwrap_or(lower).max(lower);
     println!(
-        "m = {m}: n = {n}, group {}, greedy lower bound {lower}, target {target}",
-        grid.group()
+        "m = {m}: {what} subsets of Z_{m}^2, n = {n}, group {}, a line holds at most {}, greedy lower bound {lower}, target {target}",
+        grid.group(),
+        grid.maxpeel[(1 << m) - 1]
     );
     loop {
         let (st, stopped) = search(&grid, target, false, seconds);
@@ -1019,14 +1204,14 @@ fn optimum(m: usize, target: Option<usize>, seconds: Option<f64>) {
         }
         let Some(top) = top else {
             println!(
-                "  no peelable set of {target} or more points, {} nodes, {} tests; target lowered",
+                "  no {what} set of {target} or more points, {} nodes, {} tests; target lowered",
                 st.nodes, st.tests
             );
             target -= 1;
             continue;
         };
         let g = gcd(top, n);
-        println!("  every peelable set of {target} or more points enumerated up to affine symmetry: {} nodes, {} canonicity tests, {} threads, {:.1} s", st.nodes, st.tests, THREADS, t0.elapsed().as_secs_f64());
+        println!("  every {what} set of {target} or more points enumerated up to affine symmetry: {} nodes, {} canonicity tests, {} threads, {:.1} s", st.nodes, st.tests, THREADS, t0.elapsed().as_secs_f64());
         for k in target..=top {
             if st.hist[k] > 0 {
                 let kept: Vec<&(Mask, u64)> = st
@@ -1050,12 +1235,19 @@ fn optimum(m: usize, target: Option<usize>, seconds: Option<f64>) {
         }
         let alpha = top as f64 / n as f64;
         let c = 2.0 * (1.0 / alpha).log2().sqrt();
-        println!(
-            "  alpha_{m} = {top}/{n} = {}/{} = {alpha:.5}, C(alpha) = {c:.4}, sqrt(card T) = {:.4}",
-            top / g,
-            n / g,
-            (top as f64).sqrt()
-        );
+        if k == 3 && !free {
+            println!(
+                "  alpha_{m} = {top}/{n} = {}/{} = {alpha:.5}, C(alpha) = {c:.4}, sqrt(card T) = {:.4}",
+                top / g,
+                n / g,
+                (top as f64).sqrt()
+            );
+        } else {
+            println!(
+                "  the largest {what} subset of Z_{m}^2 has {top} points, sqrt(card T) = {:.4}",
+                (top as f64).sqrt()
+            );
+        }
         let mut maxes: Vec<(Mask, u64)> = st
             .found
             .iter()
@@ -1076,7 +1268,7 @@ fn optimum(m: usize, target: Option<usize>, seconds: Option<f64>) {
                     }
                 })
                 .collect();
-            assert!(grid.triples_hold(*s, &g));
+            assert!(grid.cert_holds(*s, &g));
             let mut pts = [0u8; 128];
             let k = bits(*s, &mut pts);
             let coords: Vec<String> = pts[..k]
@@ -1090,14 +1282,14 @@ fn optimum(m: usize, target: Option<usize>, seconds: Option<f64>) {
                 grid.group() / *aut as u128
             );
             println!("    points {}", coords.join(" "));
-            println!("    peel rounds {} (digit = round removed), certificate g = 3^({} - round) checked on every triple", grid.bitmap(*s, Some(&level)).join("/"), rounds - 1);
+            println!("    peel rounds {} (digit = round removed), certificate g = 3^({} - round) checked on every progression", grid.bitmap(*s, Some(&level)).join("/"), rounds - 1);
         }
         return;
     }
 }
 
 fn witness(m: usize, seconds: Option<f64>) {
-    let grid = Grid::new(m);
+    let grid = Grid::new(m, 3, false);
     let mut target = greedy(&grid, 200);
     loop {
         let (st, stopped) = search(&grid, target, false, seconds);
@@ -1130,7 +1322,7 @@ fn witness(m: usize, seconds: Option<f64>) {
                 }
             })
             .collect();
-        assert!(grid.triples_hold(mask, &g));
+        assert!(grid.cert_holds(mask, &g));
         let mut pts = [0u8; 128];
         let k = bits(mask, &mut pts);
         let coords: Vec<String> = pts[..k]
@@ -1147,7 +1339,7 @@ fn witness(m: usize, seconds: Option<f64>) {
 
 fn census(m: usize, seconds: Option<f64>) {
     let t0 = Instant::now();
-    let grid = Grid::new(m);
+    let grid = Grid::new(m, 3, false);
     let (st, stopped) = search(&grid, 0, true, seconds);
     if stopped {
         println!(
@@ -1171,9 +1363,21 @@ fn main() {
     let mut seconds = None;
     let mut dim = 2;
     let mut seed = 1;
+    let mut k = 3;
+    let mut free = false;
+    let mut blocks = 2;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
+            "--k" => {
+                k = args[i + 1].parse().unwrap();
+                i += 1;
+            }
+            "--blocks" => {
+                blocks = args[i + 1].parse().unwrap();
+                i += 1;
+            }
+            "--free" => free = true,
             "--target" => {
                 target = Some(args[i + 1].parse().unwrap());
                 i += 1;
@@ -1194,15 +1398,19 @@ fn main() {
         }
         i += 1;
     }
+    if verb == "control" {
+        control();
+        return;
+    }
     if ms.is_empty() {
         ms = vec![3, 5, 7];
     }
     for &m in &ms {
         match verb {
-            "optimum" => optimum(m, target, seconds),
+            "optimum" => optimum(m, k, free, target, seconds),
             "census" => census(m, seconds),
             "witness" => witness(m, seconds),
-            "climb" => climb(m, dim, seconds.unwrap_or(30.0), seed),
+            "climb" => climb(m, dim, k, seconds.unwrap_or(30.0), seed, blocks),
             other => panic!("unknown verb {other}"),
         }
     }
@@ -1260,7 +1468,7 @@ mod tests {
     #[test]
     fn peel_agrees_with_reflection() {
         for m in [3, 5, 7] {
-            let grid = Grid::new(m);
+            let grid = Grid::new(m, 3, false);
             for k in [4, 8, 12] {
                 for s in random_sets(grid.n, k.min(grid.n - 1), 300) {
                     assert_eq!(
@@ -1276,7 +1484,7 @@ mod tests {
     #[test]
     fn one_dimension_is_half_plus() {
         for m in [3, 5, 7, 11] {
-            let grid = Grid::new(m);
+            let grid = Grid::new(m, 3, false);
             let full = (1usize << m) - 1;
             assert_eq!(grid.maxpeel[full] as usize, m.div_ceil(2));
         }
@@ -1284,7 +1492,7 @@ mod tests {
 
     #[test]
     fn canonical_sets_match_brute_force_at_three() {
-        let grid = Grid::new(3);
+        let grid = Grid::new(3, 3, false);
         let mut orbits = 0u128;
         let mut sets = 0u128;
         let mut origin = 0u128;
@@ -1306,7 +1514,7 @@ mod tests {
 
     #[test]
     fn line_bound_is_sound_on_random_sets() {
-        let grid = Grid::new(5);
+        let grid = Grid::new(5, 3, false);
         for s in random_sets(grid.n, 10, 200) {
             if !grid.peelable(s) {
                 continue;
@@ -1321,7 +1529,7 @@ mod tests {
     #[test]
     fn cube_peel_agrees_with_brute_force() {
         for (m, d) in [(4, 2), (5, 2), (6, 2), (7, 2), (3, 3), (4, 3)] {
-            let cube = Cube::new(m, d);
+            let cube = Cube::new(m, d, 3);
             let n = cube.n;
             let at = |v: usize, i: usize| cube.coords[v * d + i] as usize;
             let mid = |x: usize, y: usize, z: usize| {
@@ -1355,5 +1563,101 @@ mod tests {
                 }
             }
         }
+    }
+
+    fn four_inner(m: usize, d: usize, live: &[Vec<usize>]) -> Vec<bool> {
+        let mut inner = vec![false; live.len()];
+        for x in live {
+            for (j, y) in live.iter().enumerate() {
+                let t: Vec<Vec<usize>> = (0..4)
+                    .map(|c| (0..d).map(|i| (x[i] + c * (y[i] + m - x[i])) % m).collect())
+                    .collect();
+                let distinct = (0..4).all(|a| (a + 1..4).all(|b| t[a] != t[b]));
+                if distinct && live.contains(&t[2]) && live.contains(&t[3]) {
+                    inner[j] = true;
+                    inner[live.iter().position(|v| *v == t[2]).unwrap()] = true;
+                }
+            }
+        }
+        inner
+    }
+
+    #[test]
+    fn four_peel_agrees_with_brute_force() {
+        for (m, d) in [
+            (4, 2),
+            (5, 1),
+            (5, 2),
+            (6, 2),
+            (7, 1),
+            (7, 2),
+            (9, 1),
+            (9, 2),
+            (4, 3),
+        ] {
+            let cube = Cube::new(m, d, 4);
+            let grid = (m % 2 == 1 && m != 9 && d == 2).then(|| Grid::new(m, 4, false));
+            let n = cube.n;
+            for k in [5, 9, 14] {
+                for s in random_sets(n, k.min(n - 1), 200) {
+                    let set: Vec<usize> = (0..n).filter(|&v| s >> v & 1 == 1).collect();
+                    let mut live: Vec<Vec<usize>> = set
+                        .iter()
+                        .map(|&v| {
+                            cube.coords[v * d..(v + 1) * d]
+                                .iter()
+                                .map(|&c| c as usize)
+                                .collect()
+                        })
+                        .collect();
+                    let brute = loop {
+                        if live.is_empty() {
+                            break true;
+                        }
+                        match four_inner(m, d, &live).iter().position(|&b| !b) {
+                            Some(i) => {
+                                live.remove(i);
+                            }
+                            None => break false,
+                        }
+                    };
+                    assert_eq!(
+                        cube.rounds(&set).is_ok(),
+                        brute,
+                        "m = {m}, d = {d}, set {set:?}"
+                    );
+                    if let Some(g) = &grid {
+                        assert_eq!(g.peelable(s), brute, "m = {m}, set {set:?}");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn four_free_agrees_with_brute_force() {
+        for m in [5, 7] {
+            let grid = Grid::new(m, 4, true);
+            for k in [4, 8, 12, 16] {
+                for s in random_sets(grid.n, k, 300) {
+                    let live: Vec<Vec<usize>> = (0..grid.n)
+                        .filter(|&v| s >> v & 1 == 1)
+                        .map(|v| vec![v / m, v % m])
+                        .collect();
+                    let brute = !four_inner(m, 2, &live).contains(&true);
+                    assert_eq!(grid.peelable(s), brute, "m = {m}, set {s:b}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn four_peel_lift_breaks_at_nine() {
+        let cube = Cube::new(9, 1, 4);
+        let set = [0, 1, 2, 3, 4, 7];
+        let level = cube.rounds(&set).unwrap();
+        let r = level.iter().max().unwrap() + 1;
+        let g: Vec<u128> = level.iter().map(|&l| 3u128.pow(r - 1 - l)).collect();
+        assert!(lift_check(&cube, &set, &g, 4).2 > 0);
     }
 }

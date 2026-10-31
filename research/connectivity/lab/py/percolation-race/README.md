@@ -21,9 +21,9 @@ uv run python research/connectivity/lab/py/percolation-race/race.py
 
 ## WITNESSES
 
-- connectivity.md:38-42 - the two passes agree on every comparison to within a standard deviation; the widest gap printed is 0.2061 sd.
-- connectivity.md:53-62 - the components table, 1 against `134.39 +/- 7.34` at the `32 x 32` gasket up to 1 against `31576.40 +/- 152.71` at the `81^3` sponge, with every density; and 65-66, the largest fraction 1.0000 against `0.0411 +/- 0.0098`, 0.0011 and 0.0169.
-- connectivity.md:79-85 - the boundary table, including the diagonal's exact 4.0000 against `3.8808 +/- 0.0897`; and 94, the gasket drift 2.0082, 2.0027, 2.0009, 2.0003.
-- connectivity.md:101-110 - the per-draw ties 0 of 400 and 0 of 100 at the gasket, 73 of 400 then 0 of 200 at seven-of-eight, 61 of 400 then 27 of 200 at the diagonal.
-- connectivity.md:113-114 - the dispersing extreme, random 30.10 against 32 at `32 x 32` and 125.93 against 128 at `128 x 128`.
+- connectivity.md, section "The race" - the two passes agree on every comparison to within a standard deviation; the widest gap printed is 0.2061 sd.
+- connectivity.md, section "Connectivity" - the components table, 1 against `134.39 +/- 7.34` at the `32 x 32` gasket up to 1 against `31576.40 +/- 152.71` at the `81^3` sponge, with every density, and the largest fraction 1.0000 against `0.0411 +/- 0.0098`, 0.0011 and 0.0169.
+- connectivity.md, section "Boundary" - the boundary table, including the diagonal's exact 4.0000 against `3.8808 +/- 0.0897`, and the gasket's measured drift 2.0082, 2.0027, 2.0009, 2.0003, which `../boundary-drift` proves exact.
+- connectivity.md, section "How decisive, honestly" - the per-draw ties 0 of 400 and 0 of 100 at the gasket, 73 of 400 then 0 of 200 at seven-of-eight, 61 of 400 then 27 of 200 at the diagonal.
+- connectivity.md, section "How decisive, honestly" - the dispersing extreme, random 30.10 against 32 at `32 x 32` and 125.93 against 128 at `128 x 128`.
 - README.md:56 - the matched-noise bullet: `5257.23 +/- 32.94`, `31576.40 +/- 152.71`, 0 of 400 at the `32 x 32` gasket, boundary 2.0003 against `3.6006 +/- 0.0103`.

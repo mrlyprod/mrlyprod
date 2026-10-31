@@ -831,6 +831,152 @@ fn signs(top: i64) {
     println!("  frequency pairs {pairs} to {top} failures {wrong}");
 }
 
+// THE WORDS
+
+fn cutting(b: i64, r: i64) -> Vec<bool> {
+    let mut marks: Vec<(i64, bool)> = Vec::new();
+    for j in 1..r {
+        marks.push((j * b, true));
+    }
+    for k in 1..b {
+        marks.push((k * r, false));
+    }
+    marks.sort();
+    marks.into_iter().map(|(_, v)| v).collect()
+}
+
+fn words(top: i64) {
+    println!("THE WORDS  equal neighbours in the cutting word of the segment (0,0) to (rho,b)");
+    let (mut pairs, mut wrong, mut loose) = (0_usize, 0_usize, 0_usize);
+    for r in 1..=top {
+        for b in 1..=top {
+            if b == r || gcd(b, r) != 1 {
+                continue;
+            }
+            pairs += 1;
+            let word = cutting(b, r);
+            let equal = word.windows(2).filter(|w| w[0] == w[1]).count() as i64;
+            if equal != (r - b).abs() - 1 || equal != turns(b, r) - 1 {
+                wrong += 1;
+                println!(
+                    "    WORDS b {b} rho {r} equal {equal} want {}",
+                    (r - b).abs() - 1
+                );
+            }
+            let major = r > b;
+            let isolated = word.windows(2).all(|w| w[0] == major || w[1] == major);
+            let ends = word.first().map_or(true, |&x| x == major)
+                && word.last().map_or(true, |&x| x == major);
+            if !isolated || !ends {
+                loose += 1;
+            }
+        }
+    }
+    println!("  frequency pairs {pairs} to {top} failures {wrong} minority letter loose {loose}");
+}
+
+// THE FOLDS
+
+fn lift(b: i64, r: i64, d: f64) -> f64 {
+    (r as f64 * (b as f64 * d).sin() / (b as f64 * (r as f64 * d).sin())).abs()
+}
+
+fn folds_of(b: i64, r: i64) -> Vec<f64> {
+    let mut stops: Vec<f64> = Vec::new();
+    for j in 1..r {
+        stops.push(PI * j as f64 / r as f64);
+    }
+    for k in 1..b {
+        stops.push(PI * k as f64 / b as f64);
+    }
+    stops.sort_by(|x, y| x.partial_cmp(y).unwrap());
+    let (p, q) = ((r + b) as f64, (r - b) as f64);
+    let g = |d: f64| p * (q * d).sin() - q * (p * d).sin();
+    let mut found = Vec::new();
+    for w in stops.windows(2) {
+        if g(w[0]) * g(w[1]) < 0.0 {
+            found.push(bisect(&g, w[0], w[1]));
+        }
+    }
+    found
+}
+
+fn level_count(pieces: &[(f64, f64)], t: f64) -> i64 {
+    pieces.iter().filter(|&&(lo, hi)| lo < t && t < hi).count() as i64
+}
+
+fn folds(top: i64) {
+    println!("THE FOLDS  roots of |H| = t counted on its monotone pieces, against the staircase");
+    let (mut pairs, mut wrong, mut levels, mut closed, mut mins) =
+        (0_usize, 0_usize, 0_usize, 0_usize, 0_usize);
+    for r in 1..=top {
+        for b in 1..=top {
+            if b == r || gcd(b, r) != 1 {
+                continue;
+            }
+            pairs += 1;
+            let sign = (r - b).signum();
+            let cuts = folds_of(b, r);
+            let mut stops: Vec<(f64, f64)> = vec![(0.0, 1.0), (PI, 1.0)];
+            for j in 1..r {
+                stops.push((PI * j as f64 / r as f64, f64::INFINITY));
+            }
+            for k in 1..b {
+                stops.push((PI * k as f64 / b as f64, 0.0));
+            }
+            let mut reaches = vec![1.0];
+            for &d in &cuts {
+                let v = lift(b, r, d);
+                stops.push((d, v));
+                reaches.push(v);
+                let e = 1e-3 / r.max(b) as f64;
+                let side = |x: f64| lift(b, r, x) - v;
+                if sign * ((side(d - e) > 0.0) as i64 - (side(d - e) < 0.0) as i64) < 0
+                    || sign * ((side(d + e) > 0.0) as i64 - (side(d + e) < 0.0) as i64) < 0
+                {
+                    mins += 1;
+                }
+            }
+            stops.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap());
+            let pieces: Vec<(f64, f64)> = stops
+                .windows(2)
+                .map(|w| (w[0].1.min(w[1].1), w[0].1.max(w[1].1)))
+                .collect();
+            reaches.sort_by(|x, y| x.partial_cmp(y).unwrap());
+            if cuts.len() as i64 + 1 != (r - b).abs() {
+                wrong += 1;
+                println!(
+                    "    FOLDS b {b} rho {r} angles {} want {}",
+                    cuts.len() + 1,
+                    (r - b).abs()
+                );
+            }
+            let mut probes = vec![(0.5 * reaches[0], 0_i64)];
+            for k in 1..reaches.len() {
+                if reaches[k] - reaches[k - 1] > 1e-7 * reaches[k] {
+                    probes.push((0.5 * (reaches[k] + reaches[k - 1]), k as i64));
+                }
+            }
+            probes.push((2.0 * reaches[reaches.len() - 1] + 1.0, reaches.len() as i64));
+            for (t, below) in probes {
+                levels += 1;
+                if level_count(&pieces, t) != 2 * (b - 1) + 2 * sign * below {
+                    wrong += 1;
+                    println!(
+                        "    FOLDS b {b} rho {r} level {t} count {} want {}",
+                        level_count(&pieces, t),
+                        2 * (b - 1) + 2 * sign * below
+                    );
+                }
+            }
+            if 2 * (b - 1) + 2 * sign * reaches.len() as i64 == 2 * (r - 1) {
+                closed += 1;
+            }
+        }
+    }
+    println!("  frequency pairs {pairs} to {top} levels {levels} failures {wrong} ends closed {closed} folds on the wrong side {mins}");
+}
+
 fn census(top: i64) {
     println!("THE CENSUS  thresholds counted against min(|m|, a), the closed form against the crossing equation");
     let (mut cases, mut wrong, mut ends) = (0_usize, 0_usize, 0_usize);
@@ -1184,9 +1330,16 @@ fn pairs() {
 }
 
 fn main() {
+    if std::env::args().nth(1).as_deref() == Some("words") {
+        words(220);
+        folds(100);
+        return;
+    }
     axes();
     staircase();
     signs(220);
+    words(220);
+    folds(100);
     census(24);
     mirror(26);
     contact();

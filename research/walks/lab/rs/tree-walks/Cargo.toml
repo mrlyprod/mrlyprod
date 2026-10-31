@@ -1,0 +1,8 @@
+[package]
+name = "tree-walks"
+edition = "2021"
+
+[dependencies]
+mrly = { path = "../../../../../crates/mrly" }
+
+[workspace]

@@ -33,6 +33,14 @@
 - `tally N LO HI THREADS PLAIN`: every admissible `N`-set with largest element in `[LO, HI]` through the cut search, each checked from the definition and against the cut on all its prefixes; with `PLAIN = 1` also through the search without the cut, comparing the lists. Runtime `0.3` s at `tally 6 168 176 8 1`, `12.4` s at `tally 7 474 474 8 0`.
 - `route R E`: the least ratio per minimal base set in `[3, R]` over terms in `[10^E, 10^30]`. Runtime under `0.01` s.
 - `tight K BITS HOLES`: `{3, 4, 7}`, where `sigma = 1`, at `k = 1..K` through the wide certificate at `W = 2^BITS` with a list of `2^HOLES` middle holes, default `25`: at each step with `T <= a_(n+1)` it sets `L = C_k + 2T - 1` and `B = max(8, ceil(ln(3L)/(ln 4 - 1/5)) + 1)`, checks the step on every term up to `4^B`, and past `4^B` leaves the step to Ellison's bound on `abs(2^x - 3^y)`, the tight certificate of the note; prints `F`, the count of positive non-sums up to `F`, the index and term of the close, `S_n`, `L`, `B`, the terms checked, the least slack, the margin `(B + 1)(ln 4 - 1/5) - ln(3L)` and the steps tried, or the term where the cap stops. Runtime `0.4` s at `tight 4 31`, `12` s and `4.9` GB at `tight 5 34 26`, which caps; `10.2` s at `tight 4 20`.
+- `ones R SIZE`: the base sets of at most `SIZE` bases in `[3, R]` with `sigma = 1`, `gcd = 1` and no two bases powers of one integer, by a search over one common denominator; prints the count, those with two smooth bases `2^alpha 3^beta` and the pair the rule takes, the two least smooth bases, and those without, and `rho`, the least `abs(2^x - 3^y)/2^x` over `x` in Ellison's exceptional set and `y >= 1`. Runtime under `0.1` s at `ones 47 6`.
+- `pair D K BITS HOLES`: one base set with `sigma = 1` and two smooth bases at `k = 1..K` through the wide certificate, the paired certificate of `research/erdos/notes/sigma-one.md`: at each step with `T <= a_(n+1)` it sets `L = C_k + 2T - 1` and `H = max(ceil((f - 1) L 2^19/7153), ((f - 1) L)^(1/theta))`, rounded up, `f` the larger base of the pair, and checks the step on every term up to `H`; prints the pair, `C_k`, `F`, the count of positive non-sums up to `F`, the index and term of the close, `S_n`, `L`, `H`, the terms checked, the least slack and the steps tried, or the cap, or a horizon past `10^30`. Runtime `2.8` s at `pair 3,4,10,19 5 34 26`, `6.0` s at `pair 3,5,6,21 5 35 26`.
+- `pairs R SIZE K BITS HOLES THREADS`: `pair` on every set of `ones R SIZE` with two smooth bases, each up to its first open level, then per level the cells closed and the largest `F` and `H`. Runtime `89.2` s and `7.9` GB at `pairs 47 6 5 35 26 2`, `35.2` s at `pairs 47 6 5 33 25 3`, `4.1` s at `pairs 47 6 4 24 25 4`.
+- `pcontrol R SIZE K`: every cell of `pairs` at `k = 1..K` and `W = 2^31` against a plain knapsack to `4 F + 4`, same `F` and same count of non-sums. Runtime `0.9` s at `pcontrol 47 6 2`.
+- `near E F BITS`: the neighbour pairs of `e^a` among the powers of `f`, `a` up to `A(e, f) = ceil((81 ln 2 + 2520 ln e ln f)/ln e) + 1`, the bound that Laurent's Corollary 2 puts on `a` when `0 < abs(e^a - f^b) < 2^80`, in exact integer arithmetic on `64`-bit limbs; prints those with gap below `2^80`, lists those below `2^BITS`, and the largest smaller power and the largest ratio of smaller power to gap. Runtime under `0.01` s at `near 3 5 24`, `0.03` s at `near 31 46 0`.
+- `lpair D K BITS HOLES`: `pair` with the two-log rule of `research/erdos/notes/sigma-one.md`, for any base set with `sigma = 1` and no two bases powers of one integer: at each step with `T <= a_(n+1)` it takes, over every pair of bases `e < f`, the largest smaller power `H` of a neighbour pair of `near` with gap below `(f - 1) L`, and checks the step on every term up to the least `H`. Runtime `0.3` s at `lpair 3,5,7,13 4 31 25`.
+- `logs R SIZE K BITS HOLES THREADS ALL`: `lpair` on every set of `ones R SIZE` without two smooth bases, or on all with `ALL = 1`, each up to its first open level, then per level the cells closed and the largest `F` and `H`. Runtime `2.8` s and `1.6` GB at `logs 47 6 5 31 25 4 0`, `6.9` s and `2.2` GB at `logs 47 6 5 33 25 2 0`, `5.6` s at `logs 47 6 4 31 25 4 1`.
+- `lcontrol R SIZE K ALL`: `pcontrol` for the cells of `logs`. Runtime `1.3` s at `lcontrol 47 6 2 0`, `9.0` s at `lcontrol 47 6 2 1`.
 - `cantor E1,E2,... CAP`: the set `C(1, 2^E1, 2^E2, ...)` through its carry automaton, at most `4` exponents below `126`: the ternary digits of each multiplier, the states, the cyclic components and those with more edges than nodes, the radius bracket, the dimension, two first-return cycles at a state of the largest component with a prefix reaching it, checked by running the carries directly, the dimension of the Cantor set they generate, and the admissible prefixes of length `1..28`. Runtime under `0.01` s at `cantor 8` and `cantor 2,8`.
 - `carry M1,M2,... CAP`: the same for integer multipliers. Runtime under `0.01` s at `carry 94`.
 - `tuples R TOP THREADS CAP`: every `R`-subset of the even exponents in `[2, TOP]` through the automaton, capped at `CAP` states: the positive ones with radius and dimension, the countable nonzero ones, the count of sets equal to `{0}`, the capped ones, the most states. Runtime `128.8` s at `tuples 1 40 8 16777216`, which caps at `40`, `16.2` s at `tuples 2 40 8 16777216`, under `0.1` s at `tuples 3 124 8 16777216`.
@@ -87,6 +95,13 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tight 4 31
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tight 4 20
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- tight 5 34 26
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- ones 47 6
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- pair 3,4,10,19 5 34 26
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- pairs 47 6 5 35 26 2
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- pairs 47 6 5 33 25 3
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- pairs 47 6 4 24 25 4
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- pcontrol 47 6 2
+cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- split 3,4,10,19 5 271729742861 64
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- set 3,4,7 2 20000000
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- split 3,4,7 3 166025260 64
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- split 3,4,7 4 14961204826 64
@@ -102,7 +117,7 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- classes 2 8 8
 ```
 
-- `cargo test --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml`, `17` tests, under `1` s after the build.
+- `cargo test --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml`, `18` tests, under `1` s after the build.
 
 ## READS
 
@@ -115,6 +130,7 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 - The jump law holds on every step of the `173` cells `jumps` reaches at `W = 2^31`; `T_n/a_(n+1)` after the last base enters peaks at `1.9430` and passes `1.1727` in every certified cell with `k >= 2`; all `28` capped cells sit in one open run of rises.
 - Route ratios over `[10^12, 10^30]` for the `30` minimal base sets in `[3, 10]`: between `1.105953` and `1.537469`.
 - `F({3, 4, 7}, k)` at `k = 1..4` by the tight certificate: `581, 3982888, 166025260, 14961204826`, with `37, 5207, 391070, 23496512` positive non-sums up to `F`, `B = 8, 16, 19, 23`; `k = 5` caps at `W = 2^34` with `2^26` holes at term `40`.
+- Smooth-pair sets, `sigma = 1`, at most six bases in `[3, 47]`: `52` of `62`, all closed at `k = 1..4`, `51` at `k = 5`, `{3, 4, 7}` capping at term `40` at `W = 2^35`; `F({3, 4, 10, 19}, k) = 251, 66091, 4138541, 1052160335, 271729742861` at `k = 1..5`; largest `H` `186717655760522`.
 - `g_3(n) = 1, 3, 8, 22, 60, 168, 474` at `n = 1..7` for Erdos problem 817; `474` has one extremal set and `168` two.
 - `C(1, 2^a, 2^b, 2^c) = {0}` for all `561375500` triples of even exponents up to `3000`, every prefix test dead by length `50`, deepest at `(2, 8, 332)`; up to `124` every triple automaton has at most `35` states.
 - Pairs of even exponents up to `40`: `177` empty, `3` countable, `10` of positive dimension, the largest `0.228391` at `(2, 8)`.
@@ -148,7 +164,11 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 - `tally 7 LO HI 8 1` over `[169, 348]`, `[349, 445]`, `[446, 458]`, `[459, 467]`, `[468, 473]`, `[474, 474]`: the search without the cut agrees, about `27` minutes in all.
 - `tally 7 474 474 8 0` and `tally 6 168 176 8 1`: the extremal sets at `n = 6, 7`, and the cut removing none of the sets it was tried on, with the crate tests on the cut.
 - `tight 4 31`, `tight 4 20`, `set 3,4,7 1 2000000`, `set 3,4,7 2 20000000`, the `split` runs at `3,4,7` and the crate test on the sigma-one set: `{3, 4, 7}` cofinite at `k = 1..4` and its largest non-sums.
-- The certificate, exactness, monotone, wide certificate, two-part, window, two-route, one-inequality, surplus-does-not-heal, chain, birth, jump, route-of-`F`, sigma-one deficit, tight certificate and sigma-one exactness rows are proofs on `research/erdos/notes/problem-124.md`.
+- The certificate, exactness, monotone, wide certificate, two-part, window, two-route, one-inequality, surplus-does-not-heal, chain, birth, jump and route-of-`F` rows are proofs on `research/erdos/notes/problem-124.md`; the sigma-one deficit, tight certificate and sigma-one exactness rows, the smooth-pair reduction and the two-log reduction are proofs on `research/erdos/notes/sigma-one.md`.
+- `ones 47 6`: the `62` base sets of at most six bases in `[3, 47]` with `sigma = 1`, `gcd = 1` and no two bases powers of one integer, the `52` with two smooth bases, and `rho = 7153/2^19`, in the smooth-pair reduction row.
+- `pairs 47 6 5 35 26 2`, `pairs 47 6 5 33 25 3`, `pairs 47 6 4 24 25 4`, `pcontrol 47 6 2`, the `split` runs at `3,4,10,19`, `3,5,6,21` and `3,6,8,15,21,29`, and the crate test on the smooth pair: the `52` smooth-pair sets cofinite at `k <= 4`, `51` at `k = 5`, and the largest non-sums of `{3, 4, 10, 19}`.
+- `near 3 5 24`, `near 3 7 0`, `near 5 7 0`, `near 31 46 0` and the crate test on the close powers: the neighbour pairs below `2^80` and `abs(3^a - 5^b) >= min(2^80, min(3^a, 5^b)/47)`.
+- `logs 47 6 5 31 25 4 0`, `logs 47 6 5 33 25 2 0`, `logs 47 6 4 24 25 4 0`, `logs 47 6 4 31 25 4 1`, `lcontrol 47 6 2 0`, `lcontrol 47 6 2 1`, the `split` runs at `3,5,7,13`, `lpair 3,5,7,13 6 34 25` and the crate test on the two-log rule: the `10` sets without two smooth bases cofinite at `k = 1..5`, and the two rules agreeing on the `52`.
 - The concentration-cut row is a proof on `research/erdos/notes/problems-817-406.md`.
 - `deaths 3 3000 79 8`, `tuples 3 124 8 16777216` and the crate test on the two deciders: no four exponents within a span of `3000` for a nonzero 3-adic `lambda`.
 - `tuples 2 40 8 16777216`, `deaths 2 40 79 8` and `cantor 2,18`: the pairs up to `40`.

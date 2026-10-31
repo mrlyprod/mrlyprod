@@ -1837,6 +1837,541 @@ fn tight(kmax: u32, bits: u32, holes: u32) {
     println!("{:.1} s", clock.elapsed().as_secs_f64());
 }
 
+// PAIRS
+
+const EXCEPT: [u32; 16] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 19, 27];
+
+fn root(d: u64) -> u64 {
+    (2..=d)
+        .find(|&r| {
+            let mut x = r;
+            while x < d {
+                x *= r;
+            }
+            x == d
+        })
+        .unwrap()
+}
+
+fn smooth(d: u64) -> bool {
+    let mut x = d;
+    while x.is_multiple_of(2) {
+        x /= 2;
+    }
+    while x.is_multiple_of(3) {
+        x /= 3;
+    }
+    x == 1
+}
+
+fn ones(r: u64, size: usize) -> Vec<Vec<u64>> {
+    let den = (3..=r).fold(1u128, |l, d| {
+        let e = (d - 1) as u128;
+        l / gcd(l, e) * e
+    });
+    fn walk(
+        d0: u64,
+        r: u64,
+        left: usize,
+        den: u128,
+        sum: u128,
+        cur: &mut Vec<u64>,
+        out: &mut Vec<Vec<u64>>,
+    ) {
+        for d in d0..=r {
+            let w = den / (d - 1) as u128;
+            if sum + w > den {
+                continue;
+            }
+            if sum + left as u128 * w < den {
+                break;
+            }
+            cur.push(d);
+            if sum + w == den {
+                out.push(cur.clone());
+            } else if left > 1 {
+                walk(d + 1, r, left - 1, den, sum + w, cur, out);
+            }
+            cur.pop();
+        }
+    }
+    let mut out = vec![];
+    walk(3, r, size, den, 0, &mut vec![], &mut out);
+    let mut out: Vec<Vec<u64>> = out
+        .into_iter()
+        .filter(|s| coprime(s))
+        .filter(|s| {
+            let roots: Vec<u64> = s.iter().map(|&d| root(d)).collect();
+            (0..s.len()).all(|i| (0..i).all(|j| roots[i] != roots[j]))
+        })
+        .collect();
+    order(&mut out);
+    out
+}
+
+fn pair_of(bases: &[u64]) -> Option<(u64, u64)> {
+    let s: Vec<u64> = bases.iter().copied().filter(|&d| smooth(d)).collect();
+    (s.len() >= 2).then(|| (s[0], s[1]))
+}
+
+fn rho() -> (u128, u32, u32) {
+    let mut best: (u128, u32, u32) = (1, 0, 0);
+    for &x in &EXCEPT {
+        let p = 1u128 << x;
+        for y in 1..=20u32 {
+            let c = p.abs_diff(3u128.pow(y));
+            if best.1 == 0 || c << best.1 < best.0 << x {
+                best = (c, x, y);
+            }
+        }
+    }
+    best
+}
+
+fn horizon(m: u64, l: u128) -> u128 {
+    let (c, x, _) = rho();
+    let need = (m as u128 - 1) * l;
+    let h1 = (need << x).div_ceil(c);
+    let theta = 1.0 - 1.0 / (10.0 * 2f64.ln());
+    let h2 = ((need as f64).ln() / theta).exp() * (1.0 + 1e-9);
+    h1.max(h2.ceil() as u128 + 1)
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Paired {
+    e: u64,
+    pf: u64,
+    c: u128,
+    f: u128,
+    gaps: usize,
+    n: usize,
+    last: u128,
+    sum: u128,
+    l: u128,
+    h: u128,
+    checked: usize,
+    slack: i128,
+    tries: usize,
+}
+
+enum Stop {
+    Cap(usize, u128, usize),
+    Far(usize, u128),
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Rule {
+    Smooth,
+    Logs,
+}
+
+fn paired_cell(bases: &[u64], k: u32, bits: u32, holes: u32, rule: Rule) -> Result<Paired, Stop> {
+    let near = match rule {
+        Rule::Smooth => vec![],
+        Rule::Logs => nears(bases),
+    };
+    let reach = |l: u128| -> (u128, u64, u64) {
+        match rule {
+            Rule::Smooth => {
+                let (e, f) = pair_of(bases).unwrap();
+                (horizon(f, l), e, f)
+            }
+            Rule::Logs => log_horizon(&near, l),
+        }
+    };
+    let c = 1 + bases
+        .iter()
+        .map(|&d| ((d as u128).pow(k) - 1) / (d as u128 - 1))
+        .sum::<u128>();
+    let a = elements(bases, k, far());
+    let mut wide = Wide::new(bits, holes);
+    let mut tries = 0;
+    for n in 0..a.len() - 1 {
+        let Some(t) = wide.push(a[n]) else {
+            return Err(Stop::Cap(n, wide.s, wide.sparse.len()));
+        };
+        if t == 0 || t > a[n + 1] {
+            continue;
+        }
+        tries += 1;
+        let l = c + 2 * t - 1;
+        let (h, e, pf) = reach(l);
+        if h >= far() {
+            return Err(Stop::Far(n, h));
+        }
+        let mut sm = wide.s;
+        let mut slack = i128::MAX;
+        let mut checked = 0;
+        let mut holds = true;
+        for &x in &a[n + 1..] {
+            if x > h {
+                break;
+            }
+            let room = sm as i128 + 1 - 2 * t as i128 - x as i128;
+            if room < 0 {
+                holds = false;
+                break;
+            }
+            slack = slack.min(room);
+            checked += 1;
+            sm += x;
+        }
+        if holds {
+            return Ok(Paired {
+                e,
+                pf,
+                c,
+                f: t - 1,
+                gaps: wide.gaps(t),
+                n: n + 1,
+                last: a[n],
+                sum: wide.s,
+                l,
+                h,
+                checked,
+                slack,
+                tries,
+            });
+        }
+    }
+    Err(Stop::Far(a.len(), far()))
+}
+
+fn paired_row(
+    bases: &[u64],
+    k: u32,
+    bits: u32,
+    holes: u32,
+    rule: Rule,
+) -> (String, Option<Paired>) {
+    let t = Instant::now();
+    match paired_cell(bases, k, bits, holes, rule) {
+        Ok(r) => (
+            format!(
+                "{} k {} pair {{{},{}}} C_k {} F {} gaps {} n {} last {} S_n {} L {} H {} terms checked {} least slack {} tries {} {:.2}s",
+                show(bases), k, r.e, r.pf, r.c, r.f, r.gaps, r.n, r.last, r.sum, r.l, r.h, r.checked, r.slack, r.tries,
+                t.elapsed().as_secs_f64()
+            ),
+            Some(r),
+        ),
+        Err(Stop::Cap(n, s, len)) => (
+            format!(
+                "{} k {} cap W = 2^{}, 2^{} holes: folding term {} with S_n {} and {} middle holes {:.2}s",
+                show(bases), k, bits, holes, n + 1, s, len, t.elapsed().as_secs_f64()
+            ),
+            None,
+        ),
+        Err(Stop::Far(n, h)) => (
+            format!("{} k {} horizon {} at term {} passes 10^30 {:.2}s", show(bases), k, h, n + 1, t.elapsed().as_secs_f64()),
+            None,
+        ),
+    }
+}
+
+fn unit_sets(r: u64, size: usize) {
+    let all = ones(r, size);
+    let (with, without): (Vec<_>, Vec<_>) = all.iter().partition(|s| pair_of(s).is_some());
+    let (c, x, y) = rho();
+    println!(
+        "sigma = 1, gcd = 1, at most {} bases in [3, {}], no two powers of one integer: {} sets; {} hold two {{2,3}}-smooth bases, {} do not",
+        size, r, all.len(), with.len(), without.len()
+    );
+    println!(
+        "least |2^x - 3^y|/2^x over x in Ellison's S: {}/2^{} at (x, y) = ({}, {})",
+        c, x, x, y
+    );
+    for s in &with {
+        let (e, f) = pair_of(s).unwrap();
+        println!("pair {{{},{}}} {}", e, f, show(s));
+    }
+    for s in &without {
+        println!("no pair {}", show(s));
+    }
+}
+
+fn chosen(r: u64, size: usize, rule: Rule, all: bool) -> Vec<Vec<u64>> {
+    ones(r, size)
+        .into_iter()
+        .filter(|s| (all && rule == Rule::Logs) || pair_of(s).is_some() == (rule == Rule::Smooth))
+        .collect()
+}
+
+fn pcontrol(r: u64, size: usize, kmax: u32, rule: Rule, all: bool) {
+    let clock = Instant::now();
+    let sets = chosen(r, size, rule, all);
+    let (mut agree, mut differ) = (0, vec![]);
+    for s in &sets {
+        for k in 1..=kmax {
+            let Ok(p) = paired_cell(s, k, 31, 25, rule) else {
+                differ.push((s.clone(), k));
+                continue;
+            };
+            let f = p.f as usize;
+            let sums = knapsack(s, k, 4 * f + 4);
+            let ok = !sums[f]
+                && sums[f + 1..].iter().all(|&x| x)
+                && (1..=f).filter(|&x| !sums[x]).count() == p.gaps;
+            if ok {
+                agree += 1;
+            } else {
+                differ.push((s.clone(), k));
+            }
+        }
+    }
+    println!(
+        "{} sets at k = 1..{}: a plain knapsack to 4 F + 4 agrees on F and the count of non-sums in {} cells, differs in {:?}; {:.1} s",
+        sets.len(),
+        kmax,
+        agree,
+        differ,
+        clock.elapsed().as_secs_f64()
+    );
+}
+
+#[allow(clippy::too_many_arguments)]
+fn pairs(
+    r: u64,
+    size: usize,
+    kmax: u32,
+    bits: u32,
+    holes: u32,
+    threads: usize,
+    rule: Rule,
+    all: bool,
+) {
+    let clock = Instant::now();
+    let sets = chosen(r, size, rule, all);
+    let next = AtomicUsize::new(0);
+    let rows: Mutex<Vec<(usize, Vec<(String, Option<Paired>)>)>> = Mutex::new(vec![]);
+    std::thread::scope(|scope| {
+        for _ in 0..threads {
+            scope.spawn(|| loop {
+                let i = next.fetch_add(1, Ordering::SeqCst);
+                if i >= sets.len() {
+                    break;
+                }
+                let mut row = vec![];
+                for k in 1..=kmax {
+                    let (line, cell) = paired_row(&sets[i], k, bits, holes, rule);
+                    let ok = cell.is_some();
+                    row.push((line, cell));
+                    if !ok {
+                        break;
+                    }
+                }
+                rows.lock().unwrap().push((i, row));
+            });
+        }
+    });
+    let mut rows = rows.into_inner().unwrap();
+    rows.sort_by_key(|r| r.0);
+    let mut closed = vec![0usize; kmax as usize + 1];
+    let mut top: Vec<Option<(u128, usize, u128, usize)>> = vec![None; kmax as usize + 1];
+    for (i, row) in &rows {
+        for (j, (line, cell)) in row.iter().enumerate() {
+            println!("{}", line);
+            if let Some(p) = cell {
+                closed[j + 1] += 1;
+                let t = top[j + 1].get_or_insert((p.f, *i, p.h, *i));
+                if p.f > t.0 {
+                    (t.0, t.1) = (p.f, *i);
+                }
+                if p.h > t.2 {
+                    (t.2, t.3) = (p.h, *i);
+                }
+            }
+        }
+    }
+    for k in 1..=kmax as usize {
+        if let Some((f, i, h, j)) = top[k] {
+            println!(
+                "k {}: {} closed, largest F {} at {}, largest H {} at {}",
+                k,
+                closed[k],
+                f,
+                show(&sets[i]),
+                h,
+                show(&sets[j])
+            );
+        }
+    }
+    println!(
+        "{} sets; closed at k = 1..{}: {:?}; {:.1} s",
+        sets.len(),
+        kmax,
+        &closed[1..],
+        clock.elapsed().as_secs_f64()
+    );
+}
+
+// LOGS
+
+const GAP: u32 = 80;
+
+#[derive(Clone)]
+struct Big(Vec<u64>);
+
+impl Big {
+    fn one() -> Big {
+        Big(vec![1])
+    }
+
+    fn times(&self, d: u64) -> Big {
+        let mut out = Vec::with_capacity(self.0.len() + 1);
+        let mut carry = 0u128;
+        for &x in &self.0 {
+            let p = x as u128 * d as u128 + carry;
+            out.push(p as u64);
+            carry = p >> 64;
+        }
+        if carry > 0 {
+            out.push(carry as u64);
+        }
+        Big(out)
+    }
+
+    fn rank(&self, o: &Big) -> std::cmp::Ordering {
+        self.0
+            .len()
+            .cmp(&o.0.len())
+            .then_with(|| self.0.iter().rev().cmp(o.0.iter().rev()))
+    }
+
+    fn small(&self) -> Option<u128> {
+        match self.0.len() {
+            1 => Some(self.0[0] as u128),
+            2 => Some(self.0[0] as u128 | (self.0[1] as u128) << 64),
+            _ => None,
+        }
+    }
+}
+
+fn gap(u: &Big, v: &Big) -> Option<u128> {
+    let (hi, lo) = if u.rank(v).is_ge() { (u, v) } else { (v, u) };
+    let mut out = Vec::with_capacity(hi.0.len());
+    let mut borrow = false;
+    for (i, &x) in hi.0.iter().enumerate() {
+        let (d1, b1) = x.overflowing_sub(lo.0.get(i).copied().unwrap_or(0));
+        let (d2, b2) = d1.overflowing_sub(borrow as u64);
+        out.push(d2);
+        borrow = b1 || b2;
+    }
+    while out.len() > 1 && out.last() == Some(&0) {
+        out.pop();
+    }
+    Big(out).small()
+}
+
+struct Near {
+    e: u64,
+    f: u64,
+    top: u32,
+    rows: Vec<(u128, Option<u128>, u32, u32)>,
+}
+
+fn ceiling(e: u64, f: u64) -> u32 {
+    let (le, lf) = ((e as f64).ln(), (f as f64).ln());
+    (((GAP + 1) as f64 * 2f64.ln() + 2520.0 * le * lf) / le).ceil() as u32 + 1
+}
+
+fn closest(e: u64, f: u64) -> Near {
+    let top = ceiling(e, f);
+    let (mut u, mut v, mut b) = (Big::one(), Big::one(), 0u32);
+    let mut rows = vec![];
+    for a in 1..=top {
+        u = u.times(e);
+        let mut w = v.times(f);
+        while w.rank(&u).is_le() {
+            v = w;
+            w = v.times(f);
+            b += 1;
+        }
+        for (j, p) in [(b, &v), (b + 1, &w)] {
+            if j == 0 {
+                continue;
+            }
+            let g = gap(&u, p);
+            assert_ne!(g, Some(0));
+            if let Some(g) = g.filter(|&g| g < 1 << GAP) {
+                let low = if u.rank(p).is_le() { &u } else { p };
+                rows.push((g, low.small(), a, j));
+            }
+        }
+    }
+    Near { e, f, top, rows }
+}
+
+fn nears(bases: &[u64]) -> Vec<Near> {
+    let mut out = vec![];
+    for (i, &e) in bases.iter().enumerate() {
+        for &f in &bases[i + 1..] {
+            out.push(closest(e.min(f), e.max(f)));
+        }
+    }
+    out
+}
+
+fn reach(p: &Near, g: u128) -> u128 {
+    assert!(g < 1 << GAP);
+    p.rows
+        .iter()
+        .filter(|r| r.0 < g)
+        .map(|r| r.1.unwrap_or(u128::MAX))
+        .max()
+        .unwrap_or(0)
+}
+
+fn log_horizon(near: &[Near], l: u128) -> (u128, u64, u64) {
+    near.iter()
+        .map(|p| (reach(p, (p.f as u128 - 1) * l), p.e, p.f))
+        .min()
+        .unwrap()
+}
+
+fn near_pair(e: u64, f: u64, bits: u32) {
+    let clock = Instant::now();
+    let p = closest(e.min(f), e.max(f));
+    let (e, f) = (p.e, p.f);
+    let huge = p.rows.iter().filter(|r| r.1.is_none()).count();
+    println!(
+        "pair {{{},{}}}: Laurent ceiling 2520 ln {} ln {} = {:.3}, exponents a <= {} of {}, {} neighbour pairs with 0 < |{}^a - {}^b| < 2^{}, {} with min(...) >= 2^128",
+        e, f, e, f, 2520.0 * (e as f64).ln() * (f as f64).ln(), p.top, e, p.rows.len(), e, f, GAP, huge
+    );
+    let mut rows: Vec<_> = p.rows.iter().filter(|r| r.0 < 1 << bits).collect();
+    rows.sort();
+    for r in &rows {
+        println!(
+            "a {} b {} gap {} min {}",
+            r.2,
+            r.3,
+            r.0,
+            r.1.map_or("huge".to_string(), |m| m.to_string())
+        );
+    }
+    let top = p
+        .rows
+        .iter()
+        .max_by_key(|r| r.1.unwrap_or(u128::MAX))
+        .unwrap();
+    let ratio = p
+        .rows
+        .iter()
+        .max_by(|x, y| {
+            (x.1.unwrap_or(u128::MAX) as f64 / x.0 as f64)
+                .total_cmp(&(y.1.unwrap_or(u128::MAX) as f64 / y.0 as f64))
+        })
+        .unwrap();
+    let m = ratio.1.unwrap_or(u128::MAX);
+    let exact = p
+        .rows
+        .iter()
+        .all(|r| r.1.unwrap_or(u128::MAX) <= m.div_ceil(ratio.0) * r.0);
+    println!(
+        "largest min over the {} pairs: {} at (a, b) = ({}, {}), gap {}; largest min/gap: {}/{} at (a, b) = ({}, {}), ceil {}, bounding every pair: {}; {:.2} s",
+        p.rows.len(), top.1.unwrap_or(u128::MAX), top.2, top.3, top.0, m, ratio.0, ratio.2, ratio.3, m.div_ceil(ratio.0), exact, clock.elapsed().as_secs_f64()
+    );
+}
+
 // SWEEP
 
 fn word(w: &[u64], bit: usize) -> u64 {
@@ -3082,6 +3617,24 @@ fn main() {
         "tally" => tally(num(2, 6) as usize, num(3, 168) as usize, num(4, 176) as usize, num(5, 8) as usize, num(6, 1) == 1),
         "route" => route(num(2, 10), 10u128.pow(num(3, 12) as u32)),
         "tight" => tight(num(2, 4) as u32, num(3, 31) as u32, num(4, 25) as u32),
+        "ones" => unit_sets(num(2, 47), num(3, 6) as usize),
+        "pair" | "lpair" => {
+            let mut bases: Vec<u64> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
+            bases.sort();
+            let rule = if args[1] == "pair" { Rule::Smooth } else { Rule::Logs };
+            for k in 1..=num(3, 1) as u32 {
+                let (line, cell) = paired_row(&bases, k, num(4, 31) as u32, num(5, 25) as u32, rule);
+                println!("{}", line);
+                if cell.is_none() {
+                    break;
+                }
+            }
+        }
+        "pcontrol" => pcontrol(num(2, 47), num(3, 6) as usize, num(4, 2) as u32, Rule::Smooth, false),
+        "lcontrol" => pcontrol(num(2, 47), num(3, 6) as usize, num(4, 2) as u32, Rule::Logs, num(5, 0) == 1),
+        "pairs" => pairs(num(2, 47), num(3, 6) as usize, num(4, 4) as u32, num(5, 31) as u32, num(6, 25) as u32, num(7, 4) as usize, Rule::Smooth, false),
+        "logs" => pairs(num(2, 47), num(3, 6) as usize, num(4, 4) as u32, num(5, 31) as u32, num(6, 25) as u32, num(7, 4) as usize, Rule::Logs, num(8, 0) == 1),
+        "near" => near_pair(num(2, 3), num(3, 5), num(4, 24) as u32),
         "cantor" => {
             let exps: Vec<u32> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
             cantor(&exps, num(3, 1 << 24) as usize)
@@ -3093,7 +3646,7 @@ fn main() {
         "deaths" => deaths(num(2, 3) as usize, num(3, 400) as u32, num(4, 79) as u32, num(5, 8) as usize),
         "classes" => classes(num(2, 3) as usize, num(3, 5) as u32, num(4, 8) as usize),
         "tuples" => tuples(num(2, 2) as usize, num(3, 40) as u32, num(4, 8) as usize, num(5, 1 << 24) as usize),
-        _ => println!("verbs census R K BITS THREADS, deep R K BITS THREADS, jumps R K BITS THREADS, trace D K BITS, windowed BITS, cell D K BITS, wcell D K BITS, chainless BITS, forced BITS, wcontrol BITS, split D K X COUNT, set D K B, windows D K E F, graham T P Q BITS, refute BITS, ternary N HI THREADS, probe N TOP THREADS, band LO HI W THREADS, offsets LO HI, sweep N LO HI THREADS, tally N LO HI THREADS PLAIN, control, route R E, tight K BITS HOLES, cantor E1,E2,... CAP, carry M1,M2,... CAP, tuples R TOP THREADS CAP, deaths R TOP D THREADS, classes R D THREADS"),
+        _ => println!("verbs census R K BITS THREADS, deep R K BITS THREADS, jumps R K BITS THREADS, trace D K BITS, windowed BITS, cell D K BITS, wcell D K BITS, chainless BITS, forced BITS, wcontrol BITS, split D K X COUNT, set D K B, windows D K E F, graham T P Q BITS, refute BITS, ternary N HI THREADS, probe N TOP THREADS, band LO HI W THREADS, offsets LO HI, sweep N LO HI THREADS, tally N LO HI THREADS PLAIN, control, route R E, tight K BITS HOLES, ones R SIZE, pair D K BITS HOLES, pairs R SIZE K BITS HOLES THREADS, pcontrol R SIZE K, near E F BITS, lpair D K BITS HOLES, logs R SIZE K BITS HOLES THREADS ALL, lcontrol R SIZE K ALL, cantor E1,E2,... CAP, carry M1,M2,... CAP, tuples R TOP THREADS CAP, deaths R TOP D THREADS, classes R D THREADS"),
     }
 }
 
@@ -3292,6 +3845,59 @@ mod tests {
             assert!(r.margin > 0.0 && r.big >= 8);
         }
         assert_eq!(tight_cell(1, 16, 25).unwrap().f, 581);
+    }
+
+    #[test]
+    fn the_smooth_pair_reproduces_the_tight_certificate() {
+        for k in [1, 2, 3] {
+            let t = tight_cell(k, 20, 25).unwrap();
+            let p = paired_cell(&[3, 4, 7], k, 20, 25, Rule::Smooth)
+                .ok()
+                .unwrap();
+            assert_eq!((p.f, p.gaps, p.n, p.slack), (t.f, t.gaps, t.n, t.slack));
+        }
+    }
+
+    #[test]
+    fn the_close_powers_match_machine_integers() {
+        let p = closest(3, 5);
+        let mut direct = vec![];
+        for a in 1..=80u32 {
+            let u = 3u128.pow(a);
+            let b = (1..=55u32)
+                .filter(|&b| 5u128.pow(b) <= u)
+                .max()
+                .unwrap_or(0);
+            for j in [b, b + 1] {
+                let v = 5u128.pow(j);
+                if j >= 1 && u.abs_diff(v) < 1 << GAP {
+                    direct.push((u.abs_diff(v), Some(u.min(v)), a, j));
+                }
+            }
+        }
+        let small: Vec<_> = p.rows.iter().filter(|r| r.2 <= 80).cloned().collect();
+        assert_eq!(small, direct);
+        assert!(p.rows.iter().all(|r| r.2 <= 80));
+    }
+
+    #[test]
+    fn the_two_log_rule_matches_a_knapsack() {
+        for k in [1, 2] {
+            let p = paired_cell(&[3, 5, 7, 13], k, 20, 25, Rule::Logs)
+                .ok()
+                .unwrap();
+            let f = p.f as usize;
+            let sums = knapsack(&[3, 5, 7, 13], k, 4 * f + 4);
+            assert!(!sums[f] && sums[f + 1..].iter().all(|&x| x));
+            assert_eq!((1..=f).filter(|&x| !sums[x]).count(), p.gaps);
+        }
+        assert_eq!(
+            paired_cell(&[3, 5, 7, 13], 1, 20, 25, Rule::Logs)
+                .ok()
+                .unwrap()
+                .f,
+            112
+        );
     }
 
     #[test]

@@ -1208,6 +1208,45 @@ def shift_floor(b, a0, N, m):
     return best
 
 
+def carpet_enclosure():
+    t0 = time.time()
+    hat_missing_check(9, 4)
+    ent = math.floor((1 - math.log(8) / math.log(9)) * 1e7) / 1e7
+    print(
+        f"carpet, base 9 missing 4, the Morton code of the Sierpinski carpet, the constant-phase digit 2 a_0 = base - 1: entropy floor alpha_1 >= 1 - log 8/log 9 = {ent:.7f}, the Mahler term of P_F = (x+1)(x^2+1)(x^5+1) being 0"
+    )
+    lo_best, hi_best = 0.0, 1.0
+    for nd, m in ((4, 16), (5, 8), (6, 4)):
+        t1 = time.time()
+        el, eh, mu_lo, mu_hi, slack = alpha_band(9, 4, nd, m, 1, True)
+        plain = alpha_band(9, 4, nd, m, 1, False)[0]
+        hi_best = min(hi_best, eh)
+        lo_best = max(lo_best, -1.0 if el is None else el)
+        print(
+            f"window {nd} digits sub-scan {m}: restricted infimum matrix mu_lo {mu_lo:.6f} supremum matrix mu_hi {mu_hi:.6f} slack {slack:.3e} -> alpha_1 in [{'none' if el is None else f'{el:.7f}'}, {eh:.7f}]  plain lower test {'none' if plain is None else f'{plain:.7f}'}  ({time.time() - t1:.1f}s)"
+        )
+    for N, m in ((3, 4000), (4, 1500), (5, 300)):
+        t1 = time.time()
+        s = shift_floor(9, 4, N, m)
+        el = math.floor(math.log(s) / (N * math.log(9)) * 1e7) / 1e7
+        if not s > 9 ** (N * el):
+            raise SystemExit(f"rounding unsafe at shift floor N={N}")
+        lo_best = max(lo_best, el)
+        print(
+            f"shift floor N={N} m={m}, the CVY Theorem 4.2 sandwich, lower side: min_x Sigma_{N} > {s:.6f} -> alpha_1 > {el:.7f}  ({time.time() - t1:.1f}s)"
+        )
+    line = crit(9)
+    print(
+        f"certified enclosure alpha_1(9, {{4}}) in [{lo_best:.7f}, {hi_best:.7f}], width {hi_best - lo_best:.7f}; against 27/77 = {27 / 77:.7f} and the Type I level 1 - alpha_1 > {1 - hi_best:.7f}"
+    )
+    print(
+        f"the line (1/5)(1 + c/2)(2 - s) at base 9: {line:.7f} at s = 1, {line / 2:.7f} at s = 3/2; the lower bound of the enclosure meets it at s = 1 by {line - lo_best:+.7f} and the criterion itself reads only s in [3/2, 2), where the order band of verb criterion refutes it"
+    )
+    ok = lo_best <= hi_best and hi_best < 27 / 77 and lo_best > ent
+    print(f"carpet enclosure {'OK' if ok else 'FAIL'}  ({time.time() - t0:.1f}s)")
+    return lo_best, hi_best
+
+
 def shift_sweep(lo, hi, Ns, ms):
     t0 = time.time()
     rows = []
@@ -2136,13 +2175,15 @@ def main():
         shift_sweep(3, 20, [1, 2, 3], [512, 4096, 16384])
     elif verb == "blind":
         blind_sweep(3, 20, 4, 8)
+    elif verb == "carpet":
+        carpet_enclosure()
     elif verb == "floor":
         v = [int(x) for x in sys.argv[2:]]
         floor_sweep(v[0] if v else 3, v[1] if len(v) > 1 else 20, [4, 5], 8)
         dear_sweep(21, 33, 8)
     else:
         raise SystemExit(
-            "verbs: check grid sandwich certify windows moments lemma corollary criterion least six family floor fifth fifthbelow shift grid1 blind pairs pairholes pairfail pairclear"
+            "verbs: check grid sandwich certify windows moments lemma corollary criterion least six family floor fifth fifthbelow shift grid1 blind carpet pairs pairholes pairfail pairclear"
         )
     close(t0)
 

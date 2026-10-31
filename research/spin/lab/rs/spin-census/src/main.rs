@@ -1,4 +1,5 @@
 mod design;
+mod eisenstein;
 mod gaussian;
 mod mass;
 mod orbit;
@@ -503,12 +504,234 @@ fn gaussian_farey(top: usize) {
     }
 }
 
+fn gaussian_limit(top: usize) {
+    println!();
+    println!("THE GAUSSIAN FAREY LIMIT: new(n) sqrt(ln n) / n^2 AGAINST sqrt 2 K J_2(rad n) FOR n UP TO {top}");
+    let cap = 2 * top * top;
+    let least = gaussian::least_factors(cap);
+    let prefix = gaussian::two_square_prefix(cap, &least);
+    println!(
+        "  K = {:.16} (A064533), every k up to 2 n^2 classified, cut n <= {top}, no radius sampled",
+        gaussian::LANDAU_RAMANUJAN
+    );
+    let landau = prefix[cap] as f64 * (cap as f64).ln().sqrt() / cap as f64;
+    println!("  Landau factor at the cut: B({cap}) sqrt(ln {cap}) / {cap} = {landau:.6} against K");
+    let radicals = [2usize, 3, 5, 6, 10, 30, 210];
+    let mut by_class = Vec::new();
+    for radical in radicals {
+        let members: Vec<usize> = (2..=top)
+            .filter(|n| gaussian::radical(*n, &least) == radical)
+            .collect();
+        println!(
+            "  radical {radical:>3}: {} scales up to {top}, target sqrt2 K J_2 = {:.6}",
+            members.len(),
+            gaussian::landau_target(radical, &least)
+        );
+        let mut ladder = Vec::new();
+        for shift in [0u32, 2, 4, 6] {
+            let bound = top >> shift;
+            if let Some(n) = members.iter().rev().find(|n| **n <= bound) {
+                if !ladder.contains(n) {
+                    ladder.push(*n);
+                }
+            }
+        }
+        for n in &ladder {
+            let count = gaussian::mobius_count(*n, &prefix, &least);
+            let value = gaussian::scaled(*n, count);
+            let target = gaussian::landau_target(*n, &least);
+            println!(
+                "    n {n:>5} new {count:>9} scaled {value:.6} ratio {:.5}",
+                value / target
+            );
+        }
+        by_class.push((radical, members));
+    }
+    let band: Vec<(usize, f64)> = (top / 2 + 1..=top)
+        .map(|n| {
+            let count = gaussian::mobius_count(n, &prefix, &least);
+            (
+                n,
+                gaussian::scaled(n, count) / gaussian::landau_target(n, &least),
+            )
+        })
+        .collect();
+    let low = band
+        .iter()
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .expect("a band");
+    let high = band
+        .iter()
+        .max_by(|a, b| a.1.total_cmp(&b.1))
+        .expect("a band");
+    println!(
+        "  every n in ({}, {top}]: ratio least {:.5} at n = {} (radical {}), greatest {:.5} at n = {} (radical {})",
+        top / 2,
+        low.1,
+        low.0,
+        gaussian::radical(low.0, &least),
+        high.1,
+        high.0,
+        gaussian::radical(high.0, &least)
+    );
+    println!(
+        "  classes listed: {:?}",
+        by_class
+            .iter()
+            .map(|(radical, members)| (*radical, members.len()))
+            .collect::<Vec<_>>()
+    );
+}
+
+fn eisenstein_farey(top: usize) {
+    println!();
+    println!("THE EISENSTEIN FAREY: RADII NEW AT SCALE n IN THE DISC OF RADIUS SQRT 3");
+    let cap = eisenstein::WINDOW * top * top;
+    let least = gaussian::least_factors(cap);
+    let direct = eisenstein::union_counts(top);
+    let rule: Vec<usize> = (1..=top)
+        .map(|scale| eisenstein::new_rule(scale, &least))
+        .collect();
+    let prefix = eisenstein::loeschian_prefix(cap, &least);
+    let sieve: Vec<usize> = (1..=top)
+        .map(|scale| eisenstein::mobius_count(scale, &prefix, &least, None))
+        .collect();
+    let without: Vec<usize> = (1..=top)
+        .map(|scale| eisenstein::mobius_count(scale, &prefix, &least, Some(3)))
+        .collect();
+    let first = |left: &[usize], right: &[usize]| -> Option<usize> {
+        (1..=top).find(|n| left[n - 1] != right[n - 1])
+    };
+    println!(
+        "  lattice reading over every point of Z[omega], new radii at n = 1..30: {:?}",
+        &direct[..30.min(direct.len())]
+    );
+    println!(
+        "  the square free rule reproduces the lattice reading at every n up to {top}: {}",
+        first(&direct, &rule).is_none()
+    );
+    println!(
+        "  the Mobius identity new(n) = sum_d mu(d) L(3n^2/d^2) over d | rad(n) holds to n = {top}: {}",
+        first(&direct, &sieve).is_none()
+    );
+    println!(
+        "  the same sum with the prime 3 left out of the radical first fails at n = {:?}",
+        first(&direct, &without)
+    );
+    println!(
+        "  scales n <= {top} divisible by 3 on which the full sum holds: {} of {}",
+        (3..=top)
+            .step_by(3)
+            .filter(|n| sieve[n - 1] == direct[n - 1])
+            .count(),
+        top / 3
+    );
+}
+
+fn eisenstein_limit(top: usize) {
+    println!();
+    println!("THE EISENSTEIN FAREY LIMIT: new(n) sqrt(ln n) / n^2 AGAINST (3 / sqrt 2) K_3 J_2(rad n) FOR n UP TO {top}");
+    let cap = eisenstein::WINDOW * top * top;
+    let least = gaussian::least_factors(cap);
+    let prefix = eisenstein::loeschian_prefix(cap, &least);
+    println!(
+        "  K_3 = {:.16}, every k up to 3 n^2 classified, cut n <= {top}, no radius sampled",
+        eisenstein::HEX_CONSTANT
+    );
+    let partial = eisenstein::constant_from_primes(cap, &least);
+    println!(
+        "  K_3 = sqrt(B / (2 sqrt 3)), B = prod over p = 2 mod 3 of (1 - p^-2)^-1 taken over p <= {cap}: {partial:.12}, short of K_3 by {:.2e}, every omitted factor exceeding 1",
+        eisenstein::HEX_CONSTANT - partial
+    );
+    let landau = prefix[cap] as f64 * (cap as f64).ln().sqrt() / cap as f64;
+    println!(
+        "  Landau factor at the cut: L({cap}) sqrt(ln {cap}) / {cap} = {landau:.6} against K_3"
+    );
+    let radicals = [2usize, 3, 5, 6, 7, 10, 30, 210];
+    for radical in radicals {
+        let members: Vec<usize> = (2..=top)
+            .filter(|n| gaussian::radical(*n, &least) == radical)
+            .collect();
+        println!(
+            "  radical {radical:>3}: {} scales up to {top}, target (3/sqrt2) K_3 J_2 = {:.6}",
+            members.len(),
+            eisenstein::target(radical, &least)
+        );
+        let mut ladder = Vec::new();
+        for shift in [0u32, 2, 4, 6] {
+            let bound = top >> shift;
+            if let Some(n) = members.iter().rev().find(|n| **n <= bound) {
+                if !ladder.contains(n) {
+                    ladder.push(*n);
+                }
+            }
+        }
+        for n in &ladder {
+            let count = eisenstein::mobius_count(*n, &prefix, &least, None);
+            let value = gaussian::scaled(*n, count);
+            println!(
+                "    n {n:>5} new {count:>9} scaled {value:.6} ratio {:.5}",
+                value / eisenstein::target(*n, &least)
+            );
+        }
+    }
+    let band: Vec<(usize, f64)> = (top / 2 + 1..=top)
+        .map(|n| {
+            let count = eisenstein::mobius_count(n, &prefix, &least, None);
+            (
+                n,
+                gaussian::scaled(n, count) / eisenstein::target(n, &least),
+            )
+        })
+        .collect();
+    let low = band
+        .iter()
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .expect("a band");
+    let high = band
+        .iter()
+        .max_by(|a, b| a.1.total_cmp(&b.1))
+        .expect("a band");
+    println!(
+        "  every n in ({}, {top}]: ratio least {:.5} at n = {} (radical {}), greatest {:.5} at n = {} (radical {})",
+        top / 2,
+        low.1,
+        low.0,
+        gaussian::radical(low.0, &least),
+        high.1,
+        high.0,
+        gaussian::radical(high.0, &least)
+    );
+    println!(
+        "  the radical 3 family, new(n) / L(3n^2) climbing to the Jordan factor 8/9 = 0.88889:"
+    );
+    let mut scale = 3usize;
+    while scale <= top {
+        let count = eisenstein::mobius_count(scale, &prefix, &least, None);
+        let all = prefix[eisenstein::WINDOW * scale * scale];
+        println!(
+            "    n {scale:>5} new {count:>9} all {all:>9} ratio {:.5}",
+            count as f64 / f64::from(all)
+        );
+        scale *= 3;
+    }
+}
+
 fn main() {
     let table = bit_cells();
     if std::env::args().any(|a| a == "shape") {
         shape::control();
         shape::base_five();
         shape::cube_three();
+        return;
+    }
+    if std::env::args().any(|a| a == "limit") {
+        gaussian_limit(4096);
+        return;
+    }
+    if std::env::args().any(|a| a == "hex") {
+        eisenstein_farey(64);
+        eisenstein_limit(4096);
         return;
     }
     anchors(&table);

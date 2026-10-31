@@ -53,7 +53,7 @@ That carpet and net collapse into one class at base 2 is not a slip. It is the s
 
 ## The universe is finite, and small up to symmetry
 
-Designs that differ by a symmetry of the cube draw the same shape. The symmetry group is the hyperoctahedral group `B_dim` of signed permutations, of order `2^dim * dim!`, acting on the `2^dim` corners.
+Designs that differ by a symmetry of the cube draw congruent shapes at base 2 or any even side; at an odd side they need not, as the caution below shows. The symmetry group is the hyperoctahedral group `B_dim` of signed permutations, of order `2^dim * dim!`, acting on the `2^dim` corners.
 
 | `dim` | designs `2^(2^dim)` | classes up to cube symmetry |
 |---|---|---|
@@ -70,7 +70,7 @@ The Burnside form is what makes high dimensions tractable: it needs the cycle co
 
 ## Three genera
 
-A single parity constraint takes exactly three irreducible forms, and genus is a property of the shape, so it is constant on a symmetry class.
+A single parity constraint takes exactly three irreducible forms, and genus is assigned to a symmetry class: isotropic when some member is a level-set, axial when some member is a pin `{c : c_T = a_T}` and none is a level-set, compound otherwise.
 
 - **Isotropic.** Fill depends only on the number of odd coordinates: a level-set `S` inside `{0,...,dim}`, filled where the popcount lies in `S`.
 - **Axial.** Fill is "these named axes must be even": a pin of a set of axes.
@@ -99,7 +99,7 @@ Six classes, sixteen designs. (Verified by `coprime/lab/rs/design-census`: codes
 | `bang dim 2, code 7` | 2 | iso | `S = {0,1}` | 4 | carpet / net |
 | `bang dim 2, code 15` | 0 | iso | `S = {0,1,2}` | 1 | |
 
-One caution on reading any such table: the rule shown belongs to the canonical representative, the smallest code in the class. Parity flips are symmetries of the infinite tiling but not of a truncation to `side` cells, so the level-1 fill at a fixed `side` is *not* constant on a class - `bang dim 2, code 6` and its orbit-mate `bang dim 2, code 9` (the diagonal `S = {0,2}`) are the same design and fill differently at side 3. What is invariant is the tail: the degree and leading coefficient of the fill, hence the fractal dimension. The same caveat is recorded against the census in [the sequence ledger](../../shared/sequences.md).
+One caution on reading any such table: the rule shown belongs to the canonical representative, the smallest code in the class. At an odd `side` the reflection `x -> side - 1 - x` fixes every parity, so a parity flip is a symmetry of the infinite tiling but not of the truncation to `side` cells, and the level-1 fill at a fixed odd `side` is *not* constant on a class - `bang dim 2, code 6` and its orbit-mate `bang dim 2, code 9` (the diagonal `S = {0,2}`) are the same design and fill 4 and 5 cells at side 3. The class of `bang dim 2, code 7` holds the carpet (8 cells), codes 11 and 13 (7 cells each) and the Vicsek cross, code 14 (5 cells), so at side 3 the cell count and the fractal dimension `log(cells)/log(3)`, `1.892789`, `1.771244`, `1.464974`, are not class invariants. At an even `side` each parity has `side/2` values per axis, so the fill is `popcount * (side/2)^dim` and both are class invariants there. (Proved; Verified at sides 2 to 7 by `core/lab/rs/side-three-classes`, which finds no class with a mixed fill at sides 2, 4, 6 and 4, 20, 400 of the 6, 22, 402 classes at dim 2, 3, 4 at sides 3, 5, 7.) What is invariant at every side is the popcount, hence the degree and leading coefficient of the odd-side fill polynomial in `k` at side `2k - 1`. At side 3 the shapes up to rigid motion number `4, 12, 80, 3984` at dim 1..4, not `3, 6, 22, 402`, because only axis permutations move a pattern of the grid; these are [OEIS A003180](https://oeis.org/A003180) at `n = 1..4`. (Verified by the same study: every code drawn cell by cell and reduced under the `2^dim * dim!` motions of the `3^dim` grid, and a Burnside average over axis permutations alone, which continues `37333248, 25626412338274304` at dim 5, 6.) The same caveat is recorded against the census in [the sequence ledger](../../shared/sequences.md).
 
 ## Structure, and what survives into high dimensions
 
@@ -118,4 +118,4 @@ This is the precise content of the intuition that most designs look like noise. 
 
 ## Where the numbers live
 
-The classification census - canonical representatives, orbit sizes, fill polynomials, three notions of algebraic degree, each design validated cell by cell against an independently rendered array - is `coprime/lab/rs/design-census`, which writes `sequences.csv` and the per-dimension counts in `counts.csv`. Sequences that fall out of this construction, and the standard every one of them has to meet, are in [the sequence ledger](../../shared/sequences.md).
+The classification census - canonical representatives, orbit sizes, fill polynomials, three notions of algebraic degree, each design validated cell by cell against an independently rendered array - is `coprime/lab/rs/design-census`, which writes `sequences.csv` and the per-dimension counts in `counts.csv`; the side-3 shape classes and the fills that vary within a cube class are `core/lab/rs/side-three-classes`. Sequences that fall out of this construction, and the standard every one of them has to meet, are in [the sequence ledger](../../shared/sequences.md).

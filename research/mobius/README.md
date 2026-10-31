@@ -30,6 +30,7 @@ The Mobius meter across digit designs: exact transfer between scaled columns, th
 - [papers/half-interval-mobius.md](papers/half-interval-mobius.md): An Unconditional Mertens Bound on the Half Interval
 - [papers/sparse-mertens-under-grh.md](papers/sparse-mertens-under-grh.md): A Power Saving for Mobius Sums on Missing-Digit Integers, under GRH
 - [refs.md](refs.md): the references this topic cites
+- [lab/py/base3-exponent/](lab/py/base3-exponent/): The `l^1` exponent of the digit transform of `{0,1}` at base 3, enclosed in interval arithmetic with its floor, its one-step and two-step bounds.
 - [lab/py/design-meter/](lab/py/design-meter/): Reads the oscillation spectrum of the digit-design Mobius meter `M_F(x) = sum of mu(n)` over `n in S_F`, `n <= x`, with `F` the kept digits, normalised by `x^(alpha/2)` with `alpha = log_base fill`, and asks which frequencies it carries.
 - [lab/py/digit-progressions/](lab/py/digit-progressions/): The numbers of the digit progressions on mobius
 - [lab/py/even-digits/](lab/py/even-digits/): The numbers of the even digits on mobius

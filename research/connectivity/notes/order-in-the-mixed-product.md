@@ -35,7 +35,7 @@ Denominators are the multisets admitting two or more distinct orderings; a const
 
 Write `h(X)` for the number of rows at which two side-by-side copies of `X` touch, and `v(X)` for the columns at which two stacked copies touch. Then `h(A_w) = prod_i h(A_(c_i))` and `v(A_w) = prod_i v(A_(c_i))`, because the outer columns of a Kronecker product are the Kronecker products of the outer columns and the inner product of Kronecker products is the product of the inner products. (**Proved**; the sweep of all `15^3` words has zero mismatches, **Verified**, `lab/rs/magic-words`.) So whether adjacent copies touch at all is order-blind even where the component count is not - the order-blind part of the boundary story is the contact law, not the interior count.
 
-The race's one Proved line is the `h = v = 0` case: code 9, the diagonal, has no contact in either direction, so no two cells of its fractal are ever face-adjacent at any level and boundary per cell is exactly `2*dim`.
+The race's first Proved line is the `h = v = 0` case: code 9, the diagonal, has no contact in either direction, so no two cells of its fractal are ever face-adjacent at any level and boundary per cell is exactly `2*dim`.
 
 ### The observables are rational series
 

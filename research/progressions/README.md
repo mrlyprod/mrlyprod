@@ -16,14 +16,18 @@ A digit design with `0` among its digits is free of three-term progressions exac
 - [claims/carry-criterion.md](claims/carry-criterion.md): The carry criterion
 - [claims/block-area.md](claims/block-area.md): The block area
 - [claims/four-baselines.md](claims/four-baselines.md): Against four baselines
+- [claims/four-term.md](claims/four-term.md): Four-term progressions
 - [refs.md](refs.md): the references this topic cites
 - [lab/rs/carry-census/](lab/rs/carry-census/): The numbers of progressions
 - [lab/py/block-search/](lab/py/block-search/): The discrete block problem
 - [lab/rs/block-exact/](lab/rs/block-exact/): The exact grid optimum
 - [lab/py/four-baselines/](lab/py/four-baselines/): Against four baselines
+- [lab/rs/evasive-saturation/](lab/rs/evasive-saturation/): The saturation of the evasive set
+- [lab/rs/layer-spectra/](lab/rs/layer-spectra/): Graphs and spectra
 - [figures/research-progressions.ts](figures/research-progressions.ts): research-progressions
 
 ## Lost
 
 - A digit design as the largest known progression-free subset of `[0, N)`: the base-37 design passes greedy, Behrend and the Salem-Spencer family at `N = 37^7` and loses to the sets of Wroblewski cited at A065825 by `1.21` to `1.31`; the rows are in [claims/four-baselines.md](claims/four-baselines.md).
 - The planar climb at `m = 21, 23, 25` as a lower-bound constant for `r_3(Z_m^n)`: the published block at its best shift holds `136, 164, 191` points against the climb's `132, 156, 182`; the rows are in [claims/block-area.md](claims/block-area.md).
+- A planar 4-peel block as a record constant for `r_4(Z_7^n)`: the exact planar optimum is `21` points, constant `sqrt 21 = 4.5826`, below Fuhrer and Taranchuk's `7^(5/6) = 5.0611`; and augmenting their evasive set fails, since every outside point ends a 4-AP with three terms in it; the rows are in [claims/four-term.md](claims/four-term.md).

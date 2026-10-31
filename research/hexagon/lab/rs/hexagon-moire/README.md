@@ -11,7 +11,9 @@
 - The width family in closed form: the derived tail weight E(K) against its 8-periodic run, the per-layer identity in exact rationals at 14 distinct half-widths broken out by n mod 8, and the summed ladders with the constant, both 1/L^2 branches and the sliding window's own L residue trap.
 - The constants from the `mrly::num` series and the partial character sums at N = 53 and 55.
 - The one-layer law: the six ink-law coefficients of each family, the summed identity against the counted hexagons in exact rationals, and the approach in both classes of the layer count.
-- Every domain is the source's own; nothing was shrunk. Under a minute.
+- The flat carpet stack: pair-term, carpet and void ink at generic points of 20 primitive lines against the ray law, the crosshair period sums, the solid diagonals, the gcd sums by their Jordan grouping against the double sum, the odd-harmonic Euler sums, the four exact variance constants at N = 999999 against their limits, and the odd-denominator fraction census.
+- The eternal points of the xor pair: a rational grid of the cut searched at every odd n to 55 and to 2001, with the permutations of (3/4, 3/4, 0) beside.
+- Every domain is the source's own; nothing was shrunk. About a minute.
 
 ## RUN
 
@@ -46,3 +48,7 @@
 - hexagon.md every pair limit: carpet and net read -+253/2160, -11/135 and +29/135, the tree 0, -61/864 and +4/27, the void 0, +7/864 and +2/27; the tree and void doubling covariances are exactly 0.
 - hexagon.md every pair limit, the finite-layer gap: (249,251) reads -0.08150224 against -11/135 and (99,297) reads +0.21476417 against +29/135, gaps 2.1e-5 and 5.1e-5 with gap times m at -0.0052 and -0.0050.
 - hexagon.md every pair limit, the second residue class: (103,205) reads +0.11914004 and (203,405) reads +0.11814528 against +253/2160, gap times m at +0.207 and +0.206, about twice the m = 1 mod 4 class's.
+- flat-carpet-stack.md the ray law: 20 lines at 3 generic points and 500000 odd layers read within 3.7e-5 of -sgn(ab)(-1)^c/|ab| on the odd-odd lines and 2.1e-5 of 0 on the rest, carpet excess within 1.7e-5 of -pair/4, void excess within 1.9e-5 of +pair/2; 181 of 181 reduced a/b with b <= 24 match (-1)^a over b for odd b and 0 for even b; u + v = 1 is solid void ink at 300000 of 300000 layers.
+- flat-carpet-stack.md the gcd sums: Jordan grouping against the gcd double sum at N = 6001 to 2.8e-11; sum of h_c/c^2 over odd c 1.3810359531 and over all n 1.9069358482 against 7 zeta(3)/16 + pi^2 ln2/8 and 7 zeta(3)/8 + pi^2 ln2/8; T2 = 1.7102721160 = pi^2 ln2/4; T4 = 1.1122336970; S2/N 0.8130215039 and S4/N 0.5536131179 at N = 999999 against 0.8130217042 and 0.5536124372.
+- flat-carpet-stack.md the variance constants at N = 999999: tree 0.4064818975, void 0.2768055212, carpet 0.2724275136, net 0.2724571445 against 0.4065108521, 0.2768062186, 0.2724569807 and 0.2724569807; reduced fractions with odd denominator b <= 999999 number 202642133233 against (2/pi^2) B^2 = 202641962000.1.
+- diagonal-slice-stack.md the eternal points: 34 grid points of constant parity to n = 55 and 5 to n = 2001, the permutations of (1/4, 1/4, 1), (0, 3/4, 3/4) and (1/4, 3/4, 1/2); (3/4, 3/4, 0) alternates 0 1 0 1 and (3/4, 0, 3/4) lies outside the layer.

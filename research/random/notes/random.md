@@ -1,6 +1,6 @@
 ---
 title: Random
-lead: Randomness from designs: the rounds, all even once they write two cells or more, and a census of which splits reach the alternating group; the design ladder, three no-go rungs for generators built from designs alone; the mess, every Source below the nonlinearity ceiling past five neighbours; and eight chapters: moire limit, schedules, mixing, machine, squares, readings, primes, major arcs.
+lead: Randomness from designs: the rounds, all even once they write two cells or more, and a census of which splits reach the alternating group; the design ladder, three no-go rungs for generators built from designs alone; the mess, every Source below the nonlinearity ceiling past five neighbours; and nine chapters: pascal images, moire limit, schedules, mixing, machine, squares, readings, primes, major arcs.
 figure: research-random
 slug: random
 ---
@@ -97,6 +97,7 @@ The figure runs the level-2 carpet split `0x135f` (carpet, `primes`, `slide`; an
 ## Chapters
 
 - [The design ladder](design-ladder.md): Three no-go rungs for generators built from designs alone: one base, two bases, and rounds. A polynomial reading of degree 2 or more leaves the automatic class but not the battery: centred monomials keep exact identities, and only Rudin-Shapiro along `n^2 + n` remains a conjectural fourth rung.
+- [Pascal images](pascal-images.md): Rules 22, 126, 129, 161 and 182 from one cell as Pascal images, with the paper's Conjecture 9.4 closed.
 - [The moire limit](two-bases.md): Thue-Morse times the ternary parity: correlations that tend to zero.
 - [The mess](mess.md): The nonlinear step as a symmetric Boolean function: past five neighbours every Source sits below the nonlinearity ceiling.
 - [The schedules](schedules.md): Which schedules generate a primitive group, for every `n`.

@@ -168,7 +168,7 @@ pub fn report(path: &Path) {
     let header: Vec<String> = [
         "D",
         "total_designs",
-        "shape_classes_A000616",
+        "cube_classes_A000616",
         "fractal_dim_classes_A129824",
         "limiting_ratio_classes",
     ]
@@ -178,7 +178,7 @@ pub fn report(path: &Path) {
     let mut records = Vec::new();
     for dimension in 1..=TABLE {
         let designs = BigUint::from(2u32).pow(1 << dimension);
-        let shapes = (dimension <= BURNSIDE_LIMIT)
+        let cubes = (dimension <= BURNSIDE_LIMIT)
             .then(|| distinct_designs(2, dimension).expect("the Burnside average is an integer"))
             .map(|value| value.to_string())
             .unwrap_or_default();
@@ -189,11 +189,11 @@ pub fn report(path: &Path) {
         } else {
             designs.to_string()
         };
-        println!("{dimension:<3}{shown:>12}{shapes:>18}{classes:>16}{ratios:>8}");
+        println!("{dimension:<3}{shown:>12}{cubes:>18}{classes:>16}{ratios:>8}");
         records.push(vec![
             dimension.to_string(),
             designs.to_string(),
-            shapes,
+            cubes,
             classes.to_string(),
             ratios.to_string(),
         ]);

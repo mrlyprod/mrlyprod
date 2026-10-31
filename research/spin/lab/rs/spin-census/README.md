@@ -14,6 +14,9 @@
 - Base 5 and `dim 3` run `Phi_1` in full over all `2^25` and `2^27` codes, storing canonical representatives only, and run `Phi_2` over the colliding groups inside a budget-capped weight window the generator prints; the cap did not bind and the window covered every group.
 - The sponge shadow counts lattice lines in direction `(a,b,c)` meeting the sponge at `level`, as classes of filled cells under `x -> x cross v`, with the solid cube in the same direction as the exact ceiling.
 - The Gaussian Farey counts radii new at scale `n` three ways: the direct union over reduced squared radii, the square-free rule, and the Mobius identity over the radical.
+- The limit reading takes `new(n)` by the Mobius identity for every `n` up to 4096 from the prefix count of A001481 over all `k <= 2 n^2`, and prints `new(n) sqrt(ln n) / n^2` against `sqrt 2 K prod_(p | n) (1 - 1/p^2)`, with `K` the constant of A064533, at the largest scale of each radical class and over every `n` in the top half of the window.
+- The Eisenstein Farey counts the radii of `(1/n) Z[omega]` new at scale `n` inside the disc of radius `sqrt 3` three ways: the direct union over reduced squared radii of every point of `Z[omega]`, the square-free rule on Loeschian `k <= 3 n^2`, and the Mobius identity over the radical; the same identity with the prime 3 left out of the radical is the control that 3 is not droppable.
+- Its limit reading takes `new(n)` by the Mobius identity for every `n` up to 4096 from the prefix count of A003136 over all `k <= 3 n^2`, and prints `new(n) sqrt(ln n) / n^2` against `(3/sqrt 2) K_3 prod_(p | n) (1 - 1/p^2)` at the largest scale of each radical class, over every `n` in the top half of the window, and along the radical-3 family; `K_3` is the table value for the form `X^2 + 3 Y^2`, and the same run multiplies its Euler product `sqrt(B / (2 sqrt 3))` over the primes up to `3 * 4096^2` and prints the shortfall.
 
 ## RUN
 
@@ -21,6 +24,8 @@
 - About thirty seconds; prints only, writes nothing. Peak memory is the pad-8192 transform, about 1.1 GB.
 - `cargo run --release --manifest-path research/spin/lab/rs/spin-census/Cargo.toml -- shape` runs the shape reading, the one verb group the default pass leaves out.
 - About two minutes and 0.4 GB, the peak being the base-5 sweep holding 4.2 million packed censuses; the `dim 3` sweep visits all `2^27` codes and keeps 2.85 million.
+- `cargo run --release --manifest-path research/spin/lab/rs/spin-census/Cargo.toml -- limit` runs the limit reading alone, about four seconds and 0.4 GB.
+- `cargo run --release --manifest-path research/spin/lab/rs/spin-census/Cargo.toml -- hex` runs the Eisenstein Farey and its limit reading alone, about three seconds and 0.5 GB.
 
 ## WITNESSES
 
@@ -33,6 +38,8 @@
 - spin.md the spectrum: 0 isospectral pairs, 101 distinct spectra against 101 nonempty square classes.
 - spin.md the shadow: `(0,0,1)` sponge `8, 64, 512, 4096, 32768` against cube `9, 81, 729, 6561`; `(1,1,1)` sponge and cube both `19, 217, 2107, 19441, 176419`.
 - spin.md the Gaussian Farey: `2, 3, 9, 11, 22, 18, 40, 38, 55, 52, 91, 64, 123, 97, 128, 126, 199, 136, 243, 180`, the Mobius identity to `n = 64`, the radical-six ratios `0.56250` to `0.63801`.
+- spin.md the Gaussian Farey limit: ratios `1.00249, 1.00956, 1.01388, 0.99315, 0.99767, 0.98851, 0.98553` at the largest scale of radicals `2, 3, 5, 6, 10, 30, 210` up to `n = 4096`, and `0.98301` to `1.02067` over every `n` in `(2048, 4096]`.
+- spin.md the Eisenstein Farey: `2, 4, 10, 13, 26, 22, 48, 44, 66, 61, 109, 78, 147, 116, 155, 154, 240, 164, 294, 219`, the lattice union, the rule and the Mobius identity agreeing to `n = 64` with 21 of 21 multiples of 3, the sum without the prime 3 failing first at `n = 3`; ratios `0.99024, 0.99601, 1.00076, 0.98117, 1.00291, 0.98558, 0.97678, 0.97382` at the largest scale of radicals `2, 3, 5, 6, 7, 10, 30, 210` up to `n = 4096`, `0.97071` to `1.00653` over every `n` in `(2048, 4096]`, the Euler product for `K_3` short by `1.70e-10`.
 - spin.md the shape reading at base 3: 11 pair classes at level 1 and 461 at level 2, 97 level-1 censuses against 101 orbits, the homometric pairs `45-105`, `61-121`, `78-102`, `94-118` at level-1 spectrum gaps `1.30e-16`, `1.03e-17`, `6.51e-17`, `1.64e-16` and level-2 gaps `0.151`, `0.0689`, `0.253`, `0.105`; `P_m` read at level 1 alone, bucketed greedily at `1e-9`, gives 97 spectra, the count the census predicts.
 - spin.md the reduction: the level-1 coefficients solved from 11 independent censuses reproduce `mrly::math::spin::harmonics` on all 511 codes at worst relative residual `1.14e-14`, coefficient rank 9 of 11, the six odd orders at the cap 3 that half-turning one member of a pair forces and the seven even orders at 6 of a possible 8.
 - spin.md the completeness away from base 3: `3993511` level-1 censuses on `4211743` base-5 orbits with `204856` ties over `423088` orbits, and `1461693` on `2852287` cube orbits with `757066` ties over `2147660`; every tie broken at level 2, the window covering every group out to weights 21 and 24, with no pair surviving, and the canonical counts matching the Burnside averages `4211744` and `2852288`.
