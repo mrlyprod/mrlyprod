@@ -9,6 +9,8 @@ pub mod measure;
 pub mod records;
 /// The term generators and the closed forms.
 pub mod terms;
+/// The window census of a plane design.
+pub mod windows;
 
 pub use markdown::markdown;
 pub use measure::{Cost, Measure};
@@ -50,16 +52,19 @@ pub enum Axis {
     Level,
     /// The odd side `2k - 1` from `k = 2`, at level 1.
     Side,
+    /// The window side `k` from 1, over every level of the design at side `max(base, 3)`.
+    Window,
 }
 
 impl Axis {
-    /// Both axes, level first.
-    pub const ALL: [Axis; 2] = [Axis::Level, Axis::Side];
+    /// Every axis, level first.
+    pub const ALL: [Axis; 3] = [Axis::Level, Axis::Side, Axis::Window];
     /// Returns the axis's one-word name.
     pub fn slug(self) -> &'static str {
         match self {
             Axis::Level => "level",
             Axis::Side => "side",
+            Axis::Window => "window",
         }
     }
     /// Parses a one-word name back into its axis, or an error for any other word.
@@ -67,20 +72,21 @@ impl Axis {
         match slug {
             "level" => Ok(Axis::Level),
             "side" => Ok(Axis::Side),
+            "window" => Ok(Axis::Window),
             other => value_error(format!("unknown axis {other:?}.")),
         }
     }
-    /// Returns the ledger index of the first term: the level 1 or the `k` of side 3.
+    /// Returns the ledger index of the first term: the level 1, the `k` of side 3 or the window side 1.
     pub fn start(self) -> i32 {
         match self {
-            Axis::Level => 1,
+            Axis::Level | Axis::Window => 1,
             Axis::Side => 2,
         }
     }
-    /// Returns the side number and level of the term at the index.
+    /// Returns the side number and level of the term at the index; on the window axis the level slot carries the window side.
     pub fn place(self, index: usize, number: usize) -> (usize, u32) {
         match self {
-            Axis::Level => (number, index as u32 + 1),
+            Axis::Level | Axis::Window => (number, index as u32 + 1),
             Axis::Side => (2 * index + 3, 1),
         }
     }
@@ -255,7 +261,7 @@ impl Closed {
 /// A cost tier of the catalog.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Tier {
-    /// The closed measures on both axes.
+    /// The closed measures on both axes and the face counts on the level axis.
     Closed,
     /// The profile measures on both axes.
     Convolved,
@@ -263,15 +269,18 @@ pub enum Tier {
     SideGrid,
     /// The grid measures on the level axis.
     LevelGrid,
+    /// The window census on the window axis.
+    WindowGrid,
 }
 
 impl Tier {
     /// Every tier, cheapest first.
-    pub const ALL: [Tier; 4] = [
+    pub const ALL: [Tier; 5] = [
         Tier::Closed,
         Tier::Convolved,
         Tier::SideGrid,
         Tier::LevelGrid,
+        Tier::WindowGrid,
     ];
     /// Returns the tier's one-word name.
     pub fn slug(self) -> &'static str {
@@ -280,6 +289,7 @@ impl Tier {
             Tier::Convolved => "convolved",
             Tier::SideGrid => "side",
             Tier::LevelGrid => "level",
+            Tier::WindowGrid => "window",
         }
     }
     /// Parses a one-word name back into its tier, or an error for any other word.
@@ -296,11 +306,13 @@ impl Tier {
             _ => Cost::Grid,
         }
     }
-    fn axes(self) -> &'static [Axis] {
+    /// Returns the axes the tier's rows run along.
+    pub fn axes(self) -> &'static [Axis] {
         match self {
             Tier::SideGrid => &[Axis::Side],
             Tier::LevelGrid => &[Axis::Level],
-            _ => &Axis::ALL,
+            Tier::WindowGrid => &[Axis::Window],
+            _ => &[Axis::Level, Axis::Side],
         }
     }
 }
@@ -354,17 +366,19 @@ pub fn designs(dimension: usize, base: usize) -> Result<&'static [u128]> {
     Ok(leaked)
 }
 
-/// Lists every key of a tier: the designs of every space, the measures of the tier's cost that apply, on the tier's axes.
+/// Lists every key of a tier: the designs of every space, the measures of the tier's cost that apply, on the tier's axes the measure runs along.
 pub fn keys(tier: Tier) -> Vec<Key> {
     let mut out = Vec::new();
     for (dimension, base) in SPACES {
         let codes = designs(dimension, base).expect("the ledger spaces are walkable");
         for &code in codes {
             for measure in Measure::ALL {
-                if measure.cost() != tier.cost() || !measure.applies(dimension, base) {
+                if !measure.applies(dimension, base) {
                     continue;
                 }
-                for &axis in tier.axes() {
+                for &axis in tier.axes().iter().filter(|&&axis| {
+                    measure.axes().contains(&axis) && measure.cost(axis) == tier.cost()
+                }) {
                     out.push(Key::new(code, dimension, base, measure, axis));
                 }
             }
@@ -496,9 +510,15 @@ mod tests {
     #[test]
     fn the_keys_of_the_closed_tier_cover_every_space() {
         let closed = keys(Tier::Closed);
-        assert_eq!(closed.len(), 1282 * 3 * 2);
+        assert_eq!(closed.len(), 1282 * 3 * 2 + (6 + 26 + 805) * 3 + 22 * 4);
         assert_eq!(keys(Tier::Convolved).len(), (1282 - 3 - 4 - 6 - 8) * 2 * 2);
-        assert!(closed.iter().all(|key| key.measure.cost() == Cost::Closed));
+        assert_eq!(keys(Tier::WindowGrid).len(), 6 + 26 + 805);
+        assert!(keys(Tier::LevelGrid)
+            .iter()
+            .all(|key| key.measure != Measure::Windows));
+        assert!(closed
+            .iter()
+            .all(|key| key.measure.cost(key.axis) == Cost::Closed));
         assert!(designs(3, 3).is_err());
     }
 

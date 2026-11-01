@@ -134,6 +134,6 @@ request /about/
 
 ## GENERATED
 
-- A committed file a tool writes carries `.gen.` in its name: `src/styles/palette.gen.css` and `src/lib/theme/palette.gen.js` (the palette, written outside this repo), `src/lib/icons.gen.js` (`bun run vendor`), `src/lib/font/font.gen.json` (`bun run wasm`, checked glyph by glyph against the font door by `src/lib/font/font.test.js`).
+- A committed file a tool writes carries `.gen.` in its name: `src/styles/palette.gen.css` and `src/lib/theme/palette.gen.js` (the palette, written outside this repo), `src/lib/icons.gen.js` (`bun run vendor`), `src/lib/font/font.gen.json` (`bun run wasm`, checked glyph by glyph against the font door by `src/lib/font/font.test.js`), `src/apps/life/library.gen.json` (`bun run library`, the encyclopedia shelves trimmed from the lab's extract; `scripts/README.md` has it).
 - `src/styles/fonts/` is written whole by `bun run vendor`, `keep.css` aside.
 - `wasm/`, `dist/` and `node_modules/` are build output and stay out of git.

@@ -9,6 +9,7 @@ import {
   drawn,
   fate,
   fitLevel,
+  grammar,
   hash,
   LINE,
   lattice,
@@ -18,6 +19,8 @@ import {
   PATTERNS,
   parse,
   population,
+  roll,
+  rolled,
   ruleOf,
   STARTS,
   sources,
@@ -77,6 +80,21 @@ test("a side named after a sequence draws its counts inside the budget without z
   ]);
 });
 
+test("a side carries the zeros and ones rolls of the grammar, drawn through the door and spelt back as its token", () => {
+  expect([
+    rolled(life, "carpet_fills_zeros"),
+    rolled(life, " Primes_Zeros_Ones"),
+    rolled(life, "primes_ones_zeros"),
+  ]).toEqual([{ name: "carpet_fills", zeros: true, ones: false }, { name: "primes", zeros: true, ones: true }, null]);
+  expect([
+    roll(life, { name: "evens", zeros: false, ones: true }),
+    roll(life, { name: "evens", zeros: true, ones: true }),
+    roll(life, { name: "evens", zeros: false, ones: false }),
+  ]).toEqual(["evens_ones", "evens_zeros_ones", "evens"]);
+  expect(drawn(life, "carpet_fills_zeros_ones", 8)).toEqual({ counts: [1, 8], name: "carpet_fills_zeros_ones" });
+  expect(grammar(life)).toBe(grammar(life));
+});
+
 test("a code reads as a whole number inside the universe of its dimension, the carpet or the dust when it is junk", () => {
   expect([codeOf("7"), codeOf("15"), codeOf("99"), codeOf("-4"), codeOf("carpet"), codeOf("")]).toEqual([
     7, 15, 15, 0, 7, 7,
@@ -109,7 +127,7 @@ test("the mask of code 7 at side 3 is the Moore neighbourhood, eight cells round
     1,
     1,
   ]);
-  expect(maskOf(life, { code: "15", number: 9, level: 3 }).level).toBe(1);
+  expect(maskOf(life, { code: "15", number: 9, level: 3 }).level).toBe(2);
 });
 
 test("a line mask is one row of the line design, and the level-2 Cantor row splits the line into two copies", () => {

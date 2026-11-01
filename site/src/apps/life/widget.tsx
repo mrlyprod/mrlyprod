@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Btn, Pick, Segment } from "../../lib/app/controls.tsx";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Btn, Pick, Segment, Toggle } from "../../lib/app/controls.tsx";
 import type { Readout } from "../../lib/app/hooks.ts";
 import { useReroll, useStatus } from "../../lib/app/hooks.ts";
+import type { Chip } from "../../lib/app/library.tsx";
 import { Art, Item, Library, Shelf } from "../../lib/app/library.tsx";
 import type { Handle, WidgetProps } from "../../lib/app/page.tsx";
 import { Scene } from "../../lib/app/page.tsx";
@@ -10,12 +11,15 @@ import type { Option, Scalar, Seeded, Units } from "../../lib/app/spec.ts";
 import { paints } from "../../lib/color.ts";
 import { useTheme } from "../../lib/designs/pick.tsx";
 import type { Start } from "../../lib/life/engine.ts";
-import { dimOf, maskOf, PATTERNS, SEEDS, sources, sow, spell, startOf } from "../../lib/life/engine.ts";
+import { dimOf, maskOf, PATTERNS, roll, rolled, SEEDS, sources, sow, spell, startOf } from "../../lib/life/engine.ts";
 import { MaskView, Pane, useLife, usePaint } from "../../lib/life/parts.tsx";
+import { DESIGN, fixed, island, knobsOf, nameOf } from "../../lib/life/recipe.ts";
 import { SOUP, sprite } from "../../lib/life/scene.ts";
 import { rng } from "../../lib/rand.ts";
 import type { Life, Stat } from "./scene.ts";
-import { make, PRESETS, RULES, SPEC, wears } from "./scene.ts";
+import { DIMS, make, PRESETS, RULES, SPEC, wears } from "./scene.ts";
+import type { Filter, Row } from "./shelves.tsx";
+import { ALL, Encyclopedia } from "./shelves.tsx";
 
 /* TYPES */
 
@@ -23,27 +27,53 @@ type Props = Partial<WidgetProps<Units, Life>> & Pick<WidgetProps<Units, Life>, 
 
 type Act = "step" | "doom" | "reset" | "clear";
 
+type Side = "born" | "stay";
+
 const HAND: Option = ["", "By hand"];
+
+const KINDS: Chip[] = [
+  ["shelves", "Shelves"],
+  ["rows", "Encyclopedia"],
+];
+
+const ROWS = "rows";
 
 const THUMB = 40;
 
+const LIBRARY = () => import("./library.gen.json", { with: { type: "json" } });
+
 const listed = (counts: readonly number[] | undefined) => (counts?.length ? counts.join(" ") : "none");
 
-export const status = (stat: Omit<Stat, "mask"> | null): Readout[] =>
-  stat
-    ? [
-        ["gen", stat.gen],
-        ["pop", stat.pop],
-        ["fate", stat.fate || "-"],
-        ["rule", stat.name],
-        ["born", listed(stat.counts?.[0])],
-        ["stay", listed(stat.counts?.[1])],
-        ["mask", stat.label],
-        ["cells", stat.cells],
-        ["lattice", stat.lattice],
-        ...(stat.error ? [["error", stat.error] satisfies Readout] : []),
-      ]
-    : [];
+export const status = (stat: Omit<Stat, "mask"> | null): Readout[] => {
+  if (!stat) return [];
+  const error = stat.error ? [["error", stat.error] satisfies Readout] : [];
+  if ("recipe" in stat)
+    return [
+      ["gen", stat.gen],
+      ["pop", stat.pop],
+      ["stop", stat.fate || "-"],
+      ["recipe", stat.recipe || "-"],
+      ["born", `${stat.sides?.[0] || "-"}: ${listed(stat.counts?.[0])}`],
+      ["stay", `${stat.sides?.[1] || "-"}: ${listed(stat.counts?.[1])}`],
+      ["mask", stat.label || "-"],
+      ["budget", stat.budget ?? 0],
+      ["reach", stat.reach ?? 0],
+      ...(stat.flips ? [["background", stat.background ? "full, flips" : "empty, flips"] satisfies Readout] : []),
+      ...error,
+    ];
+  return [
+    ["gen", stat.gen],
+    ["pop", stat.pop],
+    ["fate", stat.fate || "-"],
+    ["rule", stat.name],
+    ["born", listed(stat.counts?.[0])],
+    ["stay", listed(stat.counts?.[1])],
+    ["mask", stat.label],
+    ["cells", stat.cells],
+    ["lattice", stat.lattice],
+    ...error,
+  ];
+};
 
 const clean = (text: Scalar | null | undefined) =>
   String(text ?? "")
@@ -59,6 +89,9 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const handle = useRef<Handle<Life> | null>(null);
   const [stat, setStat] = useState<Stat | null>(null);
   const [find, setFind] = useState("");
+  const [kind, setKind] = useState<Scalar>(KINDS[0][0]);
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [filter, setFilter] = useState<Filter>({ cls: "", family: ALL, stop: ALL });
   const tick = useTheme();
   const paint = usePaint(handle);
   const names = useMemo(() => (units ? sources(units.life) : []), [units]);
@@ -67,53 +100,88 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units!, onStat: setStat }),
     [units],
   );
+  useEffect(() => {
+    if (kind !== ROWS || rows) return undefined;
+    let on = true;
+    LIBRARY().then((mod) => on && setRows(mod.default.rows));
+    return () => {
+      on = false;
+    };
+  }, [kind, rows]);
   const ready = (scene: Handle<Life> | null) => {
     handle.current = scene;
     onReady?.(scene);
   };
   const act = (name: Act) => () => handle.current?.[name]?.();
+  const board = fixed(value);
+  const alone = units ? island(units.life, value) : false;
   const dim = dimOf(value);
-  const chosen = (text: Scalar) => (names.includes(clean(text)) ? clean(text) : "");
-  const from = (key: string, i: number, label: string) => (
-    <Pick
-      key={`${key}-from`}
-      label={label}
-      value={chosen(value[key])}
-      options={options}
-      onChange={(one) => onChange({ [key]: one || spell(stat?.counts?.[i] ?? []) })}
-    />
-  );
+  const drawn = (key: Side) => (units ? rolled(units.life, value[key]) : null);
+  const from = (key: Side, i: number, label: string) => {
+    const side = drawn(key);
+    return (
+      <Pick
+        key={`${key}-from`}
+        label={label}
+        value={side && names.includes(side.name) ? side.name : ""}
+        options={options}
+        onChange={(one) =>
+          onChange({
+            [key]: one
+              ? roll(units!.life, { name: one, zeros: side?.zeros ?? false, ones: side?.ones ?? false })
+              : spell(stat?.counts?.[i] ?? []),
+          })
+        }
+      />
+    );
+  };
+  const rolls = (key: Side) => {
+    const side = drawn(key);
+    if (!side) return [];
+    return (["zeros", "ones"] as const).map((bit) => (
+      <Toggle
+        key={`${key}-${bit}`}
+        label={bit[0].toUpperCase() + bit.slice(1)}
+        value={side[bit] ? 1 : 0}
+        onChange={(v) => onChange({ [key]: roll(units!.life, { ...side, [bit]: v === 1 }) })}
+      />
+    ));
+  };
   useStatus(onStatus, status(stat));
-  useReroll(value.seed, () => onChange({ from: "noise" }));
+  useReroll(value.seed, () => fixed(value) && onChange({ from: "noise" }));
+  const buttons = [
+    <Btn key="step" onClick={act("step")}>
+      Step
+    </Btn>,
+    <Btn key="fate" onClick={act("doom")}>
+      {board ? "Run to fate" : "Run to stop"}
+    </Btn>,
+    <Btn key="reset" onClick={act("reset")}>
+      Reset
+    </Btn>,
+    ...(board
+      ? [
+          <Btn key="clear" onClick={act("clear")}>
+            Clear
+          </Btn>,
+        ]
+      : []),
+  ];
   const folds = [
-    {
-      name: "Board",
-      items: [
-        ...(SOUP(value) ? ["density"] : []),
-        "speed",
-        <Btn key="step" onClick={act("step")}>
-          Step
-        </Btn>,
-        <Btn key="fate" onClick={act("doom")}>
-          Run to fate
-        </Btn>,
-        <Btn key="reset" onClick={act("reset")}>
-          Reset
-        </Btn>,
-        <Btn key="clear" onClick={act("clear")}>
-          Clear
-        </Btn>,
-      ],
-    },
+    { name: "Mode", items: ["mode"] },
+    board
+      ? { name: "Board", items: [...(SOUP(value) ? ["density"] : []), "speed", ...buttons] }
+      : { name: "Run", live: stat?.recipe, items: ["speed", "x", ...(alone ? ["cap"] : []), ...buttons] },
+    !board && { name: "Seed", items: ["shape", "side", "depth", ...(alone ? ["tiling"] : [])] },
     {
       name: "Rule",
       live: stat?.name,
       items: [
         "born",
-        ...(units ? [from("born", 0, "Born from")] : []),
+        ...(units ? [from("born", 0, "Born from"), ...rolls("born")] : []),
         "stay",
-        ...(units ? [from("stay", 1, "Stay from")] : []),
-        "wrap",
+        ...(units ? [from("stay", 1, "Stay from"), ...rolls("stay")] : []),
+        ...(board ? ["wrap"] : []),
       ],
     },
     {
@@ -121,15 +189,18 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
       live: stat?.label,
       items: [
         <MaskView key="view" mask={stat?.mask} />,
-        <Segment
-          key="dim"
-          label="Dim"
-          value={dim}
-          options={SPEC[0].options}
-          onChange={(v) => onChange({ dim: Number(v), code: Number(v) === 1 ? "1" : "7" })}
-        />,
-        "number",
-        "level",
+        ...(board
+          ? [
+              <Segment
+                key="dim"
+                label="Dim"
+                value={dim}
+                options={DIMS}
+                onChange={(v) => onChange({ dim: Number(v), code: Number(v) === 1 ? "1" : "7" })}
+              />,
+            ]
+          : ["mask"]),
+        ...(board || value.mask === DESIGN ? ["number", "level"] : []),
       ],
     },
   ];
@@ -138,14 +209,28 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const shapes = (list: readonly Start[]) => list.filter(([, name]) => has(name, find));
   const seeds = shapes(SEEDS.filter(([id]) => dim === 2 || id !== "design"));
   const patterns = dim === 2 ? shapes(Object.entries(PATTERNS).map(([id, { name }]): Start => [id, name])) : [];
-  const worlds = PRESETS.filter(([label]) => has(label, find));
+  const worlds = PRESETS.filter(([label, one]) => has(label, find) && (board || Number(one.dim) !== 1));
   const rules = RULES.filter(([label]) => has(label, find));
+  const current = units ? nameOf(units.life, units.math, value) : "";
+  const pickRow = (key: string) => onChange(knobsOf(units!.life, units!.math, units!.life.recipe.parse(key)));
   return (
     <>
       {units && <Scene make={made} value={value} onReady={ready} {...paint} />}
       {units && (
-        <Library find={find} onFind={setFind}>
-          {patterns.length > 0 && (
+        <Library find={find} onFind={setFind} chips={KINDS} chip={kind} onChip={setKind}>
+          {kind === ROWS && (
+            <Encyclopedia
+              rows={rows}
+              life={units.life}
+              find={find}
+              filter={filter}
+              onFilter={setFilter}
+              current={current}
+              onPick={pickRow}
+              tick={tick}
+            />
+          )}
+          {kind !== ROWS && board && patterns.length > 0 && (
             <Shelf name="Patterns" grid>
               {patterns.map(([id, name]) => (
                 <Item
@@ -158,7 +243,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
               ))}
             </Shelf>
           )}
-          {seeds.length > 0 && (
+          {kind !== ROWS && board && seeds.length > 0 && (
             <Shelf name="Seeds" grid={dim === 2}>
               {seeds.map(([id, name]) => (
                 <Item
@@ -178,7 +263,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
               ))}
             </Shelf>
           )}
-          {worlds.length > 0 && (
+          {kind !== ROWS && worlds.length > 0 && (
             <Shelf name="Worlds">
               {worlds.map(([label, one]) => (
                 <Item
@@ -200,7 +285,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
               ))}
             </Shelf>
           )}
-          {rules.length > 0 && (
+          {kind !== ROWS && rules.length > 0 && (
             <Shelf name="Rules">
               {rules.map(([label, one]) => (
                 <Item
@@ -215,7 +300,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
           )}
         </Library>
       )}
-      <Pane spec={SPEC} value={value} onChange={onChange} folds={folds} />
+      <Pane spec={SPEC} value={value} units={units ?? undefined} onChange={onChange} folds={folds} />
     </>
   );
 }

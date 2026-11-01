@@ -20,8 +20,24 @@ const BASE: usize = 2;
 /// | Binary | A000079 |
 /// | Fibonacci | A000045 |
 /// | GridSquares | A016754 |
+/// | CarpetFills | A000567 |
+/// | CarpetVoids | A000290 |
+/// | NetFills | A045944 |
+/// | NetVoids | A000290 |
+/// | TreeFills | A000384 |
+/// | TreeVoids | A014105 |
+/// | VoidFills | A001844 |
+/// | VoidVoids | A046092 |
+/// | PointFills | A000290 |
+/// | PointVoids | A000567 |
+/// | DustFills | A000290 |
+/// | DustVoids | A045944 |
+/// | LineFills | A014105 |
+/// | LineVoids | A000384 |
+/// | StarFills | A046092 |
+/// | StarVoids | A001844 |
 ///
-/// Random, the other mrly families and the code families carry no OEIS id.
+/// A design family's id matches its odd-side values by value; mates share an id. Random and the code families carry none.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Source {
     /// The even numbers.
@@ -248,7 +264,23 @@ impl Source {
             Source::Binary => Some("A000079".to_string()),
             Source::Fibonacci => Some("A000045".to_string()),
             Source::GridSquares => Some("A016754".to_string()),
-            _ => None,
+            Source::CarpetFills => Some("A000567".to_string()),
+            Source::CarpetVoids => Some("A000290".to_string()),
+            Source::NetFills => Some("A045944".to_string()),
+            Source::NetVoids => Some("A000290".to_string()),
+            Source::TreeFills => Some("A000384".to_string()),
+            Source::TreeVoids => Some("A014105".to_string()),
+            Source::VoidFills => Some("A001844".to_string()),
+            Source::VoidVoids => Some("A046092".to_string()),
+            Source::PointFills => Some("A000290".to_string()),
+            Source::PointVoids => Some("A000567".to_string()),
+            Source::DustFills => Some("A000290".to_string()),
+            Source::DustVoids => Some("A045944".to_string()),
+            Source::LineFills => Some("A014105".to_string()),
+            Source::LineVoids => Some("A000384".to_string()),
+            Source::StarFills => Some("A046092".to_string()),
+            Source::StarVoids => Some("A001844".to_string()),
+            Source::Random(_) | Source::CodeFills(_) | Source::CodeVoids(_) => None,
         }
     }
     /// Returns whether the sequence is a seeded random draw.
@@ -532,13 +564,13 @@ mod tests {
         let mut listed = 0;
         for s in Source::all() {
             if let Some(id) = s.oeis() {
-                assert_eq!(Source::parse(&id).unwrap(), s);
+                assert_eq!(Source::parse(&id).unwrap().oeis(), Some(id));
                 listed += 1;
             }
         }
-        assert_eq!(listed, 6);
+        assert_eq!(listed, 22);
         assert_eq!(Source::Random(0).oeis(), None);
-        assert_eq!(Source::CarpetFills.oeis(), None);
+        assert_eq!(Source::CarpetFills.oeis().as_deref(), Some("A000567"));
         assert_eq!(Source::CodeFills(7).oeis(), None);
     }
     #[test]

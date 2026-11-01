@@ -1,4 +1,4 @@
-import type { Cell, Tensor } from "@mrlyprod/mrly/life";
+import type { Cell } from "@mrlyprod/mrly/life";
 import type { Ready } from "../../lib/app/hooks.ts";
 import type { Page } from "../../lib/app/page.tsx";
 import type { Board, Opts, View } from "../../lib/app/run.ts";
@@ -13,6 +13,7 @@ import {
   destiny,
   dimOf,
   fate,
+  grammar,
   hash,
   LIMIT,
   LINE,
@@ -29,6 +30,9 @@ import {
   sow,
   told,
 } from "../../lib/life/engine.ts";
+import type { Stage, Stat } from "../../lib/life/plane.ts";
+import { plane } from "../../lib/life/plane.ts";
+import { DESIGN, FIXED, fixed, modes, nameOf } from "../../lib/life/recipe.ts";
 import { PANE, runs, SOUP } from "../../lib/life/scene.ts";
 import type { Rng } from "../../lib/rand.ts";
 import { pick, rng } from "../../lib/rand.ts";
@@ -37,13 +41,21 @@ import { wasm } from "../../lib/units/index.ts";
 /* TYPES */
 
 export type Knobs = {
+  mode: string;
   dim: number;
   code: string;
+  mask: string;
   number: number;
   level: number;
   born: string;
   stay: string;
   wrap: number;
+  shape: string;
+  side: number;
+  depth: number;
+  tiling: number;
+  cap: number;
+  x: number;
   from: string;
   density: number;
   speed: number;
@@ -52,24 +64,11 @@ export type Knobs = {
 
 export type Preset = [string, Value];
 
-export type Stat = {
-  gen: number;
-  pop: number;
-  fate: string;
-  name: string;
-  counts: number[][];
-  mask: Tensor;
-  cells: number;
-  lattice: string;
-  label: string;
-  error: string;
-};
+export type { Stat };
 
 export type Given = Opts & { life: Door; math: Mrly; onStat?: (stat: Stat) => void };
 
-export type Life = ReturnType<typeof make>;
-
-type Rows = [Row & { options: readonly Option[] }, ...Row[]];
+export type Life = Stage;
 
 type Mould = Shape & { named?: string; label?: string };
 
@@ -77,40 +76,121 @@ type Lay = Board & { rows?: number };
 
 type Skin = { ink: string; dim: string };
 
+export const DIMS: Option[] = [
+  [1, "1D"],
+  [2, "2D"],
+];
+
 const NUMBERS = [3, 5, 7, 9].map((n): Option => [n, String(n)]);
 
 const LEVELS = [1, 2, 3];
 
 const START = "glider";
 
-export const SPEC: Rows = [
+const SEED = "code7";
+
+const CAP = 151;
+
+const X = 256;
+
+const picks = (list: readonly number[]): Option[] => list.map((n) => [n, String(n)]);
+
+const word = (token: string) => token[0].toUpperCase() + token.slice(1);
+
+export const SPEC: Row[] = [
+  {
+    key: "mode",
+    label: "Mode",
+    kind: "segment",
+    def: FIXED,
+    options: (_value, units) => modes(units?.life),
+    group: "Mode",
+    when: PANE,
+  },
   {
     key: "dim",
     label: "Dim",
     kind: "segment",
     def: 2,
-    options: [
-      [1, "1D"],
-      [2, "2D"],
-    ],
+    options: (value) => (fixed(value) ? DIMS : DIMS.slice(1)),
     group: "Mask",
     when: PANE,
   },
   { key: "code", label: "Code", kind: "text", def: "7", group: "Mask", when: PANE },
-  { key: "number", label: "Side", kind: "pick", def: 3, options: NUMBERS, group: "Mask", when: PANE },
+  {
+    key: "mask",
+    label: "Mask",
+    kind: "segment",
+    def: DESIGN,
+    options: (_value, units) => [
+      [DESIGN, "Design"],
+      ...(units?.life ? grammar(units.life).copies.map((copy): Option => [copy, word(copy)]) : []),
+    ],
+    group: "Mask",
+    when: PANE,
+  },
+  {
+    key: "number",
+    label: "Side",
+    kind: "pick",
+    def: 3,
+    options: (value, units) => (fixed(value) || !units?.life ? NUMBERS : picks(grammar(units.life).mask_sides)),
+    group: "Mask",
+    when: PANE,
+  },
   {
     key: "level",
     label: "Level",
     kind: "pick",
     def: 1,
-    options: (value) =>
-      LEVELS.filter((n) => (value.number as number) ** n <= SPANS[dimOf(value)]).map((n): Option => [n, String(n)]),
+    options: (value, units) =>
+      fixed(value) || !units?.life
+        ? LEVELS.filter((n) => (value.number as number) ** n <= SPANS[dimOf(value)]).map((n): Option => [n, String(n)])
+        : picks(grammar(units.life).mask_levels),
     group: "Mask",
     when: PANE,
   },
   { key: "born", label: "Born", kind: "text", def: "3", group: "Rule", when: PANE },
   { key: "stay", label: "Stay", kind: "text", def: "23", group: "Rule", when: PANE },
   { key: "wrap", label: "Wrap", kind: "toggle", def: 1, group: "Rule", when: PANE },
+  {
+    key: "shape",
+    label: "Shape",
+    kind: "pick",
+    def: SEED,
+    options: (_value, units) => (units?.life ? grammar(units.life).shapes : [SEED]),
+    group: "Seed",
+    when: PANE,
+  },
+  {
+    key: "side",
+    label: "Side",
+    kind: "pick",
+    def: 3,
+    options: (_value, units) => (units?.life ? picks(grammar(units.life).sides) : [3]),
+    group: "Seed",
+    when: PANE,
+  },
+  {
+    key: "depth",
+    label: "Level",
+    kind: "pick",
+    def: 1,
+    options: (_value, units) => (units?.life ? picks(grammar(units.life).levels) : [1]),
+    group: "Seed",
+    when: PANE,
+  },
+  {
+    key: "tiling",
+    label: "Tiling",
+    kind: "pick",
+    def: 1,
+    options: (_value, units) => (units?.life ? picks(grammar(units.life).tilings) : [1]),
+    group: "Seed",
+    when: PANE,
+  },
+  { key: "cap", label: "Cap", kind: "number", def: CAP, min: 3, max: 999, step: 1, group: "Run", when: PANE },
+  { key: "x", label: "Limit", kind: "number", def: X, min: 1, max: 1024, step: 1, group: "Run", when: PANE },
   {
     key: "from",
     label: "Start",
@@ -185,19 +265,22 @@ export const PAGE = {
   about: [
     "Conway's Life is one rule on the eight cells around a cell: a dead cell with three live neighbours is born, a live cell with two or three stays, and every other cell dies.",
     "Here the neighbourhood is a design, picked with the design chip. The carpet at side 3, level 1 is the Moore ring; any other code, side and level is another life. Born and Stay count live mask cells, as digits or as a named sequence.",
-    "The Library holds famous patterns to seed the board, whole worlds of mask and rule, and named rules. Reroll sows a random soup.",
-    "Paint cells by hand, then press Play. Run to fate replays the board for up to 512 generations and says whether it dies, freezes, loops, or is still moving.",
-    "In 1D the board is one line of 320 cells, drawn top to bottom with the newest row last. Wrap joins the edges. A side-3 line at level 1 runs elementary rules, as on [Wolfram](/wolfram/); the whole family is in [the automata note](/research/automata/).",
+    "The Library holds famous patterns to seed the board, whole worlds of mask and rule, and named rules; its Encyclopedia shelves hold the census extract of the automata encyclopedia by stop, class and seed family, every item drawn live from its name, and picking one sets every knob. Reroll sows a random soup.",
+    "Paint cells by hand, then press Play. Run to fate replays the board for up to 512 generations and says whether it dies, freezes, loops, or is still moving. In 1D the board is one line of 320 cells, drawn top to bottom with the newest row last; Wrap joins the edges; a side-3 line at level 1 runs elementary rules, as on [Wolfram](/wolfram/). The whole family is in [the automata note](/research/automata/).",
+    "Island and Wallpaper run a recipe of the encyclopedia on the infinite plane: a seed design, tiled once, three or five times, alone inside a cap wall, or as the torus that is the plane filled with it. The mask is a design of side 3 to 9 at level 1 or 2, or a copy of the tiled seed; Born and Stay name counts or a sequence with its zeros and ones rolls; a zero in Born runs on a flipping background. The run stops dead, still, in a loop, as a mover, at the wall or at the limit, and its recipe name regenerates it bit for bit.",
   ],
-  name: (value) =>
-    [
+  name: (value: Value, units?: Units) => {
+    const recipe = units?.life && units.math ? nameOf(units.life, units.math, value) : "";
+    if (recipe) return `life-${slug(recipe)}`;
+    return [
       "life",
       slug(
         worn(PRESETS, value) ||
           `${dimOf(value)}d ${value.code} ${value.number} ${value.level} b${value.born} s${value.stay}`,
       ),
       SOUP(value) ? value.seed : slug(value.from),
-    ].join("-"),
+    ].join("-");
+  },
   keys: [
     {
       key: "Enter",
@@ -207,9 +290,9 @@ export const PAGE = {
       menu: "Edit",
     },
     { key: "n", label: "Step", act: "step", menu: "Edit" },
-    { key: "f", label: "Run to fate", act: "fate", menu: "Edit" },
+    { key: "f", label: (value: Value) => (fixed(value) ? "Run to fate" : "Run to stop"), act: "fate", menu: "Edit" },
     { key: ["0", "Home"], label: "Reset", act: "reset" },
-    { key: "c", label: "Clear", act: "clear" },
+    { key: "c", label: "Clear", act: "clear", when: fixed },
   ],
   actions: {
     play: (scene) => scene.toggle(),
@@ -288,14 +371,15 @@ const EPS = 1e-6;
 
 /* SCENE */
 
-export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as Given) {
-  const ctx = canvas.getContext("2d")!;
+export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as Given): Stage {
   const { life, math } = opts;
   const read = (next: Opts): Knobs => {
-    const one = { ...(tidy(SPEC, next) as Knobs), seed: next.seed };
+    const one = { ...(tidy(SPEC, next, { life, math }) as Knobs), seed: next.seed };
     return view.lock && one.from === START ? { ...one, from: "noise" } : one;
   };
   let value = read(opts);
+  if (!fixed(value)) return plane(canvas, view, { ...opts, read });
+  const ctx = canvas.getContext("2d")!;
   let shape: Mould | null = null;
   let rule: Rule | null = null;
   let name = "";
@@ -555,6 +639,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
   const set = (next: Opts) => {
     const was = value;
     value = read(next);
+    if (!fixed(value)) return false;
     const moved = (...keys: (keyof Knobs)[]) => keys.some((key) => String(value[key]) !== String(was[key]));
     if (moved("dim", "code", "number", "level")) mould();
     if (moved("dim", "from")) measure();
@@ -564,6 +649,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
     if (moved("speed")) origin = view.t - (gen * 1000) / value.speed;
     tell();
     whole();
+    return true;
   };
   const stop = () => {
     gone = true;

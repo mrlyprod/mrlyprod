@@ -4,17 +4,17 @@ mod rows;
 mod tables;
 
 use census::{Census, CHAMPIONS, MISSES, WINDOWS};
-use ledger::{designs, Closed, Cost, Measure, Tier, SPACES, TERMS};
-use rows::{Row, Sheet, Stop, CAP, CEILING, CELLS};
+use ledger::{designs, Axis, Closed, Cost, Measure, Tier, SPACES, TERMS};
+use rows::{counted, Row, Sheet, Stop, CAP, CEILING, CELLS};
 use std::env;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 fn definition() -> Vec<String> {
     vec![
-        "A registry row is one (design, measure, axis) key of `ledger::keys` over the four tiers.".to_string(),
+        "A registry row is one (design, measure, axis) key of `ledger::keys` over the closed, convolved, side and level tiers and the first twelve measures, the registry the census was run on.".to_string(),
         format!("A row's rendered window is its first `min({CAP}, B)` terms, `B` the leading terms whose footprint fits {CELLS} cells, under the ledger's own budget of {CELLS} cells a term."),
-        "A term's footprint is 1 cell for a closed measure, `number^dimension + level * span` for a convolved measure, `number^(dimension * level)` for a grid measure.".to_string(),
+        "A term's footprint is its render cost: 1 cell for a measure closed on both axes, `number^dimension + level * span` for a convolved measure, `number^(dimension * level)` for a grid measure and for the face counts, which close on the level axis but are read here to the same window they rendered.".to_string(),
         format!("A row whose rendered terms are strictly increasing stops at the first term above {CEILING}; the count of rows truncated this way is printed, never assumed to lose nothing."),
         format!("Row `R` writes `n` iff `n` is a term of `R` inside `R`'s rendered window and `1 <= n <= {CEILING}`."),
         "Multiplicity counts rows, not `(row, index)` pairs: a row writing `n` at several indices counts once.".to_string(),
@@ -28,9 +28,10 @@ fn expected(tier: Tier) -> usize {
         Tier::Convolved => Cost::Convolved,
         _ => Cost::Grid,
     };
-    let axes = match tier {
-        Tier::Closed | Tier::Convolved => 2,
-        _ => 1,
+    let axes: &[Axis] = match tier {
+        Tier::SideGrid => &[Axis::Side],
+        Tier::LevelGrid => &[Axis::Level],
+        _ => &[Axis::Level, Axis::Side],
     };
     SPACES
         .iter()
@@ -38,11 +39,16 @@ fn expected(tier: Tier) -> usize {
             let designs = designs(dimension, base)
                 .expect("the ledger spaces are walkable")
                 .len();
-            let measures = Measure::ALL
+            let rows: usize = Measure::ALL
                 .iter()
-                .filter(|measure| measure.cost() == cost && measure.applies(dimension, base))
-                .count();
-            designs * measures * axes
+                .filter(|measure| counted(**measure) && measure.applies(dimension, base))
+                .map(|measure| {
+                    axes.iter()
+                        .filter(|&&axis| measure.cost(axis) == cost)
+                        .count()
+                })
+                .sum();
+            designs * rows
         })
         .sum()
 }
@@ -351,4 +357,23 @@ fn main() {
         out.display()
     );
     println!("files run {:.1}s", clock.elapsed().as_secs_f64());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_census_reads_its_registry() {
+        let mut total = 0;
+        for tier in rows::TIERS {
+            let count = ledger::keys(tier)
+                .into_iter()
+                .filter(|key| counted(key.measure))
+                .count();
+            assert_eq!(count, expected(tier), "{}", tier.slug());
+            total += count;
+        }
+        assert_eq!(total, 18066);
+    }
 }

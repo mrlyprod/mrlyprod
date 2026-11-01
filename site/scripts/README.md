@@ -9,6 +9,7 @@
 - `time.ts` (`time`): every figure drawn cold and warm in a worker; `../README.md` has the gate.
 - `draw.ts` (`draw`): `bun run draw <name...> | --all [--svg] [--png] [--theme dark|light] [--size px] [--out dir]` draws roster figures without the site, through the `mrly` plugin and the svg or raster pen, in the shell ink of the theme and the `site.json` tint; svg, dark and the figure size by default, into `data/site/scripts/draw/<name>.<theme>.<ext>`, one path a line.
 - `vendor.ts` (`vendor`): the fonts and the icons, below.
+- `library.ts` (`library`): the Life app's encyclopedia shelves, `../src/apps/life/library.gen.json`, trimmed from the lab's extract `../../data/research/automata/lab/rs/encyclopedia/library.json`: per row the recipe name, the stop, the class, the seed family, the generation, the period and the population's last and max, the first 4 rows of every shelf cell; the app draws each row live from its name.
 - Modules of the build beside them: `git.ts` (the raw list and `git.json`), `llms.ts` (`llms.txt`), `links.ts` (the links of a built `dist/`, for the content gate); `film/page.ts` is the page `film.ts` drives.
 
 ## SHOTS

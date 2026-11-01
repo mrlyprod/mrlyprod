@@ -63,9 +63,14 @@ export function sprite(
   rows: number,
   side: number,
   ink: string,
+  ground?: string,
 ): void {
   const box = reach(types, cols, rows);
   ctx.clearRect(0, 0, side, side);
+  if (ground) {
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, side, side);
+  }
   if (!box) return;
   const w = box.x1 - box.x0 + 1;
   const h = box.y1 - box.y0 + 1;

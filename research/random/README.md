@@ -19,6 +19,7 @@ Randomness from designs: the rounds, where every round that writes two cells or 
 - [notes/pascal-images.md](notes/pascal-images.md): Pascal images
 - [notes/primes.md](notes/primes.md): Along the primes
 - [notes/readings.md](notes/readings.md): The readings
+- [notes/rounds.md](notes/rounds.md): The rounds
 - [notes/schedules.md](notes/schedules.md): The schedules
 - [notes/squares.md](notes/squares.md): Along the squares
 - [notes/two-bases.md](notes/two-bases.md): The moire limit
@@ -59,6 +60,7 @@ Randomness from designs: the rounds, where every round that writes two cells or 
 - [figures/research-random-mixing.ts](figures/research-random-mixing.ts): research-random-mixing
 - [figures/research-random-primes.ts](figures/research-random-primes.ts): research-random-primes
 - [figures/research-random-readings.ts](figures/research-random-readings.ts): research-random-readings
+- [figures/research-random-rounds.ts](figures/research-random-rounds.ts): research-random-rounds
 - [figures/research-random-schedules.ts](figures/research-random-schedules.ts): research-random-schedules
 - [figures/research-random-squares.ts](figures/research-random-squares.ts): research-random-squares
 - [figures/research-random-two-bases.ts](figures/research-random-two-bases.ts): research-random-two-bases

@@ -101,11 +101,13 @@ The odd-side fill of a design is a product of norm forms, one per irreducible fa
 
 At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrly::math::counts::exposure` closes it in every dimension and `mrly::math::counts::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, its recurrence **Proved** by the carry automaton on the cuts note, the census checked to level 4 by `mrly::math::counts::cut_fills`.
 
+The vertices, edges, faces and Euler characteristic of a level close by the placement recurrence of `mrly::math::counts::skeleton`: each unit `k`-face count is a signed sum of window-pattern counts, the pattern counts obey a triangular recurrence whose diagonal is the spanning counts, and `mrly::math::counts::skeleton_recurrence` spells the recurrence each row obeys from level 0. **Proved**. These rows print the recurrence, never a sum of powers: of the 2599 level rows, 644 print a recurrence with a repeated root and 220 one with a repeated nonzero root, where a polynomial factor in `level` can stand beside the powers. The recurrence terms equal the rendered census on all 859 designs that carry a face count, 10404 terms within the cell budget, pinned by the ledger test `the_skeleton_closes_the_rendered_face_counts`; the side axis still renders.
+
 {{levels}}
 
 ### Cited by a claim
 
-A sequence that a claim or a note names by its `sequence_...` name, and that no OEIS record holds, is still a row: the terms come from the same registry, and its witness is the file that cites it. A name no claim cites and no record holds is not on this page.
+A sequence that a claim or a note names by its `sequence_...` name, and that no OEIS record holds, is still a row: the terms come from the same registry, and its witness is the file that cites it. A name no claim cites and no record holds is not on this page. A `loops` row counts the closed curves of the design drawn in Truchet arcs; a `windows` row runs along the window side `k` and counts the distinct `k x k` windows of the design's renders, exactly, through the substitution census.
 
 {{cited}}
 

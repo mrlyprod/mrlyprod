@@ -143,6 +143,20 @@ export const prime = {
     squares: wasm.num_prime_squares,
     study: wasm.num_prime_study,
 };
+export const readings = {
+    Design: wasm.num_readings_Design,
+    READINGS: wasm.num_readings_READINGS,
+    Reading: wasm.num_readings_Reading,
+    arcs: wasm.num_readings_arcs,
+    battery: wasm.num_readings_battery,
+    bias: wasm.num_readings_bias,
+    designs: wasm.num_readings_designs,
+    model: wasm.num_readings_model,
+    name: wasm.num_readings_name,
+    near_heads: wasm.num_readings_near_heads,
+    sign: wasm.num_readings_sign,
+    stream: wasm.num_readings_stream,
+};
 export const series = {
     APERY: wasm.num_series_APERY,
     BASEL: wasm.num_series_BASEL,

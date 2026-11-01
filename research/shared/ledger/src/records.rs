@@ -99,11 +99,14 @@ pub static RECORDS: &[Record] = &[
     record("A009964", "Powers of 20", 0, "1, 20, 400, 8000, 160000, 3200000, 64000000, 1280000000, 25600000000, 512000000000", Tag::Proved, "20^level", FILLS).keyed(23, 3, Measure::Fills, Axis::Level, 0),
     record("A009971", "Powers of 27", 0, "1, 27, 729, 19683, 531441, 14348907, 387420489, 10460353203, 282429536481, 7625597484987", Tag::Proved, "27^level", FILLS).keyed(255, 3, Measure::Fills, Axis::Level, 0),
     record("A011934", "a(n) = abs(1^3 - 2^3 + 3^3 - 4^3 + ... + (-1)^(n+1)*n^3)", 0, "0, 1, 7, 20, 44, 81, 135, 208, 304, 425, 575, 756", Tag::Verified, "none", "this page, the parent of the bisections A103532 and A395241"),
+    record("A014105", "Second hexagonal numbers: a(n) = n*(2*n + 1)", 0, "0, 3, 10, 21, 36, 55, 78, 105, 136, 171, 210, 253", Tag::Proved, "2k^2 - 3k + 1", SIDES).keyed(3, 2, Measure::Voids, Axis::Side, -1),
     record("A016185", "a(n) = 9^n - 8^n", 0, "0, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 253202761, 2413042577, 22791125017", Tag::Proved, "9^level - 8^level", "mrly::math::counts::void").keyed(7, 2, Measure::Voids, Axis::Level, 0),
     record("A016754", "Odd squares: a(n) = (2n+1)^2, also centered octagonal numbers", 0, "1, 9, 25, 49, 81, 121, 169, 225, 289, 361, 441, 529", Tag::Proved, "(2k - 1)^2", SIDES).keyed(15, 2, Measure::Fills, Axis::Side, -1),
     record("A016755", "Odd cubes: a(n) = (2*n + 1)^3", 0, "1, 27, 125, 343, 729, 1331, 2197, 3375, 4913, 6859, 9261, 12167", Tag::Proved, "(2k - 1)^3", SIDES).keyed(255, 3, Measure::Fills, Axis::Side, -1),
     record("A018413", "Divisors of 363", 1, "1, 3, 11, 33, 121, 363", Tag::Verified, "none", "this page, a near miss of A396934 - 1"),
     record("A034474", "a(n) = 5^n + 1", 0, "2, 6, 26, 126, 626, 3126, 15626, 78126, 390626, 1953126, 9765626, 48828126", Tag::Verified, "5^n + 1", "REFS.md"),
+    record("A045944", "Rhombic matchstick numbers: a(n) = n*(3*n+2)", 0, "0, 5, 16, 33, 56, 85, 120, 161, 208, 261, 320, 385", Tag::Proved, "3k^2 - 4k + 1", SIDES).keyed(1, 2, Measure::Voids, Axis::Side, -1),
+    record("A046092", "4 times triangular numbers: a(n) = 2*n*(n+1)", 0, "0, 4, 12, 24, 40, 60, 84, 112, 144, 180, 220, 264", Tag::Proved, "2k^2 - 2k", SIDES).keyed(6, 2, Measure::Fills, Axis::Side, -1),
     record("A047999", "Sierpinski's triangle (or gasket): Pascal's triangle read by rows mod 2", 0, "1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0", Tag::Verified, "none", "coprime.md, the points i AND j = 0"),
     record("A048883", "a(n) = 3^wt(n), where wt(n) = A000120(n)", 0, "1, 3, 3, 9, 3, 9, 9, 27, 3, 9, 9, 27", Tag::Verified, "3^wt(n)", "REFS.md"),
     record("A054247", "Number of n X n binary matrices under action of dihedral group of the square D_4", 0, "1, 2, 6, 102, 8548, 4211744, 8590557312, 70368882591744, 2305843028004192256", Tag::Verified, "none", "README.md, the rigid hypercube census at dim 2"),
@@ -129,6 +132,8 @@ pub static RECORDS: &[Record] = &[
     record("A396922", "E.g.f. A(x) satisfies A( x / A(log(A(log(A(log(A(x))))))) ) = exp(x)", 0, "1, 1, 3, 40, 1421, 87896, 7921207, 951512332, 144407735033, 26715045346048", Tag::Verified, "none", "REFS.md"),
     record("A396934", "Number of pairs (i,j) with 0 <= i,j < 2^n, i AND j = 0, and gcd(i,j) = 1", 0, "0, 2, 4, 12, 34, 122, 362, 1130, 3406, 10506, 31550, 95260", Tag::Verified, "none", "lab/rs/oeis-terms, the b-file to n = 20"),
     record("A398348", "Number of toroidal n X n X n binary arrays, allowing rotation and/or reflection of the layers along each axis as well as all permutations of the axes", 1, "2, 22, 111618, 6005363762644688, 7089215977519836239803174210135872, 10157435539019790383692007859901914095646506996125324171134976", Tag::Verified, "none", "lab/rs/oeis-terms, the b-file to n = 14"),
+    record("A399018", "Number of solid unit triangles in the hexagonal cross-section of the first iteration of the generalized Menger sponge with subdivision 2n+1, cut through the center perpendicular to a space diagonal", 0, "6, 42, 72, 204, 210, 486, 420, 888, 702, 1410, 1056, 2052", Tag::Verified, "3(n+1)(3n+2) for n even, 3(n+1)(5n+2) for n odd", "mrly::math::counts::cut_fills").keyed(23, 3, Measure::Triangles, Axis::Side, -1),
+    record("A399019", "Number of empty unit triangles in the hexagonal cross-section of the first iteration of the generalized Menger sponge with subdivision 2n+1, cut through the center perpendicular to a space diagonal", 0, "0, 12, 78, 90, 276, 240, 594, 462, 1032, 756, 1590, 1122", Tag::Verified, "3n(5n+3) for n even, 3n(3n+1) for n odd", "mrly::math::counts::cut_voids").keyed(23, 3, Measure::Gaps, Axis::Side, -1),
 ];
 
 /// Finds a record by id.
@@ -206,7 +211,7 @@ mod tests {
             assert!(record.parsed().len() >= 5, "{}", record.id);
             assert!(!record.name.contains('|'), "{}", record.id);
         }
-        assert_eq!(RECORDS.len(), 60);
+        assert_eq!(RECORDS.len(), 65);
         assert_eq!(record_by_id("A398348").unwrap().parsed().len(), 5);
     }
 
@@ -228,7 +233,30 @@ mod tests {
             assert!(compared >= 3, "{} compared {compared}", record.id);
             keyed += 1;
         }
-        assert_eq!(keyed, 20);
+        assert_eq!(keyed, 25);
+    }
+
+    #[test]
+    fn every_design_family_reads_its_record_by_value() {
+        use mrly::life::source::{sequence, Source};
+        for family in Source::designs() {
+            let id = family.oeis().expect("every design family carries an id");
+            let known = record_by_id(&id)
+                .expect("the family's id is a record")
+                .parsed();
+            let limit = usize::try_from(*known.last().unwrap()).unwrap();
+            let values: Vec<i128> = sequence(family, limit)
+                .unwrap()
+                .into_iter()
+                .map(|value| value as i128)
+                .collect();
+            assert!(values.len() >= 5, "{family:?}");
+            assert_eq!(
+                identify(&values).iter().filter(|(r, _)| r.id == id).count(),
+                1,
+                "{family:?}"
+            );
+        }
     }
 
     #[test]

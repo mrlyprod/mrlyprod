@@ -118,6 +118,47 @@ The void row is the degenerate case, and a second eigenvalue of 0 for it is wron
 
 This matrix shares nothing but a name with the digit-borrow [transfer matrices](https://en.wikipedia.org/wiki/Transfer-matrix_method_(statistical_mechanics)) this lane uses elsewhere: those are automata on the binary digits of a position, this one is a `2x2` face ledger. Two arguments, one word.
 
+## The whole skeleton, counted
+
+The surface recurrence counts the faces open to void. The same Kronecker structure counts every unit face of the design at once: the vertices, edges, squares and cubes of the polyhedral complex of the union of closed unit cubes, each counted once however many cubes share it. That is exactly what the ledger renders as vertices, edges, faces and euler: `counts::faces` agrees with `three::census` on the level-one and level-two sponge, `64, 144, 96, -4` and `896, 2304, 1728, -80`, and with `two::census` on the carpet (test `the_rendered_skeleton_is_the_census`).
+
+**The patterns.** Fix a tile `T` of side `n` in dimension `d` and let `D_L` be its `L`-fold Kronecker power, the cells of `[0, n^L)^d` whose every base-`n` digit vector lies in `T`. A pattern is a nonempty set `P` of cells of the `2^d` window `{0,1}^d`, normalised so that some cell of `P` has coordinate `0` on every axis; `N_P(L)` counts the translates `v + P` inside `D_L`. The single cell gives `N(L) = fc^L`, the pair along axis `a` gives the adjacent pairs of `D_L`, the full window gives its filled `2 x ... x 2` blocks.
+
+**Faces from patterns (Proved).** A unit `k`-face is a window of type `B`, the `d - k` axes on which it is a point, together with the `2^(d-k)` cells around it, and the face belongs to the union exactly when one of those cells is filled. Inclusion and exclusion over the filled cells of the window, every nonempty subset `U` of the window cells counted once per window containing it, turns the count of `k`-faces into a signed sum of pattern counts:
+
+```
+F_k(L) = sum over B with |B| = d - k, sum over nonempty U in {0,1}^B of (-1)^(|U|+1) N_U(L)
+chi(L) = sum over nonempty P in {0,1}^d, one per translation class, of (-1)^(|P|+1) N_P(L)
+```
+
+The second line is the nerve of the cover by closed cubes, and it is also the alternating sum of the first over `k`. In the plane the vertex count reads `4 fc^L - 2 N_x - 2 N_y - N_diag - N_anti + (the four L-trominoes) - N_square`, and on the level-one carpet that is `32 - 20 + 4 - 0 = 16`.
+
+**The carry recurrence (Proved).** Write a translate `v + P` in `D_(L+1)` by its lowest digit `w` in `[0, n)^d` and its higher digits `u` in `D_L`. Adding `p` in `P` to `v` moves the lowest digit to `(w + p) mod n` and carries one into `u` exactly on the axes `W` where `w` sits at `n - 1` and `p` has a `1`. So `v + P` lies in `D_(L+1)` exactly when the wrapped pattern `w + P mod n` lies in `T` and the carried pattern `P ^ W`, the cells of `P` with every coordinate outside `W` set to `0`, lies in `D_L` at `u`:
+
+```
+N_P(L+1) = sum over Q of M[P][Q] N_Q(L),  M[P][Q] = #{w in [0,n)^d : w + P mod n in T, P ^ W(w) = Q}
+```
+
+The matrix `M` is the only tile data, read off the tile once. Its entries for the pair along `a` are the exposure data, `M[pair][cell] = adj_a` and `M[pair][pair] = S_a`, so `N_pair(L+1) = adj_a fc^L + S_a N_pair(L)`, and the exposure recurrence `V(L+1) = fc V(L) - 2 sum adj_a S_a^L` is the case `P = pair` of this one. `P ^ W` never has a larger support than `P`, so `M` is triangular in the support order, with the diagonal entry `lambda_P = M[P][P]` the spanning count of `P`: the digits `w` at `n - 1` on the whole support of `P` that still fit it wrapped. The single cell has `lambda = fc`.
+
+**The roots (Proved).** The generating function `G_P(x) = sum N_P(L) x^L` satisfies `(1 - lambda_P x) G_P = N_P(0) + x sum over Q below P of M[P][Q] G_Q`, so by induction down the support order `G_P` is a rational function whose denominator is `prod over lambda of (1 - lambda x)^(c_lambda(P))`, where `c_lambda(P)` is the largest number of patterns of spanning count `lambda` on one carry chain from `P` (a path of nonzero off-diagonal entries), and whose numerator has degree below the denominator's degree plus `z`, with `z` the most patterns of spanning count `0` on one chain (a zero-count pattern adds no denominator degree, so `z = 0` gives degree below the denominator's). Every face count and the Euler characteristic therefore obey, from `L = 0`, the linear recurrence with characteristic polynomial `prod (x - lambda)^(c_lambda)` over the patterns their signed sums reach, and each is a sum of `lambda^L` times a polynomial of degree below `c_lambda` from `L = z` (code 123456789 has `z = 2` for its vertex count and leaves the power form at `L = 0` and `1`, `z = 1` for its edge count); when every `c_lambda` is `1` it is a plain sum of powers with rational coefficients fixed by the first terms. (Proved; `counts::faces` test `the_terms_obey_the_recurrence` checks the recurrence on twelve levels for six codes, `the_recurrence_matches_the_rendered_skeleton` the counts against a brute-force face census of the rendered design for nine codes across dims 2 and 3 and bases 2 and 3, to level 4 in the plane and at base 2 in space, level 3 at base 3 in space.)
+
+**The classics (Proved).** The carpet and the sponge have the roots `1, 3, 8` and `1, 3, 8, 20`, all simple, so every count is a sum of powers (`counts::faces` test `the_classics_close`):
+
+| count | carpet, side 3 | sponge, side 3 |
+|---|---|---|
+| vertices | `(40 + 56*3^L + 44*8^L)/35` | `(16320 + 25536*3^L + 28424*8^L + 20160*20^L)/11305` |
+| edges | `(8*3^L + 12*8^L)/5` | `(192*3^L + 408*8^L + 420*20^L)/85` |
+| squares | `8^L` | `2*8^L + 4*20^L` |
+| cubes | | `20^L` |
+| euler | `(8 - 8^L)/7` | `(192 - 38*8^L - 21*20^L)/133` |
+
+The carpet vertices `16, 96, 688, 5280` are [OEIS A293143](https://oeis.org/A293143) from its second term, whose recurrence `a(n+1) = 8 a(n) - 8 (3^n + 1)` has the same roots; the sponge vertices `64, 896, 15616, 295808` are [A293144](https://oeis.org/A293144), given there by the recurrence `a(n) = 20 a(n-1) - 24 A293143(n-1)`, and it already carries the closed form above, which equals the page's form after clearing denominators (`64*255 = 16320`). The sponge edges `144, 2304, 42048, 810432`, squares `96, 1728, 33024, 648192` and Euler characteristics `-4, -80, -1408, -26432`, and the carpet edges `24, 168, 1272, 9960`, are absent from the OEIS dump at four terms (Conjecture until a live read). The sponge squares are the surface plus half the buried faces, `(exposed + 6*20^L)/2`, so the `(d-1)`-faces close by the exposure alone in every dimension: `F_(d-1) = d fc^L + exposed/2` (checked on six codes in `the_terms_obey_the_recurrence`). The carpet Euler characteristic says `1 - chi = (8^L - 1)/7` holes, one per cell removed along the way.
+
+**The multiplicity bites (Proved).** The bound `c_lambda` is attained: `bang dim 3, code 123456789` at base 3 has vertex roots `0, 0, 1, 1, 2, 3, 5, 16`, and its vertex count `8, 57, 699, 10463, 164778, 2626182` carries the term `(11/30) L` beside its powers (test `a_repeated_root_carries_a_linear_term`), so the vertex count of a design is not always a sum of powers; the edge count of the same design has the simple roots `0, 1, 2, 3, 5, 16`. The double root `0` is transient and moves the first two terms only.
+
+**What this gives the ledger.** `counts::skeleton(code, number, dimension, base, level)` returns every `k`-face count and the Euler characteristic from the tile alone, `counts::skeleton_recurrence(code, number, dimension, base, k)` the recurrence coefficients, `Placements::roots` the roots with their multiplicities, in dimensions one to four, where the window patterns fit a machine word.
+
 ## No hidden faces
 
 **(Proved.)** Two cells share a unit face exactly when they differ by 1 in one coordinate - which flips exactly one bit of the parity vector. So a design ever hides a face if and only if two of its filled corners sit at Hamming distance 1. The void's corners are at distance 3, so no two of its filled cubes ever meet face to face, at any side and any level: every face is exposed, and

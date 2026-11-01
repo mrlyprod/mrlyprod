@@ -117,7 +117,11 @@ pub fn distinct_designs(base: usize, dimension: usize) -> Result<u128> {
     for perm in permutations(dimension) {
         for choice in choices(&axis, dimension) {
             order += 1;
-            total += 1u128 << cycles(&perm, &choice, &axis, &cells, &index);
+            let fixed = 1u128.checked_shl(cycles(&perm, &choice, &axis, &cells, &index));
+            total = match fixed.and_then(|fixed| total.checked_add(fixed)) {
+                Some(total) => total,
+                None => return value_error("the Burnside sum overflows a u128."),
+            };
         }
     }
     if !total.is_multiple_of(order) {
@@ -255,7 +259,9 @@ pub fn classes(dimension: usize) -> u128 {
         }
         row = next;
     }
-    row.iter().map(|corners| corners + 1).product()
+    row.iter()
+        .try_fold(1u128, |product, corners| product.checked_mul(corners + 1))
+        .unwrap_or(u128::MAX)
 }
 
 /// Returns the fill-class counts for dimensions 1 through max_dimension.
@@ -372,6 +378,14 @@ mod tests {
             class_sequence(7),
             vec![4, 12, 64, 700, 17424, 1053696, 160579584]
         );
+    }
+    #[test]
+    fn classes_saturate_past_a_u128() {
+        assert_eq!(classes(40), u128::MAX);
+    }
+    #[test]
+    fn distinct_designs_refuse_a_burnside_sum_past_a_u128() {
+        assert!(distinct_designs(128, 1).is_err());
     }
     #[test]
     fn totals_doubly_exponential() {

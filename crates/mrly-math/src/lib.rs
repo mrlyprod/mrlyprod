@@ -26,6 +26,7 @@
 //! - `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.
 //! - `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.
 //! - `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.
+//! - `game`: the chaos game of a design: its de Bruijn schedules, the restricted games that draw the memory dial's sets, and the mosaic and slice games on a graph.
 //! - `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.
 //! - `radix`: a digit set inside the residues of a base in a ring, and where its words land.
 //! - `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.
@@ -63,6 +64,8 @@ pub mod design;
 /// The unconditional dissection of a missing-digit set: the four regions of the frequency grid, the `l^1` masses of the digit transform, the chain certificate against `1/5`, the constant `kappa_F` and the set's own meter and prime count.
 pub mod dissection;
 mod eigen;
+/// The chaos game: the shift register that writes a design backwards, the de Bruijn schedules that paint every cell once, the restricted games of the memory dial, and the mosaic and slice games on a graph of states.
+pub mod game;
 /// The spatial network: its nodes, branches, extraction and census.
 pub mod graph;
 /// The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.

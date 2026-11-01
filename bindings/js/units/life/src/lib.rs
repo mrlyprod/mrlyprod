@@ -199,6 +199,28 @@ pub fn life_popcount(rule: u8) -> Result<u32, JsValue> {
     Ok(value)
 }
 
+/// Lists what every knob of a recipe may offer, in grammar order.
+#[wasm_bindgen]
+pub fn life_recipe_grammar() -> Result<JsValue, JsValue> {
+    let value = mrly::life::recipe::grammar();
+    hand::to_js(&value)
+}
+
+/// Writes a recipe as its name, the one string that regenerates it.
+#[wasm_bindgen]
+pub fn life_recipe_name(recipe: JsValue) -> Result<String, JsValue> {
+    let recipe = hand::from_js::<mrly::life::recipe::Recipe>(&recipe)?;
+    let value = mrly::life::recipe::name(&recipe);
+    Ok(value)
+}
+
+/// Reads a recipe out of its name.
+#[wasm_bindgen]
+pub fn life_recipe_parse(name: &str) -> Result<JsValue, JsValue> {
+    let value = mrly::life::recipe::parse(name).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
 /// Renders one grid to a white-on-black image at a pixel scale.
 #[wasm_bindgen]
 pub fn life_render_frame(grid: JsValue, scale: usize) -> Result<JsValue, JsValue> {
@@ -706,6 +728,98 @@ impl life_Source {
     }
 }
 
+/// A recipe's run, stepped one generation at a time until its stop.
+#[wasm_bindgen]
+pub struct life_recipe_Run {
+    inner: mrly::life::recipe::Run,
+}
+
+#[wasm_bindgen]
+impl life_recipe_Run {
+    /// Returns the background the frame sits on, 1 once a flipping rule has turned it.
+    pub fn background(&self) -> Result<u8, JsValue> {
+        let value = self.inner.background();
+        Ok(value)
+    }
+    /// Returns the birth counts drawn against the budget.
+    pub fn birth(&self) -> Result<Vec<u32>, JsValue> {
+        let value = self.inner.birth();
+        Ok(value)
+    }
+    /// Returns the mask's budget, the most neighbours a cell can count.
+    pub fn budget(&self) -> Result<u32, JsValue> {
+        let value = self.inner.budget();
+        Ok(value)
+    }
+    /// Returns the canvas side: an island's cap, at least its seed board, or a wallpaper's torus.
+    pub fn cap(&self) -> Result<u32, JsValue> {
+        let value = self.inner.cap();
+        Ok(value)
+    }
+    /// Returns whether the rule flips its background, birth holding zero.
+    pub fn flips(&self) -> Result<bool, JsValue> {
+        let value = self.inner.flips();
+        Ok(value)
+    }
+    /// Returns the live frame: the cropped island pattern, or the whole torus.
+    pub fn frame(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.frame();
+        hand::cell_to_js(&value)
+    }
+    /// Returns the generation reached.
+    pub fn generation(&self) -> Result<u32, JsValue> {
+        let value = self.inner.generation();
+        Ok(value)
+    }
+    /// Returns the mask as a square tensor of bytes, its centre popped.
+    pub fn mask(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.mask();
+        hand::tensor_to_js(&value)
+    }
+    /// Sets a recipe up at generation zero: the tiled seed, the mask's kernel, the rule drawn against its budget.
+    #[wasm_bindgen(constructor)]
+    pub fn new(recipe: JsValue) -> Result<life_recipe_Run, JsValue> {
+        let recipe = hand::from_js::<mrly::life::recipe::Recipe>(&recipe)?;
+        let value = mrly::life::recipe::Run::new(&recipe).map_err(hand::throw)?;
+        Ok(life_recipe_Run { inner: value })
+    }
+    /// Returns the row and column of the frame's top-left corner, the seed's top-left corner being the origin.
+    pub fn origin(&self) -> Result<Vec<i64>, JsValue> {
+        let value = self.inner.origin();
+        Ok(value.to_vec())
+    }
+    /// Returns the live cells of the frame.
+    pub fn population(&self) -> Result<u32, JsValue> {
+        let value = self.inner.population();
+        Ok(value)
+    }
+    /// Returns the mask's reach, half its side.
+    pub fn reach(&self) -> Result<u32, JsValue> {
+        let value = self.inner.reach();
+        Ok(value)
+    }
+    /// Returns the side of the seed board, the seed's side to its level times its tiling.
+    pub fn side(&self) -> Result<u32, JsValue> {
+        let value = self.inner.side();
+        Ok(value)
+    }
+    /// Advances one generation and returns the stop the moment the run ends; after a stop it returns the same stop and changes nothing.
+    pub fn step(&mut self) -> Result<JsValue, JsValue> {
+        let value = self.inner.step();
+        hand::to_js(&value)
+    }
+    /// Returns the stop once the run has ended.
+    pub fn stop(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.stop();
+        hand::to_js(&value)
+    }
+    /// Returns the survive counts drawn against the budget.
+    pub fn survive(&self) -> Result<Vec<u32>, JsValue> {
+        let value = self.inner.survive();
+        Ok(value)
+    }
+}
+
 /// The edge policy of a life grid.
 #[wasm_bindgen]
 pub struct life_Boundary {}
@@ -734,6 +848,19 @@ impl life_Fate {
     /// Returns every Fate in canonical order.
     pub fn all() -> Result<JsValue, JsValue> {
         let value = mrly::life::Fate::all();
+        hand::to_js(&value)
+    }
+}
+
+/// The mode of a run.
+#[wasm_bindgen]
+pub struct life_recipe_Mode {}
+
+#[wasm_bindgen]
+impl life_recipe_Mode {
+    /// Returns every Mode in canonical order.
+    pub fn all() -> Result<JsValue, JsValue> {
+        let value = mrly::life::recipe::Mode::all();
         hand::to_js(&value)
     }
 }

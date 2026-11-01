@@ -44,7 +44,7 @@ function check(c: Census, cols: number, side: number) {
   const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
   for (let k = 0; k < cols; k++) {
     const q = c.heights[k];
-    if (!(q <= 1 + 1e-9 && q > 1 - 1e-2)) throw new Error(`paper-spectral-tiling-levels: Q at column ${k} = ${q}`);
+    if (!(q <= 1 + 1e-9 && q > 1 - 1e-2)) throw new Error(`paper-spectral-tiling-levels: Psi at column ${k} = ${q}`);
     let total = 0;
     for (const [bands, runs] of c.stacks.map((s) => s[k])) {
       if (runs.length !== bands.length + 1)
@@ -56,7 +56,7 @@ function check(c: Census, cols: number, side: number) {
       total += sum(bands) + sum(runs);
     }
     if (Math.abs(total - q) > 1e-6)
-      throw new Error(`paper-spectral-tiling-levels: column ${k} stacks to ${total}, Q = ${q}`);
+      throw new Error(`paper-spectral-tiling-levels: column ${k} stacks to ${total}, Psi = ${q}`);
   }
 }
 

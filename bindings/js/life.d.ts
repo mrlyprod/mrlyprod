@@ -329,6 +329,118 @@ export declare namespace elementary {
     /** Returns the bit a rule sends the neighbourhood to, reading bit `4l + 2c + r` in Wolfram's numbering off the low bit of each cell. */
     export function output(rule: number, l: number, c: number, r: number): number;
 }
+export declare namespace recipe {
+    /** Lists what every knob of a recipe may offer, in grammar order. */
+    export function grammar(): recipe.Grammar;
+    /** Writes a recipe as its name, the one string that regenerates it. */
+    export function name(recipe: recipe.Recipe): string;
+    /** Reads a recipe out of its name. */
+    export function parse(name: string): recipe.Recipe;
+    /** The lists the knobs of a recipe may offer, in grammar order. */
+    export interface Grammar {
+        /** The seed shapes: the five plane classes, the five classics, the five antis. */
+        shapes: string[];
+        /** The seed sides. */
+        sides: number[];
+        /** The seed levels. */
+        levels: number[];
+        /** The island tilings. */
+        tilings: number[];
+        /** The modes. */
+        modes: string[];
+        /** The mask sides. */
+        mask_sides: number[];
+        /** The mask levels. */
+        mask_levels: number[];
+        /** The copy masks of the tiled seed. */
+        copies: string[];
+        /** The source names a side may draw. */
+        sources: string[];
+        /** The rolls a drawn side may carry. */
+        rolls: string[];
+    }
+    /** The mode of a run. */
+    export type Mode = "Island" | "Wallpaper";
+    export const Mode: {
+        /** Returns every Mode in canonical order. */
+        all(): recipe.Mode[];
+    };
+    /** The parts of one recipe name. */
+    export interface Recipe {
+        /** The seed shape token: a plane class `code<n>` or a named design. */
+        seed: string;
+        /** The seed side, odd. */
+        side: number;
+        /** The seed level. */
+        level: number;
+        /** The tiling of the seed, 1 for one copy. */
+        tiling: number;
+        /** The mode. */
+        mode: recipe.Mode;
+        /** The mask token: `shape.side.level`, `copy` or `copyinv`. */
+        mask: string;
+        /** The birth side: a source name with the `_zeros` and `_ones` rolls, or a comma list of counts. */
+        birth: string;
+        /** The survive side, written as the birth side. */
+        survive: string;
+        /** The generation limit. */
+        x: number;
+        /** The cap of the island canvas, 0 for a wallpaper. */
+        cap: number;
+    }
+    export type RunData = Record<string, unknown>;
+    /** A recipe's run, stepped one generation at a time until its stop. */
+    export class Run {
+        /** Sets a recipe up at generation zero: the tiled seed, the mask's kernel, the rule drawn against its budget. */
+        constructor(recipe: recipe.Recipe);
+        free(): void;
+        /** Returns the background the frame sits on, 1 once a flipping rule has turned it. */
+        background(): number;
+        /** Returns the birth counts drawn against the budget. */
+        birth(): Uint32Array;
+        /** Returns the mask's budget, the most neighbours a cell can count. */
+        budget(): number;
+        /** Returns the canvas side: an island's cap, at least its seed board, or a wallpaper's torus. */
+        cap(): number;
+        /** Returns whether the rule flips its background, birth holding zero. */
+        flips(): boolean;
+        /** Returns the live frame: the cropped island pattern, or the whole torus. */
+        frame(): Cell;
+        /** Returns the generation reached. */
+        generation(): number;
+        /** Returns the mask as a square tensor of bytes, its centre popped. */
+        mask(): Tensor;
+        /** Returns the row and column of the frame's top-left corner, the seed's top-left corner being the origin. */
+        origin(): BigInt64Array;
+        /** Returns the live cells of the frame. */
+        population(): number;
+        /** Returns the mask's reach, half its side. */
+        reach(): number;
+        /** Returns the side of the seed board, the seed's side to its level times its tiling. */
+        side(): number;
+        /** Advances one generation and returns the stop the moment the run ends; after a stop it returns the same stop and changes nothing. */
+        step(): recipe.Stop | undefined;
+        /** Returns the stop once the run has ended. */
+        stop(): recipe.Stop | undefined;
+        /** Returns the survive counts drawn against the budget. */
+        survive(): Uint32Array;
+    }
+    /** The stop of a run. */
+    export interface Stop {
+        /** The kind: dead, still, loop, mover, wall or limit. */
+        kind: string;
+        /** The generation the run stopped at. */
+        generation: number;
+        /** The period: 1 for dead and still, the cycle of a loop or mover, 0 for a wall or limit. */
+        period: number;
+        /** The row shift of a mover over one period. */
+        dr: number;
+        /** The column shift of a mover over one period. */
+        dc: number;
+        /** The generation a mover reaches the wall by, 0 when it does not before the limit. */
+        wall_by: number;
+    }
+}
 export declare namespace render {
     /** Renders one grid to a white-on-black image at a pixel scale. */
     export function frame(grid: Cell, scale: number): Image;

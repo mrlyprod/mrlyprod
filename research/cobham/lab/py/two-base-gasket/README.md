@@ -14,6 +14,34 @@
 - `hankel HI [RMAX]` recomputes `C(3^m)` for `m = 0..HI` and prints them, prints the Hankel determinants `det H_k` of the matrix with entries `a[i+j]` for `k = 1..RMAX+1`, and for each order `r = 1..RMAX` solves the system `a(n) = c_1 a(n-1) + ... + c_r a(n-r)` over every `n` with `r <= n <= HI`, printing the number of equations, the equations spare after the `r` unknowns, and either `none` for an inconsistent system or the coefficients. A consistent order also gets its characteristic polynomial and the modulus of its dominant root from `gp -q`. `RMAX` defaults to `12`, which is the largest order `HI = 24` leaves a spare equation for, order `r` wanting `2r+1` terms and so order `13` wanting `HI = 26`. Runtime `3` min `15` s at `HI = 24`, the census being the whole cost and the algebra under `0.01` s.
 - `selftest` runs the algebra of `hankel` against answers known in advance: `bareiss` on five determinants computed by hand, reading `3`, `-2`, `-6`, `0` and `4`, the third needing a pivot swap and the fourth singular; the Fibonacci numbers, first fitted at order `2` with characteristic polynomial `x^2 - x - 1`; `2^n + 3^n + 1`, first fitted at order `3` with dominant root `3.0000000` from `gp -q`; and `n^3 + 2^n`, fitted at no order below `5` and at `5` with `(x - 1)^4 (x - 2)`. Eleven checks, each printing its expected value beside what it got. A solver that answered `none` to everything would fail the three positive fits, and one that fitted anything would fail `n^3 + 2^n` below order `5`. Runtime `0.05` s.
 
+## KUMMER
+
+- `kummer.py` is the variant in which the two gaskets are the Kummer conditions: `K(3^m) = card{(i, j) : 0 <= i, j < 3^m, gcd(binomial(i + j, i), 6) = 1}`, the pairs with no carry in base 2 (`i AND j = 0`) and none in base 3 (every base-3 digit pair sums to at most 2).
+- The walk builds the six allowed base-3 digit pairs from the top down with numpy arrays and prunes with the same proved bit-length cut as `census.py`, then keeps the pairs with `x AND y = 0`.
+- The row count `row(n) = card{k : gcd(binomial(n, k), 6) = 1}` walks the submasks of `n` in binary and keeps those with every base-3 digit at most that of `n`.
+- The box count `B(N) = card{(i, j) in [0, N)^2 : gcd(binomial(i + j, i), 6) = 1}` adds one index at a time.
+- `kummer.gp` is the PARI route: `gp -q kummer.gp` from this folder prints `K(3^m)` at `m = 0..7` and `row(n)` at `n = 0..299` from `gcd(binomial(n, k), 6) = 1` alone, about 30 s, equal to `kummer.py` terms `0 7` and `rowlist 299`.
+- Direct controls use `math.comb` and `gcd` only; a PARI `gp -q` count of `gcd(binomial(i + j, i), 6) == 1` is the independent second generator.
+
+## KUMMER VERBS
+
+- `terms LO HI` prints `K(3^m)`, the ratio to the level below and `log_3 K(3^m) / m`. Runtime `0.1` s at `m = 10`, `30` s at `m = 13`; `m = 14` was stopped after two minutes and is not run.
+- `control M` rebuilds `K(3^m)` for `m = 0..M` by the walk and by testing every pair with `gcd(binomial(i + j, i), 6)`, and prints whether they agree.
+- `rows M` prints `row(n)` beside the direct `gcd` count for `n = 0..M`; `rowlist M` and `bfile M` print `n row(n)`.
+- `ident M` prints `K(3^m)` beside the sum of `row(n)` over `n < 3^m` for `m = 0..M`.
+- `boxcheck N` builds `B(n)` for `n <= N`, compares it with the `gcd` count for `n <= 60`, and prints `K(3^m)` beside `B(3^m)`; `boxlist N` prints `n B(n)`.
+- `budget` prints `log_2 3 + log_3 6 - 2`, the exponent of two independent gaskets.
+
+```
+uv run python research/cobham/lab/py/two-base-gasket/kummer.py terms 0 13
+uv run python research/cobham/lab/py/two-base-gasket/kummer.py control 6
+uv run python research/cobham/lab/py/two-base-gasket/kummer.py ident 10
+uv run python research/cobham/lab/py/two-base-gasket/kummer.py rows 300
+uv run python research/cobham/lab/py/two-base-gasket/kummer.py boxcheck 2200
+uv run python research/cobham/lab/py/two-base-gasket/kummer.py bfile 10000
+uv run python research/cobham/lab/py/two-base-gasket/kummer.py budget
+```
+
 ## RUN
 
 - From the repo root.

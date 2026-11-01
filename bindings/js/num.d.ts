@@ -635,6 +635,111 @@ export declare namespace prime {
         types(): Uint8Array;
     }
 }
+export declare namespace readings {
+    /** Lists a design's major arcs along the squares below the cut, best first, each with its amplitude. */
+    export function arcs(design: readings.Design, cut: number): readings.Arc[];
+    /** Runs the battery on a stream of signs. */
+    export function battery(stream: ArrayLike<number>): readings.Battery;
+    /** Measures the bias `S(N) = sum_(n<N) y(n)` of a stream at `N = 2^e` for each exponent; a checkpoint past the stream's end sums the whole stream. */
+    export function bias(stream: ArrayLike<number>, exponents: ArrayLike<number>): BigInt64Array;
+    /** Lists the 57 digit designs, base by base and mask by mask, then Rudin-Shapiro. */
+    export function designs(): readings.Design[];
+    /** Predicts the bias `S(N) = sum_(n<N) x(n^2)` at `N = 2^e` for each exponent, from the arcs below the cut: `1 + Re sum_gamma A(gamma) U(gamma; N^2)`. */
+    export function model(design: readings.Design, cut: number, exponents: ArrayLike<number>): Float64Array;
+    /** Returns the design's name in the `b:D` form, the digits of `D` ascending, or `rudin-shapiro`. */
+    export function name(design: readings.Design): string;
+    /** Lists the battery pairs that are near-heads of a polynomial reading at the design's base, the 44 dilation pairs first and the two kernel pairs after; the primes have none. */
+    export function near_heads(design: readings.Design, reading: readings.Reading): readings.Head[];
+    /** Returns the design's sign at a number, plus or minus one. */
+    export function sign(design: readings.Design, n: number | bigint): number;
+    /** Builds a reading's first signs: `y(n) = x(P(n))` for `n < count`, or `x(p_n)` along the first `count` primes from a segmented sieve. */
+    export function stream(design: readings.Design, reading: readings.Reading, count: number): Int8Array;
+    /** Lists the readings in the order the battery tables print them. */
+    export function READINGS(): readings.Reading[];
+    /** One major arc of a design along the squares: the point `gamma = num/den`, its exponent and its amplitude. */
+    export interface Arc {
+        /** The numerator of `gamma` in lowest terms. */
+        num: number;
+        /** The denominator of `gamma` in lowest terms, a divisor of `b^2 - 1`. */
+        den: number;
+        /** The exponent `eta = 1 - log_B abs(sigma)`, `B = b^2`, `sigma = sum_(t<B) x(t) e(t gamma)`; the arc's term grows as `N^(1 - 2 eta)`. */
+        eta: number;
+        /** The real part of the amplitude `A = (G(-c, q)/q) K`. */
+        amplitude_re: number;
+        /** The imaginary part of the amplitude. */
+        amplitude_im: number;
+    }
+    /** The battery's verdict on one stream, every correlation over the same `N`. */
+    export interface Battery {
+        /** The `N` every statistic runs over: the pairs `n < N`, so `z = abs(r) sqrt(N)` is the caller's. */
+        count: number;
+        /** The mean of `y(n)` over `n < N`. */
+        mean: number;
+        /** The shift test: the Pearson correlation of `y(n)` with `y(n + h)` for `h = 1..=64`, in that order. */
+        shift: number[];
+        /** The dilation test: the 44 pairs `(B, r)`, `2 <= B <= 9`, `r < B`, in that order. */
+        dilation: readings.Dilation[];
+        /** The kernel test: the correlation of `y(b n)` with `y(b^2 n)` for `b = 2, 3`. */
+        kernel: number[];
+        /** The dilation square: the mean of `y(n) y(2n) y(3n) y(6n)`. */
+        square: number;
+    }
+    /** A digit-parity design `b:D`, or Rudin-Shapiro: the sign `x(n)` is `-1` to the count of base-`b` digits of `n` in `D`. */
+    export interface Design {
+        /** The base, 2 through 6; a base outside that span is clamped into it. */
+        base: number;
+        /** The digit set `D` as a bitmask, bit `d - 1` set when the digit `d` is in `D`; bits past the base's digits are ignored, and an empty set reads a constant sign. */
+        mask: number;
+        /** Whether the design is Rudin-Shapiro, the parity of the `11` blocks in the binary digits, which ignores the base and the mask. */
+        rudin: boolean;
+    }
+    export const Design: {
+        /** Builds the design `b:D` from its base and its digit mask. */
+        digits(base: number, mask: number): readings.Design;
+        /** Returns Rudin-Shapiro. */
+        rudin(): readings.Design;
+        /** Returns the ternary parity, `3:2`, the parity of the ternary digits equal to 2. */
+        ternary(): readings.Design;
+        /** Returns Thue-Morse, `2:1`. */
+        thue(): readings.Design;
+    };
+    /** One dilation pair of the battery: `y(n)` against `y(scale n + offset)`. */
+    export interface Dilation {
+        /** The factor `B`, 2 through 9. */
+        scale: number;
+        /** The remainder `r`, below the factor. */
+        offset: number;
+        /** The Pearson correlation of the pair over the battery's `N` values of `n`. */
+        correlation: number;
+    }
+    /** A battery pair that is a near-head of a reading at the design's base: `P(psi(n)) = b^level (P(phi(n)) + shift) + tail`. */
+    export interface Head {
+        /** Whether the pair is a kernel pair `(b n, b^2 n)` rather than a dilation pair `(n, B n + r)`. */
+        kernel: boolean;
+        /** The dilation's factor `B`, or the kernel's base `b`. */
+        scale: number;
+        /** The dilation's remainder `r`, zero for a kernel pair. */
+        offset: number;
+        /** The level `L`, the count of digits the pair appends. */
+        level: number;
+        /** The carry `q`, saturated into the field. */
+        shift: number;
+        /** The tail `s`, the digits appended below the carry. */
+        tail: number;
+        /** The design's sign at the tail, `x(s)`. */
+        sign: number;
+        /** Whether the pair reads `x(s)` at every `n`, so its correlation is exactly plus or minus one: `q = 0`, and for Rudin-Shapiro a tail whose top digit is zero. */
+        exact: boolean;
+    }
+    /** The sequences a design is read along: `y(n) = x(P(n))` for a polynomial `P`, or `x(p_n)` along the primes. */
+    export type Reading = "N" | "Square" | "SquarePlusN" | "Cube" | "Primes";
+    export const Reading: {
+        /** Returns every Reading in canonical order. */
+        all(): readings.Reading[];
+        /** Returns the reading's formula, written the way the page prints it. */
+        formula(reading: readings.Reading): string;
+    };
+}
 export declare namespace series {
     /** Returns the Basel sum of the reciprocal squares over n terms, walking to pi squared over six. */
     export function basel(n: number): number;

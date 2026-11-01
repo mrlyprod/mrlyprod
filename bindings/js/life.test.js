@@ -60,3 +60,20 @@ test("life::heatmap", () => {
   const frames = life.heatmap(run(r.in.grids).grids, r.in.scale);
   expect(frames.map(pixels)).toEqual(r.out);
 });
+
+test("life::recipe", () => {
+  const key = "hline.3.1 x1 island mask:carpet.3.1 birth:3 survive:2,3 x:64 cap:31";
+  const recipe = life.recipe.parse(key);
+  expect(life.recipe.name(recipe)).toBe(key);
+  expect(recipe.mode).toBe("Island");
+  expect(life.recipe.grammar().shapes.length).toBe(15);
+  const run = new life.recipe.Run(recipe);
+  expect([run.population(), run.budget(), run.reach()]).toEqual([3, 8, 1]);
+  expect(run.step()).toBeUndefined();
+  const stop = run.step();
+  expect([stop.kind, stop.generation, stop.period]).toEqual(["loop", 2, 2]);
+  expect(run.frame().shape).toEqual([1, 3]);
+  expect(Array.from(run.origin())).toEqual([1n, 0n]);
+  expect(run.step()).toEqual(stop);
+  run.free();
+});

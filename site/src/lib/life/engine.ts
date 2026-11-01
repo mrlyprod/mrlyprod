@@ -1,4 +1,4 @@
-import type { Cell, Fate, Tensor } from "@mrlyprod/mrly/life";
+import type { Cell, Fate, recipe, Tensor } from "@mrlyprod/mrly/life";
 import type { Scalar, Value } from "../app/spec.ts";
 import type { Mrly } from "../designs/engine.ts";
 import type { Rng } from "../rand.ts";
@@ -18,6 +18,10 @@ export type Pattern = { name: string; w: number; h: number; board: number; cells
 export type Start = [string, string];
 
 export type Side = { counts: number[]; name: string };
+
+export type Rolled = { name: string; zeros: boolean; ones: boolean };
+
+export type Grammar = recipe.Grammar;
 
 export type Rule = { birth: number[]; survive: number[]; name: string };
 
@@ -39,7 +43,7 @@ export const LINE = 320;
 export const ROWS = 1024;
 export const KEEP = 16;
 export const LIMIT = 512;
-export const SPANS: Record<Dim, number> = { 1: 81, 2: 27 };
+export const SPANS: Record<Dim, number> = { 1: 81, 2: 81 };
 
 const CODES: Record<Dim, number> = { 1: 4, 2: 16 };
 const FIRST: Record<Dim, number> = { 1: 1, 2: 7 };
@@ -146,21 +150,44 @@ export function sources(life: Door): string[] {
     .map((seq) => seq.name());
 }
 
-export function drawn(life: Door, text: Scalar | null | undefined, limit: number): Side | null {
-  try {
-    const seq = life.Source.parse(
-      String(text ?? "")
-        .trim()
-        .toLowerCase(),
-    );
-    const name = seq.name();
-    const counts = life.Counts.drawn(seq, false, false);
-    const list = Array.from(counts.values(limit));
-    counts.free();
-    return { counts: list, name };
-  } catch {
-    return null;
+const GRAMMARS = new WeakMap<Door, Grammar>();
+
+export function grammar(life: Door): Grammar {
+  let known = GRAMMARS.get(life);
+  if (!known) {
+    known = life.recipe.grammar();
+    GRAMMARS.set(life, known);
   }
+  return known;
+}
+
+export function rolled(life: Door, text: Scalar | null | undefined): Rolled | null {
+  const read = life.Source.read(
+    String(text ?? "")
+      .trim()
+      .toLowerCase(),
+  );
+  if (!read) return null;
+  const [seq, tail] = read;
+  const name = seq.name();
+  seq.free();
+  const rolls = grammar(life).rolls;
+  if (!rolls.includes(tail)) return null;
+  return { name, zeros: tail.includes(rolls[1]), ones: tail.includes(rolls[2]) };
+}
+
+export const roll = (life: Door, { name, zeros, ones }: Rolled) =>
+  `${name}${grammar(life).rolls[(zeros ? 1 : 0) + (ones ? 2 : 0)]}`;
+
+export function drawn(life: Door, text: Scalar | null | undefined, limit: number): Side | null {
+  const side = rolled(life, text);
+  if (!side) return null;
+  const seq = life.Source.parse(side.name);
+  const counts = life.Counts.drawn(seq, side.zeros, side.ones);
+  const list = Array.from(counts.values(limit));
+  counts.free();
+  seq.free();
+  return { counts: list, name: roll(life, side) };
 }
 
 function side(life: Door, text: Scalar | null | undefined, limit: number): Side {

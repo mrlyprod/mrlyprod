@@ -1,0 +1,15 @@
+[package]
+name = "encyclopedia"
+edition = "2021"
+
+[dependencies]
+mrly = { path = "../../../../../crates/mrly" }
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+
+[profile.test]
+opt-level = 2
+
+[workspace]

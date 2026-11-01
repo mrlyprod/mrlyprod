@@ -4,11 +4,16 @@ import * as math from "@mrlyprod/mrly/math";
 import type { View } from "../../lib/app/run.ts";
 import type { Raw, Scalar, Value } from "../../lib/app/spec.ts";
 import { defaults, tidy } from "../../lib/app/spec.ts";
+import { knobsOf, nameOf } from "../../lib/life/recipe.ts";
 import { rng } from "../../lib/rand.ts";
 import type { Life, Stat } from "./scene.ts";
 import { HOLD, make, PAGE, PRESETS, RULES, SPEC, wears } from "./scene.ts";
 
 type Said = (value: Value, scene: Life) => string;
+
+type Told = (value: Value) => string;
+
+const WALLPAPER = "code1.3.2 x1 wallpaper mask:code3.3.1 birth:primes survive:primes x:256";
 
 type Picks = (value: Value) => [Scalar, Scalar][];
 
@@ -232,14 +237,56 @@ test("the primary is the Enter row, reading Play or Pause from the scene", () =>
   expect([enter.button, before, (enter.label as Said)({}, run.scene)]).toEqual([true, "Play", "Pause"]);
 });
 
-test("the export is named by the preset or the rule, with the seed only for a soup", () => {
+test("the export is named by the preset or the rule, with the seed only for a soup, and by the recipe on the plane", () => {
   const value = { ...defaults(SPEC), seed: 7 };
   const soup = { ...value, from: "noise" };
-  expect([PAGE.name(value), PAGE.name(soup), PAGE.name({ ...soup, born: "primes" })]).toEqual([
+  expect([
+    PAGE.name(value),
+    PAGE.name(soup),
+    PAGE.name({ ...soup, born: "primes" }),
+    PAGE.name({ ...value, mode: "island" }, { life, math }),
+  ]).toEqual([
     "life-conway-glider",
     "life-conway-7",
     "life-2d-7-3-1-bprimes-s23-7",
+    "life-code7.3.1-x1-island-mask-code7.3.1-birth-3-survive-2-3-x-256-cap-151",
   ]);
+});
+
+test("six recipe names of the classes and the rolls round-trip through the knobs: the patch, tidied by the spec, names the same recipe", () => {
+  for (const key of [
+    "code1.3.1 x1 island mask:code1.3.1 birth:evens survive:evens x:256 cap:151",
+    "code1.3.1 x3 island mask:code1.3.1 birth:evens_zeros survive:evens_zeros x:256 cap:151",
+    "code6.3.1 x5 island mask:code6.3.2 birth:fibonacci_zeros_ones survive:fibonacci_zeros_ones x:256 cap:151",
+    WALLPAPER,
+    "net.5.1 x3 island mask:net.5.1 birth:net_fills_ones survive:net_voids x:256 cap:151",
+    "code15.3.2 x1 wallpaper mask:copyinv birth:3 survive:2,3 x:64",
+  ]) {
+    const patch = knobsOf(life, math, life.recipe.parse(key));
+    const value = tidy(SPEC, { ...defaults(SPEC), ...patch }, { life, math });
+    expect([key, nameOf(life, math, value), value.dim]).toEqual([key, key, 2]);
+  }
+});
+
+test("the mode picks the scene: a wallpaper runs through the door to the stop the extract reports, and a mode switch asks for a remount", () => {
+  const paper = open(knobsOf(life, math, life.recipe.parse(WALLPAPER)));
+  paper.scene.doom();
+  expect(paper.last()).toMatchObject({ gen: 256, pop: 35, fate: "limit after 256", recipe: WALLPAPER });
+  expect(paper.set({ mode: "board" })).toBe(false);
+  const board = open({});
+  expect(board.last().recipe).toBeUndefined();
+  expect([board.set({ born: "36" }), board.set({ mode: "island" })]).toEqual([true, false]);
+});
+
+test("the keys hide Clear off the board and name the f key by the mode", () => {
+  const clear = PAGE.keys.find((row) => row.act === "clear")!;
+  const fate = PAGE.keys.find((row) => row.act === "fate")!;
+  expect([
+    clear.when!({ mode: "board" }),
+    clear.when!({ mode: "island" }),
+    (fate.label as Told)({ mode: "board" }),
+    (fate.label as Told)({ mode: "wallpaper" }),
+  ]).toEqual([true, false, "Run to fate", "Run to stop"]);
 });
 
 test("the presets and the rules round-trip through the value, and a line keeps only the starts a line can take", () => {
@@ -255,8 +302,8 @@ test("the Level pick offers the levels whose mask fits the span of its dimension
   expect([3, 5, 7, 9].map((number) => (row.options as Picks)({ number, dim: 2 }).map(([level]) => level))).toEqual([
     [1, 2, 3],
     [1, 2],
-    [1],
-    [1],
+    [1, 2],
+    [1, 2],
   ]);
   expect([3, 5, 7, 9].map((number) => (row.options as Picks)({ number, dim: 1 }).map(([level]) => level))).toEqual([
     [1, 2, 3],

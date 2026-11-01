@@ -1,6 +1,7 @@
+use super::Axis;
 use mrly::core::error::{value_error, Result};
 
-/// The cost class of a measure along the level axis.
+/// The cost class of a measure along an axis.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Cost {
     /// A closed form: microseconds a term.
@@ -38,11 +39,17 @@ pub enum Measure {
     Holes,
     /// The connected pieces of the diagonal slice of a cube.
     Pieces,
+    /// The empty triangles of the diagonal slice of a cube.
+    Gaps,
+    /// The closed loops of the plane drawn in Truchet arcs, a filled cell's arcs round its corners `(i, j)` and `(i+1, j+1)`, an empty cell's the other two.
+    Loops,
+    /// The distinct `k x k` windows of the plane's renders, read along the window side `k`.
+    Windows,
 }
 
 impl Measure {
     /// Every measure, in ledger order.
-    pub const ALL: [Measure; 12] = [
+    pub const ALL: [Measure; 15] = [
         Measure::Fills,
         Measure::Voids,
         Measure::Surface,
@@ -55,6 +62,9 @@ impl Measure {
         Measure::Triangles,
         Measure::Holes,
         Measure::Pieces,
+        Measure::Gaps,
+        Measure::Loops,
+        Measure::Windows,
     ];
     /// Returns the measure's one-word name.
     pub fn slug(self) -> &'static str {
@@ -71,6 +81,9 @@ impl Measure {
             Measure::Triangles => "triangles",
             Measure::Holes => "holes",
             Measure::Pieces => "pieces",
+            Measure::Gaps => "gaps",
+            Measure::Loops => "loops",
+            Measure::Windows => "windows",
         }
     }
     /// Parses a one-word name back into its measure, or an error for any other word.
@@ -80,11 +93,16 @@ impl Measure {
             .find(|measure| measure.slug() == slug)
             .map_or_else(|| value_error(format!("unknown measure {slug:?}.")), Ok)
     }
-    /// Returns the measure's cost class along the level axis.
-    pub fn cost(self) -> Cost {
+    /// Returns the measure's cost class along the axis: the face counts close along the level and render along the side.
+    pub fn cost(self, axis: Axis) -> Cost {
         match self {
             Measure::Fills | Measure::Voids | Measure::Surface => Cost::Closed,
             Measure::Peak | Measure::Heights => Cost::Convolved,
+            Measure::Vertices | Measure::Edges | Measure::Faces | Measure::Euler
+                if axis == Axis::Level =>
+            {
+                Cost::Closed
+            }
             _ => Cost::Grid,
         }
     }
@@ -95,7 +113,17 @@ impl Measure {
             Measure::Peak | Measure::Heights => dimension >= 2,
             Measure::Vertices | Measure::Edges | Measure::Euler => dimension == 2 || dimension == 3,
             Measure::Faces => dimension == 3,
-            Measure::Triangles | Measure::Holes | Measure::Pieces => dimension == 3 && base == 2,
+            Measure::Triangles | Measure::Holes | Measure::Pieces | Measure::Gaps => {
+                dimension == 3 && base == 2
+            }
+            Measure::Loops | Measure::Windows => dimension == 2,
+        }
+    }
+    /// Returns the axes the measure runs along: the window side for the windows, the level and the side for the rest.
+    pub fn axes(self) -> &'static [Axis] {
+        match self {
+            Measure::Windows => &[Axis::Window],
+            _ => &[Axis::Level, Axis::Side],
         }
     }
 }
@@ -116,14 +144,18 @@ mod tests {
             .into_iter()
             .filter(|m| m.applies(2, 2))
             .collect();
-        assert_eq!(plane.len(), 8);
+        assert_eq!(plane.len(), 10);
         let cube: Vec<Measure> = Measure::ALL
             .into_iter()
             .filter(|m| m.applies(3, 2))
             .collect();
-        assert_eq!(cube.len(), 12);
+        assert_eq!(cube.len(), 13);
         assert_eq!(Measure::ALL.iter().filter(|m| m.applies(1, 5)).count(), 3);
         assert!(!Measure::Triangles.applies(3, 3));
-        assert_eq!(Measure::Euler.cost(), Cost::Grid);
+        assert_eq!(Measure::Euler.cost(Axis::Level), Cost::Closed);
+        assert_eq!(Measure::Euler.cost(Axis::Side), Cost::Grid);
+        assert_eq!(Measure::Holes.cost(Axis::Level), Cost::Grid);
+        assert_eq!(Measure::Windows.axes(), [Axis::Window]);
+        assert!(Measure::Loops.axes().contains(&Axis::Level));
     }
 }

@@ -25,3 +25,4 @@
 - `pairs`: 12 splits at `3 x 3` up to symmetry and complement, alternating 12 of 108 nonlinear cells (binary 8, primes 4); 23 words at `4 x 4`, alternating 10 of 207 (binary 6, fibonacci 3, primes 1); every other cell imprimitive.
 - `null`: the mean cycle count of the even permutations of `M = 2..8` points equals `H_M + (-1)^M / (M (M - 1))` and their mean fixed-point count is 1 from `M = 3`.
 - `word 7 7`: the level-2 carpet split `0x135f` with the carpet neighbourhood, `primes` and `slide` is alternating, 258 cycles, longest 24865, 3 fixed points, the cell the figure redraws and re-counts.
+- `blocks`: the split `0x005f` with the net neighbourhood, `primes` and `slide` is alternating, 62 cycles, longest 36, 4 fixed points, the cell the rounds chapter's figure redraws and re-counts.

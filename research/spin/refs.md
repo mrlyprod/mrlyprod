@@ -11,6 +11,8 @@
 | A004018 | Theta series of the square lattice, r2(n); the weight of each square ring | https://oeis.org/A004018 |
 | A003215 | Hex (or centered hexagonal) numbers: 3*n*(n+1)+1; also the lattice lines down the space diagonal of a cube of side n+1, hence the sponge's diagonal shadow at n = 3^level - 1 | https://oeis.org/A003215 |
 | A220978 | a(n) = 3^(2n+1) - 3^(n+1) + 1, the left Aurifeuillian factor of 3^(6n+3) + 1; the same diagonal shadow indexed by the level | https://oeis.org/A220978 |
+| A301429 | Decimal expansion of the Loeschian analog of the Landau-Ramanujan constant, K_3 = 0.6389094054..., the constant in `L(x) ~ K_3 x / sqrt(ln x)` | https://oeis.org/A301429 |
+| A400227 | The Gaussian Farey `new(n)`: distances of `(1/n) Z^2` in the disc of radius `sqrt 2` new at scale `n`, the square-lattice twin of the hexagonal count | https://oeis.org/A400227 |
 
 ## PAPERS AND BOOKS
 

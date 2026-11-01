@@ -1994,6 +1994,48 @@ pub fn math_counts_six_solid_slice_vertices(number: usize) -> Result<JsValue, Js
     Ok(JsValue::from_str(&value.to_string()))
 }
 
+/// Returns the face counts of the code's design at the given level, from the tile's placement counts alone.
+#[wasm_bindgen]
+pub fn math_counts_skeleton(
+    code: JsValue,
+    number: usize,
+    dimension: usize,
+    base: usize,
+    level: u32,
+) -> Result<math_counts_Skeleton, JsValue> {
+    let code = hand::code_from_js(&code)?;
+    let value =
+        mrly::math::counts::skeleton(code, number, dimension, base, level).map_err(hand::throw)?;
+    Ok(math_counts_Skeleton { inner: value })
+}
+
+/// Returns the face counts of the tile's level-fold Kronecker power, or none past a `u128`.
+#[wasm_bindgen]
+pub fn math_counts_skeleton_of_tile(
+    tile: JsValue,
+    level: u32,
+) -> Result<Option<math_counts_Skeleton>, JsValue> {
+    let tile = hand::tensor_from_js(&tile)?;
+    let value = mrly::math::counts::skeleton_of_tile(&tile, level).map_err(hand::throw)?;
+    Ok(value.map(|inner| math_counts_Skeleton { inner }))
+}
+
+/// Returns the coefficients of the recurrence the code's `k`-face count obeys along the level, every face and the Euler characteristic when `k` is none.
+#[wasm_bindgen]
+pub fn math_counts_skeleton_recurrence(
+    code: JsValue,
+    number: usize,
+    dimension: usize,
+    base: usize,
+    k: JsValue,
+) -> Result<JsValue, JsValue> {
+    let code = hand::code_from_js(&code)?;
+    let k = hand::from_js::<Option<usize>>(&k)?;
+    let value = mrly::math::counts::skeleton_recurrence(code, number, dimension, base, k)
+        .map_err(hand::throw)?;
+    hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
+}
+
 /// Returns the exposed face count of the code's 3D fractal at the given level.
 #[wasm_bindgen]
 pub fn math_counts_surface(
@@ -2286,6 +2328,93 @@ pub fn math_dissection_weights(
     let base = hand::u64_from_js(&base)?;
     let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
     let value = mrly::math::dissection::weights(base, &digits, level);
+    Ok(value)
+}
+
+/// Returns the index of the level-`k` cell holding a point of `[0, 1)^D`: `floor(x b^k) + floor(y b^k) b^k + ...`, row major with coordinate `0` least significant, the dimension read off the point.
+#[wasm_bindgen]
+pub fn math_game_cell(point: &[f64], base: u8, level: u32) -> Result<u64, JsValue> {
+    let value = mrly::math::game::cell(point, base, level).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Returns the count of level-`k` cells of the cube, `b^(D k)`.
+#[wasm_bindgen]
+pub fn math_game_cells(base: u8, dimension: u8, level: u32) -> Result<u64, JsValue> {
+    let value = mrly::math::game::cells(base, dimension, level).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Returns the path counts from a state, `e_start M^L 1` for `L = 1 ..= levels`: the filled cells of a mosaic slot or of a slice at each level, and stops early on the level whose count overruns a `u64`.
+#[wasm_bindgen]
+pub fn math_game_counts(matrix: JsValue, start: usize, levels: usize) -> Result<Vec<u64>, JsValue> {
+    let matrix = hand::list_from_js(&matrix, |x1| hand::list_from_js(x1, hand::u64_from_js))?;
+    let value = mrly::math::game::counts(&matrix, start, levels).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Returns a de Bruijn cycle of order `k` over `m` letters: `m^k` letters in which every word of length `k` occurs exactly once as a cyclic window, so played as the draw schedule of an `m`-digit design it paints every level-`k` cell once per lap, and from a cold start once in `m^k + k - 1` draws.
+#[wasm_bindgen]
+pub fn math_game_de_bruijn(m: u32, k: u32) -> Result<Vec<u8>, JsValue> {
+    let value = mrly::math::game::de_bruijn(m, k).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Reads the game of a mosaic: its substitution matrix, Perron root, dimension and edges.
+#[wasm_bindgen]
+pub fn math_game_mosaic_game(mosaic: JsValue) -> Result<JsValue, JsValue> {
+    let mosaic = hand::from_js::<mrly::math::game::Mosaic>(&mosaic)?;
+    let value = mrly::math::game::mosaic_game(&mosaic).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
+/// Returns the named games of the square, corner `c = x + 2 y`, cyclic order `0, 1, 3, 2` anticlockwise with `y` up: the seven one-step games and the width-3 game that forbids a neighbour after a repeat.
+#[wasm_bindgen]
+pub fn math_game_named_games() -> Result<JsValue, JsValue> {
+    let value = mrly::math::game::named_games();
+    hand::to_js(&value)
+}
+
+/// Returns the Perron root of a square nonnegative integer matrix, the growth per level of the paths its graph counts.
+#[wasm_bindgen]
+pub fn math_game_perron(matrix: JsValue) -> Result<f64, JsValue> {
+    let matrix = hand::list_from_js(&matrix, |x1| hand::list_from_js(x1, hand::u64_from_js))?;
+    let value = mrly::math::game::perron(&matrix).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Returns the rule whose windows are the rule's windows read backwards.
+#[wasm_bindgen]
+pub fn math_game_reverse(rule: &math_memory_Rule) -> Result<math_memory_Rule, JsValue> {
+    let value = mrly::math::game::reverse(&rule.inner);
+    Ok(math_memory_Rule { inner: value })
+}
+
+/// Reads the game of a plane design, corners `c = x + b y`, cut by the line `x + y = p / q`: its carry states, edges, matrix, Perron root and dimension.
+#[wasm_bindgen]
+pub fn math_game_slice_game(
+    base: u8,
+    digits: &[u8],
+    p: JsValue,
+    q: JsValue,
+) -> Result<JsValue, JsValue> {
+    let p = hand::i64_from_js(&p)?;
+    let q = hand::i64_from_js(&q)?;
+    let value = mrly::math::game::slice_game(base, digits, p, q).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
+/// Returns the letters a restricted game may draw next: the corners `c` for which some allowed window, read in time order, ends in the last `k - 1` draws of the history followed by `c`.
+#[wasm_bindgen]
+pub fn math_game_successors(rule: &math_memory_Rule, history: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let value = mrly::math::game::successors(&rule.inner, history);
+    Ok(value)
+}
+
+/// Returns the cell of a word of corners read coarsest digit first, the cell the game lands in after playing the word's digits last letter first.
+#[wasm_bindgen]
+pub fn math_game_word_cell(word: &[u8], base: u8, dimension: u8) -> Result<u64, JsValue> {
+    let value = mrly::math::game::word_cell(word, base, dimension).map_err(hand::throw)?;
     Ok(value)
 }
 
@@ -5106,6 +5235,13 @@ pub fn math_dissection_WINDOW_WALL() -> Result<u64, JsValue> {
     Ok(value)
 }
 
+/// The longest lap a de Bruijn cycle may run, in letters.
+#[wasm_bindgen]
+pub fn math_game_LAP() -> Result<u64, JsValue> {
+    let value = mrly::math::game::LAP;
+    Ok(value)
+}
+
 /// The relative rounding allowance the double-precision ladder charges against the scale it carries.
 #[wasm_bindgen]
 pub fn math_ladder_ROUNDING() -> Result<f64, JsValue> {
@@ -5633,6 +5769,100 @@ impl math_counts_Exposure {
     pub fn recurrence(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.recurrence();
         hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
+    }
+}
+
+/// The placement counts the face recurrence runs on: for each pattern `P` of cells inside a `2^d` window and each lowest digit `w` of the tile, whether `w + P` fits the tile with wrap-around, and which pattern `P ^ W` the carried digits must then form one level up.
+#[wasm_bindgen]
+pub struct math_counts_Placements {
+    inner: mrly::math::counts::Placements,
+}
+
+#[wasm_bindgen]
+impl math_counts_Placements {
+    /// Returns the face counts of the level-fold Kronecker power, or none past a `u128`.
+    pub fn at(&self, level: u32) -> Result<Option<math_counts_Skeleton>, JsValue> {
+        let value = self.inner.at(level);
+        Ok(value.map(|inner| math_counts_Skeleton { inner }))
+    }
+    /// Reads the placement counts off a rendered tile of two to four dimensions.
+    pub fn of_tile(tile: JsValue) -> Result<math_counts_Placements, JsValue> {
+        let tile = hand::tensor_from_js(&tile)?;
+        let value = mrly::math::counts::Placements::of_tile(&tile).map_err(hand::throw)?;
+        Ok(math_counts_Placements { inner: value })
+    }
+    /// Returns the coefficients `c` of the recurrence `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...` the `k`-face count obeys from `L = 0`, every face when `k` is none, or none past an `i128`.
+    pub fn recurrence(&self, k: JsValue) -> Result<JsValue, JsValue> {
+        let k = hand::from_js::<Option<usize>>(&k)?;
+        let value = self.inner.recurrence(k);
+        hand::option_to_js(value.as_ref(), |x1| {
+            hand::list_to_js(x1, |x2| Ok(JsValue::from_str(&x2.to_string())))
+        })
+    }
+    /// Returns the roots of the recurrence the `k`-face count obeys, every face when `k` is none, each with the multiplicity the recurrence needs: the spanning counts of the patterns the count reaches, a root repeated once per pattern of that count on one carry chain.
+    pub fn roots(&self, k: JsValue) -> Result<JsValue, JsValue> {
+        let k = hand::from_js::<Option<usize>>(&k)?;
+        let value = self.inner.roots(k);
+        hand::list_to_js(&value, |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from_str(&x1.0.to_string()),
+                hand::to_js(&x1.1)?,
+            ]))
+        })
+    }
+}
+
+/// The face counts of the union of closed unit cubes a design's level power fills: `counts[k]` is its distinct unit `k`-faces, the cells last, and `euler` their alternating sum.
+#[wasm_bindgen]
+pub struct math_counts_Skeleton {
+    inner: mrly::math::counts::Skeleton,
+}
+
+#[wasm_bindgen]
+impl math_counts_Skeleton {
+    /// The distinct unit `k`-faces for `k = 0..=dimension`.
+    #[wasm_bindgen(getter)]
+    pub fn counts(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.counts.clone();
+        hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_counts(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::list_from_js(&value, hand::u128_from_js)?;
+        self.inner.counts = value;
+        Ok(())
+    }
+    /// The Euler characteristic, `sum (-1)^k counts[k]`.
+    #[wasm_bindgen(getter)]
+    pub fn euler(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.euler;
+        Ok(JsValue::from_str(&value.to_string()))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_euler(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::i128_from_js(&value)?;
+        self.inner.euler = value;
+        Ok(())
+    }
+    /// The filled cells.
+    pub fn cells(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.cells();
+        Ok(JsValue::from_str(&value.to_string()))
+    }
+    /// The distinct unit edges.
+    pub fn edges(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.edges();
+        Ok(JsValue::from_str(&value.to_string()))
+    }
+    /// The distinct unit squares, the cells themselves in the plane.
+    pub fn faces(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.faces();
+        Ok(JsValue::from_str(&value.to_string()))
+    }
+    /// The distinct corners.
+    pub fn vertices(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.vertices();
+        Ok(JsValue::from_str(&value.to_string()))
     }
 }
 

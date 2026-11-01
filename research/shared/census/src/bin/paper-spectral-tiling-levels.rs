@@ -86,7 +86,7 @@ fn main() -> Result<()> {
         let total: f64 = parts.iter().flatten().sum();
         assert!(
             total <= 1.0 + 1e-9 && total > 1.0 - 1e-2,
-            "Q({xi}) = {total} leaves (1 - 1e-2, 1 + 1e-9]"
+            "Psi({xi}) = {total} leaves (1 - 1e-2, 1 + 1e-9]"
         );
         heights.push(total);
         for (g, bands) in parts.iter().enumerate() {

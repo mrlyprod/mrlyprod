@@ -896,6 +896,86 @@ pub fn num_prime_study(limit: usize) -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
+/// Lists a design's major arcs along the squares below the cut, best first, each with its amplitude.
+#[wasm_bindgen]
+pub fn num_readings_arcs(design: JsValue, cut: f64) -> Result<JsValue, JsValue> {
+    let design = hand::from_js::<mrly::num::readings::Design>(&design)?;
+    let value = mrly::num::readings::arcs(design, cut);
+    hand::to_js(&value)
+}
+
+/// Runs the battery on a stream of signs.
+#[wasm_bindgen]
+pub fn num_readings_battery(stream: &[i8]) -> Result<JsValue, JsValue> {
+    let value = mrly::num::readings::battery(stream);
+    hand::to_js(&value)
+}
+
+/// Measures the bias `S(N) = sum_(n<N) y(n)` of a stream at `N = 2^e` for each exponent; a checkpoint past the stream's end sums the whole stream.
+#[wasm_bindgen]
+pub fn num_readings_bias(stream: &[i8], exponents: &[u32]) -> Result<Vec<i64>, JsValue> {
+    let value = mrly::num::readings::bias(stream, exponents);
+    Ok(value)
+}
+
+/// Lists the 57 digit designs, base by base and mask by mask, then Rudin-Shapiro.
+#[wasm_bindgen]
+pub fn num_readings_designs() -> Result<JsValue, JsValue> {
+    let value = mrly::num::readings::designs();
+    hand::to_js(&value)
+}
+
+/// Predicts the bias `S(N) = sum_(n<N) x(n^2)` at `N = 2^e` for each exponent, from the arcs below the cut: `1 + Re sum_gamma A(gamma) U(gamma; N^2)`.
+#[wasm_bindgen]
+pub fn num_readings_model(
+    design: JsValue,
+    cut: f64,
+    exponents: &[u32],
+) -> Result<Vec<f64>, JsValue> {
+    let design = hand::from_js::<mrly::num::readings::Design>(&design)?;
+    let value = mrly::num::readings::model(design, cut, exponents);
+    Ok(value)
+}
+
+/// Returns the design's name in the `b:D` form, the digits of `D` ascending, or `rudin-shapiro`.
+#[wasm_bindgen]
+pub fn num_readings_name(design: JsValue) -> Result<String, JsValue> {
+    let design = hand::from_js::<mrly::num::readings::Design>(&design)?;
+    let value = mrly::num::readings::name(design);
+    Ok(value)
+}
+
+/// Lists the battery pairs that are near-heads of a polynomial reading at the design's base, the 44 dilation pairs first and the two kernel pairs after; the primes have none.
+#[wasm_bindgen]
+pub fn num_readings_near_heads(design: JsValue, reading: JsValue) -> Result<JsValue, JsValue> {
+    let design = hand::from_js::<mrly::num::readings::Design>(&design)?;
+    let reading = hand::from_js::<mrly::num::readings::Reading>(&reading)?;
+    let value = mrly::num::readings::near_heads(design, reading);
+    hand::to_js(&value)
+}
+
+/// Returns the design's sign at a number, plus or minus one.
+#[wasm_bindgen]
+pub fn num_readings_sign(design: JsValue, n: JsValue) -> Result<i8, JsValue> {
+    let design = hand::from_js::<mrly::num::readings::Design>(&design)?;
+    let n = hand::u64_from_js(&n)?;
+    let value = mrly::num::readings::sign(design, n);
+    Ok(value)
+}
+
+/// Builds a reading's first signs: `y(n) = x(P(n))` for `n < count`, or `x(p_n)` along the first `count` primes from a segmented sieve.
+#[wasm_bindgen]
+pub fn num_readings_stream(
+    design: JsValue,
+    reading: JsValue,
+    count: u32,
+) -> Result<Vec<i8>, JsValue> {
+    let design = hand::from_js::<mrly::num::readings::Design>(&design)?;
+    let reading = hand::from_js::<mrly::num::readings::Reading>(&reading)?;
+    let value = mrly::num::readings::stream(design, reading, count);
+    Ok(value)
+}
+
 /// Returns the Basel sum of the reciprocal squares over n terms, walking to pi squared over six.
 #[wasm_bindgen]
 pub fn num_series_basel(n: usize) -> Result<f64, JsValue> {
@@ -1395,6 +1475,13 @@ pub fn num_kummer_TABLE() -> Result<u64, JsValue> {
 #[wasm_bindgen]
 pub fn num_morse_LIFTS() -> Result<JsValue, JsValue> {
     let value = mrly::num::morse::LIFTS;
+    hand::to_js(&value)
+}
+
+/// Lists the readings in the order the battery tables print them.
+#[wasm_bindgen]
+pub fn num_readings_READINGS() -> Result<JsValue, JsValue> {
+    let value = mrly::num::readings::READINGS;
     hand::to_js(&value)
 }
 
@@ -1988,6 +2075,53 @@ impl num_morse_Lift {
     pub fn formula(lift: JsValue) -> Result<String, JsValue> {
         let lift = hand::from_js::<mrly::num::morse::Lift>(&lift)?;
         let value = lift.formula();
+        Ok(value)
+    }
+}
+
+/// A digit-parity design `b:D`, or Rudin-Shapiro: the sign `x(n)` is `-1` to the count of base-`b` digits of `n` in `D`.
+#[wasm_bindgen]
+pub struct num_readings_Design {}
+
+#[wasm_bindgen]
+impl num_readings_Design {
+    /// Builds the design `b:D` from its base and its digit mask.
+    pub fn digits(base: u8, mask: u8) -> Result<JsValue, JsValue> {
+        let value = mrly::num::readings::Design::digits(base, mask);
+        hand::to_js(&value)
+    }
+    /// Returns Rudin-Shapiro.
+    pub fn rudin() -> Result<JsValue, JsValue> {
+        let value = mrly::num::readings::Design::rudin();
+        hand::to_js(&value)
+    }
+    /// Returns the ternary parity, `3:2`, the parity of the ternary digits equal to 2.
+    pub fn ternary() -> Result<JsValue, JsValue> {
+        let value = mrly::num::readings::Design::ternary();
+        hand::to_js(&value)
+    }
+    /// Returns Thue-Morse, `2:1`.
+    pub fn thue() -> Result<JsValue, JsValue> {
+        let value = mrly::num::readings::Design::thue();
+        hand::to_js(&value)
+    }
+}
+
+/// The sequences a design is read along: `y(n) = x(P(n))` for a polynomial `P`, or `x(p_n)` along the primes.
+#[wasm_bindgen]
+pub struct num_readings_Reading {}
+
+#[wasm_bindgen]
+impl num_readings_Reading {
+    /// Returns every Reading in canonical order.
+    pub fn all() -> Result<JsValue, JsValue> {
+        let value = mrly::num::readings::Reading::all();
+        hand::to_js(&value)
+    }
+    /// Returns the reading's formula, written the way the page prints it.
+    pub fn formula(reading: JsValue) -> Result<String, JsValue> {
+        let reading = hand::from_js::<mrly::num::readings::Reading>(&reading)?;
+        let value = reading.formula();
         Ok(value)
     }
 }

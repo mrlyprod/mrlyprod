@@ -44,6 +44,7 @@ fn table(axis: Axis) -> String {
     let index = match axis {
         Axis::Level => "level 1",
         Axis::Side => "`k = 2`",
+        Axis::Window => "`k = 1`",
     };
     let mut out = format!("| id | design | key | closed form | terms from {index} | record | shift | status |\n|---|---|---|---|---|---|---|---|\n");
     let mut keyed: Vec<(Key, &Record)> = RECORDS

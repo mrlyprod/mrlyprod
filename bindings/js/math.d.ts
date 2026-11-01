@@ -631,6 +631,12 @@ export declare namespace counts {
     export function ratio(code: string | number | bigint, number: number, dimension: number, level: number, base: number): number;
     /** Returns the exact filled fraction as a fraction of fill over grid, reduced. */
     export function rational(code: string | number | bigint, number: number, dimension: number, level: number, base: number): [string, string];
+    /** Returns the face counts of the code's design at the given level, from the tile's placement counts alone. */
+    export function skeleton(code: string | number | bigint, number: number, dimension: number, base: number, level: number): counts.Skeleton;
+    /** Returns the face counts of the tile's level-fold Kronecker power, or none past a `u128`. */
+    export function skeleton_of_tile(tile: Tensor, level: number): counts.Skeleton | undefined;
+    /** Returns the coefficients of the recurrence the code's `k`-face count obeys along the level, every face and the Euler characteristic when `k` is none. */
+    export function skeleton_recurrence(code: string | number | bigint, number: number, dimension: number, base: number, k?: number): string[];
     /** Returns the exposed face count of the code's 3D fractal at the given level. */
     export function surface(code: string | number | bigint, number: number, level: number, base: number): string;
     /** Returns the empty cell count, grid minus fill. */
@@ -668,6 +674,45 @@ export declare namespace counts {
         static of_tile(tile: Tensor): counts.Exposure;
         /** Returns the coefficients `c` of the recurrence `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...` the exposure obeys. */
         recurrence(): string[];
+    }
+    export type PlacementsData = Record<string, unknown>;
+    /** The placement counts the face recurrence runs on: for each pattern `P` of cells inside a `2^d` window and each lowest digit `w` of the tile, whether `w + P` fits the tile with wrap-around, and which pattern `P ^ W` the carried digits must then form one level up. */
+    export class Placements {
+        private constructor();
+        free(): void;
+        /** Returns the face counts of the level-fold Kronecker power, or none past a `u128`. */
+        at(level: number): counts.Skeleton | undefined;
+        /** Reads the placement counts off a rendered tile of two to four dimensions. */
+        static of_tile(tile: Tensor): counts.Placements;
+        /** Returns the coefficients `c` of the recurrence `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...` the `k`-face count obeys from `L = 0`, every face when `k` is none, or none past an `i128`. */
+        recurrence(k?: number): string[] | undefined;
+        /** Returns the roots of the recurrence the `k`-face count obeys, every face when `k` is none, each with the multiplicity the recurrence needs: the spanning counts of the patterns the count reaches, a root repeated once per pattern of that count on one carry chain. */
+        roots(k?: number): [string, number][];
+    }
+    export interface SkeletonData {
+        /** The distinct unit `k`-faces for `k = 0..=dimension`. */
+        counts: bigint[];
+        /** The Euler characteristic, `sum (-1)^k counts[k]`. */
+        euler: bigint;
+    }
+    /** The face counts of the union of closed unit cubes a design's level power fills: `counts[k]` is its distinct unit `k`-faces, the cells last, and `euler` their alternating sum. */
+    export class Skeleton {
+        private constructor();
+        free(): void;
+        /** The distinct unit `k`-faces for `k = 0..=dimension`. */
+        get counts(): string[];
+        set counts(value: (string | number | bigint)[]);
+        /** The Euler characteristic, `sum (-1)^k counts[k]`. */
+        get euler(): string;
+        set euler(value: string | number | bigint);
+        /** The filled cells. */
+        cells(): string;
+        /** The distinct unit edges. */
+        edges(): string;
+        /** The distinct unit squares, the cells themselves in the plane. */
+        faces(): string;
+        /** The distinct corners. */
+        vertices(): string;
     }
     export namespace diagonal {
         /** The widest side a profile spans. */
@@ -807,6 +852,78 @@ export declare namespace dissection {
         meter: number[];
         /** The prime count `psi_F(x)`, the sum of `Lambda(n)` over the elements up to `x`. */
         primes: number[];
+    }
+}
+export declare namespace game {
+    /** Returns the index of the level-`k` cell holding a point of `[0, 1)^D`: `floor(x b^k) + floor(y b^k) b^k + ...`, row major with coordinate `0` least significant, the dimension read off the point. */
+    export function cell(point: ArrayLike<number>, base: number, level: number): bigint;
+    /** Returns the count of level-`k` cells of the cube, `b^(D k)`. */
+    export function cells(base: number, dimension: number, level: number): bigint;
+    /** Returns the path counts from a state, `e_start M^L 1` for `L = 1 ..= levels`: the filled cells of a mosaic slot or of a slice at each level, and stops early on the level whose count overruns a `u64`. */
+    export function counts(matrix: (ArrayLike<number | bigint>)[], start: number, levels: number): BigUint64Array;
+    /** Returns a de Bruijn cycle of order `k` over `m` letters: `m^k` letters in which every word of length `k` occurs exactly once as a cyclic window, so played as the draw schedule of an `m`-digit design it paints every level-`k` cell once per lap, and from a cold start once in `m^k + k - 1` draws. */
+    export function de_bruijn(m: number, k: number): Uint8Array;
+    /** Reads the game of a mosaic: its substitution matrix, Perron root, dimension and edges. */
+    export function mosaic_game(mosaic: game.Mosaic): game.MosaicGame;
+    /** Returns the named games of the square, corner `c = x + 2 y`, cyclic order `0, 1, 3, 2` anticlockwise with `y` up: the seven one-step games and the width-3 game that forbids a neighbour after a repeat. */
+    export function named_games(): game.NamedGame[];
+    /** Returns the Perron root of a square nonnegative integer matrix, the growth per level of the paths its graph counts. */
+    export function perron(matrix: (ArrayLike<number | bigint>)[]): number;
+    /** Returns the rule whose windows are the rule's windows read backwards. */
+    export function reverse(rule: memory.Rule): memory.Rule;
+    /** Reads the game of a plane design, corners `c = x + b y`, cut by the line `x + y = p / q`: its carry states, edges, matrix, Perron root and dimension. */
+    export function slice_game(base: number, digits: ArrayLike<number>, p: number | bigint, q: number | bigint): game.SliceGame;
+    /** Returns the letters a restricted game may draw next: the corners `c` for which some allowed window, read in time order, ends in the last `k - 1` draws of the history followed by `c`. */
+    export function successors(rule: memory.Rule, history: ArrayLike<number>): Uint8Array;
+    /** Returns the cell of a word of corners read coarsest digit first, the cell the game lands in after playing the word's digits last letter first. */
+    export function word_cell(word: ArrayLike<number>, base: number, dimension: number): bigint;
+    /** The longest lap a de Bruijn cycle may run, in letters. */
+    export function LAP(): bigint;
+    /** A mosaic: one mask per palette slot, each filled corner of a slot's mask naming the slot it sends to. */
+    export interface Mosaic {
+        /** The base `b`, the digits per axis. */
+        base: number;
+        /** The dimension `D` of the cube. */
+        dimension: number;
+        /** The masks, one per slot: the filled corners `c = sum_i d_i b^i` of the slot, each with the slot it sends to. */
+        masks: [number, number][][];
+    }
+    /** The chaos game of a mosaic: the graph-directed game on its slots. */
+    export interface MosaicGame {
+        /** The substitution matrix: entry `(u, v)` counts the corners of mask `u` sending to slot `v`. */
+        matrix: number[][];
+        /** The Perron root of the substitution matrix. */
+        rho: number;
+        /** The Hausdorff dimension `log_b rho` on a strongly connected slot graph, `-inf` when nothing grows. */
+        dimension: number;
+        /** The edges `(from slot, corner, to slot)`, one per filled corner of every mask. */
+        edges: [number, number, number][];
+    }
+    /** A restricted game of the base-2 square with a name: a rule of `crate::memory` in time order, oldest draw most significant. */
+    export interface NamedGame {
+        /** The name the game is known by. */
+        name: string;
+        /** The dimension of the rule, two on the square. */
+        dimension: number;
+        /** The window width `k`, one more than the memory. */
+        width: number;
+        /** The window code, bit `w` set when the time-ordered window `w` is allowed; a `u128` so a width-3 code crosses the bridge as a decimal string. */
+        code: bigint;
+    }
+    /** The chaos game of a plane design cut by the line `x + y = p / q`: the graph-directed game on its carry heights. */
+    export interface SliceGame {
+        /** The live heights as reduced fractions `(numerator, denominator)`, in increasing order. */
+        states: [number, number][];
+        /** The index of the start height `p / q` in the states, `0` on an empty game. */
+        start: number;
+        /** The edges `(from state, corner, to state)`, one per corner that carries a live height to a live height. */
+        edges: [number, number, number][];
+        /** The carry matrix: entry `(s, t)` counts the corners carrying state `s` to state `t`. */
+        matrix: number[][];
+        /** The Perron root of the carry matrix. */
+        rho: number;
+        /** The Hausdorff dimension `log_b rho` of the slice, `-inf` when it is empty. */
+        dimension: number;
     }
 }
 export declare namespace graph {

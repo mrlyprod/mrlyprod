@@ -25,6 +25,7 @@ The slice sign law: the central diagonal cut of the `D`-dimensional middle-digit
 - [lab/py/pascal-shear/](lab/py/pascal-shear/): The level-`level` cell set of the 2D design with code `7`, tile `[[1, 1], [1, 0]]`, is `{(i, j) in [0, 2^level)^2 
 - [lab/py/slice-sign-certificates/](lab/py/slice-sign-certificates/): Certifies every numerical step of the even-half theorems at bases 3 and 5 of the paper The Slice Sign Law, Theorems 6.1 and 7.1, and regenerates the exact certificates, determinants and anchors the topic's claim rows print.
 - [lab/py/slice-ladder-controls/](lab/py/slice-ladder-controls/): Checks the anti-diagonal profile identity `P_{A (x) B}(t) = P_A(t^side_B) P_B(t)` on every base-2 word of length 2 and 3, counting mismatches.
+- [lab/py/slice-ladder-rate/](lab/py/slice-ladder-rate/): Settles the decay rate `r_inf` of the slice excess `rho_dim - fill/3` of the base-3 central diagonal slice: the 3-adic cosine product `1/prod_(k>=2) cos(2 pi/3^k)` against the retired Richardson fit, from exact Perron roots to `dim = 120`.
 - [figures/paper-slice-sign-law.ts](figures/paper-slice-sign-law.ts): paper-slice-sign-law
 - [figures/research-cuts.ts](figures/research-cuts.ts): research-cuts
 

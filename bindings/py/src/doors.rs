@@ -3021,6 +3021,194 @@ pub mod life {
         }
     }
 
+    /// The recipe grammar and its two-mode run: one name regenerates a run bit for bit.
+    pub mod recipe {
+        use crate::hand::{PyCell, PySerde, PyTensor, ok};
+        use pyo3::IntoPyObjectExt;
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+
+        /// A recipe's run, stepped one generation at a time until its stop.
+        #[pyclass(name = "Run", module = "mrly.life.recipe", from_py_object)]
+        #[derive(Clone)]
+        pub struct Run(pub mrly::life::recipe::Run);
+
+        #[pymethods]
+        impl Run {
+            /// Sets a recipe up at generation zero: the tiled seed, the mask's kernel, the rule drawn against its budget.
+            #[new]
+            #[pyo3(signature = (recipe))]
+            pub fn __new__(recipe: PySerde<mrly::life::recipe::Recipe>) -> PyResult<Self> {
+                let recipe = recipe.0;
+                let out = mrly::life::recipe::Run::new(&recipe);
+                Ok(Self(ok(out)?))
+            }
+            /// Returns the background the frame sits on, 1 once a flipping rule has turned it.
+            #[pyo3(name = "background", signature = ())]
+            pub fn background<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::background(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the birth counts drawn against the budget.
+            #[pyo3(name = "birth", signature = ())]
+            pub fn birth<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::birth(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the mask's budget, the most neighbours a cell can count.
+            #[pyo3(name = "budget", signature = ())]
+            pub fn budget<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::budget(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the canvas side: an island's cap, at least its seed board, or a wallpaper's torus.
+            #[pyo3(name = "cap", signature = ())]
+            pub fn cap<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::cap(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns whether the rule flips its background, birth holding zero.
+            #[pyo3(name = "flips", signature = ())]
+            pub fn flips<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::flips(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the live frame: the cropped island pattern, or the whole torus.
+            #[pyo3(name = "frame", signature = ())]
+            pub fn frame<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::frame(&self.0);
+                (PyCell(out)).into_bound_py_any(py)
+            }
+            /// Returns the generation reached.
+            #[pyo3(name = "generation", signature = ())]
+            pub fn generation<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::generation(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the mask as a square tensor of bytes, its centre popped.
+            #[pyo3(name = "mask", signature = ())]
+            pub fn mask<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::mask(&self.0);
+                (PyTensor(out)).into_bound_py_any(py)
+            }
+            /// Sets a recipe up at generation zero: the tiled seed, the mask's kernel, the rule drawn against its budget.
+            #[staticmethod]
+            #[pyo3(name = "new", signature = (recipe))]
+            pub fn new_<'py>(
+                py: Python<'py>,
+                recipe: PySerde<mrly::life::recipe::Recipe>,
+            ) -> PyResult<Bound<'py, PyAny>> {
+                let recipe = recipe.0;
+                let out = mrly::life::recipe::Run::new(&recipe);
+                (crate::doors::life::recipe::Run(ok(out)?)).into_bound_py_any(py)
+            }
+            /// Returns the row and column of the frame's top-left corner, the seed's top-left corner being the origin.
+            #[pyo3(name = "origin", signature = ())]
+            pub fn origin<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::origin(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the live cells of the frame.
+            #[pyo3(name = "population", signature = ())]
+            pub fn population<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::population(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the mask's reach, half its side.
+            #[pyo3(name = "reach", signature = ())]
+            pub fn reach<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::reach(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the side of the seed board, the seed's side to its level times its tiling.
+            #[pyo3(name = "side", signature = ())]
+            pub fn side<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::side(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Advances one generation and returns the stop the moment the run ends; after a stop it returns the same stop and changes nothing.
+            #[pyo3(name = "step", signature = ())]
+            pub fn step<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::step(&mut self.0);
+                ((out).map(PySerde)).into_bound_py_any(py)
+            }
+            /// Returns the stop once the run has ended.
+            #[pyo3(name = "stop", signature = ())]
+            pub fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::stop(&self.0);
+                ((out).map(PySerde)).into_bound_py_any(py)
+            }
+            /// Returns the survive counts drawn against the budget.
+            #[pyo3(name = "survive", signature = ())]
+            pub fn survive<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Run::survive(&self.0);
+                (out).into_bound_py_any(py)
+            }
+        }
+
+        /// The mode of a run.
+        #[pyclass(name = "Mode", module = "mrly.life.recipe", skip_from_py_object)]
+        pub struct Mode;
+
+        #[pymethods]
+        impl Mode {
+            /// Returns every Mode in canonical order.
+            #[staticmethod]
+            #[pyo3(name = "all", signature = ())]
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::life::recipe::Mode::all();
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+            }
+        }
+
+        /// Lists what every knob of a recipe may offer, in grammar order.
+        #[pyfunction]
+        #[pyo3(name = "grammar", signature = ())]
+        pub fn grammar<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::life::recipe::grammar();
+            (PySerde(out)).into_bound_py_any(py)
+        }
+
+        /// Writes a recipe as its name, the one string that regenerates it.
+        #[pyfunction]
+        #[pyo3(name = "name", signature = (recipe))]
+        pub fn name<'py>(
+            py: Python<'py>,
+            recipe: PySerde<mrly::life::recipe::Recipe>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let recipe = recipe.0;
+            let out = mrly::life::recipe::name(&recipe);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Reads a recipe out of its name.
+        #[pyfunction]
+        #[pyo3(name = "parse", signature = (name))]
+        pub fn parse<'py>(py: Python<'py>, name: &str) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::life::recipe::parse(name);
+            (PySerde(ok(out)?)).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrly.life.recipe")?;
+            m.setattr("__doc__", "The recipe grammar and its two-mode run: one name regenerates a run bit for bit.\n\n- A name reads `seed.side.level x<tiling> <mode> mask:<mask> birth:<side> survive:<side> x:<limit> cap:<cap>`; a wallpaper drops the cap and tiles once.\n- The seed is a plane class `code1 code3 code6 code7 code15` or a named design at base 2; the mask is a design popped at its centre, or `copy` and `copyinv` of the tiled seed.\n- A rule side names a source with the `_zeros` and `_ones` rolls, or lists its counts; the counts are drawn against the mask's budget.\n- Island: the seed alone on the plane; the canvas grows with the pattern, and the run stops when a live cell comes within the mask's reach of the cap wall.\n- Wallpaper: the seed is the torus, stepped on its own side.\n- A zero in birth runs the rule on a flipping background; the frame is the pattern against its background.\n- A repeated frame stops the run as still, loop or mover with its period and displacement; a mover tells the generation by which it reaches the wall.\n- Counts come from the mask's Kronecker factors, one dilated pass per factor.")?;
+            m.add_class::<Run>()?;
+            m.add_class::<Mode>()?;
+            m.add_function(wrap_pyfunction!(grammar, &m)?)?;
+            m.add_function(wrap_pyfunction!(name, &m)?)?;
+            m.add_function(wrap_pyfunction!(parse, &m)?)?;
+            let names: Vec<&str> = vec!["grammar", "name", "parse", "Run", "Mode"];
+            m.add("__all__", names)?;
+            parent.add("recipe", &m)?;
+            sys.set_item("mrly._mrly.life.recipe", &m)?;
+            Ok(())
+        }
+    }
+
     /// The frames and the cumulative-visit heatmap of grids, as images.
     pub mod render {
         use crate::hand::{PyCell2d, PyImage, ok};
@@ -3980,7 +4168,7 @@ pub mod life {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.life")?;
-        m.setattr("__doc__", "The engine: a rule over a grid, stepped, recorded, measured and rendered.\n\n- `step`: one generation of a grid under birth and survive counts.\n- `animate`: a seed run until it fixes, loops or times out.\n- `models`: the run config and the recorded life.\n- `metrics`: the entropy and churn readings of a run.\n- `crop`: the centred cropping and tiling of a run's frames.\n- `mask`: the design masks a rule reads and the lattice they generate.\n- `source`: the named sources of neighbor counts, and the counts they lay down.\n- `elementary`: the one-line automata and the card of one rule.\n- `render`: the frames and the visit heatmap of a run, as images.\n- `rule`: the canonical name of a rule.\n\nThe doors: `next_grid`, `animate`,\n`entropy`, `churn`,\n`counts`, `frames`,\n`heatmap`, `history` and\n`Rule`.")?;
+        m.setattr("__doc__", "The engine: a rule over a grid, stepped, recorded, measured and rendered.\n\n- `step`: one generation of a grid under birth and survive counts.\n- `animate`: a seed run until it fixes, loops or times out.\n- `models`: the run config and the recorded life.\n- `recipe`: the recipe grammar and its two-mode run, one name regenerating a run bit for bit.\n- `metrics`: the entropy and churn readings of a run.\n- `crop`: the centred cropping and tiling of a run's frames.\n- `mask`: the design masks a rule reads and the lattice they generate.\n- `source`: the named sources of neighbor counts, and the counts they lay down.\n- `elementary`: the one-line automata and the card of one rule.\n- `render`: the frames and the visit heatmap of a run, as images.\n- `rule`: the canonical name of a rule.\n\nThe doors: `next_grid`, `animate`,\n`entropy`, `churn`,\n`counts`, `frames`,\n`heatmap`, `history` and\n`Rule`.")?;
         m.add_class::<Config>()?;
         m.add_class::<Counts>()?;
         m.add_class::<Life>()?;
@@ -4059,6 +4247,7 @@ pub mod life {
         ];
         m.add("__all__", names)?;
         elementary::init(py, &m, sys)?;
+        recipe::init(py, &m, sys)?;
         render::init(py, &m, sys)?;
         source::init(py, &m, sys)?;
         parent.add("life", &m)?;
@@ -7719,6 +7908,108 @@ pub mod math {
             }
         }
 
+        /// The placement counts the face recurrence runs on: for each pattern `P` of cells inside a `2^d` window and each lowest digit `w` of the tile, whether `w + P` fits the tile with wrap-around, and which pattern `P ^ W` the carried digits must then form one level up.
+        #[pyclass(name = "Placements", module = "mrly.math.counts", from_py_object)]
+        #[derive(Clone)]
+        pub struct Placements(pub mrly::math::counts::Placements);
+
+        #[pymethods]
+        impl Placements {
+            /// Returns the face counts of the level-fold Kronecker power, or none past a `u128`.
+            #[pyo3(name = "at", signature = (level))]
+            pub fn at<'py>(&self, py: Python<'py>, level: u32) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::math::counts::Placements::at(&self.0, level);
+                ((out).map(crate::doors::math::counts::Skeleton)).into_bound_py_any(py)
+            }
+            /// Reads the placement counts off a rendered tile of two to four dimensions.
+            #[staticmethod]
+            #[pyo3(name = "of_tile", signature = (tile))]
+            pub fn of_tile<'py>(py: Python<'py>, tile: PyTensor) -> PyResult<Bound<'py, PyAny>> {
+                let tile = tile.0;
+                let out = mrly::math::counts::Placements::of_tile(&tile);
+                (crate::doors::math::counts::Placements(ok(out)?)).into_bound_py_any(py)
+            }
+            /// Returns the coefficients `c` of the recurrence `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...` the `k`-face count obeys from `L = 0`, every face when `k` is none, or none past an `i128`.
+            #[pyo3(name = "recurrence", signature = (k=None))]
+            pub fn recurrence<'py>(
+                &self,
+                py: Python<'py>,
+                k: Option<usize>,
+            ) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::math::counts::Placements::recurrence(&self.0, k);
+                (out).into_bound_py_any(py)
+            }
+            /// Returns the roots of the recurrence the `k`-face count obeys, every face when `k` is none, each with the multiplicity the recurrence needs: the spanning counts of the patterns the count reaches, a root repeated once per pattern of that count on one carry chain.
+            #[pyo3(name = "roots", signature = (k=None))]
+            pub fn roots<'py>(
+                &self,
+                py: Python<'py>,
+                k: Option<usize>,
+            ) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::math::counts::Placements::roots(&self.0, k);
+                (out).into_bound_py_any(py)
+            }
+        }
+
+        /// The face counts of the union of closed unit cubes a design's level power fills: `counts[k]` is its distinct unit `k`-faces, the cells last, and `euler` their alternating sum.
+        #[pyclass(name = "Skeleton", module = "mrly.math.counts", from_py_object)]
+        #[derive(Clone)]
+        pub struct Skeleton(pub mrly::math::counts::Skeleton);
+
+        #[pymethods]
+        impl Skeleton {
+            /// The distinct unit `k`-faces for `k = 0..=dimension`.
+            #[getter]
+            #[pyo3(name = "counts")]
+            pub fn counts<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let value = self.0.counts.clone();
+                (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "counts")]
+            pub fn set_counts(&mut self, value: Vec<u128>) -> PyResult<()> {
+                self.0.counts = value;
+                Ok(())
+            }
+            /// The Euler characteristic, `sum (-1)^k counts[k]`.
+            #[getter]
+            #[pyo3(name = "euler")]
+            pub fn euler<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let value = self.0.euler;
+                (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "euler")]
+            pub fn set_euler(&mut self, value: i128) -> PyResult<()> {
+                self.0.euler = value;
+                Ok(())
+            }
+            /// The filled cells.
+            #[pyo3(name = "cells", signature = ())]
+            pub fn cells<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::math::counts::Skeleton::cells(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// The distinct unit edges.
+            #[pyo3(name = "edges", signature = ())]
+            pub fn edges<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::math::counts::Skeleton::edges(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// The distinct unit squares, the cells themselves in the plane.
+            #[pyo3(name = "faces", signature = ())]
+            pub fn faces<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::math::counts::Skeleton::faces(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// The distinct corners.
+            #[pyo3(name = "vertices", signature = ())]
+            pub fn vertices<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::math::counts::Skeleton::vertices(&self.0);
+                (out).into_bound_py_any(py)
+            }
+        }
+
         /// Returns the centered hexagonal number at the index, the lattice points of a hexagon of side m-1.
         #[pyfunction]
         #[pyo3(name = "centered_hexagonal", signature = (m))]
@@ -7980,6 +8271,51 @@ pub mod math {
             (ok(out)?).into_bound_py_any(py)
         }
 
+        /// Returns the face counts of the code's design at the given level, from the tile's placement counts alone.
+        #[pyfunction]
+        #[pyo3(name = "skeleton", signature = (code, number, dimension, base, level))]
+        pub fn skeleton<'py>(
+            py: Python<'py>,
+            code: PyCode,
+            number: usize,
+            dimension: usize,
+            base: usize,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let code = code.0;
+            let out = mrly::math::counts::skeleton(code, number, dimension, base, level);
+            (crate::doors::math::counts::Skeleton(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Returns the face counts of the tile's level-fold Kronecker power, or none past a `u128`.
+        #[pyfunction]
+        #[pyo3(name = "skeleton_of_tile", signature = (tile, level))]
+        pub fn skeleton_of_tile<'py>(
+            py: Python<'py>,
+            tile: PyTensor,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let tile = tile.0;
+            let out = mrly::math::counts::skeleton_of_tile(&tile, level);
+            ((ok(out)?).map(crate::doors::math::counts::Skeleton)).into_bound_py_any(py)
+        }
+
+        /// Returns the coefficients of the recurrence the code's `k`-face count obeys along the level, every face and the Euler characteristic when `k` is none.
+        #[pyfunction]
+        #[pyo3(name = "skeleton_recurrence", signature = (code, number, dimension, base, k=None))]
+        pub fn skeleton_recurrence<'py>(
+            py: Python<'py>,
+            code: PyCode,
+            number: usize,
+            dimension: usize,
+            base: usize,
+            k: Option<usize>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let code = code.0;
+            let out = mrly::math::counts::skeleton_recurrence(code, number, dimension, base, k);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
         /// Returns the exposed face count of the code's 3D fractal at the given level.
         #[pyfunction]
         #[pyo3(name = "surface", signature = (code, number, level, base))]
@@ -8019,6 +8355,8 @@ pub mod math {
             let m = PyModule::new(py, "mrly.math.counts")?;
             m.setattr("__doc__", "The closed-form counts.\n\nEvery number the censuses reach by walking a built cell, this folder reaches by formula:\nfills, grids, exposed surfaces, hex slices and the base-q carry ladder.")?;
             m.add_class::<Exposure>()?;
+            m.add_class::<Placements>()?;
+            m.add_class::<Skeleton>()?;
             m.add_function(wrap_pyfunction!(centered_hexagonal, &m)?)?;
             m.add_function(wrap_pyfunction!(cut_fills, &m)?)?;
             m.add_function(wrap_pyfunction!(cut_voids, &m)?)?;
@@ -8038,6 +8376,9 @@ pub mod math {
             m.add_function(wrap_pyfunction!(profile_of_tile, &m)?)?;
             m.add_function(wrap_pyfunction!(ratio, &m)?)?;
             m.add_function(wrap_pyfunction!(rational, &m)?)?;
+            m.add_function(wrap_pyfunction!(skeleton, &m)?)?;
+            m.add_function(wrap_pyfunction!(skeleton_of_tile, &m)?)?;
+            m.add_function(wrap_pyfunction!(skeleton_recurrence, &m)?)?;
             m.add_function(wrap_pyfunction!(surface, &m)?)?;
             m.add_function(wrap_pyfunction!(void, &m)?)?;
             let names: Vec<&str> = vec![
@@ -8060,9 +8401,14 @@ pub mod math {
                 "profile_of_tile",
                 "ratio",
                 "rational",
+                "skeleton",
+                "skeleton_of_tile",
+                "skeleton_recurrence",
                 "surface",
                 "void",
                 "Exposure",
+                "Placements",
+                "Skeleton",
             ];
             m.add("__all__", names)?;
             diagonal::init(py, &m, sys)?;
@@ -8503,6 +8849,178 @@ pub mod math {
             m.add("__all__", names)?;
             parent.add("dissection", &m)?;
             sys.set_item("mrly._mrly.math.dissection", &m)?;
+            Ok(())
+        }
+    }
+
+    /// The chaos game of a design: the shift register that writes its digits backwards, the de Bruijn schedules that paint every cell once, the restricted games that draw the memory dial's sets, and the games on a graph that draw a mosaic or a slice.
+    pub mod game {
+        use crate::hand::{PySerde, ok};
+        use pyo3::IntoPyObjectExt;
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+
+        /// Returns the index of the level-`k` cell holding a point of `[0, 1)^D`: `floor(x b^k) + floor(y b^k) b^k + ...`, row major with coordinate `0` least significant, the dimension read off the point.
+        #[pyfunction]
+        #[pyo3(name = "cell", signature = (point, base, level))]
+        pub fn cell<'py>(
+            py: Python<'py>,
+            point: Vec<f64>,
+            base: u8,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::cell(&point, base, level);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Returns the count of level-`k` cells of the cube, `b^(D k)`.
+        #[pyfunction]
+        #[pyo3(name = "cells", signature = (base, dimension, level))]
+        pub fn cells<'py>(
+            py: Python<'py>,
+            base: u8,
+            dimension: u8,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::cells(base, dimension, level);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Returns the path counts from a state, `e_start M^L 1` for `L = 1 ..= levels`: the filled cells of a mosaic slot or of a slice at each level, and stops early on the level whose count overruns a `u64`.
+        #[pyfunction]
+        #[pyo3(name = "counts", signature = (matrix, start, levels))]
+        pub fn counts<'py>(
+            py: Python<'py>,
+            matrix: Vec<Vec<u64>>,
+            start: usize,
+            levels: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::counts(&matrix, start, levels);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Returns a de Bruijn cycle of order `k` over `m` letters: `m^k` letters in which every word of length `k` occurs exactly once as a cyclic window, so played as the draw schedule of an `m`-digit design it paints every level-`k` cell once per lap, and from a cold start once in `m^k + k - 1` draws.
+        #[pyfunction]
+        #[pyo3(name = "de_bruijn", signature = (m, k))]
+        pub fn de_bruijn<'py>(py: Python<'py>, m: u32, k: u32) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::de_bruijn(m, k);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Reads the game of a mosaic: its substitution matrix, Perron root, dimension and edges.
+        #[pyfunction]
+        #[pyo3(name = "mosaic_game", signature = (mosaic))]
+        pub fn mosaic_game<'py>(
+            py: Python<'py>,
+            mosaic: PySerde<mrly::math::game::Mosaic>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let mosaic = mosaic.0;
+            let out = mrly::math::game::mosaic_game(&mosaic);
+            (PySerde(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Returns the named games of the square, corner `c = x + 2 y`, cyclic order `0, 1, 3, 2` anticlockwise with `y` up: the seven one-step games and the width-3 game that forbids a neighbour after a repeat.
+        #[pyfunction]
+        #[pyo3(name = "named_games", signature = ())]
+        pub fn named_games<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::named_games();
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+        }
+
+        /// Returns the Perron root of a square nonnegative integer matrix, the growth per level of the paths its graph counts.
+        #[pyfunction]
+        #[pyo3(name = "perron", signature = (matrix))]
+        pub fn perron<'py>(py: Python<'py>, matrix: Vec<Vec<u64>>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::perron(&matrix);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Returns the rule whose windows are the rule's windows read backwards.
+        #[pyfunction]
+        #[pyo3(name = "reverse", signature = (rule))]
+        pub fn reverse<'py>(
+            py: Python<'py>,
+            rule: PyRef<'_, crate::doors::math::memory::Rule>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::reverse(&rule.0);
+            (crate::doors::math::memory::Rule(out)).into_bound_py_any(py)
+        }
+
+        /// Reads the game of a plane design, corners `c = x + b y`, cut by the line `x + y = p / q`: its carry states, edges, matrix, Perron root and dimension.
+        #[pyfunction]
+        #[pyo3(name = "slice_game", signature = (base, digits, p, q))]
+        pub fn slice_game<'py>(
+            py: Python<'py>,
+            base: u8,
+            digits: Vec<u8>,
+            p: i64,
+            q: i64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::slice_game(base, &digits, p, q);
+            (PySerde(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Returns the letters a restricted game may draw next: the corners `c` for which some allowed window, read in time order, ends in the last `k - 1` draws of the history followed by `c`.
+        #[pyfunction]
+        #[pyo3(name = "successors", signature = (rule, history))]
+        pub fn successors<'py>(
+            py: Python<'py>,
+            rule: PyRef<'_, crate::doors::math::memory::Rule>,
+            history: Vec<u8>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::successors(&rule.0, &history);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the cell of a word of corners read coarsest digit first, the cell the game lands in after playing the word's digits last letter first.
+        #[pyfunction]
+        #[pyo3(name = "word_cell", signature = (word, base, dimension))]
+        pub fn word_cell<'py>(
+            py: Python<'py>,
+            word: Vec<u8>,
+            base: u8,
+            dimension: u8,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::math::game::word_cell(&word, base, dimension);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrly.math.game")?;
+            m.setattr("__doc__", "The chaos game of a design: the shift register that writes its digits backwards, the de Bruijn schedules that paint every cell once, the restricted games that draw the memory dial's sets, and the games on a graph that draw a mosaic or a slice.\n\nA design at base `b` has one map per digit, `phi_d(x) = (x + d) / b`, and the game plays `x_n = phi_(d_n)(x_(n-1))` from a start in `[0, 1)^D`.\nEach draw becomes the new leading digit, so for `n >= k` the level-`k` cell of `x_n` is the word of the last `k` draws read newest first.\nA corner is the integer `c = sum_i d_i b^i`, coordinate `0` its least significant digit, the `c = x + b y` of the plane designs, and a cell index is row major, `y side + x` at `side = b^k`, as `crate::memory::cells` reads it.\nA restricted game is a rule of `crate::memory` on the draws in time order, the oldest draw the most significant digit of the window, and the set it draws is the dial's set of the reversed rule.\nA game on a graph keeps a state, draws an edge into it, plays the edge's digit and moves to the edge's source: the mosaic game on its slots, the slice game on its carry heights.")?;
+            m.add_function(wrap_pyfunction!(cell, &m)?)?;
+            m.add_function(wrap_pyfunction!(cells, &m)?)?;
+            m.add_function(wrap_pyfunction!(counts, &m)?)?;
+            m.add_function(wrap_pyfunction!(de_bruijn, &m)?)?;
+            m.add_function(wrap_pyfunction!(mosaic_game, &m)?)?;
+            m.add_function(wrap_pyfunction!(named_games, &m)?)?;
+            m.add_function(wrap_pyfunction!(perron, &m)?)?;
+            m.add_function(wrap_pyfunction!(reverse, &m)?)?;
+            m.add_function(wrap_pyfunction!(slice_game, &m)?)?;
+            m.add_function(wrap_pyfunction!(successors, &m)?)?;
+            m.add_function(wrap_pyfunction!(word_cell, &m)?)?;
+            m.add("LAP", mrly::math::game::LAP)?;
+            let names: Vec<&str> = vec![
+                "cell",
+                "cells",
+                "counts",
+                "de_bruijn",
+                "mosaic_game",
+                "named_games",
+                "perron",
+                "reverse",
+                "slice_game",
+                "successors",
+                "word_cell",
+                "LAP",
+            ];
+            m.add("__all__", names)?;
+            parent.add("game", &m)?;
+            sys.set_item("mrly._mrly.math.game", &m)?;
             Ok(())
         }
     }
@@ -15647,7 +16165,7 @@ pub mod math {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.math")?;
-        m.setattr("__doc__", "The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level into a fractal design, and the same code always unfolds into the same shape, so a design can be named, counted and drawn again from its number alone. Everything rests on the tensors and cells of `mrly_core` and the sequences of `mrly_num`.\n\n# The design pipeline\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `name` holds the bang, sequence and word kinds of the canonical name.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches.\n- `spectrum` reads the Laplacian spectra off a network.\n- `nodal` rings the plate a design cuts: its lowest modes, nodal domains and Courant bounds.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `arcs` lays two quarter arcs in every cell and follows the loops they join into.\n\n# Line and Dirichlet designs\n\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation, their four regions and the chain certificate.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.\n\n# Wheels\n\n- `spin` spins a raster about its centre.\n- `tourbillon` stacks the turned parity carpets inside the inscribed disc.\n- `spirograph` rolls a byte grid as a wheel and draws the curves of its pencils.\n- `roulette` counts where those curves cross.\n\nThe doors are `crate::atoms::carpet_2d`, `crate::bang::bang`,\n`crate::two::carpet`, `crate::two::census()`, `crate::two::to_json`,\n`crate::counts::fill`, `crate::three::census::surface` and\n`crate::spectrum::laplacian_spectrum`.")?;
+        m.setattr("__doc__", "The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level into a fractal design, and the same code always unfolds into the same shape, so a design can be named, counted and drawn again from its number alone. Everything rests on the tensors and cells of `mrly_core` and the sequences of `mrly_num`.\n\n# The design pipeline\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `name` holds the bang, sequence and word kinds of the canonical name.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches.\n- `spectrum` reads the Laplacian spectra off a network.\n- `nodal` rings the plate a design cuts: its lowest modes, nodal domains and Courant bounds.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `arcs` lays two quarter arcs in every cell and follows the loops they join into.\n\n# Line and Dirichlet designs\n\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation, their four regions and the chain certificate.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `game`: the chaos game of a design: its de Bruijn schedules, the restricted games that draw the memory dial's sets, and the mosaic and slice games on a graph.\n- `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.\n\n# Wheels\n\n- `spin` spins a raster about its centre.\n- `tourbillon` stacks the turned parity carpets inside the inscribed disc.\n- `spirograph` rolls a byte grid as a wheel and draws the curves of its pencils.\n- `roulette` counts where those curves cross.\n\nThe doors are `crate::atoms::carpet_2d`, `crate::bang::bang`,\n`crate::two::carpet`, `crate::two::census()`, `crate::two::to_json`,\n`crate::counts::fill`, `crate::three::census::surface` and\n`crate::spectrum::laplacian_spectrum`.")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         arcs::init(py, &m, sys)?;
@@ -15659,6 +16177,7 @@ pub mod math {
         counts::init(py, &m, sys)?;
         design::init(py, &m, sys)?;
         dissection::init(py, &m, sys)?;
+        game::init(py, &m, sys)?;
         graph::init(py, &m, sys)?;
         ladder::init(py, &m, sys)?;
         memory::init(py, &m, sys)?;
@@ -17815,6 +18334,230 @@ pub mod num {
         }
     }
 
+    /// The readings: a digit-parity design read along a polynomial or the primes, the battery that tests the signs, the near-heads that fix some of its pairs, and the major-arc model of the bias along the squares.
+    pub mod readings {
+        use crate::hand::PySerde;
+        use pyo3::IntoPyObjectExt;
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+
+        /// A digit-parity design `b:D`, or Rudin-Shapiro: the sign `x(n)` is `-1` to the count of base-`b` digits of `n` in `D`.
+        #[pyclass(name = "Design", module = "mrly.num.readings", skip_from_py_object)]
+        pub struct Design;
+
+        #[pymethods]
+        impl Design {
+            /// Builds the design `b:D` from its base and its digit mask.
+            #[staticmethod]
+            #[pyo3(name = "digits", signature = (base, mask))]
+            pub fn digits<'py>(py: Python<'py>, base: u8, mask: u8) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::num::readings::Design::digits(base, mask);
+                (PySerde(out)).into_bound_py_any(py)
+            }
+            /// Returns Rudin-Shapiro.
+            #[staticmethod]
+            #[pyo3(name = "rudin", signature = ())]
+            pub fn rudin<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::num::readings::Design::rudin();
+                (PySerde(out)).into_bound_py_any(py)
+            }
+            /// Returns the ternary parity, `3:2`, the parity of the ternary digits equal to 2.
+            #[staticmethod]
+            #[pyo3(name = "ternary", signature = ())]
+            pub fn ternary<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::num::readings::Design::ternary();
+                (PySerde(out)).into_bound_py_any(py)
+            }
+            /// Returns Thue-Morse, `2:1`.
+            #[staticmethod]
+            #[pyo3(name = "thue", signature = ())]
+            pub fn thue<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::num::readings::Design::thue();
+                (PySerde(out)).into_bound_py_any(py)
+            }
+        }
+
+        /// The sequences a design is read along: `y(n) = x(P(n))` for a polynomial `P`, or `x(p_n)` along the primes.
+        #[pyclass(name = "Reading", module = "mrly.num.readings", skip_from_py_object)]
+        pub struct Reading;
+
+        #[pymethods]
+        impl Reading {
+            /// Returns every Reading in canonical order.
+            #[staticmethod]
+            #[pyo3(name = "all", signature = ())]
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly::num::readings::Reading::all();
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+            }
+            /// Returns the reading's formula, written the way the page prints it.
+            #[staticmethod]
+            #[pyo3(name = "formula", signature = (reading))]
+            pub fn formula<'py>(
+                py: Python<'py>,
+                reading: PySerde<mrly::num::readings::Reading>,
+            ) -> PyResult<Bound<'py, PyAny>> {
+                let reading = reading.0;
+                let out = mrly::num::readings::Reading::formula(reading);
+                (out).into_bound_py_any(py)
+            }
+        }
+
+        /// Lists a design's major arcs along the squares below the cut, best first, each with its amplitude.
+        #[pyfunction]
+        #[pyo3(name = "arcs", signature = (design, cut))]
+        pub fn arcs<'py>(
+            py: Python<'py>,
+            design: PySerde<mrly::num::readings::Design>,
+            cut: f64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let design = design.0;
+            let out = mrly::num::readings::arcs(design, cut);
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+        }
+
+        /// Runs the battery on a stream of signs.
+        #[pyfunction]
+        #[pyo3(name = "battery", signature = (stream))]
+        pub fn battery<'py>(py: Python<'py>, stream: Vec<i8>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::num::readings::battery(&stream);
+            (PySerde(out)).into_bound_py_any(py)
+        }
+
+        /// Measures the bias `S(N) = sum_(n<N) y(n)` of a stream at `N = 2^e` for each exponent; a checkpoint past the stream's end sums the whole stream.
+        #[pyfunction]
+        #[pyo3(name = "bias", signature = (stream, exponents))]
+        pub fn bias<'py>(
+            py: Python<'py>,
+            stream: Vec<i8>,
+            exponents: Vec<u32>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::num::readings::bias(&stream, &exponents);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Lists the 57 digit designs, base by base and mask by mask, then Rudin-Shapiro.
+        #[pyfunction]
+        #[pyo3(name = "designs", signature = ())]
+        pub fn designs<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly::num::readings::designs();
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+        }
+
+        /// Predicts the bias `S(N) = sum_(n<N) x(n^2)` at `N = 2^e` for each exponent, from the arcs below the cut: `1 + Re sum_gamma A(gamma) U(gamma; N^2)`.
+        #[pyfunction]
+        #[pyo3(name = "model", signature = (design, cut, exponents))]
+        pub fn model<'py>(
+            py: Python<'py>,
+            design: PySerde<mrly::num::readings::Design>,
+            cut: f64,
+            exponents: Vec<u32>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let design = design.0;
+            let out = mrly::num::readings::model(design, cut, &exponents);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the design's name in the `b:D` form, the digits of `D` ascending, or `rudin-shapiro`.
+        #[pyfunction]
+        #[pyo3(name = "name", signature = (design))]
+        pub fn name<'py>(
+            py: Python<'py>,
+            design: PySerde<mrly::num::readings::Design>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let design = design.0;
+            let out = mrly::num::readings::name(design);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Lists the battery pairs that are near-heads of a polynomial reading at the design's base, the 44 dilation pairs first and the two kernel pairs after; the primes have none.
+        #[pyfunction]
+        #[pyo3(name = "near_heads", signature = (design, reading))]
+        pub fn near_heads<'py>(
+            py: Python<'py>,
+            design: PySerde<mrly::num::readings::Design>,
+            reading: PySerde<mrly::num::readings::Reading>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let design = design.0;
+            let reading = reading.0;
+            let out = mrly::num::readings::near_heads(design, reading);
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+        }
+
+        /// Returns the design's sign at a number, plus or minus one.
+        #[pyfunction]
+        #[pyo3(name = "sign", signature = (design, n))]
+        pub fn sign<'py>(
+            py: Python<'py>,
+            design: PySerde<mrly::num::readings::Design>,
+            n: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let design = design.0;
+            let out = mrly::num::readings::sign(design, n);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Builds a reading's first signs: `y(n) = x(P(n))` for `n < count`, or `x(p_n)` along the first `count` primes from a segmented sieve.
+        #[pyfunction]
+        #[pyo3(name = "stream", signature = (design, reading, count))]
+        pub fn stream<'py>(
+            py: Python<'py>,
+            design: PySerde<mrly::num::readings::Design>,
+            reading: PySerde<mrly::num::readings::Reading>,
+            count: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let design = design.0;
+            let reading = reading.0;
+            let out = mrly::num::readings::stream(design, reading, count);
+            (out).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrly.num.readings")?;
+            m.setattr("__doc__", "The readings: a digit-parity design read along a polynomial or the primes, the battery that tests the signs, the near-heads that fix some of its pairs, and the major-arc model of the bias along the squares.\n\nA design is `f_{b,D}(n)`, the parity of the number of base-`b` digits of `n` in `D`, with `2 <= b <= 6` and `D` a subset of the digits `1..b-1`, named `b:D`, so `2:1` is Thue-Morse and `3:2` the ternary parity; its sign is `x(n) = (-1)^f(n)`. Rudin-Shapiro, the parity of the `11` blocks of the binary digits, rides beside them.\n\nA reading is `y(n) = x(P(n))` along a polynomial `P`, or `x(p_n)` along the consecutive primes. The battery reads a stream of signs by Pearson correlations: the shift pairs `(n, n + h)`, the 44 dilation pairs `(n, B n + r)`, the two kernel pairs `(b n, b^2 n)` and the dilation square `y(n) y(2n) y(3n) y(6n)`.\n\nA battery pair is a near-head when the composed polynomials satisfy `P(psi(n)) = b^L (P(phi(n)) + q) + s` with `0 <= s < b^L`; when `q = 0` the design's digits concatenate and the pair reads exactly `x(s)`.\n\nAlong the squares the circle method's major arcs model `S(N) = sum_(n<N) x(n^2)` as `1 + Re sum_gamma A(gamma) U(gamma; N^2)`, the arcs `gamma = c/(b^2 - 1)` being the points fixed by `B = b^2`, each with `eta = 1 - log_B abs(sigma)`, the amplitude `A = (G(-c, q)/q) K` a quadratic Gauss sum times the `B`-adic limit `K` of the digit recursion, and `U(gamma; M) = sum_(1<=m<M) x(m) e(m gamma)/(2 sqrt(m))` summed exactly block by block through a Taylor-moment recursion.")?;
+            m.add_class::<Design>()?;
+            m.add_class::<Reading>()?;
+            m.add_function(wrap_pyfunction!(arcs, &m)?)?;
+            m.add_function(wrap_pyfunction!(battery, &m)?)?;
+            m.add_function(wrap_pyfunction!(bias, &m)?)?;
+            m.add_function(wrap_pyfunction!(designs, &m)?)?;
+            m.add_function(wrap_pyfunction!(model, &m)?)?;
+            m.add_function(wrap_pyfunction!(name, &m)?)?;
+            m.add_function(wrap_pyfunction!(near_heads, &m)?)?;
+            m.add_function(wrap_pyfunction!(sign, &m)?)?;
+            m.add_function(wrap_pyfunction!(stream, &m)?)?;
+            m.add(
+                "READINGS",
+                (mrly::num::readings::READINGS)
+                    .into_iter()
+                    .map(PySerde)
+                    .collect::<Vec<_>>(),
+            )?;
+            let names: Vec<&str> = vec![
+                "arcs",
+                "battery",
+                "bias",
+                "designs",
+                "model",
+                "name",
+                "near_heads",
+                "sign",
+                "stream",
+                "Design",
+                "Reading",
+                "READINGS",
+            ];
+            m.add("__all__", names)?;
+            parent.add("readings", &m)?;
+            sys.set_item("mrly._mrly.num.readings", &m)?;
+            Ok(())
+        }
+    }
+
     /// The infinite sums: the classic sequences, zeta and its Dirichlet cousins, the partials that walk to pi, e and gamma, the visible count and the Bernoulli fractions.
     pub mod series {
         use crate::hand::ok;
@@ -18942,7 +19685,7 @@ pub mod num {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.num")?;
-        m.setattr("__doc__", "The integers: primes, divisors, series, sieves, lattices and spectra.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: `gcd`, `factorial`, `divisors`, `mobius`.\n- The primality test: `is_prime`.\n- The zeta value above one: `zeta`.")?;
+        m.setattr("__doc__", "The integers: primes, divisors, series, sieves, lattices and spectra.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `chladni`: the figures of a ringing square plate, their ladder by pitch, the sand that runs to their lines and the lines themselves.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `readings`: a digit-parity design read along a polynomial or the primes, its battery, its near-heads and the major-arc model of its bias along the squares.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: `gcd`, `factorial`, `divisors`, `mobius`.\n- The primality test: `is_prime`.\n- The zeta value above one: `zeta`.")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         apollonian::init(py, &m, sys)?;
@@ -18956,6 +19699,7 @@ pub mod num {
         lattice::init(py, &m, sys)?;
         morse::init(py, &m, sys)?;
         prime::init(py, &m, sys)?;
+        readings::init(py, &m, sys)?;
         series::init(py, &m, sys)?;
         sieve::init(py, &m, sys)?;
         spiral::init(py, &m, sys)?;

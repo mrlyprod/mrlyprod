@@ -36,6 +36,39 @@ class Exposure:
     def to_dict(self) -> Any:
         """Returns the value as plain data."""
 
+class Placements:
+    """The placement counts the face recurrence runs on: for each pattern `P` of cells inside a `2^d` window and each lowest digit `w` of the tile, whether `w + P` fits the tile with wrap-around, and which pattern `P ^ W` the carried digits must then form one level up."""
+    def at(self, level: int) -> Skeleton | None:
+        """Returns the face counts of the level-fold Kronecker power, or none past a `u128`."""
+    @staticmethod
+    def of_tile(tile: NDArray[Any]) -> Placements:
+        """Reads the placement counts off a rendered tile of two to four dimensions."""
+    def recurrence(self, k: int | None = None) -> list[int] | None:
+        """Returns the coefficients `c` of the recurrence `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...` the `k`-face count obeys from `L = 0`, every face when `k` is none, or none past an `i128`."""
+    def roots(self, k: int | None = None) -> list[tuple[int, int]]:
+        """Returns the roots of the recurrence the `k`-face count obeys, every face when `k` is none, each with the multiplicity the recurrence needs: the spanning counts of the patterns the count reaches, a root repeated once per pattern of that count on one carry chain."""
+
+class Skeleton:
+    """The face counts of the union of closed unit cubes a design's level power fills: `counts[k]` is its distinct unit `k`-faces, the cells last, and `euler` their alternating sum."""
+    @property
+    def counts(self) -> list[int]:
+        """The distinct unit `k`-faces for `k = 0..=dimension`."""
+    @counts.setter
+    def counts(self, value: list[int]) -> None: ...
+    @property
+    def euler(self) -> int:
+        """The Euler characteristic, `sum (-1)^k counts[k]`."""
+    @euler.setter
+    def euler(self, value: int) -> None: ...
+    def cells(self) -> int:
+        """The filled cells."""
+    def edges(self) -> int:
+        """The distinct unit edges."""
+    def faces(self) -> int:
+        """The distinct unit squares, the cells themselves in the plane."""
+    def vertices(self) -> int:
+        """The distinct corners."""
+
 def centered_hexagonal(m: int) -> int:
     """Returns the centered hexagonal number at the index, the lattice points of a hexagon of side m-1."""
 
@@ -93,6 +126,15 @@ def ratio(code: int, number: int, dimension: int, level: int, base: int) -> floa
 
 def rational(code: int, number: int, dimension: int, level: int, base: int) -> tuple[int, int]:
     """Returns the exact filled fraction as a fraction of fill over grid, reduced."""
+
+def skeleton(code: int, number: int, dimension: int, base: int, level: int) -> Skeleton:
+    """Returns the face counts of the code's design at the given level, from the tile's placement counts alone."""
+
+def skeleton_of_tile(tile: NDArray[Any], level: int) -> Skeleton | None:
+    """Returns the face counts of the tile's level-fold Kronecker power, or none past a `u128`."""
+
+def skeleton_recurrence(code: int, number: int, dimension: int, base: int, k: int | None = None) -> list[int]:
+    """Returns the coefficients of the recurrence the code's `k`-face count obeys along the level, every face and the Euler characteristic when `k` is none."""
 
 def surface(code: int, number: int, level: int, base: int) -> int:
     """Returns the exposed face count of the code's 3D fractal at the given level."""

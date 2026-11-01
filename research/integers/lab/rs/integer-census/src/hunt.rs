@@ -1,6 +1,5 @@
 use crate::census::{self, Census, CHAMPIONS};
-use crate::rows::{Row, Sheet, Stop, CAP, CEILING, DEEP};
-use ledger::Tier;
+use crate::rows::{Row, Sheet, Stop, CAP, CEILING, DEEP, TIERS};
 
 pub const BANDS: [i128; 5] = [10, 100, 1_000, 10_000, CEILING];
 pub const TAIL: i128 = 30_000;
@@ -538,7 +537,7 @@ fn spectrum(sheet: &Sheet, book: &Census) {
         whole.len(),
         high.len()
     );
-    for tier in Tier::ALL {
+    for tier in TIERS {
         let mine = fold(
             sheet
                 .rows

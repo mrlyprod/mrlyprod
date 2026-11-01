@@ -16,6 +16,7 @@
 //! - `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.
 //! - `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.
 //! - `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.
+//! - `readings`: a digit-parity design read along a polynomial or the primes, its battery, its near-heads and the major-arc model of its bias along the squares.
 //! - `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.
 //! - `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.
 //! - `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.
@@ -49,6 +50,8 @@ pub mod lattice;
 pub mod morse;
 /// The prime objects: the sieve and its readings, values, ranks, gaps, the counts they make and the shape readings of a number.
 pub mod prime;
+/// The readings: the digit-parity designs and Rudin-Shapiro read along `n`, `n^2`, `n^2 + n`, `n^3` and the primes, the battery of shift, dilation and kernel correlations, the near-heads it fixes and the major-arc model of the bias along the squares.
+pub mod readings;
 /// The infinite sums: the classic sequences, zeta and its Dirichlet cousins, the partials that walk to pi, e and gamma, the visible count and the Bernoulli fractions.
 pub mod series;
 /// The punctured schedules: the Wallis sieve and its kin, their words, rasters, punctures and limits.

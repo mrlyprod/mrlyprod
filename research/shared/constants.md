@@ -17,6 +17,7 @@ Real numbers fall out of the fractal work beside the integer sequences: sieve li
 | [log2-phi](#log2-phi) | `0.694241913630` | 12 | `beneath/lab/py/question-mark` verb table, code 126 | [beneath](../beneath/notes/beneath.md) | [A242208](https://oeis.org/A242208) |
 | [orphan-11892](#orphan-11892) | `0.41681776443307102575640207215` | 29 | `beneath/lab/py/periodic-determinant` verb orphans | [beneath](../beneath/notes/beneath.md) | none |
 | [carpet-reach-7-3](#carpet-reach-7-3) | `0.79100941515` | 11 | `spirograph/lab/rs/roulette-reaches`, track `7/3` inside, marks `(-6, -9)` | [spirograph](../spirograph/notes/spirograph.md) | none |
+| [slice-ladder-rate](#slice-ladder-rate) | `1.346122006764217277640827069917397630838` | 40 | `cuts/lab/py/slice-ladder-rate` verb product | [cuts](../cuts/notes/cuts.md) | none |
 
 ## ROWS
 
@@ -73,3 +74,9 @@ Real numbers fall out of the fractal work beside the integer sequences: sieve li
 - The reach at which four of the carpet wheel's trochoids on the circle track `7/3`, inside, run through one point: the transversal alignment with marks `(-6, -9)`, corner seat modulus `0.527339610104`, ring `1.005704332357` wheel radii.
 - The study bisects it to an f64 bracket of width `1.1e-16` and prints `0.791009415157`, the exact law residual `4.18e-15`; the twelve printed decimals round safe, so eleven are truncated safe.
 - Claim: [spirograph-reaches](../spirograph/claims/spirograph-reaches.md).
+
+### slice-ladder-rate
+
+- `r_inf = 1/prod_(k>=2) cos(2 pi/3^k)`, the per-dimension decay rate on the eigenvalue scale of the slice excess `rho_dim - fill/3` of the base-3 central diagonal slice; the product itself is `0.7428747134175312701067637570301888840694`, and `2 r_inf = 2.69224401352843455` is the rate on the dimension scale.
+- The verb multiplies 139 cosines at 60 and 120 digits, the two agreeing on all 40 truncated digits, the tail below `pi^2/(4 9^140) = 6.28e-134`; the verb `rate` reads the same constant off exact Perron roots, the one-step ratio deflated by the form's `dim`-dependence within `1.06e-17` of it at `dim = 120`, and retires the fit `1.34612251727283689`, seven true digits.
+- Claims: [diagonal-slice-ladder](../cuts/claims/diagonal-slice-ladder.md), [slice-ladder-rate-and-dead-routes](../cuts/claims/slice-ladder-rate-and-dead-routes.md).

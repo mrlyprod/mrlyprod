@@ -35,7 +35,7 @@ function machine() {
       }
     reads.push([a, mask & ~fill & (STATES - 1)]);
   }
-  const slide = Array.from({ length: CELLS }, (_, p) => (((p >> 2) + 1) % SIDE << 2) | (((p & 3) + 1) % SIDE));
+  const slide = Array.from({ length: CELLS }, (_, p) => ((((p >> 2) + 1) % SIDE) << 2) | (((p & 3) + 1) % SIDE));
   const ones = (v: number) => {
     let c = 0;
     for (; v; v &= v - 1) c++;
@@ -94,10 +94,27 @@ export default function draw(pen: Pen, ink: Ink) {
       Array.from({ length: SIDE }, (_, i) => Array.from({ length: SIDE }, (_, j) => want(SIDE * i + j)));
     const on = (p: number) => ((x >> p) & 1) === 1;
     const side = (p: number) => ((fill >> p) & 1) === 1;
-    const grid = new Grid(frame(left + (t % TILES) * (tile + gap), top + Math.floor(t / TILES) * (tile + gap), tile, tile), SIDE, SIDE, 0);
-    grid.carpet(pen, at((p) => side(p) && !on(p)), ink.line);
-    grid.carpet(pen, at((p) => side(p) && on(p)), ink.blue);
-    grid.carpet(pen, at((p) => !side(p) && on(p)), ink.orange);
+    const grid = new Grid(
+      frame(left + (t % TILES) * (tile + gap), top + Math.floor(t / TILES) * (tile + gap), tile, tile),
+      SIDE,
+      SIDE,
+      0,
+    );
+    grid.carpet(
+      pen,
+      at((p) => side(p) && !on(p)),
+      ink.line,
+    );
+    grid.carpet(
+      pen,
+      at((p) => side(p) && on(p)),
+      ink.blue,
+    );
+    grid.carpet(
+      pen,
+      at((p) => !side(p) && on(p)),
+      ink.orange,
+    );
     x = next[x];
   }
 }

@@ -7,6 +7,8 @@
 pub mod counting;
 /// The diagonal profile of any tile's power, as a digit polynomial.
 pub mod diagonal;
+/// The closed-form vertex, edge, face and Euler counts of any design's level power.
+pub mod faces;
 /// The base-q slice carry automaton: its digit polynomial, its matrix, its ladder and its sign law.
 pub mod ladder;
 /// The closed-form triangle, node and edge counts of hex slices.
@@ -18,6 +20,7 @@ pub use counting::{
     dimension, fill, fill_from_corners, grid, limit, positions, ratio, rational, void,
 };
 pub use diagonal::profile_of_tile;
+pub use faces::{Placements, Skeleton, skeleton, skeleton_of_tile, skeleton_recurrence};
 pub use six::{centered_hexagonal, cut_fills, cut_voids, pro_fills, pro_voids};
 pub use surface::{
     Exposure, edges_of_tile, exposure, exposure_of_tile, exposure_recurrence, pairs, surface,

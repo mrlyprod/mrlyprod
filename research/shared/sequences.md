@@ -94,7 +94,10 @@ At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so 
 | id | design | key | closed form | terms from `k = 2` | record | shift | status |
 |---|---|---|---|---|---|---|---|
 | 6630d885 | dust | `sequence_dim=2_code=1_measure=fills_axis=side` | `k^2` | `4, 9, 16, 25, 36, 49, 64, 81` | [A000290](https://oeis.org/A000290) | 0 | **Proved** |
+| 7199050d | dust | `sequence_dim=2_code=1_measure=voids_axis=side` | `3k^2 - 4k + 1` | `5, 16, 33, 56, 85, 120, 161, 208` | [A045944](https://oeis.org/A045944) | -1 | **Proved** |
 | 09d8d98c | tree | `sequence_dim=2_code=3_measure=fills_axis=side` | `2k^2 - k` | `6, 15, 28, 45, 66, 91, 120, 153` | [A000384](https://oeis.org/A000384) | 0 | **Proved** |
+| 91c41302 | tree | `sequence_dim=2_code=3_measure=voids_axis=side` | `2k^2 - 3k + 1` | `3, 10, 21, 36, 55, 78, 105, 136` | [A014105](https://oeis.org/A014105) | -1 | **Proved** |
+| df16f6b0 | star | `sequence_dim=2_code=6_measure=fills_axis=side` | `2k^2 - 2k` | `4, 12, 24, 40, 60, 84, 112, 144` | [A046092](https://oeis.org/A046092) | -1 | **Proved** |
 | 8a9e4ce8 | carpet | `sequence_dim=2_code=7_measure=fills_axis=side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225` | [A000567](https://oeis.org/A000567) | 0 | **Proved** |
 | a3ef3d4d | void | `sequence_dim=2_code=9_measure=fills_axis=side` | `2k^2 - 2k + 1` | `5, 13, 25, 41, 61, 85, 113, 145` | [A001844](https://oeis.org/A001844) | -1 | **Proved** |
 | 20aeeec9 | corner and centre | `sequence_dim=2_code=11_measure=fills_axis=side` | `3k^2 - 3k + 1` | `7, 19, 37, 61, 91, 127, 169, 217` | [A003215](https://oeis.org/A003215) | -1 | **Proved** |
@@ -102,6 +105,8 @@ At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so 
 | b91a9c68 | dust | `sequence_dim=3_code=1_measure=fills_axis=side` | `k^3` | `8, 27, 64, 125, 216, 343, 512, 729` | [A000578](https://oeis.org/A000578) | 0 | **Proved** |
 | 52fb27f4 | sponge | `sequence_dim=3_code=23_measure=fills_axis=side` | `4k^3 - 3k^2` | `20, 81, 208, 425, 756, 1225, 1856, 2673` | [A103532](https://oeis.org/A103532) | -1 | **Proved** |
 | 1d05226c | sponge | `sequence_dim=3_code=23_measure=voids_axis=side` | `4k^3 - 9k^2 + 6k - 1` | `7, 44, 135, 304, 575, 972, 1519, 2240` | [A395241](https://oeis.org/A395241) | -1 | **Verified** |
+| 6cbb6663 | sponge | `sequence_dim=3_code=23_measure=triangles_axis=side` | none | `42, 72, 204, 210, 486, 420, 888, 702` | [A399018](https://oeis.org/A399018) | -1 | **Verified** |
+| 770e39c6 | sponge | `sequence_dim=3_code=23_measure=gaps_axis=side` | none | `12, 78, 90, 276, 240, 594, 462, 1032` | [A399019](https://oeis.org/A399019) | -1 | **Verified** |
 | cea32177 | void | `sequence_dim=3_code=129_measure=fills_axis=side` | `2k^3 - 3k^2 + 3k - 1` | `9, 35, 91, 189, 341, 559, 855, 1241` | [A005898](https://oeis.org/A005898) | -1 | **Proved** |
 | 553a9967 | solid | `sequence_dim=3_code=255_measure=fills_axis=side` | `8k^3 - 12k^2 + 6k - 1` | `27, 125, 343, 729, 1331, 2197, 3375, 4913` | [A016755](https://oeis.org/A016755) | -1 | **Proved** |
 
@@ -112,6 +117,8 @@ The odd-side fill of a design is a product of norm forms, one per irreducible fa
 ### The level axis
 
 At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrly::math::counts::exposure` closes it in every dimension and `mrly::math::counts::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, its recurrence **Proved** by the carry automaton on the cuts note, the census checked to level 4 by `mrly::math::counts::cut_fills`.
+
+The vertices, edges, faces and Euler characteristic of a level close by the placement recurrence of `mrly::math::counts::skeleton`: each unit `k`-face count is a signed sum of window-pattern counts, the pattern counts obey a triangular recurrence whose diagonal is the spanning counts, and `mrly::math::counts::skeleton_recurrence` spells the recurrence each row obeys from level 0. **Proved**. These rows print the recurrence, never a sum of powers: of the 2599 level rows, 644 print a recurrence with a repeated root and 220 one with a repeated nonzero root, where a polynomial factor in `level` can stand beside the powers. The recurrence terms equal the rendered census on all 859 designs that carry a face count, 10404 terms within the cell budget, pinned by the ledger test `the_skeleton_closes_the_rendered_face_counts`; the side axis still renders.
 
 | id | design | key | closed form | terms from level 1 | record | shift | status |
 |---|---|---|---|---|---|---|---|
@@ -127,11 +134,14 @@ At side 3 the fill of a level is the tile's fill to the power `level` and the vo
 
 ### Cited by a claim
 
-A sequence that a claim or a note names by its `sequence_...` name, and that no OEIS record holds, is still a row: the terms come from the same registry, and its witness is the file that cites it. A name no claim cites and no record holds is not on this page.
+A sequence that a claim or a note names by its `sequence_...` name, and that no OEIS record holds, is still a row: the terms come from the same registry, and its witness is the file that cites it. A name no claim cites and no record holds is not on this page. A `loops` row counts the closed curves of the design drawn in Truchet arcs; a `windows` row runs along the window side `k` and counts the distinct `k x k` windows of the design's renders, exactly, through the substitution census.
 
 | id | key | closed form | terms | cited by |
 |---|---|---|---|---|
+| `3d20d6b8` | `sequence_dim=2_base=3_code=495_measure=loops_axis=level` | none | `0, 3, 50, 509, 4444` to the cell budget | `claims/arc-loops` |
+| `13bc5323` | `sequence_dim=2_base=3_code=495_measure=windows_axis=window` | none | `2, 10, 40, 74, 152, 242, 344, 442` | `claims/design-windows` |
 | `2a763bb2` | `sequence_dim=2_code=6_measure=heights_axis=side` | none | `2, 4, 6, 8, 10, 12, 14, 16` | `claims/registry-integers` |
+| `dea974a8` | `sequence_dim=2_code=7_measure=windows_axis=window` | none | `2, 10, 40, 74, 152, 242, 344, 442` | `claims/design-windows` |
 | `e4c7cd4a` | `sequence_dim=4_code=28662_measure=voids_axis=side` | `4k^4 - 8k^3 + 8k^2 - 4k + 1` | `25, 169, 625, 1681, 3721, 7225, 12769, 21025` | `claims/registry-integers` |
 
 ## CANDIDATES, NOT ENTRIES
@@ -158,7 +168,7 @@ Both censuses live in `coprime/lab/rs/design-census`: the fill-class census behi
 
 ## THE RECORDS
 
-Every OEIS entry this ledger holds, read against the live entry on its name, its offset and its first terms; an id cited elsewhere on this tree with no row here is resolved in [REFS.md](refs.md) and is not read by this page. `key` names the design sequence an entry is, in the registry's `sequence_dim=..._code=..._measure=..._axis=...` spelling, `id` the first eight hex digits of the sha256 of that name's canonical JSON, and `shift` that record's index less the ledger's. The registry walks 1282 designs across 9 dimension and base pairs and holds 7692 closed rows and 5044 convolved rows of 8 terms each; the grid tiers render on demand within a budget of 500000 cells a term.
+Every OEIS entry this ledger holds, read against the live entry on its name, its offset and its first terms; an id cited elsewhere on this tree with no row here is resolved in [REFS.md](refs.md) and is not read by this page. `key` names the design sequence an entry is, in the registry's `sequence_dim=..._code=..._measure=..._axis=...` spelling, `id` the first eight hex digits of the sha256 of that name's canonical JSON, and `shift` that record's index less the ledger's. The registry walks 1282 designs across 9 dimension and base pairs and holds 10291 closed rows and 5044 convolved rows of 8 terms each; the grid tiers render on demand within a budget of 500000 cells a term.
 
 | id | record | name | offset | first terms | key | shift | status |
 |---|---|---|---|---|---|---|---|
@@ -192,11 +202,14 @@ Every OEIS entry this ledger holds, read against the live entry on its name, its
 | 91fac30a | [A009964](https://oeis.org/A009964) | Powers of 20 | 0 | `1, 20, 400, 8000, 160000, 3200000, 64000000, 1280000000, 25600000000, 512000000000` | `sequence_dim=3_code=23_measure=fills_axis=level` | 0 | **Proved** |
 | 0e1b6a21 | [A009971](https://oeis.org/A009971) | Powers of 27 | 0 | `1, 27, 729, 19683, 531441, 14348907, 387420489, 10460353203, 282429536481, 7625597484987` | `sequence_dim=3_code=255_measure=fills_axis=level` | 0 | **Proved** |
 |  | [A011934](https://oeis.org/A011934) | a(n) = abs(1^3 - 2^3 + 3^3 - 4^3 + ... + (-1)^(n+1)\*n^3) | 0 | `0, 1, 7, 20, 44, 81, 135, 208, 304, 425, 575, 756` |  |  | **Verified** |
+| 91c41302 | [A014105](https://oeis.org/A014105) | Second hexagonal numbers: a(n) = n\*(2\*n + 1) | 0 | `0, 3, 10, 21, 36, 55, 78, 105, 136, 171, 210, 253` | `sequence_dim=2_code=3_measure=voids_axis=side` | -1 | **Proved** |
 | f1ee0d51 | [A016185](https://oeis.org/A016185) | a(n) = 9^n - 8^n | 0 | `0, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 253202761, 2413042577, 22791125017` | `sequence_dim=2_code=7_measure=voids_axis=level` | 0 | **Proved** |
 | c11482b0 | [A016754](https://oeis.org/A016754) | Odd squares: a(n) = (2n+1)^2, also centered octagonal numbers | 0 | `1, 9, 25, 49, 81, 121, 169, 225, 289, 361, 441, 529` | `sequence_dim=2_code=15_measure=fills_axis=side` | -1 | **Proved** |
 | 553a9967 | [A016755](https://oeis.org/A016755) | Odd cubes: a(n) = (2\*n + 1)^3 | 0 | `1, 27, 125, 343, 729, 1331, 2197, 3375, 4913, 6859, 9261, 12167` | `sequence_dim=3_code=255_measure=fills_axis=side` | -1 | **Proved** |
 |  | [A018413](https://oeis.org/A018413) | Divisors of 363 | 1 | `1, 3, 11, 33, 121, 363` |  |  | **Verified** |
 |  | [A034474](https://oeis.org/A034474) | a(n) = 5^n + 1 | 0 | `2, 6, 26, 126, 626, 3126, 15626, 78126, 390626, 1953126, 9765626, 48828126` |  |  | **Verified** |
+| 7199050d | [A045944](https://oeis.org/A045944) | Rhombic matchstick numbers: a(n) = n\*(3\*n+2) | 0 | `0, 5, 16, 33, 56, 85, 120, 161, 208, 261, 320, 385` | `sequence_dim=2_code=1_measure=voids_axis=side` | -1 | **Proved** |
+| df16f6b0 | [A046092](https://oeis.org/A046092) | 4 times triangular numbers: a(n) = 2\*n\*(n+1) | 0 | `0, 4, 12, 24, 40, 60, 84, 112, 144, 180, 220, 264` | `sequence_dim=2_code=6_measure=fills_axis=side` | -1 | **Proved** |
 |  | [A047999](https://oeis.org/A047999) | Sierpinski's triangle (or gasket): Pascal's triangle read by rows mod 2 | 0 | `1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0` |  |  | **Verified** |
 |  | [A048883](https://oeis.org/A048883) | a(n) = 3^wt(n), where wt(n) = A000120(n) | 0 | `1, 3, 3, 9, 3, 9, 9, 27, 3, 9, 9, 27` |  |  | **Verified** |
 |  | [A054247](https://oeis.org/A054247) | Number of n X n binary matrices under action of dihedral group of the square D\_4 | 0 | `1, 2, 6, 102, 8548, 4211744, 8590557312, 70368882591744, 2305843028004192256` |  |  | **Verified** |
@@ -222,6 +235,8 @@ Every OEIS entry this ledger holds, read against the live entry on its name, its
 |  | [A396922](https://oeis.org/A396922) | E.g.f. A(x) satisfies A( x / A(log(A(log(A(log(A(x))))))) ) = exp(x) | 0 | `1, 1, 3, 40, 1421, 87896, 7921207, 951512332, 144407735033, 26715045346048` |  |  | **Verified** |
 |  | [A396934](https://oeis.org/A396934) | Number of pairs (i,j) with 0 <= i,j < 2^n, i AND j = 0, and gcd(i,j) = 1 | 0 | `0, 2, 4, 12, 34, 122, 362, 1130, 3406, 10506, 31550, 95260` |  |  | **Verified** |
 |  | [A398348](https://oeis.org/A398348) | Number of toroidal n X n X n binary arrays, allowing rotation and/or reflection of the layers along each axis as well as all permutations of the axes | 1 | `2, 22, 111618, 6005363762644688, 7089215977519836239803174210135872, 10157435539019790383692007859901914095646506996125324171134976` |  |  | **Verified** |
+| 6cbb6663 | [A399018](https://oeis.org/A399018) | Number of solid unit triangles in the hexagonal cross-section of the first iteration of the generalized Menger sponge with subdivision 2n+1, cut through the center perpendicular to a space diagonal | 0 | `6, 42, 72, 204, 210, 486, 420, 888, 702, 1410, 1056, 2052` | `sequence_dim=3_code=23_measure=triangles_axis=side` | -1 | **Verified** |
+| 770e39c6 | [A399019](https://oeis.org/A399019) | Number of empty unit triangles in the hexagonal cross-section of the first iteration of the generalized Menger sponge with subdivision 2n+1, cut through the center perpendicular to a space diagonal | 0 | `0, 12, 78, 90, 276, 240, 594, 462, 1032, 756, 1590, 1122` | `sequence_dim=3_code=23_measure=gaps_axis=side` | -1 | **Verified** |
 
 ## OPEN QUESTIONS
 

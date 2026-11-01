@@ -20,6 +20,7 @@ export type Section = { name: string; items?: readonly ReactNode[]; live?: React
 export type PaneProps<U = Units> = {
   spec: Spec<U>;
   value: Value;
+  units?: U;
   onChange: Change;
   folds: readonly (Section | null | false | undefined)[];
 };
@@ -60,7 +61,7 @@ export function usePaint(handle: RefObject<Touched<unknown> | null | undefined>)
   return { onPointerDown: down, onPointerMove: move, onPointerUp: up, onPointerCancel: up };
 }
 
-export function Pane<U = Units>({ spec, value, onChange, folds }: PaneProps<U>) {
+export function Pane<U = Units>({ spec, value, units, onChange, folds }: PaneProps<U>) {
   return (
     <Bar side="right">
       {folds
@@ -70,12 +71,12 @@ export function Pane<U = Units>({ spec, value, onChange, folds }: PaneProps<U>) 
             .filter((item) => typeof item === "string")
             .map((key) => spec.find((row) => row.key === key)!);
           return (
-            <Fold key={name} name={name} live={live ?? gist(rows, value)}>
+            <Fold key={name} name={name} live={live ?? gist(rows, value, units)}>
               {items.map((item) => {
                 if (typeof item !== "string") return item;
                 const row = rows.find((one) => one.key === item);
                 return row ? (
-                  <Knob key={item} row={row} value={value[item]} values={value} onChange={onChange} />
+                  <Knob key={item} row={row} value={value[item]} values={value} units={units} onChange={onChange} />
                 ) : null;
               })}
             </Fold>

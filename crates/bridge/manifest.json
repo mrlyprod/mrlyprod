@@ -202,6 +202,7 @@
         "- `step`: one generation of a grid under birth and survive counts.",
         "- `animate`: a seed run until it fixes, loops or times out.",
         "- `models`: the run config and the recorded life.",
+        "- `recipe`: the recipe grammar and its two-mode run, one name regenerating a run bit for bit.",
         "- `metrics`: the entropy and churn readings of a run.",
         "- `crop`: the centred cropping and tiling of a run's frames.",
         "- `mask`: the design masks a rule reads and the lattice they generate.",
@@ -267,6 +268,23 @@
       "items": 0
     },
     {
+      "path": "life::recipe",
+      "file": "life/recipe.rs",
+      "docs": [
+        "The recipe grammar and its two-mode run: one name regenerates a run bit for bit.",
+        "",
+        "- A name reads `seed.side.level x<tiling> <mode> mask:<mask> birth:<side> survive:<side> x:<limit> cap:<cap>`; a wallpaper drops the cap and tiles once.",
+        "- The seed is a plane class `code1 code3 code6 code7 code15` or a named design at base 2; the mask is a design popped at its centre, or `copy` and `copyinv` of the tiled seed.",
+        "- A rule side names a source with the `_zeros` and `_ones` rolls, or lists its counts; the counts are drawn against the mask's budget.",
+        "- Island: the seed alone on the plane; the canvas grows with the pattern, and the run stops when a live cell comes within the mask's reach of the cap wall.",
+        "- Wallpaper: the seed is the torus, stepped on its own side.",
+        "- A zero in birth runs the rule on a flipping background; the frame is the pattern against its background.",
+        "- A repeated frame stops the run as still, loop or mover with its period and displacement; a mover tells the generation by which it reaches the wall.",
+        "- Counts come from the mask's Kronecker factors, one dilated pass per factor."
+      ],
+      "items": 26
+    },
+    {
       "path": "life::render",
       "file": "life/render.rs",
       "docs": [
@@ -330,6 +348,7 @@
         "- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.",
         "- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.",
         "- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.",
+        "- `game`: the chaos game of a design: its de Bruijn schedules, the restricted games that draw the memory dial's sets, and the mosaic and slice games on a graph.",
         "- `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.",
         "- `radix`: a digit set inside the residues of a base in a ring, and where its words land.",
         "- `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.",
@@ -525,7 +544,7 @@
         "Every number the censuses reach by walking a built cell, this folder reaches by formula:",
         "fills, grids, exposed surfaces, hex slices and the base-q carry ladder."
       ],
-      "items": 26
+      "items": 39
     },
     {
       "path": "math::counts::counting",
@@ -542,6 +561,14 @@
         "The diagonal profile of any tile's power, as a digit polynomial."
       ],
       "items": 1
+    },
+    {
+      "path": "math::counts::faces",
+      "file": "math/counts/faces.rs",
+      "docs": [
+        "The closed-form vertex, edge, face and Euler counts of any design's level power."
+      ],
+      "items": 0
     },
     {
       "path": "math::counts::ladder",
@@ -582,6 +609,20 @@
         "The unconditional dissection of a missing-digit set: the four regions of the frequency grid, the `l^1` masses of the digit transform, the chain certificate against `1/5`, the constant `kappa_F` and the set's own meter and prime count."
       ],
       "items": 24
+    },
+    {
+      "path": "math::game",
+      "file": "math/game.rs",
+      "docs": [
+        "The chaos game of a design: the shift register that writes its digits backwards, the de Bruijn schedules that paint every cell once, the restricted games that draw the memory dial's sets, and the games on a graph that draw a mosaic or a slice.",
+        "",
+        "A design at base `b` has one map per digit, `phi_d(x) = (x + d) / b`, and the game plays `x_n = phi_(d_n)(x_(n-1))` from a start in `[0, 1)^D`.",
+        "Each draw becomes the new leading digit, so for `n >= k` the level-`k` cell of `x_n` is the word of the last `k` draws read newest first.",
+        "A corner is the integer `c = sum_i d_i b^i`, coordinate `0` its least significant digit, the `c = x + b y` of the plane designs, and a cell index is row major, `y side + x` at `side = b^k`, as `crate::memory::cells` reads it.",
+        "A restricted game is a rule of `crate::memory` on the draws in time order, the oldest draw the most significant digit of the window, and the set it draws is the dial's set of the reversed rule.",
+        "A game on a graph keeps a state, draws an edge into it, plays the edge's digit and moves to the edge's source: the mosaic game on its slots, the slice game on its carry heights."
+      ],
+      "items": 16
     },
     {
       "path": "math::graph",
@@ -1088,6 +1129,7 @@
         "- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.",
         "- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.",
         "- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.",
+        "- `readings`: a digit-parity design read along a polynomial or the primes, its battery, its near-heads and the major-arc model of its bias along the squares.",
         "- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.",
         "- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.",
         "- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.",
@@ -1188,6 +1230,22 @@
         "The prime objects: the sieve and its readings, values, ranks, gaps, the counts they make and the shape readings of a number."
       ],
       "items": 25
+    },
+    {
+      "path": "num::readings",
+      "file": "num/readings.rs",
+      "docs": [
+        "The readings: a digit-parity design read along a polynomial or the primes, the battery that tests the signs, the near-heads that fix some of its pairs, and the major-arc model of the bias along the squares.",
+        "",
+        "A design is `f_{b,D}(n)`, the parity of the number of base-`b` digits of `n` in `D`, with `2 <= b <= 6` and `D` a subset of the digits `1..b-1`, named `b:D`, so `2:1` is Thue-Morse and `3:2` the ternary parity; its sign is `x(n) = (-1)^f(n)`. Rudin-Shapiro, the parity of the `11` blocks of the binary digits, rides beside them.",
+        "",
+        "A reading is `y(n) = x(P(n))` along a polynomial `P`, or `x(p_n)` along the consecutive primes. The battery reads a stream of signs by Pearson correlations: the shift pairs `(n, n + h)`, the 44 dilation pairs `(n, B n + r)`, the two kernel pairs `(b n, b^2 n)` and the dilation square `y(n) y(2n) y(3n) y(6n)`.",
+        "",
+        "A battery pair is a near-head when the composed polynomials satisfy `P(psi(n)) = b^L (P(phi(n)) + q) + s` with `0 <= s < b^L`; when `q = 0` the design's digits concatenate and the pair reads exactly `x(s)`.",
+        "",
+        "Along the squares the circle method's major arcs model `S(N) = sum_(n<N) x(n^2)` as `1 + Re sum_gamma A(gamma) U(gamma; N^2)`, the arcs `gamma = c/(b^2 - 1)` being the points fixed by `B = b^2`, each with `eta = 1 - log_B abs(sigma)`, the amplitude `A = (G(-c, q)/q) K` a quadratic Gauss sum times the `B`-adic limit `K` of the digit recursion, and `U(gamma; M) = sum_(1<=m<M) x(m) e(m gamma)/(2 sqrt(m))` summed exactly block by block through a Taylor-moment recursion."
+      ],
+      "items": 23
     },
     {
       "path": "num::series",
@@ -3268,7 +3326,7 @@
     {
       "path": "life::Boundary",
       "name": "Boundary",
-      "defined_at": "life/lib.rs:55",
+      "defined_at": "life/lib.rs:58",
       "docs": [
         "The edge policy of a life grid."
       ],
@@ -3436,7 +3494,7 @@
     {
       "path": "life::Counts",
       "name": "Counts",
-      "defined_at": "life/source.rs:371",
+      "defined_at": "life/source.rs:403",
       "docs": [
         "The neighbor counts one side of a rule fires on.",
         "",
@@ -3539,7 +3597,7 @@
     {
       "path": "life::Fate",
       "name": "Fate",
-      "defined_at": "life/lib.rs:73",
+      "defined_at": "life/lib.rs:76",
       "docs": [
         "The ending of a life run."
       ],
@@ -3786,7 +3844,7 @@
     {
       "path": "life::Source",
       "name": "Source",
-      "defined_at": "life/source.rs:26",
+      "defined_at": "life/source.rs:42",
       "docs": [
         "A named source of neighbor-count values.",
         "",
@@ -3798,8 +3856,24 @@
         "| Binary | A000079 |",
         "| Fibonacci | A000045 |",
         "| GridSquares | A016754 |",
+        "| CarpetFills | A000567 |",
+        "| CarpetVoids | A000290 |",
+        "| NetFills | A045944 |",
+        "| NetVoids | A000290 |",
+        "| TreeFills | A000384 |",
+        "| TreeVoids | A014105 |",
+        "| VoidFills | A001844 |",
+        "| VoidVoids | A046092 |",
+        "| PointFills | A000290 |",
+        "| PointVoids | A000567 |",
+        "| DustFills | A000290 |",
+        "| DustVoids | A045944 |",
+        "| LineFills | A014105 |",
+        "| LineVoids | A000384 |",
+        "| StarFills | A046092 |",
+        "| StarVoids | A001844 |",
         "",
-        "Random, the other mrly families and the code families carry no OEIS id."
+        "A design family's id matches its odd-side values by value; mates share an id. Random and the code families carry none."
       ],
       "kind": "enum",
       "cross": {
@@ -4078,6 +4152,697 @@
           ]
         }
       ],
+      "alias": null
+    },
+    {
+      "path": "life::recipe::Grammar",
+      "name": "Grammar",
+      "defined_at": "life/recipe.rs:80",
+      "docs": [
+        "The lists the knobs of a recipe may offer, in grammar order."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "shapes",
+          "public": true,
+          "docs": [
+            "The seed shapes: the five plane classes, the five classics, the five antis."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        },
+        {
+          "name": "sides",
+          "public": true,
+          "docs": [
+            "The seed sides."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        },
+        {
+          "name": "levels",
+          "public": true,
+          "docs": [
+            "The seed levels."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        },
+        {
+          "name": "tilings",
+          "public": true,
+          "docs": [
+            "The island tilings."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        },
+        {
+          "name": "modes",
+          "public": true,
+          "docs": [
+            "The modes."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        },
+        {
+          "name": "mask_sides",
+          "public": true,
+          "docs": [
+            "The mask sides."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        },
+        {
+          "name": "mask_levels",
+          "public": true,
+          "docs": [
+            "The mask levels."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        },
+        {
+          "name": "copies",
+          "public": true,
+          "docs": [
+            "The copy masks of the tiled seed."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        },
+        {
+          "name": "sources",
+          "public": true,
+          "docs": [
+            "The source names a side may draw."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        },
+        {
+          "name": "rolls",
+          "public": true,
+          "docs": [
+            "The rolls a drawn side may carry."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "life::recipe::Mode",
+      "name": "Mode",
+      "defined_at": "life/recipe.rs:42",
+      "docs": [
+        "The mode of a run."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "island",
+          "wallpaper"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Island",
+          "word": "island",
+          "docs": [
+            "The seed alone on a growing canvas with a wall cap."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Wallpaper",
+          "word": "wallpaper",
+          "docs": [
+            "The seed as the torus."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "life::recipe::Recipe",
+      "name": "Recipe",
+      "defined_at": "life/recipe.rs:55",
+      "docs": [
+        "The parts of one recipe name."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "seed",
+          "public": true,
+          "docs": [
+            "The seed shape token: a plane class `code<n>` or a named design."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "string"
+          }
+        },
+        {
+          "name": "side",
+          "public": true,
+          "docs": [
+            "The seed side, odd."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "level",
+          "public": true,
+          "docs": [
+            "The seed level."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "tiling",
+          "public": true,
+          "docs": [
+            "The tiling of the seed, 1 for one copy."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "mode",
+          "public": true,
+          "docs": [
+            "The mode."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "life::recipe::Mode"
+          }
+        },
+        {
+          "name": "mask",
+          "public": true,
+          "docs": [
+            "The mask token: `shape.side.level`, `copy` or `copyinv`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "string"
+          }
+        },
+        {
+          "name": "birth",
+          "public": true,
+          "docs": [
+            "The birth side: a source name with the `_zeros` and `_ones` rolls, or a comma list of counts."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "string"
+          }
+        },
+        {
+          "name": "survive",
+          "public": true,
+          "docs": [
+            "The survive side, written as the birth side."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "string"
+          }
+        },
+        {
+          "name": "x",
+          "public": true,
+          "docs": [
+            "The generation limit."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "cap",
+          "public": true,
+          "docs": [
+            "The cap of the island canvas, 0 for a wallpaper."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "life::recipe::Run",
+      "name": "Run",
+      "defined_at": "life/recipe.rs:833",
+      "docs": [
+        "A recipe's run, stepped one generation at a time until its stop.",
+        "",
+        "```",
+        "use mrly_life::recipe::{Run, parse};",
+        "let recipe = parse(\"hline.3.1 x1 island mask:carpet.3.1 birth:3 survive:2,3 x:64 cap:31\")?;",
+        "let mut run = Run::new(&recipe)?;",
+        "while run.step().is_none() {}",
+        "assert_eq!((run.stop().map(|s| s.kind), run.generation()), (Some(\"loop\".to_string()), 2));",
+        "# Ok::<(), mrly_core::Error>(())",
+        "```"
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "mode",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "life::recipe::Mode"
+          }
+        },
+        {
+          "name": "kernel",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "unknown",
+            "text": "unknown type Kernel"
+          }
+        },
+        {
+          "name": "table",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "unknown",
+            "text": "unknown type Table"
+          }
+        },
+        {
+          "name": "x",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "cap",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "side",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "walls",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "unknown",
+            "text": "unknown type Walls"
+          }
+        },
+        {
+          "name": "frame",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "unknown",
+            "text": "unknown type Grid"
+          }
+        },
+        {
+          "name": "origin",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "i64"
+              },
+              {
+                "t": "scalar",
+                "name": "i64"
+              }
+            ]
+          }
+        },
+        {
+          "name": "background",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "generation",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "history",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "map",
+            "key": {
+              "t": "u128"
+            },
+            "value": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "u32"
+                },
+                {
+                  "t": "scalar",
+                  "name": "i64"
+                },
+                {
+                  "t": "scalar",
+                  "name": "i64"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "stop",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "plain",
+              "path": "life::recipe::Stop"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "life::recipe::Stop",
+      "name": "Stop",
+      "defined_at": "life/recipe.rs:105",
+      "docs": [
+        "The stop of a run."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "kind",
+          "public": true,
+          "docs": [
+            "The kind: dead, still, loop, mover, wall or limit."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "string"
+          }
+        },
+        {
+          "name": "generation",
+          "public": true,
+          "docs": [
+            "The generation the run stopped at."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "period",
+          "public": true,
+          "docs": [
+            "The period: 1 for dead and still, the cycle of a loop or mover, 0 for a wall or limit."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "dr",
+          "public": true,
+          "docs": [
+            "The row shift of a mover over one period."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        },
+        {
+          "name": "dc",
+          "public": true,
+          "docs": [
+            "The column shift of a mover over one period."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        },
+        {
+          "name": "wall_by",
+          "public": true,
+          "docs": [
+            "The generation a mover reaches the wall by, 0 when it does not before the limit."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "variants": [],
       "alias": null
     },
     {
@@ -5161,6 +5926,136 @@
       "alias": null
     },
     {
+      "path": "math::counts::Placements",
+      "name": "Placements",
+      "defined_at": "math/counts/faces.rs:83",
+      "docs": [
+        "The placement counts the face recurrence runs on: for each pattern `P` of cells inside a `2^d` window and each lowest digit `w` of the tile, whether `w + P` fits the tile with wrap-around, and which pattern `P ^ W` the carried digits must then form one level up.",
+        "",
+        "Every face count of the level power is a signed sum of the placement counts `N_P(L)` of the",
+        "patterns `P`, and `N_P(L + 1) = sum over Q of M[P][Q] N_Q(L)` with `M[P][Q]` the number of",
+        "lowest digits `w` that fit `P` and carry it to `Q`, so every count is a linear recurrence",
+        "whose roots are the diagonal entries `M[P][P]`, the spanning counts of the patterns."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "dimension",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "states",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        },
+        {
+          "name": "transitions",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "tuple",
+                "items": [
+                  {
+                    "t": "scalar",
+                    "name": "usize"
+                  },
+                  {
+                    "t": "u128"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "math::counts::Skeleton",
+      "name": "Skeleton",
+      "defined_at": "math/counts/faces.rs:9",
+      "docs": [
+        "The face counts of the union of closed unit cubes a design's level power fills: `counts[k]` is its distinct unit `k`-faces, the cells last, and `euler` their alternating sum."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "counts",
+          "public": true,
+          "docs": [
+            "The distinct unit `k`-faces for `k = 0..=dimension`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "u128"
+            }
+          }
+        },
+        {
+          "name": "euler",
+          "public": true,
+          "docs": [
+            "The Euler characteristic, `sum (-1)^k counts[k]`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "i128"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
       "path": "math::dissection::Region",
       "name": "Region",
       "defined_at": "math/dissection.rs:26",
@@ -5308,6 +6203,405 @@
               "t": "scalar",
               "name": "f64"
             }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "math::game::Mosaic",
+      "name": "Mosaic",
+      "defined_at": "math/game.rs:468",
+      "docs": [
+        "A mosaic: one mask per palette slot, each filled corner of a slot's mask naming the slot it sends to.",
+        "",
+        "Slot `t` at level `L + 1` is slot `t`'s mask with every filled corner `(d, u)` replaced by slot `u` at level `L`, so the filled cells of slot `t` at level `L` count `e_t S^L 1` with `S` the substitution matrix."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "base",
+          "public": true,
+          "docs": [
+            "The base `b`, the digits per axis."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "dimension",
+          "public": true,
+          "docs": [
+            "The dimension `D` of the cube."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "masks",
+          "public": true,
+          "docs": [
+            "The masks, one per slot: the filled corners `c = sum_i d_i b^i` of the slot, each with the slot it sends to."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "tuple",
+                "items": [
+                  {
+                    "t": "scalar",
+                    "name": "u8"
+                  },
+                  {
+                    "t": "scalar",
+                    "name": "u8"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "math::game::MosaicGame",
+      "name": "MosaicGame",
+      "defined_at": "math/game.rs:481",
+      "docs": [
+        "The chaos game of a mosaic: the graph-directed game on its slots.",
+        "",
+        "The game keeps a slot `v`, draws an edge `(u, d, v)` into it, plays `x -> (x + d) / b` and moves to slot `u`; its limit set from slot `v` is the slot-`v` set of the mosaic."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "matrix",
+          "public": true,
+          "docs": [
+            "The substitution matrix: entry `(u, v)` counts the corners of mask `u` sending to slot `v`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "u64"
+              }
+            }
+          }
+        },
+        {
+          "name": "rho",
+          "public": true,
+          "docs": [
+            "The Perron root of the substitution matrix."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "dimension",
+          "public": true,
+          "docs": [
+            "The Hausdorff dimension `log_b rho` on a strongly connected slot graph, `-inf` when nothing grows."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "edges",
+          "public": true,
+          "docs": [
+            "The edges `(from slot, corner, to slot)`, one per filled corner of every mask."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "u8"
+                },
+                {
+                  "t": "scalar",
+                  "name": "u8"
+                },
+                {
+                  "t": "scalar",
+                  "name": "u8"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "math::game::NamedGame",
+      "name": "NamedGame",
+      "defined_at": "math/game.rs:229",
+      "docs": [
+        "A restricted game of the base-2 square with a name: a rule of `crate::memory` in time order, oldest draw most significant."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "name",
+          "public": true,
+          "docs": [
+            "The name the game is known by."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "string"
+          }
+        },
+        {
+          "name": "dimension",
+          "public": true,
+          "docs": [
+            "The dimension of the rule, two on the square."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "width",
+          "public": true,
+          "docs": [
+            "The window width `k`, one more than the memory."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "code",
+          "public": true,
+          "docs": [
+            "The window code, bit `w` set when the time-ordered window `w` is allowed; a `u128` so a width-3 code crosses the bridge as a decimal string."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "u128"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "math::game::SliceGame",
+      "name": "SliceGame",
+      "defined_at": "math/game.rs:556",
+      "docs": [
+        "The chaos game of a plane design cut by the line `x + y = p / q`: the graph-directed game on its carry heights.",
+        "",
+        "A corner `d` carries the weight `w(d) = d_x + d_y`, and the slice of the set at height `h` is the union over the corners of `phi_d` of the slice at height `b h - w(d)`, so the heights reachable from `p / q` inside the hull `[min w, max w] / (b - 1)` are the states, finitely many at a rational height, and the heights with no way on are dropped.",
+        "The game keeps a height, draws an edge into it, plays the edge's corner and moves to the edge's source height; its limit set from the start is the slice."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "states",
+          "public": true,
+          "docs": [
+            "The live heights as reduced fractions `(numerator, denominator)`, in increasing order."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "i64"
+                },
+                {
+                  "t": "scalar",
+                  "name": "i64"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "start",
+          "public": true,
+          "docs": [
+            "The index of the start height `p / q` in the states, `0` on an empty game."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "edges",
+          "public": true,
+          "docs": [
+            "The edges `(from state, corner, to state)`, one per corner that carries a live height to a live height."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "usize"
+                },
+                {
+                  "t": "scalar",
+                  "name": "u8"
+                },
+                {
+                  "t": "scalar",
+                  "name": "usize"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "matrix",
+          "public": true,
+          "docs": [
+            "The carry matrix: entry `(s, t)` counts the corners carrying state `s` to state `t`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "u64"
+              }
+            }
+          }
+        },
+        {
+          "name": "rho",
+          "public": true,
+          "docs": [
+            "The Perron root of the carry matrix."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "dimension",
+          "public": true,
+          "docs": [
+            "The Hausdorff dimension `log_b rho` of the slice, `-inf` when it is empty."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
           }
         }
       ],
@@ -6917,7 +8211,7 @@
     {
       "path": "math::name::Sequence",
       "name": "Sequence",
-      "defined_at": "math/name/sequence.rs:48",
+      "defined_at": "math/name/sequence.rs:51",
       "docs": [
         "A design sequence's address: the design, the reading taken off it and the index it runs along.",
         "",
@@ -12393,6 +13687,551 @@
       "alias": null
     },
     {
+      "path": "num::readings::Arc",
+      "name": "Arc",
+      "defined_at": "num/readings.rs:531",
+      "docs": [
+        "One major arc of a design along the squares: the point `gamma = num/den`, its exponent and its amplitude."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "num",
+          "public": true,
+          "docs": [
+            "The numerator of `gamma` in lowest terms."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "den",
+          "public": true,
+          "docs": [
+            "The denominator of `gamma` in lowest terms, a divisor of `b^2 - 1`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "eta",
+          "public": true,
+          "docs": [
+            "The exponent `eta = 1 - log_B abs(sigma)`, `B = b^2`, `sigma = sum_(t<B) x(t) e(t gamma)`; the arc's term grows as `N^(1 - 2 eta)`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "amplitude_re",
+          "public": true,
+          "docs": [
+            "The real part of the amplitude `A = (G(-c, q)/q) K`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "amplitude_im",
+          "public": true,
+          "docs": [
+            "The imaginary part of the amplitude."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::readings::Battery",
+      "name": "Battery",
+      "defined_at": "num/readings.rs:332",
+      "docs": [
+        "The battery's verdict on one stream, every correlation over the same `N`."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "count",
+          "public": true,
+          "docs": [
+            "The `N` every statistic runs over: the pairs `n < N`, so `z = abs(r) sqrt(N)` is the caller's."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "mean",
+          "public": true,
+          "docs": [
+            "The mean of `y(n)` over `n < N`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "shift",
+          "public": true,
+          "docs": [
+            "The shift test: the Pearson correlation of `y(n)` with `y(n + h)` for `h = 1..=64`, in that order."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        },
+        {
+          "name": "dilation",
+          "public": true,
+          "docs": [
+            "The dilation test: the 44 pairs `(B, r)`, `2 <= B <= 9`, `r < B`, in that order."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "plain",
+              "path": "num::readings::Dilation"
+            }
+          }
+        },
+        {
+          "name": "kernel",
+          "public": true,
+          "docs": [
+            "The kernel test: the correlation of `y(b n)` with `y(b^2 n)` for `b = 2, 3`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        },
+        {
+          "name": "square",
+          "public": true,
+          "docs": [
+            "The dilation square: the mean of `y(n) y(2n) y(3n) y(6n)`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::readings::Design",
+      "name": "Design",
+      "defined_at": "num/readings.rs:21",
+      "docs": [
+        "A digit-parity design `b:D`, or Rudin-Shapiro: the sign `x(n)` is `-1` to the count of base-`b` digits of `n` in `D`."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "base",
+          "public": true,
+          "docs": [
+            "The base, 2 through 6; a base outside that span is clamped into it."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "mask",
+          "public": true,
+          "docs": [
+            "The digit set `D` as a bitmask, bit `d - 1` set when the digit `d` is in `D`; bits past the base's digits are ignored, and an empty set reads a constant sign."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "rudin",
+          "public": true,
+          "docs": [
+            "Whether the design is Rudin-Shapiro, the parity of the `11` blocks in the binary digits, which ignores the base and the mask."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::readings::Dilation",
+      "name": "Dilation",
+      "defined_at": "num/readings.rs:321",
+      "docs": [
+        "One dilation pair of the battery: `y(n)` against `y(scale n + offset)`."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "scale",
+          "public": true,
+          "docs": [
+            "The factor `B`, 2 through 9."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "offset",
+          "public": true,
+          "docs": [
+            "The remainder `r`, below the factor."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "correlation",
+          "public": true,
+          "docs": [
+            "The Pearson correlation of the pair over the battery's `N` values of `n`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::readings::Head",
+      "name": "Head",
+      "defined_at": "num/readings.rs:414",
+      "docs": [
+        "A battery pair that is a near-head of a reading at the design's base: `P(psi(n)) = b^level (P(phi(n)) + shift) + tail`."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "kernel",
+          "public": true,
+          "docs": [
+            "Whether the pair is a kernel pair `(b n, b^2 n)` rather than a dilation pair `(n, B n + r)`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "scale",
+          "public": true,
+          "docs": [
+            "The dilation's factor `B`, or the kernel's base `b`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "offset",
+          "public": true,
+          "docs": [
+            "The dilation's remainder `r`, zero for a kernel pair."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "level",
+          "public": true,
+          "docs": [
+            "The level `L`, the count of digits the pair appends."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "shift",
+          "public": true,
+          "docs": [
+            "The carry `q`, saturated into the field."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "i32"
+          }
+        },
+        {
+          "name": "tail",
+          "public": true,
+          "docs": [
+            "The tail `s`, the digits appended below the carry."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "sign",
+          "public": true,
+          "docs": [
+            "The design's sign at the tail, `x(s)`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "i8"
+          }
+        },
+        {
+          "name": "exact",
+          "public": true,
+          "docs": [
+            "Whether the pair reads `x(s)` at every `n`, so its correlation is exactly plus or minus one: `q = 0`, and for Rudin-Shapiro a tail whose top digit is zero."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::readings::Reading",
+      "name": "Reading",
+      "defined_at": "num/readings.rs:192",
+      "docs": [
+        "The sequences a design is read along: `y(n) = x(P(n))` for a polynomial `P`, or `x(p_n)` along the primes."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "n",
+          "square",
+          "square-plus-n",
+          "cube",
+          "primes"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "N",
+          "word": "n",
+          "docs": [
+            "The design itself, `P(n) = n`."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Square",
+          "word": "square",
+          "docs": [
+            "The squares, `P(n) = n^2`."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "SquarePlusN",
+          "word": "square-plus-n",
+          "docs": [
+            "The pronic numbers, `P(n) = n^2 + n`."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Cube",
+          "word": "cube",
+          "docs": [
+            "The cubes, `P(n) = n^3`."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Primes",
+          "word": "primes",
+          "docs": [
+            "The consecutive primes, `p_0 = 2`."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
       "path": "num::sieve::Row",
       "name": "Row",
       "defined_at": "num/sieve/row.rs:24",
@@ -15557,6 +17396,21 @@
       }
     },
     {
+      "path": "math::game::LAP",
+      "name": "LAP",
+      "defined_at": "math/game.rs:114",
+      "docs": [
+        "The longest lap a de Bruijn cycle may run, in letters."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::ladder::ROUNDING",
       "name": "ROUNDING",
       "defined_at": "math/ladder.rs:9",
@@ -16034,6 +17888,25 @@
           "path": "num::morse::Lift"
         },
         "len": 4
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::READINGS",
+      "name": "READINGS",
+      "defined_at": "num/readings.rs:210",
+      "docs": [
+        "Lists the readings in the order the battery tables print them."
+      ],
+      "ty": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "num::readings::Reading"
+        },
+        "len": 5
       },
       "cross": {
         "status": "ok"
@@ -23050,7 +24923,7 @@
       "path": "life::Boundary::all",
       "name": "all",
       "module": "life",
-      "defined_at": "life/lib.rs:55",
+      "defined_at": "life/lib.rs:58",
       "docs": [
         "Returns every Boundary in canonical order."
       ],
@@ -23077,7 +24950,7 @@
       "path": "life::Boundary::name",
       "name": "name",
       "module": "life",
-      "defined_at": "life/lib.rs:55",
+      "defined_at": "life/lib.rs:58",
       "docs": [
         "Returns the Boundary's display name."
       ],
@@ -23105,7 +24978,7 @@
       "path": "life::Boundary::wrap",
       "name": "wrap",
       "module": "life",
-      "defined_at": "life/lib.rs:68",
+      "defined_at": "life/lib.rs:71",
       "docs": [
         "Returns whether the edges wrap."
       ],
@@ -23245,7 +25118,7 @@
       "path": "life::Counts::drawn",
       "name": "drawn",
       "module": "life",
-      "defined_at": "life/source.rs:391",
+      "defined_at": "life/source.rs:423",
       "docs": [
         "Builds the counts a sequence lays down, keeping zeros and ones on request."
       ],
@@ -23292,7 +25165,7 @@
       "path": "life::Counts::list",
       "name": "list",
       "module": "life",
-      "defined_at": "life/source.rs:387",
+      "defined_at": "life/source.rs:419",
       "docs": [
         "Spells the counts outright."
       ],
@@ -23327,7 +25200,7 @@
       "path": "life::Counts::values",
       "name": "values",
       "module": "life",
-      "defined_at": "life/source.rs:399",
+      "defined_at": "life/source.rs:431",
       "docs": [
         "Returns the counts, a drawn side resolved against the mask's neighbor budget.",
         "",
@@ -23368,7 +25241,7 @@
       "path": "life::Fate::all",
       "name": "all",
       "module": "life",
-      "defined_at": "life/lib.rs:73",
+      "defined_at": "life/lib.rs:76",
       "docs": [
         "Returns every Fate in canonical order."
       ],
@@ -23395,7 +25268,7 @@
       "path": "life::Fate::name",
       "name": "name",
       "module": "life",
-      "defined_at": "life/lib.rs:73",
+      "defined_at": "life/lib.rs:76",
       "docs": [
         "Returns the Fate's display name."
       ],
@@ -23845,7 +25718,7 @@
       "path": "life::Source::all",
       "name": "all",
       "module": "life",
-      "defined_at": "life/source.rs:182",
+      "defined_at": "life/source.rs:198",
       "docs": [
         "Returns every fixed sequence, the seeded and coded families excluded."
       ],
@@ -23873,7 +25746,7 @@
       "path": "life::Source::designs",
       "name": "designs",
       "module": "life",
-      "defined_at": "life/source.rs:221",
+      "defined_at": "life/source.rs:237",
       "docs": [
         "Returns the seventeen mrly design families: the grid, the four classics and their antis."
       ],
@@ -23901,7 +25774,7 @@
       "path": "life::Source::is_random",
       "name": "is_random",
       "module": "life",
-      "defined_at": "life/source.rs:255",
+      "defined_at": "life/source.rs:287",
       "docs": [
         "Returns whether the sequence is a seeded random draw."
       ],
@@ -23924,7 +25797,7 @@
       "path": "life::Source::name",
       "name": "name",
       "module": "life",
-      "defined_at": "life/source.rs:81",
+      "defined_at": "life/source.rs:97",
       "docs": [
         "Returns the sequence's parseable name, the one string that regenerates it."
       ],
@@ -23946,7 +25819,7 @@
       "path": "life::Source::numbers",
       "name": "numbers",
       "module": "life",
-      "defined_at": "life/source.rs:210",
+      "defined_at": "life/source.rs:226",
       "docs": [
         "Returns the six number sequences, the random one listed under seed zero."
       ],
@@ -23974,7 +25847,7 @@
       "path": "life::Source::oeis",
       "name": "oeis",
       "module": "life",
-      "defined_at": "life/source.rs:243",
+      "defined_at": "life/source.rs:259",
       "docs": [
         "Returns the sequence's OEIS id, or None off the encyclopedia."
       ],
@@ -23999,7 +25872,7 @@
       "path": "life::Source::parse",
       "name": "parse",
       "module": "life",
-      "defined_at": "life/source.rs:116",
+      "defined_at": "life/source.rs:132",
       "docs": [
         "Parses a sequence name back to its source.",
         "",
@@ -24037,7 +25910,7 @@
       "path": "life::Source::read",
       "name": "read",
       "module": "life",
-      "defined_at": "life/source.rs:160",
+      "defined_at": "life/source.rs:176",
       "docs": [
         "Reads a canonical name off the front of the text, returning the tail left over."
       ],
@@ -24258,7 +26131,7 @@
       "path": "life::counts",
       "name": "counts",
       "module": "life",
-      "defined_at": "life/source.rs:353",
+      "defined_at": "life/source.rs:385",
       "docs": [
         "Returns the sequence up to max_neighbors, keeping zeros and ones only on request.",
         "",
@@ -24937,7 +26810,7 @@
       "path": "life::moore",
       "name": "moore",
       "module": "life",
-      "defined_at": "life/lib.rs:51",
+      "defined_at": "life/lib.rs:54",
       "docs": [
         "Builds the 3 by 3 Moore mask, every site on but the center.",
         "",
@@ -25177,6 +27050,570 @@
       }
     },
     {
+      "path": "life::recipe::Mode::all",
+      "name": "all",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:42",
+      "docs": [
+        "Returns every Mode in canonical order."
+      ],
+      "owner": "life::recipe::Mode",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "life::recipe::Mode"
+        },
+        "len": 2
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Mode::name",
+      "name": "name",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:42",
+      "docs": [
+        "Returns the Mode's display name."
+      ],
+      "owner": "life::recipe::Mode",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "life::recipe::Run::background",
+      "name": "background",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1024",
+      "docs": [
+        "Returns the background the frame sits on, 1 once a flipping rule has turned it."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u8"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::birth",
+      "name": "birth",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1059",
+      "docs": [
+        "Returns the birth counts drawn against the budget."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "u32"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::budget",
+      "name": "budget",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1054",
+      "docs": [
+        "Returns the mask's budget, the most neighbours a cell can count."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::cap",
+      "name": "cap",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1044",
+      "docs": [
+        "Returns the canvas side: an island's cap, at least its seed board, or a wallpaper's torus."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::flips",
+      "name": "flips",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1029",
+      "docs": [
+        "Returns whether the rule flips its background, birth holding zero."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::frame",
+      "name": "frame",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1009",
+      "docs": [
+        "Returns the live frame: the cropped island pattern, or the whole torus."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::generation",
+      "name": "generation",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1019",
+      "docs": [
+        "Returns the generation reached."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::mask",
+      "name": "mask",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1069",
+      "docs": [
+        "Returns the mask as a square tensor of bytes, its centre popped."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::new",
+      "name": "new",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:855",
+      "docs": [
+        "Sets a recipe up at generation zero: the tiled seed, the mask's kernel, the rule drawn against its budget.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the recipe does not name a run, or when a design, mask or side will not build."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "recipe",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "life::recipe::Recipe"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "life::recipe::Run",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::origin",
+      "name": "origin",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1014",
+      "docs": [
+        "Returns the row and column of the frame's top-left corner, the seed's top-left corner being the origin."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "i64"
+        },
+        "len": 2
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::population",
+      "name": "population",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1034",
+      "docs": [
+        "Returns the live cells of the frame."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::reach",
+      "name": "reach",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1049",
+      "docs": [
+        "Returns the mask's reach, half its side."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::side",
+      "name": "side",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1039",
+      "docs": [
+        "Returns the side of the seed board, the seed's side to its level times its tiling."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::step",
+      "name": "step",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:923",
+      "docs": [
+        "Advances one generation and returns the stop the moment the run ends; after a stop it returns the same stop and changes nothing."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "mut",
+      "params": [],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "plain",
+          "path": "life::recipe::Stop"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::stop",
+      "name": "stop",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1077",
+      "docs": [
+        "Returns the stop once the run has ended."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "plain",
+          "path": "life::recipe::Stop"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::Run::survive",
+      "name": "survive",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:1064",
+      "docs": [
+        "Returns the survive counts drawn against the budget."
+      ],
+      "owner": "life::recipe::Run",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "u32"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::grammar",
+      "name": "grammar",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:383",
+      "docs": [
+        "Lists what every knob of a recipe may offer, in grammar order."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "life::recipe::Grammar"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::name",
+      "name": "name",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:363",
+      "docs": [
+        "Writes a recipe as its name, the one string that regenerates it."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "recipe",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "life::recipe::Recipe"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "life::recipe::parse",
+      "name": "parse",
+      "module": "life::recipe",
+      "defined_at": "life/recipe.rs:309",
+      "docs": [
+        "Reads a recipe out of its name.",
+        "",
+        "```",
+        "use mrly_life::recipe::{Mode, parse};",
+        "let recipe = parse(\"carpet.3.2 x3 island mask:net.5.1 birth:carpet_fills_zeros survive:carpet_voids x:1024 cap:301\")?;",
+        "assert_eq!((recipe.seed.as_str(), recipe.tiling, recipe.mode), (\"carpet\", 3, Mode::Island));",
+        "# Ok::<(), mrly_core::Error>(())",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs when a part is missing or unknown, when an island names no cap, or when a wallpaper names one or tiles more than once."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "name",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "life::recipe::Recipe"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "life::render::frame",
       "name": "frame",
       "module": "life::render",
@@ -25377,7 +27814,7 @@
       "path": "life::source::sequence",
       "name": "sequence",
       "module": "life::source",
-      "defined_at": "life/source.rs:308",
+      "defined_at": "life/source.rs:340",
       "docs": [
         "Generates the sequence's values up to the limit.",
         "",
@@ -28335,7 +30772,7 @@
       "path": "math::bang::baseq::bracelets",
       "name": "bracelets",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:244",
+      "defined_at": "math/bang/baseq.rs:248",
       "docs": [
         "Returns the distinct one-dimensional design counts for bases 1 through max_base.",
         "",
@@ -28375,7 +30812,7 @@
       "path": "math::bang::baseq::canonical",
       "name": "canonical",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:173",
+      "defined_at": "math/bang/baseq.rs:177",
       "docs": [
         "Returns the least code of the design's orbit.",
         "",
@@ -28425,7 +30862,7 @@
       "path": "math::bang::baseq::carry",
       "name": "carry",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:152",
+      "defined_at": "math/bang/baseq.rs:156",
       "docs": [
         "Carries a code through one group element."
       ],
@@ -28465,7 +30902,7 @@
       "path": "math::bang::baseq::class_sequence",
       "name": "class_sequence",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:266",
+      "defined_at": "math/bang/baseq.rs:272",
       "docs": [
         "Returns the fill-class counts for dimensions 1 through max_dimension.",
         "",
@@ -28502,7 +30939,7 @@
       "path": "math::bang::baseq::classes",
       "name": "classes",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:249",
+      "defined_at": "math/bang/baseq.rs:253",
       "docs": [
         "Counts the fill classes of a dimension, the popcount profiles a base-2 design can have: one more than the corners of each weight, multiplied over the weights, A129824 at the dimension."
       ],
@@ -28576,7 +31013,7 @@
       "path": "math::bang::baseq::even_fill_is_balanced",
       "name": "even_fill_is_balanced",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:288",
+      "defined_at": "math/bang/baseq.rs:294",
       "docs": [
         "Returns the collapsed fill count at an even side number.",
         "",
@@ -28626,7 +31063,7 @@
       "path": "math::bang::baseq::fill_from_corners",
       "name": "fill_from_corners",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:271",
+      "defined_at": "math/bang/baseq.rs:277",
       "docs": [
         "Returns the filled-cell count of a binary design at a side number, folded from its filled corners."
       ],
@@ -28677,7 +31114,7 @@
       "path": "math::bang::baseq::group",
       "name": "group",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:130",
+      "defined_at": "math/bang/baseq.rs:134",
       "docs": [
         "Returns the symmetry group as cell maps, each sending the cell at index `i` to `element[i]`."
       ],
@@ -28761,7 +31198,7 @@
       "path": "math::bang::baseq::orbit",
       "name": "orbit",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:164",
+      "defined_at": "math/bang/baseq.rs:168",
       "docs": [
         "Returns every code a design reaches under the group."
       ],
@@ -28847,7 +31284,7 @@
       "path": "math::bang::baseq::representatives",
       "name": "representatives",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:189",
+      "defined_at": "math/bang/baseq.rs:193",
       "docs": [
         "Walks every code of a base and dimension and returns each orbit's least code with the orbit's size.",
         "",
@@ -28907,7 +31344,7 @@
       "path": "math::bang::baseq::sequence",
       "name": "sequence",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:233",
+      "defined_at": "math/bang/baseq.rs:237",
       "docs": [
         "Returns the distinct-design counts for dimensions 1 through max_dimension.",
         "",
@@ -28954,7 +31391,7 @@
       "path": "math::bang::baseq::total_designs",
       "name": "total_designs",
       "module": "math::bang::baseq",
-      "defined_at": "math/bang/baseq.rs:218",
+      "defined_at": "math/bang/baseq.rs:222",
       "docs": [
         "Returns the raw design count before symmetry, two to the number of cells.",
         "",
@@ -33067,6 +35504,258 @@
       }
     },
     {
+      "path": "math::counts::Placements::at",
+      "name": "at",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:202",
+      "docs": [
+        "Returns the face counts of the level-fold Kronecker power, or none past a `u128`."
+      ],
+      "owner": "math::counts::Placements",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "class",
+          "path": "math::counts::Skeleton",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::Placements::of_tile",
+      "name": "of_tile",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:95",
+      "docs": [
+        "Reads the placement counts off a rendered tile of two to four dimensions.",
+        "",
+        "# Errors",
+        "",
+        "Errors when the tile has more than four dimensions, where the window patterns pass a `u32`."
+      ],
+      "owner": "math::counts::Placements",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "tile",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "math::counts::Placements",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::Placements::recurrence",
+      "name": "recurrence",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:276",
+      "docs": [
+        "Returns the coefficients `c` of the recurrence `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...` the `k`-face count obeys from `L = 0`, every face when `k` is none, or none past an `i128`."
+      ],
+      "owner": "math::counts::Placements",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "i128"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::Placements::roots",
+      "name": "roots",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:218",
+      "docs": [
+        "Returns the roots of the recurrence the `k`-face count obeys, every face when `k` is none, each with the multiplicity the recurrence needs: the spanning counts of the patterns the count reaches, a root repeated once per pattern of that count on one carry chain."
+      ],
+      "owner": "math::counts::Placements",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "u128"
+            },
+            {
+              "t": "scalar",
+              "name": "u32"
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::Skeleton::cells",
+      "name": "cells",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:44",
+      "docs": [
+        "The filled cells."
+      ],
+      "owner": "math::counts::Skeleton",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "u128"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::Skeleton::edges",
+      "name": "edges",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:36",
+      "docs": [
+        "The distinct unit edges."
+      ],
+      "owner": "math::counts::Skeleton",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "u128"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::Skeleton::faces",
+      "name": "faces",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:40",
+      "docs": [
+        "The distinct unit squares, the cells themselves in the plane."
+      ],
+      "owner": "math::counts::Skeleton",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "u128"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::Skeleton::vertices",
+      "name": "vertices",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:32",
+      "docs": [
+        "The distinct corners."
+      ],
+      "owner": "math::counts::Skeleton",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "u128"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::counts::centered_hexagonal",
       "name": "centered_hexagonal",
       "module": "math::counts",
@@ -35046,6 +37735,216 @@
       }
     },
     {
+      "path": "math::counts::skeleton",
+      "name": "skeleton",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:321",
+      "docs": [
+        "Returns the face counts of the code's design at the given level, from the tile's placement counts alone.",
+        "",
+        "```",
+        "use mrly_math::bang::Code;",
+        "let carpet = mrly_math::counts::skeleton(Code::from(7u64), 3, 2, 2, 3).unwrap();",
+        "assert_eq!((carpet.vertices(), carpet.edges(), carpet.cells(), carpet.euler), (688, 1272, 512, -72));",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errors when the code is out of range, the dimension passes four, or a count passes a `u128`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "code",
+          "ty": {
+            "t": "code"
+          }
+        },
+        {
+          "name": "number",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "math::counts::Skeleton",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::skeleton_of_tile",
+      "name": "skeleton_of_tile",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:306",
+      "docs": [
+        "Returns the face counts of the tile's level-fold Kronecker power, or none past a `u128`.",
+        "",
+        "```",
+        "use mrly_math::bang::Code;",
+        "let sponge = mrly_math::bang::factory::create(Code::from(23u64), 3, 3, 2, 1).unwrap();",
+        "let level_two = mrly_math::counts::skeleton_of_tile(&sponge, 2).unwrap().unwrap();",
+        "assert_eq!(level_two.counts, [896, 2304, 1728, 400]);",
+        "assert_eq!(level_two.euler, -80);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errors when the tile has more than four dimensions."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "tile",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "option",
+          "item": {
+            "t": "class",
+            "path": "math::counts::Skeleton",
+            "dim": null
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::skeleton_recurrence",
+      "name": "skeleton_recurrence",
+      "module": "math::counts",
+      "defined_at": "math/counts/faces.rs:345",
+      "docs": [
+        "Returns the coefficients of the recurrence the code's `k`-face count obeys along the level, every face and the Euler characteristic when `k` is none.",
+        "",
+        "```",
+        "use mrly_math::bang::Code;",
+        "assert_eq!(mrly_math::counts::skeleton_recurrence(Code::from(7u64), 3, 2, 2, Some(0)).unwrap(), [12, -35, 24]);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errors when the code is out of range, the dimension passes four, or a coefficient passes an `i128`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "code",
+          "ty": {
+            "t": "code"
+          }
+        },
+        {
+          "name": "number",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "k",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "i128"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::counts::surface",
       "name": "surface",
       "module": "math::counts",
@@ -36480,6 +39379,620 @@
         "item": {
           "t": "scalar",
           "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::cell",
+      "name": "cell",
+      "module": "math::game",
+      "defined_at": "math/game.rs:59",
+      "docs": [
+        "Returns the index of the level-`k` cell holding a point of `[0, 1)^D`: `floor(x b^k) + floor(y b^k) b^k + ...`, row major with coordinate `0` least significant, the dimension read off the point.",
+        "",
+        "At level one the index is the corner the point sits in. A coordinate outside the cube is clamped to its nearest cell.",
+        "",
+        "```",
+        "assert_eq!(mrly_math::game::cell(&[0.3, 0.6], 2, 1).unwrap(), 2);",
+        "assert_eq!(mrly_math::game::cell(&[0.3, 0.6], 2, 2).unwrap(), 9);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs under base two, and when the cell count runs past a `u64`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "point",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        },
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "u64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::cells",
+      "name": "cells",
+      "module": "math::game",
+      "defined_at": "math/game.rs:43",
+      "docs": [
+        "Returns the count of level-`k` cells of the cube, `b^(D k)`.",
+        "",
+        "```",
+        "assert_eq!(mrly_math::game::cells(2, 2, 3).unwrap(), 64);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs under base two, and when the count runs past a `u64`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "u64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::counts",
+      "name": "counts",
+      "module": "math::game",
+      "defined_at": "math/game.rs:432",
+      "docs": [
+        "Returns the path counts from a state, `e_start M^L 1` for `L = 1 ..= levels`: the filled cells of a mosaic slot or of a slice at each level, and stops early on the level whose count overruns a `u64`.",
+        "",
+        "```",
+        "let golden = vec![vec![1, 1], vec![1, 0]];",
+        "assert_eq!(mrly_math::game::counts(&golden, 0, 5).unwrap(), vec![2, 3, 5, 8, 13]);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs when the matrix is not square, and when the start is not one of its states."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "matrix",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "u64"
+              }
+            }
+          }
+        },
+        {
+          "name": "start",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "levels",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::de_bruijn",
+      "name": "de_bruijn",
+      "module": "math::game",
+      "defined_at": "math/game.rs:142",
+      "docs": [
+        "Returns a de Bruijn cycle of order `k` over `m` letters: `m^k` letters in which every word of length `k` occurs exactly once as a cyclic window, so played as the draw schedule of an `m`-digit design it paints every level-`k` cell once per lap, and from a cold start once in `m^k + k - 1` draws.",
+        "",
+        "The cycle concatenates the Lyndon words over `{0, ..., m - 1}` whose length divides `k`, in lexicographic order, the construction of Fredricksen, Kessler and Maiorana.",
+        "",
+        "```",
+        "assert_eq!(mrly_math::game::de_bruijn(2, 3).unwrap(), vec![0, 0, 0, 1, 0, 1, 1, 1]);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs when `m` or `k` is zero, when `m` passes the `256` letters a byte holds, and when `m^k` passes `LAP`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "m",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::mosaic_game",
+      "name": "mosaic_game",
+      "module": "math::game",
+      "defined_at": "math/game.rs:508",
+      "docs": [
+        "Reads the game of a mosaic: its substitution matrix, Perron root, dimension and edges.",
+        "",
+        "```",
+        "let mosaic = mrly_math::game::Mosaic {",
+        "    base: 2,",
+        "    dimension: 2,",
+        "    masks: vec![vec![(0, 0), (1, 1), (2, 0)], vec![(0, 1), (3, 0)]],",
+        "};",
+        "let game = mrly_math::game::mosaic_game(&mosaic).unwrap();",
+        "assert_eq!(game.matrix, vec![vec![2, 1], vec![1, 1]]);",
+        "assert_eq!(format!(\"{:.6}\", game.dimension), \"1.388484\");",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs under base two or dimension one, with no mask or more than `256`, at a corner past `b^D` or repeated in its mask, and at a slot past the masks."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "mosaic",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "math::game::Mosaic"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "math::game::MosaicGame"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::named_games",
+      "name": "named_games",
+      "module": "math::game",
+      "defined_at": "math/game.rs:271",
+      "docs": [
+        "Returns the named games of the square, corner `c = x + 2 y`, cyclic order `0, 1, 3, 2` anticlockwise with `y` up: the seven one-step games and the width-3 game that forbids a neighbour after a repeat.",
+        "",
+        "```",
+        "let games = mrly_math::game::named_games();",
+        "assert_eq!((games[0].name.as_str(), games[0].code), (\"no repeat\", 31710));",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "plain",
+          "path": "math::game::NamedGame"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::perron",
+      "name": "perron",
+      "module": "math::game",
+      "defined_at": "math/game.rs:398",
+      "docs": [
+        "Returns the Perron root of a square nonnegative integer matrix, the growth per level of the paths its graph counts.",
+        "",
+        "The graph is split into its strongly connected components; a component carrying no cycle contributes nothing, and a matrix with no cycle reads exactly `0`.",
+        "On each cyclic component `I + B` is primitive, so the power iteration on it converges to the Perron vector, and the Collatz-Wielandt ratios of that vector bracket the root; the answer is the largest component root.",
+        "",
+        "```",
+        "let golden = vec![vec![1, 1], vec![1, 0]];",
+        "assert!((mrly_math::game::perron(&golden).unwrap() - 1.618_033_988_749_895).abs() < 1e-12);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs when the matrix is not square."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "matrix",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "u64"
+              }
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::reverse",
+      "name": "reverse",
+      "module": "math::game",
+      "defined_at": "math/game.rs:173",
+      "docs": [
+        "Returns the rule whose windows are the rule's windows read backwards.",
+        "",
+        "A restricted game allows a window of draws in time order, oldest first, and the digits of its point are the draws newest first, so the set a game draws is the dial's set of the reversed rule: `crate::memory::cells` of the reverse are the game's cells, and the two share their Perron root, their transfer matrices being transposes.",
+        "",
+        "```",
+        "use mrly_math::memory::Rule;",
+        "let anticlockwise = Rule::new(2, 2, 16770).unwrap();",
+        "assert_eq!(mrly_math::game::reverse(&anticlockwise).code, 10260);",
+        "assert_eq!(mrly_math::game::reverse(&mrly_math::game::reverse(&anticlockwise)), anticlockwise);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rule",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "class",
+              "path": "math::memory::Rule",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "math::memory::Rule",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::slice_game",
+      "name": "slice_game",
+      "module": "math::game",
+      "defined_at": "math/game.rs:597",
+      "docs": [
+        "Reads the game of a plane design, corners `c = x + b y`, cut by the line `x + y = p / q`: its carry states, edges, matrix, Perron root and dimension.",
+        "",
+        "```",
+        "let game = mrly_math::game::slice_game(2, &[0, 1, 3], 2, 3).unwrap();",
+        "assert_eq!(game.states, vec![(1, 3), (2, 3), (4, 3), (5, 3)]);",
+        "assert_eq!(format!(\"{:.6}\", game.dimension), \"0.694242\");",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs under base two, at a corner past `b^2` or repeated, at a zero `q`, and when a height overruns an `i64`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "digits",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        },
+        {
+          "name": "p",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        },
+        {
+          "name": "q",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "math::game::SliceGame"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::successors",
+      "name": "successors",
+      "module": "math::game",
+      "defined_at": "math/game.rs:205",
+      "docs": [
+        "Returns the letters a restricted game may draw next: the corners `c` for which some allowed window, read in time order, ends in the last `k - 1` draws of the history followed by `c`.",
+        "",
+        "A history shorter than `k - 1` fixes only the end of the window, so the letters consistent with some allowed window are returned, and the empty history at width one reads the rule's alphabet.",
+        "A history letter past the rule's corners matches no window.",
+        "",
+        "```",
+        "use mrly_math::memory::Rule;",
+        "let no_repeat = Rule::new(2, 2, 31710).unwrap();",
+        "assert_eq!(mrly_math::game::successors(&no_repeat, &[0]), vec![1, 2, 3]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rule",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "class",
+              "path": "math::memory::Rule",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "history",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::game::word_cell",
+      "name": "word_cell",
+      "module": "math::game",
+      "defined_at": "math/game.rs:82",
+      "docs": [
+        "Returns the cell of a word of corners read coarsest digit first, the cell the game lands in after playing the word's digits last letter first.",
+        "",
+        "```",
+        "assert_eq!(mrly_math::game::word_cell(&[1, 2], 2, 2).unwrap(), 6);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs under base two or dimension one, at a corner past `b^D`, and when the cell count runs past a `u64`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "word",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        },
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "u64"
         }
       },
       "dims": [],
@@ -40679,7 +44192,7 @@
       "path": "math::name::Sequence::design",
       "name": "design",
       "module": "math::name",
-      "defined_at": "math/name/sequence.rs:77",
+      "defined_at": "math/name/sequence.rs:80",
       "docs": [
         "Returns the design pinned to its dimension and base."
       ],
@@ -40805,7 +44318,7 @@
       "path": "math::name::Sequence::new",
       "name": "new",
       "module": "math::name",
-      "defined_at": "math/name/sequence.rs:66",
+      "defined_at": "math/name/sequence.rs:69",
       "docs": [
         "Pins a design's reading to its measure and axis."
       ],
@@ -62971,6 +66484,590 @@
         "item": {
           "t": "plain",
           "path": "num::prime::Prime"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::Design::digits",
+      "name": "digits",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:32",
+      "docs": [
+        "Builds the design `b:D` from its base and its digit mask."
+      ],
+      "owner": "num::readings::Design",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "plain",
+        "path": "num::readings::Design"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::Design::rudin",
+      "name": "rudin",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:48",
+      "docs": [
+        "Returns Rudin-Shapiro."
+      ],
+      "owner": "num::readings::Design",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "num::readings::Design"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::Design::ternary",
+      "name": "ternary",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:44",
+      "docs": [
+        "Returns the ternary parity, `3:2`, the parity of the ternary digits equal to 2."
+      ],
+      "owner": "num::readings::Design",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "num::readings::Design"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::Design::thue",
+      "name": "thue",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:40",
+      "docs": [
+        "Returns Thue-Morse, `2:1`."
+      ],
+      "owner": "num::readings::Design",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "num::readings::Design"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::Reading::all",
+      "name": "all",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:192",
+      "docs": [
+        "Returns every Reading in canonical order."
+      ],
+      "owner": "num::readings::Reading",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "num::readings::Reading"
+        },
+        "len": 5
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::Reading::formula",
+      "name": "formula",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:214",
+      "docs": [
+        "Returns the reading's formula, written the way the page prints it."
+      ],
+      "owner": "num::readings::Reading",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::Reading::name",
+      "name": "name",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:192",
+      "docs": [
+        "Returns the Reading's display name."
+      ],
+      "owner": "num::readings::Reading",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "num::readings::arcs",
+      "name": "arcs",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:780",
+      "docs": [
+        "Lists a design's major arcs along the squares below the cut, best first, each with its amplitude.",
+        "",
+        "The cut is held under `1/2`, where the trees stop converging; the lab's model keeps the arcs below `1/4`. An arc whose Gauss sum vanishes keeps a zero amplitude. Rudin-Shapiro, which is no digit design, has none. For base 6 the limit `K` is a series over the 2-adic and 3-adic valuations, cut at 14 terms.",
+        "",
+        "```",
+        "use mrly_num::readings::{Design, arcs};",
+        "let found = arcs(Design::thue(), 0.25);",
+        "assert_eq!((found[0].num, found[0].den), (1, 3));",
+        "assert!((found[0].amplitude_re + 2.0 / 3.0).abs() < 1e-9);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "design",
+          "ty": {
+            "t": "plain",
+            "path": "num::readings::Design"
+          }
+        },
+        {
+          "name": "cut",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "plain",
+          "path": "num::readings::Arc"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::battery",
+      "name": "battery",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:376",
+      "docs": [
+        "Runs the battery on a stream of signs.",
+        "",
+        "Every statistic runs over the same `N = min(floor(len / 9), len - 64)` values of `n`, the largest that keeps every pair inside the stream, so a stream of `9N` signs feeds a battery at `N`; a stream below 72 signs gives `N = 0` and zeros. A pair whose sides have no variance reads zero."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "stream",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "i8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "plain",
+        "path": "num::readings::Battery"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::bias",
+      "name": "bias",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:944",
+      "docs": [
+        "Measures the bias `S(N) = sum_(n<N) y(n)` of a stream at `N = 2^e` for each exponent; a checkpoint past the stream's end sums the whole stream."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "stream",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "i8"
+            }
+          }
+        },
+        {
+          "name": "exponents",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "i64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::designs",
+      "name": "designs",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:58",
+      "docs": [
+        "Lists the 57 digit designs, base by base and mask by mask, then Rudin-Shapiro."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "plain",
+          "path": "num::readings::Design"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::model",
+      "name": "model",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:921",
+      "docs": [
+        "Predicts the bias `S(N) = sum_(n<N) x(n^2)` at `N = 2^e` for each exponent, from the arcs below the cut: `1 + Re sum_gamma A(gamma) U(gamma; N^2)`.",
+        "",
+        "Exponents above 63 are read as 63. Rudin-Shapiro has no arcs and reads the constant one."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "design",
+          "ty": {
+            "t": "plain",
+            "path": "num::readings::Design"
+          }
+        },
+        {
+          "name": "cut",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "exponents",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::name",
+      "name": "name",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:82",
+      "docs": [
+        "Returns the design's name in the `b:D` form, the digits of `D` ascending, or `rudin-shapiro`.",
+        "",
+        "```",
+        "use mrly_num::readings::{Design, name};",
+        "assert_eq!(name(Design::thue()), \"2:1\");",
+        "assert_eq!(name(Design::digits(6, 0b10101)), \"6:135\");",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "design",
+          "ty": {
+            "t": "plain",
+            "path": "num::readings::Design"
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::near_heads",
+      "name": "near_heads",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:489",
+      "docs": [
+        "Lists the battery pairs that are near-heads of a polynomial reading at the design's base, the 44 dilation pairs first and the two kernel pairs after; the primes have none.",
+        "",
+        "```",
+        "use mrly_num::readings::{Design, Reading, near_heads};",
+        "let heads = near_heads(Design::thue(), Reading::Square);",
+        "let pairs: Vec<(bool, u8, u8)> = heads.iter().map(|h| (h.kernel, h.scale, h.offset)).collect();",
+        "assert_eq!(pairs, vec![(false, 2, 0), (false, 4, 0), (false, 8, 0), (true, 2, 0)]);",
+        "assert!(heads.iter().all(|h| h.exact && h.sign == 1));",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "design",
+          "ty": {
+            "t": "plain",
+            "path": "num::readings::Design"
+          }
+        },
+        {
+          "name": "reading",
+          "ty": {
+            "t": "enum",
+            "path": "num::readings::Reading"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "plain",
+          "path": "num::readings::Head"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::sign",
+      "name": "sign",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:176",
+      "docs": [
+        "Returns the design's sign at a number, plus or minus one.",
+        "",
+        "```",
+        "use mrly_num::readings::{Design, sign};",
+        "let word: Vec<i8> = (0..8).map(|n| sign(Design::thue(), n)).collect();",
+        "assert_eq!(word, vec![1, -1, -1, 1, -1, 1, 1, -1]);",
+        "assert_eq!(sign(Design::ternary(), 5), -1);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "design",
+          "ty": {
+            "t": "plain",
+            "path": "num::readings::Design"
+          }
+        },
+        {
+          "name": "n",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "i8"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::readings::stream",
+      "name": "stream",
+      "module": "num::readings",
+      "defined_at": "num/readings.rs:304",
+      "docs": [
+        "Builds a reading's first signs: `y(n) = x(P(n))` for `n < count`, or `x(p_n)` along the first `count` primes from a segmented sieve.",
+        "",
+        "```",
+        "use mrly_num::readings::{Design, Reading, stream};",
+        "assert_eq!(stream(Design::thue(), Reading::Square, 6), vec![1, -1, -1, 1, -1, -1]);",
+        "assert_eq!(stream(Design::thue(), Reading::Primes, 4), vec![-1, 1, 1, -1]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "design",
+          "ty": {
+            "t": "plain",
+            "path": "num::readings::Design"
+          }
+        },
+        {
+          "name": "reading",
+          "ty": {
+            "t": "enum",
+            "path": "num::readings::Reading"
+          }
+        },
+        {
+          "name": "count",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "i8"
         }
       },
       "dims": [],

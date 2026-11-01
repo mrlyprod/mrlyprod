@@ -190,6 +190,8 @@ export const cell = {
 };
 export const counts = {
     Exposure: wasm.math_counts_Exposure,
+    Placements: wasm.math_counts_Placements,
+    Skeleton: wasm.math_counts_Skeleton,
     centered_hexagonal: wasm.math_counts_centered_hexagonal,
     cut_fills: wasm.math_counts_cut_fills,
     cut_voids: wasm.math_counts_cut_voids,
@@ -209,6 +211,9 @@ export const counts = {
     profile_of_tile: wasm.math_counts_profile_of_tile,
     ratio: wasm.math_counts_ratio,
     rational: wasm.math_counts_rational,
+    skeleton: wasm.math_counts_skeleton,
+    skeleton_of_tile: wasm.math_counts_skeleton_of_tile,
+    skeleton_recurrence: wasm.math_counts_skeleton_recurrence,
     surface: wasm.math_counts_surface,
     void_: wasm.math_counts_void,
     diagonal: {
@@ -279,6 +284,20 @@ export const dissection = {
     regions: wasm.math_dissection_regions,
     tally: wasm.math_dissection_tally,
     weights: wasm.math_dissection_weights,
+};
+export const game = {
+    LAP: wasm.math_game_LAP,
+    cell: wasm.math_game_cell,
+    cells: wasm.math_game_cells,
+    counts: wasm.math_game_counts,
+    de_bruijn: wasm.math_game_de_bruijn,
+    mosaic_game: wasm.math_game_mosaic_game,
+    named_games: wasm.math_game_named_games,
+    perron: wasm.math_game_perron,
+    reverse: wasm.math_game_reverse,
+    slice_game: wasm.math_game_slice_game,
+    successors: wasm.math_game_successors,
+    word_cell: wasm.math_game_word_cell,
 };
 export const graph = {
     Layout: wasm.math_graph_Layout,

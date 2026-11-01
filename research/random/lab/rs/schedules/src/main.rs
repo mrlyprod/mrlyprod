@@ -336,6 +336,14 @@ fn pairs(n: usize, verbose: bool) -> Vec<Cell> {
             }
         }
     }
+    let nonlinear = out.iter().filter(|c| c.nonlinear).count();
+    println!(
+        "  n {n}: {} pair cells, {} splits x {} neighbourhoods x {} Sources, {nonlinear} nonlinear",
+        out.len(),
+        splits.len(),
+        NEIGHBOURHOODS.len(),
+        SOURCES.len()
+    );
     tabulate(&out);
     out
 }
@@ -554,8 +562,13 @@ fn main() {
     }
     if verb == "all" || verb == "pairs" || verb == "verbose" {
         println!("# a split and its complement in turn, identity spread");
-        pairs(3, verb == "verbose");
-        pairs(4, verb == "verbose");
+        let three = pairs(3, verb == "verbose");
+        let four = pairs(4, verb == "verbose");
+        let nonlinear = three.iter().chain(&four).filter(|c| c.nonlinear).count();
+        println!(
+            "  both catalogs: {} pair cells, {nonlinear} nonlinear",
+            three.len() + four.len()
+        );
     }
     if verb == "all" || verb == "singles" || verb == "onto" {
         println!("# one split, every spread, 4 x 4");

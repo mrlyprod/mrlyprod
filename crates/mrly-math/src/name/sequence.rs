@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 kind!("sequence");
 
-const MEASURES: [&str; 12] = [
+const MEASURES: [&str; 15] = [
     "fills",
     "voids",
     "surface",
@@ -19,9 +19,12 @@ const MEASURES: [&str; 12] = [
     "triangles",
     "holes",
     "pieces",
+    "gaps",
+    "loops",
+    "windows",
 ];
 
-const AXES: [&str; 2] = ["level", "side"];
+const AXES: [&str; 3] = ["level", "side", "window"];
 
 fn two() -> usize {
     2

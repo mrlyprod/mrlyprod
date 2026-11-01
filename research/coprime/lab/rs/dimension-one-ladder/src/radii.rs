@@ -212,11 +212,11 @@ pub fn divides(q: &[i128], p: &[i128]) -> bool {
     r.iter().all(|&c| c == 0)
 }
 
-fn mulmod(a: u64, b: u64, p: u64) -> u64 {
+pub fn mulmod(a: u64, b: u64, p: u64) -> u64 {
     ((a as u128 * b as u128) % p as u128) as u64
 }
 
-fn powmod(mut a: u64, mut e: u64, p: u64) -> u64 {
+pub fn powmod(mut a: u64, mut e: u64, p: u64) -> u64 {
     let mut r = 1u64;
     a %= p;
     while e > 0 {
@@ -269,7 +269,7 @@ pub fn primes(count: usize) -> Vec<u64> {
     out
 }
 
-fn sub(a: u64, b: u64, p: u64) -> u64 {
+pub fn sub(a: u64, b: u64, p: u64) -> u64 {
     if a >= b {
         a - b
     } else {
@@ -483,7 +483,7 @@ pub fn row(a: u64, b: u64, ps: &[u64]) -> Row {
     }
 }
 
-fn components(edges: &[Vec<usize>]) -> Vec<Vec<usize>> {
+pub fn components(edges: &[Vec<usize>]) -> Vec<Vec<usize>> {
     let n = edges.len();
     let mut back = vec![Vec::new(); n];
     for (i, out) in edges.iter().enumerate() {

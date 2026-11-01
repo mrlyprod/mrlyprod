@@ -69,9 +69,26 @@ export default function draw(pen: Pen, ink: Ink) {
     const set = run.out[t % ROUNDS];
     const at = (want: (p: number) => boolean) =>
       Array.from({ length: SIDE }, (_, i) => Array.from({ length: SIDE }, (_, j) => want(SIDE * i + j)));
-    const grid = new Grid(frame(left + (t % TILES) * (tile + gap), top + Math.floor(t / TILES) * (tile + gap), tile, tile), SIDE, SIDE, 0);
-    grid.carpet(pen, at((p) => !set[p]), ink.line);
-    grid.carpet(pen, at((p) => set[p] && run.fill[p]), ink.blue);
-    grid.carpet(pen, at((p) => set[p] && !run.fill[p]), ink.orange);
+    const grid = new Grid(
+      frame(left + (t % TILES) * (tile + gap), top + Math.floor(t / TILES) * (tile + gap), tile, tile),
+      SIDE,
+      SIDE,
+      0,
+    );
+    grid.carpet(
+      pen,
+      at((p) => !set[p]),
+      ink.line,
+    );
+    grid.carpet(
+      pen,
+      at((p) => set[p] && run.fill[p]),
+      ink.blue,
+    );
+    grid.carpet(
+      pen,
+      at((p) => set[p] && !run.fill[p]),
+      ink.orange,
+    );
   }
 }

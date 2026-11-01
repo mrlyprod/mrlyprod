@@ -159,11 +159,13 @@ export const folders = (dir: string) =>
         .sort()
     : [];
 
+const stem = (name: string) => name.slice(0, -3);
+
 const drawn = (dir: string) =>
   existsSync(dir)
     ? readdirSync(dir)
         .filter((name) => name.endsWith(".ts") && !/\.(test|d)\.ts$/.test(name))
-        .sort()
+        .sort((a, b) => (stem(a) < stem(b) ? -1 : stem(a) > stem(b) ? 1 : 0))
     : [];
 
 const places = () =>

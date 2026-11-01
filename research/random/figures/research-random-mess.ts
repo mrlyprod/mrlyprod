@@ -31,7 +31,9 @@ function lucas() {
     for (let col = 0; col < SIDE; col++) {
       const on = cells.types[row * SIDE + col] !== 0;
       if (on !== ((row & col) === row))
-        throw new Error(`research-random-mess: cell ${row},${col} is not the binary domination of the row by the column`);
+        throw new Error(
+          `research-random-mess: cell ${row},${col} is not the binary domination of the row by the column`,
+        );
       mask[row].push(on);
     }
   }
@@ -45,7 +47,10 @@ function parity(mask: boolean[][], chosen: boolean[]) {
     for (let row = 0; row < SIDE; row++) if (chosen[row] && mask[row][col]) odd = !odd;
     out.push(odd);
   }
-  const head = out.slice(0, ANF.length).map((bit) => (bit ? "1" : "0")).join("");
+  const head = out
+    .slice(0, ANF.length)
+    .map((bit) => (bit ? "1" : "0"))
+    .join("");
   if (head !== ANF) throw new Error(`research-random-mess: the prime parities begin ${head}, want ${ANF}`);
   return out;
 }

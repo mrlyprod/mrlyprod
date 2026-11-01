@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8586fb"/><stop offset=".7" stop-color="#6768fa"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <g fill="#ffffff" data-mono="full"><circle cx="232" cy="792" r="26"/><circle cx="312" cy="792" r="26"/><circle cx="392" cy="792" r="26"/><circle cx="472" cy="792" r="26"/><circle cx="552" cy="792" r="26"/><circle cx="632" cy="792" r="26"/><circle cx="712" cy="792" r="26"/><circle cx="792" cy="792" r="26"/><circle cx="232" cy="712" r="26"/><circle cx="392" cy="712" r="26"/><circle cx="552" cy="712" r="26"/><circle cx="712" cy="712" r="26"/><circle cx="232" cy="632" r="26"/><circle cx="312" cy="632" r="26"/><circle cx="552" cy="632" r="26"/><circle cx="632" cy="632" r="26"/><circle cx="232" cy="552" r="26"/><circle cx="552" cy="552" r="26"/><circle cx="232" cy="472" r="26"/><circle cx="312" cy="472" r="26"/><circle cx="392" cy="472" r="26"/><circle cx="472" cy="472" r="26"/><circle cx="232" cy="392" r="26"/><circle cx="392" cy="392" r="26"/><circle cx="232" cy="312" r="26"/><circle cx="312" cy="312" r="26"/><circle cx="232" cy="232" r="26"/></g>
+  <g fill="#ffffff" data-mono="full"><circle cx="232" cy="792" r="44"/><circle cx="792" cy="792" r="44"/><circle cx="232" cy="232" r="44"/></g>
+</svg>

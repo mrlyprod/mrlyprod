@@ -184,7 +184,7 @@ def exponent_candidate(F, b, n):
     Z = zero_set(F)
     cs = sorted(a for a in range(1, 64) if p**a in Z)
     q = {c: (c - 1) // e for c in cs}
-    rho = {c: c - e * q[c] for c in cs}
+    tau = {c: c - e * q[c] for c in cs}
     J = max(q.values())
     L0 = [Fraction(0)]
     for c in cs:
@@ -194,7 +194,7 @@ def exponent_candidate(F, b, n):
                 for x in L0
                 for s in range(p)
             ]
-    L = sumset([[s * b // p ** rho[c] for s in range(p)] for c in cs])
+    L = sumset([[s * b // p ** tau[c] for s in range(p)] for c in cs])
     return [x + bp**J * g for x in L0 for g in lam(b, L, n)], cs, L0, L
 
 
@@ -378,7 +378,7 @@ def spectra():
         o = orthogonal(F, b, spec(2))
         gaps = q_report(F, b, spec, ns, xi)
         print(
-            "%s: orthogonal %s; 1 - min Q over %d points at n = %s: %s"
+            "%s: orthogonal %s; 1 - min Psi over %d points at n = %s: %s"
             % (name, o, len(xi), list(ns), ", ".join("%.2e" % g for g in gaps))
         )
     print("time %.1f s" % (time.time() - t0))
@@ -1228,7 +1228,7 @@ def witness_report(witnesses, p):
             len(witnesses),
             [(k, int(w[0]), w[2]) for k, w in rows],
             worst,
-            " so none spectral" if worst < p else " UNDECIDED AT L = 1",
+            " so none spectral" if worst < p else " UNDECIDED AT h = 1",
             sum(1 for w in witnesses.values() if w[4]),
             [(k, tuple(sorted(w[1])), w[2], w[3]) for k, w in rows[:3]],
         )

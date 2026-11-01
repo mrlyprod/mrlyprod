@@ -1452,6 +1452,146 @@ pub(crate) static DOORS: &[Function] = &[
         door: Some(door_life_popcount),
     },
     Function {
+        name: "life.recipe.Mode.all",
+        signature: "() -> [life.recipe.Mode; 2]",
+        docs: "Returns every Mode in canonical order.",
+        uncallable: None,
+        door: Some(door_life_recipe_mode_all),
+    },
+    Function {
+        name: "life.recipe.Run.background",
+        signature: "(self: life.recipe.Run) -> u8",
+        docs: "Returns the background the frame sits on, 1 once a flipping rule has turned it.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.birth",
+        signature: "(self: life.recipe.Run) -> [u32]",
+        docs: "Returns the birth counts drawn against the budget.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.budget",
+        signature: "(self: life.recipe.Run) -> u32",
+        docs: "Returns the mask's budget, the most neighbours a cell can count.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.cap",
+        signature: "(self: life.recipe.Run) -> u32",
+        docs: "Returns the canvas side: an island's cap, at least its seed board, or a wallpaper's torus.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.flips",
+        signature: "(self: life.recipe.Run) -> bool",
+        docs: "Returns whether the rule flips its background, birth holding zero.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.frame",
+        signature: "(self: life.recipe.Run) -> Cell",
+        docs: "Returns the live frame: the cropped island pattern, or the whole torus.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.generation",
+        signature: "(self: life.recipe.Run) -> u32",
+        docs: "Returns the generation reached.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.mask",
+        signature: "(self: life.recipe.Run) -> Tensor",
+        docs: "Returns the mask as a square tensor of bytes, its centre popped.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.new",
+        signature: "(recipe: life.recipe.Recipe) -> life.recipe.Run",
+        docs: "Sets a recipe up at generation zero: the tiled seed, the mask's kernel, the rule drawn against its budget.\n\n# Errors\n\nErrs when the recipe does not name a run, or when a design, mask or side will not build.",
+        uncallable: Some("life::recipe::Run has no Serialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.origin",
+        signature: "(self: life.recipe.Run) -> [i64; 2]",
+        docs: "Returns the row and column of the frame's top-left corner, the seed's top-left corner being the origin.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.population",
+        signature: "(self: life.recipe.Run) -> u32",
+        docs: "Returns the live cells of the frame.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.reach",
+        signature: "(self: life.recipe.Run) -> u32",
+        docs: "Returns the mask's reach, half its side.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.side",
+        signature: "(self: life.recipe.Run) -> u32",
+        docs: "Returns the side of the seed board, the seed's side to its level times its tiling.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.step",
+        signature: "(self: life.recipe.Run) -> life.recipe.Stop?",
+        docs: "Advances one generation and returns the stop the moment the run ends; after a stop it returns the same stop and changes nothing.",
+        uncallable: Some("mutates its argument in place"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.stop",
+        signature: "(self: life.recipe.Run) -> life.recipe.Stop?",
+        docs: "Returns the stop once the run has ended.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.Run.survive",
+        signature: "(self: life.recipe.Run) -> [u32]",
+        docs: "Returns the survive counts drawn against the budget.",
+        uncallable: Some("life::recipe::Run has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "life.recipe.grammar",
+        signature: "() -> life.recipe.Grammar",
+        docs: "Lists what every knob of a recipe may offer, in grammar order.",
+        uncallable: None,
+        door: Some(door_life_recipe_grammar),
+    },
+    Function {
+        name: "life.recipe.name",
+        signature: "(recipe: life.recipe.Recipe) -> String",
+        docs: "Writes a recipe as its name, the one string that regenerates it.",
+        uncallable: None,
+        door: Some(door_life_recipe_name),
+    },
+    Function {
+        name: "life.recipe.parse",
+        signature: "(name: str) -> life.recipe.Recipe",
+        docs: "Reads a recipe out of its name.\n\n# Errors\n\nErrs when a part is missing or unknown, when an island names no cap, or when a wallpaper names one or tiles more than once.",
+        uncallable: None,
+        door: Some(door_life_recipe_parse),
+    },
+    Function {
         name: "life.render.frame",
         signature: "(grid: Cell2d, scale: usize) -> Image",
         docs: "Renders one grid to a white-on-black image at a pixel scale.\n\n# Errors\n\nErrs on a scale below one.",
@@ -2747,6 +2887,62 @@ pub(crate) static DOORS: &[Function] = &[
         door: Some(door_math_counts_exposure_recurrence),
     },
     Function {
+        name: "math.counts.Placements.at",
+        signature: "(self: math.counts.Placements, level: u32) -> math.counts.Skeleton?",
+        docs: "Returns the face counts of the level-fold Kronecker power, or none past a `u128`.",
+        uncallable: Some("math::counts::Placements has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.Placements.of_tile",
+        signature: "(tile: Tensor) -> math.counts.Placements",
+        docs: "Reads the placement counts off a rendered tile of two to four dimensions.\n\n# Errors\n\nErrors when the tile has more than four dimensions, where the window patterns pass a `u32`.",
+        uncallable: Some("math::counts::Placements has no Serialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.Placements.recurrence",
+        signature: "(self: math.counts.Placements, k: usize?) -> [i128]?",
+        docs: "Returns the coefficients `c` of the recurrence `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...` the `k`-face count obeys from `L = 0`, every face when `k` is none, or none past an `i128`.",
+        uncallable: Some("math::counts::Placements has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.Placements.roots",
+        signature: "(self: math.counts.Placements, k: usize?) -> [(u128, u32)]",
+        docs: "Returns the roots of the recurrence the `k`-face count obeys, every face when `k` is none, each with the multiplicity the recurrence needs: the spanning counts of the patterns the count reaches, a root repeated once per pattern of that count on one carry chain.",
+        uncallable: Some("math::counts::Placements has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.Skeleton.cells",
+        signature: "(self: math.counts.Skeleton) -> u128",
+        docs: "The filled cells.",
+        uncallable: Some("math::counts::Skeleton has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.Skeleton.edges",
+        signature: "(self: math.counts.Skeleton) -> u128",
+        docs: "The distinct unit edges.",
+        uncallable: Some("math::counts::Skeleton has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.Skeleton.faces",
+        signature: "(self: math.counts.Skeleton) -> u128",
+        docs: "The distinct unit squares, the cells themselves in the plane.",
+        uncallable: Some("math::counts::Skeleton has no Deserialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.Skeleton.vertices",
+        signature: "(self: math.counts.Skeleton) -> u128",
+        docs: "The distinct corners.",
+        uncallable: Some("math::counts::Skeleton has no Deserialize"),
+        door: None,
+    },
+    Function {
         name: "math.counts.centered_hexagonal",
         signature: "(m: usize) -> u128",
         docs: "Returns the centered hexagonal number at the index, the lattice points of a hexagon of side m-1.",
@@ -3020,6 +3216,27 @@ pub(crate) static DOORS: &[Function] = &[
         door: Some(door_math_counts_six_solid_slice_vertices),
     },
     Function {
+        name: "math.counts.skeleton",
+        signature: "(code: Code, number: usize, dimension: usize, base: usize, level: u32) -> math.counts.Skeleton",
+        docs: "Returns the face counts of the code's design at the given level, from the tile's placement counts alone.\n\n# Errors\n\nErrors when the code is out of range, the dimension passes four, or a count passes a `u128`.",
+        uncallable: Some("math::counts::Skeleton has no Serialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.skeleton_of_tile",
+        signature: "(tile: Tensor, level: u32) -> math.counts.Skeleton?",
+        docs: "Returns the face counts of the tile's level-fold Kronecker power, or none past a `u128`.\n\n# Errors\n\nErrors when the tile has more than four dimensions.",
+        uncallable: Some("math::counts::Skeleton has no Serialize"),
+        door: None,
+    },
+    Function {
+        name: "math.counts.skeleton_recurrence",
+        signature: "(code: Code, number: usize, dimension: usize, base: usize, k: usize?) -> [i128]",
+        docs: "Returns the coefficients of the recurrence the code's `k`-face count obeys along the level, every face and the Euler characteristic when `k` is none.\n\n# Errors\n\nErrors when the code is out of range, the dimension passes four, or a coefficient passes an `i128`.",
+        uncallable: None,
+        door: Some(door_math_counts_skeleton_recurrence),
+    },
+    Function {
         name: "math.counts.surface",
         signature: "(code: Code, number: usize, level: u32, base: usize) -> u128",
         docs: "Returns the exposed face count of the code's 3D fractal at the given level.\n\n# Errors\n\nErrors when the code is out of range, or the exposure passes a hundred and twenty-eight bits.",
@@ -3228,6 +3445,83 @@ pub(crate) static DOORS: &[Function] = &[
         docs: "Returns `|hat F_level(a/base^level)|` at every `a < base^level`, built one digit at a time from `hat F_j(t) = hat F(t) hat F_(j-1)(base t)`.",
         uncallable: None,
         door: Some(door_math_dissection_weights),
+    },
+    Function {
+        name: "math.game.cell",
+        signature: "(point: [f64], base: u8, level: u32) -> u64",
+        docs: "Returns the index of the level-`k` cell holding a point of `[0, 1)^D`: `floor(x b^k) + floor(y b^k) b^k + ...`, row major with coordinate `0` least significant, the dimension read off the point.\n\nAt level one the index is the corner the point sits in. A coordinate outside the cube is clamped to its nearest cell.\n\n# Errors\n\nErrs under base two, and when the cell count runs past a `u64`.",
+        uncallable: None,
+        door: Some(door_math_game_cell),
+    },
+    Function {
+        name: "math.game.cells",
+        signature: "(base: u8, dimension: u8, level: u32) -> u64",
+        docs: "Returns the count of level-`k` cells of the cube, `b^(D k)`.\n\n# Errors\n\nErrs under base two, and when the count runs past a `u64`.",
+        uncallable: None,
+        door: Some(door_math_game_cells),
+    },
+    Function {
+        name: "math.game.counts",
+        signature: "(matrix: [[u64]], start: usize, levels: usize) -> [u64]",
+        docs: "Returns the path counts from a state, `e_start M^L 1` for `L = 1 ..= levels`: the filled cells of a mosaic slot or of a slice at each level, and stops early on the level whose count overruns a `u64`.\n\n# Errors\n\nErrs when the matrix is not square, and when the start is not one of its states.",
+        uncallable: None,
+        door: Some(door_math_game_counts),
+    },
+    Function {
+        name: "math.game.de_bruijn",
+        signature: "(m: u32, k: u32) -> [u8]",
+        docs: "Returns a de Bruijn cycle of order `k` over `m` letters: `m^k` letters in which every word of length `k` occurs exactly once as a cyclic window, so played as the draw schedule of an `m`-digit design it paints every level-`k` cell once per lap, and from a cold start once in `m^k + k - 1` draws.\n\nThe cycle concatenates the Lyndon words over `{0, ..., m - 1}` whose length divides `k`, in lexicographic order, the construction of Fredricksen, Kessler and Maiorana.\n\n# Errors\n\nErrs when `m` or `k` is zero, when `m` passes the `256` letters a byte holds, and when `m^k` passes `LAP`.",
+        uncallable: None,
+        door: Some(door_math_game_de_bruijn),
+    },
+    Function {
+        name: "math.game.mosaic_game",
+        signature: "(mosaic: math.game.Mosaic) -> math.game.MosaicGame",
+        docs: "Reads the game of a mosaic: its substitution matrix, Perron root, dimension and edges.\n\n# Errors\n\nErrs under base two or dimension one, with no mask or more than `256`, at a corner past `b^D` or repeated in its mask, and at a slot past the masks.",
+        uncallable: None,
+        door: Some(door_math_game_mosaic_game),
+    },
+    Function {
+        name: "math.game.named_games",
+        signature: "() -> [math.game.NamedGame]",
+        docs: "Returns the named games of the square, corner `c = x + 2 y`, cyclic order `0, 1, 3, 2` anticlockwise with `y` up: the seven one-step games and the width-3 game that forbids a neighbour after a repeat.",
+        uncallable: None,
+        door: Some(door_math_game_named_games),
+    },
+    Function {
+        name: "math.game.perron",
+        signature: "(matrix: [[u64]]) -> f64",
+        docs: "Returns the Perron root of a square nonnegative integer matrix, the growth per level of the paths its graph counts.\n\nThe graph is split into its strongly connected components; a component carrying no cycle contributes nothing, and a matrix with no cycle reads exactly `0`.\nOn each cyclic component `I + B` is primitive, so the power iteration on it converges to the Perron vector, and the Collatz-Wielandt ratios of that vector bracket the root; the answer is the largest component root.\n\n# Errors\n\nErrs when the matrix is not square.",
+        uncallable: None,
+        door: Some(door_math_game_perron),
+    },
+    Function {
+        name: "math.game.reverse",
+        signature: "(rule: math.memory.Rule) -> math.memory.Rule",
+        docs: "Returns the rule whose windows are the rule's windows read backwards.\n\nA restricted game allows a window of draws in time order, oldest first, and the digits of its point are the draws newest first, so the set a game draws is the dial's set of the reversed rule: `crate::memory::cells` of the reverse are the game's cells, and the two share their Perron root, their transfer matrices being transposes.",
+        uncallable: None,
+        door: Some(door_math_game_reverse),
+    },
+    Function {
+        name: "math.game.slice_game",
+        signature: "(base: u8, digits: [u8], p: i64, q: i64) -> math.game.SliceGame",
+        docs: "Reads the game of a plane design, corners `c = x + b y`, cut by the line `x + y = p / q`: its carry states, edges, matrix, Perron root and dimension.\n\n# Errors\n\nErrs under base two, at a corner past `b^2` or repeated, at a zero `q`, and when a height overruns an `i64`.",
+        uncallable: None,
+        door: Some(door_math_game_slice_game),
+    },
+    Function {
+        name: "math.game.successors",
+        signature: "(rule: math.memory.Rule, history: [u8]) -> [u8]",
+        docs: "Returns the letters a restricted game may draw next: the corners `c` for which some allowed window, read in time order, ends in the last `k - 1` draws of the history followed by `c`.\n\nA history shorter than `k - 1` fixes only the end of the window, so the letters consistent with some allowed window are returned, and the empty history at width one reads the rule's alphabet.\nA history letter past the rule's corners matches no window.",
+        uncallable: None,
+        door: Some(door_math_game_successors),
+    },
+    Function {
+        name: "math.game.word_cell",
+        signature: "(word: [u8], base: u8, dimension: u8) -> u64",
+        docs: "Returns the cell of a word of corners read coarsest digit first, the cell the game lands in after playing the word's digits last letter first.\n\n# Errors\n\nErrs under base two or dimension one, at a corner past `b^D`, and when the cell count runs past a `u64`.",
+        uncallable: None,
+        door: Some(door_math_game_word_cell),
     },
     Function {
         name: "math.graph.Layout.energy",
@@ -7402,6 +7696,111 @@ pub(crate) static DOORS: &[Function] = &[
         door: Some(door_num_prime_study),
     },
     Function {
+        name: "num.readings.Design.digits",
+        signature: "(base: u8, mask: u8) -> num.readings.Design",
+        docs: "Builds the design `b:D` from its base and its digit mask.",
+        uncallable: None,
+        door: Some(door_num_readings_design_digits),
+    },
+    Function {
+        name: "num.readings.Design.rudin",
+        signature: "() -> num.readings.Design",
+        docs: "Returns Rudin-Shapiro.",
+        uncallable: None,
+        door: Some(door_num_readings_design_rudin),
+    },
+    Function {
+        name: "num.readings.Design.ternary",
+        signature: "() -> num.readings.Design",
+        docs: "Returns the ternary parity, `3:2`, the parity of the ternary digits equal to 2.",
+        uncallable: None,
+        door: Some(door_num_readings_design_ternary),
+    },
+    Function {
+        name: "num.readings.Design.thue",
+        signature: "() -> num.readings.Design",
+        docs: "Returns Thue-Morse, `2:1`.",
+        uncallable: None,
+        door: Some(door_num_readings_design_thue),
+    },
+    Function {
+        name: "num.readings.Reading.all",
+        signature: "() -> [num.readings.Reading; 5]",
+        docs: "Returns every Reading in canonical order.",
+        uncallable: None,
+        door: Some(door_num_readings_reading_all),
+    },
+    Function {
+        name: "num.readings.Reading.formula",
+        signature: "(self: num.readings.Reading) -> String",
+        docs: "Returns the reading's formula, written the way the page prints it.",
+        uncallable: None,
+        door: Some(door_num_readings_reading_formula),
+    },
+    Function {
+        name: "num.readings.arcs",
+        signature: "(design: num.readings.Design, cut: f64) -> [num.readings.Arc]",
+        docs: "Lists a design's major arcs along the squares below the cut, best first, each with its amplitude.\n\nThe cut is held under `1/2`, where the trees stop converging; the lab's model keeps the arcs below `1/4`. An arc whose Gauss sum vanishes keeps a zero amplitude. Rudin-Shapiro, which is no digit design, has none. For base 6 the limit `K` is a series over the 2-adic and 3-adic valuations, cut at 14 terms.",
+        uncallable: None,
+        door: Some(door_num_readings_arcs),
+    },
+    Function {
+        name: "num.readings.battery",
+        signature: "(stream: [i8]) -> num.readings.Battery",
+        docs: "Runs the battery on a stream of signs.\n\nEvery statistic runs over the same `N = min(floor(len / 9), len - 64)` values of `n`, the largest that keeps every pair inside the stream, so a stream of `9N` signs feeds a battery at `N`; a stream below 72 signs gives `N = 0` and zeros. A pair whose sides have no variance reads zero.",
+        uncallable: None,
+        door: Some(door_num_readings_battery),
+    },
+    Function {
+        name: "num.readings.bias",
+        signature: "(stream: [i8], exponents: [u32]) -> [i64]",
+        docs: "Measures the bias `S(N) = sum_(n<N) y(n)` of a stream at `N = 2^e` for each exponent; a checkpoint past the stream's end sums the whole stream.",
+        uncallable: None,
+        door: Some(door_num_readings_bias),
+    },
+    Function {
+        name: "num.readings.designs",
+        signature: "() -> [num.readings.Design]",
+        docs: "Lists the 57 digit designs, base by base and mask by mask, then Rudin-Shapiro.",
+        uncallable: None,
+        door: Some(door_num_readings_designs),
+    },
+    Function {
+        name: "num.readings.model",
+        signature: "(design: num.readings.Design, cut: f64, exponents: [u32]) -> [f64]",
+        docs: "Predicts the bias `S(N) = sum_(n<N) x(n^2)` at `N = 2^e` for each exponent, from the arcs below the cut: `1 + Re sum_gamma A(gamma) U(gamma; N^2)`.\n\nExponents above 63 are read as 63. Rudin-Shapiro has no arcs and reads the constant one.",
+        uncallable: None,
+        door: Some(door_num_readings_model),
+    },
+    Function {
+        name: "num.readings.name",
+        signature: "(design: num.readings.Design) -> String",
+        docs: "Returns the design's name in the `b:D` form, the digits of `D` ascending, or `rudin-shapiro`.",
+        uncallable: None,
+        door: Some(door_num_readings_name),
+    },
+    Function {
+        name: "num.readings.near_heads",
+        signature: "(design: num.readings.Design, reading: num.readings.Reading) -> [num.readings.Head]",
+        docs: "Lists the battery pairs that are near-heads of a polynomial reading at the design's base, the 44 dilation pairs first and the two kernel pairs after; the primes have none.",
+        uncallable: None,
+        door: Some(door_num_readings_near_heads),
+    },
+    Function {
+        name: "num.readings.sign",
+        signature: "(design: num.readings.Design, n: u64) -> i8",
+        docs: "Returns the design's sign at a number, plus or minus one.",
+        uncallable: None,
+        door: Some(door_num_readings_sign),
+    },
+    Function {
+        name: "num.readings.stream",
+        signature: "(design: num.readings.Design, reading: num.readings.Reading, count: u32) -> [i8]",
+        docs: "Builds a reading's first signs: `y(n) = x(P(n))` for `n < count`, or `x(p_n)` along the first `count` primes from a segmented sieve.",
+        uncallable: None,
+        door: Some(door_num_readings_stream),
+    },
+    Function {
         name: "num.series.basel",
         signature: "(n: usize) -> f64",
         docs: "Returns the Basel sum of the reciprocal squares over n terms, walking to pi squared over six.",
@@ -9974,6 +10373,31 @@ fn door_life_popcount(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrly::life::popcount(a0)))
 }
 
+fn door_life_recipe_mode_all(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrly::life::recipe::Mode::all()))
+}
+
+fn door_life_recipe_grammar(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrly::life::recipe::grammar()))
+}
+
+fn door_life_recipe_name(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrly::life::recipe::Recipe = take!(name, 0, &args[0]);
+    Ok(give!(mrly::life::recipe::name(&a0)))
+}
+
+fn door_life_recipe_parse(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: String = take!(name, 0, &args[0]);
+    match mrly::life::recipe::parse(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
 fn door_life_render_frame(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrly::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
@@ -12521,6 +12945,25 @@ fn door_math_counts_six_solid_slice_vertices(name: &str, args: &[Value]) -> Done
     }
 }
 
+fn door_math_counts_skeleton_recurrence(name: &str, args: &[Value]) -> Done {
+    count(name, args, 5)?;
+    let a0: mrly::math::bang::Code = mrly::math::bang::Code::from(big(name, 0, &args[0])?);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    let a3: usize = take!(name, 3, &args[3]);
+    let a4: Option<usize> = take!(name, 4, &args[4]);
+    match mrly::math::counts::skeleton_recurrence(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
 fn door_math_counts_surface(name: &str, args: &[Value]) -> Done {
     count(name, args, 4)?;
     let a0: mrly::math::bang::Code = mrly::math::bang::Code::from(big(name, 0, &args[0])?);
@@ -12750,6 +13193,108 @@ fn door_math_dissection_weights(name: &str, args: &[Value]) -> Done {
     let a1: Vec<u64> = take!(name, 1, &args[1]);
     let a2: u32 = take!(name, 2, &args[2]);
     Ok(give!(mrly::math::dissection::weights(a0, &a1, a2)))
+}
+
+fn door_math_game_cell(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: Vec<f64> = take!(name, 0, &args[0]);
+    let a1: u8 = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    match mrly::math::game::cell(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
+fn door_math_game_cells(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u8 = take!(name, 0, &args[0]);
+    let a1: u8 = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    match mrly::math::game::cells(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
+fn door_math_game_counts(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: Vec<Vec<u64>> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    match mrly::math::game::counts(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
+fn door_math_game_de_bruijn(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u32 = take!(name, 0, &args[0]);
+    let a1: u32 = take!(name, 1, &args[1]);
+    match mrly::math::game::de_bruijn(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
+fn door_math_game_mosaic_game(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrly::math::game::Mosaic = take!(name, 0, &args[0]);
+    match mrly::math::game::mosaic_game(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
+fn door_math_game_named_games(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrly::math::game::named_games()))
+}
+
+fn door_math_game_perron(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<Vec<u64>> = take!(name, 0, &args[0]);
+    match mrly::math::game::perron(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
+fn door_math_game_reverse(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrly::math::memory::Rule = take!(name, 0, &args[0]);
+    Ok(give!(mrly::math::game::reverse(&a0)))
+}
+
+fn door_math_game_slice_game(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: u8 = take!(name, 0, &args[0]);
+    let a1: Vec<u8> = take!(name, 1, &args[1]);
+    let a2: i64 = take!(name, 2, &args[2]);
+    let a3: i64 = take!(name, 3, &args[3]);
+    match mrly::math::game::slice_game(a0, &a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
+fn door_math_game_successors(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrly::math::memory::Rule = take!(name, 0, &args[0]);
+    let a1: Vec<u8> = take!(name, 1, &args[1]);
+    Ok(give!(mrly::math::game::successors(&a0, &a1)))
+}
+
+fn door_math_game_word_cell(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: Vec<u8> = take!(name, 0, &args[0]);
+    let a1: u8 = take!(name, 1, &args[1]);
+    let a2: u8 = take!(name, 2, &args[2]);
+    match mrly::math::game::word_cell(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
 }
 
 fn door_math_graph_network_adjacency(name: &str, args: &[Value]) -> Done {
@@ -17889,6 +18434,100 @@ fn door_num_prime_study(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
     Ok(give!(mrly::num::prime::study(a0)))
+}
+
+fn door_num_readings_design_digits(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u8 = take!(name, 0, &args[0]);
+    let a1: u8 = take!(name, 1, &args[1]);
+    Ok(give!(mrly::num::readings::Design::digits(a0, a1)))
+}
+
+fn door_num_readings_design_rudin(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrly::num::readings::Design::rudin()))
+}
+
+fn door_num_readings_design_ternary(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrly::num::readings::Design::ternary()))
+}
+
+fn door_num_readings_design_thue(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrly::num::readings::Design::thue()))
+}
+
+fn door_num_readings_reading_all(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrly::num::readings::Reading::all()))
+}
+
+fn door_num_readings_reading_formula(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrly::num::readings::Reading = take!(name, 0, &args[0]);
+    Ok(give!(mrly::num::readings::Reading::formula(a0)))
+}
+
+fn door_num_readings_arcs(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrly::num::readings::Design = take!(name, 0, &args[0]);
+    let a1: f64 = take!(name, 1, &args[1]);
+    Ok(give!(mrly::num::readings::arcs(a0, a1)))
+}
+
+fn door_num_readings_battery(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<i8> = take!(name, 0, &args[0]);
+    Ok(give!(mrly::num::readings::battery(&a0)))
+}
+
+fn door_num_readings_bias(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<i8> = take!(name, 0, &args[0]);
+    let a1: Vec<u32> = take!(name, 1, &args[1]);
+    Ok(give!(mrly::num::readings::bias(&a0, &a1)))
+}
+
+fn door_num_readings_designs(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrly::num::readings::designs()))
+}
+
+fn door_num_readings_model(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrly::num::readings::Design = take!(name, 0, &args[0]);
+    let a1: f64 = take!(name, 1, &args[1]);
+    let a2: Vec<u32> = take!(name, 2, &args[2]);
+    Ok(give!(mrly::num::readings::model(a0, a1, &a2)))
+}
+
+fn door_num_readings_name(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrly::num::readings::Design = take!(name, 0, &args[0]);
+    Ok(give!(mrly::num::readings::name(a0)))
+}
+
+fn door_num_readings_near_heads(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrly::num::readings::Design = take!(name, 0, &args[0]);
+    let a1: mrly::num::readings::Reading = take!(name, 1, &args[1]);
+    Ok(give!(mrly::num::readings::near_heads(a0, a1)))
+}
+
+fn door_num_readings_sign(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrly::num::readings::Design = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    Ok(give!(mrly::num::readings::sign(a0, a1)))
+}
+
+fn door_num_readings_stream(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrly::num::readings::Design = take!(name, 0, &args[0]);
+    let a1: mrly::num::readings::Reading = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    Ok(give!(mrly::num::readings::stream(a0, a1, a2)))
 }
 
 fn door_num_series_basel(name: &str, args: &[Value]) -> Done {

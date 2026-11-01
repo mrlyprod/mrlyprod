@@ -94,8 +94,8 @@ function rule30(moved: boolean) {
 }
 
 function differences(step: (x: Uint8Array) => Uint8Array, flip: number, keep: number[]) {
-  let a = fill();
-  let b = fill();
+  let a: Uint8Array = fill();
+  let b: Uint8Array = fill();
   b[flip] ^= 1;
   const out: Uint8Array[] = [];
   for (let r = 1; r <= keep[keep.length - 1]; r++) {
@@ -127,9 +127,26 @@ export default function draw(pen: Pen, ink: Ink) {
   tiles.forEach(({ d, out }, t) => {
     const mask = (want: (p: number) => boolean) =>
       Array.from({ length: SIDE }, (_, i) => Array.from({ length: SIDE }, (_, j) => want(SIDE * i + j)));
-    const grid = new Grid(frame(left + (t % TILES) * (tile + gap), top + Math.floor(t / TILES) * (tile + gap), tile, tile), SIDE, SIDE, 0);
-    grid.carpet(pen, mask((p) => out(p) && !d[p]), ink.line);
-    grid.carpet(pen, mask((p) => !out(p) && d[p] === 1), ink.blue);
-    grid.carpet(pen, mask((p) => out(p) && d[p] === 1), ink.orange);
+    const grid = new Grid(
+      frame(left + (t % TILES) * (tile + gap), top + Math.floor(t / TILES) * (tile + gap), tile, tile),
+      SIDE,
+      SIDE,
+      0,
+    );
+    grid.carpet(
+      pen,
+      mask((p) => out(p) && !d[p]),
+      ink.line,
+    );
+    grid.carpet(
+      pen,
+      mask((p) => !out(p) && d[p] === 1),
+      ink.blue,
+    );
+    grid.carpet(
+      pen,
+      mask((p) => out(p) && d[p] === 1),
+      ink.orange,
+    );
   });
 }

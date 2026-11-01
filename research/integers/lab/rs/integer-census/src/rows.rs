@@ -1,4 +1,4 @@
-use ledger::{closed, keys, terms, Closed, Cost, Key, Tier, TERMS};
+use ledger::{closed, keys, terms, Axis, Closed, Cost, Key, Measure, Tier, TERMS};
 use std::thread;
 
 pub const CEILING: i128 = 100_000;
@@ -8,6 +8,17 @@ pub const SHALLOW: usize = 32;
 pub const CELLS: u128 = 100_000;
 pub const BLOCK: usize = 8;
 pub const THREADS: usize = 4;
+pub const TIERS: [Tier; 4] = [
+    Tier::Closed,
+    Tier::Convolved,
+    Tier::SideGrid,
+    Tier::LevelGrid,
+];
+pub const MEASURES: usize = 12;
+
+pub fn counted(measure: Measure) -> bool {
+    Measure::ALL[..MEASURES].contains(&measure)
+}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Stop {
@@ -43,7 +54,7 @@ fn footprint(key: &Key, index: usize) -> Option<u128> {
     let (number, level) = key.axis.place(index, key.number());
     let number = number as u128;
     let dimension = key.dimension as u32;
-    match key.measure.cost() {
+    match key.measure.cost(Axis::Side) {
         Cost::Closed => Some(1),
         Cost::Convolved => {
             let tile = number.checked_pow(dimension)?;
@@ -178,8 +189,11 @@ pub struct Sheet {
 pub fn read() -> Sheet {
     let mut tiers = Vec::new();
     let mut listed: Vec<(Key, Tier)> = Vec::new();
-    for tier in Tier::ALL {
-        let batch = keys(tier);
+    for tier in TIERS {
+        let batch: Vec<Key> = keys(tier)
+            .into_iter()
+            .filter(|key| counted(key.measure))
+            .collect();
         tiers.push((tier, batch.len()));
         listed.extend(batch.into_iter().map(|key| (key, tier)));
     }

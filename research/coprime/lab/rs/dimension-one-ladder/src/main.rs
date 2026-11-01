@@ -2,6 +2,7 @@ mod blocks;
 mod census;
 mod design;
 mod mass;
+mod pairs;
 mod radii;
 mod terms;
 
@@ -98,6 +99,9 @@ fn main() {
                 args[2].parse().expect("b"),
                 args[3].parse().expect("top level"),
             );
+        }
+        Some("pairs") => {
+            pairs::report(args[1].parse().expect("height"), threads);
         }
         Some("ray") => {
             radii::single(args[1].parse().expect("a"), args[2].parse().expect("b"));

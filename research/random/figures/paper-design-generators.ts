@@ -57,7 +57,8 @@ function certificate() {
     [delta(-1 / 2), 133 / 1000],
     [delta(1 / 4), 5077 / 4000],
   ];
-  for (const [got, exact] of want) if (Math.abs(got - exact) > 1e-12) throw new Error(`${NAME}: certificate value ${got}, want ${exact}`);
+  for (const [got, exact] of want)
+    if (Math.abs(got - exact) > 1e-12) throw new Error(`${NAME}: certificate value ${got}, want ${exact}`);
   for (const t of [-0.5, -0.3, -0.1, 0, 0.1, 0.25]) {
     const gap = 4 * a(t) * d(t) - b(t) * b(t) - delta(t);
     if (Math.abs(gap) > 1e-9) throw new Error(`${NAME}: discriminant mismatch ${gap} at t = ${t}`);

@@ -42,6 +42,13 @@ export const wolfram_class = wasm.life_wolfram_class;
 export const elementary = {
     output: wasm.life_elementary_output,
 };
+export const recipe = {
+    Mode: wasm.life_recipe_Mode,
+    Run: wasm.life_recipe_Run,
+    grammar: wasm.life_recipe_grammar,
+    name: wasm.life_recipe_name,
+    parse: wasm.life_recipe_parse,
+};
 export const render = {
     frame: wasm.life_render_frame,
 };

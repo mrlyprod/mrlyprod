@@ -1,15 +1,30 @@
-use ledger::{keys, terms, Cost, Key, Tier};
+use ledger::{keys, terms, Axis, Cost, Key, Measure, Tier};
 
 const CAP: usize = 48;
 const CELLS: u128 = 100_000;
 const BLOCK: usize = 8;
 const ROWS: usize = 18066;
+const TIERS: [Tier; 4] = [
+    Tier::Closed,
+    Tier::Convolved,
+    Tier::SideGrid,
+    Tier::LevelGrid,
+];
+const MEASURES: usize = 12;
+
+fn registry() -> Vec<Key> {
+    TIERS
+        .into_iter()
+        .flat_map(keys)
+        .filter(|key| Measure::ALL[..MEASURES].contains(&key.measure))
+        .collect()
+}
 
 fn footprint(key: &Key, index: usize) -> Option<u128> {
     let (number, level) = key.axis.place(index, key.number());
     let number = number as u128;
     let dimension = key.dimension as u32;
-    match key.measure.cost() {
+    match key.measure.cost(Axis::Side) {
         Cost::Closed => Some(1),
         Cost::Convolved => {
             let tile = number.checked_pow(dimension)?;
@@ -88,7 +103,7 @@ fn tally(
 
 /// Counts, for each depth, how many of the 18066 ledger sequences write each value from 1 to `window` in their first `depth` terms, reading each sequence until a term passes `ceiling`; returns one tally of `window + 1` slots per depth, slot 0 always empty.
 pub fn census(ceiling: i128, window: usize, depths: &[usize]) -> Vec<Vec<u32>> {
-    let rows: Vec<Key> = Tier::ALL.into_iter().flat_map(keys).collect();
+    let rows = registry();
     assert_eq!(rows.len(), ROWS);
     let lanes = std::thread::available_parallelism()
         .map(|n| n.get())
@@ -111,4 +126,14 @@ pub fn census(ceiling: i128, window: usize, depths: &[usize]) -> Vec<Vec<u32>> {
         }
     });
     counts
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_census_reads_its_registry() {
+        assert_eq!(registry().len(), ROWS);
+    }
 }

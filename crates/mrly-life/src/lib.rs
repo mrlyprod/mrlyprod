@@ -3,6 +3,7 @@
 //! - `step`: one generation of a grid under birth and survive counts.
 //! - `animate`: a seed run until it fixes, loops or times out.
 //! - `models`: the run config and the recorded life.
+//! - `recipe`: the recipe grammar and its two-mode run, one name regenerating a run bit for bit.
 //! - `metrics`: the entropy and churn readings of a run.
 //! - `crop`: the centred cropping and tiling of a run's frames.
 //! - `mask`: the design masks a rule reads and the lattice they generate.
@@ -29,6 +30,8 @@ pub mod mask;
 pub mod metrics;
 /// The run config and the recorded life.
 pub mod models;
+/// The recipe grammar and its two-mode run: one name regenerates a run bit for bit.
+pub mod recipe;
 /// The frames and the cumulative-visit heatmap of grids, as images.
 pub mod render;
 /// The rule name: a life rule's birth and survival counts and whether the edge wraps.
