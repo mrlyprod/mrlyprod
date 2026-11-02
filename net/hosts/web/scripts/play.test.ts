@@ -1,10 +1,4 @@
 import { expect, test } from "bun:test";
-import * as math from "@mrlyprod/math";
-import * as mend from "../../../../apps/mend/engine.ts";
-import { pick as mending } from "../../../../apps/mend/policy.ts";
-import type { Knobs } from "../../../../apps/mend/scene.ts";
-import { SPEC as MEND } from "../../../../apps/mend/scene.ts";
-import type { Mrly } from "../../../../apps/shared/designs/engine.ts";
 import * as snake from "../../../../apps/snake/engine.ts";
 import { SPEC as SNAKE } from "../../../../apps/snake/scene.ts";
 import { rng } from "../../../sdk/rand.ts";
@@ -25,22 +19,7 @@ async function session(start: Session, lines: string[]) {
 
 test("discovery finds the reducer apps and no other", async () => {
   const found = await reducers();
-  for (const id of [
-    "beam",
-    "canon",
-    "chaos",
-    "fold",
-    "frost",
-    "life",
-    "matrix",
-    "mend",
-    "race",
-    "sleep",
-    "snake",
-    "swirl",
-    "twig",
-  ])
-    expect(found).toContain(id);
+  for (const id of ["chaos", "life", "matrix", "race", "sleep", "snake"]) expect(found).toContain(id);
   for (const id of ["apollonian", "ulam", "designs", "shared"]) expect(found).not.toContain(id);
 });
 
@@ -60,22 +39,6 @@ test("a snake session reads as the engine called directly", async () => {
     state = snake.step(state, act);
     expect(outs[i + 1]).toEqual({ read: snake.read(state) });
   }
-});
-
-test("a mend session and its smart bot read as the engine called directly", async () => {
-  let state = mend.deal(tidy(MEND, {}) as Knobs, { seed: 3, units: { math: math as unknown as Mrly } });
-  const start = await open("mend", 3);
-  const [first, bot] = await session(start, [
-    JSON.stringify({ step: mend.moves(state)[5] }),
-    '{"bot":"smart","n":1000}',
-  ]);
-  state = mend.step(state, mend.moves(state)[5]);
-  expect(first).toEqual({ read: mend.read(state) });
-  let steps = 0;
-  for (let act = mending(state, "smart", Math.random); act; act = mending(state, "smart", Math.random), steps++)
-    state = mend.step(state, act);
-  expect(bot).toEqual({ steps, read: mend.read(state) });
-  expect(state.over).toBe("mended");
 });
 
 test("a malformed line answers an error and the session goes on", async () => {

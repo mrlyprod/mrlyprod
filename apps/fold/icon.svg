@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs><linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33dac9"/><stop offset=".7" stop-color="#00d1bb"/></linearGradient><mask id="lace" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024"><rect width="1024" height="1024" fill="#fff"/><circle cx="262" cy="262" r="30" fill="#000"/><circle cx="762" cy="262" r="30" fill="#000"/><circle cx="362" cy="362" r="30" fill="#000"/><circle cx="662" cy="362" r="30" fill="#000"/><circle cx="462" cy="462" r="30" fill="#000"/><circle cx="562" cy="462" r="30" fill="#000"/><circle cx="462" cy="562" r="30" fill="#000"/><circle cx="562" cy="562" r="30" fill="#000"/><circle cx="362" cy="662" r="30" fill="#000"/><circle cx="662" cy="662" r="30" fill="#000"/><circle cx="262" cy="762" r="30" fill="#000"/><circle cx="762" cy="762" r="30" fill="#000"/></mask></defs>
-  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
-  <rect x="212" y="212" width="600" height="600" fill="#fff" mask="url(#lace)"/>
-</svg>
