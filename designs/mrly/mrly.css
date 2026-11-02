@@ -1366,6 +1366,15 @@ button.cell[data-design="mrly"]:hover {
   grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
+.control[data-design="mrly"] > .label {
+  overflow: hidden;
+  padding-inline: calc(var(--m-unit) / 2);
+  overflow-wrap: normal;
+  text-align: center;
+  font-size: 0.8em;
+  line-height: 1.15;
+}
+
 .control[data-design="mrly"] .step[data-limit="true"] {
   background: color-mix(in srgb, var(--hue, var(--gray)) 50%, var(--paper));
   color: var(--muted);
@@ -1412,11 +1421,14 @@ button.cell[data-design="mrly"]:hover {
 .control[data-design="mrly"] .pick select {
   width: 100%;
   height: var(--m-cell);
-  padding: 0 var(--s4);
+  padding: 0 calc(var(--s4) + 0.6em) 0 var(--s2);
+  overflow: hidden;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
+  font-size: 0.85em;
+  text-overflow: ellipsis;
   text-align: center;
   appearance: none;
   cursor: pointer;
@@ -1460,7 +1472,14 @@ button.cell[data-design="mrly"]:hover {
 }
 
 .control[data-design="mrly"] .value {
+  overflow: hidden;
   font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.control[data-design="mrly"][data-kind="slider"] > .value {
+  font-size: 0.8em;
 }
 
 /* GROUP */
