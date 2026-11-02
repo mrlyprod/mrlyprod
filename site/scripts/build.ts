@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import type { BuildArtifact, BunPlugin } from "bun";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { rawKind } from "../infra/mime.ts";
 import SITE from "../site.json";
 import { appicon } from "../src/lib/appicon.ts";
@@ -10,6 +12,8 @@ import { front, NAME, figures as named, plain, summary } from "../src/lib/md/md.
 import { esc } from "../src/lib/md/text.ts";
 import { rng } from "../src/lib/rand.ts";
 import { tintCss } from "../src/lib/theme/tint.ts";
+import type { Design } from "../src/shell/design.ts";
+import { draw, pulldown, runtime, sheets, source } from "./design.ts";
 import { forest, config as gitConfig, TREE, tree } from "./git.ts";
 import { llms, type Shelf } from "./llms.ts";
 
@@ -51,6 +55,7 @@ const shellFile = (name: Name) => under(join(org, "src", "shell"), name);
 const SHELLS = [shellFile("app"), shellFile("prose")];
 const LOCK = shellFile("lock");
 const TINT = '<style id="tint"></style>';
+const MARK = '<link rel="icon" type="image/svg+xml">';
 const HASHED = /-[0-9a-z]{8}\.[^./]+$/;
 const NAMING = { entry: "[name]-[hash].[ext]", chunk: "lib-[hash].[ext]", asset: "[name]-[hash].[ext]" };
 const MANIFEST = JSON.parse(readFileSync(join(MRLY, "package.json"), "utf8")) as {
@@ -119,7 +124,9 @@ export type State = {
   dropped: number;
 };
 
-export type Ready = State & { boot: string; css: Record<string, string>; assets: Out[] };
+export type Dressed = { design: string; sheets: string[]; skin: Design["skin"]; pulldown?: string; frame: string };
+
+export type Ready = State & Dressed & { boot: string; css: Record<string, string>; assets: Out[] };
 
 /* TEXT */
 
@@ -549,10 +556,20 @@ export function state(): State {
   const shown = savers(hosts(list), evaluate);
   const site = {
     ...Object.fromEntries(
-      ["title", "company", "tagline", "since", "prefix", "tint", "menu", "socials", "contact", "tree"].map((key) => [
-        key,
-        SITE[key as keyof typeof SITE],
-      ]),
+      [
+        "title",
+        "company",
+        "tagline",
+        "since",
+        "prefix",
+        "mark",
+        "tint",
+        "menu",
+        "socials",
+        "contact",
+        "tree",
+        "min",
+      ].map((key) => [key, SITE[key as keyof typeof SITE]]),
     ),
     root,
     version: MANIFEST.version,
@@ -629,6 +646,10 @@ export function modules(ready: Ready): Record<string, string> {
     "site:apps": `export const apps = ${thunks(appFiles(ready.apps))};\nexport const own = new Set(${JSON.stringify(own(ready.apps))});\nexport const lock = () => import(${JSON.stringify(LOCK)});`,
     "site:css": `export const css = ${JSON.stringify(ready.css)};`,
     "site:icons": icons(ready.apps),
+    "site:frame": `export const frame = ${JSON.stringify(ready.frame)};`,
+    "site:design": source(ready.design),
+    "site:design/pulldown": pulldown(ready.design, ready.pulldown),
+    ...sheets(ready.design, ready.sheets, ready.skin),
     "apps:scenes": `export const scenes = ${thunks(scenes(ready))};`,
     ...Object.fromEntries(
       ready.apps.filter((one) => spells(one.page, "scene")).map((one) => [`app:${one.id}`, entry(one.dir)]),
@@ -648,7 +669,7 @@ export const plugin = (get: () => Ready): BunPlugin => ({
     build.onLoad({ filter: /.*/, namespace: "site" }, ({ path }) => {
       const text = modules(get())[path];
       if (text === undefined) throw new Error(`site: no virtual module ${path}`);
-      return { contents: text, loader: "js" };
+      return { contents: text, loader: path.endsWith(".css") ? "css" : "js" };
     });
   },
 });
@@ -724,6 +745,22 @@ async function prime(seen: Map<string, string>) {
   };
 }
 
+let worn = false;
+
+export async function dress(title: string): Promise<Dressed> {
+  const drawn = await draw();
+  if (!worn) runtime(drawn.name, drawn.design.pulldown);
+  worn = true;
+  const { Frame } = await import("../src/shell/frame.tsx");
+  return {
+    design: drawn.name,
+    sheets: drawn.design.css,
+    skin: drawn.design.skin,
+    pulldown: drawn.design.pulldown,
+    frame: renderToStaticMarkup(createElement(Frame, { title })),
+  };
+}
+
 let primed: Promise<Ready> | null = null;
 
 let done: Ready | null = null;
@@ -731,8 +768,8 @@ let done: Ready | null = null;
 export function ready(): Promise<Ready> {
   if (primed) return primed;
   const seen = new Map<string, string>();
-  primed = prime(seen).then((made) => {
-    done = { ...state(), ...made, assets: [...made.assets, ...faces(seen), ...licenses()] };
+  primed = Promise.all([prime(seen), dress(SITE.title)]).then(([made, dressed]) => {
+    done = { ...state(), ...made, ...dressed, assets: [...made.assets, ...faces(seen), ...licenses()] };
     return done;
   });
   return primed;
@@ -845,6 +882,7 @@ function copies(ready: State): Out[] {
 
 export type Built = {
   out: string;
+  design: string;
   rows: Row[];
   files: { path: string; hash: string; type?: string; fixed?: boolean }[];
   raw: number;
@@ -852,16 +890,27 @@ export type Built = {
   units: string[];
 };
 
-export function withTint(html: string) {
+export function withSite(html: string) {
   if (!html.includes(TINT))
     throw new Error(`site: src/shell/index.html must hold ${TINT}, which the build fills with the tint rules`);
-  return html.replace(TINT, `<style id="tint">\n${tintCss(SITE.tint)}</style>`);
+  const fill = { title: SITE.title, tagline: SITE.tagline, prefix: SITE.prefix, root, domain: new URL(root).host };
+  const safe = (text: string) => text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+  let out = html.replace(TINT, `<style id="tint">\n${tintCss(SITE.tint)}</style>`);
+  if (!out.includes(MARK))
+    throw new Error(`site: src/shell/index.html must hold ${MARK}, which the build fills with site.mark`);
+  out = out.replace(MARK, `<link rel="icon" href="${safe(SITE.mark)}" type="image/svg+xml">`);
+  for (const [key, value] of Object.entries(fill)) {
+    if (!out.includes(`{${key}}`))
+      throw new Error(`site: src/shell/index.html must hold {${key}}, which the build fills from site.json`);
+    out = out.replaceAll(`{${key}}`, safe(value));
+  }
+  return out;
 }
 
 export async function build(out = DIST): Promise<Built> {
   const seen = new Map<string, string>();
   const made = await prime(seen);
-  const ready: Ready = { ...state(), ...made };
+  const ready: Ready = { ...state(), ...made, ...(await dress(SITE.title)) };
   const entries = [
     join(org, "src", "shell", "index.html"),
     ...SHELLS,
@@ -886,7 +935,7 @@ export async function build(out = DIST): Promise<Built> {
   if (!shell.includes('<script src="/boot.js"></script>'))
     throw new Error("site: src/shell/index.html must load /boot.js as its first, classic script");
   page.path = "index.html";
-  page.bytes = withTint(shell.replace('<script src="/boot.js"></script>', `<script src="${made.boot}"></script>`));
+  page.bytes = withSite(shell.replace('<script src="/boot.js"></script>', `<script src="${made.boot}"></script>`));
   const loose = [...bundle, ...made.assets].filter((one) => one !== page && !HASHED.test(one.path));
   if (loose.length) throw new Error(`site: the bundle named ${loose.map((one) => one.path).join(", ")} without a hash`);
   const hashed = [...faces(seen), ...made.assets, ...bundle.filter((one) => one !== page)].map((one) => ({
@@ -911,6 +960,7 @@ export async function build(out = DIST): Promise<Built> {
   }
   return {
     out,
+    design: ready.design,
     rows: ready.rows,
     files: [...files.values()],
     raw: ready.raw.length,
@@ -925,6 +975,6 @@ if (import.meta.main) {
   const done = await build();
   const size = done.files.reduce((sum, one) => sum + statSync(join(done.out, one.path)).size, 0);
   console.log(
-    `site: ${done.rows.length} rows, ${done.raw} raw files, ${done.files.length} files (${(size / 1e6).toFixed(1)} MB) in ${done.out.startsWith(`${org}/`) ? relative(org, done.out) : done.out}, wasm ${done.units.join(" ")}, ${done.dropped} redirects dropped for a target that is no route`,
+    `site: design ${done.design}, ${done.rows.length} rows, ${done.raw} raw files, ${done.files.length} files (${(size / 1e6).toFixed(1)} MB) in ${done.out.startsWith(`${org}/`) ? relative(org, done.out) : done.out}, wasm ${done.units.join(" ")}, ${done.dropped} redirects dropped for a target that is no route`,
   );
 }

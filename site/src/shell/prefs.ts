@@ -1,6 +1,6 @@
 /* STORAGE */
 
-export const PREFIX = (typeof document !== "undefined" && document.documentElement.dataset.prefix) || "mrly-";
+export const PREFIX = (typeof document !== "undefined" && document.documentElement.dataset.prefix) || "";
 export const KEY = {
   theme: `${PREFIX}theme`,
   font: `${PREFIX}font`,
@@ -214,19 +214,7 @@ export function minutes() {
 
 /* CLOCK */
 
-const CYCLES: Partial<Record<string, "h12" | "h23">> = { 12: "h12", 24: "h23" };
-
 export const hours = (next: string) => write(KEY.hours, next);
-
-export function stamp(now: Date, mode: string, bare?: boolean) {
-  const cycle = CYCLES[mode];
-  return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit", ...(cycle && { hourCycle: cycle }) })
-    .formatToParts(now)
-    .filter((part) => !bare || part.type !== "dayPeriod")
-    .map((part) => part.value)
-    .join("")
-    .trim();
-}
 
 /* REPLAY */
 

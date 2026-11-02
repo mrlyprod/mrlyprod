@@ -4,14 +4,19 @@ import * as num from "@mrlyprod/mrly/num";
 import type { Raw } from "../../lib/app/spec.ts";
 import { defaults } from "../../lib/app/spec.ts";
 import { rng } from "../../lib/rand.ts";
-import type { Source } from "./engine.ts";
+import type { Act, Source, State } from "./engine.ts";
 import {
   binary,
+  boot,
   cap,
+  cell,
   csv,
   cut,
+  DRAW,
+  deal,
   digits,
   distance,
+  feed,
   fit,
   fromCloud,
   games,
@@ -22,9 +27,11 @@ import {
   meter,
   modeOf,
   modes,
+  moves,
   odds,
   origin,
   pair,
+  read,
   replay,
   restricted,
   ruleCode,
@@ -32,10 +39,12 @@ import {
   sideOf,
   sides,
   spelt,
+  spot,
   stationary,
+  step,
   study,
+  taking,
   toCloud,
-  walker,
 } from "./engine.ts";
 import { SPEC, tidied } from "./scene.ts";
 
@@ -44,6 +53,29 @@ const units = { math, num };
 const value = (over: Raw) => tidied({ ...defaults(SPEC), seed: 1, base: 2, code: "7", ...over }, units);
 
 const source = (over: Raw) => study(units, value(over));
+
+const game = (
+  one: Source,
+  k: number,
+  start: [number, number],
+  seed = 1,
+  sched: Uint8Array | null = null,
+  heavy = false,
+) => boot(deal(one, k, heavy, sched, start, seed));
+
+const freeze = <T>(x: T): T => {
+  if (x && typeof x === "object") {
+    Object.values(x).forEach(freeze);
+    Object.freeze(x);
+  }
+  return x;
+};
+
+const plain = (x: unknown): boolean =>
+  x === null ||
+  typeof x === "string" ||
+  Number.isInteger(x) ||
+  (typeof x === "object" && Object.values(x as object).every(plain));
 
 const fact = (one: Source, label: string) => one.facts.find(([name]) => name === label)?.[1];
 
@@ -389,7 +421,7 @@ test("a restricted or graph game reads the stationary law on cells, and a reduci
   expect(cut.lost).toBe(false);
 });
 
-test("the walker is the shift register: its cell is the door's cell of its point, from the start on, at every base", () => {
+test("the game is the shift register: its cell is the door's cell of its point, from the start on, at every base", () => {
   for (const [over, k] of [
     [{}, 3],
     [{ base: 3, code: "495" }, 2],
@@ -397,22 +429,20 @@ test("the walker is the shift register: its cell is the door's cell of its point
     [{ view: "slice", code: "11" }, 3],
   ] as [Raw, number][]) {
     const one = source(over);
-    const rand = rng(3);
-    const walked = walker(one, k, false, rand, null, [0.3, 0.6]);
-    expect(walked.cell()).toBe(Number(math.game.cell([walked.x, walked.y], one.base, k)));
+    let state = game(one, k, [0.3, 0.6], 3);
+    expect(cell(state)).toBe(Number(math.game.cell(spot(state), one.base, k)));
     for (let i = 0; i < 2000; i++) {
-      expect(walked.step()).toBe(true);
-      expect(walked.cell()).toBe(Number(math.game.cell([walked.x, walked.y], one.base, k)));
+      state = step(state, DRAW);
+      expect(cell(state)).toBe(Number(math.game.cell(spot(state), one.base, k)));
     }
-    expect(walked.n).toBe(2000);
+    expect(state.n).toBe(2000);
   }
-  const gasket = source({});
-  const walked = walker(gasket, 2, false, rng(1), null, [0.3, 0.6]);
-  expect(walked.cell()).toBe(9);
-  walked.take(1);
-  expect(walked.x).toBeCloseTo(0.65, 12);
-  expect(walked.y).toBeCloseTo(0.3, 12);
-  expect(walked.cell()).toBe(6);
+  const gasket = game(source({}), 2, [0.3, 0.6]);
+  expect(cell(gasket)).toBe(9);
+  const moved = step(gasket, taking(1));
+  expect(spot(moved)[0]).toBeCloseTo(0.65, 12);
+  expect(spot(moved)[1]).toBeCloseTo(0.3, 12);
+  expect(cell(moved)).toBe(6);
 });
 
 test("a de Bruijn lap paints every level-k cell exactly once from the kth draw on, and the histogram sits at distance zero at the lap's end", () => {
@@ -421,10 +451,10 @@ test("a de Bruijn lap paints every level-k cell exactly once from the kth draw o
   expect(Array.from(sched)).toEqual([0, 0, 1, 0, 2, 1, 1, 2, 2]);
   const lawed = law(gasket, 2, false);
   const met = meter(lawed, sched.length);
-  const walked = walker(gasket, 2, false, rng(1), sched, [0.9, 0.1]);
+  let state = game(gasket, 2, [0.9, 0.1], 1, sched);
   for (let n = 1; n <= 2 * sched.length + 2; n++) {
-    walked.step();
-    if (n >= 2) hit(met, pair(lawed, walked.cell(), 0));
+    state = step(state, DRAW);
+    if (n >= 2) hit(met, pair(lawed, cell(state), 0));
     if (n === sched.length + 1) expect([met.painted, met.laps, met.perfect, distance(met)]).toEqual([9, 1, true, 0]);
     if (n === 2 * sched.length + 1) expect([met.laps, distance(met)]).toEqual([2, 0]);
   }
@@ -438,29 +468,77 @@ test("a random game paints inside the law, its distance falls, and a replay of t
   const one = source({ view: "mosaic" });
   const lawed = law(one, 3, false);
   const met = meter(lawed, 0);
-  const rand = rng(5);
-  const start = origin(one, rand);
-  const walked = walker(one, 3, false, rand, null, start);
+  const tape = feed(5);
+  const start = origin(one, tape.rand);
+  const first = game(one, 3, start, tape.seed);
+  let state = first;
   const log = new Uint8Array(4000);
   for (let n = 1; n <= 4000; n++) {
-    walked.step();
-    log[n - 1] = walked.moved;
-    if (n >= 3) hit(met, pair(lawed, walked.cell(), one.auto.tag[walked.state]));
+    state = step(state, DRAW);
+    log[n - 1] = state.moved;
+    if (n >= 3) hit(met, pair(lawed, cell(state), one.auto.tag[state.node]));
   }
   expect([met.outside, met.painted, met.counted]).toEqual([0, lawed.total, 3998]);
   expect(distance(met)).toBeLessThan(0.1);
   const again = meter(lawed, 0);
-  const back = replay(one, again, false, rng(5), null, start, log, 4000);
-  expect([back.n, back.x, back.y, back.cell(), back.state]).toEqual([
-    walked.n,
-    walked.x,
-    walked.y,
-    walked.cell(),
-    walked.state,
-  ]);
+  const back = replay(first, again, one.auto.tag, log, 4000);
+  expect([back.n, spot(back), cell(back), back.node]).toEqual([state.n, spot(state), cell(state), state.node]);
   expect(Array.from(again.hist)).toEqual(Array.from(met.hist));
   expect(csv(met).split("\n")[0]).toBe("cell,tag,count,law");
   expect(csv(met).split("\n").length).toBe(lawed.total + 2);
+});
+
+const GAME: Act[] = [DRAW, DRAW, taking(2), DRAW, taking(0), DRAW, DRAW, taking(1)];
+
+const replayed = (acts: Act[], seed = 42, over: Raw = { view: "hex" }) =>
+  acts.reduce(step, game(source(over), 3, [0.25, 0.5], seed, null, true));
+
+test("the same seed and acts replay to the same state, byte for byte", () => {
+  for (const over of [{ view: "hex" }, { view: "mosaic" }, {}] as Raw[]) {
+    expect(JSON.stringify(replayed(GAME, 42, over))).toBe(JSON.stringify(replayed(GAME, 42, over)));
+    expect(JSON.stringify(replayed(GAME, 42, over))).not.toBe(JSON.stringify(replayed(GAME, 43, over)));
+  }
+});
+
+test("step leaves its input untouched and its output is plain and survives a JSON round trip", () => {
+  for (const over of [{ view: "hex" }, { view: "slice" }, {}] as Raw[]) {
+    let state = game(source(over), 3, [0.25, 0.5], 42, null, true);
+    for (const act of GAME) {
+      const before = JSON.stringify(state);
+      const next = step(freeze(state), act);
+      expect(JSON.stringify(state)).toBe(before);
+      expect(JSON.parse(JSON.stringify(next))).toEqual(next);
+      expect(plain(next)).toBe(true);
+      state = next;
+    }
+  }
+});
+
+test("a scripted de Bruijn game takes every move the schedule names and paints each level-2 cell once a lap", () => {
+  const gasket = source({});
+  const sched = schedule(math, gasket, 2)!;
+  let drawn: State = game(gasket, 2, [0.5, 0.5], 1, sched);
+  let taken: State = game(gasket, 2, [0.5, 0.5], 1, sched);
+  const cells: number[] = [];
+  for (const j of [...sched, ...sched]) {
+    drawn = step(drawn, DRAW);
+    taken = step(taken, taking(j));
+    cells.push(cell(taken));
+  }
+  expect(JSON.stringify(drawn)).toBe(JSON.stringify(taken));
+  expect(new Set(cells.slice(sched.length)).size).toBe(9);
+  expect([taken.n, taken.pos, taken.seed]).toEqual([18, 0, 1]);
+});
+
+test("moves lists the draw and every move of the node, and read walks a slash path into the state", () => {
+  const state = game(source({}), 2, [0.5, 0.5]);
+  expect(moves(state)).toEqual([DRAW, taking(0), taking(1), taking(2)]);
+  expect([read(state), read(state, "k"), read(state, "letters/1/0"), read(state, "nope/x")]).toEqual([
+    state,
+    2,
+    1,
+    undefined,
+  ]);
 });
 
 test("the meter counts painted cells, points outside the law and a cell painted twice in a lap", () => {
@@ -476,10 +554,11 @@ test("the meter counts painted cells, points outside the law and a cell painted 
 });
 
 test("a stuck game has no move: an empty design or a rule with no window", () => {
-  const empty = source({ code: "0" });
-  const walked = walker(empty, 1, false, rng(1), null, [0.5, 0.5]);
-  expect([walked.step(), walked.stuck, walked.n]).toEqual([false, true, 0]);
-  expect(law(empty, 1, false)).toMatchObject({ total: 0, lost: true });
+  const empty = game(source({ code: "0" }), 1, [0.5, 0.5]);
+  const stuck = step(empty, DRAW);
+  expect([stuck.stuck, stuck.n, moves(empty), step(stuck, DRAW)]).toEqual([1, 0, [], stuck]);
+  expect(step(game(source({}), 1, [0.5, 0.5]), taking(5)).stuck).toBe(1);
+  expect(law(source({ code: "0" }), 1, false)).toMatchObject({ total: 0, lost: true });
 });
 
 test("the cloud fit letterboxes a box into the square with y up, and a tap maps back", () => {

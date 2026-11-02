@@ -24,7 +24,7 @@ Rank is the odds of a checked result in one sitting times the readership; status
 | rank | problem | statement | site | the angle |
 |---|---|---|---|---|
 | 1 | [124](https://www.erdosproblems.com/124) | for `D` with `sigma(D) >= 1` and `gcd(D) = 1`, is `sum_i P(d_i, k)` cofinite for every `k >= 1`? | open | a sumset of scaled `{0, 1}` designs across bases; the surplus `sigma - 1` and a bitset certificate per level; attacked below |
-| 2 | [817](https://www.erdosproblems.com/817) | least `N` with an `n`-set in `[1, N]` whose subset sums hold no 3-term progression; is it `>> 3^n`? | open | the powers of `3` give the base-3 design `{0, 1}`; admissible means the `{0, 1, 2}` digit sums are distinct, a base-3 numeration; the discussion thread reports `o(3^n)` and exact values to `n = 6`; `g_3(7) = 474` below |
+| 2 | [817](https://www.erdosproblems.com/817) | least `N` with an `n`-set in `[1, N]` whose subset sums hold no 3-term progression; is it `>> 3^n`? | open | the powers of `3` give the base-3 design `{0, 1}`; admissible means the `{0, 1, 2}` digit sums are distinct, a base-3 numeration; the discussion thread reports `o(3^n)` and exact values to `n = 6`; `g_3(7) = 474` below, and at `k = 4` `g_4(n) = 1, 3, 5, 14, 40, 79` to `n = 6` |
 | 3 | [406](https://www.erdosproblems.com/406) | only finitely many powers of `2` lie in the base-3 design `{0, 1}`? | open | the orbit of `x -> 2x` against a base-3 design, a 3-adic carry automaton; the site records every digit present for `16 <= n <= 5.9 10^21`, past any census here; the 3-adic relaxation at four exponents is attacked below |
 | 4 | [376](https://www.erdosproblems.com/376) | infinitely many `n` with `binomial(2n, n)` prime to `105`? | open | carried: three designs at bases `3, 5, 7`, [Two bases](../../cobham/notes/cobham.md) Object T, not reopened |
 | 5 | [271](https://www.erdosproblems.com/271) | growth of the greedy sequences without 3-term progressions | open | `A(1)` is the base-3 design `{0, 1}`; which starts give a design, read as digit rules |
@@ -42,7 +42,7 @@ Problem 125 is Object S of [Two bases](../../cobham/notes/cobham.md) and stays t
 
 - [Problem 124](problem-124.md): Problem 124 attacked with a bitset certificate: what is in print, the surplus certificate, the two-part route proved dead below two, the census of certified base sets, the missing lemma, the two routes, the windowed lemma and the deepest hole.
 - [Sigma one](sigma-one.md): Problem 124 where `sum 1/(d - 1) = 1`: an exact deficit writes a failing step as close powers of two bases, so a lower bound on `|e^a - f^b|`, Ellison's for `{2, 3}`-smooth pairs and Laurent's on linear forms in two logarithms with an exact enumeration for the rest, makes each level of every such base set with no two bases powers of one integer one finite run that halts exactly when the level is complete; all `62` such sets of at most six bases up to `47` are complete at `k <= 4`, and all but `{3, 4, 7}` at `k = 5`.
-- [Problems 817 and 406](problems-817-406.md): Problem 817 at n = 7 and problem 406 in the 3-adic integers, each settled by a finite computation.
+- [Problems 817 and 406](problems-817-406.md): Problem 817 at n = 7, its values at k = 4 to n = 6, and problem 406 in the 3-adic integers, each settled by a finite computation.
 
 ## What stays open
 

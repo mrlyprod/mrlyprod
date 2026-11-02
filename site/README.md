@@ -32,7 +32,7 @@ request /about/
   figure src/lib/figure.ts draws each host from an intersection queue
 ```
 
-- Imports run one way (`test/imports.test.ts`): an app imports `lib/`; a page `lib/` and `shell/`; the shell `lib/` and `styles/`; `lib/` only `lib/`; no route imports another.
+- Imports run one way (`test/imports.test.ts`): an app imports `lib/`; a page `lib/` and `shell/`; the shell `lib/` and `styles/`; a design `lib/` and its contract, `shell/design.ts`; `lib/` only `lib/`; no route imports another.
 
 ## THE UNIT
 
@@ -55,7 +55,7 @@ request /about/
 - `scripts/build.ts` collects the rows from `src/pages/*/app.json` and `src/apps/*/app.json`, home first, then by id: `{ route, kind, title, source, date, lead, figure, hidden, meta }`.
 - `kind` is `app` (an `index.tsx` or a written entry) or `prose` (a markdown source); `meta` holds `id`, `scene` (an app of `scene.ts` and `widget.tsx`), `deep`, and `prose` (`page`, `post` or `source`).
 - `source` is the repo path served at `/raw/<source>` for a prose row, null otherwise; no row carries a body.
-- `/mrlymath/` renders `crates/mrly-core/src/name/NAMES.md`, so the page and the crate never disagree.
+- `/mrlymath/` renders `crates/core/src/name/NAMES.md`, so the page and the crate never disagree.
 - `research.json` is built from `../research/*/README.md` (a folder with a front matter `title`; `shared/` never): `{ topics: [{ slug, title, date, lead, figure, figures }] }`, `date` (YYYY-MM-DD, required) and `lead` the README's front matter, `figure` the README's, `figures` every figure of `<topic>/figures/`.
 - A hidden route (`redirects`, `missing`, `figures`) has no sitemap entry, no `llms.txt` line, no search row and no Launchpad tile.
 - A missing url renders "Nothing here" with `noindex`, status 200 by design.
@@ -86,7 +86,7 @@ request /about/
 - Collect: the routes, the rows, the figure roster, the wasm units, the kept redirects, the raw list (`git ls-files`), the research topics, the savers (every `scene.ts` that exports `SAVERS`, loaded in Bun with `require`).
 - Bundle: one `Bun.build` with splitting over `src/shell/index.html`, `src/shell/app.tsx`, `src/shell/prose.tsx`, `src/pages/git/git.ts`, every live figure, every `src/pages/<id>/index.tsx` and `src/shell/lock.ts`; each `app:<id>` is a chunk of the `site:apps` thunks.
 - Names: entries `[name]-[hash]`, chunks `lib-[hash]`; the build refuses a bundled file with no hash.
-- Shell: the bundled `index.html` with the hashed boot script swapped in for `/boot.js` and its empty `<style id="tint">` filled with `tintCss(site.tint)` (`withTint`, which dev uses too); `404.html` is its copy.
+- Shell: the bundled `index.html` with the hashed boot script swapped in for `/boot.js` its empty `<style id="tint">` filled with `tintCss(site.tint)` and its `{title}`, `{tagline}`, `{prefix}`, `{root}` and `{domain}` filled from `site.json` (`withSite`, which dev uses too); `404.html` is its copy.
 - Copy: `raw/<path>` for every listed file, `public/`, the font licences.
 - Globals: `routes.json`, `llms.txt`, `sitemap.xml` with one `sitemap-<section>.xml` per section and `sitemap-raw.xml`, `robots.txt`, `git.json`, `redirects.json`.
 - Write: `dist/` is emptied, then written whole; `bun run push` ships it (`infra/README.md`).
@@ -114,7 +114,7 @@ request /about/
 
 - `bun run --cwd site dev`, from `site/`, where `bunfig.toml` hands the plugin to Bun's dev server.
 - `scripts/dev.ts` serves 127.0.0.1:3000 (`PORT` overrides) with HMR.
-- A path the edge sends to the shell answers `src/shell/index.html`, bundled by Bun on request, its tint style filled.
+- A path the edge sends to the shell answers `src/shell/index.html`, bundled by Bun on request, its tint style and site fields filled.
 - `/raw/<path>` reads the tree per request; `public/` reads from disk.
 - The globals, the boot script, the sheets and the faces are built once at start, so a new page, post or app needs a restart.
 

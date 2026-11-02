@@ -1,0 +1,52 @@
+import type { Tokens } from "../../shell/design.ts";
+
+/* SKIN */
+
+export const LIGHT: Tokens = {
+  "--ground": "#008080",
+  "--box": "#c0c0c0",
+  "--lt": "#ffffff",
+  "--sh": "#808080",
+  "--dk": "#000000",
+  "--bg": "#ffffff",
+  "--fg": "#000000",
+  "--panel": "#c0c0c0",
+  "--line": "#808080",
+  "--dim": "#808080",
+  "--title-a": "#000080",
+  "--title-b": "#1084d0",
+  "--title-off-a": "#808080",
+  "--title-off-b": "#b5b5b5",
+  "--accent": "#000080",
+  "--on-accent": "#ffffff",
+  "--link": "#0000ee",
+  "--visited": "#551a8b",
+  "--scrim": "transparent",
+  "--tip": "#ffffe1",
+  "--sans": '"Noto Sans", sans-serif',
+  "--serif": '"Noto Serif", serif',
+  "--mono": '"Noto Sans Mono", monospace',
+};
+
+export const DARK: Tokens = {
+  "--ground": "#003f3f",
+  "--box": "#3c3c3c",
+  "--lt": "#6a6a6a",
+  "--sh": "#262626",
+  "--dk": "#000000",
+  "--bg": "#1a1a1a",
+  "--fg": "#e6e6e6",
+  "--panel": "#3c3c3c",
+  "--line": "#262626",
+  "--dim": "#7a7a7a",
+  "--title-a": "#000060",
+  "--title-b": "#0a5a96",
+  "--title-off-a": "#4a4a4a",
+  "--title-off-b": "#6a6a6a",
+  "--accent": "#1084d0",
+  "--on-accent": "#ffffff",
+  "--link": "#7fb2ff",
+  "--visited": "#c79bff",
+  "--scrim": "transparent",
+  "--tip": "#4a4a2a",
+};

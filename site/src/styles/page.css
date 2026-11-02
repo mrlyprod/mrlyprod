@@ -1,11 +1,10 @@
 @import "./palette.gen.css";
-@import "./tokens.css";
+@import "site:design/tokens.css";
 @import "./base.css";
-@import "./chrome.css";
-@import "./desk.css";
-@import "./appicons.css";
+@import "./gate.css";
+@import "site:design.css";
 @import "./fonts/fonts.css";
 @import "./pages.css";
 @import "./settings.css";
-@import "./saver.css";
+@import "site:design/saver.css";
 @import "./screensavers.css";

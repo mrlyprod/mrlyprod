@@ -1,9 +1,13 @@
+import "./mount.ts";
 import { state } from "../lib/app/history.ts";
+import { stamp } from "../lib/clock.ts";
 import { handle } from "../lib/handle.ts";
 import { track, type } from "./catalog.ts";
-import { desk, greeting, knock, listen, mark, route, visit } from "./desk.ts";
+import { canvas, desk, greeting, knock, listen, mark, route, visit } from "./desk.ts";
+import { measure } from "./measure.ts";
 import { menus } from "./menus.ts";
 import {
+  calm,
   face,
   glass,
   icons,
@@ -14,7 +18,6 @@ import {
   root,
   screen,
   shade,
-  stamp,
   subscribe,
   theme,
   tint,
@@ -69,10 +72,7 @@ function land() {
 
 /* DRAWERS */
 
-const docked = () => {
-  const pane = document.querySelector(".panes > .pane");
-  return Boolean(pane) && getComputedStyle(pane!).position === "static";
-};
+const docked = () => root().hasAttribute("data-docked");
 const isOpen = (side: string) => root().dataset[side] === "open";
 
 function set(side: string, open: boolean) {
@@ -84,15 +84,21 @@ function stow() {
   set("right", false);
 }
 
-function watch() {
+function dock() {
   const box = document.querySelector(".window");
-  if (!box || typeof ResizeObserver !== "function") return;
-  let was = docked();
-  new ResizeObserver(() => {
-    const now = docked();
-    if (now !== was) stow();
-    was = now;
-  }).observe(box);
+  const rem = (Number.parseFloat(getComputedStyle(root()).fontSize) || 16) / 16;
+  const on =
+    root().dataset.window === "wide" && Boolean(box) && box!.getBoundingClientRect().width >= measure.dock * rem;
+  if (on === docked()) return;
+  root().toggleAttribute("data-docked", on);
+  stow();
+}
+
+function watch() {
+  dock();
+  new MutationObserver(dock).observe(root(), { attributeFilter: ["data-window", "data-text"] });
+  const box = document.querySelector(".window");
+  if (box && typeof ResizeObserver === "function") new ResizeObserver(dock).observe(box);
 }
 
 function sync() {
@@ -179,8 +185,8 @@ const two = (n: number) => String(n).padStart(2, "0");
 
 function tick() {
   const now = new Date();
-  const date = document.querySelector<HTMLTimeElement>(".tray .date");
-  const clock = document.querySelector<HTMLTimeElement>(".tray .clock");
+  const date = document.querySelector<HTMLTimeElement>(".bar .date");
+  const clock = document.querySelector<HTMLTimeElement>(".bar .clock");
   if (date) {
     date.textContent = now.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
     date.dateTime = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
@@ -196,10 +202,10 @@ function tick() {
 /* WINDOW */
 
 const WIDTHS: Record<"page" | "wide", Width> & Partial<Record<string, Width>> = {
-  page: ["--win", KEY.page, 720],
-  wide: ["--wide", KEY.wide, 1280],
+  page: ["--win", KEY.page, measure.page],
+  wide: ["--wide", KEY.wide, measure.wide],
 };
-const LEAST = 352;
+const step = (px: number) => Math.round(px / measure.step) * measure.step;
 
 function edges() {
   const box = document.querySelector<HTMLElement>(".window");
@@ -207,7 +213,7 @@ function edges() {
   const kind = () => WIDTHS[root().dataset.window ?? ""] ?? WIDTHS.page;
   const room = () => innerWidth - 2 * (Number.parseFloat(getComputedStyle(root()).fontSize) || 16) * 0.75;
   const get = () => box.getBoundingClientRect().width;
-  const put = (px: number) => root().style.setProperty(kind()[0], `${Math.round(px)}px`);
+  const put = (px: number) => root().style.setProperty(kind()[0], `${step(px)}px`);
   for (const side of EDGES) {
     const grip = document.createElement("div");
     grip.className = "edge";
@@ -216,9 +222,9 @@ function edges() {
     handle(grip, {
       get,
       set: put,
-      done: (px) => write(kind()[1], px >= room() - 1 ? "" : String(Math.round(px))),
+      done: (px) => write(kind()[1], px >= room() - 1 ? "" : String(step(px))),
       reset: () => kind()[2],
-      min: LEAST,
+      min: measure.least,
       max: room,
       rate: side === "left" ? -2 : 2,
       label: "Window width",
@@ -327,7 +333,9 @@ function wire(event?: CustomEvent<Wired>) {
   if (route === "/") lay("widgets", () => import("./widgets.tsx"));
   if (!lit) {
     lit = true;
-    import("../lib/glass/index.ts").then((one) => one.start()).catch((error) => console.error(error));
+    import("./active.ts")
+      .then(({ design }) => design.start?.({ root: root(), desk: canvas, calm }))
+      .catch((error) => console.error(error));
   }
 }
 
@@ -372,7 +380,7 @@ function boot() {
         field.select();
         return;
       }
-      document.querySelector<HTMLElement>(".tray .find")?.click();
+      document.querySelector<HTMLElement>(".bar .find")?.click();
       return;
     }
     ahead(e);

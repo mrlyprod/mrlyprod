@@ -91,7 +91,17 @@ function refocus() {
 
 /* SIDEBAR */
 
-function Square({ art, hue }: Pick<Pane, "art" | "hue">) {
+const HUES: Partial<Record<string, string>> = {
+  appearance: "purple",
+  glass: "cyan",
+  desktop: "indigo",
+  screensaver: "pink",
+  accessibility: "blue",
+  privacy: "green",
+  about: "orange",
+};
+
+function Square({ art, hue }: Pick<Pane, "art"> & { hue: string }) {
   const rows = art.split(" ");
   return (
     <span className="symbol" style={{ "--hue": `var(--${hue})` } as Vars} aria-hidden="true">
@@ -115,7 +125,7 @@ function Row({ one, on, labels, phone }: RowProps) {
   return (
     <li>
       <a href={one.href} aria-current={on ? "page" : undefined}>
-        <Square art={one.art} hue={one.hue} />
+        <Square art={one.art} hue={HUES[one.id] ?? ""} />
         <span className="words">
           <span className="name">{one.title}</span>
           {labels.length > 0 && <span className="hint">{labels.join(", ")}</span>}

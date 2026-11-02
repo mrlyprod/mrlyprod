@@ -112,10 +112,9 @@ if (import.meta.main) {
     `film: ${run.name} ${run.video ? `${run.frames} frames at ${FPS} fps, ${w}x${h} webm` : `${run.frames} frames every ${run.step} ms from ${run.from}, sheet ${w}x${h}`} in ${out}`,
   );
   const latest = join(DATA_DIR, "shots", "latest");
-  const took = join(latest, run.video ? `${run.name}-16x9.webm` : `${run.name}-open0-film-motion.png`);
-  const kept = run.video ? join(out, `${run.name}.webm`) : join(latest, `${run.name}-film-motion.png`);
-  rmSync(took, { force: true });
-  if (run.video) rmSync(kept, { force: true });
+  const took = join(latest, run.video ? `${run.name}-16x9.webm` : `${run.name}-open0-motion.png`);
+  const kept = join(out, run.video ? `${run.name}.webm` : `${run.name}.png`);
+  rmSync(kept, { force: true });
   process.once("exit", () => {
     if (!existsSync(took)) return console.log(`film: FAILED no ${run.video ? "webm" : "sheet"} came back`);
     renameSync(took, kept);
@@ -128,9 +127,10 @@ if (import.meta.main) {
     {
       shots: {
         routes,
-        sizes: run.video ? { video: [SIZE[0]!, SIZE[1]!, false] } : { film: [w!, Math.min(h!, TALL), false] },
+        screen: run.video ? [SIZE[0]!, SIZE[1]!, 1] : [w!, Math.min(h!, TALL), 1],
       },
     },
     films,
+    (path) => ({ uri: path }),
   );
 }

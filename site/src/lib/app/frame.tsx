@@ -1,11 +1,11 @@
-import type { CSSProperties, ReactNode, RefCallback } from "react";
+import type { ReactNode, RefCallback, RefObject } from "react";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { sourced, tap } from "../glass/feed.ts";
+import { parts } from "../../shell/active.ts";
+import type { Props } from "../../shell/design.ts";
+import { measure } from "../../shell/measure.ts";
 import { handle } from "../handle.ts";
 import { held, hold } from "../keep.ts";
-import type { IconName } from "./controls.tsx";
-import { Icon } from "./controls.tsx";
 
 /* TYPES */
 
@@ -13,7 +13,7 @@ export type Side = "left" | "right";
 
 export type Slot = Side | "tail" | "status" | "hints" | "actions";
 
-export type Pane = { name: string; key: string; keep: string; icons: [IconName, IconName] };
+export type Pane = { name: string; key: string; keep: string };
 
 export type Nodes = Partial<Record<Slot, HTMLElement | null>>;
 
@@ -37,22 +37,14 @@ export type FrameProps = { label?: string; gestures?: boolean; panes?: Panes; ch
 
 export type BarProps = { side: Slot; children?: ReactNode };
 
-export type OpenerProps = { side: Side; panes: Panes };
-
-type Vars = CSSProperties & Record<`--${string}`, string>;
-
 const Slots = createContext<Framed | null>(null);
 
 export const SIDES: Record<Side, Pane> = {
-  left: { name: "Library", key: "[", keep: "library", icons: ["left_panel_open", "left_panel_close"] },
-  right: { name: "Knobs", key: "]", keep: "knobs", icons: ["right_panel_open", "right_panel_close"] },
+  left: { name: "Library", key: "[", keep: "library" },
+  right: { name: "Knobs", key: "]", keep: "knobs" },
 };
 
-export const WIDTH = 280;
-const LEAST = 220;
-const MOST = 440;
-const GAP = 12;
-const ROOM = 360;
+const { width: WIDTH, least: LEAST, most: MOST, gap: GAP, stage: ROOM } = measure.panes;
 
 export function calm(box: EventTarget | null): () => void {
   let by = "";
@@ -147,48 +139,36 @@ export function usePanes(): Panes {
   );
   const size = useCallback((side: Side, px: number, keep: boolean) => {
     setWidths((was) => (was[side] === px ? was : { ...was, [side]: px }));
-    if (keep) hold(SIDES[side].keep, px === WIDTH ? null : Math.round(px));
+    if (keep) hold(SIDES[side].keep, px === WIDTH ? null : Math.round(px / measure.step) * measure.step);
   }, []);
   return { claims, nodes, ref, claim, has, open, flip, widths, size };
 }
 
-function Grip({ side, panes }: OpenerProps) {
-  const at = useRef<HTMLDivElement>(null);
+function useGrips(panes: Panes, root: RefObject<HTMLElement | null>) {
   const latest = useRef(panes);
   latest.current = panes;
-  useEffect(
+  return useMemo(
     () =>
-      handle(at.current!, {
-        get: () => latest.current.widths[side],
-        set: (px) => latest.current.size(side, px, false),
-        done: (px) => latest.current.size(side, px, true),
-        reset: WIDTH,
-        min: LEAST,
-        max: MOST,
-        rate: side === "left" ? 1 : -1,
-        label: `${SIDES[side].name} width`,
-        busy: (on) => at.current?.closest(".frame")?.toggleAttribute("data-drag", on),
-      }),
-    [side],
-  );
-  return <div className="grip" ref={at} />;
-}
-
-export function Opener({ side, panes }: OpenerProps) {
-  const { name, key, icons } = SIDES[side];
-  const on = panes.open[side];
-  return (
-    <button
-      type="button"
-      className="icon side"
-      aria-controls={side}
-      aria-expanded={on}
-      aria-label={name}
-      title={`${name} (${key})`}
-      onClick={() => panes.flip(side)}
-    >
-      <Icon name={icons[on ? 1 : 0]} />
-    </button>
+      Object.fromEntries(
+        (Object.keys(SIDES) as Side[]).map((side): [Side, RefCallback<HTMLElement>] => [
+          side,
+          (el) =>
+            el
+              ? handle(el, {
+                  get: () => latest.current.widths[side],
+                  set: (px) => latest.current.size(side, px, false),
+                  done: (px) => latest.current.size(side, px, true),
+                  reset: WIDTH,
+                  min: LEAST,
+                  max: MOST,
+                  rate: side === "left" ? 1 : -1,
+                  label: `${SIDES[side].name} width`,
+                  busy: (on) => root.current?.toggleAttribute("data-drag", on),
+                })
+              : undefined,
+        ]),
+      ) as Record<Side, RefCallback<HTMLElement>>,
+    [root],
   );
 }
 
@@ -204,12 +184,6 @@ export function Frame({ label, gestures, panes: given, children }: FrameProps) {
     const eye = new ResizeObserver(([one]) => setWide(one.contentRect.width));
     eye.observe(el);
     return () => eye.disconnect();
-  }, []);
-  const [fed, setFed] = useState(false);
-  useEffect(() => {
-    const look = () => setFed(sourced().some((one) => box.current?.contains(one)));
-    look();
-    return tap(look);
   }, []);
   const stage = useRef<HTMLDivElement>(null);
   const status = has("status") || has("hints");
@@ -230,8 +204,6 @@ export function Frame({ label, gestures, panes: given, children }: FrameProps) {
       watch?.disconnect();
     };
   }, [nodes.status, nodes.hints]);
-  const glass = (name: string, kind: string) =>
-    fed ? { className: name, "data-lens": kind } : { className: `${name} frost` };
   const latest = useRef(has);
   latest.current = has;
   useEffect(() => {
@@ -245,66 +217,42 @@ export function Frame({ label, gestures, panes: given, children }: FrameProps) {
     addEventListener("keydown", press);
     return () => removeEventListener("keydown", press);
   }, [flip]);
+  const grips = useGrips(panes, box);
   const frame = useMemo(() => ({ claim, nodes }), [claim, nodes]);
   const shown = Object.fromEntries(
     (Object.keys(SIDES) as Side[]).map((side): [Side, boolean] => [side, has(side) && open[side]]),
   );
   const float = phone() || floats(wide, pushed(shown, widths));
-  const sides = (Object.keys(SIDES) as Side[]).filter(has);
-  const style: Vars = { "--left": `${widths.left}px`, "--right": `${widths.right}px` };
+  const to = (slot: Slot) => () => ({ ref: ref(slot) });
+  const slots: Props["app"]["slots"] = {
+    stage: () => ({ ref: stage, "data-gestures": gestures ? "" : undefined }),
+    ...(has("left") && { left: to("left") }),
+    ...(has("right") && { right: to("right"), tail: to("tail") }),
+    ...(has("actions") && { actions: to("actions") }),
+    ...(status && { status: to("status"), hints: to("hints") }),
+  };
+  const bind: Props["app"]["bind"] = {
+    root: () => ({ ref: box }),
+    pane: (side) => () => ({
+      id: side,
+      "aria-label": SIDES[side].name,
+      inert: !open[side] ? true : undefined,
+      ...(side === "right" && { ref: calm }),
+    }),
+    grip: (side) => () => ({ ref: grips[side] }),
+    opener: (side) => () => ({
+      "aria-controls": side,
+      "aria-expanded": open[side],
+      "aria-label": SIDES[side].name,
+      title: `${SIDES[side].name} (${SIDES[side].key})`,
+      onClick: () => flip(side),
+    }),
+  };
   return (
     <Slots.Provider value={frame}>
-      <section
-        className="frame"
-        aria-label={label}
-        ref={box}
-        style={style}
-        data-left={has("left") ? (open.left ? "open" : "shut") : undefined}
-        data-right={has("right") ? (open.right ? "open" : "shut") : undefined}
-        data-float={float ? "" : undefined}
-      >
-        <div className="canvas" ref={stage} data-gestures={gestures ? "" : undefined}>
-          {children}
-        </div>
-        {has("left") && (
-          <aside
-            {...glass("pane left", "panel")}
-            id="left"
-            aria-label={SIDES.left.name}
-            inert={!open.left ? true : undefined}
-          >
-            <div className="body" ref={ref("left")} />
-            <Grip side="left" panes={panes} />
-          </aside>
-        )}
-        {has("right") && (
-          <aside
-            {...glass("pane right", "panel")}
-            id="right"
-            aria-label={SIDES.right.name}
-            inert={!open.right ? true : undefined}
-          >
-            <div className="body" ref={calm}>
-              <section className="controls" aria-label="Controls" ref={ref("right")} />
-              <div className="controls tail" ref={ref("tail")} />
-            </div>
-            <Grip side="right" panes={panes} />
-          </aside>
-        )}
-        {(has("actions") || (float && sides.length > 0)) && (
-          <div {...glass("actions", "pill")}>
-            {float && sides.includes("left") && <Opener side="left" panes={panes} />}
-            <div className="buttons" ref={ref("actions")} />
-            {float && sides.includes("right") && <Opener side="right" panes={panes} />}
-          </div>
-        )}
-        {status && (
-          <div {...glass("status", "pill")}>
-            <div className="facts" ref={ref("status")} />
-            <div className="hints" ref={ref("hints")} />
-          </div>
-        )}
-      </section>
+      <parts.app title={label ?? ""} slots={slots} open={open} widths={widths} float={float} onFlip={flip} bind={bind}>
+        {children}
+      </parts.app>
     </Slots.Provider>
   );
 }

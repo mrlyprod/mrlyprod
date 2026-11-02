@@ -1,7 +1,7 @@
 import type { Mrly } from "../../lib/designs/engine.ts";
 import { title, total } from "../../lib/designs/engine.ts";
 import type { Rng } from "../../lib/rand.ts";
-import { rng } from "../../lib/rand.ts";
+import { mix, rng, xorshift } from "../../lib/rand.ts";
 
 /* TYPES */
 
@@ -26,16 +26,24 @@ export type How = "goal" | "stall" | "limit";
 export type Over = { tick: number; winner: number; how: How };
 
 export type State = {
+  side: number;
+  boards: string[];
+  homes: number[];
+  goal: number;
   tick: number;
-  at: Int32Array[];
-  trail: Float32Array[];
-  stamp: Int32Array[];
-  reach: number[];
+  at: number[][];
+  sums: number[];
   best: number[];
   since: number[];
   over: Over | null;
-  log: [number, number][];
+  seed: number;
 };
+
+export type Config = Pick<State, "side" | "boards" | "homes" | "goal" | "seed"> & { walkers: number };
+
+export type Act = { verb: "tick" } | { verb: "aim"; args: { goal: number } };
+
+export type Trace = { trail: Float32Array[]; stamp: Int32Array[]; log: [number, number][] };
 
 export type Series = ReturnType<typeof series>;
 
@@ -61,6 +69,9 @@ const MOVES = [
   [0, -1],
 ];
 const WIDE = 4294967296;
+const ON = 49;
+export const TICK: Act = { verb: "tick" };
+export const aiming = (goal: number): Act => ({ verb: "aim", args: { goal } });
 const ceilings = new Map<string, number>();
 const masses = new Map<string, number[]>();
 
@@ -255,111 +266,165 @@ export function plan(math: Mrly, value: Race, rand: Rng) {
   };
 }
 
+export const bits = (filled: ArrayLike<number>) => Array.from(filled, (one) => (one ? "1" : "0")).join("");
+
+export function deal(plan: Plan, seed: number): Config {
+  return {
+    side: plan.side,
+    boards: plan.sides.map(({ filled }) => bits(filled)),
+    homes: plan.sides.map(({ home }) => home),
+    walkers: plan.walkers,
+    goal: plan.goal,
+    seed,
+  };
+}
+
 export function heat(value: number, stamp: number, tick: number, keep: number) {
   return keep === 1 || tick === stamp || value === 0 ? value : value * keep ** (tick - stamp);
 }
 
-export function spread(at: Int32Array, home: number, side: number) {
-  if (!at.length) return 0;
+export function spread(at: readonly number[], home: number, side: number) {
   const hr = Math.floor(home / side);
   const hc = home % side;
   let total = 0;
   for (const i of at) total += (Math.floor(i / side) - hr) ** 2 + ((i % side) - hc) ** 2;
-  return Math.sqrt(total / at.length);
+  return total;
 }
 
-export function open(plan: Plan): State {
-  const cells = plan.side * plan.side;
-  return {
-    tick: 0,
-    at: plan.sides.map(({ home }) => new Int32Array(home < 0 ? 0 : plan.walkers).fill(home)),
-    trail: plan.sides.map(() => new Float32Array(cells)),
-    stamp: plan.sides.map(() => new Int32Array(cells)),
-    reach: [0, 0],
-    best: [0, 0],
-    since: [0, 0],
-    over: null,
-    log: [[0, 0]],
-  };
-}
+const far = (sum: number, count: number) => (count ? Math.sqrt(sum / count) : 0);
+
+export const reach = ({ sums, at }: State): [number, number] => [
+  far(sums[0], at[0].length),
+  far(sums[1], at[1].length),
+];
 
 const verdict = ([a, b]: number[]) => (a > b ? 0 : b > a ? 1 : -1);
 
-function reached(state: State, plan: Pick<Plan, "goal">): Over | null {
-  const hit = state.reach.map((r) => r >= plan.goal);
+function reached(state: State): Over | null {
+  const now = reach(state);
+  const hit = now.map((r) => r >= state.goal);
   return hit[0] || hit[1]
-    ? { tick: state.tick, winner: hit[0] && hit[1] ? verdict(state.reach) : hit[0] ? 0 : 1, how: "goal" }
+    ? { tick: state.tick, winner: hit[0] && hit[1] ? verdict(now) : hit[0] ? 0 : 1, how: "goal" }
     : null;
 }
 
-export function step(state: State, plan: Plan, rand: Rng) {
+export function boot({ side, boards, homes, walkers, goal, seed }: Config): State {
+  return {
+    side,
+    boards,
+    homes,
+    goal,
+    tick: 0,
+    at: homes.map((home) => Array.from({ length: home < 0 ? 0 : walkers }, () => home)),
+    sums: [0, 0],
+    best: [0, 0],
+    since: [0, 0],
+    over: null,
+    seed: mix(seed),
+  };
+}
+
+function tick(state: State): State {
   if (state.over) return state;
   const tick = state.tick + 1;
-  const { side, keep } = plan;
-  plan.sides.forEach(({ filled, home }, s) => {
-    const at = state.at[s];
-    const trail = state.trail[s];
-    const stamp = state.stamp[s];
-    for (let w = 0; w < at.length; w++) {
-      const i = at[w];
-      const r = Math.floor(i / side);
-      const c = i % side;
-      const [dr, dc] = MOVES[Math.floor(rand() * 4)];
-      const nr = r + dr;
-      const nc = c + dc;
+  const { side, boards, homes } = state;
+  let seed = state.seed;
+  const sums = state.sums.slice();
+  const best = state.best.slice();
+  const since = state.since.slice();
+  const at = state.at.map((from, s) => {
+    const board = boards[s];
+    const to = from.slice();
+    for (let w = 0; w < to.length; w++) {
+      seed = xorshift(seed);
+      const i = to[w];
+      const [dr, dc] = MOVES[seed >>> 30];
+      const nr = Math.floor(i / side) + dr;
+      const nc = (i % side) + dc;
       const j = nr * side + nc;
-      if (nr < 0 || nc < 0 || nr >= side || nc >= side || !filled[j]) continue;
-      at[w] = j;
-      trail[j] = heat(trail[j], stamp[j], tick, keep) + 1;
-      stamp[j] = tick;
+      if (nr < 0 || nc < 0 || nr >= side || nc >= side || board.charCodeAt(j) !== ON) continue;
+      to[w] = j;
     }
-    state.reach[s] = spread(at, home, side);
-    if (state.reach[s] > state.best[s] + GAIN) {
-      state.best[s] = state.reach[s];
-      state.since[s] = tick;
+    sums[s] = spread(to, homes[s], side);
+    if (far(sums[s], to.length) > far(best[s], to.length) + GAIN) {
+      best[s] = sums[s];
+      since[s] = tick;
     }
+    return to;
   });
-  state.tick = tick;
-  state.log.push([state.reach[0], state.reach[1]]);
-  state.over = reached(state, plan);
-  if (state.over) return state;
-  if (tick - Math.max(state.since[0], state.since[1]) >= STALL)
-    state.over = { tick, winner: verdict(state.reach), how: "stall" };
-  else if (tick >= LIMIT) state.over = { tick, winner: verdict(state.reach), how: "limit" };
+  const next: State = { ...state, tick, at, sums, best, since, seed };
+  const goal = reached(next);
+  if (goal) return { ...next, over: goal };
+  if (tick - Math.max(since[0], since[1]) >= STALL)
+    return { ...next, over: { tick, winner: verdict(reach(next)), how: "stall" } };
+  if (tick >= LIMIT) return { ...next, over: { tick, winner: verdict(reach(next)), how: "limit" } };
+  return next;
+}
+
+function aim(state: State, goal: number): State {
+  const next = { ...state, goal };
+  if (!state.over) return { ...next, over: reached(next) };
+  if (state.over.how === "goal" && !reached(next)) return { ...next, over: null };
+  return next;
+}
+
+export function step(state: State, act: Act): State {
+  if (act.verb === "tick") return tick(state);
+  if (act.verb === "aim") return aim(state, act.args.goal);
   return state;
 }
 
-export function aim(state: State, plan: Pick<Plan, "goal">) {
-  if (!state.over) state.over = reached(state, plan);
-  else if (state.over.how === "goal" && !reached(state, plan)) state.over = null;
-  return state;
-}
+export const moves = (state: State): Act[] => (state.over ? [] : [TICK]);
 
-export function bake(state: State, keep: number) {
-  state.trail.forEach((trail, s) => {
-    const stamp = state.stamp[s];
-    for (let i = 0; i < trail.length; i++) {
-      trail[i] = heat(trail[i], stamp[i], state.tick, keep);
-      stamp[i] = state.tick;
-    }
-  });
-  return state;
+export function read(state: State, path = ""): unknown {
+  let at: unknown = state;
+  for (const key of path.split("/").filter(Boolean)) {
+    if (at === null || typeof at !== "object") return undefined;
+    at = (at as Record<string, unknown>)[key];
+  }
+  return at;
 }
 
 /* SERIES */
 
 export function series(plan: Plan, walk: number, wait = HOLD) {
   const hold = Number.isFinite(wait) ? Math.ceil((wait * plan.speed) / 1000) : Infinity;
+  const cells = plan.side * plan.side;
+  const base = deal(plan, walk);
+  const open = () => boot({ ...base, goal: plan.goal, seed: (walk + k) >>> 0 });
+  const blank = (): Trace => ({
+    trail: plan.sides.map(() => new Float32Array(cells)),
+    stamp: plan.sides.map(() => new Int32Array(cells)),
+    log: [[0, 0]],
+  });
   let k = 0;
   let start = 0;
   let version = 0;
-  let state = open(plan);
-  let rand = rng((walk + k) >>> 0);
+  let state = open();
+  let trace = blank();
+  const advance = () => {
+    const was = state;
+    state = step(state, TICK);
+    const { tick } = state;
+    state.at.forEach((at, s) => {
+      const trail = trace.trail[s];
+      const stamp = trace.stamp[s];
+      const from = was.at[s];
+      for (let w = 0; w < at.length; w++) {
+        const j = at[w];
+        if (j === from[w]) continue;
+        trail[j] = heat(trail[j], stamp[j], tick, plan.keep) + 1;
+        stamp[j] = tick;
+      }
+    });
+    trace.log.push(reach(state));
+    version++;
+  };
   const next = () => {
     start += state.over!.tick + hold;
     k++;
-    state = open(plan);
-    rand = rng((walk + k) >>> 0);
+    state = open();
+    trace = blank();
     version++;
   };
   const to = (at: number) => {
@@ -371,22 +436,24 @@ export function series(plan: Plan, walk: number, wait = HOLD) {
         continue;
       }
       if (state.tick >= local) return;
-      step(state, plan, rand);
-      version++;
+      advance();
     }
   };
   const finish = (limit = Infinity) => {
-    if (state.over) return;
-    while (!state.over && state.tick < limit) {
-      step(state, plan, rand);
-      version++;
-    }
+    while (!state.over && state.tick < limit) advance();
+  };
+  const aim = (goal: number) => {
+    state = step(state, aiming(goal));
   };
   return {
     to,
     finish,
+    aim,
     get state() {
       return state;
+    },
+    get trace() {
+      return trace;
     },
     get k() {
       return k;
@@ -398,6 +465,17 @@ export function series(plan: Plan, walk: number, wait = HOLD) {
       return version;
     },
   };
+}
+
+export function bake(trace: Trace, tick: number, keep: number) {
+  trace.trail.forEach((trail, s) => {
+    const stamp = trace.stamp[s];
+    for (let i = 0; i < trail.length; i++) {
+      trail[i] = heat(trail[i], stamp[i], tick, keep);
+      stamp[i] = tick;
+    }
+  });
+  return trace;
 }
 
 /* LAYOUT */

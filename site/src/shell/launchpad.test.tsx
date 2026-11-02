@@ -7,8 +7,6 @@ type Keyed = { key: string; shiftKey?: boolean; preventDefault: () => void; curr
 
 type Props = { onKeyDown: (e: Keyed) => void; onClick: () => void };
 
-type More = { focus: () => void } | null;
-
 const SITE = {
   launchpad: {
     sections: [
@@ -34,7 +32,7 @@ const props = (el: FakeNode): Props =>
 const find = (host: FakeNode, tag: string, words: string) =>
   all(host, (at) => at.tagName === tag && (text(at) === words || at.attributes["aria-label"] === words))[0];
 
-const pad = async (run: (host: FakeNode) => Promise<void>, more: More = null) => {
+const pad = async (run: (host: FakeNode) => Promise<void>) => {
   const store = new Map<string, string>();
   const make = doc.createElement;
   Object.assign(globalThis, {
@@ -53,7 +51,7 @@ const pad = async (run: (host: FakeNode) => Promise<void>, more: More = null) =>
     });
   doc.createElement = (tag: string) =>
     Object.assign(made(tag), {
-      querySelector: (sel: string) => (sel === ".more" ? more : null),
+      querySelector: () => null,
       querySelectorAll: () => [],
       getBoundingClientRect: () => ({ left: 0, bottom: 0 }),
       focus: () => {},
@@ -107,14 +105,12 @@ test("confirming a section rename with Enter cancels the key so it cannot click 
 
 test("undoing from the toast by keyboard hands focus back to More", async () => {
   const focus = mock(() => {});
-  await pad(
-    async (host) => {
-      await act(async () => props(find(host, "BUTTON", "Reset Layout")).onClick());
-      const undo = find(host, "BUTTON", "Undo");
-      doc.activeElement = undo;
-      await act(async () => props(undo).onClick());
-    },
-    { focus },
-  );
+  await pad(async (host) => {
+    Object.assign(find(host, "BUTTON", "More"), { focus });
+    await act(async () => props(find(host, "BUTTON", "Reset Layout")).onClick());
+    const undo = find(host, "BUTTON", "Undo");
+    doc.activeElement = undo;
+    await act(async () => props(undo).onClick());
+  });
   expect(focus).toHaveBeenCalled();
 });

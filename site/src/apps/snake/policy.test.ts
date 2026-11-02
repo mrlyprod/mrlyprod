@@ -2,10 +2,10 @@ import { expect, test } from "bun:test";
 import type { Rng } from "../../lib/rand.ts";
 import { rng } from "../../lib/rand.ts";
 import type { State } from "./engine.ts";
-import { DOWN, flip, LEFT, start, step, turn } from "./engine.ts";
+import { boot, DOWN, flip, LEFT, step, TICK, toward } from "./engine.ts";
 import { pick, STARVED } from "./policy.ts";
 
-const drive = (state: State, mode: string, rand: Rng) => step(turn(state, pick(state, mode, rand)), rand);
+const drive = (state: State, mode: string, rand: Rng) => step(step(state, toward(pick(state, mode, rand))), TICK);
 
 const BAIT = {
   size: 8,
@@ -20,13 +20,14 @@ const BAIT = {
   score: 40,
   hunger: 0,
   over: null,
+  seed: 1,
 };
 
 test("smart reaches the food on an empty board within size*2 steps", () => {
   for (const wrap of [1, 0]) {
     for (let seed = 1; seed <= 10; seed++) {
       const rand = rng(seed);
-      let state = start({ size: 16, apples: 1, wrap }, rand);
+      let state = boot({ size: 16, apples: 1, wrap, seed });
       let steps = 0;
       while (!state.score && !state.over && steps <= 32) {
         state = drive(state, "smart", rand);
@@ -41,7 +42,7 @@ test("smart never dies in 200 steps on a 10x10 board", () => {
   for (const wrap of [1, 0]) {
     for (let seed = 1; seed <= 10; seed++) {
       const rand = rng(seed);
-      let state = start({ size: 10, apples: 1, wrap }, rand);
+      let state = boot({ size: 10, apples: 1, wrap, seed });
       for (let i = 0; i < 200 && !state.over; i++) state = drive(state, "smart", rand);
       expect([wrap, seed, state.over]).toEqual([wrap, seed, null]);
     }
@@ -50,12 +51,12 @@ test("smart never dies in 200 steps on a 10x10 board", () => {
 
 test("silly never reverses in 200 steps", () => {
   const rand = rng(5);
-  let state = start({ size: 10, apples: 1, wrap: 1 }, rand);
+  let state = boot({ size: 10, apples: 1, wrap: 1, seed: 5 });
   for (let i = 0; i < 200; i++) {
-    if (state.over) state = start({ size: 10, apples: 1, wrap: 1 }, rand);
+    if (state.over) state = boot({ size: 10, apples: 1, wrap: 1, seed: i });
     const dir = pick(state, "silly", rand);
     expect(dir).not.toBe(flip(state.dir));
-    state = step(turn(state, dir), rand);
+    state = step(step(state, toward(dir)), TICK);
   }
 });
 
@@ -77,6 +78,7 @@ test("a hungry smart takes the food it refused, and starves with no way to any",
     score: 4,
     hunger: 64,
     over: null,
+    seed: 1,
   };
   expect(pick(boxed, "smart", rand)).toBe(STARVED);
 });

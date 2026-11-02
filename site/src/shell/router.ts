@@ -1,3 +1,4 @@
+import "./mount.ts";
 import { css } from "site:css";
 import type { Site } from "site:routes";
 import { rows, site } from "site:routes";
@@ -169,6 +170,7 @@ function dress(next: Next) {
   html.dataset.window = shape;
   if (box) {
     box.setAttribute("aria-label", row.title);
+    box.dataset.app = row.kind === "app" ? (row.meta?.id ?? "") : "";
     if (shape === "page" || shape === "wide") box.dataset.lens = "window";
     else delete box.dataset.lens;
   }
@@ -181,7 +183,7 @@ function dress(next: Next) {
   drawer.hidden = false;
   if (fill && !drawer.isConnected) main.after(drawer);
   if (!fill) drawer.remove();
-  const button = document.querySelector<HTMLElement>('.title .actions [data-pane="right"]');
+  const button = document.querySelector<HTMLElement>('.window > .title [data-pane="right"]');
   if (button) button.hidden = !fill;
   html.dataset.right = "shut";
   for (const { link } of sheets.values()) link.media = link === next.sheet?.link ? "" : "not all";

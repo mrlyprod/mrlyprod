@@ -12,16 +12,13 @@ import {
   BOARD,
   destiny,
   dimOf,
-  fate,
   grammar,
-  hash,
   LIMIT,
   LINE,
   LINES,
   lattice,
   maskName,
   maskOf,
-  population,
   ROWS,
   ruleOf,
   SPANS,
@@ -37,6 +34,8 @@ import { PANE, runs, SOUP } from "../../lib/life/scene.ts";
 import type { Rng } from "../../lib/rand.ts";
 import { pick, rng } from "../../lib/rand.ts";
 import { wasm } from "../../lib/units/index.ts";
+import type { State } from "./engine.ts";
+import { bits, boot, CLEAR, types as decode, painting, step as play, ruling, TICK } from "./engine.ts";
 
 /* TYPES */
 
@@ -388,8 +387,8 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
   let ring: Uint8Array | null = null;
   let types: Cell["types"] | null = null;
   let age: Uint8Array | null = null;
+  let game: State | null = null;
   let gen = 0;
-  let seen: number[] = [];
   let word = "";
   let verdict = "";
   let error = "";
@@ -419,15 +418,25 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
     name = shape!.named ? `${rule.name} on ${shape!.named}` : rule.name;
   };
   const grid = (): Cell => ({ shape: [height, width], types: types! });
+  const law = () => ({
+    wrap: value.wrap ? 1 : 0,
+    birth: rule!.birth,
+    survive: rule!.survive,
+    span: [...shape!.mask.shape],
+    mask: bits(shape!.mask.data),
+  });
+  const took = (next: State) => {
+    game = next;
+    types = decode(next.cells);
+    gen = next.gen;
+    pop = next.pop;
+    word = next.word;
+  };
   const begin = (next: Uint8Array) => {
-    types = next;
-    age = Uint8Array.from(types);
+    took(boot({ width, height, ...law(), cells: bits(next) }));
+    age = Uint8Array.from(types!);
     ring = linear() ? new Uint8Array(ROWS * LINE) : null;
-    ring?.set(types, 0);
-    gen = 0;
-    seen = [];
-    pop = population(types);
-    word = fate(seen, hash(types), pop);
+    ring?.set(types!, 0);
     verdict = "";
     origin = view.t;
     since = -1;
@@ -453,12 +462,10 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
       error,
     });
   const advance = () => {
-    types = life.next_grid(grid(), rule!.birth, rule!.survive, shape!.mask, value.wrap ? "Wrap" : "Constant").types;
-    if (ring) ring.set(types, ((gen + 1) % ROWS) * LINE);
-    else for (let i = 0; i < types.length; i++) age![i] = types[i] ? Math.min(255, age![i] + 1) : 0;
-    gen++;
-    pop = population(types);
-    word = fate(seen, hash(types), pop);
+    took(play(game!, TICK));
+    const now = types!;
+    if (ring) ring.set(now, (gen % ROWS) * LINE);
+    else for (let i = 0; i < now.length; i++) age![i] = now[i] ? Math.min(255, age![i] + 1) : 0;
   };
   const settle = () => {
     if (hands || !word) {
@@ -604,13 +611,9 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
   };
   const clear = () => {
     hands = true;
-    types = new Uint8Array(types!.length);
-    age = new Uint8Array(types.length);
+    took(play(game!, CLEAR));
+    age = new Uint8Array(types!.length);
     ring?.fill(0);
-    gen = 0;
-    seen = [];
-    pop = 0;
-    word = fate(seen, hash(types), 0);
     verdict = "";
     origin = view.t;
     tell();
@@ -625,13 +628,11 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
     const i = line * width + col;
     hands = true;
     if (start) brush = types![i] ? 0 : 1;
-    if (types![i] === brush) return;
-    types![i] = brush;
+    const next = play(game!, painting(i, brush));
+    if (next === game) return;
+    took(next);
     age![i] = brush;
     if (ring) ring[(gen % ROWS) * LINE + i] = brush;
-    seen = [];
-    pop = population(types!);
-    word = fate(seen, hash(types!), pop);
     verdict = "";
     tell();
     paint(!linear());
@@ -645,7 +646,10 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
     if (moved("dim", "from")) measure();
     if (moved("dim", "code", "number", "level", "born", "stay")) judge();
     if (moved("dim", "from", "density", "seed") || (value.from === "design" && moved("code", "number"))) sowed();
-    else if (moved("dim", "code", "number", "level", "born", "stay", "wrap")) verdict = "";
+    else if (moved("dim", "code", "number", "level", "born", "stay", "wrap")) {
+      took(play(game!, ruling(law())));
+      verdict = "";
+    }
     if (moved("speed")) origin = view.t - (gen * 1000) / value.speed;
     tell();
     whole();

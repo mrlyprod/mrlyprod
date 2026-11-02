@@ -27,6 +27,15 @@
 - `run(canvas, make, opts, { still, lock })` in `../lib/app/run.ts` drives a scene and returns `stop`, with `pause`, `play`, `coast`, `fix`, `set` and `scene`.
 - `stop.fix({ frame, step, dpr })` pins the store and the step for a take or a sized export: `view.fixed` true for a take; a frame with its own `dpr` is a still; `stop.fix()` returns to the box.
 
+## REDUCER
+
+- A game's `engine.ts` is a pure reducer over one JSON state: `boot(config)`, `moves(state)`, `step(state, act)`, `read(state, path?)`; snake is the first.
+- State holds integers, strings and nulls only, the generator's state included (`seed`, a `../lib/rand.ts` xorshift); no clock, no `Math.random`, no DOM, and `step` never mutates its input.
+- The scene draws the boot seed from `view.rand` and calls `step`; a player or policy picks from `moves` and stays outside the state.
+- Race boots from its two boards as strings of `0` and `1`; its trail and reach log only paint, so its series keeps them outside the state.
+- Chaos boots from its source's moves and letters; a hex point's floats ride as exact number strings, and its meter and move log stay in the scene.
+- Life boots from its board and mask as strings of `0` and `1`; `step` calls the life unit's `next_grid`, a pure function of the state, and the age and row history only paint.
+
 ## WIDGET
 
 - `Widget({ value, onChange, onReady, onStatus, onExport, units })`; `units` is `PAGE.units` loaded, and the page mounts once they are in.

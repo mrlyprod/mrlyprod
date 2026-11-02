@@ -4,6 +4,7 @@ import { Chip } from "../designs/chip.tsx";
 import type { Design, Slot } from "../designs/store.ts";
 import { choose, current, fits, keys as owned, place, read } from "../designs/store.ts";
 import { source } from "../glass/feed.ts";
+import { useDoor } from "../sdk/door.ts";
 import type { Action } from "./controls.tsx";
 import { Accordion, Btn, Export, Fold, Icon, pair } from "./controls.tsx";
 import type { Side } from "./frame.tsx";
@@ -506,6 +507,7 @@ function App<U extends Mathy, S extends Made>({
     const row = map.find((one) => one.act === name);
     fn?.({ key: key ?? (row ? ([] as string[]).concat(row.key)[0] : ""), preventDefault: () => {} });
   };
+  useDoor({ id: id ?? "", spec, keys, value, units, status: rows, change: onChange, run: (act) => run.current!(act) });
   const sign = JSON.stringify(model);
   useEffect(() => publish({ title, menus: model, run: (act) => run.current!(act) }), [sign]);
   useEffect(() => () => publish(null), []);

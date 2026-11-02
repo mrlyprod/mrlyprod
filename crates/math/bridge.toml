@@ -1,0 +1,34 @@
+unit = "math"
+
+[[hand]]
+name = "CellNd"
+rust = ["mrly::math::two::Cell2d", "mrly::math::three::Cell3d"]
+js = ["cell2d", "cell3d"]
+word = "cell"
+ts = "Cell"
+ts_data = "{ cell: CellData }"
+py = ["PyCell2d", "PyCell3d"]
+py_into = "PyCellNd"
+pyi = "dict[str, Any]"
+
+[[hand]]
+name = "Cell6d"
+rust = ["mrly::math::six::Cell6d"]
+js = ["cell6d"]
+word = "cell"
+ts = "Cell6d"
+ts_data = "Cell6dData"
+py = ["PyCell6d"]
+py_into = "PyCell6d"
+pyi = "dict[str, Any]"
+
+[[hand]]
+name = "Code"
+rust = ["mrly::math::bang::Code"]
+js = ["code"]
+word = "code"
+ts = "string | number | bigint"
+ts_data = "bigint"
+py = ["PyCode"]
+py_into = "PyCode"
+pyi = "int"

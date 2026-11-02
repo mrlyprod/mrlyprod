@@ -69,7 +69,7 @@ fn every_kind_has_one_canonical_string_and_one_id() {
 
 #[test]
 fn every_example_on_names_md_round_trips() {
-    let doc = include_str!("../../mrly-core/src/name/NAMES.md");
+    let doc = include_str!("../../core/src/name/NAMES.md");
     let mut seen = 0;
     for piece in doc.split('`') {
         let Some(rest) = piece.strip_prefix("{\"kind\":\"") else {

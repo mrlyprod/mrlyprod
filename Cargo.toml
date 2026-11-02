@@ -32,12 +32,12 @@ strip = true
 
 [workspace.dependencies]
 mrly = { path = "crates/mrly", version = "=0.2.0" }
-mrly-core = { path = "crates/mrly-core", version = "=0.2.0" }
-mrly-num = { path = "crates/mrly-num", version = "=0.2.0" }
-mrly-math = { path = "crates/mrly-math", version = "=0.2.0" }
-mrly-tile = { path = "crates/mrly-tile", version = "=0.2.0" }
-mrly-life = { path = "crates/mrly-life", version = "=0.2.0" }
-mrly-font = { path = "crates/mrly-font", version = "=0.2.0" }
+mrly-core = { path = "crates/core", version = "=0.2.0" }
+mrly-num = { path = "crates/num", version = "=0.2.0" }
+mrly-math = { path = "crates/math", version = "=0.2.0" }
+mrly-tile = { path = "crates/tile", version = "=0.2.0" }
+mrly-life = { path = "crates/life", version = "=0.2.0" }
+mrly-font = { path = "crates/font", version = "=0.2.0" }
 mrly-js-hand = { path = "bindings/js/hand" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }

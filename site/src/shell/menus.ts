@@ -1,15 +1,11 @@
+import { pulldown } from "site:design/pulldown";
 import { rows } from "site:routes";
-import type { IconName } from "../lib/app/controls.tsx";
 import type { Item, Menu, Model } from "../lib/app/menus.ts";
-import { label } from "../lib/app/menus.ts";
-import { ICONS, VIEWBOX } from "../lib/icons.gen.js";
 import type { Note } from "./catalog.ts";
 import { app, notes, recent, shelves } from "./catalog.ts";
 import { siblings } from "./launch.ts";
 
 const RECENT = 5;
-const DROP = 6;
-const SVG = "http://www.w3.org/2000/svg";
 
 /* MODEL */
 
@@ -54,73 +50,10 @@ function full(model: Model): Menu[] {
 
 const mac = () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
 
-function glyph(name: IconName) {
-  const svg = document.createElementNS(SVG, "svg");
-  svg.setAttribute("viewBox", VIEWBOX);
-  svg.setAttribute("aria-hidden", "true");
-  const path = document.createElementNS(SVG, "path");
-  path.setAttribute("d", ICONS[name]);
-  svg.append(path);
-  return svg;
-}
-
-function chord(keys: string[]) {
-  const out = document.createElement("span");
-  out.className = "chord";
-  const apple = mac();
-  const parts = keys.map((one) =>
-    one === "mod"
-      ? apple
-        ? glyph("keyboard_command_key")
-        : "Ctrl"
-      : one === "shift"
-        ? apple
-          ? glyph("shift")
-          : "Shift"
-        : label(one),
-  );
-  parts.forEach((part, n) => {
-    if (n && !apple) out.append("+");
-    out.append(part);
-  });
-  out.setAttribute(
-    "aria-label",
-    keys
-      .map((one) => (one === "mod" ? (apple ? "Command" : "Control") : one === "shift" ? "Shift" : label(one)))
-      .join(" "),
-  );
-  return out;
-}
-
-function item(row: Item | null) {
-  if (!row) {
-    const rule = document.createElement("hr");
-    rule.setAttribute("role", "separator");
-    return rule;
-  }
-  const one = document.createElement(row.href ? "a" : "button");
-  if (row.href) (one as HTMLAnchorElement).href = row.href;
-  else (one as HTMLButtonElement).type = "button";
-  one.setAttribute("role", row.radio ? "menuitemradio" : "on" in row ? "menuitemcheckbox" : "menuitem");
-  if ("on" in row) one.setAttribute("aria-checked", String(Boolean(row.on)));
-  if (row.off) one.setAttribute("aria-disabled", "true");
-  one.tabIndex = -1;
-  if (row.act) one.dataset.act = row.act;
-  const tick = document.createElement("span");
-  tick.className = "tick";
-  if (row.on) tick.append(glyph("check"));
-  const text = document.createElement("span");
-  text.className = "label";
-  text.textContent = String(row.label);
-  one.append(tick, text);
-  if (row.keys?.length) one.append(chord(row.keys));
-  return one;
-}
-
 /* OPEN */
 
 const bar = () => document.querySelector(".trio .menus");
-const drops = () => [...document.querySelectorAll<HTMLElement>(".pulldown[data-menu]")];
+const drops = () => [...document.querySelectorAll<HTMLElement>("[data-menu][popover]")];
 const buttons = () => [...(bar()?.querySelectorAll("button") ?? [])];
 const shown = () => drops().find((one) => one.matches(":popover-open")) ?? null;
 const live = (drop: HTMLElement) => [
@@ -128,9 +61,10 @@ const live = (drop: HTMLElement) => [
 ];
 
 function place(drop: HTMLElement, button: HTMLElement) {
+  const gap = pulldown?.drop ?? 0;
   const at = button.getBoundingClientRect();
-  drop.style.left = `${Math.max(DROP, Math.min(at.left, innerWidth - drop.offsetWidth - DROP))}px`;
-  drop.style.top = `${at.bottom + DROP}px`;
+  drop.style.left = `${Math.max(gap, Math.min(at.left, innerWidth - drop.offsetWidth - gap))}px`;
+  drop.style.top = `${at.bottom + gap}px`;
 }
 
 function show(n: number, focus = "") {
@@ -174,23 +108,21 @@ function render() {
   for (const one of drops()) one.remove();
   if (!nav) return;
   nav.replaceChildren();
-  if (!held) return;
+  if (!held || !pulldown) return;
+  const look = pulldown;
+  const apple = mac();
   full(held).forEach((menu, n) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = menu.name;
+    const button = look.button(menu.name);
     button.setAttribute("aria-haspopup", "menu");
     button.setAttribute("aria-expanded", "false");
-    const drop = document.createElement("div");
-    drop.className = "pulldown";
+    const drop = look.sheet(menu.name);
     drop.id = `menu-${menu.name.toLowerCase()}`;
     drop.dataset.menu = menu.name;
-    drop.dataset.lens = "menu";
     drop.popover = "auto";
     drop.setAttribute("role", "menu");
     drop.setAttribute("aria-label", menu.name);
     button.setAttribute("aria-controls", drop.id);
-    drop.append(...menu.items.map(item));
+    drop.append(...menu.items.map((row) => look.item(row, apple)));
     drop.addEventListener("toggle", (e) => {
       const open = e.newState === "open";
       button.setAttribute("aria-expanded", String(open));
@@ -218,7 +150,7 @@ function render() {
 
 function pick(e: Event) {
   const one =
-    e.target instanceof Element ? e.target.closest<HTMLElement>('.pulldown[data-menu] [role^="menuitem"]') : null;
+    e.target instanceof Element ? e.target.closest<HTMLElement>('[data-menu][popover] [role^="menuitem"]') : null;
   if (!one) return;
   if (one.getAttribute("aria-disabled") === "true") return e.preventDefault();
   hide();

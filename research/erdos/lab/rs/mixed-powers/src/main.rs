@@ -3570,6 +3570,247 @@ fn classes(r: usize, d: u32, threads: usize) {
     );
 }
 
+// FOUR
+
+fn on(bits: &[u64], x: usize) -> bool {
+    bits[x >> 6] >> (x & 63) & 1 == 1
+}
+
+fn extend4(sums: &[usize], bits: &mut [u64], a: usize) -> Option<(Vec<usize>, Vec<usize>)> {
+    let fresh: Vec<usize> = sums
+        .iter()
+        .map(|&x| x + a)
+        .filter(|&t| !on(bits, t))
+        .collect();
+    for &t in &fresh {
+        bits[t >> 6] |= 1 << (t & 63);
+    }
+    let mut all: Vec<usize> = sums.iter().chain(fresh.iter()).copied().collect();
+    all.sort_unstable();
+    let mut free = true;
+    'out: for &t in &fresh {
+        for &u in &all {
+            if u > t {
+                let diff = u - t;
+                for k in 1..=3 {
+                    if diff % k == 0 {
+                        let d = diff / k;
+                        let i = 3 - k;
+                        if t >= i * d && (0..4).all(|l| on(bits, t - i * d + l * d)) {
+                            free = false;
+                            break 'out;
+                        }
+                    }
+                }
+            } else if u < t && (t - u) % 3 == 0 {
+                let d = (t - u) / 3;
+                if on(bits, u + d) && on(bits, u + 2 * d) {
+                    free = false;
+                    break 'out;
+                }
+            }
+        }
+    }
+    if free {
+        Some((all, fresh))
+    } else {
+        for &t in &fresh {
+            bits[t >> 6] &= !(1 << (t & 63));
+        }
+        None
+    }
+}
+
+fn plain_free(set: &[usize]) -> bool {
+    let mut sums = vec![0usize];
+    for &a in set {
+        let more: Vec<usize> = sums.iter().map(|&x| x + a).collect();
+        sums.extend(more);
+    }
+    sums.sort_unstable();
+    sums.dedup();
+    let seen: std::collections::HashSet<usize> = sums.iter().copied().collect();
+    for (i, &x) in sums.iter().enumerate() {
+        for &y in &sums[i + 1..] {
+            let d = y - x;
+            if seen.contains(&(y + d)) && seen.contains(&(y + 2 * d)) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn descend(
+    sums: &[usize],
+    bits: &mut [u64],
+    cands: &[usize],
+    r: usize,
+    floor: &[usize],
+    chosen: &mut Vec<usize>,
+    out: &mut Vec<Vec<usize>>,
+    all: bool,
+    nodes: &mut u64,
+) {
+    for (at, &b) in cands.iter().enumerate().rev() {
+        if b < floor[r].max(1) {
+            break;
+        }
+        *nodes += 1;
+        if r == 1 {
+            chosen.push(b);
+            out.push(chosen.clone());
+            chosen.pop();
+            if !all {
+                return;
+            }
+            continue;
+        }
+        let (next, fresh) = extend4(sums, bits, b).unwrap();
+        let mut kept = vec![];
+        for &y in &cands[..at] {
+            if let Some((_, back)) = extend4(&next, bits, y) {
+                for x in back {
+                    bits[x >> 6] &= !(1 << (x & 63));
+                }
+                kept.push(y);
+            }
+        }
+        let room = (1..r).all(|j| kept.iter().filter(|&&y| y >= floor[j].max(1)).count() >= r - j);
+        if room {
+            chosen.push(b);
+            descend(&next, bits, &kept, r - 1, floor, chosen, out, all, nodes);
+            chosen.pop();
+        }
+        for x in fresh {
+            bits[x >> 6] &= !(1 << (x & 63));
+        }
+        if !all && !out.is_empty() {
+            return;
+        }
+    }
+}
+
+fn four_top(n: usize, top: usize, floor: &[usize], all: bool) -> (Vec<Vec<usize>>, u64) {
+    let mut bits = vec![0u64; (n * top) / 64 + 2];
+    bits[0] |= 1;
+    let sums = extend4(&[0], &mut bits, top).unwrap().0;
+    let mut chosen = vec![top];
+    let mut out = vec![];
+    let mut nodes = 0;
+    if n == 1 {
+        out.push(chosen.clone());
+    } else {
+        let mut cands = vec![];
+        for y in 1..top {
+            if let Some((_, back)) = extend4(&sums, &mut bits, y) {
+                for x in back {
+                    bits[x >> 6] &= !(1 << (x & 63));
+                }
+                cands.push(y);
+            }
+        }
+        descend(
+            &sums,
+            &mut bits,
+            &cands,
+            n - 1,
+            floor,
+            &mut chosen,
+            &mut out,
+            all,
+            &mut nodes,
+        );
+    }
+    for set in out.iter_mut() {
+        set.reverse();
+    }
+    (out, nodes)
+}
+
+fn four(nmax: usize, hi: usize, threads: usize) {
+    let mut floor = vec![0usize];
+    for n in 1..=nmax {
+        let clock = Instant::now();
+        let lo = floor[n - 1] + 1;
+        let nodes = AtomicUsize::new(0);
+        let next = AtomicUsize::new(lo);
+        let best = AtomicUsize::new(usize::MAX);
+        std::thread::scope(|scope| {
+            for _ in 0..threads {
+                scope.spawn(|| loop {
+                    let top = next.fetch_add(1, Ordering::SeqCst);
+                    if top > hi || top >= best.load(Ordering::SeqCst) {
+                        break;
+                    }
+                    let (found, k) = four_top(n, top, &floor, false);
+                    nodes.fetch_add(k as usize, Ordering::SeqCst);
+                    if !found.is_empty() {
+                        best.fetch_min(top, Ordering::SeqCst);
+                    }
+                });
+            }
+        });
+        let g = best.into_inner();
+        if g == usize::MAX {
+            println!(
+                "g_4({}) > {}, {} nodes, {:.1} s",
+                n,
+                hi,
+                nodes.into_inner(),
+                clock.elapsed().as_secs_f64()
+            );
+            return;
+        }
+        let (sets, _) = four_top(n, g, &floor, true);
+        assert!(sets.iter().all(|s| plain_free(s)));
+        println!(
+            "g_4({}) = {}, {} extremal sets {:?}, {} nodes, {:.1} s",
+            n,
+            g,
+            sets.len(),
+            sets,
+            nodes.into_inner(),
+            clock.elapsed().as_secs_f64()
+        );
+        floor.push(g);
+    }
+}
+
+fn four_plain(n: usize, hi: usize) {
+    fn walk(set: &mut Vec<usize>, n: usize, best: &mut usize, wit: &mut Vec<usize>) {
+        if set.len() == n {
+            *best = *set.last().unwrap();
+            *wit = set.clone();
+            return;
+        }
+        let from = set.last().map_or(1, |&x| x + 1);
+        let mut a = from;
+        while a < *best {
+            set.push(a);
+            if plain_free(set) {
+                walk(set, n, best, wit);
+            }
+            set.pop();
+            a += 1;
+        }
+    }
+    let clock = Instant::now();
+    let mut best = hi + 1;
+    let mut wit = vec![];
+    walk(&mut vec![], n, &mut best, &mut wit);
+    if wit.is_empty() {
+        println!(
+            "no {}-set in [1, {}], {:.1} s",
+            n,
+            hi,
+            clock.elapsed().as_secs_f64()
+        );
+    } else {
+        println!("least largest element of a {}-set with no 4-term progression in its subset sums: {}, witness {:?}, {:.1} s", n, best, wit, clock.elapsed().as_secs_f64());
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let num = |i: usize, d: u64| args.get(i).map(|s| s.parse().unwrap()).unwrap_or(d);
@@ -3646,13 +3887,35 @@ fn main() {
         "deaths" => deaths(num(2, 3) as usize, num(3, 400) as u32, num(4, 79) as u32, num(5, 8) as usize),
         "classes" => classes(num(2, 3) as usize, num(3, 5) as u32, num(4, 8) as usize),
         "tuples" => tuples(num(2, 2) as usize, num(3, 40) as u32, num(4, 8) as usize, num(5, 1 << 24) as usize),
-        _ => println!("verbs census R K BITS THREADS, deep R K BITS THREADS, jumps R K BITS THREADS, trace D K BITS, windowed BITS, cell D K BITS, wcell D K BITS, chainless BITS, forced BITS, wcontrol BITS, split D K X COUNT, set D K B, windows D K E F, graham T P Q BITS, refute BITS, ternary N HI THREADS, probe N TOP THREADS, band LO HI W THREADS, offsets LO HI, sweep N LO HI THREADS, tally N LO HI THREADS PLAIN, control, route R E, tight K BITS HOLES, ones R SIZE, pair D K BITS HOLES, pairs R SIZE K BITS HOLES THREADS, pcontrol R SIZE K, near E F BITS, lpair D K BITS HOLES, logs R SIZE K BITS HOLES THREADS ALL, lcontrol R SIZE K ALL, cantor E1,E2,... CAP, carry M1,M2,... CAP, tuples R TOP THREADS CAP, deaths R TOP D THREADS, classes R D THREADS"),
+        "four" => four(num(2, 7) as usize, num(3, 5000) as usize, num(4, 8) as usize),
+        "fourtop" => {
+            let floor: Vec<usize> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
+            let clock = Instant::now();
+            let (sets, nodes) = four_top(floor.len(), num(3, 100) as usize, &floor, num(4, 1) == 1);
+            println!("{} sets {:?}, {} nodes, {:.1} s", sets.len(), sets, nodes, clock.elapsed().as_secs_f64());
+        }
+        "fourplain" => four_plain(num(2, 5) as usize, num(3, 100) as usize),
+        _ => println!("verbs census R K BITS THREADS, deep R K BITS THREADS, jumps R K BITS THREADS, trace D K BITS, windowed BITS, cell D K BITS, wcell D K BITS, chainless BITS, forced BITS, wcontrol BITS, split D K X COUNT, set D K B, windows D K E F, graham T P Q BITS, refute BITS, ternary N HI THREADS, probe N TOP THREADS, band LO HI W THREADS, offsets LO HI, sweep N LO HI THREADS, tally N LO HI THREADS PLAIN, control, route R E, tight K BITS HOLES, ones R SIZE, pair D K BITS HOLES, pairs R SIZE K BITS HOLES THREADS, pcontrol R SIZE K, near E F BITS, lpair D K BITS HOLES, logs R SIZE K BITS HOLES THREADS ALL, lcontrol R SIZE K ALL, cantor E1,E2,... CAP, carry M1,M2,... CAP, tuples R TOP THREADS CAP, deaths R TOP D THREADS, classes R D THREADS, four N HI THREADS, fourplain N HI"),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_four_term_values_to_five() {
+        let mut floor = vec![0usize];
+        for (n, g) in [1usize, 3, 5, 14, 40].into_iter().enumerate() {
+            assert!(four_top(n + 1, g - 1, &floor, false).0.is_empty() || g == 1);
+            assert!(!four_top(n + 1, g, &floor, false).0.is_empty());
+            floor.push(g);
+        }
+        assert!(!plain_free(&[1, 2]));
+        assert!(plain_free(&[2, 29, 45, 74, 77, 79]));
+        assert!(plain_free(&[1, 6, 87, 135, 222, 231, 237]));
+        assert!(!plain_free(&[1, 2, 29, 45, 74, 77, 79]));
+    }
 
     #[test]
     fn the_unit_sets_below_eight_are_one() {

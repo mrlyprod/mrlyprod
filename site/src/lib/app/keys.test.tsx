@@ -134,7 +134,7 @@ test("the info card lists each readout a widget hands up, its label beside its v
       ]}
     />,
   );
-  expect(html).toContain('<dialog class="modal info" aria-label="Info">');
+  expect(html).toContain('<dialog class="modal info" aria-label="Info" data-light="true">');
   expect([...html.matchAll(/<dt>(.*?)<\/dt><dd>(.*?)<\/dd>/g)].map(([, name, value]) => [name, value])).toEqual([
     ["Cells", "420"],
     ["Gen", "12"],

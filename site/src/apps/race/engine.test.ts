@@ -2,13 +2,17 @@ import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/mrly/math";
 import { defaults } from "../../lib/app/spec.ts";
 import { rng } from "../../lib/rand.ts";
+import type { Act, Config } from "./engine.ts";
 import {
-  aim,
+  aiming,
   BUDGET,
   bake,
+  bits,
   board,
+  boot,
   cap,
   ceiling,
+  deal,
   fills,
   GAIN,
   grow,
@@ -18,11 +22,13 @@ import {
   kin,
   LIMIT,
   lay,
-  open,
+  moves,
   pair,
   plan,
   REACH,
   ROLLS,
+  reach,
+  read,
   reads,
   roll,
   room,
@@ -32,10 +38,19 @@ import {
   series,
   spread,
   step,
+  TICK,
   top,
 } from "./engine.ts";
 import type { Knobs } from "./scene.ts";
 import { SPEC } from "./scene.ts";
+
+const freeze = <T>(x: T): T => {
+  if (x && typeof x === "object") {
+    Object.values(x).forEach(freeze);
+    Object.freeze(x);
+  }
+  return x;
+};
 
 const value = (over?: Partial<Knobs>) => ({ ...(defaults(SPEC) as Knobs), seed: 1, ...over });
 
@@ -181,18 +196,37 @@ test("heat decays by the keep a tick since its stamp and holds when nothing fade
   expect(heat(4, 10, 99, 1)).toBe(4);
 });
 
-test("the spread is the root mean square distance of the walkers from home", () => {
-  expect(spread(Int32Array.from([0, 2, 6, 8]), 4, 3)).toBe(Math.SQRT2);
-  expect(spread(Int32Array.from([4, 4]), 4, 3)).toBe(0);
-  expect(spread(new Int32Array(0), 4, 3)).toBe(0);
+const DUST: Config = { side: 3, boards: ["111111111", "010111010"], homes: [4, 4], walkers: 6, goal: 2, seed: 42 };
+const plain = (x: unknown): boolean =>
+  x === null ||
+  typeof x === "string" ||
+  Number.isInteger(x) ||
+  (typeof x === "object" && Object.values(x).every(plain));
+const replay = (acts: Act[], config = DUST) => acts.reduce(step, boot(config));
+const GAME: Act[] = [TICK, TICK, aiming(1), TICK, aiming(3), TICK, TICK];
+
+test("the spread sums the squared distances of the walkers from home, and the reach is its root mean", () => {
+  expect([spread([0, 2, 6, 8], 4, 3), spread([4, 4], 4, 3), spread([], 4, 3)]).toEqual([8, 0, 0]);
+  const state = { ...boot(DUST), at: [[0, 2, 6, 8], []], sums: [8, 0] };
+  expect(reach(state)).toEqual([Math.SQRT2, 0]);
 });
 
-test("a step moves every walker one blind step onto a filled cell or leaves it, heats only the cells walkers arrive on, and logs the reach", () => {
+test("boot fields every walker at home on its board as strings and integers, and none on an empty board", () => {
+  const state = boot(DUST);
+  expect([state.at, state.tick, state.over, plain(state)]).toEqual([
+    [Array(6).fill(4), Array(6).fill(4)],
+    0,
+    null,
+    true,
+  ]);
+  const { plan: laid, walk } = race({ a: "0", b: "127", level: 2 });
+  const none = boot(deal(laid, walk));
+  expect([none.at[0].length, none.boards[1].length, none.boards[1]]).toEqual([0, 81, bits(laid.sides[1].filled)]);
+});
+
+test("a tick moves every walker one blind step onto a filled cell or leaves it", () => {
   const { plan: laid, walk } = race({ a: "127", b: "239", walkers: 50 });
-  const state = open(laid);
-  expect(state.at.map((at) => at.length)).toEqual([50, 50]);
-  expect(state.at[0].every((i) => i === laid.sides[0].home)).toBe(true);
-  step(state, laid, rng(walk));
+  const state = step(boot(deal(laid, walk)), TICK);
   state.at.forEach((at, s) => {
     const { filled, home: from } = laid.sides[s];
     const side = laid.side;
@@ -202,12 +236,21 @@ test("a step moves every walker one blind step onto a filled cell or leaves it, 
         Math.abs(Math.floor(i / side) - Math.floor(from / side)) + Math.abs((i % side) - (from % side)),
       ).toBeLessThanOrEqual(1);
     }
-    const moved = [...at].filter((i) => i !== from).length;
-    expect(moved).toBeGreaterThan(0);
-    expect(state.trail[s].reduce((sum, h) => sum + h, 0)).toBe(moved);
-    expect(state.trail[s][from]).toBe(0);
+    expect(at.some((i) => i !== from)).toBe(true);
   });
-  expect([state.tick, state.log.length, state.reach[0] > 0, state.over]).toEqual([1, 2, true, null]);
+  expect([state.tick, reach(state)[0] > 0, state.over]).toEqual([1, true, null]);
+});
+
+test("the series heats only the cells walkers arrive on and logs the reach every tick", () => {
+  const { plan: laid, walk } = race({ a: "127", b: "239", walkers: 50 });
+  const run = series(laid, walk);
+  run.to(1);
+  run.state.at.forEach((at, s) => {
+    const { home: from } = laid.sides[s];
+    expect([...run.trace.trail[s]].reduce((sum, h) => sum + h, 0)).toBe(at.filter((i) => i !== from).length);
+    expect(run.trace.trail[s][from]).toBe(0);
+  });
+  expect(run.trace.log).toEqual([[0, 0], reach(run.state)]);
 });
 
 test("the race ends at the goal with the side that reached it, and is the same in one jump or by steps", () => {
@@ -219,16 +262,12 @@ test("the race ends at the goal with the side that reached it, and is the same i
   for (let t = 0; t <= end; t += 1) stepped.to(t);
   const jumped = series(laid, walk);
   jumped.to(end);
-  expect([jumped.state.tick, jumped.state.reach, jumped.state.over, [...jumped.state.at[0]]]).toEqual([
-    stepped.state.tick,
-    stepped.state.reach,
-    stepped.state.over,
-    [...stepped.state.at[0]],
-  ]);
+  expect(JSON.stringify(jumped.state)).toBe(JSON.stringify(stepped.state));
   expect(jumped.state.over).toMatchObject({ winner: 0, how: "goal" });
-  expect(jumped.state.reach[0]).toBeGreaterThanOrEqual(laid.goal);
-  expect(jumped.state.reach[1]).toBeLessThan(laid.goal);
-  expect(jumped.state.log.length).toBe(jumped.state.over!.tick + 1);
+  expect(reach(jumped.state)[0]).toBeGreaterThanOrEqual(laid.goal);
+  expect(reach(jumped.state)[1]).toBeLessThan(laid.goal);
+  expect(jumped.trace.log.length).toBe(jumped.state.over!.tick + 1);
+  expect(plain(jumped.state)).toBe(true);
 });
 
 test("a finish with a limit stops short of the end without a judgement, and a later finish carries on to the same end", () => {
@@ -239,43 +278,71 @@ test("a finish with a limit stops short of the end without a judgement, and a la
   cut.finish(100);
   expect([cut.state.tick, cut.state.over]).toEqual([100, null]);
   cut.finish();
-  expect([cut.state.over, [...cut.state.at[0]]]).toEqual([whole.state.over, [...whole.state.at[0]]]);
+  expect(JSON.stringify(cut.state)).toBe(JSON.stringify(whole.state));
 });
 
-test("a board with no way out stalls into a judgement and an empty board fields no walker", () => {
+test("a board with no way out stalls into a judgement", () => {
   const dust = race({ a: "1", b: "1", number: 3, level: 1 });
   const run = series(dust.plan, dust.walk);
   run.finish();
   expect(run.state.over).toMatchObject({ tick: STALL, winner: -1, how: "stall" });
-  const none = race({ a: "0", b: "127", level: 2 });
-  expect(open(none.plan).at[0].length).toBe(0);
   expect([GAIN > 0, LIMIT > STALL]).toEqual([true, true]);
 });
 
-test("a new finish ends a race past it, and a goal end below a raised finish runs on", () => {
+test("a new finish ends a race past it, a goal end below a raised finish runs on, and a stall stays", () => {
   const { plan: laid, walk } = race({ a: "127", b: "239" });
   const run = series(laid, walk, Infinity);
   run.to(400);
   expect(run.state.over).toBe(null);
-  const far = Math.max(...run.state.reach);
-  aim(run.state, { ...laid, goal: Math.floor(far) });
-  expect(run.state.over).toMatchObject({ tick: 400, how: "goal" });
-  aim(run.state, { ...laid, goal: Math.ceil(far) + 1 });
-  expect(run.state.over).toBe(null);
-  run.state.over = { tick: 400, winner: 0, how: "stall" };
-  aim(run.state, laid);
-  expect(run.state.over!.how).toBe("stall");
+  const far = Math.max(...reach(run.state));
+  const past = step(run.state, aiming(Math.floor(far)));
+  expect([past.goal, past.over]).toMatchObject([Math.floor(far), { tick: 400, how: "goal" }]);
+  expect(step(past, aiming(Math.ceil(far) + 1)).over).toBe(null);
+  const stalled = { ...run.state, over: { tick: 400, winner: 0, how: "stall" as const } };
+  expect(step(stalled, aiming(laid.goal)).over!.how).toBe("stall");
 });
 
 test("a bake folds the fade so far into every trail and stamps it now", () => {
   const { plan: laid, walk } = race({ a: "127", b: "239", heat: 50, speed: 6 });
   const run = series(laid, walk);
   run.to(30);
-  const { state } = run;
-  const seen = state.trail[0].map((h, i) => heat(h, state.stamp[0][i], state.tick, laid.keep));
-  bake(state, laid.keep);
-  expect([...state.trail[0]].map((h) => Math.round(h * 1e4))).toEqual([...seen].map((h) => Math.round(h * 1e4)));
-  expect(state.stamp[0].every((t) => t === 30)).toBe(true);
+  const { trace } = run;
+  const seen = trace.trail[0].map((h, i) => heat(h, trace.stamp[0][i], 30, laid.keep));
+  bake(trace, 30, laid.keep);
+  expect([...trace.trail[0]].map((h) => Math.round(h * 1e4))).toEqual([...seen].map((h) => Math.round(h * 1e4)));
+  expect(trace.stamp[0].every((t) => t === 30)).toBe(true);
+});
+
+test("the same seed and acts replay to the same state, byte for byte", () => {
+  expect(JSON.stringify(replay(GAME))).toBe(JSON.stringify(replay(GAME)));
+  expect(JSON.stringify(replay(GAME))).not.toBe(JSON.stringify(replay(GAME, { ...DUST, seed: 43 })));
+});
+
+test("step leaves its input untouched and its output survives a JSON round trip", () => {
+  let state = boot(DUST);
+  for (const act of GAME) {
+    const before = JSON.stringify(state);
+    const next = step(freeze(state), act);
+    expect(JSON.stringify(state)).toBe(before);
+    expect(JSON.parse(JSON.stringify(next))).toEqual(next);
+    state = next;
+  }
+});
+
+test("moves lists the tick, and nothing once over", () => {
+  const state = boot(DUST);
+  expect(moves(state)).toEqual([TICK]);
+  expect(moves({ ...state, over: { tick: 0, winner: -1, how: "limit" } })).toEqual([]);
+});
+
+test("read walks a slash path into the state", () => {
+  const state = boot(DUST);
+  expect([read(state), read(state, "goal"), read(state, "at/1/0"), read(state, "nope/x")]).toEqual([
+    state,
+    2,
+    4,
+    undefined,
+  ]);
 });
 
 test("with no hold the series stays on the finished race", () => {

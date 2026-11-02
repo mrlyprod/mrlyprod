@@ -1,5 +1,6 @@
 import type { KeyboardEvent, MouseEvent, ReactNode, Ref } from "react";
 import { useEffect, useRef } from "react";
+import { measure } from "../../shell/measure.ts";
 import { Icon, useRoom } from "./controls.tsx";
 import { Bar } from "./frame.tsx";
 import type { Scalar } from "./spec.ts";
@@ -62,7 +63,7 @@ function queue(job: () => void) {
 
 /* ART */
 
-export function Art({ paint, px = 56, deps = [], label }: ArtProps) {
+export function Art({ paint, px = measure.thumb, deps = [], label }: ArtProps) {
   const at = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = at.current;
@@ -142,7 +143,7 @@ function move(e: KeyboardEvent<HTMLDivElement>) {
 }
 
 export function Chips({ label, chips, chip, onChip }: ChipsProps) {
-  const [at, narrow] = useRoom<HTMLElement>(chips.map(([v, text]) => `${v}:${text}`).join("\n"), true);
+  const [at, narrow] = useRoom<HTMLElement>(chips.map(([v, text]) => `${v}:${text}`).join("\n"));
   const hold = (el: HTMLElement | null) => {
     at.current = el;
   };

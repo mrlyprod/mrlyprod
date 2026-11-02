@@ -7,6 +7,8 @@ import { Accordion, Fold, Slider } from "./controls.tsx";
 import { gist, Knob, Knobs, useAccordion } from "./knobs.tsx";
 import type { Row, Spec, Value } from "./spec.ts";
 
+type Change = { onChange: (e: { target: { value: string } }) => void };
+
 const SPEC: Row[] = [
   { key: "max", label: "Jump speed", kind: "slider", def: 14, min: 4, max: 30, step: 1, group: "Jump" },
   { key: "stars", label: "Density", kind: "slider", def: 1, min: 0.25, max: 3, step: 0.25, group: "Sky" },
@@ -63,11 +65,17 @@ test("Knobs draws the groups of a spec in first-seen order, each row under its g
   expect(seen).toEqual(["Jump", "Jump speed", "Cruise", "Sky", "Density", "Saver", "hyper"]);
 });
 
-test("a slider input fires onChange on input, before any change event", () => {
+test("a slider input fires onChange on input, before any change event", async () => {
   const wrote: Value[] = [];
   const input = Knob({ row: SPEC[0], value: 14, onChange: (patch) => wrote.push(patch) }).props as SliderProps;
   expect(input.commit).toBeUndefined();
-  Slider(input).props.children[2].props.onChange({ target: { value: "20" } });
+  await mount(async (draw, host) => {
+    await draw(<Slider {...input} />);
+    const range = find(host, (at) => at.tagName === "INPUT")!;
+    (Object.entries<unknown>(range).find(([key]) => key.startsWith("__reactProps"))![1] as Change).onChange({
+      target: { value: "20" },
+    });
+  });
   expect(wrote).toEqual([{ max: 20 }]);
 });
 

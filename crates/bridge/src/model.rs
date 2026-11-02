@@ -1,118 +1,45 @@
 use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
 
 pub type Result<T> = std::result::Result<T, String>;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Hand {
-    pub name: &'static str,
-    pub rust: &'static [&'static str],
-    pub js: &'static [&'static str],
-    pub word: &'static str,
-    pub ts: &'static str,
-    pub ts_data: &'static str,
-    pub py: &'static [&'static str],
-    pub py_into: &'static str,
-    pub pyi: &'static str,
+    pub name: String,
+    pub rust: Vec<String>,
+    pub js: Vec<String>,
+    pub word: String,
+    pub ts: String,
+    pub ts_data: String,
+    pub py: Vec<String>,
+    pub py_into: String,
+    pub pyi: String,
 }
 
-pub const HAND: &[Hand] = &[
-    Hand {
-        name: "Tensor",
-        rust: &["mrly::core::Tensor"],
-        js: &["tensor"],
-        word: "tensor",
-        ts: "Tensor",
-        ts_data: "TensorData",
-        py: &["PyTensor"],
-        py_into: "PyTensor",
-        pyi: "NDArray[Any]",
-    },
-    Hand {
-        name: "Cell",
-        rust: &["mrly::core::Cell"],
-        js: &["cell"],
-        word: "cell",
-        ts: "Cell",
-        ts_data: "CellData",
-        py: &["PyCell"],
-        py_into: "PyCell",
-        pyi: "dict[str, Any]",
-    },
-    Hand {
-        name: "CellNd",
-        rust: &["mrly::math::two::Cell2d", "mrly::math::three::Cell3d"],
-        js: &["cell2d", "cell3d"],
-        word: "cell",
-        ts: "Cell",
-        ts_data: "{ cell: CellData }",
-        py: &["PyCell2d", "PyCell3d"],
-        py_into: "PyCellNd",
-        pyi: "dict[str, Any]",
-    },
-    Hand {
-        name: "Cell6d",
-        rust: &["mrly::math::six::Cell6d"],
-        js: &["cell6d"],
-        word: "cell",
-        ts: "Cell6d",
-        ts_data: "Cell6dData",
-        py: &["PyCell6d"],
-        py_into: "PyCell6d",
-        pyi: "dict[str, Any]",
-    },
-    Hand {
-        name: "Image",
-        rust: &["mrly::core::Image"],
-        js: &["image"],
-        word: "image",
-        ts: "Image",
-        ts_data: "{ width: number; height: number; colors: number[][] }",
-        py: &["PyImage"],
-        py_into: "PyImage",
-        pyi: "NDArray[Any]",
-    },
-    Hand {
-        name: "Color",
-        rust: &["mrly::core::Color"],
-        js: &["color"],
-        word: "color",
-        ts: "Color",
-        ts_data: "ColorData",
-        py: &["PyColor"],
-        py_into: "PyColor",
-        pyi: "tuple[int, int, int, int]",
-    },
-    Hand {
-        name: "Code",
-        rust: &["mrly::math::bang::Code"],
-        js: &["code"],
-        word: "code",
-        ts: "string | number | bigint",
-        ts_data: "bigint",
-        py: &["PyCode"],
-        py_into: "PyCode",
-        pyi: "int",
-    },
-    Hand {
-        name: "Rng",
-        rust: &["mrly::core::Rng"],
-        js: &[],
-        word: "rng",
-        ts: "Rng",
-        ts_data: "unknown",
-        py: &["PyRng"],
-        py_into: "PyRng",
-        pyi: "Rng",
-    },
-];
+static HANDS: OnceLock<Vec<Hand>> = OnceLock::new();
+
+pub fn install(hands: Vec<Hand>) {
+    HANDS.get_or_init(|| hands);
+}
+
+pub fn hands() -> &'static [Hand] {
+    HANDS.get_or_init(|| {
+        crate::config::load(&crate::config::home())
+            .map(|config| config.hands)
+            .unwrap_or_else(|error| panic!("{error}"))
+    })
+}
 
 pub fn hand(name: &str) -> Option<&'static Hand> {
-    HAND.iter().find(|hand| hand.name == name)
+    hands().iter().find(|hand| hand.name == name)
 }
 
-pub fn by_dim(list: &'static [&'static str], dim: Option<u8>) -> Option<&'static str> {
+pub fn by_dim(list: &'static [String], dim: Option<u8>) -> Option<&'static str> {
     match list {
         [one] => Some(one),
-        many => many.get(usize::from(dim?.checked_sub(2)?)).copied(),
+        many => many
+            .get(usize::from(dim?.checked_sub(2)?))
+            .map(String::as_str),
     }
 }
 

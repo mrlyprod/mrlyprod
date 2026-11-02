@@ -1,6 +1,6 @@
 ---
 title: Problems 817 and 406
-lead: Problem 817 at n = 7 and problem 406 in the 3-adic integers, each settled by a finite computation.
+lead: Problem 817 at n = 7, its values at k = 4 to n = 6, and problem 406 in the 3-adic integers, each settled by a finite computation.
 figure: research-erdos
 slug: erdos
 ---
@@ -22,6 +22,18 @@ slug: erdos
 - Controls (verb `tally 6 168 176 8 1`, `0.3` s, and two crate tests): the `153` admissible 6-sets with largest element in `[168, 176]` are listed alike with and without the cut, and the cut fires on no prefix of any of them, nor of the extremal sets at `n = 5, 6, 7`; `168` has exactly the two extremal sets `{107, 145, 159, 162, 164, 168}` and `{107, 145, 159, 162, 166, 168}`.
 - So `g_3(n) = 1, 3, 8, 22, 60, 168, 474` at `n = 1..7` (verbs `ternary 6 200 8` and `sweep 7 169 473 8`). At `n = 8` only the thread's step applied to the witness above and Korsky's formula bound `g_3(8)`; this page computes nothing there.
 - `n = 8` is out of this box: the elements triple and the tree gains a level, while the time per top at `n = 7` already doubles about every `20`; it wants a cut at the last two levels as cheap as the bit scan it would replace.
+
+## Problem 817 at k = 4
+
+- `g_4(n)` is the least `N` such that `[1, N]` holds an `n`-set `A` whose subset sums `<A>`, `0` included and read as a set, contain no 4-term progression `x, x + d, x + 2d, x + 3d` with `d >= 1`; the problem asks for every `k >= 3`, and the page and its thread print values only at `k = 3`.
+- Korsky's preprint, read at its abstract for `k >= 4`, proves `g_k(n) >>_k ((k - 1)/(k - 2))^n n^(-log_2((k - 1)/(k - 2)))` for `k >= 4`, at `k = 4` the rate `3/2`, and `limsup g_k(n)^(1/n) <= min_(p prime, p >= 3) p^(2/(min(p, k) - 1))`, at `k = 4` the rate `5^(2/3) = 2.9240`, truncated; the OEIS dump holds neither `1, 3, 5, 14, 40` nor `3, 5, 14, 40, 79`.
+- No distinct-sums reading exists here: at `k = 3` admissibility is the `3^n` ternary sums being distinct, while at `k = 4` subset sums may repeat, and the extremal `{1, 9, 13, 14}` has `1 + 13 = 14`. Every 3-progression-free set is 4-progression-free, so `g_4(n) <= g_3(n)`.
+- **Proved (the step).** `g_4(n + 1) <= 3 g_4(n)`. Proof: let `A` be admissible with largest element `g_4(n)` and `A' = {1} U 3A`, an `(n + 1)`-set with the same largest element tripled. `<A'> = 3<A> U (3<A> + 1)` lies in the classes `0, 1` mod `3`. A 4-term progression with `3` not dividing `d` has its first three terms in three distinct classes, so it is not in `<A'>`; with `3 | d` its terms share one class, so all four lie in `3<A>` or all in `3<A> + 1`, and dividing out gives one in `<A>`.
+- The search fixes the largest element and picks the rest from the top down; a node with sums `S` keeps the list of `y` below its least element with `S U (S + y)` free of 4-term progressions, and a child tests only its parent's list, since the sums of a subset lie in the sums of the set. The test after adding `y` checks only the progressions through a new sum `t`: one with `t` not last is fixed by `t` and its last term `u > t`, one with `t` last by its first term. The `r` elements still owed must have their `j`-th smallest at least `g_4(j)`, and the list must hold that many.
+- **Verified** (verb `four 6 200 8`, `2.0` s on `8` threads, exhaustive): `g_4(n) = 1, 3, 5, 14, 40, 79` at `n = 1..6`, with `1, 2, 2, 2, 7, 1` extremal sets, each rechecked from the definition: `{1, 4, 5}` and `{2, 3, 5}` at `n = 3`, `{1, 9, 13, 14}` and `{3, 11, 13, 14}` at `n = 4`, seven at `n = 5` from `{1, 13, 35, 39, 40}`, and only `{2, 29, 45, 74, 77, 79}` at `n = 6`.
+- **Verified** (verb `fourplain N 100`, `N = 1..6`, `38.4` s at `N = 6`): a plain search from the bottom up, which recomputes the subset sums at every node, tests every pair as the first two terms of a progression and prunes by nothing but heredity, returns the same least largest elements `1, 3, 5, 14, 40, 79`.
+- **Verified** (verb `four 7 130 8`, `63` s on `8` threads, exhaustive): no admissible 7-set has its largest element in `[80, 130]`, so `131 <= g_4(7)`; the step on the 6-set gives `{1, 6, 87, 135, 222, 231, 237}`, checked from the definition, so `131 <= g_4(7) <= 237`, against `g_3(7) = 474`; with the step, `g_4(n) <= 79 3^(n - 6)` and `g_4(n)/3^n < 0.108368` for every `n >= 6`.
+- **Verified** (verb `fourtop 0,1,3,5,14,40,79 TOP 0`, exhaustive at each top): no admissible 7-set has its largest element in `{140, 150, 160, 170, 180}`, the last in `283` s; closing the gap `[131, 237]` wants a cheaper last level, as `g_3(8)` does.
 
 ## Problem 406 in the 3-adic integers
 

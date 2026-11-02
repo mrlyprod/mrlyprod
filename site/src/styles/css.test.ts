@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 /* SELECTORS */
 
@@ -25,12 +25,18 @@ const selectors = (css: string) => {
 
 /* CSS */
 
-test("the site css never repeats a top-level selector with another rule between", () => {
-  const home = import.meta.dir;
-  for (const name of readdirSync(home)
+const GLASS = join(import.meta.dir, "..", "designs", "glass");
+
+const sheets = (dir: string) =>
+  readdirSync(dir)
     .filter((one) => one.endsWith(".css"))
-    .sort()) {
-    const file = join(home, name);
+    .sort()
+    .map((one) => join(dir, one));
+
+const ALL = [...sheets(import.meta.dir), ...sheets(GLASS)];
+
+test("the site css never repeats a top-level selector with another rule between", () => {
+  for (const file of ALL) {
     const list = selectors(readFileSync(file, "utf8"));
     const last = new Map<string, number>();
     list.forEach((sel, n) => {
@@ -58,9 +64,15 @@ test("the git and app sheets import nothing the shell sheet already links", () =
 
 /* TOKENS */
 
-const SHEETS = ["chrome.css", "desk.css", "base.css", "pages.css", "../lib/app/mrly.css"];
+const SHEETS = [
+  "../designs/glass/chrome.css",
+  "../designs/glass/desk.css",
+  "base.css",
+  "pages.css",
+  "../lib/app/mrly.css",
+];
 
-const bare = (name: string) => readFileSync(join(import.meta.dir, name), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+const bare = (name: string) => readFileSync(resolve(import.meta.dir, name), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
 const values = (css: string, prop: RegExp) =>
   [...css.matchAll(/(?:^|[{;])\s*([a-z-]+)\s*:\s*([^;{}]+)/g)]
@@ -84,10 +96,10 @@ test("the site css and the demo css set no bare numeric z-index", () => {
 });
 
 test("tokens.css defines every type and layer token the site css reads", () => {
-  const tokens = bare("tokens.css");
+  const tokens = bare("../designs/glass/tokens.css");
   for (const name of [
-    ...readdirSync(import.meta.dir).filter((one) => one.endsWith(".css") && one !== "tokens.css"),
-    "../lib/app/mrly.css",
+    ...ALL.filter((one) => !one.endsWith("tokens.css")),
+    join(import.meta.dir, "..", "lib", "app", "mrly.css"),
   ]) {
     for (const [, token] of bare(name).matchAll(/var\(--((?:t|lh)\d+|z-[a-z]+)\b/g)) {
       if (!new RegExp(`--${token}\\s*:`).test(tokens)) throw new Error(`${name}: --${token} undefined`);
@@ -101,14 +113,12 @@ const rules = (css: string) =>
   [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => [sel!.trim().replace(/\s+/g, " "), body!] as const);
 
 test("no rule for a hero, a half hero or a plate on either rounds a corner", () => {
-  const round = readdirSync(import.meta.dir)
-    .filter((one) => one.endsWith(".css"))
-    .flatMap((name) =>
-      rules(bare(name))
-        .filter(
-          ([sel, body]) => /\.(hero|half|plate)\b/.test(sel) && !/\.paper\b/.test(sel) && /border-radius/.test(body),
-        )
-        .map(([sel]) => `${name}: ${sel}`),
-    );
+  const round = ALL.flatMap((name) =>
+    rules(bare(name))
+      .filter(
+        ([sel, body]) => /\.(hero|half|plate)\b/.test(sel) && !/\.paper\b/.test(sel) && /border-radius/.test(body),
+      )
+      .map(([sel]) => `${name}: ${sel}`),
+  );
   expect(round).toEqual([]);
 });

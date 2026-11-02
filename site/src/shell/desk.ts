@@ -12,6 +12,8 @@ type Pinned = { pick: string; as: string };
 
 type Path = (t: number, height: number) => number;
 
+type Drawn = typeof import("./parts.tsx");
+
 /* MARK */
 
 export let route = "";
@@ -25,9 +27,8 @@ export function mark() {
   const home = route === "/";
   if (!route || home === homed) return;
   homed = home;
-  const one = document.querySelector<HTMLElement>(".bar .mark");
-  if (!one) return;
-  if (home) return arrive(one);
+  if (!document.querySelector(".bar .mark")) return;
+  if (home) return arrive();
   depart();
 }
 
@@ -87,14 +88,22 @@ function enter() {
   asked = playing;
   if (playing) return;
   const mine = shown;
-  const go = () => {
-    if (shown !== mine || playing || greeting() !== "open") return;
-    unlock();
-    mine?.stop?.coast?.(SETTLE);
+  const run = () => {
     const h = hall()?.offsetHeight ?? 0;
     if (!h || scrollY >= h) return settle();
     const from = scrollY / h;
     glide((t, height) => height * (from + (1 - from) * t), PLAY * (1 - from), settle);
+  };
+  const go = () => {
+    if (shown !== mine || playing || greeting() !== "open") return;
+    const left = leave();
+    mine?.stop?.coast?.(SETTLE);
+    if (!left) return run();
+    playing = true;
+    left.then(() => {
+      playing = false;
+      if (shown === mine && greeting() === "open") run();
+    });
   };
   if (mine?.stop?.leave && root().dataset.lock) return mine.stop.leave(go);
   go();
@@ -191,18 +200,13 @@ export function knock(mark: HTMLElement) {
   });
 }
 
-async function arrive(mark: HTMLElement) {
-  const { markup, welcome } = await import("./welcome.ts");
+async function arrive() {
+  const one = await import("./parts.tsx").catch(() => null);
   if (!homed) return;
-  const model = welcome();
-  const svg = mark.querySelector("svg")!;
-  svg.setAttribute("class", "glyphs fold");
-  svg.setAttribute("viewBox", `0 0 ${model.cols} 5`);
-  svg.style.setProperty("--rows", "5");
-  svg.style.setProperty("--cols", String(model.cols));
-  svg.innerHTML = markup(model);
+  drawn = one?.locks() ? one : null;
   const due = owed;
   owed = false;
+  if (!drawn) return void delete root().dataset.welcome;
   if (!rolls()) return;
   root().dataset.welcome = read(KEY.welcome) || calm() ? "shut" : "open";
   if (greeting() === "open") {
@@ -233,29 +237,36 @@ let pinned: Pinned | null = null;
 let nap: ReturnType<typeof setTimeout> | 0 = 0;
 let later: ReturnType<typeof setTimeout> | 0 = 0;
 let idle = false;
+let drawn: Drawn | null = null;
+
+export const canvas = () => shown?.box.querySelector("canvas") ?? null;
+
+const ground = (box: HTMLElement) =>
+  import("./parts.tsx").then((one) => one.ground(box, route === "/")).catch(() => null);
 
 export async function desk() {
   if (!idle) {
     idle = true;
     import("./idle.ts").then((one) => one.watch()).catch(() => {});
   }
-  if (shown?.want === read(KEY.saver)) return;
+  if (shown?.want === read(KEY.saver)) return void ground(shown.box);
   if (shown) close();
   const box = document.createElement("div");
   box.className = "desk";
   box.setAttribute("aria-hidden", "true");
-  box.append(document.createElement("canvas"));
   const mine: Shown = { box, stop: null, want: read(KEY.saver) };
   shown = mine;
   document.body.append(box);
+  const surface = await ground(box);
+  if (shown !== mine || !surface) return;
   const want = read(KEY.saver);
   const use = pinned?.pick === want ? pinned.as : want;
   const stop = await saver()
-    .then(({ lock }) => lock(box.firstChild as HTMLCanvasElement, use))
+    .then(({ lock }) => lock(surface, use))
     .catch(() => null);
   if (shown !== mine) return stop?.();
   if (!stop) return close();
-  mine.drop = source(box.firstChild as HTMLCanvasElement);
+  mine.drop = source(surface);
   mine.stop = stop;
   mine.want = use === want && stop.pick !== want ? stop.pick : want;
   pinned = { pick: mine.want, as: stop.as };
@@ -265,28 +276,47 @@ export async function desk() {
   later = setTimeout(() => stop.coast?.(SETTLE), HOLD);
 }
 
+function face(state: "wake" | "rest") {
+  root().dataset.lock = state;
+  const host = hall();
+  if (host) drawn?.seal(host, state);
+}
+
 function lid() {
-  if (!shown?.stop || playing || greeting() !== "open") return;
-  root().dataset.lock = "wake";
+  if (!drawn || !shown?.stop || playing || greeting() !== "open") return;
+  face("wake");
   doze();
 }
 
 function doze() {
   clearTimeout(nap);
   nap = setTimeout(() => {
-    if (root().dataset.lock) root().dataset.lock = "rest";
+    if (root().dataset.lock) face("rest");
   }, IDLE);
 }
 
 function stir(e: Event & Partial<Pick<PointerEvent, "pointerType">>) {
   if (!root().dataset.lock || e.pointerType === "touch") return;
-  root().dataset.lock = "wake";
+  face("wake");
   doze();
+}
+
+function leave(): Promise<unknown> | null {
+  const up = root().dataset.lock;
+  clearTimeout(nap);
+  delete root().dataset.lock;
+  const host = hall();
+  const kit = drawn;
+  if (!up || !host || !kit) return null;
+  const left = kit.ending(host, () => kit.seal(host, "leaving"));
+  return calm() ? null : left;
 }
 
 function unlock() {
   clearTimeout(nap);
   delete root().dataset.lock;
+  const host = hall();
+  if (host) drawn?.hide(host);
 }
 
 function close() {
@@ -294,6 +324,8 @@ function close() {
   clearTimeout(later);
   shown?.stop?.();
   shown?.drop?.();
-  shown?.box.remove();
+  const box = shown?.box;
+  if (box) import("./parts.tsx").then((one) => one.hide(box)).catch(() => {});
+  box?.remove();
   shown = null;
 }

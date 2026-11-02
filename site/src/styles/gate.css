@@ -1,0 +1,24 @@
+/* GATE */
+
+.domain {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+html.js .domain {
+  display: none;
+}
+.floor {
+  position: fixed;
+  inset: 0;
+  width: 50px;
+  height: 50px;
+  margin: auto;
+}
+html:not([data-floor]) .floor {
+  display: none;
+}
+html[data-floor] body > :not(.floor) {
+  display: none !important;
+}

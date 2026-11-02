@@ -10,15 +10,20 @@ import type { Rng } from "../../lib/rand.ts";
 import { pick, rng } from "../../lib/rand.ts";
 import type { Units as Loaded } from "../../lib/units/index.ts";
 import { wasm } from "../../lib/units/index.ts";
-import type { Chaos, Doors, Fit, Law, Meter, Mode, Num, Pair, Source, Walker } from "./engine.ts";
+import type { Chaos, Doors, Fit, Law, Meter, Mode, Num, Pair, Source, State } from "./engine.ts";
 import {
+  boot,
   boxOf,
   CHECKS,
   CUT,
+  cell,
   csv,
   DIM,
+  DRAW,
+  deal,
   distance,
   FRAME,
+  feed,
   fit,
   fromCloud,
   games,
@@ -40,12 +45,13 @@ import {
   SPEEDS,
   schedule,
   sides,
+  spot,
+  step,
   study,
   toCloud,
   VIEWS,
   WEIGHTS,
   WORDS,
-  walker,
   weighted,
 } from "./engine.ts";
 
@@ -258,6 +264,7 @@ const LINES = 32;
 const TELL = 200;
 const BURST = 30000;
 const THUMB = 1500;
+const WIDE = 4294967296;
 
 /* PAINT */
 
@@ -349,16 +356,20 @@ export function light(pen: Pen, source: Source, k: number, idx: number, f: Fit, 
 export function sketch(ctx: CanvasRenderingContext2D, w: number, h: number, dpr: number, units: Doors, patch: Raw) {
   const value = tidied(patch, units);
   const source = study(units, value);
-  const rand = rng(1);
-  const walked = walker(source, 1, false, rand, null, origin(source, rand));
+  const tape = feed(Math.floor(rng(1)() * WIDE));
+  const start = origin(source, tape.rand);
+  let state = boot(deal(source, 1, false, null, start, tape.seed));
   const box = lay(w, h, 4 * dpr);
   const f = fit(boxOf(source), box.size);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, w, h);
   const css = typeof getComputedStyle === "function" ? getComputedStyle(ctx.canvas) : null;
   ctx.fillStyle = css?.getPropertyValue("--fg").trim() || "#888";
-  for (let i = 0; i < THUMB && walked.step(); i++) {
-    const [cx, cy] = toCloud(f, walked.x, walked.y);
+  for (let i = 0; i < THUMB; i++) {
+    const next = step(state, DRAW);
+    if (next.n === state.n) break;
+    state = next;
+    const [cx, cy] = toCloud(f, ...spot(state));
     ctx.fillRect(box.x + cx - dpr / 2, box.y + cy - dpr / 2, dpr, dpr);
   }
 }
@@ -382,7 +393,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   let lawed: Law = law(source, k, heavy);
   let met: Meter = meter(lawed, 0);
   let start: Pair = [0, 0];
-  let walked: Walker | null = null;
+  let walked: State | null = null;
   let lit = new Uint8Array(0);
   let log = new Uint8Array(MOST);
   let f = fit(boxOf(source), R);
@@ -434,7 +445,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
             ? "the product law 1, 2, 3"
             : "uniform"
           : "the stationary law",
-    stuck: walked?.stuck ?? false,
+    stuck: Boolean(walked?.stuck),
     lost: lawed.lost,
   });
   const tell = () => {
@@ -465,8 +476,9 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     lawed = law(source, k, heavy);
     met = meter(lawed, sched?.length ?? 0);
     lit = new Uint8Array(lawed.cells);
-    start = from ?? origin(source, view.rand);
-    walked = walker(source, k, heavy, view.rand, sched, start);
+    const tape = feed(walked ? walked.seed : Math.floor(view.rand() * WIDE));
+    start = from ?? origin(source, tape.rand);
+    walked = boot(deal(source, k, heavy, sched, start, tape.seed));
     f = fit(boxOf(source), R);
     log = new Uint8Array(MOST);
     drawn = 0;
@@ -489,7 +501,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     lawed = law(source, k, heavy);
     met = meter(lawed, sched?.length ?? 0);
     lit = new Uint8Array(lawed.cells);
-    walked = replay(source, met, heavy, view.rand, sched, start, log, was.n);
+    walked = replay(boot(deal(source, k, heavy, sched, start, was.seed)), met, source.auto.tag, log, was.n);
     for (const at of lawed.support) if (met.hist[at]) lit[Math.floor(at / lawed.tags)] = 1;
     agree = 0;
     checked = 0;
@@ -503,26 +515,29 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const accent = look().accent;
     const sheetPen = value.grid ? page() : null;
     for (let i = 0; i < count; i++) {
-      if (!walked.step()) break;
+      const next = step(walked, DRAW);
+      const moved = next.n !== walked.n;
+      walked = next;
+      if (!moved) break;
       const n = walked.n;
+      const [x, y] = spot(walked);
       if (n <= MOST) log[n - 1] = walked.moved;
-      stamp(p, f, walked.x, walked.y);
-      const [cx, cy] = toCloud(f, walked.x, walked.y);
+      stamp(p, f, x, y);
+      const [cx, cy] = toCloud(f, x, y);
       recent[2 * hot] = cx;
       recent[2 * hot + 1] = cy;
       hot = (hot + 1) % LIT;
       held = Math.min(LIT, held + 1);
       if (n < k) continue;
-      const cell = walked.cell();
-      const at = pair(lawed, cell, source.auto.tag[walked.state]);
-      hit(met, at);
-      if (!lit[cell]) {
-        lit[cell] = 1;
-        if (sheetPen) light(sheetPen, source, k, cell, f, accent);
+      const at = cell(walked);
+      hit(met, pair(lawed, at, source.auto.tag[walked.node]));
+      if (!lit[at]) {
+        lit[at] = 1;
+        if (sheetPen) light(sheetPen, source, k, at, f, accent);
       }
       if (!source.hex && checked < CHECKS) {
         checked++;
-        if (Number(math.game.cell([walked.x, walked.y], source.base, k)) === cell) agree++;
+        if (Number(math.game.cell([x, y], source.base, k)) === at) agree++;
       }
     }
     dirty = true;
@@ -600,6 +615,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const fresh = study(units, value);
     const reseeded = next.seed !== seed;
     seed = next.seed;
+    if (reseeded) walked = null;
     if (fresh !== source) {
       source = fresh;
       sheet = null;

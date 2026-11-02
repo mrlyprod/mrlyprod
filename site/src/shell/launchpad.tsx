@@ -1,13 +1,15 @@
 import { rows } from "site:routes";
-import type { KeyboardEvent as Pressed, RefObject } from "react";
+import type { FocusEvent, KeyboardEvent as Pressed } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import type { Shelf as Section } from "../../scripts/llms.ts";
 import type { MenuRow } from "../lib/app/controls.tsx";
-import { Icon, Menu } from "../lib/app/controls.tsx";
+import { useMenu } from "../lib/app/controls.tsx";
 import { text } from "../lib/app/export.ts";
 import type { Draft } from "../lib/drag.ts";
 import { placed, sortable } from "../lib/drag.ts";
+import { parts } from "./active.ts";
+import { AppIcon } from "./appicon.tsx";
 import type { Note } from "./catalog.ts";
 import {
   app,
@@ -23,11 +25,12 @@ import {
   take,
   unshelve,
 } from "./catalog.ts";
+import type { Tile } from "./design.ts";
 import { exported, RECENT, rank, renamed, spare } from "./launch.ts";
 import type { Spot } from "./lens.ts";
-import type { Vars } from "./parts.tsx";
-import { Glyph, PANES } from "./parts.tsx";
-import { Tile } from "./tile.tsx";
+import { measure } from "./measure.ts";
+import { PANES } from "./parts.tsx";
+import { WORD } from "./welcome.ts";
 
 /* TYPES */
 
@@ -60,23 +63,7 @@ type Said = { words: string; undo?: () => void };
 
 type Asked = { slot: string; id: string; at: Spot };
 
-type RenameProps = { name: string; onDone: (value: string, keyed: boolean) => void; className?: string };
-
-type ActionsProps = { at: Spot; label: string; rows: Action[]; onClose: () => void };
-
-type ShelfProps = {
-  slot: string;
-  name: string;
-  kind: string;
-  ids: string[];
-  draft: Placed | null | undefined;
-  scroller: RefObject<HTMLDivElement | null>;
-  hooks: RefObject<Hooks | null>;
-};
-
-type ChipsProps = { names: string[]; chip: string; naming: string; hooks: RefObject<Hooks | null> };
-
-type ResultsProps = { groups: Groups; at: number; query: string };
+type Shown = { slot: string; name: string; kind: string; ids: string[] };
 
 const CAP = { apps: 27, list: 6 };
 const SAID = 5000;
@@ -108,272 +95,23 @@ export function opened(host: ParentNode) {
 const without = (map: Record<string, Placed | null>, key: string) =>
   Object.fromEntries(Object.entries(map).filter(([one]) => one !== key));
 
-/* RENAME */
-
-function Rename({ name, onDone, className }: RenameProps) {
-  const done = useRef(false);
-  const field = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    field.current?.focus();
-  }, []);
-  const end = (value: string, keyed: boolean) => {
-    if (done.current) return;
-    done.current = true;
-    onDone(value, keyed);
-  };
-  return (
-    <input
-      ref={field}
-      className={className}
-      defaultValue={name}
-      aria-label={`Rename ${name}`}
-      onFocus={(e) => e.target.select()}
-      onBlur={(e) => end(e.target.value, false)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          end(e.currentTarget.value, true);
-        }
-        if (e.key === "Escape") {
-          e.preventDefault();
-          e.stopPropagation();
-          end(name, true);
-        }
-      }}
-    />
-  );
-}
-
-/* ACTIONS */
+/* PIECES */
 
 const MENU = (e: Pressed<Element>) => e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey);
 
-function Actions({ at, label, rows, onClose }: ActionsProps) {
-  const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const pop = box.current;
-    pop?.showPopover?.();
-    if (pop?.offsetWidth) {
-      pop.style.setProperty("--x", `${Math.max(8, Math.min(at.x, innerWidth - pop.offsetWidth - 8))}px`);
-      pop.style.setProperty("--y", `${Math.max(8, Math.min(at.y, innerHeight - pop.offsetHeight - 8))}px`);
-    }
-    pop?.querySelector("button")?.focus();
-    const gone = (e: ToggleEvent) => e.newState === "closed" && onClose();
-    pop?.addEventListener("toggle", gone);
-    return () => pop?.removeEventListener("toggle", gone);
-  }, [at]);
-  return (
-    <div
-      ref={box}
-      className="pop menu"
-      popover="auto"
-      data-lens="menu"
-      role="group"
-      aria-label={label}
-      style={{ "--x": `${at.x}px`, "--y": `${at.y}px` } as Vars}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      {rows.map(([text, fn]) => (
-        <button
-          type="button"
-          key={text}
-          onClick={() => {
-            box.current?.hidePopover?.();
-            fn();
-          }}
-        >
-          {text}
-        </button>
-      ))}
-    </div>
-  );
-}
+const tile = (id: string): Tile[] => {
+  const one = app(id);
+  return one ? [{ id, title: one.title, href: one.route, art: <AppIcon id={id} /> }] : [];
+};
 
-/* SHELF */
-
-function Shelf({ slot, name, kind, ids, draft, scroller, hooks }: ShelfProps) {
-  const list = useRef<HTMLUListElement>(null);
-  useEffect(
-    () =>
-      sortable(list.current!, {
-        kind,
-        takes: (from) => (kind === "launchpad" && from === "launchpad" ? "move" : ""),
-        scroller: scroller.current,
-        name: (id) => app(id)?.title ?? id,
-        preview: (next) => hooks.current!.preview(slot, next),
-        commit: (next) => hooks.current!.commit(slot, next),
-      }),
-    [slot, kind],
-  );
-  const shown = placed(ids, draft);
-  const held = draft && draft.index !== null ? draft.id : null;
-  const head = `shelf-${slot || "recent"}`.replace(/\W+/g, "-");
-  return (
-    <section className="shelf" aria-labelledby={head} data-slot={slot}>
-      <h2 id={head} onDoubleClick={kind === "launchpad" ? () => hooks.current!.name(name) : undefined}>
-        {name}
-      </h2>
-      <ul className="apps" ref={list}>
-        {shown.map((id) => (
-          <li
-            key={id}
-            data-id={id}
-            data-held={id === held ? "" : undefined}
-            onKeyDown={(e) => {
-              if (!MENU(e)) return;
-              e.preventDefault();
-              hooks.current!.menu(slot, id, e.currentTarget);
-            }}
-          >
-            <Tile id={id} />
-          </li>
-        ))}
-      </ul>
-      {!shown.length && kind === "launchpad" && (
-        <p className="empty">
-          Drag apps here, or{" "}
-          <button type="button" className="link" onClick={() => hooks.current!.drop(name)}>
-            remove this section
-          </button>
-          .
-        </p>
-      )}
-    </section>
-  );
-}
-
-/* CHIPS */
-
-function Chips({ names, chip, naming, hooks }: ChipsProps) {
-  const box = useRef<HTMLDivElement>(null);
-  const back = useRef("");
-  const [draft, setDraft] = useState<Draft | null>(null);
-  useEffect(
-    () =>
-      sortable(box.current!, {
-        kind: "sections",
-        axis: "grid",
-        takes: (from) => (from === "sections" ? "move" : ""),
-        preview: (next) => flushSync(() => setDraft(next)),
-        commit: (next) =>
-          flushSync(() => {
-            setDraft(null);
-            if (next) hooks.current!.order(next);
-          }),
-      }),
-    [],
-  );
-  useEffect(() => {
-    if (!back.current || naming) return;
-    [...(box.current!.children as HTMLCollectionOf<HTMLElement>)]
-      .find((one) => one.dataset.id === back.current)
-      ?.focus({ preventScroll: true });
-    back.current = "";
-  });
-  return (
-    <nav className="chips" aria-label="Sections">
-      <button type="button" className="pill" aria-pressed={chip === ""} onClick={() => hooks.current!.chip("")}>
-        All
-      </button>
-      <div className="names" ref={box}>
-        {placed(names, draft).map((name) =>
-          naming === name ? (
-            <Rename
-              key={name}
-              className="pill"
-              name={name}
-              onDone={(to, keyed) => {
-                const now = hooks.current!.rename(name, to);
-                if (keyed) back.current = now;
-              }}
-            />
-          ) : (
-            <button
-              type="button"
-              key={name}
-              className="pill"
-              data-id={name}
-              data-held={draft?.id === name && draft.index !== null ? "" : undefined}
-              aria-pressed={chip === name}
-              onClick={() => hooks.current!.chip(chip === name ? "" : name)}
-              onDoubleClick={() => hooks.current!.name(name)}
-              onKeyDown={(e) => {
-                if (e.key !== "F2") return;
-                e.preventDefault();
-                hooks.current!.name(name);
-              }}
-            >
-              {name}
-            </button>
-          ),
-        )}
-      </div>
-      <button
-        type="button"
-        className="pill add"
-        aria-label="New section"
-        title="New section"
-        onClick={() => hooks.current!.add()}
-      >
-        <Glyph art="plus" />
-      </button>
-    </nav>
-  );
-}
-
-/* RESULTS */
-
-function Results({ groups, at, query }: ResultsProps) {
-  let n = 0;
-  const [apps, ...lists] = groups;
-  const none = groups.every(([, list]) => !list.length);
-  if (!apps || none) return <p className="none">Nothing found for {query.trim()}.</p>;
-  return (
-    <div className="results" id="hits">
-      {apps[1].length > 0 && (
-        <section className="shelf" aria-label={apps[0]}>
-          <h2>{apps[0]}</h2>
-          <ul className="apps">
-            {apps[1].map((one) => {
-              const i = n++;
-              return (
-                <li key={one.id} id={`hit-${i}`} className={i === at ? "on" : undefined}>
-                  <Tile id={one.id} />
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-      <div className="lists">
-        {lists.map(
-          ([name, list]) =>
-            list.length > 0 && (
-              <section key={name} aria-label={name}>
-                <h2>{name}</h2>
-                <ul className="hits">
-                  {list.map((one) => {
-                    const i = n++;
-                    return (
-                      <li key={one.href} id={`hit-${i}`} className={i === at ? "on" : undefined}>
-                        <a href={one.href}>{one.title}</a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ),
-        )}
-      </div>
-    </div>
-  );
-}
+const head = (slot: string) => `shelf-${slot || "recent"}`.replace(/\W+/g, "-");
 
 /* LAUNCHPAD */
 
 export function Launchpad() {
   const [shelves, setShelves] = useState(saved);
   const [drafts, setDrafts] = useState<Record<string, Placed | null>>({});
+  const [order, setOrder] = useState<Draft | null>(null);
   const [chip, setChip] = useState("");
   const [query, setQuery] = useState(() => take() || new URLSearchParams(location.search).get("q") || "");
   const [hit, setHit] = useState(0);
@@ -388,6 +126,11 @@ export function Launchpad() {
   const root = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLInputElement>(null);
+  const more = useRef<HTMLButtonElement>(null);
+  const names = useRef<HTMLDivElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
+  const lists = useRef(new Map<string, HTMLElement>());
+  const back = useRef("");
   const hooks = useRef<Hooks | null>(null);
   const searching = query.trim() !== "";
 
@@ -429,8 +172,10 @@ export function Launchpad() {
       hooks.current!.commit(from, { id, index: null });
       hooks.current!.commit(to, { id, index: end });
       if (chip) flushSync(() => setChip(to));
-      const shelf = [...root.current!.querySelectorAll<HTMLElement>(".shelf")].find((one) => one.dataset.slot === to);
-      shelf?.querySelector<HTMLElement>(`li[data-id="${CSS.escape(id)}"] a`)?.focus({ preventScroll: true });
+      [...(lists.current.get(to)?.children ?? [])]
+        .find((one) => one.getAttribute("data-id") === id)
+        ?.querySelector<HTMLElement>("a")
+        ?.focus({ preventScroll: true });
       tell(`Moved ${named(id)} to ${to}.`);
     },
     menu: (slot, id, el) => {
@@ -512,6 +257,15 @@ export function Launchpad() {
   const hits = groups.flatMap(([, list]) => list);
   const at = hits.length ? Math.min(hit, hits.length - 1) : -1;
   const ids = [...new Set(seen.map((one) => one.id))].slice(0, RECENT);
+  const shown: Shown[] = searching
+    ? []
+    : [
+        ...(chip === "" && ids.length > 0 ? [{ slot: SEEN, name: "Recent", kind: "recent", ids }] : []),
+        ...shelves
+          .filter((one) => !chip || one.name === chip)
+          .map((one) => ({ slot: one.name, name: one.name, kind: "launchpad", ids: one.apps })),
+      ];
+  const lay = [searching, ...shown.map((one) => `${one.kind}:${one.slot}`)].join("\n");
 
   useEffect(() => {
     const fresh = () => setSeen(recent());
@@ -556,6 +310,64 @@ export function Launchpad() {
   }, []);
 
   useEffect(() => {
+    const offs = shown.flatMap(({ slot, kind }) => {
+      const el = lists.current.get(slot);
+      return el
+        ? [
+            sortable(el, {
+              kind,
+              takes: (from) => (kind === "launchpad" && from === "launchpad" ? "move" : ""),
+              scroller: body.current,
+              name: (id) => app(id)?.title ?? id,
+              preview: (next) => hooks.current!.preview(slot, next),
+              commit: (next) => hooks.current!.commit(slot, next),
+            }),
+          ]
+        : [];
+    });
+    if (names.current)
+      offs.push(
+        sortable(names.current, {
+          kind: "sections",
+          axis: "grid",
+          takes: (from) => (from === "sections" ? "move" : ""),
+          preview: (next) => flushSync(() => setOrder(next)),
+          commit: (next) =>
+            flushSync(() => {
+              setOrder(null);
+              if (next) hooks.current!.order(next);
+            }),
+        }),
+      );
+    return () => {
+      for (const off of offs) off();
+    };
+  }, [lay]);
+
+  useEffect(() => {
+    if (!back.current || naming || !names.current) return;
+    [...(names.current.children as HTMLCollectionOf<HTMLElement>)]
+      .find((one) => one.dataset.id === back.current)
+      ?.focus({ preventScroll: true });
+    back.current = "";
+  });
+
+  useEffect(() => {
+    const box = pop.current;
+    if (!menu || !box) return undefined;
+    box.showPopover?.();
+    if (box.offsetWidth) {
+      const { edge } = measure;
+      box.style.setProperty("--x", `${Math.max(edge, Math.min(menu.at.x, innerWidth - box.offsetWidth - edge))}px`);
+      box.style.setProperty("--y", `${Math.max(edge, Math.min(menu.at.y, innerHeight - box.offsetHeight - edge))}px`);
+    }
+    box.querySelector("button")?.focus();
+    const gone = (e: ToggleEvent) => e.newState === "closed" && setMenu(null);
+    box.addEventListener("toggle", gone);
+    return () => box.removeEventListener("toggle", gone);
+  }, [menu?.at]);
+
+  useEffect(() => {
     if (searching) notes().then(setFound);
   }, [searching]);
 
@@ -588,111 +400,166 @@ export function Launchpad() {
     }
   };
 
+  const rows: MenuRow[] = [
+    ["New Section", () => hooks.current!.add()],
+    ...(chip && !searching ? ([["Rename Section", () => hooks.current!.name(chip)]] satisfies MenuRow[]) : []),
+    ["Export JSON", save, "download"],
+    ["Reset Layout", reset],
+  ];
+  const menus = useMenu(rows);
+  const asked = menu ? actions(menu.slot, menu.id) : [];
+  const renaming = useMemo(() => {
+    let done = false;
+    const end = (value: string, keyed: boolean) => {
+      if (done) return;
+      done = true;
+      const now = hooks.current!.rename(naming, value);
+      if (keyed) back.current = now;
+    };
+    return {
+      ref: (el: HTMLInputElement | null) => el?.focus(),
+      defaultValue: naming,
+      "aria-label": `Rename ${naming}`,
+      onFocus: (e: FocusEvent<HTMLInputElement>) => e.target.select(),
+      onBlur: (e: FocusEvent<HTMLInputElement>) => end(e.target.value, false),
+      onKeyDown: (e: Pressed<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          end(e.currentTarget.value, true);
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopPropagation();
+          end(naming, true);
+        }
+      },
+    };
+  }, [naming]);
+  const listed = (slot: string) => (el: HTMLElement | null) => {
+    if (el) lists.current.set(slot, el);
+    else lists.current.delete(slot);
+  };
+
   return (
-    <div className="launchpad" ref={root}>
-      <div className="veil" onClick={away} aria-hidden="true" />
-      <section className="pad" data-lens="launchpad" aria-label="Launchpad">
-        <header>
-          <Glyph art="apps" />
-          {!searching && <h1>Apps</h1>}
-          <form role="search" className="find" onSubmit={(e) => e.preventDefault()}>
-            <Glyph art="find" />
-            <input
-              ref={field}
-              type="search"
-              value={query}
-              placeholder="Search apps, notes, settings"
-              aria-label="Search"
-              role="combobox"
-              aria-expanded={searching}
-              aria-controls="hits"
-              aria-activedescendant={at >= 0 ? `hit-${at}` : undefined}
-              autoComplete="off"
-              spellCheck={false}
-              enterKeyHint="go"
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setHit(0);
-              }}
-              onKeyDown={press}
-            />
-          </form>
-          <Menu
-            className="icon more"
-            aria-label="More"
-            rows={[
-              ["New Section", () => hooks.current!.add()],
-              ...(chip && !searching
-                ? ([["Rename Section", () => hooks.current!.name(chip)]] satisfies MenuRow[])
-                : []),
-              ["Export JSON", save, "download"],
-              ["Reset Layout", reset],
-            ]}
-          >
-            <Icon name="more_horiz" />
-          </Menu>
-        </header>
-        {said && (
-          <p className="said" role="status" ref={toast}>
-            {said.words}
-            {said.undo && (
-              <button
-                type="button"
-                className="link"
-                onClick={() => {
-                  if (toast.current?.contains(document.activeElement))
-                    root.current?.querySelector<HTMLElement>(".more")?.focus({ preventScroll: true });
-                  said.undo!();
-                }}
-              >
-                Undo
-              </button>
-            )}
-          </p>
-        )}
-        {!searching && <Chips names={shelves.map((one) => one.name)} chip={chip} naming={naming} hooks={hooks} />}
-        <div className="body" ref={body}>
-          {searching ? (
-            <Results groups={groups} at={at} query={query} />
-          ) : (
-            <>
-              {chip === "" && ids.length > 0 && (
-                <Shelf
-                  slot={SEEN}
-                  name="Recent"
-                  kind="recent"
-                  ids={ids}
-                  draft={drafts[SEEN]}
-                  scroller={body}
-                  hooks={hooks}
-                />
-              )}
-              {shelves
-                .filter((one) => !chip || one.name === chip)
-                .map((one) => (
-                  <Shelf
-                    key={one.name}
-                    slot={one.name}
-                    name={one.name}
-                    kind="launchpad"
-                    ids={one.apps}
-                    draft={drafts[one.name]}
-                    scroller={body}
-                    hooks={hooks}
-                  />
-                ))}
-            </>
-          )}
-        </div>
-        {menu && (
-          <Actions
-            at={menu.at}
-            label={named(menu.id)}
-            rows={actions(menu.slot, menu.id)}
-            onClose={() => setMenu(null)}
-          />
-        )}
-      </section>
-    </div>
+    <parts.launcher
+      word={WORD}
+      query={query}
+      onQuery={(next) => {
+        setQuery(next);
+        setHit(0);
+      }}
+      chips={placed(
+        shelves.map((one) => one.name),
+        order,
+      )}
+      chip={chip}
+      onChip={(name) => hooks.current!.chip(chip === name ? "" : name)}
+      naming={naming || null}
+      sections={shown.map(({ slot, name, kind, ids: list }) => {
+        const draft = drafts[slot];
+        const held = draft && draft.index !== null ? draft.id : null;
+        return {
+          name,
+          tiles: placed(list, draft).flatMap(tile),
+          bind: {
+            shelf: () => ({ "aria-labelledby": head(slot), "data-slot": slot }),
+            head: () => ({
+              id: head(slot),
+              onDoubleClick: kind === "launchpad" ? () => hooks.current!.name(name) : undefined,
+            }),
+            list: () => ({ ref: listed(slot) }),
+            tile: (id) => () => ({
+              "data-id": id,
+              "data-held": id === held ? "" : undefined,
+              onKeyDown: (e: Pressed<HTMLElement>) => {
+                if (!MENU(e)) return;
+                e.preventDefault();
+                hooks.current!.menu(slot, id, e.currentTarget);
+              },
+            }),
+            ...(kind === "launchpad" && { drop: () => ({ onClick: () => hooks.current!.drop(name) }) }),
+          },
+        };
+      })}
+      results={
+        searching
+          ? groups.map(([name, list]) => ({
+              name,
+              tiles: name === "Apps" ? list.flatMap((one) => tile(one.id!)) : [],
+              hits: name === "Apps" ? [] : list.map((one) => ({ label: one.title, href: one.href })),
+            }))
+          : null
+      }
+      at={at}
+      said={said?.words ?? null}
+      more={menus.items}
+      menu={
+        menu && {
+          label: named(menu.id),
+          items: asked.map(([label]) => ({ label })),
+          bind: {
+            list: () => ({
+              ref: pop,
+              popover: "auto",
+              style: { "--x": `${menu.at.x}px`, "--y": `${menu.at.y}px` },
+              onContextMenu: (e: Event) => e.preventDefault(),
+            }),
+            item: (i) => () => ({
+              onClick: () => {
+                pop.current?.hidePopover?.();
+                asked[i]![1]();
+              },
+            }),
+          },
+        }
+      }
+      bind={{
+        root: () => ({ ref: root }),
+        veil: () => ({ onClick: away }),
+        find: () => ({
+          ref: field,
+          placeholder: "Search apps, notes, settings",
+          "aria-label": "Search",
+          role: "combobox",
+          "aria-expanded": searching,
+          "aria-controls": "hits",
+          "aria-activedescendant": at >= 0 ? `hit-${at}` : undefined,
+          autoComplete: "off",
+          spellCheck: false,
+          enterKeyHint: "go",
+          onKeyDown: press,
+        }),
+        body: () => ({ ref: body }),
+        results: () => ({ id: "hits" }),
+        hit: (i) => () => ({ id: `hit-${i}` }),
+        chips: () => ({ ref: names }),
+        chip: (name) => () => ({
+          "data-id": name,
+          "data-held": order?.id === name && order.index !== null ? "" : undefined,
+          onDoubleClick: () => hooks.current!.name(name),
+          onKeyDown: (e: Pressed<HTMLElement>) => {
+            if (e.key !== "F2") return;
+            e.preventDefault();
+            hooks.current!.name(name);
+          },
+        }),
+        rename: () => renaming,
+        add: () => ({ onClick: () => hooks.current!.add() }),
+        more: {
+          button: () => ({ ...menus.button(), ref: more, "aria-label": "More" }),
+          list: menus.list,
+          item: menus.item,
+        },
+        said: () => ({ ref: toast }),
+        undo: said?.undo
+          ? () => ({
+              onClick: () => {
+                if (toast.current?.contains(document.activeElement)) more.current?.focus({ preventScroll: true });
+                said.undo!();
+              },
+            })
+          : null,
+      }}
+    />
   );
 }

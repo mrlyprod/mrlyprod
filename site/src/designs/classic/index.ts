@@ -1,0 +1,47 @@
+import type { Design } from "../../shell/design.ts";
+import { App } from "./app.tsx";
+import { Bar } from "./bar.tsx";
+import { Control } from "./control.tsx";
+import { Desk } from "./desk.tsx";
+import { Dialog } from "./dialog.tsx";
+import { Dock } from "./dock.tsx";
+import { Group } from "./group.tsx";
+import { Launcher } from "./launcher.tsx";
+import { Library } from "./library.tsx";
+import { Lock } from "./lock.tsx";
+import { MEASURE } from "./measure.ts";
+import { Menu } from "./menu.tsx";
+import { Prose } from "./prose.tsx";
+import { Saver } from "./saver.tsx";
+import { DARK, LIGHT } from "./skin.ts";
+import { Tile } from "./tile.tsx";
+import { Widgets } from "./widgets.tsx";
+import { Window } from "./window.tsx";
+
+/* CLASSIC */
+
+export const classic: Design = {
+  id: "classic",
+  title: "Classic",
+  skin: { light: LIGHT, dark: DARK },
+  css: ["classic.css"],
+  measure: MEASURE,
+  parts: {
+    bar: Bar,
+    window: Window,
+    app: App,
+    menu: Menu,
+    control: Control,
+    group: Group,
+    dialog: Dialog,
+    prose: Prose,
+    tile: Tile,
+    launcher: Launcher,
+    desk: Desk,
+    dock: Dock,
+    widgets: Widgets,
+    library: Library,
+    lock: Lock,
+    saver: Saver,
+  },
+};

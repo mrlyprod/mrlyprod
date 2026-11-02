@@ -50,7 +50,7 @@ export type HintsProps = { map: readonly Shown[]; count?: number };
 type Fused = Shown & { keys: string[][] };
 
 const KEPT =
-  ".controls, .library, .chooser, .browser, .pulldown, .trio .menus, textarea, select, [contenteditable]:not([contenteditable=false]), input:not([type=range], [type=checkbox], [type=radio], [type=button], [type=submit], [type=reset])";
+  ".controls, .library, .chooser, .browser, [data-menu][popover], .trio .menus, textarea, select, [contenteditable]:not([contenteditable=false]), input:not([type=range], [type=checkbox], [type=radio], [type=button], [type=submit], [type=reset])";
 
 const PRESSED = "button, a[href], summary, [role=button], [role=link]";
 
@@ -70,8 +70,6 @@ export function hit<K extends Key<never>>(map: readonly K[], e: Press, open: Ope
   return row;
 }
 
-const LIGHT = ["keys", "info"];
-
 export function flip(selector: string): void {
   const at = document.querySelector<HTMLDialogElement>(selector);
   if (!at) return;
@@ -79,8 +77,7 @@ export function flip(selector: string): void {
   else at.showModal();
 }
 
-const open = () =>
-  [...document.querySelectorAll("dialog[open]")].some((one) => !LIGHT.some((name) => one.classList.contains(name)));
+const open = () => document.querySelector('dialog[open]:not([data-light="true"])') !== null;
 
 const BASE: Acts = {
   keys: () => flip("dialog.keys"),
@@ -121,7 +118,7 @@ export function useKeys<K extends Key<never>>(map: readonly K[], acts: Acts | un
 
 export function Keys({ map, title = "Keys" }: KeysProps) {
   return (
-    <Modal className="keys" title={title}>
+    <Modal light className="keys" title={title}>
       <dl>
         {fused(map).map((row) => (
           <div key={row.act ?? row.label}>
@@ -157,7 +154,7 @@ function linked(text: string): ReactNode[] {
 
 export function Info({ about = [], rows = [], title = "Info" }: InfoProps) {
   return (
-    <Modal className="info" title={title}>
+    <Modal light className="info" title={title}>
       {about.map((line) => (
         <p key={line}>{linked(line)}</p>
       ))}

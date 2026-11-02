@@ -236,6 +236,17 @@ test("no html outside raw/ but the shell and its 404 copy", () => {
   expect(readFileSync(join(out, "404.html"), "utf8")).toBe(readFileSync(join(out, "index.html"), "utf8"));
 });
 
+test("with javascript off, every html the build writes shows only the domain", () => {
+  const text = (path: string) =>
+    readFileSync(join(out, path), "utf8")
+      .match(/<body[^>]*>([\s\S]*)<\/body>/)![1]!
+      .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  expect(["index.html", "404.html"].map(text)).toEqual(Array(2).fill(new URL(SITE.root).host));
+});
+
 test("the shell loads its boot script first as a classic script, and every url it names is a route or a file in dist", () => {
   const shell = readFileSync(join(out, "index.html"), "utf8");
   const urls = [...shell.matchAll(/(?:src|href)="(\/[^"]*)"/g)].map((hit) => hit[1]!);

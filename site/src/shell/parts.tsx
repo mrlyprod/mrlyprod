@@ -4,12 +4,17 @@ import { flushSync } from "react-dom";
 import type { Root } from "react-dom/client";
 import { createRoot } from "react-dom/client";
 import type { Row } from "../../scripts/build.ts";
+import { Figure } from "../lib/host.tsx";
+import { parts } from "./active.ts";
+import type { Props } from "./design.ts";
+import { WORD } from "./welcome.ts";
+
+export type { FigureProps } from "../lib/host.tsx";
+export { Figure };
 
 /* TYPES */
 
 export type Vars = CSSProperties & Record<`--${string}`, string | number>;
-
-export type FigureProps = { name: string; label?: string; className?: string; caption?: ReactNode };
 
 export type LedeProps = { id?: string; title: string; lead?: string; children?: ReactNode };
 
@@ -42,26 +47,52 @@ export function hide(host: Element) {
   roots.delete(host);
 }
 
-/* FIGURE */
+/* DESK */
 
-export function Figure({ name, label = "", className, caption }: FigureProps) {
-  return (
-    <figure className={className} data-figure={name}>
-      <canvas role={label ? "img" : undefined} aria-label={label || undefined} aria-hidden={label ? undefined : true} />
-      {caption !== undefined && <figcaption>{caption}</figcaption>}
-    </figure>
-  );
+const bare = () => ({});
+
+export function ground(host: Element, home: boolean) {
+  if (!parts.desk) return null;
+  show(host, <parts.desk canvas={bare} home={home} />);
+  return host.querySelector("canvas");
+}
+
+/* ENDING */
+
+const finite = (one: Animation) => one.effect?.getComputedTiming().endTime !== Infinity;
+
+export function ending(host: Element, change: () => void): Promise<unknown> | null {
+  const before = new Set(host.getAnimations?.({ subtree: true }) ?? []);
+  change();
+  const fresh = (host.getAnimations?.({ subtree: true }) ?? []).filter((one) => !before.has(one) && finite(one));
+  return fresh.length ? Promise.all(fresh.map((one) => one.finished.catch(() => null))) : null;
+}
+
+/* LOCK */
+
+export const locks = () => typeof parts.lock === "function";
+
+export function seal(host: Element, state: Props["lock"]["state"]) {
+  const Lock = parts.lock;
+  if (Lock) show(host, <Lock word={WORD} state={state} bind={bare} />);
+}
+
+/* SAVER */
+
+export const saves = () => typeof parts.saver === "function";
+
+export function veil(host: Element, props: Props["saver"]) {
+  const Saver = parts.saver;
+  if (Saver) show(host, <Saver {...props} />);
 }
 
 /* LEDE */
 
 export function Lede({ id, title, lead, children }: LedeProps) {
   return (
-    <div className="lede">
-      <h1 id={id}>{title}</h1>
-      {lead && <p className="lead">{lead}</p>}
+    <parts.prose kind="hub" id={id} title={title} lead={lead} contents={[]}>
       {children}
-    </div>
+    </parts.prose>
   );
 }
 
@@ -129,15 +160,13 @@ export function Glyph({ art, className = "glyphs" }: GlyphProps) {
 /* LOST */
 
 export function Lost({ site, rows, row = rows.find((one) => one.meta?.id === "missing")! }: LostProps) {
-  return (
-    <div className="lede">
-      <h1 id="lost">{row.title}</h1>
-      <p className="lead">
-        {row.lead} The <a href={site.menu}>Launchpad</a> holds every door of this site. A page that moved is on{" "}
-        <a href="/redirects/">Redirects</a>.
-      </p>
-    </div>
+  const lead = (
+    <>
+      {row.lead} The <a href={site.menu}>Launchpad</a> holds every door of this site. A page that moved is on{" "}
+      <a href="/redirects/">Redirects</a>.
+    </>
   );
+  return <parts.prose kind="lost" id="lost" title={row.title} lead={lead} contents={[]} />;
 }
 
 /* SETTINGS */

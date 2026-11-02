@@ -1,12 +1,12 @@
+import type { Clock, Props } from "./design.ts";
 import type { Spot } from "./lens.ts";
 import type { Lock } from "./lock.ts";
-import { calm, KEY, minutes, read, root, stamp, subscribe } from "./prefs.ts";
+import { ending, hide, saves, veil } from "./parts.tsx";
+import { calm, KEY, minutes, read, root, subscribe } from "./prefs.ts";
 
 /* TYPES */
 
 export type Woke = Pick<Event, "type"> & Partial<Pick<PointerEvent, "clientX" | "clientY">>;
-
-type Dial = { node: HTMLDivElement; stop: () => void };
 
 type Live = { canvas: HTMLCanvasElement; run: Lock; timer?: ReturnType<typeof setTimeout> };
 
@@ -22,7 +22,13 @@ type Waiting = Base & { box: null };
 
 type Up = {
   box: HTMLDivElement;
-  face: Dial | null;
+  stage: HTMLElement | null;
+  bind: () => { ref: (node: HTMLElement | null) => void };
+  face: boolean;
+  now: Date;
+  state: Props["saver"]["state"];
+  tick: ReturnType<typeof setTimeout> | 0;
+  deaf: () => void;
   pool: string[];
   at: number;
   id: string;
@@ -90,7 +96,7 @@ async function due() {
 }
 
 export function watch() {
-  if (watching) return;
+  if (watching || !saves()) return;
   watching = true;
   for (const type of INPUT) addEventListener(type, poke, { capture: true, passive: true });
   document.addEventListener("visibilitychange", poke);
@@ -103,39 +109,33 @@ export function watch() {
 
 /* CLOCK */
 
-const two = (n: number) => String(n).padStart(2, "0");
+const cycle = (): Clock["hours"] => {
+  const mode = read(KEY.hours);
+  return mode === "12" ? 12 : mode === "24" ? 24 : null;
+};
 
-function dial(): Dial {
-  const node = document.createElement("div");
-  node.className = "clock";
-  const date = document.createElement("p");
-  const time = document.createElement("time");
-  node.append(date, time);
-  let tick: ReturnType<typeof setTimeout> | 0 = 0;
-  const paint = () => {
-    clearTimeout(tick);
-    const now = new Date();
-    date.textContent = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
-    time.textContent = stamp(now, read(KEY.hours), true);
-    time.dateTime = `${two(now.getHours())}:${two(now.getMinutes())}`;
-    tick = setTimeout(paint, MINUTE - (now.getSeconds() * 1000 + now.getMilliseconds()) + 50);
-  };
-  paint();
-  const deaf = subscribe((key) => (key === null || key === KEY.hours) && paint());
-  return {
-    node,
-    stop: () => {
-      clearTimeout(tick);
-      deaf();
-    },
-  };
+function draw(mine: Running) {
+  veil(mine.box, {
+    clock: mine.face ? { now: mine.now, hours: cycle() } : null,
+    state: mine.state,
+    stage: mine.bind,
+  });
+}
+
+function tick(mine: Running) {
+  clearTimeout(mine.tick);
+  if (mine.gone) return;
+  mine.now = new Date();
+  draw(mine);
+  if (!mine.face) return;
+  const now = mine.now;
+  mine.tick = setTimeout(() => tick(mine), MINUTE - (now.getSeconds() * 1000 + now.getMilliseconds()) + 50);
 }
 
 /* SAVER */
 
 const TURN = 90000;
 const FADE = 1600;
-const OUT = 300;
 const WAKE = ["keydown", "pointerdown", "pointermove", "wheel", "touchstart", "click", "contextmenu"];
 
 const show = (node: HTMLElement) => {
@@ -194,7 +194,9 @@ async function next(mine: Running) {
   const id = mine.pool[mine.at];
   mine.at += 1;
   const canvas = document.createElement("canvas");
-  mine.box.insertBefore(canvas, mine.face?.node ?? null);
+  const stage = mine.stage ?? mine.box;
+  const after = mine.live?.canvas ?? null;
+  stage.insertBefore(canvas, after?.parentNode === stage ? after.nextSibling : stage.firstChild);
   const run = await mine.kit.lock(canvas, id, { pool: mine.pool }).catch(() => null);
   if (mine.gone) {
     run?.();
@@ -218,7 +220,7 @@ async function next(mine: Running) {
 }
 
 export async function start({ only }: { only?: string } = {}) {
-  if (shown || document.hidden) return false;
+  if (shown || document.hidden || !saves()) return false;
   const mine: Waiting = { gone: false, only: only || "", box: null };
   shown = mine;
   clearTimeout(timer);
@@ -233,13 +235,19 @@ export async function start({ only }: { only?: string } = {}) {
     return false;
   }
   const box = document.createElement("div");
-  box.className = "saver";
-  box.setAttribute("aria-hidden", "true");
-  const face = read(KEY.clock) === "off" ? null : dial();
-  if (face) box.append(face.node);
   const up = Object.assign<Base, Up>(mine, {
     box,
-    face,
+    stage: null,
+    bind: () => ({
+      ref: (node: HTMLElement | null) => {
+        if (node) up.stage = node;
+      },
+    }),
+    face: read(KEY.clock) !== "off",
+    now: new Date(),
+    state: undefined,
+    tick: 0,
+    deaf: () => {},
     pool,
     at: 0,
     id: "",
@@ -256,8 +264,12 @@ export async function start({ only }: { only?: string } = {}) {
     addEventListener(type, (e) => hear(up, e), { capture: true, passive: false, signal: up.ears.signal });
   shut();
   document.body.append(box);
+  tick(up);
+  up.deaf = subscribe((key) => (key === null || key === KEY.hours) && tick(up));
   root().dataset.saver = "";
-  show(box);
+  (up.stage ?? box).getBoundingClientRect();
+  up.state = "on";
+  draw(up);
   dispatchEvent(new CustomEvent("saver", { detail: true }));
   next(up);
   return true;
@@ -272,7 +284,8 @@ export function stop() {
   arm();
   if (!mine.box) return;
   clearTimeout(mine.cycle);
-  mine.face?.stop();
+  clearTimeout(mine.tick);
+  mine.deaf();
   delete root().dataset.saver;
   dispatchEvent(new CustomEvent("saver", { detail: false }));
   const done = () => {
@@ -282,10 +295,13 @@ export function stop() {
       clearTimeout(one.timer);
       one.run();
     }
+    hide(mine.box);
     mine.box.remove();
   };
-  mine.box.classList.add("out");
-  mine.box.classList.remove("on");
-  if (calm()) return done();
-  setTimeout(done, OUT);
+  const left = ending(mine.box, () => {
+    mine.state = "out";
+    draw(mine);
+  });
+  if (calm() || !left) return done();
+  left.then(done);
 }

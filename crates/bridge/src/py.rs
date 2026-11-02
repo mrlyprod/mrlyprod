@@ -1,3 +1,4 @@
+use crate::config::{Layout, climb};
 use crate::disk::save;
 use crate::model::*;
 use std::cell::RefCell;
@@ -33,16 +34,16 @@ const HAND_NAMES: &[&str] = &[
     "PyPixels", "PyRgba", "PyRng", "PySerde", "PyTensor",
 ];
 
-pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
+pub fn write(manifest: &Manifest, root: &Path, layout: &Layout) -> Result<()> {
     let cx = Cx::new(manifest);
     let tree = build(&cx)?;
-    let pkg = root.join("bindings/py");
+    let pkg = root.join(&layout.py);
     save(&pkg.join("src/lib.rs"), &lib_file())?;
     save(&pkg.join("src/doors.rs"), &rust_file(&cx, &tree)?)?;
     let python = pkg.join("python/mrly");
     python_files(&cx, &tree, &python)?;
     save(&python.join("py.typed"), "")?;
-    save(&pkg.join("tests/test_manifest.py"), &test_file(&cx))?;
+    save(&pkg.join("tests/test_manifest.py"), &test_file(&cx, layout))?;
     Ok(())
 }
 
@@ -474,14 +475,14 @@ fn has_tensor(ty: &Ty) -> bool {
 
 fn hand_decl(name: &str, dim: Option<u8>) -> Result<String> {
     let row = hand(name).ok_or_else(|| format!("no hand crossing for {name}"))?;
-    by_dim(row.py, dim)
+    by_dim(&row.py, dim)
         .map(str::to_string)
         .ok_or_else(|| "a cell of undecided dimension".into())
 }
 
 fn hand_into(name: &str) -> Result<&'static str> {
     hand(name)
-        .map(|row| row.py_into)
+        .map(|row| row.py_into.as_str())
         .ok_or_else(|| format!("no hand crossing for {name}"))
 }
 
@@ -1750,7 +1751,9 @@ fn bare_type(cx: &Cx, ty: &Ty, here: &str) -> String {
             bare_type(cx, value, here)
         ),
         Ty::Hand { name, .. } if name == "Rng" => qualified("core", "Rng", here),
-        Ty::Hand { name, .. } => hand(name).map_or("dict[str, Any]", |row| row.pyi).into(),
+        Ty::Hand { name, .. } => hand(name)
+            .map_or("dict[str, Any]", |row| row.pyi.as_str())
+            .into(),
         Ty::Plain { path } => match cx.types.get(path.as_str()).map(|t| t.kind) {
             Some(TypeKind::Enum) => "Any".into(),
             _ => "dict[str, Any]".into(),
@@ -2125,7 +2128,13 @@ fn python_files(cx: &Cx, root: &Node, python: &Path) -> Result<()> {
 
 // TEST
 
-fn test_file(cx: &Cx) -> String {
+fn test_file(cx: &Cx, layout: &Layout) -> String {
+    let manifest: String = layout
+        .manifest
+        .components()
+        .map(|part| format!(" / {:?}", part.as_os_str().to_string_lossy()))
+        .collect();
+    let up = climb(&layout.py) + 1;
     let ok = cx
         .manifest
         .functions
@@ -2140,7 +2149,7 @@ import pathlib
 
 import mrly
 
-MANIFEST = pathlib.Path(__file__).resolve().parents[3] / "crates" / "bridge" / "manifest.json"
+MANIFEST = pathlib.Path(__file__).resolve().parents[{up}]{manifest}
 
 
 def load():

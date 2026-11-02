@@ -2,9 +2,19 @@ use crate::model::*;
 use crate::parse::{self, Files};
 use crate::report;
 use crate::resolve::{self, Built};
-use crate::{cli, disk, js, py, version};
+use crate::{cli, config, disk, js, py, version};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
+
+fn layout() -> config::Layout {
+    config::load(&config::home())
+        .expect("the bridge config loads")
+        .layout
+}
+
+fn doors() -> String {
+    config::slashed(&layout().cli.join(cli::DOORS))
+}
 
 fn build(lib: &str) -> Built {
     let files: Files = [("lib.rs".to_string(), lib.to_string())]
@@ -46,9 +56,9 @@ fn scratch(name: &str, lib: &str) -> PathBuf {
     let _ = std::fs::remove_dir_all(&root);
     std::fs::create_dir_all(root.join("crates/bridge")).expect("a scratch root");
     let m = manifest(lib);
-    cli::write(&m, &root).expect("the cli writes");
-    py::write(&m, &root).expect("the python bridge writes");
-    js::write(&m, &root).expect("the js bridge writes");
+    cli::write(&m, &root, &layout()).expect("the cli writes");
+    py::write(&m, &root, &layout()).expect("the python bridge writes");
+    js::write(&m, &root, &layout()).expect("the js bridge writes");
     root
 }
 
@@ -243,7 +253,7 @@ fn an_image_crosses_by_hand_as_one_shaped_array_and_a_list_of_them() {
     ));
     assert!(dts.contains("export function frame(scale: number): Image;"));
     assert!(dts.contains("export function frames(scale: number): Image[];"));
-    let cli: String = read(&root, cli::DOORS).split_whitespace().collect();
+    let cli: String = read(&root, &doors()).split_whitespace().collect();
     assert!(cli.contains("name:\"life.frames\",signature:\"(scale:usize)->[Image]\""));
     std::fs::remove_dir_all(root).ok();
 }
@@ -713,7 +723,7 @@ fn default_crosses_as_a_static_on_the_type_and_an_alias_fixes_n() {
             .contains("class Config2d:\n    @staticmethod\n    def default() -> dict[str, Any]:")
     );
     assert!(read(&root, "bindings/js/tile.d.ts").contains("static default(): Field;"));
-    let cli: String = read(&root, cli::DOORS).split_whitespace().collect();
+    let cli: String = read(&root, &doors()).split_whitespace().collect();
     assert!(cli.contains("name:\"tile.Config2d.default\",signature:\"()->tile.ConfigNd\""));
     std::fs::remove_dir_all(root).ok();
 }
@@ -737,7 +747,7 @@ fn the_hand_rng_declares_choice_and_shuffle_in_both_bridges() {
 fn a_nested_type_without_serde_shuts_its_cli_door() {
     let lib = "pub mod num { #[derive(Clone)] pub struct Pair { pub n: u8 } impl Pair { pub fn size(&self) -> u8 { 0 } } pub fn pairs() -> Vec<Pair> { vec![] } }";
     let root = scratch("nested", lib);
-    let cli: String = read(&root, cli::DOORS).split_whitespace().collect();
+    let cli: String = read(&root, &doors()).split_whitespace().collect();
     assert!(cli.contains(
         "signature:\"()->[num.Pair]\",docs:\"\",uncallable:Some(\"num::PairhasnoSerialize\"),door:None"
     ));
@@ -753,8 +763,8 @@ fn a_watched_run_names_the_stale_files_and_writes_nothing() {
     std::fs::write(root.join(old), "stale").expect("a stale file");
     std::fs::remove_file(root.join(gone)).expect("a missing file");
     disk::watch();
-    py::write(&m, &root).expect("the python bridge checks");
-    js::write(&m, &root).expect("the js bridge checks");
+    py::write(&m, &root, &layout()).expect("the python bridge checks");
+    js::write(&m, &root, &layout()).expect("the js bridge checks");
     assert_eq!(disk::stale(), [root.join(old), root.join(gone)]);
     assert_eq!(read(&root, old), "stale");
     assert!(!root.join(gone).exists());
@@ -766,7 +776,7 @@ fn generated_rust_is_saved_formatted() {
     let lib = "pub mod core { pub fn add(a: u8, b: u8) -> u8 { a + b } }";
     let root = scratch("fmt", lib);
     for file in [
-        cli::DOORS,
+        &*doors(),
         "bindings/py/src/doors.rs",
         "bindings/js/units/core/src/lib.rs",
     ] {
@@ -780,14 +790,14 @@ fn generated_rust_is_saved_formatted() {
 fn every_copy_takes_the_manifest_version() {
     let lib = "pub mod core { pub fn f() {} }";
     let root = scratch("version", lib);
-    let pins = "[workspace.package]\nversion = \"0.1.0\"\n\n[workspace.dependencies]\nmrly-core = { path = \"crates/mrly-core\", version = \"=0.1.0\" }\nmrly-num = { path = \"crates/mrly-num\", version = \"=0.1.0\" }\n";
+    let pins = "[workspace.package]\nversion = \"0.1.0\"\n\n[workspace.dependencies]\nmrly-core = { path = \"crates/core\", version = \"=0.1.0\" }\nmrly-num = { path = \"crates/num\", version = \"=0.1.0\" }\n";
     let other = "other = { version = \"=0.1.0\" }\n";
     let cargo = format!("{pins}{other}");
     std::fs::write(root.join("Cargo.toml"), cargo).expect("a workspace");
     let mut m = manifest(lib);
     m.version = "1.2.3".into();
-    js::write(&m, &root).expect("the js bridge writes");
-    version::write(&m, &root).expect("the pins write");
+    js::write(&m, &root, &layout()).expect("the js bridge writes");
+    version::write(&m, &root, &layout()).expect("the pins write");
     assert!(
         read(&root, "bindings/js/units/core/Cargo.toml").contains("\nversion.workspace = true\n")
     );
@@ -843,8 +853,8 @@ fn a_break_needs_the_minor_under_one_and_the_major_from_one() {
 fn the_bump_reads_the_tagged_manifest_where_the_bridge_lives() {
     let root = std::env::temp_dir().join(format!("bridge-bump-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
-    let file = root.join("crates/bridge/manifest.json");
-    std::fs::create_dir_all(root.join("crates/bridge")).expect("a scratch root");
+    let file = root.join(layout().manifest);
+    std::fs::create_dir_all(file.parent().expect("a folder")).expect("a scratch root");
     let git = |args: &[&str]| {
         let done = std::process::Command::new("git")
             .arg("-C")
@@ -867,16 +877,16 @@ fn the_bump_reads_the_tagged_manifest_where_the_bridge_lives() {
     git(&["commit", "-q", "-m", "one"]);
     git(&["tag", "v0.1.0"]);
     write("0.1.1", "u8");
-    assert_eq!(version::bump(&root), Ok(()));
+    assert_eq!(version::bump(&root, &layout().manifest), Ok(()));
     write("0.1.1", "u16");
-    let refused = version::bump(&root).expect_err("a break under a patch");
+    let refused = version::bump(&root, &layout().manifest).expect_err("a break under a patch");
     assert!(refused.contains("needs 0.2.0"), "{refused}");
     std::fs::remove_dir_all(root).ok();
 }
 
 fn crate_files() -> Files {
-    parse::load_crates(Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/..")))
-        .expect("the crate loads")
+    let config = config::load(&config::home()).expect("the bridge config loads");
+    parse::load_crates(&config.mounts).expect("the crate loads")
 }
 
 #[test]
@@ -1124,7 +1134,7 @@ fn the_bridge_marks_every_file_it_writes_as_generated_and_keeps_other_lines() {
     assert!(made.starts_with("*.sh text eol=lf\n"));
     assert!(!made.contains("gone.js"));
     for file in [
-        cli::DOORS,
+        &*doors(),
         "bindings/js/core.js",
         "bindings/js/package.json",
         "bindings/py/src/doors.rs",
@@ -1186,12 +1196,12 @@ fn every_hand_row_names_a_hand_type_of_the_crate() {
     let m = resolve::build(&crate_files(), "0")
         .expect("the crate builds")
         .manifest;
-    for row in HAND {
-        for rust in row.rust {
+    for row in hands() {
+        for rust in &row.rust {
             let path = rust.strip_prefix("mrly::").expect("a mrly path");
             assert!(
                 m.types.iter().any(|t| t.path == path
-                    && matches!(&t.cross, TypeCross::Hand { name } if name == row.name)),
+                    && matches!(&t.cross, TypeCross::Hand { name } if *name == row.name)),
                 "{} names {rust}, not a hand type of the crate",
                 row.name
             );
@@ -1202,4 +1212,24 @@ fn every_hand_row_names_a_hand_type_of_the_crate() {
             assert!(hand(name).is_some(), "{} has no HAND row", t.path);
         }
     }
+}
+
+#[test]
+fn a_bridge_toml_holds_strings_lists_and_hand_rows_and_nothing_else() {
+    use crate::toml::{Value, parse};
+    let doc = parse(
+        "unit = \"core\"\n\n[[hand]]\nname = \"A \\\"b\\\"\"\njs = [\"a\", \"b\"]\nrust = []\n",
+    )
+    .expect("a bridge.toml");
+    assert_eq!(doc.top["unit"], Value::Text("core".into()));
+    assert_eq!(doc.arrays.len(), 1);
+    assert_eq!(doc.arrays[0].0, "hand");
+    assert_eq!(doc.arrays[0].1["name"], Value::Text("A \"b\"".into()));
+    assert_eq!(
+        doc.arrays[0].1["js"],
+        Value::List(vec!["a".into(), "b".into()])
+    );
+    assert_eq!(doc.arrays[0].1["rust"], Value::List(vec![]));
+    assert!(parse("unit = core\n").is_err());
+    assert!(parse("unit = \"a\"\nunit = \"b\"\n").is_err());
 }

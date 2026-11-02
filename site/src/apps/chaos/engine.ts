@@ -6,6 +6,7 @@ import type { Mrly } from "../../lib/designs/engine.ts";
 import { canon, DESIGN } from "../../lib/designs/engine.ts";
 import type { Design } from "../../lib/designs/store.ts";
 import type { Rng } from "../../lib/rand.ts";
+import { xorshift } from "../../lib/rand.ts";
 import type { Unit } from "../../lib/units/index.ts";
 
 /* TYPES */
@@ -91,20 +92,39 @@ export type Meter = {
   lapOutside: number;
 };
 
-export type Register = { cell: () => number; push: (letter: number) => void };
+export type Plane = { beta: string[]; digits: string[][]; units: string[][] };
 
-export type Walker = {
+export type State = {
+  base: number;
+  k: number;
+  letters: number[][];
+  moves: Move[][];
+  hex: Plane | null;
+  weighted: number;
+  sched: string | null;
+  pos: number;
+  node: number;
+  px: number;
+  py: number;
+  zx: string | null;
+  zy: string | null;
+  cx: number;
+  cy: number;
   n: number;
-  x: number;
-  y: number;
-  state: number;
   letter: number;
   moved: number;
-  stuck: boolean;
-  cell: () => number;
-  take: (j: number) => boolean;
-  step: () => boolean;
+  stuck: number;
+  seed: number;
 };
+
+export type Config = Pick<
+  State,
+  "base" | "k" | "letters" | "moves" | "node" | "hex" | "weighted" | "sched" | "seed"
+> & {
+  start: string[];
+};
+
+export type Act = { verb: "draw" } | { verb: "take"; args: { j: number } };
 
 export type Fit = { s: number; ox: number; oy: number };
 
@@ -257,6 +277,12 @@ const TAIL = 1.5;
 const SWEEPS = 20000;
 const CLOSE = 1e-13;
 const FINE: Record<number, number> = { 2: 52, 3: 32, 5: 21 };
+const WIDE = 4294967296;
+const SPARE = 0x9e3779b9;
+const ZERO = 48;
+const CHUNK = 8192;
+export const DRAW: Act = { verb: "draw" };
+export const taking = (j: number): Act => ({ verb: "take", args: { j } });
 
 /* KNOBS */
 
@@ -884,117 +910,167 @@ export function schedule(math: Mrly, source: Source, k: number): Uint8Array | nu
   return math.game.de_bruijn(source.letters.length, k);
 }
 
-/* WALK */
+/* GAME */
 
-export function register(source: Source, k: number, start: Pair): Register {
-  const { base, hex, letters } = source;
-  const m = letters.length;
-  if (hex) {
-    let idx = 0;
-    const top = m ** (k - 1);
-    return {
-      cell: () => idx,
-      push: (letter) => {
-        idx = letter * top + Math.floor(idx / m);
-      },
-    };
-  }
-  const side = base ** k;
-  const top = base ** (k - 1);
-  const clamp = (v: number) => Math.min(side - 1, Math.max(0, Math.floor(v * side)));
-  let cx = clamp(start[0]);
-  let cy = clamp(start[1]);
-  return {
-    cell: () => cx + cy * side,
-    push: (letter) => {
-      cx = letters[letter].x * top + Math.floor(cx / base);
-      cy = letters[letter].y * top + Math.floor(cy / base);
-    },
-  };
-}
-
-export function walker(
+export function deal(
   source: Source,
   k: number,
   weighted: boolean,
-  rand: Rng,
   sched: Uint8Array | null,
   start: Pair,
-): Walker {
-  const { auto, base, hex, letters } = source;
-  const reg = register(source, k, start);
-  const cum = auto.moves.map((moves) => {
-    const odd = odds(moves.length, weighted);
-    for (let j = 1; j < odd.length; j++) odd[j] += odd[j - 1];
-    return odd;
-  });
-  const K = FINE[base] ?? 20;
-  const scale = base ** K;
-  const top = base ** (K - 1);
-  const clamp = (v: number) => Math.min(scale - 1, Math.max(0, Math.floor(v * scale)));
-  let px = clamp(start[0]);
-  let py = clamp(start[1]);
-  let zx = start[0];
-  let zy = start[1];
-  let pos = 0;
-  const out: Walker = {
-    n: 0,
-    x: hex ? zx : px / scale,
-    y: hex ? zy : py / scale,
-    state: auto.start,
-    letter: -1,
-    moved: -1,
-    stuck: false,
-    cell: reg.cell,
-    take: (j) => {
-      const move = auto.moves[out.state][j];
-      if (!move) {
-        out.stuck = true;
-        return false;
-      }
-      if (sched) pos = (pos + 1) % sched.length;
-      const letter = move.letter;
-      if (hex) {
-        const [dx, dy] = hex.digits[letter];
-        const [ux, uy] = hex.units[letter];
-        const [bx, by] = hex.beta;
-        const ax = ux * zx - uy * zy + dx;
-        const ay = ux * zy + uy * zx + dy;
-        const den = bx * bx + by * by;
-        zx = (ax * bx + ay * by) / den;
-        zy = (ay * bx - ax * by) / den;
-        out.x = zx;
-        out.y = zy;
-      } else {
-        px = letters[letter].x * top + Math.floor(px / base);
-        py = letters[letter].y * top + Math.floor(py / base);
-        out.x = px / scale;
-        out.y = py / scale;
-      }
-      reg.push(letter);
-      out.state = move.next;
-      out.letter = letter;
-      out.moved = j;
-      out.n++;
-      return true;
+  seed: number,
+): Config {
+  const hex = source.hex;
+  const put = ([x, y]: Pair) => [String(x), String(y)];
+  let tape: string | null = null;
+  if (sched) {
+    tape = "";
+    for (let i = 0; i < sched.length; i += CHUNK)
+      tape += String.fromCharCode(...Array.from(sched.subarray(i, i + CHUNK), (j) => j + ZERO));
+  }
+  return {
+    base: hex ? 0 : source.base,
+    k,
+    letters: source.letters.map(({ x, y }) => [x, y]),
+    moves: source.auto.moves,
+    node: source.auto.start,
+    hex: hex ? { beta: put(hex.beta), digits: hex.digits.map(put), units: hex.units.map(put) } : null,
+    weighted: weighted ? 1 : 0,
+    sched: tape,
+    start: put(start),
+    seed,
+  };
+}
+
+export function feed(seed: number) {
+  let s = seed >>> 0 || SPARE;
+  return {
+    rand: () => {
+      const r = s / WIDE;
+      s = xorshift(s);
+      return r;
     },
-    step: () => {
-      const moves = auto.moves[out.state];
-      if (!moves.length) {
-        out.stuck = true;
-        return false;
-      }
-      if (sched) return out.take(sched[pos]);
-      if (!weighted) return out.take(Math.floor(rand() * moves.length));
-      const r = rand();
-      const row = cum[out.state];
-      let j = 0;
-      while (j < row.length - 1 && row[j] <= r) j++;
-      return out.take(j);
+    get seed() {
+      return s;
     },
   };
+}
+
+const fine = (base: number, less = 0) => base ** ((FINE[base] ?? 20) - less);
+
+export function boot({ start, ...config }: Config): State {
+  const { base, k } = config;
+  const hex = config.hex !== null;
+  const clamp = (v: string, side: number) => Math.min(side - 1, Math.max(0, Math.floor(Number(v) * side)));
+  const side = base ** k;
+  return {
+    ...config,
+    seed: config.seed >>> 0 || SPARE,
+    pos: 0,
+    px: hex ? 0 : clamp(start[0], fine(base)),
+    py: hex ? 0 : clamp(start[1], fine(base)),
+    zx: hex ? start[0] : null,
+    zy: hex ? start[1] : null,
+    cx: hex ? 0 : clamp(start[0], side),
+    cy: hex ? 0 : clamp(start[1], side),
+    n: 0,
+    letter: -1,
+    moved: -1,
+    stuck: 0,
+  };
+}
+
+const parsed = new WeakMap<object, number[][]>();
+
+function plane(hex: Plane): number[][] {
+  let out = parsed.get(hex);
+  if (!out) {
+    out = [hex.beta, ...hex.digits, ...hex.units].map(([x, y]) => [Number(x), Number(y)]);
+    parsed.set(hex, out);
+  }
   return out;
 }
+
+function take(state: State, j: number): State {
+  const move = state.moves[state.node][j];
+  if (!move) return state.stuck ? state : { ...state, stuck: 1 };
+  const { base, k, letters, hex, sched } = state;
+  const letter = move.letter;
+  const next: State = {
+    ...state,
+    pos: sched ? (state.pos + 1) % sched.length : state.pos,
+    node: move.next,
+    letter,
+    moved: j,
+    n: state.n + 1,
+  };
+  if (hex) {
+    const at = plane(hex);
+    const m = letters.length;
+    const [bx, by] = at[0];
+    const [dx, dy] = at[1 + letter];
+    const [ux, uy] = at[1 + m + letter];
+    const zx = Number(state.zx);
+    const zy = Number(state.zy);
+    const ax = ux * zx - uy * zy + dx;
+    const ay = ux * zy + uy * zx + dy;
+    const den = bx * bx + by * by;
+    next.zx = String((ax * bx + ay * by) / den);
+    next.zy = String((ay * bx - ax * by) / den);
+    next.cx = letter * m ** (k - 1) + Math.floor(state.cx / m);
+    return next;
+  }
+  const [lx, ly] = letters[letter];
+  const top = fine(base, 1);
+  next.px = lx * top + Math.floor(state.px / base);
+  next.py = ly * top + Math.floor(state.py / base);
+  const edge = base ** (k - 1);
+  next.cx = lx * edge + Math.floor(state.cx / base);
+  next.cy = ly * edge + Math.floor(state.cy / base);
+  return next;
+}
+
+function draw(state: State): State {
+  const moves = state.moves[state.node];
+  if (!moves.length) return state.stuck ? state : { ...state, stuck: 1 };
+  if (state.sched) return take(state, state.sched.charCodeAt(state.pos) - ZERO);
+  const r = state.seed / WIDE;
+  const seeded = { ...state, seed: xorshift(state.seed) };
+  if (!state.weighted) return take(seeded, Math.floor(r * moves.length));
+  const sum = (moves.length * (moves.length + 1)) / 2;
+  let j = 0;
+  let acc = 1 / sum;
+  while (j < moves.length - 1 && acc <= r) {
+    j++;
+    acc += (j + 1) / sum;
+  }
+  return take(seeded, j);
+}
+
+export function step(state: State, act: Act): State {
+  if (act.verb === "draw") return draw(state);
+  if (act.verb === "take") return take(state, act.args.j);
+  return state;
+}
+
+export function moves(state: State): Act[] {
+  const list = state.moves[state.node];
+  return list.length ? [DRAW, ...list.map((_, j) => taking(j))] : [];
+}
+
+export function read(state: State, path = ""): unknown {
+  let at: unknown = state;
+  for (const key of path.split("/").filter(Boolean)) {
+    if (at === null || typeof at !== "object") return undefined;
+    at = (at as Record<string, unknown>)[key];
+  }
+  return at;
+}
+
+export const spot = (state: State): Pair =>
+  state.hex ? [Number(state.zx), Number(state.zy)] : [state.px / fine(state.base), state.py / fine(state.base)];
+
+export const cell = (state: State) => (state.hex ? state.cx : state.cx + state.cy * state.base ** state.k);
 
 export const pair = (law: Law, cell: number, tag: number) => cell * law.tags + tag;
 
@@ -1042,22 +1118,15 @@ export function distance(meter: Meter): number {
   return sum / 2;
 }
 
-export function replay(
-  source: Source,
-  made: Meter,
-  weighted: boolean,
-  rand: Rng,
-  sched: Uint8Array | null,
-  start: Pair,
-  log: Uint8Array,
-  count: number,
-): Walker {
-  const walked = walker(source, made.law.k, weighted, rand, sched, start);
+export function replay(state: State, made: Meter, tag: number[], log: Uint8Array, count: number): State {
+  let at = state;
   for (let n = 1; n <= count; n++) {
-    if (!walked.take(log[n - 1])) break;
-    if (n >= made.law.k) hit(made, pair(made.law, walked.cell(), source.auto.tag[walked.state]));
+    const next = take(at, log[n - 1]);
+    if (next.n === at.n) return next;
+    at = next;
+    if (n >= made.law.k) hit(made, pair(made.law, cell(at), tag[at.node]));
   }
-  return walked;
+  return at;
 }
 
 export function csv(meter: Meter): string {

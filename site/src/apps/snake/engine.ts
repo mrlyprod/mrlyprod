@@ -1,4 +1,4 @@
-import type { Rng } from "../../lib/rand.ts";
+import { mix, xorshift } from "../../lib/rand.ts";
 
 /* TYPES */
 
@@ -14,9 +14,16 @@ export type State = {
   score: number;
   hunger: number;
   over: Over;
+  seed: number;
 };
 
-export type Setup = Pick<State, "size" | "wrap"> & { apples: number };
+export type Config = Pick<State, "size" | "wrap" | "seed"> & { apples: number };
+
+export type Act = { verb: "turn"; args: { dir: number } } | { verb: "tick" } | { verb: "starve" };
+
+export const TICK: Act = { verb: "tick" };
+export const STARVE: Act = { verb: "starve" };
+export const toward = (dir: number): Act => ({ verb: "turn", args: { dir } });
 
 export const UP = 0;
 export const RIGHT = 1;
@@ -48,37 +55,41 @@ export function bearing(size: number, from: number, to: number): number | undefi
   return DIRS.find((dir) => ahead(size, 1, from, dir) === to);
 }
 
-function drop(size: number, taken: readonly number[], rand: Rng): number {
+function drop(size: number, taken: readonly number[], seed: number): [number, number] {
   const used = new Uint8Array(size * size);
   for (const cell of taken) used[cell] = 1;
   const free: number[] = [];
   for (let cell = 0; cell < used.length; cell++) if (!used[cell]) free.push(cell);
-  return free.length ? free[Math.floor(rand() * free.length)] : -1;
+  if (!free.length) return [-1, seed];
+  const next = xorshift(seed);
+  return [free[next % free.length], next];
 }
 
 /* RULES */
 
-export function start({ size, apples, wrap }: Setup, rand: Rng): State {
-  const dir = Math.floor(rand() * 4);
+export function boot({ size, apples, wrap, seed }: Config): State {
+  let next = xorshift(mix(seed));
+  const dir = next & 3;
   const head = (size >> 1) * size + (size >> 1);
   const snake = [head, ahead(size, wrap, head, flip(dir))];
   const foods: number[] = [];
   for (let i = 0; i < apples; i++) {
-    const spot = drop(size, [...snake, ...foods], rand);
+    const [spot, after] = drop(size, [...snake, ...foods], next);
     if (spot < 0) break;
     foods.push(spot);
+    next = after;
   }
-  return { size, wrap, snake, dir, queue: [], foods, score: 0, hunger: 0, over: null };
+  return { size, wrap, snake, dir, queue: [], foods, score: 0, hunger: 0, over: null, seed: next };
 }
 
-export function turn(state: State, dir: number): State {
+function turn(state: State, dir: number): State {
   if (state.over || !DIRS.includes(dir) || state.queue.length >= LIMIT) return state;
   const last = state.queue.length ? state.queue[state.queue.length - 1] : state.dir;
   if (dir === last || dir === flip(last)) return state;
   return { ...state, queue: [...state.queue, dir] };
 }
 
-export function step(state: State, rand: Rng): State {
+function tick(state: State): State {
   if (state.over) return state;
   const { size, wrap } = state;
   const queue = state.queue.slice();
@@ -91,15 +102,33 @@ export function step(state: State, rand: Rng): State {
   const snake = [head, ...body];
   if (eat < 0) return { ...state, snake, dir, queue, hunger: state.hunger + 1 };
   const foods = state.foods.slice();
-  const spot = drop(size, [...snake, ...foods.filter((_, i) => i !== eat)], rand);
+  const [spot, seed] = drop(size, [...snake, ...foods.filter((_, i) => i !== eat)], state.seed);
   if (spot < 0) foods.splice(eat, 1);
   else foods[eat] = spot;
   const over = snake.length === size * size ? "won" : null;
-  return { ...state, snake, dir, queue, foods, score: state.score + 1, hunger: 0, over };
+  return { ...state, snake, dir, queue, foods, score: state.score + 1, hunger: 0, over, seed };
 }
 
-export function starve(state: State): State {
-  return state.over ? state : { ...state, over: "starved" };
+export function step(state: State, act: Act): State {
+  if (act.verb === "turn") return turn(state, act.args.dir);
+  if (act.verb === "tick") return tick(state);
+  if (act.verb === "starve" && !state.over) return { ...state, over: "starved" };
+  return state;
+}
+
+export function moves(state: State): Act[] {
+  if (state.over) return [];
+  const turns = DIRS.filter((dir) => turn(state, dir) !== state).map(toward);
+  return [...turns, TICK, STARVE];
+}
+
+export function read(state: State, path = ""): unknown {
+  let at: unknown = state;
+  for (const key of path.split("/").filter(Boolean)) {
+    if (at === null || typeof at !== "object") return undefined;
+    at = (at as Record<string, unknown>)[key];
+  }
+  return at;
 }
 
 /* ROUNDS */

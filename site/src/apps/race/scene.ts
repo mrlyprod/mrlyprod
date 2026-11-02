@@ -14,7 +14,6 @@ import { light } from "../../lib/theme/theme.ts";
 import { wasm } from "../../lib/units/index.ts";
 import type { Laid, Over, Plan, Series, Side } from "./engine.ts";
 import {
-  aim,
   bake,
   budget,
   cap,
@@ -26,6 +25,7 @@ import {
   lay,
   NUMBERS,
   plan,
+  reach,
   roots,
   series,
   TURN,
@@ -264,7 +264,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     return {
       phase,
       tick: state.tick,
-      reach: [...state.reach],
+      reach: reach(state),
       over: state.over,
       goal: laid!.goal,
       side: n,
@@ -328,7 +328,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   };
   const retarget = () => {
     const was = show!.state.over;
-    aim(show!.state, laid!);
+    show!.aim(laid!.goal);
     if (was && !show!.state.over && phase === "done") {
       phase = "running";
       anchor();
@@ -336,10 +336,10 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     if (!was && show!.state.over && hands) phase = "done";
   };
   const level = (s: number) => {
-    const { state } = show!;
+    const { state, trace } = show!;
     const { filled } = laid!.sides[s];
-    const trail = state.trail[s];
-    const stamp = state.stamp[s];
+    const trail = trace.trail[s];
+    const stamp = trace.stamp[s];
     const out = sheets[s].hot;
     for (let i = 0; i < out.length; i++) out[i] = filled[i] ? heat(trail[i], stamp[i], state.tick, laid!.keep) : 0;
     return out;
@@ -366,6 +366,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const { state } = show!;
     const { home } = laid!.sides[s];
     if (home < 0) return;
+    const far = reach(state)[s];
     const dpr = view.dpr;
     const { cell, edge } = box!;
     const { x, y } = box!.boards[s];
@@ -383,10 +384,10 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.strokeStyle = colours[s];
-    if (state.reach[s] > 0) {
+    if (far > 0) {
       ctx.lineWidth = (won(state.over, s) ? WIN : LINE) * dpr;
       ctx.beginPath();
-      ctx.arc(hx, hy, state.reach[s] * cell, 0, TAU);
+      ctx.arc(hx, hy, far * cell, 0, TAU);
       ctx.stroke();
     }
     const m = cell + 4 * dpr;
@@ -436,7 +437,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
         restart();
       }
       if (value.speed !== was.speed || value.heat !== was.heat) {
-        bake(show!.state, laid!.keep);
+        bake(show!.trace, show!.state.tick, laid!.keep);
         laid!.keep = keeping(value.heat, value.speed);
         laid!.speed = value.speed;
         anchor();
@@ -461,6 +462,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const dpr = view.dpr;
     const css = lay(view.w / dpr, view.h / dpr, n, GAP, PAD);
     const { state } = show!;
+    const now = reach(state);
     const c = css.cell;
     const body = laid!.sides.map(({ filled, home }, s) => {
       const { x, y } = css.boards[s];
@@ -483,11 +485,11 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
         `<circle cx="${num(hx)}" cy="${num(hy)}" r="${num(r)}" fill="none" stroke="${colours[s]}" stroke-width="${num(width)}"${dash ? ` stroke-dasharray="${DASH.join(" ")}" stroke-opacity="${RING}"` : ""}/>`;
       const m = c + 4;
       const mark = `<rect x="${num(hx - m / 2)}" y="${num(hy - m / 2)}" width="${num(m)}" height="${num(m)}" fill="none" stroke="${ink!.fg}" stroke-width="${MARK}"/>`;
-      return `${cells}<clipPath id="race-${s}"><rect x="${num(x)}" y="${num(y)}" width="${num(css.edge)}" height="${num(css.edge)}"/></clipPath><g clip-path="url(#race-${s})">${ring(laid!.goal * c, 1, true)}${state.reach[s] > 0 ? ring(state.reach[s] * c, won(state.over, s) ? WIN : LINE, false) : ""}${mark}</g>`;
+      return `${cells}<clipPath id="race-${s}"><rect x="${num(x)}" y="${num(y)}" width="${num(css.edge)}" height="${num(css.edge)}"/></clipPath><g clip-path="url(#race-${s})">${ring(laid!.goal * c, 1, true)}${now[s] > 0 ? ring(now[s] * c, won(state.over, s) ? WIN : LINE, false) : ""}${mark}</g>`;
     });
     return sheet(view.w / dpr, view.h / dpr, body.join(""));
   };
-  const csv = () => ["step,a,b", ...show!.state.log.map(([a, b], i) => `${i},${num(a, 3)},${num(b, 3)}`)].join("\n");
+  const csv = () => ["step,a,b", ...show!.trace.log.map(([a, b], i) => `${i},${num(a, 3)},${num(b, 3)}`)].join("\n");
   paint();
   replan();
   return {

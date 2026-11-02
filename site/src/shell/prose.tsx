@@ -2,7 +2,8 @@ import type { Site } from "site:routes";
 import type { Row } from "../../scripts/build.ts";
 import { index, resolve } from "../lib/md/links.ts";
 import { front, mathml, render as md } from "../lib/md/md.ts";
-import { Contents, Figure, heads, hide, Lede, show } from "./parts.tsx";
+import { parts } from "./active.ts";
+import { Contents, heads, hide, show } from "./parts.tsx";
 import type { Context, Layout, Own } from "./router.ts";
 
 /* TYPES */
@@ -32,11 +33,8 @@ function Legal({ site }: { site: Pick<Site, "company" | "title" | "since"> }) {
 
 function Page({ row, site, data, html, slug }: PageProps) {
   const act = data.button && data.link;
-  return (
+  const after = (
     <>
-      {data.opener && row.figure && <Figure className="opener" name={row.figure} label={row.title} />}
-      <Lede id={slug} title={row.title} lead={row.lead} />
-      <div dangerouslySetInnerHTML={{ __html: html }} />
       {act && (
         <p>
           <a className="button primary" href={data.link}>
@@ -47,31 +45,46 @@ function Page({ row, site, data, html, slug }: PageProps) {
       {data.legal && <Legal site={site} />}
     </>
   );
+  return (
+    <parts.prose
+      kind="page"
+      id={slug}
+      title={row.title}
+      lead={row.lead}
+      figure={data.opener ? (row.figure ?? undefined) : undefined}
+      html={html}
+      contents={[]}
+      after={after}
+    />
+  );
 }
 
 export function Post({ row, site, html, slug }: PostProps) {
   return (
-    <>
-      <Figure className="opener" name={row.figure!} label={row.title} />
-      <div className="plate">
-        <h1 id={slug}>{row.title}</h1>
-        <p className="by">
-          {row.date} · {site.title}
-        </p>
-        {row.lead && <p className="lead">{row.lead}</p>}
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: html }} />
-    </>
+    <parts.prose
+      kind="post"
+      id={slug}
+      title={row.title}
+      lead={row.lead}
+      by={`${row.date} · ${site.title}`}
+      figure={row.figure ?? undefined}
+      html={html}
+      contents={[]}
+    />
   );
 }
 
 function Standard({ row, html }: Pick<PageProps, "row" | "html">) {
   return (
-    <>
-      {row.figure && <Figure className="opener" name={row.figure} label={row.title} />}
-      <Lede id={row.title.toLowerCase()} title={row.title} lead={row.lead} />
-      <div dangerouslySetInnerHTML={{ __html: html }} />
-    </>
+    <parts.prose
+      kind="page"
+      id={row.title.toLowerCase()}
+      title={row.title}
+      lead={row.lead}
+      figure={row.figure ?? undefined}
+      html={html}
+      contents={[]}
+    />
   );
 }
 

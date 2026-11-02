@@ -6,7 +6,7 @@ import type { View } from "../../lib/app/run.ts";
 import type { Raw, Value } from "../../lib/app/spec.ts";
 import { defaults, describe, tidy } from "../../lib/app/spec.ts";
 import { rng } from "../../lib/rand.ts";
-import { FRAME, HEXES, LEVELS, origin, study, walker } from "./engine.ts";
+import { boot, cell, DRAW, deal, FRAME, HEXES, LEVELS, origin, spot, step, study } from "./engine.ts";
 import type { Facts } from "./scene.ts";
 import { file, hexCentre, make, PAGE, SAVERS, SPEC, sketch, tidied } from "./scene.ts";
 
@@ -210,14 +210,16 @@ test("a hex cell's square sits under the points of that cell, once the start has
     const source = study(units, tidied({ ...BASE, view: "hex", hex }, units));
     const { reach, norm, box } = source.hex!;
     const span = Math.hypot(box[2] - box[0], box[3] - box[1]);
-    const walked = walker(source, 3, false, rng(4), null, origin(source, rng(4)));
+    const first = Math.floor(rng(4)() * 2 ** 32);
+    let state = boot(deal(source, 3, false, null, origin(source, rng(4)), first));
     for (let i = 0; i < 500; i++) {
-      walked.step();
-      if (walked.n < 3) continue;
-      const [cx, cy] = hexCentre(source, 3, walked.cell());
-      const off = Math.max(Math.abs(cx - walked.x), Math.abs(cy - walked.y));
-      const half = reach * norm ** (-3 / 2) + span * norm ** (-walked.n / 2) + 1e-9;
-      expect([hex, walked.n, off <= half]).toEqual([hex, walked.n, true]);
+      state = step(state, DRAW);
+      if (state.n < 3) continue;
+      const [x, y] = spot(state);
+      const [cx, cy] = hexCentre(source, 3, cell(state));
+      const off = Math.max(Math.abs(cx - x), Math.abs(cy - y));
+      const half = reach * norm ** (-3 / 2) + span * norm ** (-state.n / 2) + 1e-9;
+      expect([hex, state.n, off <= half]).toEqual([hex, state.n, true]);
     }
   }
 });

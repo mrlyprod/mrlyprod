@@ -1,7 +1,8 @@
-import type { MouseEvent as Clicked, ComponentType, RefObject } from "react";
+import type { MouseEvent as Clicked, ComponentType } from "react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { flushSync } from "react-dom";
 import { useUnit } from "../lib/app/hooks.ts";
+import { stamp } from "../lib/clock.ts";
 import { paints } from "../lib/color.ts";
 import type { Mrly } from "../lib/designs/engine.ts";
 import { classes, dimension } from "../lib/designs/engine.ts";
@@ -9,13 +10,15 @@ import { useTheme } from "../lib/designs/pick.tsx";
 import { thumb } from "../lib/designs/thumb.ts";
 import type { Draft } from "../lib/drag.ts";
 import { placed, sortable } from "../lib/drag.ts";
+import { parts } from "./active.ts";
 import { AppIcon } from "./appicon.tsx";
 import type { Note } from "./catalog.ts";
 import { app, KNOWN, notes, recent } from "./catalog.ts";
 import { ago, daily, gist, today } from "./launch.ts";
 import type { Spot } from "./lens.ts";
-import { Glyph, show } from "./parts.tsx";
-import { KEY, read, root, stamp, subscribe, write } from "./prefs.ts";
+import { measure } from "./measure.ts";
+import { show } from "./parts.tsx";
+import { KEY, read, root, subscribe, write } from "./prefs.ts";
 import type { Wired } from "./route.ts";
 
 /* TYPES */
@@ -28,27 +31,14 @@ export type Box = { w: number; h: number };
 
 type Hooks = { preview: (next: Draft | null) => void; commit: (next: Draft | null) => void };
 
-type CardProps = { one: Widget; editing?: boolean; held?: boolean; lens?: boolean; onRemove?: (id: string) => void };
-
-type GalleryProps = {
-  list: string[];
-  done: RefObject<HTMLButtonElement | null>;
-  onAdd: (id: string) => void;
-  onDone: () => void;
-};
-
-type MenuProps = { at: Spot; onEdit: () => void; onClose: () => void };
-
 const MINUTE = 60000;
 const SPACES: [number, number][] = [
   [2, 2],
   [3, 2],
   [2, 3],
 ];
-const SKIP = "a, button, input, textarea, select, .bar, .dock, .catalog, .menu";
-const EDGE = 8;
-const BARE = ".widgets, .widgets .column";
-const KEEP = ".widgets, .catalog, .bar";
+const SKIP = "a, button, input, textarea, select, [popover], .bar, .docked";
+const EDGE = measure.edge;
 
 const two = (n: number) => String(n).padStart(2, "0");
 const shift = (ms = 0) => dispatchEvent(new CustomEvent("shift", { detail: ms }));
@@ -251,105 +241,12 @@ export function kept(text: string): string[] {
   }
 }
 
-function Card({ one, editing, held, lens = true, onRemove }: CardProps) {
-  const { Body } = one;
-  return (
-    <article
-      className={lens ? "widget" : "widget frost"}
-      data-id={lens ? one.id : undefined}
-      data-size={one.size}
-      data-lens={lens ? "widget" : undefined}
-      data-held={held ? "" : undefined}
-      inert={!lens}
-      aria-label={one.name}
-    >
-      {editing && (
-        <button
-          type="button"
-          className="remove"
-          aria-label={`Remove ${one.name}`}
-          title={`Remove ${one.name}`}
-          onClick={() => onRemove!(one.id)}
-        >
-          <Glyph art="minus" />
-        </button>
-      )}
-      <Body />
-    </article>
-  );
-}
-
-function Gallery({ list, done, onAdd, onDone }: GalleryProps) {
-  const shelf = useRef<HTMLDivElement>(null);
-  const box = useRef<HTMLElement>(null);
-  useEffect(() => sortable(shelf.current!, { kind: "catalog", axis: "x", name: (id) => BY.get(id)?.name ?? id }), []);
-  useEffect(() => done.current?.focus(), []);
-  useEffect(() => {
-    const watch = new ResizeObserver(() => root().style.setProperty("--gallery", `${box.current!.offsetHeight}px`));
-    watch.observe(box.current!);
-    return () => {
-      watch.disconnect();
-      root().style.removeProperty("--gallery");
-    };
-  }, []);
-  return (
-    <section className="catalog" ref={box} data-lens="window" aria-label="Widget gallery">
-      <header>
-        <h2>Widgets</h2>
-        <button type="button" className="primary" ref={done} onClick={onDone}>
-          Done
-        </button>
-      </header>
-      <div className="row" ref={shelf}>
-        {WIDGETS.map((one) => {
-          const added = list.includes(one.id);
-          return (
-            <div key={one.id} className="pick" data-id={added ? undefined : one.id} data-size={one.size}>
-              <Card one={one} lens={false} />
-              <span>{one.name}</span>
-              <button type="button" disabled={added} onClick={() => onAdd(one.id)}>
-                {added ? "Added" : "Add"}
-              </button>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 /* MENU */
 
 export const clamp = (at: Spot, w: number, h: number, view: Box): Spot => ({
   x: Math.max(EDGE, Math.min(at.x, view.w - w - EDGE)),
   y: Math.max(EDGE, Math.min(at.y, view.h - h - EDGE)),
 });
-
-function Menu({ at, onEdit, onClose }: MenuProps) {
-  const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const pop = box.current;
-    if (!pop) return undefined;
-    pop.showPopover?.();
-    const { x, y } = clamp(at, pop.offsetWidth, pop.offsetHeight, { w: innerWidth, h: innerHeight });
-    pop.style.setProperty("--x", `${x}px`);
-    pop.style.setProperty("--y", `${y}px`);
-    pop.querySelector<HTMLElement>("button, a")?.focus();
-    const gone = (e: ToggleEvent) => e.newState === "closed" && onClose();
-    pop.addEventListener("toggle", gone);
-    return () => pop.removeEventListener("toggle", gone);
-  }, [at]);
-  return (
-    <div ref={box} className="pop menu" popover="auto" data-lens="menu">
-      <button type="button" onClick={onEdit}>
-        Edit Widgets
-      </button>
-      <a className="button" href="/settings/desktop/" onClick={() => box.current?.hidePopover?.()}>
-        Change Wallpaper
-      </a>
-    </div>
-  );
-}
 
 /* WIDGETS */
 
@@ -359,9 +256,13 @@ function Widgets() {
   const [editing, setEditing] = useState(false);
   const [menu, setMenu] = useState<Spot | null>(null);
   const live = useRef(list);
-  const column = useRef<HTMLDivElement>(null);
-  const edit = useRef<HTMLButtonElement>(null);
-  const done = useRef<HTMLButtonElement>(null);
+  const aside = useRef<HTMLElement | null>(null);
+  const column = useRef<HTMLElement | null>(null);
+  const edit = useRef<HTMLElement | null>(null);
+  const done = useRef<HTMLElement | null>(null);
+  const gallery = useRef<HTMLElement | null>(null);
+  const shelf = useRef<HTMLElement | null>(null);
+  const pop = useRef<HTMLElement | null>(null);
   const was = useRef(false);
   const hooks = useRef<Hooks | null>(null);
 
@@ -380,18 +281,21 @@ function Widgets() {
       }),
   };
 
-  useEffect(
-    () =>
-      sortable(column.current!, {
-        kind: "widgets",
-        scroller: column.current!.parentElement,
-        takes: (from) => (from === "widgets" ? "move" : from === "catalog" ? "copy" : ""),
-        name: (id) => BY.get(id)?.name ?? id,
-        preview: (next) => hooks.current!.preview(next),
-        commit: (next) => hooks.current!.commit(next),
-      }),
-    [],
-  );
+  const ours = (target: Element) =>
+    [aside.current, column.current, gallery.current].some((one) => one?.contains(target));
+
+  useEffect(() => {
+    const el = column.current;
+    if (!el) return undefined;
+    return sortable(el, {
+      kind: "widgets",
+      scroller: el.parentElement,
+      takes: (from) => (from === "widgets" ? "move" : from === "catalog" ? "copy" : ""),
+      name: (id) => BY.get(id)?.name ?? id,
+      preview: (next) => hooks.current!.preview(next),
+      commit: (next) => hooks.current!.commit(next),
+    });
+  }, []);
 
   useEffect(
     () =>
@@ -409,6 +313,12 @@ function Widgets() {
     if (editing) root().dataset.editing = "";
     else delete root().dataset.editing;
     if (!editing) return undefined;
+    const row = shelf.current;
+    const off = row ? sortable(row, { kind: "catalog", axis: "x", name: (id) => BY.get(id)?.name ?? id }) : null;
+    const box = gallery.current;
+    const watch = new ResizeObserver(() => box && root().style.setProperty("--gallery", `${box.offsetHeight}px`));
+    if (box) watch.observe(box);
+    done.current?.focus();
     const key = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.defaultPrevented) return;
       e.preventDefault();
@@ -419,8 +329,8 @@ function Widgets() {
       const target = e.target instanceof Element ? e.target : null;
       armed = null;
       if (!target) return;
-      if (target.matches(BARE)) armed = e.pointerId;
-      else if (!target.closest(KEEP)) setEditing(false);
+      if (target === aside.current || target === column.current) armed = e.pointerId;
+      else if (!ours(target) && !target.closest(".bar")) setEditing(false);
     };
     const up = (e: PointerEvent) => e.pointerId === armed && setEditing(false);
     const cancel = () => {
@@ -433,6 +343,9 @@ function Widgets() {
     document.addEventListener("pointercancel", cancel);
     addEventListener("wire", wire);
     return () => {
+      off?.();
+      watch.disconnect();
+      root().style.removeProperty("--gallery");
       document.removeEventListener("keydown", key);
       document.removeEventListener("pointerdown", press);
       document.removeEventListener("pointerup", up);
@@ -454,7 +367,8 @@ function Widgets() {
         !root().hasAttribute("data-desk") ||
         root().dataset.welcome === "open" ||
         !target ||
-        target.closest(SKIP)
+        target.closest(SKIP) ||
+        gallery.current?.contains(target)
       )
         return;
       e.preventDefault();
@@ -465,52 +379,79 @@ function Widgets() {
   }, []);
 
   useEffect(() => {
+    const box = pop.current;
+    if (!menu || !box) return undefined;
+    box.showPopover?.();
+    const { x, y } = clamp(menu, box.offsetWidth, box.offsetHeight, { w: innerWidth, h: innerHeight });
+    box.style.setProperty("--x", `${x}px`);
+    box.style.setProperty("--y", `${y}px`);
+    box.querySelector<HTMLElement>("button, a")?.focus();
+    const gone = (e: ToggleEvent) => e.newState === "closed" && setMenu(null);
+    box.addEventListener("toggle", gone);
+    return () => box.removeEventListener("toggle", gone);
+  }, [menu]);
+
+  useEffect(() => {
     shift();
   });
 
-  const inert = (e: Clicked<HTMLDivElement>) => {
+  if (!parts.widgets) return null;
+  const inert = (e: Clicked<HTMLElement>) => {
     if (editing && e.target instanceof Element && e.target.closest("a")) e.preventDefault();
   };
   const remove = (gone: string) => {
     const next = live.current[live.current.indexOf(gone) + 1];
     flushSync(() => keep(live.current.filter((one) => one !== gone)));
-    ((next && column.current?.querySelector<HTMLElement>(`[data-id="${next}"] > .remove`)) || done.current)?.focus();
+    ((next && column.current?.querySelector<HTMLElement>(`[data-id="${next}"] button`)) || done.current)?.focus();
   };
-  const shown = placed(list, draft);
   const held = draft && draft.index !== null ? draft.id : null;
+  const cards = placed(list, draft).flatMap((id) => {
+    const one = BY.get(id);
+    return one ? [{ id, name: one.name, size: one.size, body: <one.Body />, held: id === held }] : [];
+  });
 
   return (
-    <>
-      <aside className="widgets" aria-label="Widgets" data-editing={editing ? "" : undefined}>
-        <div className="column" ref={column} onClickCapture={inert}>
-          {shown.map((id) => (
-            <Card key={id} one={BY.get(id)!} editing={editing} held={id === held} onRemove={remove} />
-          ))}
-        </div>
-        {!editing && (
-          <button type="button" className="edit" ref={edit} onClick={() => setEditing(true)}>
-            Edit Widgets
-          </button>
-        )}
-      </aside>
-      {editing && (
-        <Gallery list={list} done={done} onAdd={(id) => keep([...live.current, id])} onDone={() => setEditing(false)} />
-      )}
-      {menu && (
-        <Menu
-          at={menu}
-          onEdit={() => {
-            setMenu(null);
-            setEditing(true);
-          }}
-          onClose={() => setMenu(null)}
-        />
-      )}
-    </>
+    <parts.widgets
+      cards={cards}
+      editing={editing}
+      gallery={WIDGETS.map((one) => ({
+        id: one.id,
+        name: one.name,
+        size: one.size,
+        body: <one.Body />,
+        added: list.includes(one.id),
+      }))}
+      menu={
+        menu && {
+          list: () => ({ ref: pop, popover: "auto" }),
+          edit: () => ({
+            onClick: () => {
+              setMenu(null);
+              setEditing(true);
+            },
+          }),
+          wallpaper: () => ({ href: "/settings/desktop/", onClick: () => pop.current?.hidePopover?.() }),
+        }
+      }
+      onEdit={setEditing}
+      onAdd={(id) => keep([...live.current, id])}
+      onRemove={remove}
+      bind={{
+        root: () => ({ ref: aside }),
+        column: () => ({ ref: column, onClickCapture: inert }),
+        card: (id) => () => ({ "data-id": id }),
+        edit: () => ({ ref: edit }),
+        gallery: () => ({ ref: gallery }),
+        shelf: () => ({ ref: shelf }),
+        pick: (id) => () => ({ "data-id": list.includes(id) ? undefined : id }),
+        done: () => ({ ref: done }),
+      }}
+    />
   );
 }
 
 export function start() {
+  if (!parts.widgets) return;
   const host = document.createElement("div");
   host.className = "desked";
   document.body.append(host);

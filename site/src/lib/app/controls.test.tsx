@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { FakeNode } from "../../../test/dom.ts";
 import { doc, find, mount, text } from "../../../test/dom.ts";
 import { Btn, Export, Fold, Icon, Menu, Pick, Row, Segment, Toggle } from "./controls.tsx";
 import type { Scalar } from "./spec.ts";
@@ -8,24 +9,43 @@ type Loose = { detail: number; currentTarget: { blur: () => void } };
 
 type Props = { onChange: (e: { target: { value: string } }) => void };
 
-test("a Toggle writes 1 when switched on and 0 when switched off", () => {
+const hooks = (el: FakeNode) =>
+  Object.entries<unknown>(el).find(([key]) => key.startsWith("__reactProps"))![1] as Record<
+    string,
+    (e: unknown) => void
+  >;
+
+test("a Toggle writes 1 when switched on and 0 when switched off", async () => {
   const wrote: number[] = [];
-  const input = (value: Scalar) => Toggle({ label: "wrap", value, onChange: (v) => wrote.push(v) }).props.children[1];
-  input(0).props.onChange({ target: { checked: true } });
-  input(1).props.onChange({ target: { checked: false } });
+  await mount(async (draw, host) => {
+    await draw(<Toggle label="wrap" value={0} onChange={(v) => wrote.push(v)} />);
+    const input = hooks(find(host, (at) => at.tagName === "INPUT")!);
+    input.onChange!({ target: { checked: true } });
+    input.onChange!({ target: { checked: false } });
+  });
   expect(wrote).toEqual([1, 0]);
 });
 
-test("a Btn or a fold header a pointer clicks lets go of focus before its action, one a key presses keeps it", () => {
+test("a Btn or a fold header a pointer clicks lets go of focus before its action, one a key presses keeps it", async () => {
   const seen: string[] = [];
-  const click = Btn({ onClick: () => seen.push("act"), children: "Reroll" }).props.onClick;
-  const head = Fold({ name: "Jump", open: false }).props.children[0].props.onClick;
-  const at = (fn: (e: Loose) => void, detail: number) =>
-    fn({ detail, currentTarget: { blur: () => seen.push(`blur ${detail}`) } });
-  at(click, 1);
-  at(click, 0);
-  at(head, 1);
-  at(head, 0);
+  await mount(async (draw, host) => {
+    await draw(
+      <>
+        <Btn onClick={() => seen.push("act")}>Reroll</Btn>
+        <Fold name="Jump" open={false}>
+          x
+        </Fold>
+      </>,
+    );
+    const click = hooks(find(host, (at) => at.tagName === "BUTTON")!).onClick!;
+    const head = hooks(find(host, (at) => at.tagName === "SUMMARY")!).onClick!;
+    const at = (fn: (e: Loose) => void, detail: number) =>
+      fn({ detail, currentTarget: { blur: () => seen.push(`blur ${detail}`) } });
+    at(click, 1);
+    at(click, 0);
+    at(head, 1);
+    at(head, 0);
+  });
   expect(seen).toEqual(["blur 1", "act", "act", "blur 1"]);
 });
 

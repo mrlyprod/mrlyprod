@@ -33,7 +33,7 @@
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "overrides": [
     {
-      "includes": ["site/src/shell/dock.tsx", "site/src/pages/stats/index.tsx"],
+      "includes": ["site/src/designs/glass/dock.tsx", "site/src/pages/stats/index.tsx"],
       "linter": { "rules": { "suspicious": { "noArrayIndexKey": "off" } } }
     }
   ]

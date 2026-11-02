@@ -11,7 +11,7 @@ import { DESIGNS, ink, NUMBERS, tile } from "../../lib/designs/tiles.ts";
 import type { Rng } from "../../lib/rand.ts";
 import { pick } from "../../lib/rand.ts";
 import type { Over, State } from "./engine.ts";
-import { DOWN, LEFT, RIGHT, rounds, start, starve, step, turn, UP } from "./engine.ts";
+import { boot, DOWN, LEFT, RIGHT, rounds, STARVE, step, TICK, toward, UP } from "./engine.ts";
 import { pick as choose, STARVED } from "./policy.ts";
 
 /* TYPES */
@@ -143,7 +143,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   let gone = false;
   const tell = <K extends keyof Told>(name: K, arg: Told[K]) => !gone && (opts as Hooks)[name]?.(arg);
   const begin = () => {
-    state = start(value, rand);
+    state = boot({ ...value, seed: Math.floor(rand() * 4294967296) });
     marks = Object.fromEntries(
       PARTS.map((part) => {
         const design = pick(rand, DESIGNS);
@@ -162,9 +162,9 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     const score = state.score;
     if (auto && !state.queue.length) {
       const dir = choose(state, play, rand);
-      state = dir === STARVED ? starve(state) : turn(state, dir);
+      state = step(state, dir === STARVED ? STARVE : toward(dir));
     }
-    state = step(state, rand);
+    state = step(state, TICK);
     if (state.score !== score) tell("onScore", state.score);
     if (!state.over) return;
     ended = view.t;
@@ -216,7 +216,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     gone = true;
   };
   const move = (dir: number) => {
-    state = turn(state, dir);
+    state = step(state, toward(dir));
     if (!auto) view.wake?.();
   };
   begin();

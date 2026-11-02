@@ -1,4 +1,5 @@
 mod cli;
+mod config;
 mod disk;
 mod js;
 mod model;
@@ -8,12 +9,14 @@ mod report;
 mod resolve;
 #[cfg(test)]
 mod tests;
+mod toml;
 mod version;
 
+use config::Config;
 use model::{Manifest, Result};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-type Backend = fn(&Manifest, &Path) -> Result<()>;
+type Backend = fn(&Manifest, &Path, &config::Layout) -> Result<()>;
 
 const BACKENDS: &[(&str, Backend)] = &[
     ("cli", cli::write),
@@ -23,24 +26,27 @@ const BACKENDS: &[(&str, Backend)] = &[
 ];
 
 fn main() {
-    let home = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let root = home.ancestors().nth(2).expect("bridge sits in crates");
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let done = match args.iter().map(String::as_str).collect::<Vec<_>>()[..] {
-        [] => run(root),
-        ["check"] => check(root),
-        ["bump"] => version::bump(root),
-        _ => Err("usage: bridge [check|bump]".to_string()),
-    };
+    let done = config::load(&config::home()).and_then(|config| {
+        let (root, manifest) = (config.root.clone(), config.layout.manifest.clone());
+        match args.iter().map(String::as_str).collect::<Vec<_>>()[..] {
+            [] => run(config),
+            ["check"] => check(config),
+            ["bump"] => version::bump(&root, &manifest),
+            _ => Err("usage: bridge [check|bump]".to_string()),
+        }
+    });
     if let Err(error) = done {
         eprintln!("{error}");
         std::process::exit(1);
     }
 }
 
-fn check(root: &Path) -> Result<()> {
+fn check(config: Config) -> Result<()> {
+    let root = config.root.clone();
+    let root = root.as_path();
     disk::watch();
-    let done = run(root);
+    let done = run(config);
     let mut lines: Vec<String> = disk::stale()
         .iter()
         .map(|path| path.strip_prefix(root).unwrap_or(path))
@@ -73,26 +79,34 @@ fn listed(root: &Path) -> String {
     std::fs::read_to_string(root.join(disk::ATTRIBUTES)).unwrap_or_default()
 }
 
-fn run(root: &Path) -> Result<()> {
-    let files = parse::load_crates(&root.join("crates"))?;
+fn run(config: Config) -> Result<()> {
+    let Config {
+        root,
+        layout,
+        mounts,
+        hands,
+    } = config;
+    let root = root.as_path();
+    model::install(hands);
+    let files = parse::load_crates(&mounts)?;
     let version = version::read(root)?;
     let built = resolve::build(&files, &version)?;
     let json = serde_json::to_string_pretty(&built.manifest).map_err(|e| e.to_string())?;
-    disk::save(&root.join(version::MANIFEST), &(json + "\n"))?;
+    disk::save(&root.join(&layout.manifest), &(json + "\n"))?;
     for line in report::skip_lines(&built.manifest) {
         println!("{line}");
     }
     for line in report::summary(&built.manifest, built.macro_body_fns) {
         println!("{line}");
     }
-    let skip_txt = std::fs::read_to_string(root.join("crates/bridge/skip.txt")).unwrap_or_default();
+    let skip_txt = std::fs::read_to_string(root.join(&layout.skip)).unwrap_or_default();
     let mut errors = built.collisions;
     errors.extend(report::check_skip(&built.manifest, &skip_txt));
     if !errors.is_empty() {
         return Err(errors.join("\n"));
     }
     for (name, write) in BACKENDS {
-        write(&built.manifest, root).map_err(|e| format!("{name}: {e}"))?;
+        write(&built.manifest, root, &layout).map_err(|e| format!("{name}: {e}"))?;
     }
     let before = listed(root);
     let orphans = disk::orphans(root, &before);

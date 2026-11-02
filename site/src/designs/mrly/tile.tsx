@@ -1,0 +1,27 @@
+import { classes } from "../../lib/app/room.ts";
+import type { Props } from "../../shell/design.ts";
+import { hash, MRLY, tint } from "./cell.ts";
+
+/* TILE */
+
+export function Tile({ id, title, href, art, current, soon, named, bind }: Props["tile"]) {
+  return (
+    <a
+      className={classes("tile launcher", soon ? "soon" : undefined)}
+      {...MRLY}
+      href={href}
+      draggable="false"
+      style={tint(hash(id))}
+      aria-label={named ? undefined : title}
+      aria-current={current ? "page" : undefined}
+      data-name={title}
+      {...bind()}
+    >
+      <span className="art cell">
+        {art}
+        {soon && <span className="soon">soon</span>}
+      </span>
+      {named && <span className="name cell">{title.toLowerCase()}</span>}
+    </a>
+  );
+}

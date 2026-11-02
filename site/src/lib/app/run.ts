@@ -60,6 +60,7 @@ export type Stop<S extends Scene = Scene> = {
   play: () => void;
   coast: (span: number) => void;
   fix: (next?: Fix | null) => void;
+  seek: (t: number) => boolean;
   set: (next: Opts) => boolean;
   readonly late: number;
   scene: S;
@@ -83,6 +84,18 @@ const LAG = 100;
 const SHORT = 540;
 
 const DEBT = 4;
+
+const STEP = 1000 / 60;
+
+/* WORLD */
+
+const live = new Set<Pick<Stop, "seek">>();
+
+export function seek(t: number): boolean {
+  if (!live.size || !Number.isFinite(t)) return false;
+  for (const one of live) one.seek(t);
+  return true;
+}
 
 const calm = () =>
   (typeof document !== "undefined" && document.documentElement?.dataset?.motion === "reduce") ||
@@ -244,6 +257,7 @@ export function run<S extends Scene>(
   else start();
   const stop = () => {
     gone = true;
+    live.delete(stop);
     halt();
     eye?.disconnect();
     tape?.disconnect();
@@ -284,6 +298,20 @@ export function run<S extends Scene>(
     if (size()) saver.size?.();
     if (still || paused) draw();
   };
+  stop.seek = (t: number) => {
+    if (gone || t < view.t) return false;
+    halt();
+    paused = true;
+    const from = view.t;
+    const n = Math.max(1, Math.round((t - from) / (held?.step ?? STEP)));
+    for (let i = 1; i <= n; i++) {
+      view.t = from + ((t - from) * i) / n;
+      saver.draw();
+    }
+    fed(canvas);
+    after();
+    return true;
+  };
   stop.set = (next: Opts) => {
     if (gone || !saver.set) return false;
     if (next.seed !== opts.seed) view.rand = rng(next.seed);
@@ -295,5 +323,7 @@ export function run<S extends Scene>(
   };
   Object.defineProperty(stop, "late", { get: () => late });
   stop.scene = saver;
+  live.add(stop);
+  if (typeof window !== "undefined") Object.assign(window, { world: { seek } });
   return stop as Stop<S>;
 }

@@ -13,7 +13,7 @@ const ROWS: Pick<Row, "route" | "kind" | "meta">[] = [
 ];
 
 const kind = (to: string, from: string) =>
-  sort(new URL(to, `https://mrly.net${from}`), new URL(`https://mrly.net${from}`), DEEP);
+  sort(new URL(to, `https://example.com${from}`), new URL(`https://example.com${from}`), DEEP);
 
 test("a path takes its exact row, else the longest deep row it sits under, else missing, and /index.html is home", () => {
   const rows = [
@@ -47,7 +47,7 @@ test("the router takes a page and leaves another origin, a file, a fragment of t
     ["#who", "/about/", "mark"],
     ["#", "/menu/", "mark"],
     ["https://oeis.org/A000001/", "/research/beneath/", ""],
-    ["mailto:help@mrly.net", "/contact/", ""],
+    ["mailto:", "/contact/", ""],
     ["/robots.txt", "/menu/", ""],
     ["/sitemap.xml", "/menu/", ""],
     ["/404.html", "/menu/", ""],

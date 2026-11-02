@@ -1,3 +1,4 @@
+use crate::config::Mount;
 use crate::model::{Result, SelfKind};
 use quote::ToTokens;
 use std::collections::BTreeMap;
@@ -142,22 +143,14 @@ pub fn load(src: &Path) -> Result<Files> {
     Ok(files)
 }
 
-pub fn load_crates(crates: &Path) -> Result<Files> {
-    let mut files = load(&crates.join("mrly/src"))?;
-    let mut units: Vec<String> = std::fs::read_dir(crates)
-        .map_err(|e| format!("{}: {e}", crates.display()))?
-        .filter_map(|e| e.ok())
-        .filter_map(|e| {
-            e.file_name()
-                .to_str()?
-                .strip_prefix("mrly-")
-                .map(String::from)
-        })
-        .collect();
-    units.sort();
-    for unit in units {
-        for (key, text) in load(&crates.join(format!("mrly-{unit}/src")))? {
-            files.insert(format!("{unit}/{key}"), text);
+pub fn load_crates(mounts: &[Mount]) -> Result<Files> {
+    let mut files = Files::new();
+    for mount in mounts {
+        for (key, text) in load(&mount.src)? {
+            match &mount.unit {
+                Some(unit) => files.insert(format!("{unit}/{key}"), text),
+                None => files.insert(key, text),
+            };
         }
     }
     Ok(files)

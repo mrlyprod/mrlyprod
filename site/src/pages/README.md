@@ -21,7 +21,7 @@
 - `menu`: the Launchpad over the desk (`../shell/launchpad.tsx`).
 - `method`: prose: Carlo directs, Claude writes and computes, every number names its generator.
 - `missing`: hidden: the 404 page, "Nothing here".
-- `mrlymath`: prose from `crates/mrly-core/src/name/NAMES.md`: a design as one string.
+- `mrlymath`: prose from `crates/core/src/name/NAMES.md`: a design as one string.
 - `redirects`: hidden: the moved urls of `redirects.json`.
 - `research`: Research app: the topics in the Library, the grid at `/research/`, a topic's README with its live figures at `/research/<slug>/`.
 - `screensavers`: deep: `/screensavers/` shows every saver of `../shell/savers.ts` by app, with stills shot one at a time (`screensavers/shots.ts`); `/screensavers/<app>/<id>/` plays one live, with Reroll, its value, Open in the app, Use as desktop picture, In shuffle and Run full screen.
@@ -30,7 +30,7 @@
 
 ## SETTINGS
 
-- `../../shell/panes.ts`: `PANES` (`id`, `title`, `art` a 5x5 glyph, `hue`, `more` the search words, `href`), shared with the Launchpad search.
+- `../../shell/panes.ts`: `PANES` (`id`, `title`, `art` a 5x5 glyph, `more` the search words, `href`), shared with the Launchpad search; each pane's hue lives in `settings/index.tsx`.
 - `index.tsx`: the frame: a sidebar (search, More, one row a pane) and the pane; it catches its own links (`depth` grows on each), popstate, the title and the canonical link.
 - Desk: two columns, `/settings/` shows Appearance. Phone: `/settings/` is the list, a pane has a back row.
 - Search ranks panes by title, `more` and each pane's `FIND`; `/` or Cmd/Ctrl+F focuses it, Enter opens the first hit, Escape clears; arrows walk the list.

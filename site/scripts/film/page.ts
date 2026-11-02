@@ -4,6 +4,7 @@ import { run } from "../../src/lib/app/run.ts";
 import type { Rng } from "../../src/lib/rand.ts";
 import { rng } from "../../src/lib/rand.ts";
 import type { Name, Units } from "../../src/lib/units/index.ts";
+import { COLS } from "./grid.ts";
 
 /* TYPES */
 
@@ -61,8 +62,6 @@ type Held = { frame: Size; step: number; after: (info: Info) => void };
 export const SIZE: Size = [1280, 720];
 
 const TILE: Size = [320, 180];
-
-const COLS = 6;
 
 export const sheet = (frames: number): Size => [COLS * TILE[0], Math.ceil(frames / COLS) * TILE[1]];
 

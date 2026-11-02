@@ -1,3 +1,4 @@
+use crate::config::Layout;
 use crate::disk::save;
 use crate::model::{
     Cross, Function, Manifest, Result, SelfKind, Source, Ty, Type, TypeCross, TypeKind,
@@ -5,12 +6,12 @@ use crate::model::{
 use std::collections::BTreeMap;
 use std::path::Path;
 
-pub const DOORS: &str = "bindings/cli/src/doors.gen.rs";
+pub const DOORS: &str = "src/doors.gen.rs";
 
-pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
+pub fn write(manifest: &Manifest, root: &Path, layout: &Layout) -> Result<()> {
     let book = Book::new(manifest);
     let doors = doors(&book, manifest)?;
-    save(&root.join(DOORS), &render(&doors))
+    save(&root.join(&layout.cli).join(DOORS), &render(&doors))
 }
 
 // BOOK

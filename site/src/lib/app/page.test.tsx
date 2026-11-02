@@ -108,7 +108,8 @@ test("a page with about draws the Info card; one with no about and no readouts d
     renderToStaticMarkup(
       <Held Widget={() => null} defaults={{ seed: 0 }} keys={[]} actions={{}} about={about} id="x" />,
     );
-  const card = (about?: string[]) => html(about).includes('<dialog class="modal info" aria-label="Info">');
+  const card = (about?: string[]) =>
+    html(about).includes('<dialog class="modal info" aria-label="Info" data-light="true">');
   expect([card(["A carpet of cells."]), card(undefined)]).toEqual([true, false]);
   Reflect.deleteProperty(globalThis, "location");
 });

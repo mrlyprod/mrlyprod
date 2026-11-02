@@ -27,14 +27,14 @@ type Link = HTMLAnchorElement & {
 
 type Drawn = Node & { row: Row; text: string; form: string | undefined; innerHTML: string };
 
-const ROOT = "https://mrly.net";
+const ROOT = "https://example.com";
 
 const SITE = {
   title: "mrly",
   root: ROOT,
   tagline: "designs",
-  prefix: "mrly-",
-  company: "MrlyProd",
+  prefix: "ex-",
+  company: "Example",
   since: 2026,
   doors: [],
 };
@@ -173,6 +173,7 @@ const describe = Object.assign(el("meta"), { name: "description" });
 head.append(describe);
 body.append(main, el("aside"));
 const panes: Record<string, Node> = { main, right: body.kids[1] };
+const frame = el("section");
 const texts: Record<string, string> = { "/raw/site/README.md": "# About" };
 const breaks = new Set<string>();
 const store = new Map<string, string>();
@@ -188,7 +189,7 @@ Object.assign(globalThis, {
     body,
     createElement: el,
     getElementById: (id: string) => panes[id] ?? null,
-    querySelector: () => null,
+    querySelector: (selector: string) => (selector === ".window" ? frame : null),
     addEventListener: (type: string, fn: Heard) => type === "click" && heard.click.push(fn),
   },
   window: {
@@ -244,6 +245,7 @@ const shell = () => ({
 
 const app = () => ({ ...shell(), gated: (row: Row) => Boolean(row.meta.scene) });
 
+mock.module("./mount.ts", () => ({}));
 mock.module("site:css", () => ({ css: {} }));
 mock.module("site:routes", () => ({ rows: ROWS, site: SITE }));
 mock.module("./app.tsx", app);
@@ -359,4 +361,11 @@ test("a gated app redraws when the form turns, and any other page stays", async 
     1,
     "/life/",
   ]);
+});
+
+test("the window carries the app's id on an app route and an empty one on a page", async () => {
+  await visit("/life/");
+  const life = frame.dataset.app;
+  await visit("/about/");
+  expect([life, frame.dataset.app]).toEqual(["life", ""]);
 });

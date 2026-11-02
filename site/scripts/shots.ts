@@ -1,22 +1,32 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { decide, joined } from "../infra/edge.ts";
 import { kind } from "../infra/mime.ts";
 import { decode } from "../src/lib/git/view.ts";
+import { COLS } from "./film/grid.ts";
 
 /* WHERE */
 
-export type Size = [number, number, boolean];
+export type Screen = [number, number, number];
 
-export type Block = { routes: string[]; sizes: Record<string, Size> };
+export type Block = { routes: string[]; screen: Screen };
+
+export type Frame = {
+  file: string;
+  route: string;
+  n: number;
+  t: number;
+  clock: "world" | "wall" | "still";
+  sha: string;
+};
 
 const CHROME = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const PORT = 9335;
 const SERVE = 3335;
 const LIVE = (process.env.SITE_URL ?? "").replace(/\/$/, "");
 const CSP = process.env.CSP ?? "";
-const TALL = 6000;
+const CELL = 320;
 const PATIENCE = 15000;
 const REPLY = 30000;
 const ACT = 900000;
@@ -27,7 +37,8 @@ const TAP = 60;
 
 export function block(config: Record<string, unknown>): Block {
   const found = config.shots as Block | undefined;
-  if (!found?.routes?.length || !found.sizes) throw new Error("shots: site.json has no shots block");
+  if (!found?.routes?.length || found.screen?.length !== 3)
+    throw new Error("shots: site.json has no shots block with a screen");
   return found;
 }
 
@@ -36,7 +47,21 @@ export function block(config: Record<string, unknown>): Block {
 const doc = (bytes: Uint8Array) =>
   new TextDecoder().decode(bytes.subarray(0, 15)).toLowerCase().startsWith("<!doctype html");
 
-function serve(dist: string) {
+export type Answer = (path: string) => { uri?: string; redirect?: string };
+
+const edge: Answer = (path) => decide(decode(path));
+
+function top(dir: string): string {
+  return existsSync(join(dir, ".git")) || dirname(dir) === dir ? dir : top(dirname(dir));
+}
+
+export function screened(text: string): Screen {
+  const m = /^(\d+)x(\d+)(?:@(\d))?$/.exec(text);
+  if (!m) throw new Error(`shots: --screen takes WxH or WxH@dpr, as 1000x600@2, not ${text}`);
+  return [Number(m[1]), Number(m[2]), Number(m[3] ?? 2)];
+}
+
+function serve(dist: string, answer: Answer) {
   const file = (path: string): Response | null => {
     const want = join(dist, path.endsWith("/") ? `${path}index.html` : path);
     if (!want.startsWith(dist) || !existsSync(want) || !statSync(want).isFile()) return null;
@@ -50,7 +75,7 @@ function serve(dist: string) {
     port: SERVE,
     fetch(req) {
       const url = new URL(req.url);
-      const step = decide(decode(url.pathname));
+      const step = answer(url.pathname);
       if (step.redirect) return Response.redirect(joined(step.redirect, url.search), 301);
       const hit = file(step.uri!);
       if (hit) return hit;
@@ -211,6 +236,18 @@ const painted = (born: number) =>
 
 const WIDE = `JSON.stringify([...document.querySelectorAll("body *")].filter((el) => !el.closest(".pane, .scrim") && getComputedStyle(el).visibility !== "hidden").map((el) => [el, el.getBoundingClientRect()]).filter(([, r]) => r.right > innerWidth + 1 && r.width > 0).sort((a, b) => b[1].right - a[1].right).slice(0, 4).map(([el, r]) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\\s+/).join(".") : "") + " right=" + Math.round(r.right) + " width=" + Math.round(r.width)))`;
 
+const SEEK = (t: number) => `typeof window.world?.seek === "function" && window.world.seek(${t}) === true`;
+
+const FRAMED = "new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(1))))";
+
+const PINNED = `(() => { const T = Date.UTC(2026, 0, 1, 8, 41); const t0 = performance.now(); const D = Date; const at = () => T + performance.now() - t0; class Pinned extends D { constructor(...a) { super(...(a.length ? a : [at()])); } static now() { return at(); } } globalThis.Date = Pinned; let s = 0x9e3779b9; Math.random = () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return (s >>> 0) / 4294967296; }; })()`;
+
+export function every(text: string): number {
+  const m = /^(\d+(?:\.\d+)?)(ms|s)?$/.exec(text.trim());
+  if (!m) throw new Error(`shots: --every takes seconds, as 2s, 0.5 or 500ms, not ${text}`);
+  return Math.round(Number(m[1]) * (m[2] === "ms" ? 1 : 1000));
+}
+
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex").slice(0, 8);
 
 /* KEYS */
@@ -281,14 +318,21 @@ const moved = (from: string) =>
 
 /* RUN */
 
-const VALUED = ["--js", "--theme", "--size", "--keys", "--frames"];
+const VALUED = ["--js", "--theme", "--keys", "--count", "--every", "--run", "--screen"];
 
-export async function main(root: string, config?: Record<string, unknown>, dist = join(root, "dist")): Promise<void> {
+export async function main(
+  root: string,
+  config?: Record<string, unknown>,
+  dist = join(root, "dist"),
+  answer: Answer = edge,
+): Promise<void> {
   const conf = config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Record<string, unknown>);
-  const { routes, sizes } = block(conf);
-  const repo = resolve(import.meta.dir, "../..");
-  const DATA_DIR = join(repo, "data", relative(repo, root), "scripts");
+  const { routes, screen: told } = block(conf);
   const args = process.argv.slice(2);
+  const screen = args.includes("--screen") ? screened(args[args.indexOf("--screen") + 1] ?? "") : told;
+  const [width, height, dpr] = screen;
+  const repo = top(root);
+  const DATA_DIR = join(repo, "data", relative(repo, root), "scripts");
   const flag = (name: string) => (args.includes(name) ? (args[args.indexOf(name) + 1] ?? "") : "");
   const print = args.includes("--print");
   const baseline = args.includes("--baseline");
@@ -298,24 +342,26 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
   const walk = args.includes("--walk");
   const probe = flag("--js");
   const scheme = flag("--theme");
-  const only = flag("--size");
   const keys = flag("--keys") ? flag("--keys").split(",") : [];
-  const frames = flag("--frames") ? flag("--frames").split(",").map(Number) : [];
+  const count = args.includes("--count") ? Number(flag("--count")) : 0;
+  const step = args.includes("--every") ? every(flag("--every")) : 1000;
+  const label = flag("--run") || (baseline ? "baseline" : "latest");
   const asked = args.filter((a, i) => !a.startsWith("--") && !VALUED.includes(args[i - 1] ?? ""));
   const pages = asked.length ? asked : routes;
-  const sized = Object.entries(sizes).filter(([size]) => !only || size === only);
-  if (!sized.length) throw new Error(`shots: --size ${only} is none of ${Object.keys(sizes).join(", ")}`);
-  if (frames.some((at) => !Number.isFinite(at) || at < 0))
-    throw new Error("shots: --frames takes milliseconds, as 0,200,400");
-  if (first && (walk || keys.length || frames.length))
-    throw new Error("shots: --first shoots alone, without --walk, --keys or --frames");
-  const out = join(DATA_DIR, "shots", baseline ? "baseline" : "latest");
+  if (args.includes("--count") && !(Number.isInteger(count) && count >= 1 && count <= 60))
+    throw new Error("shots: --count takes a whole number from 1 to 60");
+  if (!/^[a-z0-9-]+$/.test(label)) throw new Error("shots: --run takes lowercase letters, digits and hyphens");
+  if (first && (walk || keys.length || count))
+    throw new Error("shots: --first shoots alone, without --walk, --keys or --count");
+  const out = join(DATA_DIR, "shots", label);
+  const ran: Frame[] = [];
   const base = join(DATA_DIR, "shots", "baseline");
   const origin = LIVE || `http://127.0.0.1:${SERVE}`;
-  const name = (route: string, size: string, act: number, stage = "") =>
-    `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}-${size}${print ? "-print" : ""}${motion ? "-motion" : ""}${nojs ? "-nojs" : ""}${scheme ? `-${scheme}` : ""}${keys.length ? "-keys" : ""}${walk ? "-walk" : ""}${stage}.png`;
+  const name = (route: string, act: number, stage = "") =>
+    `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}${print ? "-print" : ""}${motion ? "-motion" : ""}${nojs ? "-nojs" : ""}${scheme ? `-${scheme}` : ""}${keys.length ? "-keys" : ""}${walk ? "-walk" : ""}${stage}.png`;
+  rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  const server = LIVE ? null : serve(resolve(dist));
+  const server = LIVE ? null : serve(resolve(dist), answer);
   const { proc, page } = await launch(join(DATA_DIR, "profile"));
   let shot = 0;
   let changed = 0;
@@ -327,6 +373,8 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
     await send("Page.enable");
     await send("Runtime.enable");
     await send("Log.enable");
+    await send("Page.addScriptToEvaluateOnNewDocument", { source: PINNED });
+    await send("Emulation.setTimezoneOverride", { timezoneId: "Europe/Rome" });
     await send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: out });
     await send("Emulation.setEmulatedMedia", {
       media: print ? "print" : "",
@@ -362,18 +410,15 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
       });
       console.log(`  ${exceptionDetails ? `probe failed: ${exceptionDetails.text}` : JSON.stringify(result.value)}`);
     };
-    const take = async ([width, height]: Size, file: string, view: boolean, note = "", tell = true) => {
+    const fit = (w: number, h: number, scale = dpr) =>
+      send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: scale, mobile: false });
+    const take = async (file: string, note = "", tell = true, frame?: Omit<Frame, "file" | "sha">) => {
       const { cssContentSize } = await send("Page.getLayoutMetrics");
-      const full = view ? height : Math.min(Math.ceil(cssContentSize.height), TALL);
-      const cap = await send(
-        "Page.captureScreenshot",
-        view
-          ? { format: "png" }
-          : { format: "png", captureBeyondViewport: true, clip: { x: 0, y: 0, width, height: full, scale: 1 } },
-      );
+      const cap = await send("Page.captureScreenshot", { format: "png" });
       const bytes = new Uint8Array(Buffer.from(cap.data, "base64"));
       await Bun.write(join(out, file), bytes);
       shot++;
+      ran.push({ route: "", n: 0, t: 0, clock: "still", ...frame, file, sha: sha(bytes) });
       const wide = Math.ceil(cssContentSize.width) > width;
       const was = join(base, file);
       let verdict = "";
@@ -386,7 +431,7 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
         fresh++;
       }
       console.log(
-        `shots: ${file} ${width}x${full} ${sha(bytes)}${note}${wide ? " OVERFLOW" : ""}${verdict}${tell && noise.length ? ` ${noise.length} NOISE` : ""}`,
+        `shots: ${file} ${width}x${height}@${dpr} ${sha(bytes)}${note}${wide ? " OVERFLOW" : ""}${verdict}${tell && noise.length ? ` ${noise.length} NOISE` : ""}`,
       );
       if (tell) {
         said();
@@ -396,14 +441,55 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
         const { result } = await send("Runtime.evaluate", { expression: WIDE, returnByValue: true });
         for (const line of JSON.parse(String(result.value)) as string[]) console.log(`  ${line}`);
       }
+      return bytes;
     };
+    const calm = async () => {
+      const glance = async () =>
+        (
+          await send("Page.captureScreenshot", {
+            format: "png",
+            clip: { x: 0, y: 0, width, height, scale: 0.25 },
+          })
+        ).data;
+      let was = await glance();
+      for (let i = 0; i < 40; i++) {
+        await wait(150);
+        const now = await glance();
+        if (now === was) return;
+        was = now;
+      }
+      console.log("  never still: frame 0 may differ between runs");
+    };
+    const contact = async (file: string, tiles: Uint8Array[]) => {
+      const cols = Math.min(tiles.length, COLS);
+      const cell = [CELL, Math.round((CELL * height) / width)] as const;
+      const [w, h] = [cols * cell[0], Math.ceil(tiles.length / cols) * cell[1]];
+      const imgs = tiles
+        .map(
+          (bytes, i) =>
+            `<img src="data:image/png;base64,${Buffer.from(bytes).toString("base64")}" style="position:absolute;left:${(i % cols) * cell[0]}px;top:${Math.floor(i / cols) * cell[1]}px;width:${cell[0]}px;height:${cell[1]}px">`,
+        )
+        .join("");
+      const tree = (await send("Page.getFrameTree")) as unknown as { frameTree: { frame: { id: string } } };
+      await fit(w, h);
+      await send("Page.setDocumentContent", {
+        frameId: tree.frameTree.frame.id,
+        html: `<!doctype html><html><body style="margin:0;background:#000">${imgs}</body></html>`,
+      });
+      await until(send, "[...document.images].every((i) => i.complete)", PATIENCE);
+      const cap = await send("Page.captureScreenshot", { format: "png" });
+      await Bun.write(join(out, file), Buffer.from(cap.data, "base64"));
+      console.log(`shots: ${file} ${w}x${h}@${dpr} sheet of ${tiles.length}`);
+      await fit(width, height);
+    };
+    const shown = motion || count > 0;
     const settle = async () => {
       if (nojs) {
         await until(send, QUIET, PATIENCE);
-        if (!motion) await send("Runtime.evaluate", { expression: STILL });
+        if (!shown) await send("Runtime.evaluate", { expression: STILL });
       } else
         await Promise.race([
-          send("Runtime.evaluate", { expression: ready(motion), awaitPromise: true, returnByValue: true }).catch(
+          send("Runtime.evaluate", { expression: ready(shown), awaitPromise: true, returnByValue: true }).catch(
             () => 0,
           ),
           wait(PATIENCE),
@@ -420,22 +506,36 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
         console.log(`  act failed: ${exceptionDetails.exception?.description ?? exceptionDetails.text}`);
       else if (result?.value !== undefined && result.value !== 0) console.log(`  act: ${JSON.stringify(result.value)}`);
     };
-    const finish = async (dims: Size, file: (stage: string) => string, moved: boolean, tell = true) => {
-      for (const step of keys) {
-        await stroke(send, step);
+    const finish = async (route: string, file: (stage: string) => string, moved: boolean, tell = true) => {
+      for (const one of keys) {
+        await stroke(send, one);
         await wait(TAP);
       }
-      if (!frames.length) {
+      if (!count) {
         if (moved || keys.length) await wait(SETTLE);
-        return take(dims, file(""), moved || keys.length > 0, "", tell);
+        await take(file(""), "", tell, { route, n: 0, t: 0, clock: "still" });
+        return;
       }
+      const world = !LIVE && (await value(SEEK(0))) === true;
+      if (world) await calm();
+      const clock = world ? "world" : "wall";
       const from = Date.now();
-      for (const [n, at] of frames.entries()) {
-        await wait(Math.max(0, at - (Date.now() - from)));
-        await take(dims, file(`-f${n}`), true, ` t=${Date.now() - from}ms`, tell && n === frames.length - 1);
+      const tiles: Uint8Array[] = [];
+      for (let n = 0; n < count; n++) {
+        let t = n * step;
+        if (world) {
+          if (n) await value(SEEK(t));
+          await send("Runtime.evaluate", { expression: FRAMED, awaitPromise: true });
+        } else {
+          await wait(Math.max(0, t - (Date.now() - from)));
+          t = Date.now() - from;
+        }
+        const one = count > 1 ? `-${n}` : "";
+        tiles.push(await take(file(one), ` t=${t}ms ${clock}`, tell && n === count - 1, { route, n, t, clock }));
       }
+      if (count > 1) await contact(file("-sheet"), tiles);
     };
-    const shoot = async (turn: number, want: string, size: string, dims: Size) => {
+    const shoot = async (turn: number, want: string) => {
       const [route = "/", act] = want.split("@");
       const born = first ? Number(await value("performance.timeOrigin")) : 0;
       const loaded = once("Page.loadEventFired").then(
@@ -448,16 +548,16 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
       await send("Page.navigate", { url: `${origin}${route}` });
       let top = 0;
       if (first) {
-        const early = name(route, size, -1, "-first");
+        const early = name(route, -1, "-first");
         if (await until(send, painted(born), FIRST)) {
           await wait(PAUSE);
           top = Number(await value("Math.round(scrollY)"));
-          await take(dims, early, true, ` scroll=${top}`);
+          await take(early, ` scroll=${top}`, true, { route, n: 0, t: 0, clock: "still" });
         } else console.log(`shots: ${early} FAILED nothing parsed within ${FIRST / 1000} s with every script held`);
         holding = false;
         for (const id of held.splice(0)) pass(id);
       }
-      const file = (stage: string) => name(route, size, !first && act ? turn : -1, first ? "-after" : stage);
+      const file = (stage: string) => name(route, !first && act ? turn : -1, first ? "-after" : stage);
       const lost = await loaded;
       if (lost) {
         console.log(`shots: ${file("")} FAILED ${lost}`);
@@ -465,12 +565,12 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
       }
       await settle();
       if (act) await run(act);
-      if (!first) return finish(dims, file, Boolean(act));
+      if (!first) return finish(route, file, Boolean(act));
       if (act) await wait(SETTLE);
       const now = Number(await value("Math.round(scrollY)"));
-      await take(dims, file(""), true, ` scroll=${now}${now === top ? "" : " JUMP"}`);
+      await take(file(""), ` scroll=${now}${now === top ? "" : " JUMP"}`, true, { route, n: 0, t: 0, clock: "still" });
     };
-    const stroll = async (size: string, dims: Size) => {
+    const stroll = async () => {
       loads = 0;
       for (const [n, want] of pages.entries()) {
         const [to = "/", act] = want.split("@");
@@ -517,7 +617,7 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
         await settle();
         if (act) await run(act);
         const here = String(await value(HERE));
-        if (n === pages.length - 1) await finish(dims, (stage) => name(here, size, -1, stage), true, false);
+        if (n === pages.length - 1) await finish(here, (stage) => name(here, -1, stage), true, false);
         else if (act) await wait(PAUSE);
         const over = await value(`${OVER}?.dataset.page ?? ""`);
         console.log(
@@ -526,35 +626,25 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
         said();
         await probed();
       }
-      console.log(`walk: ${pages.length} hops at ${size}, ${loads} page loads`);
+      console.log(`walk: ${pages.length} hops, ${loads} page loads`);
     };
-    for (const [size, dims] of walk ? sized : []) {
-      await send("Emulation.setDeviceMetricsOverride", {
-        width: dims[0],
-        height: dims[1],
-        deviceScaleFactor: 1,
-        mobile: dims[2],
-      });
-      await stroll(size, dims);
-    }
-    for (const [turn, want] of walk ? [] : pages.entries()) {
-      for (const [size, dims] of sized) {
-        await send("Emulation.setDeviceMetricsOverride", {
-          width: dims[0],
-          height: dims[1],
-          deviceScaleFactor: 1,
-          mobile: dims[2],
-        });
-        await shoot(turn, want, size, dims);
-      }
-    }
+    await fit(width, height);
+    if (walk) await stroll();
+    for (const [turn, want] of walk ? [] : pages.entries()) await shoot(turn, want);
     ws.close();
   } finally {
     proc.kill();
     await proc.exited;
+    const marks = [`--user-data-dir=${join(DATA_DIR, "profile")}`, `--remote-debugging-port=${PORT}`];
+    const alive = () => marks.some((mark) => Bun.spawnSync(["pgrep", "-f", mark]).exitCode === 0);
+    for (let i = 0; i < 50 && alive(); i++) await wait(100);
+    for (const mark of marks) Bun.spawnSync(["pkill", "-9", "-f", mark]);
+    for (let i = 0; i < 50 && alive(); i++) await wait(100);
+    if (alive()) console.log("shots: WARNING a chrome process outlived the kill");
     if (!LIVE) rmSync(join(DATA_DIR, "profile"), { recursive: true, force: true });
     server?.stop(true);
   }
+  writeFileSync(join(out, "run.json"), `${JSON.stringify({ origin, screen, frames: ran }, null, 2)}\n`);
   const tail = baseline ? "baseline written" : `${changed} differ from baseline, ${fresh} new`;
   console.log(`shots: ${shot} shots in ${out}, ${tail}, chrome killed`);
   process.exit(0);

@@ -4,7 +4,7 @@ import { decide, joined } from "../infra/edge.ts";
 import { kind } from "../infra/mime.ts";
 import { decode } from "../src/lib/git/view.ts";
 import shell from "../src/shell/index.html";
-import { globals, ready, typed, withTint } from "./build.ts";
+import { globals, ready, typed, withSite } from "./build.ts";
 
 const org = resolve(import.meta.dir, "..");
 if (process.cwd() !== org)
@@ -47,7 +47,7 @@ const server = Bun.serve({
     const path = step.uri!;
     if (path === "/index.html" || path === "/404.html")
       return reply(
-        withTint((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${org}/`, "/")),
+        withSite((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${org}/`, "/")),
         "text/html; charset=utf-8",
       );
     const raw = path.startsWith("/raw/");

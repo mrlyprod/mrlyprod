@@ -11,29 +11,55 @@ const MAY: Partial<Record<string, string[]>> = {
   lib: ["lib"],
   pages: ["lib", "shell"],
   apps: ["lib"],
+  designs: ["lib"],
 };
+
+const SEAM = ["shell/active.ts", "shell/design.ts", "shell/measure.ts"];
+
+const CONTRACT = ["shell/design.ts"];
 
 const area = (file: string) => {
   const [top, id] = relative(SRC, file).split("/");
-  return top === "pages" || top === "apps" ? `${top}/${id}` : top;
+  return top === "pages" || top === "apps" || top === "designs" ? `${top}/${id}` : top;
 };
 
 const code = readdirSync(SRC, { encoding: "utf8", recursive: true })
   .filter((path) => /\.(js|jsx|ts|tsx)$/.test(path) && !/\.test\./.test(path))
   .map((path) => join(SRC, path));
 
-const crossings = code.flatMap((file) =>
+const edges = code.flatMap((file) =>
   [...readFileSync(file, "utf8").matchAll(SPEC)]
     .map(([, , spec]) => resolve(dirname(file), spec))
     .filter((to) => to.startsWith(`${SRC}/`))
-    .map((to): [string, string] => [area(file), area(to)])
-    .filter(([from, to]) => from !== to),
+    .map((to) => ({ file: relative(SRC, file), to: relative(SRC, to), from: area(file), into: area(to) }))
+    .filter(({ from, into }) => from !== into),
 );
 
-const allowed = ([from, to]: [string, string]) => MAY[from.split("/")[0]]?.includes(to.split("/")[0]) ?? false;
+const top = (name: string) => name.split("/")[0]!;
 
-test("apps import only lib, pages lib and the shell, the shell lib and styles, lib only lib, and no route imports another", () => {
-  expect([...new Set(crossings.filter((one) => !allowed(one)).map(([from, to]) => `${from} -> ${to}`))].sort()).toEqual(
-    [],
-  );
+const allowed = ({ from, into, to }: (typeof edges)[number]) =>
+  (MAY[top(from)]?.includes(top(into)) ?? false) ||
+  (top(from) === "lib" && SEAM.includes(to)) ||
+  (top(from) === "designs" && CONTRACT.includes(to));
+
+const broken = edges.filter((one) => !allowed(one));
+
+test("apps and lib import only lib, pages lib and the shell, the shell lib and styles, and no route imports another", () => {
+  expect(
+    [
+      ...new Set(
+        broken
+          .filter(({ from }) => !["lib", "designs"].includes(top(from)))
+          .map(({ from, into }) => `${from} -> ${into}`),
+      ),
+    ].sort(),
+  ).toEqual([]);
+});
+
+test("lib reaches the shell only through the design seam: active, design and measure", () => {
+  expect(broken.filter(({ from }) => top(from) === "lib").map(({ file, to }) => `${file} -> ${to}`)).toEqual([]);
+});
+
+test("a design reaches the shell only through its contract", () => {
+  expect(broken.filter(({ from }) => top(from) === "designs").map(({ file, to }) => `${file} -> ${to}`)).toEqual([]);
 });

@@ -1,67 +1,38 @@
-import type { RefObject } from "react";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import type { Draft } from "../lib/drag.ts";
 import { dragging, placed, sortable } from "../lib/drag.ts";
+import { parts } from "./active.ts";
 import { AppIcon } from "./appicon.tsx";
 import { app, dock, redock } from "./catalog.ts";
+import type { Tile } from "./design.ts";
 import { route } from "./desk.ts";
 import type { Item } from "./lens.ts";
 import { BIG, lens } from "./lens.ts";
 import { show } from "./parts.tsx";
-import { calm, KEY, subscribe } from "./prefs.ts";
+import { calm, KEY, read, subscribe } from "./prefs.ts";
 import type { Wired } from "./route.ts";
-import { Tile } from "./tile.tsx";
 
 /* TYPES */
 
 type Hooks = { preview: (g: number, next: Draft | null) => void; commit: (g: number, next: Draft | null) => void };
 
-type GroupProps = {
-  g: number;
-  ids: string[];
-  draft: Draft | null;
-  foreign: string | undefined;
-  here: string;
-  hooks: RefObject<Hooks | null>;
-};
+type Mark = { el: HTMLElement; wide: boolean };
+
+type Sorted = { el: HTMLElement; off: () => void };
 
 const RAMP = 150;
 const VARS = ["--l", "--r", "--big", "--dx", "--m"];
+const LAUNCH = "menu";
 
 const takes = (from: string) => (from === "dock" ? "move" : from === "launchpad" || from === "recent" ? "copy" : "");
 const shift = (ms: number) => dispatchEvent(new CustomEvent("shift", { detail: ms }));
+const before = (a: Mark, b: Mark) => (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
 
-/* GROUP */
-
-function Group({ g, ids, draft, foreign, here, hooks }: GroupProps) {
-  const list = useRef<HTMLUListElement>(null);
-  useEffect(
-    () =>
-      sortable(list.current!, {
-        kind: "dock",
-        axis: "x",
-        out: true,
-        scroller: list.current!.closest(".dock"),
-        takes,
-        name: (id) => app(id)?.title ?? id,
-        preview: (next) => hooks.current!.preview(g, next),
-        commit: (next) => hooks.current!.commit(g, next),
-      }),
-    [g],
-  );
-  const held = draft && draft.index !== null ? draft.id : null;
-  const shown = placed(ids, draft).filter((id) => id === held || id !== foreign);
-  return (
-    <ul className="apps" ref={list}>
-      {shown.map((id) => (
-        <li key={id} data-id={id} data-held={id === held ? "" : undefined}>
-          <Tile id={id} name={false} current={app(id)?.route === here} />
-        </li>
-      ))}
-    </ul>
-  );
-}
+const tile = (id: string, here: string): Tile[] => {
+  const one = app(id);
+  return one ? [{ id, title: one.title, href: one.route, art: <AppIcon id={id} />, current: one.route === here }] : [];
+};
 
 /* DOCK */
 
@@ -69,10 +40,16 @@ function Dock() {
   const [groups, setGroups] = useState(dock);
   const [drafts, setDrafts] = useState<(Draft | null)[]>([]);
   const [here, setHere] = useState("");
+  const [magnify, setMagnify] = useState(() => read(KEY.magnify) === "1");
   const live = useRef(groups);
-  const nav = useRef<HTMLElement>(null);
+  const nav = useRef<HTMLElement | null>(null);
   const hooks = useRef<Hooks | null>(null);
   const poke = useRef<(() => void) | null>(null);
+  const pointer = useRef<{ move: (e: PointerEvent) => void; leave: () => void } | null>(null);
+  const lists = useRef(new Map<number, HTMLElement>());
+  const sorted = useRef(new Map<number, Sorted>());
+  const marks = useRef(new Map<string, Mark>());
+  const refs = useRef(new Map<string, (el: HTMLElement | null) => void>());
 
   const keep = (next: string[][]) => {
     live.current = next;
@@ -94,8 +71,24 @@ function Dock() {
       }),
   };
 
+  const ref = (key: string, fn: (el: HTMLElement | null) => void) => {
+    const had = refs.current.get(key);
+    if (had) return had;
+    refs.current.set(key, fn);
+    return fn;
+  };
+  const mark = (key: string, wide: boolean) =>
+    ref(`lens ${key}`, (el) => {
+      if (el) marks.current.set(key, { el, wide });
+      else marks.current.delete(key);
+    });
+  const listed = (g: number) =>
+    ref(`group ${g}`, (el) => {
+      if (el) lists.current.set(g, el);
+      else lists.current.delete(g);
+    });
+
   useEffect(() => {
-    const box = nav.current!;
     const html = document.documentElement;
     let x = 0;
     let want = false;
@@ -119,22 +112,25 @@ function Dock() {
     };
     const tick = (t: number) => {
       frame = requestAnimationFrame(tick);
+      const box = nav.current;
+      const shown = [...marks.current.values()].filter(({ el }) => el.isConnected).sort(before);
+      if (!box || !shown.length) return stop();
       const held = dragging() || !box.offsetWidth;
       const goal = want && !held ? 1 : 0;
       amount = held ? 0 : Math.min(1, Math.max(0, amount + ((goal ? 1 : -1) * Math.max(0, t - last)) / RAMP));
       last = t;
-      const parts = [...box.querySelectorAll<HTMLElement>(".launcher, .split")];
+      const els = shown.map(({ el }) => el);
       if (!amount && !goal) {
         stop();
-        for (const el of [box, ...parts]) for (const name of VARS) el.style.removeProperty(name);
+        for (const el of [box, ...els]) for (const name of VARS) el.style.removeProperty(name);
         return shift(RAMP);
       }
-      const items: Item[] = parts.map((el) => {
+      const items: Item[] = shown.map(({ el, wide }) => {
         const r = el.getBoundingClientRect();
         return {
           c: r.left + r.width / 2,
           dx: Number.parseFloat(el.style.getPropertyValue("--dx")) || 0,
-          w: el.classList.contains("launcher") ? r.width : 0,
+          w: wide ? r.width : 0,
         };
       });
       const out = lens(items, x, amount * amount * (3 - 2 * amount));
@@ -142,7 +138,7 @@ function Dock() {
       put(box, "--l", `${out.l}px`);
       put(box, "--r", `${out.r}px`);
       put(box, "--big", String(BIG));
-      parts.forEach((el, i) => {
+      els.forEach((el, i) => {
         put(el, "--dx", `${out.dx[i]}px`);
         if (items[i].w) put(el, "--m", out.m[i].toFixed(3));
       });
@@ -150,70 +146,114 @@ function Dock() {
       else if (amount === goal) stop();
     };
     const kick = () => {
-      if (frame) return;
+      if (frame || !marks.current.size) return;
       last = performance.now();
       frame = requestAnimationFrame(tick);
     };
     const redo = () => {
       if (amount) kick();
     };
-    const move = (e: PointerEvent) => {
-      x = e.clientX;
-      want =
-        e.pointerType !== "touch" &&
-        !dragging() &&
-        html.hasAttribute("data-magnify") &&
-        html.dataset.form !== "phone" &&
-        !calm();
-      if (want) kick();
-      else redo();
-    };
-    const leave = () => {
-      want = false;
-      redo();
+    pointer.current = {
+      move: (e) => {
+        x = e.clientX;
+        want =
+          e.pointerType !== "touch" &&
+          !dragging() &&
+          html.hasAttribute("data-magnify") &&
+          html.dataset.form !== "phone" &&
+          !calm();
+        if (want) kick();
+        else redo();
+      },
+      leave: () => {
+        want = false;
+        redo();
+      },
     };
     poke.current = redo;
     addEventListener("wire", wire);
     addEventListener("dock", fresh);
     addEventListener("resize", redo);
-    const sub = subscribe((key) => (!key || key === KEY.dock) && fresh());
-    box.addEventListener("pointermove", move);
-    box.addEventListener("pointerleave", leave);
+    const sub = subscribe((key) => {
+      if (!key || key === KEY.dock) fresh();
+      if (!key || key === KEY.magnify) setMagnify(read(KEY.magnify) === "1");
+    });
     setHere(route);
     return () => {
       removeEventListener("wire", wire);
       removeEventListener("dock", fresh);
       removeEventListener("resize", redo);
       sub();
-      box.removeEventListener("pointermove", move);
-      box.removeEventListener("pointerleave", leave);
       stop();
+      pointer.current = null;
     };
   }, []);
 
   useEffect(() => {
+    for (const [g, one] of sorted.current) {
+      if (lists.current.get(g) === one.el) continue;
+      one.off();
+      sorted.current.delete(g);
+    }
+    for (const [g, el] of lists.current) {
+      if (sorted.current.has(g)) continue;
+      const off = sortable(el, {
+        kind: "dock",
+        axis: "x",
+        out: true,
+        scroller: nav.current,
+        takes,
+        name: (id) => app(id)?.title ?? id,
+        preview: (next) => hooks.current!.preview(g, next),
+        commit: (next) => hooks.current!.commit(g, next),
+      });
+      sorted.current.set(g, { el, off });
+    }
     shift(0);
     poke.current?.();
   });
 
+  useEffect(
+    () => () => {
+      for (const one of sorted.current.values()) one.off();
+      sorted.current.clear();
+    },
+    [],
+  );
+
+  if (!parts.dock) return null;
   const foreign = (g: number) => drafts.find((one, k) => k !== g && one && one.index !== null)?.id;
+  const held = new Set(drafts.flatMap((one) => (one && one.index !== null ? [one.id] : [])));
+  const shown = groups.map((ids, g) => {
+    const draft = drafts[g] ?? null;
+    const mine = draft && draft.index !== null ? draft.id : null;
+    return placed(ids, draft)
+      .filter((id) => id === mine || id !== foreign(g))
+      .flatMap((id) => tile(id, here));
+  });
+  const launch = { id: LAUNCH, title: "Launchpad", href: "/menu/", art: <AppIcon id={LAUNCH} /> };
 
   return (
-    <nav className="dock" data-lens="dock" aria-label="Dock" ref={nav}>
-      <a className="launcher launch" href="/menu/" aria-label="Launchpad" data-name="Launchpad" draggable="false">
-        <AppIcon id="menu" />
-      </a>
-      {groups.map((ids, g) => (
-        <Fragment key={g}>
-          <span className="split" aria-hidden="true" />
-          <Group g={g} ids={ids} draft={drafts[g] ?? null} foreign={foreign(g)} here={here} hooks={hooks} />
-        </Fragment>
-      ))}
-    </nav>
+    <parts.dock
+      launch={launch}
+      groups={shown}
+      magnify={magnify}
+      bind={{
+        root: () => ({
+          ref: nav,
+          onPointerMove: (e: { nativeEvent: PointerEvent }) => pointer.current?.move(e.nativeEvent),
+          onPointerLeave: () => pointer.current?.leave(),
+        }),
+        group: (g) => () => ({ ref: listed(g) }),
+        tile: (id) => () => ({ "data-id": id, "data-held": held.has(id) ? "" : undefined }),
+        lens: { item: (id) => () => ({ ref: mark(id, true) }), gap: (g) => () => ({ ref: mark(`gap ${g}`, false) }) },
+      }}
+    />
   );
 }
 
 export function start() {
+  if (!parts.dock) return;
   const host = document.createElement("div");
   host.className = "docked";
   document.body.append(host);

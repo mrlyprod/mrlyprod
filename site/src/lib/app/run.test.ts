@@ -318,3 +318,19 @@ test("a scene whose set answers false makes set false, so the page remounts it",
   unstage();
   expect(answers).toEqual([true, false]);
 });
+
+test("seek steps a scene to a world time without the frame loop, the same draws every time, never backwards", () => {
+  const once = () => {
+    const frames = stage();
+    const seen: number[] = [];
+    const stop = run(box(), (_canvas, view) => ({ draw: () => seen.push(Math.round(view.t)) }), { seed: 7 });
+    const idle = frames.length;
+    const went = [stop.seek(50), stop.seek(100), stop.seek(10)];
+    stop();
+    unstage();
+    return { idle, went, last: seen.at(-1), drawn: seen.length };
+  };
+  const one = once();
+  expect(one).toEqual(once());
+  expect([one.went, one.last]).toEqual([[true, true, false], 100]);
+});

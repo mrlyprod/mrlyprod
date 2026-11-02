@@ -1,11 +1,10 @@
+use crate::config::{Layout, slashed};
 use crate::disk::edit;
 use crate::model::{Manifest, Result};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::process::Command;
-
-pub const MANIFEST: &str = "crates/bridge/manifest.json";
 
 const SOURCE: &str = "Cargo.toml";
 
@@ -30,7 +29,7 @@ pub fn read(root: &Path) -> Result<String> {
     Ok(text[start..end].to_string())
 }
 
-pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
+pub fn write(manifest: &Manifest, root: &Path, _: &Layout) -> Result<()> {
     let path = root.join(SOURCE);
     edit(&path, &pin(&load(&path)?, &manifest.version))
 }
@@ -69,8 +68,8 @@ fn load(path: &Path) -> Result<String> {
 
 // BUMP
 
-pub fn bump(root: &Path) -> Result<()> {
-    let new = json(&load(&root.join(MANIFEST))?)?;
+pub fn bump(root: &Path, manifest: &Path) -> Result<()> {
+    let new = json(&load(&root.join(manifest))?)?;
     let now = new["version"]
         .as_str()
         .ok_or("the manifest has no version")?;
@@ -85,7 +84,10 @@ pub fn bump(root: &Path) -> Result<()> {
         println!("   no other v* tag; {now} is the first release");
         return Ok(());
     };
-    let old = json(&git(root, &["show", &format!("{tag}:{MANIFEST}")])?)?;
+    let old = json(&git(
+        root,
+        &["show", &format!("{tag}:{}", slashed(manifest))],
+    )?)?;
     let diff = diff(&old, &new);
     for path in &diff.removed {
         println!("   removed {path}");

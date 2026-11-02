@@ -1,3 +1,4 @@
+use crate::config::{Layout, climb, slashed};
 use crate::disk::save;
 use crate::model::{
     Const, Cross, Function, Hand, Manifest, Result, SelfKind, Ty, Type, TypeCross, TypeKind,
@@ -157,9 +158,9 @@ const ALLOWS: &str = "#![allow(non_camel_case_types, non_snake_case, clippy::too
 
 // FILES
 
-pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
+pub fn write(manifest: &Manifest, root: &Path, layout: &Layout) -> Result<()> {
     let names = units(manifest);
-    let js = root.join("bindings/js");
+    let js = root.join(&layout.js);
     for name in names.iter().map(String::as_str) {
         let unit = Unit::new(manifest, name);
         let dir = js.join("units").join(name);
@@ -174,9 +175,9 @@ pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     save(&js.join("index.d.ts"), &index_dts(&names))?;
     save(
         &js.join("package.json"),
-        &package_json(&names, &manifest.version),
+        &package_json(&names, &manifest.version, layout),
     )?;
-    save(&js.join("manifest.test.js"), &manifest_test())?;
+    save(&js.join("manifest.test.js"), &manifest_test(layout))?;
     Ok(())
 }
 
@@ -247,7 +248,7 @@ const KEYWORDS: &[&str] = &[
     "webassembly",
 ];
 
-fn package_json(names: &[String], version: &str) -> String {
+fn package_json(names: &[String], version: &str, layout: &Layout) -> String {
     let entry = |stem: &str| {
         serde_json::json!({
             "types": format!("./{stem}.d.ts"),
@@ -283,7 +284,7 @@ fn package_json(names: &[String], version: &str) -> String {
         "repository": {
             "type": "git",
             "url": "https://github.com/mrlyprod/mrlyprod",
-            "directory": "bindings/js",
+            "directory": slashed(&layout.js),
         },
         "bugs": { "url": "https://github.com/mrlyprod/mrlyprod/issues" },
         "type": "module",
@@ -487,7 +488,7 @@ impl<'a> Unit<'a> {
 
     fn hand_name(&self, t: &Type) -> &'static str {
         match &t.cross {
-            TypeCross::Hand { name } => hand(name).map_or("Rng", |hand| hand.name),
+            TypeCross::Hand { name } => hand(name).map_or("Rng", |hand| hand.name.as_str()),
             _ => "Rng",
         }
     }
@@ -497,7 +498,7 @@ impl<'a> Unit<'a> {
         name: &str,
         dim: Option<u8>,
         cx: Cx,
-        pick: fn(&Hand) -> &'static [&'static str],
+        pick: fn(&'static Hand) -> &'static [String],
     ) -> Result<&'static str> {
         let row = hand(name).ok_or_else(|| format!("{}: unknown hand type {name}", cx.fname))?;
         by_dim(pick(row), dim.or(cx.dim))
@@ -513,7 +514,7 @@ impl<'a> Unit<'a> {
             Ty::Str | Ty::String => "String".into(),
             Ty::U128 => "u128".into(),
             Ty::I128 => "i128".into(),
-            Ty::Code => self.hand_pick("Code", None, cx, |row| row.rust)?.into(),
+            Ty::Code => self.hand_pick("Code", None, cx, |row| &row.rust)?.into(),
             Ty::Json => "mrly::core::Json".into(),
             Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Set { item } => {
                 format!("Vec<{}>", self.rust_ty(item, cx)?)
@@ -531,7 +532,7 @@ impl<'a> Unit<'a> {
                 self.rust_ty(key, cx)?,
                 self.rust_ty(value, cx)?
             ),
-            Ty::Hand { name, dim } => self.hand_pick(name, *dim, cx, |row| row.rust)?.into(),
+            Ty::Hand { name, dim } => self.hand_pick(name, *dim, cx, |row| &row.rust)?.into(),
             Ty::Plain { path } => {
                 let generic = self.ty(path).is_some_and(|t| t.const_generic);
                 if generic {
@@ -613,7 +614,7 @@ impl<'a> Unit<'a> {
                 return Err(format!("{}: {name} cannot cross in by value", cx.fname));
             }
             Ty::Hand { name, dim } => {
-                let stem = self.hand_pick(name, *dim, cx, |row| row.js)?;
+                let stem = self.hand_pick(name, *dim, cx, |row| &row.js)?;
                 format!("hand::{stem}_from_js({e})?")
             }
             Ty::Class { .. } => format!(
@@ -692,7 +693,7 @@ impl<'a> Unit<'a> {
                 "Code" => format!("JsValue::from_str(&hand::code_to_js({}))", deref(e)),
                 "Rng" => format!("JsValue::from(hand::Rng::wrap({}.clone()))", place(e)),
                 _ => {
-                    let stem = self.hand_pick(name, *dim, cx, |row| row.js)?;
+                    let stem = self.hand_pick(name, *dim, cx, |row| &row.js)?;
                     format!("hand::{stem}_to_js({e})?")
                 }
             },
@@ -1578,7 +1579,7 @@ impl<'a> Unit<'a> {
             Ty::Ref { item, .. } | Ty::Result { item } => self.ts_direct(item, ret),
             Ty::Map { value, .. } => format!("Record<string, {}>", self.ts_direct(value, ret)),
             Ty::Hand { name, .. } if name == "Code" && ret => "string".into(),
-            Ty::Hand { name, .. } => hand(name).map_or("Rng", |row| row.ts).into(),
+            Ty::Hand { name, .. } => hand(name).map_or("Rng", |row| row.ts.as_str()).into(),
             Ty::Plain { path } | Ty::Enum { path } | Ty::Class { path, .. } => self.ts_ref(path),
             Ty::Opaque { .. } | Ty::Unknown { .. } => "unknown".into(),
         }
@@ -1620,7 +1621,9 @@ impl<'a> Unit<'a> {
             ),
             Ty::Ref { item, .. } | Ty::Result { item } => self.ts_serde(item),
             Ty::Map { value, .. } => format!("Record<string, {}>", self.ts_serde(value)),
-            Ty::Hand { name, .. } => hand(name).map_or("unknown", |row| row.ts_data).into(),
+            Ty::Hand { name, .. } => hand(name)
+                .map_or("unknown", |row| row.ts_data.as_str())
+                .into(),
             Ty::Plain { path } | Ty::Enum { path } => self.ts_ref(path),
             Ty::Class { path, .. } => format!("{}Data", self.ts_ref(path)),
             Ty::Opaque { .. } | Ty::Unknown { .. } => "string".into(),
@@ -2233,7 +2236,7 @@ fn plain_ty(t: &Type) -> Ty {
 }
 
 fn hand_self(name: &str) -> &'static str {
-    hand(name).map_or("cell", |row| row.word)
+    hand(name).map_or("cell", |row| row.word.as_str())
 }
 
 fn suffix_dim(fname: &str) -> u8 {
@@ -2327,15 +2330,22 @@ fn rename_all(name: &str, rule: &str) -> String {
 
 // TEST
 
-fn manifest_test() -> String {
+fn manifest_test(layout: &Layout) -> String {
     let reserved: Vec<String> = JS_RESERVED.iter().map(|word| format!("{word:?}")).collect();
-    MANIFEST_TEST.replace("RESERVED_WORDS", &reserved.join(", "))
+    let manifest = format!(
+        "{}{}",
+        "../".repeat(climb(&layout.js)),
+        slashed(&layout.manifest)
+    );
+    MANIFEST_TEST
+        .replace("RESERVED_WORDS", &reserved.join(", "))
+        .replace("MANIFEST_PATH", &manifest)
 }
 
 const MANIFEST_TEST: &str = r#"import { expect, test } from "bun:test";
 import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 
-const manifest = await Bun.file(new URL("../../crates/bridge/manifest.json", import.meta.url)).json();
+const manifest = await Bun.file(new URL("MANIFEST_PATH", import.meta.url)).json();
 const units = readdirSync(new URL("./units", import.meta.url)).sort();
 const pkg = await Bun.file(new URL("./package.json", import.meta.url)).json();
 const kinds = new Map(manifest.types.map((t) => [t.path, t.cross.kind]));

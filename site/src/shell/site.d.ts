@@ -8,6 +8,7 @@ declare module "site:routes" {
   export type Site = {
     title: string;
     root: string;
+    mark: string;
     tagline: string;
     prefix: string;
     tint: string;
@@ -25,6 +26,7 @@ declare module "site:routes" {
     contact: string;
     tree: { name: string; nodes: { name: string; href: string }[] }[];
     git: { slug: string; branch: string };
+    min?: [number, number];
     doors?: undefined;
   };
 
@@ -35,6 +37,18 @@ declare module "site:routes" {
 declare module "site:icons" {
   export const defs: string;
   export const arts: Record<string, string>;
+}
+
+declare module "site:frame" {
+  export const frame: string;
+}
+
+declare module "site:design" {
+  export const design: import("./design.ts").Design;
+}
+
+declare module "site:design/pulldown" {
+  export const pulldown: import("./design.ts").Pulldown | null;
 }
 
 declare module "site:css" {
