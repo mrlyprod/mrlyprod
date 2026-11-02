@@ -17,6 +17,7 @@ pub use word::Word;
 mod tests {
     use super::*;
     use crate::round_trip;
+    use mrly_core::name::Named;
 
     #[test]
     fn serde_round_trips() {
@@ -24,5 +25,23 @@ mod tests {
         round_trip(Word::new(2, &[(7, 3), (14, 7)]).unwrap());
         round_trip(Sequence::new(7, 2, 2, "fills", "side"));
         round_trip(Lattice::Hex);
+    }
+    #[test]
+    fn every_bang_sequence_and_word_on_names_md_is_canonical() {
+        let mut seen = 0;
+        for piece in include_str!("../../../core/src/name/NAMES.md").split('`') {
+            let Some(rest) = piece.strip_prefix(r#"{"kind":""#) else {
+                continue;
+            };
+            let printed = match rest.split('"').next() {
+                Some("bang") => Bang::from_json(piece).map(|v| v.to_json()),
+                Some("sequence") => Sequence::from_json(piece).map(|v| v.to_json()),
+                Some("word") => Word::from_json(piece).map(|v| v.to_json()),
+                _ => continue,
+            };
+            assert_eq!(printed.unwrap(), piece);
+            seen += 1;
+        }
+        assert!(seen >= 6, "NAMES.md kept only {seen} examples");
     }
 }

@@ -1,4 +1,4 @@
-import { Grid, type Ink, type Pen } from "#view";
+import { Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
 const B = 4;
 const L = 6;

@@ -1,5 +1,5 @@
-import * as math from "@mrlyprod/mrly/math";
-import { frame as box, type Color, type Frame, type Ink, type Pen, type Point, plot } from "#view";
+import { frame as box, type Color, type Frame, type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
 
 const RE_WIDTH = 1;
 const IM_REACH = 60;

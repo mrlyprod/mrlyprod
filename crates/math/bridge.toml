@@ -1,4 +1,7 @@
 unit = "math"
+js = "js"
+py = "py"
+cli = "cli"
 
 [[hand]]
 name = "CellNd"

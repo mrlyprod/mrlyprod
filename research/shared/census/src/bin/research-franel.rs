@@ -1,8 +1,8 @@
 use census::save;
-use mrly::core::error::Result;
-use mrly::core::json;
-use mrly::math::design::elements;
-use mrly::num::factor::{gcd, mobius_sieve};
+use mrly_core::error::Result;
+use mrly_core::json;
+use mrly_math::design::elements;
+use mrly_num::factor::{gcd, mobius_sieve};
 use std::f64::consts::TAU;
 
 const NAME: &str = "research-franel";

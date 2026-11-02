@@ -1,0 +1,8155 @@
+{
+  "krate": "mrly-core",
+  "version": "0.2.0",
+  "modules": [
+    {
+      "path": "core",
+      "file": "core/lib.rs",
+      "docs": [
+        "The substrate: tensors, cells, colors, images, resampling, seeded chance and the canonical names.",
+        "",
+        "The road from a grid of bytes to pixels, and the one JSON object every mrly thing is named by.",
+        "",
+        "- `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.",
+        "- `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.",
+        "- `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.",
+        "- `image` holds the rgba pixels a renderer returns; encoding them into a file is the caller's.",
+        "- `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.",
+        "- `error` holds the one error, its Result and the json parser.",
+        "- `name` holds the `Named` trait, the `kind!` marker, the text views and the sha256 a name's id is cut from; `named_enum!` names an enum.",
+        "",
+        "The json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.",
+        "",
+        "The doors: `Tensor::of`, `Tensor::rot90`, `Color::from_hex`, `Color::to_hex`, `Image::scale` and `ramp::color`."
+      ],
+      "items": 21
+    },
+    {
+      "path": "core::cell",
+      "file": "core/cell.rs",
+      "docs": [
+        "The cell grid: type bytes with optional per-cell colors and tags."
+      ],
+      "items": 27
+    },
+    {
+      "path": "core::colors",
+      "file": "core/colors.rs",
+      "docs": [
+        "The rgba color, its themes and the fifteen-color palette."
+      ],
+      "items": 40
+    },
+    {
+      "path": "core::error",
+      "file": "core/error.rs",
+      "docs": [
+        "The one error type, its Result and the json parser over the rented value."
+      ],
+      "items": 4
+    },
+    {
+      "path": "core::image",
+      "file": "core/image.rs",
+      "docs": [
+        "The image a renderer returns: its size and its rgba pixels."
+      ],
+      "items": 4
+    },
+    {
+      "path": "core::name",
+      "file": "core/name/mod.rs",
+      "docs": [
+        "The canonical names: one JSON object per thing, its views and its id."
+      ],
+      "items": 1
+    },
+    {
+      "path": "core::name::sha",
+      "file": "core/name/sha.rs",
+      "docs": [
+        "The sha256 digest the ids are cut from."
+      ],
+      "items": 3
+    },
+    {
+      "path": "core::paint",
+      "file": "core/paint.rs",
+      "docs": [
+        "The editions that distribute a palette over a cell."
+      ],
+      "items": 27
+    },
+    {
+      "path": "core::ramp",
+      "file": "core/ramp.rs",
+      "docs": [
+        "The colorizers that turn counter values into colors."
+      ],
+      "items": 2
+    },
+    {
+      "path": "core::resample",
+      "file": "core/resample.rs",
+      "docs": [
+        "The pixel resamplers and the hex squash."
+      ],
+      "items": 0
+    },
+    {
+      "path": "core::rng",
+      "file": "core/rng.rs",
+      "docs": [
+        "The seeded random stream."
+      ],
+      "items": 9
+    },
+    {
+      "path": "core::tensor",
+      "file": "core/tensor/mod.rs",
+      "docs": [
+        "The tensor and its dtypes."
+      ],
+      "items": 41
+    }
+  ],
+  "types": [
+    {
+      "path": "Error",
+      "name": "Error",
+      "defined_at": "core/error.rs:7",
+      "docs": [
+        "The one error type of the crate."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "uncrossable",
+        "reason": "no serde derives and no methods"
+      },
+      "derives": [
+        "Debug"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Value",
+          "word": null,
+          "docs": [
+            "A value that broke a rule, carrying the message."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "string"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Shape",
+          "word": null,
+          "docs": [
+            "A length, extent or dtype that does not match, carrying the message."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "string"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Overflow",
+          "word": null,
+          "docs": [
+            "A count that runs past the width of its integer, carrying the message."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "string"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Json",
+          "word": null,
+          "docs": [
+            "A json text that would not parse, carrying the reader's own error."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "unknown",
+                "text": "serde_json :: Error"
+              }
+            }
+          ]
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "Result",
+      "name": "Result",
+      "defined_at": "core/error.rs:39",
+      "docs": [
+        "The crate's result, erring with Error."
+      ],
+      "kind": "alias",
+      "cross": {
+        "kind": "uncrossable",
+        "reason": "generic alias Result"
+      },
+      "derives": [],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [],
+      "alias": {
+        "t": "unknown",
+        "text": "generic alias Result"
+      }
+    },
+    {
+      "path": "core::Cell",
+      "name": "Cell",
+      "defined_at": "core/cell.rs:31",
+      "docs": [
+        "A grid of type bytes with optional per-cell colors and tags."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Cell"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "types",
+          "public": true,
+          "docs": [
+            "The type of every cell."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Tensor",
+            "dim": null
+          }
+        },
+        {
+          "name": "colors",
+          "public": true,
+          "docs": [
+            "The painted rgba of every cell, once painted."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "array",
+                "item": {
+                  "t": "scalar",
+                  "name": "u8"
+                },
+                "len": 4
+              }
+            }
+          }
+        },
+        {
+          "name": "tags",
+          "public": true,
+          "docs": [
+            "The tag layer over the cells, once built."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::Color",
+      "name": "Color",
+      "defined_at": "core/colors.rs:8",
+      "docs": [
+        "An rgba color with byte channels."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Color"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "r",
+          "public": true,
+          "docs": [
+            "The red channel."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "g",
+          "public": true,
+          "docs": [
+            "The green channel."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "b",
+          "public": true,
+          "docs": [
+            "The blue channel."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "a",
+          "public": true,
+          "docs": [
+            "The alpha channel, 255 for opaque."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::Colorizer",
+      "name": "Colorizer",
+      "defined_at": "core/ramp.rs:7",
+      "docs": [
+        "A rule that turns counter values into colors."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Bins",
+          "word": null,
+          "docs": [
+            "The background at zero, then the ramp binned across the range."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "background",
+              "public": false,
+              "docs": [
+                "The color at zero."
+              ],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "hand",
+                "name": "Color",
+                "dim": null
+              }
+            },
+            {
+              "name": "ramp",
+              "public": false,
+              "docs": [
+                "The colors binned across the range."
+              ],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "hand",
+                  "name": "Color",
+                  "dim": null
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Dtype",
+      "name": "Dtype",
+      "defined_at": "core/tensor/mod.rs:9",
+      "docs": [
+        "The element widths a tensor can hold."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": false,
+        "words": []
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "U8",
+          "word": null,
+          "docs": [
+            "Unsigned 8-bit elements."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "U16",
+          "word": null,
+          "docs": [
+            "Unsigned 16-bit elements."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "U32",
+          "word": null,
+          "docs": [
+            "Unsigned 32-bit elements."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "I32",
+          "word": null,
+          "docs": [
+            "Signed 32-bit elements."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Filter",
+      "name": "Filter",
+      "defined_at": "core/resample.rs:6",
+      "docs": [
+        "The way a resampling weighs the source pixels it reads."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": false,
+        "words": []
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Nearest",
+          "word": null,
+          "docs": [
+            "The single nearest source pixel, palettes and hard edges kept."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Linear",
+          "word": null,
+          "docs": [
+            "The linear blend of the four source pixels around the target centre."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Box",
+          "word": null,
+          "docs": [
+            "The mean of the source box the target pixel covers."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Image",
+      "name": "Image",
+      "defined_at": "core/image.rs:8",
+      "docs": [
+        "An image: its width, its height and the rgba color of every pixel, row by row from the top."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Image"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [
+        "try_from = \"Parts\""
+      ],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "width",
+          "public": true,
+          "docs": [
+            "The width in pixels."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "public": true,
+          "docs": [
+            "The height in pixels."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "colors",
+          "public": true,
+          "docs": [
+            "The rgba color of every pixel, row by row."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::Map",
+      "name": "Map",
+      "defined_at": "core/lib.rs:57",
+      "docs": [
+        "An object's entries, kept in insertion order."
+      ],
+      "kind": "alias",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [],
+      "alias": {
+        "t": "json"
+      }
+    },
+    {
+      "path": "core::Mode",
+      "name": "Mode",
+      "defined_at": "core/cell.rs:10",
+      "docs": [
+        "The ways paint picks a color within a type's palette."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": false,
+        "words": []
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Type",
+          "word": null,
+          "docs": [
+            "The first palette color, always."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Tag",
+          "word": null,
+          "docs": [
+            "The color each cell's tag indexes."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Index",
+          "word": null,
+          "docs": [
+            "The color the flat position indexes."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Enumerate",
+          "word": null,
+          "docs": [
+            "The colors cycled in encounter order."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Random",
+          "word": null,
+          "docs": [
+            "A color drawn from the stream for every cell."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Row",
+          "word": null,
+          "docs": [
+            "The color the row index picks."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Column",
+          "word": null,
+          "docs": [
+            "The color the column index picks."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Depth",
+          "word": null,
+          "docs": [
+            "The color the depth index picks."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Rng",
+      "name": "Rng",
+      "defined_at": "core/rng.rs:6",
+      "docs": [
+        "A seeded xoshiro256++ random stream."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Rng"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "s",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "array",
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            },
+            "len": 4
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::Tensor",
+      "name": "Tensor",
+      "defined_at": "core/tensor/mod.rs:122",
+      "docs": [
+        "An n-dimensional grid of small integers."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Tensor"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "data",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "plain",
+            "path": "core::tensor::Buf"
+          }
+        },
+        {
+          "name": "shape",
+          "public": true,
+          "docs": [
+            "The extent of each axis."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::colors::Theme",
+      "name": "Theme",
+      "defined_at": "core/colors.rs:80",
+      "docs": [
+        "One theme: the surfaces of a dark or a light ground and the thirteen inks, the same on both."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "ground",
+          "public": true,
+          "docs": [
+            "The ground every figure is painted on."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "bg",
+          "public": true,
+          "docs": [
+            "The page background, one step off the ground."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "panel",
+          "public": true,
+          "docs": [
+            "The raised panel."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "deep",
+          "public": true,
+          "docs": [
+            "The sunken well."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "line",
+          "public": true,
+          "docs": [
+            "The hairline between things."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "fg",
+          "public": true,
+          "docs": [
+            "The foreground, the strongest tone."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "dim",
+          "public": true,
+          "docs": [
+            "The dimmed foreground, for anything secondary."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "accent",
+          "public": true,
+          "docs": [
+            "The interactive accent."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "on_accent",
+          "public": true,
+          "docs": [
+            "The tone written on the accent."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "red",
+          "public": true,
+          "docs": [
+            "The red ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "orange",
+          "public": true,
+          "docs": [
+            "The orange ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "yellow",
+          "public": true,
+          "docs": [
+            "The yellow ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "green",
+          "public": true,
+          "docs": [
+            "The green ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "mint",
+          "public": true,
+          "docs": [
+            "The mint ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "teal",
+          "public": true,
+          "docs": [
+            "The teal ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "cyan",
+          "public": true,
+          "docs": [
+            "The cyan ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "blue",
+          "public": true,
+          "docs": [
+            "The blue ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "indigo",
+          "public": true,
+          "docs": [
+            "The indigo ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "purple",
+          "public": true,
+          "docs": [
+            "The purple ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "pink",
+          "public": true,
+          "docs": [
+            "The pink ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "brown",
+          "public": true,
+          "docs": [
+            "The brown ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "gray",
+          "public": true,
+          "docs": [
+            "The gray ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Config",
+      "name": "Config",
+      "defined_at": "core/paint.rs:136",
+      "docs": [
+        "The constraints a caller may put on a random paint."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "Default",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "editions",
+          "public": true,
+          "docs": [
+            "The editions allowed, or None for all seven."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "enum",
+                "path": "core::paint::Edition"
+              }
+            }
+          }
+        },
+        {
+          "name": "primaries",
+          "public": true,
+          "docs": [
+            "The primary inks allowed, or None for black and white."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "enum",
+                "path": "core::paint::Ink"
+              }
+            }
+          }
+        },
+        {
+          "name": "target",
+          "public": true,
+          "docs": [
+            "The forced target, or None for a coin flip."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "enum",
+              "path": "core::paint::Target"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Edition",
+      "name": "Edition",
+      "defined_at": "core/paint.rs:14",
+      "docs": [
+        "The seven ways a paint distributes its colors over a cell."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "Simple",
+          "Index",
+          "Layers",
+          "Neighbors",
+          "Rows",
+          "Columns",
+          "Random"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Simple",
+          "word": "Simple",
+          "docs": [
+            "One color per cell type."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Index",
+          "word": "Index",
+          "docs": [
+            "Color by cell index."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Layers",
+          "word": "Layers",
+          "docs": [
+            "Color by concentric layer."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Neighbors",
+          "word": "Neighbors",
+          "docs": [
+            "Color by neighbor count."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Rows",
+          "word": "Rows",
+          "docs": [
+            "Color by row."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Columns",
+          "word": "Columns",
+          "docs": [
+            "Color by column."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Random",
+          "word": "Random",
+          "docs": [
+            "A random color per cell."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Ink",
+      "name": "Ink",
+      "defined_at": "core/paint.rs:35",
+      "docs": [
+        "The fifteen named inks a paint draws from."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "Black",
+          "White",
+          "Red",
+          "Orange",
+          "Yellow",
+          "Green",
+          "Mint",
+          "Teal",
+          "Cyan",
+          "Blue",
+          "Indigo",
+          "Purple",
+          "Pink",
+          "Brown",
+          "Gray"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Black",
+          "word": "Black",
+          "docs": [
+            "Black (0, 0, 0)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "White",
+          "word": "White",
+          "docs": [
+            "White (255, 255, 255)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Red",
+          "word": "Red",
+          "docs": [
+            "Red (255, 61, 64)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Orange",
+          "word": "Orange",
+          "docs": [
+            "Orange (255, 143, 44)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Yellow",
+          "word": "Yellow",
+          "docs": [
+            "Yellow (255, 209, 0)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Green",
+          "word": "Green",
+          "docs": [
+            "Green (50, 204, 88)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Mint",
+          "word": "Mint",
+          "docs": [
+            "Mint (0, 209, 187)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Teal",
+          "word": "Teal",
+          "docs": [
+            "Teal (0, 202, 216)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Cyan",
+          "word": "Cyan",
+          "docs": [
+            "Cyan (30, 201, 243)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Blue",
+          "word": "Blue",
+          "docs": [
+            "Blue (0, 140, 255)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Indigo",
+          "word": "Indigo",
+          "docs": [
+            "Indigo (103, 104, 250)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Purple",
+          "word": "Purple",
+          "docs": [
+            "Purple (211, 50, 233)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Pink",
+          "word": "Pink",
+          "docs": [
+            "The palette pink."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Brown",
+          "word": "Brown",
+          "docs": [
+            "Brown (177, 132, 98)."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Gray",
+          "word": "Gray",
+          "docs": [
+            "Gray (142, 142, 147)."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Paint",
+      "name": "Paint",
+      "defined_at": "core/paint.rs:147",
+      "docs": [
+        "A complete coloring recipe for one cell."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "edition",
+          "public": true,
+          "docs": [
+            "The coloring edition."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Edition"
+          }
+        },
+        {
+          "name": "scheme",
+          "public": true,
+          "docs": [
+            "The secondary color scheme."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Scheme"
+          }
+        },
+        {
+          "name": "target",
+          "public": true,
+          "docs": [
+            "The side the primary ink lands on."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Target"
+          }
+        },
+        {
+          "name": "primary",
+          "public": true,
+          "docs": [
+            "The primary ink."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Ink"
+          }
+        },
+        {
+          "name": "secondary",
+          "public": true,
+          "docs": [
+            "The secondary inks."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "enum",
+              "path": "core::paint::Ink"
+            }
+          }
+        },
+        {
+          "name": "shades",
+          "public": true,
+          "docs": [
+            "The shade indices of a multitone ramp."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Scheme",
+      "name": "Scheme",
+      "defined_at": "core/paint.rs:72",
+      "docs": [
+        "The two ways secondary colors are drawn."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "Multicolor",
+          "Multitone"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Multicolor",
+          "word": "Multicolor",
+          "docs": [
+            "Distinct secondary inks."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Multitone",
+          "word": "Multitone",
+          "docs": [
+            "One secondary ink stepped through shades."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Target",
+      "name": "Target",
+      "defined_at": "core/paint.rs:83",
+      "docs": [
+        "The side of the figure the primary ink lands on."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "Fill",
+          "Void"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Fill",
+          "word": "Fill",
+          "docs": [
+            "The primary on the filled cells, secondaries on the empty."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Void",
+          "word": "Void",
+          "docs": [
+            "The primary on the empty cells, secondaries on the filled."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::tensor::Buf",
+      "name": "Buf",
+      "defined_at": "core/tensor/mod.rs:34",
+      "docs": [
+        "The typed storage behind a tensor."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "U8",
+          "word": null,
+          "docs": [
+            "Unsigned 8-bit storage."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "scalar",
+                  "name": "u8"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "U16",
+          "word": null,
+          "docs": [
+            "Unsigned 16-bit storage."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "scalar",
+                  "name": "u16"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "U32",
+          "word": null,
+          "docs": [
+            "Unsigned 32-bit storage."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "scalar",
+                  "name": "u32"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "I32",
+          "word": null,
+          "docs": [
+            "Signed 32-bit storage."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "scalar",
+                  "name": "i32"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "alias": null
+    }
+  ],
+  "consts": [
+    {
+      "path": "core::HEX_RATIO",
+      "name": "HEX_RATIO",
+      "defined_at": "core/resample.rs:16",
+      "docs": [
+        "The height of an equilateral triangle over its side, the squash a hex rendering wears."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::ALPHA",
+      "name": "ALPHA",
+      "defined_at": "core/colors.rs:20",
+      "docs": [
+        "The fully transparent color."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::BLACK",
+      "name": "BLACK",
+      "defined_at": "core/colors.rs:25",
+      "docs": [
+        "The palette black, #000000."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::BLUE",
+      "name": "BLUE",
+      "defined_at": "core/colors.rs:43",
+      "docs": [
+        "The palette blue, #008cff."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::BROWN",
+      "name": "BROWN",
+      "defined_at": "core/colors.rs:51",
+      "docs": [
+        "The palette brown, #b18462."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::CYAN",
+      "name": "CYAN",
+      "defined_at": "core/colors.rs:41",
+      "docs": [
+        "The palette cyan, #1ec9f3."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::DARK",
+      "name": "DARK",
+      "defined_at": "core/colors.rs:185",
+      "docs": [
+        "The dark theme."
+      ],
+      "ty": {
+        "t": "class",
+        "path": "core::colors::Theme",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::GRAY",
+      "name": "GRAY",
+      "defined_at": "core/colors.rs:53",
+      "docs": [
+        "The palette gray, #8e8e93."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::GREEN",
+      "name": "GREEN",
+      "defined_at": "core/colors.rs:35",
+      "docs": [
+        "The palette green, #32cc58."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::INDIGO",
+      "name": "INDIGO",
+      "defined_at": "core/colors.rs:45",
+      "docs": [
+        "The palette indigo, #6768fa."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::LIGHT",
+      "name": "LIGHT",
+      "defined_at": "core/colors.rs:197",
+      "docs": [
+        "The light theme."
+      ],
+      "ty": {
+        "t": "class",
+        "path": "core::colors::Theme",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::MINT",
+      "name": "MINT",
+      "defined_at": "core/colors.rs:37",
+      "docs": [
+        "The palette mint, #00d1bb."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::NAMES",
+      "name": "NAMES",
+      "defined_at": "core/colors.rs:57",
+      "docs": [
+        "The fifteen names, in palette order."
+      ],
+      "ty": {
+        "t": "array",
+        "item": {
+          "t": "str"
+        },
+        "len": 15
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::ORANGE",
+      "name": "ORANGE",
+      "defined_at": "core/colors.rs:31",
+      "docs": [
+        "The palette orange, #ff8f2c."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::PALETTE",
+      "name": "PALETTE",
+      "defined_at": "core/colors.rs:61",
+      "docs": [
+        "The fifteen colors, in name order."
+      ],
+      "ty": {
+        "t": "array",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        },
+        "len": 15
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::PINK",
+      "name": "PINK",
+      "defined_at": "core/colors.rs:49",
+      "docs": [
+        "The palette pink, #ff325a."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::PURPLE",
+      "name": "PURPLE",
+      "defined_at": "core/colors.rs:47",
+      "docs": [
+        "The palette purple, #d332e9."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::RED",
+      "name": "RED",
+      "defined_at": "core/colors.rs:29",
+      "docs": [
+        "The palette red, #ff3d40."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::TEAL",
+      "name": "TEAL",
+      "defined_at": "core/colors.rs:39",
+      "docs": [
+        "The palette teal, #00cad8."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::WHITE",
+      "name": "WHITE",
+      "defined_at": "core/colors.rs:27",
+      "docs": [
+        "The palette white, #ffffff."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::YELLOW",
+      "name": "YELLOW",
+      "defined_at": "core/colors.rs:33",
+      "docs": [
+        "The palette yellow, #ffd100."
+      ],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    }
+  ],
+  "functions": [
+    {
+      "path": "core::Colorizer::default",
+      "name": "default",
+      "module": "core",
+      "defined_at": "core/ramp.rs:87",
+      "docs": [
+        "Returns the default Colorizer."
+      ],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Colorizer::diverge",
+      "name": "diverge",
+      "module": "core",
+      "defined_at": "core/ramp.rs:36",
+      "docs": [
+        "Builds the blue-to-red diverging ramp around a white middle."
+      ],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Colorizer::fire",
+      "name": "fire",
+      "module": "core",
+      "defined_at": "core/ramp.rs:27",
+      "docs": [
+        "Builds the black-through-ember fire ramp: black, dark red, orange, light yellow."
+      ],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Colorizer::gradient_bins",
+      "name": "gradient_bins",
+      "module": "core",
+      "defined_at": "core/ramp.rs:49",
+      "docs": [
+        "Builds a binned colorizer from a gradient through the given stops.",
+        "",
+        "# Errors",
+        "",
+        "Errs on an empty stop list."
+      ],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "background",
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "colors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Color",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "shades",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "core::Colorizer"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Colorizer::heat",
+      "name": "heat",
+      "module": "core",
+      "defined_at": "core/ramp.rs:19",
+      "docs": [
+        "Builds the white-to-black heat ramp."
+      ],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Dtype::max",
+      "name": "max",
+      "module": "core",
+      "defined_at": "core/tensor/mod.rs:22",
+      "docs": [
+        "Returns the largest value the width can hold."
+      ],
+      "owner": "core::Dtype",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "i64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::block",
+      "name": "block",
+      "module": "core",
+      "defined_at": "core/resample.rs:98",
+      "docs": [
+        "Draws every source element as a scale by scale block, growing both sides by scale.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the source is not width by height, or the grown size overflows.",
+        "",
+        "```",
+        "let out = mrly_core::resample::block(&[1u8, 2], 2, 1, 2).unwrap();",
+        "assert_eq!(out, vec![1, 1, 2, 2, 1, 1, 2, 2]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "src",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "unknown",
+              "text": "generic T"
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "scale",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "unknown",
+            "text": "generic T"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::cell::anti",
+      "name": "anti",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:103",
+      "docs": [
+        "Flips every type to one minus itself, same as invert."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::binarize",
+      "name": "binarize",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:176",
+      "docs": [
+        "Maps every type to one at or above the threshold and zero below, dropping colors."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "threshold",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::binarize_otsu",
+      "name": "binarize_otsu",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:182",
+      "docs": [
+        "Binarizes the types at Otsu's threshold, dropping colors."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::blur",
+      "name": "blur",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:192",
+      "docs": [
+        "Replaces every type with the rounded mean of its masked neighborhood, dropping colors.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a mask of another rank, an even side, or a mask with nothing on."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "wrap",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::color_at",
+      "name": "color_at",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:70",
+      "docs": [
+        "Returns the painted color at a flat index, or transparent while unpainted or past the end."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "flat",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 4
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::combine",
+      "name": "combine",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:208",
+      "docs": [
+        "Builds the Kronecker product of the two cells' types."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "other",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::fractal",
+      "name": "fractal",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:131",
+      "docs": [
+        "Grows the types to the level-fold Kronecker power of themselves, dropping colors and tags.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the level is below one."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::invert",
+      "name": "invert",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:98",
+      "docs": [
+        "Flips every type to one minus itself."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::layers",
+      "name": "layers",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:156",
+      "docs": [
+        "Tags every cell with its concentric shell distance from the center."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::magic",
+      "name": "magic",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:471",
+      "docs": [
+        "Folds at least two cells into one by chained Kronecker products.",
+        "",
+        "# Errors",
+        "",
+        "Errs with fewer than two cells."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cells",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::mapping",
+      "name": "mapping",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:41",
+      "docs": [
+        "Returns the default mapping of the first six types to white, black, alpha, red, green, and blue."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "map",
+        "key": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "value": {
+          "t": "vec",
+          "item": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::merge",
+      "name": "merge",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:421",
+      "docs": [
+        "Stitches same-shaped cells into one grid of reps blocks per axis.",
+        "",
+        "# Errors",
+        "",
+        "Errs on an empty list, a cell count that is not the product of reps, a rank mismatch, or cells of unequal shape."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cells",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "reps",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::moore",
+      "name": "moore",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:365",
+      "docs": [
+        "Builds the 3-wide Moore mask of the dimension, every site on but the center.",
+        "",
+        "```",
+        "let mask = mrly_core::cell::moore(2);",
+        "assert_eq!(mask.shape, vec![3, 3]);",
+        "assert_eq!(mask.sum(), 8);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::mosaic",
+      "name": "mosaic",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:487",
+      "docs": [
+        "Lays the cell each mask entry indexes into that entry's place and merges the lot.",
+        "",
+        "# Errors",
+        "",
+        "Errs when a mask entry indexes no cell, or the picked cells do not merge."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "cells",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::neighbors",
+      "name": "neighbors",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:165",
+      "docs": [
+        "Tags every cell with its count of target-valued neighbors under the mask.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a mask of another rank or an even side, a target above one, or a count past the dtype."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "target",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "wrap",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::new",
+      "name": "new",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:54",
+      "docs": [
+        "Wraps a tensor of types in a bare cell, colorless and tagless."
+      ],
+      "owner": "core::Cell",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "types",
+          "ty": {
+            "t": "hand",
+            "name": "Tensor",
+            "dim": null
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::pad",
+      "name": "pad",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:107",
+      "docs": [
+        "Wraps the cell in count layers of value on every side, dropping colors."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "count",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::paint",
+      "name": "paint",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:216",
+      "docs": [
+        "Colors every mapped cell, picking within each type's palette by the mode.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the Random mode arrives without a stream to draw from."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "mapping",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "map",
+              "key": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "value": {
+                "t": "vec",
+                "item": {
+                  "t": "hand",
+                  "name": "Color",
+                  "dim": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "mode",
+          "ty": {
+            "t": "enum",
+            "path": "core::Mode"
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": true,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Rng",
+                "dim": null
+              }
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::perforate",
+      "name": "perforate",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:202",
+      "docs": [
+        "Stamps value wherever the tiled mask is on, dropping colors.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a mask of another rank or a side that does not evenly tile the cell."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::remap",
+      "name": "remap",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:324",
+      "docs": [
+        "Rebuilds a cell's types, colors and tags at the new shape from one destination-to-source index map.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the map is not the shape's size, or points past the cell."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "map",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::rgba",
+      "name": "rgba",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:84",
+      "docs": [
+        "Returns the flat rgba bytes of the cells, four to a cell, the stored color where there is one and opaque black everywhere else.",
+        "",
+        "```",
+        "use mrly_core::cell::Cell;",
+        "use mrly_core::tensor::Tensor;",
+        "assert_eq!(Cell::new(Tensor::new(vec![1, 2])).rgba(), vec![0, 0, 0, 255, 0, 0, 0, 255]);",
+        "```"
+      ],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::rot90_map",
+      "name": "rot90_map",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:380",
+      "docs": [
+        "Builds the flat source index of every destination cell after k quarter turns in the plane of the axes.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the axes are not two distinct axes of the shape."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "axes",
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::rotate",
+      "name": "rotate",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:118",
+      "docs": [
+        "Rotates the cell k quarter turns in the plane of the given axes, carrying colors and tags along.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the axes are not two distinct axes of the cell."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "axes",
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::shape",
+      "name": "shape",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:62",
+      "docs": [
+        "Returns the shape of the type tensor."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "scalar",
+          "name": "usize"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::size",
+      "name": "size",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:66",
+      "docs": [
+        "Returns the number of cells."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::tile",
+      "name": "tile",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:145",
+      "docs": [
+        "Repeats the cell reps times along each axis, carrying colors and tags along.",
+        "",
+        "# Errors",
+        "",
+        "Errs without one count per axis."
+      ],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "reps",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::tile_map",
+      "name": "tile_map",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:294",
+      "docs": [
+        "Builds the flat source index of every destination cell after tiling reps copies per axis.",
+        "",
+        "# Errors",
+        "",
+        "Errs without one count per axis."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "reps",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::Theme::hues",
+      "name": "hues",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:129",
+      "docs": [
+        "The thirteen inks in name order."
+      ],
+      "owner": "core::colors::Theme",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        },
+        "len": 13
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::Theme::inks",
+      "name": "inks",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:147",
+      "docs": [
+        "The six inks a figure cycles through: blue, orange, yellow, green, pink, indigo."
+      ],
+      "owner": "core::colors::Theme",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        },
+        "len": 6
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::alpha",
+      "name": "alpha",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:302",
+      "docs": [
+        "Returns the color with its alpha set to level."
+      ],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::board",
+      "name": "board",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:221",
+      "docs": [
+        "Returns the ground rgba of the dark or the light theme."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "dark",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 4
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::css",
+      "name": "css",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:294",
+      "docs": [
+        "Formats the color as a css rgb or rgba call."
+      ],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::from_hex",
+      "name": "from_hex",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:275",
+      "docs": [
+        "Parses a #RRGGBB or #RRGGBBAA code, hash optional.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the text is not six or eight ascii hex digits after an optional hash.",
+        "",
+        "```",
+        "assert_eq!(mrly_core::Color::from_hex(\"#ff3d40\").unwrap(), mrly_core::colors::RED);",
+        "```"
+      ],
+      "owner": "core::Color",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "hex",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::gradient",
+      "name": "gradient",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:368",
+      "docs": [
+        "Builds a gradient of steps colors sweeping evenly through the given stops.",
+        "",
+        "# Errors",
+        "",
+        "Errs on an empty stop list or fewer than one step."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "colors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Color",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "steps",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::ink",
+      "name": "ink",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:227",
+      "docs": [
+        "Returns the foreground rgba of the dark or the light theme."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "dark",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 4
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::invert",
+      "name": "invert",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:306",
+      "docs": [
+        "Returns the color with every channel flipped and the alpha kept."
+      ],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::lightness",
+      "name": "lightness",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:314",
+      "docs": [
+        "Returns the color scaled toward black below level 50 and toward white above.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the level is past 100."
+      ],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::luma_types",
+      "name": "luma_types",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:431",
+      "docs": [
+        "Reads rgba pixels as a type grid, one wherever the rgb mean falls below the level."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::mix",
+      "name": "mix",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:350",
+      "docs": [
+        "Blends two colors linearly by ratio.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the ratio falls outside zero to one."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "color_1",
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "color_2",
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "ratio",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::named",
+      "name": "named",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:213",
+      "docs": [
+        "Returns the palette color a name spells.",
+        "",
+        "# Errors",
+        "",
+        "Errs when no palette color carries the name."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "name",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::random",
+      "name": "random",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:335",
+      "docs": [
+        "Draws a color from the stream, opaque unless alpha is asked for."
+      ],
+      "owner": "core::Color",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "alpha",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::rgb",
+      "name": "rgb",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:246",
+      "docs": [
+        "Builds an opaque color."
+      ],
+      "owner": "core::Color",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "r",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "g",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "b",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::rgba",
+      "name": "rgba",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:250",
+      "docs": [
+        "Builds a color with an explicit alpha."
+      ],
+      "owner": "core::Color",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "r",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "g",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "b",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "a",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::shades",
+      "name": "shades",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:68",
+      "docs": [
+        "Returns a hue one shade lighter, itself, and one shade darker."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "hue",
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        },
+        "len": 3
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::snap",
+      "name": "snap",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:400",
+      "docs": [
+        "Snaps every pixel to the palette color nearest it in squared rgba distance, first on a tie.",
+        "",
+        "Returns the pixels untouched when the palette is empty."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "palette",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Color",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "array",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          },
+          "len": 4
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::to_hex",
+      "name": "to_hex",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:259",
+      "docs": [
+        "Formats the color as lowercase hex, appending the alpha pair only when not opaque.",
+        "",
+        "```",
+        "use mrly_core::Color;",
+        "assert_eq!(Color::rgba(0, 140, 255, 128).to_hex(), \"#008cff80\");",
+        "```"
+      ],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::error::overflow_error",
+      "name": "overflow_error",
+      "module": "core::error",
+      "defined_at": "core/error.rs:64",
+      "docs": [
+        "Wraps a message in an Err of the overflow variant.",
+        "",
+        "# Errors",
+        "",
+        "Always errs; the Ok side is only there to fit the caller's return type."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "message",
+          "ty": {
+            "t": "unknown",
+            "text": "impl Trait argument impl Into < String >"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unknown",
+          "text": "generic T"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "error constructor"
+      }
+    },
+    {
+      "path": "core::error::parse",
+      "name": "parse",
+      "module": "core::error",
+      "defined_at": "core/error.rs:85",
+      "docs": [
+        "Parses JSON text into a value.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the text is not valid json, naming where it broke.",
+        "",
+        "```",
+        "let v = mrly_core::error::parse(r#\"{\"tags\": [3, 5]}\"#).unwrap();",
+        "assert_eq!(v[\"tags\"][1], 5);",
+        "assert!(mrly_core::error::parse(\"[1,\").is_err());",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "json"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::error::shape_error",
+      "name": "shape_error",
+      "module": "core::error",
+      "defined_at": "core/error.rs:55",
+      "docs": [
+        "Wraps a message in an Err of the shape variant.",
+        "",
+        "# Errors",
+        "",
+        "Always errs; the Ok side is only there to fit the caller's return type."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "message",
+          "ty": {
+            "t": "unknown",
+            "text": "impl Trait argument impl Into < String >"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unknown",
+          "text": "generic T"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "error constructor"
+      }
+    },
+    {
+      "path": "core::error::value_error",
+      "name": "value_error",
+      "module": "core::error",
+      "defined_at": "core/error.rs:46",
+      "docs": [
+        "Wraps a message in an Err of the value variant.",
+        "",
+        "# Errors",
+        "",
+        "Always errs; the Ok side is only there to fit the caller's return type."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "message",
+          "ty": {
+            "t": "unknown",
+            "text": "impl Trait argument impl Into < String >"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unknown",
+          "text": "generic T"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "error constructor"
+      }
+    },
+    {
+      "path": "core::hex_fit",
+      "name": "hex_fit",
+      "module": "core",
+      "defined_at": "core/resample.rs:37",
+      "docs": [
+        "Squashes rgba pixels to the hex aspect, returning the new width, height and pixels.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a side of zero or a pixels length that is not width by height."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "vertical",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "filter",
+          "ty": {
+            "t": "enum",
+            "path": "core::Filter"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "vec",
+              "item": {
+                "t": "array",
+                "item": {
+                  "t": "scalar",
+                  "name": "u8"
+                },
+                "len": 4
+              }
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::hex_size",
+      "name": "hex_size",
+      "module": "core",
+      "defined_at": "core/resample.rs:24",
+      "docs": [
+        "Returns the size a hex rendering wears, the named axis squashed by the triangle ratio.",
+        "",
+        "```",
+        "assert_eq!(mrly_core::resample::hex_size(100, 100, true), (86, 100));",
+        "assert_eq!(mrly_core::resample::hex_size(100, 100, false), (100, 86));",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "vertical",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "tuple",
+        "items": [
+          {
+            "t": "scalar",
+            "name": "usize"
+          },
+          {
+            "t": "scalar",
+            "name": "usize"
+          }
+        ]
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::blur",
+      "name": "blur",
+      "module": "core::image",
+      "defined_at": "core/image.rs:73",
+      "docs": [
+        "Box-blurs rgba pixels by radius, each channel the mean of its edge-padded window."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "radius",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "array",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          },
+          "len": 4
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::new",
+      "name": "new",
+      "module": "core::image",
+      "defined_at": "core/image.rs:30",
+      "docs": [
+        "Builds an image from its width, its height and its colors.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the colors do not count width by height.",
+        "",
+        "```",
+        "let image = mrly_core::Image::new(2, 1, vec![[255, 0, 0, 255], [0, 0, 255, 255]])?;",
+        "assert_eq!((image.width, image.height, image.colors[1]), (2, 1, [0, 0, 255, 255]));",
+        "assert!(mrly_core::Image::new(2, 2, vec![[0, 0, 0, 255]]).is_err());",
+        "# Ok::<(), mrly_core::Error>(())",
+        "```"
+      ],
+      "owner": "core::Image",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "colors",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::resample",
+      "name": "resample",
+      "module": "core::image",
+      "defined_at": "core/image.rs:61",
+      "docs": [
+        "Resamples the image to a new size.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a side of zero, colors that do not count width by height, or a size that overflows."
+      ],
+      "owner": "core::Image",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "filter",
+          "ty": {
+            "t": "enum",
+            "path": "core::Filter"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::scale",
+      "name": "scale",
+      "module": "core::image",
+      "defined_at": "core/image.rs:45",
+      "docs": [
+        "Draws every pixel as a scale by scale block, growing both sides by scale.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a scale below one, colors that do not count width by height, or a grown size that overflows."
+      ],
+      "owner": "core::Image",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "scale",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::name::longest",
+      "name": "longest",
+      "module": "core::name",
+      "defined_at": "core/name/text.rs:286",
+      "docs": [
+        "Returns the index of the longest of `names` that `text` starts with, and the rest of `text`, or `None` when none matches.",
+        "",
+        "A prefix reader takes the longest match, not the first, so `evens` never cuts `evens_zeros` short.",
+        "",
+        "```",
+        "let names = vec![\"evens\".to_string(), \"evens_zeros\".to_string()];",
+        "assert_eq!(mrly_core::name::longest(\"evens_zeros_ones\", &names), Some((1, \"_ones\")));",
+        "assert_eq!(mrly_core::name::longest(\"odds\", &names), None);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": "'a",
+            "item": {
+              "t": "str"
+            }
+          }
+        },
+        {
+          "name": "names",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'a",
+              "item": {
+                "t": "str"
+              }
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "lifetime-bearing return"
+      }
+    },
+    {
+      "path": "core::name::sha::hex",
+      "name": "hex",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:75",
+      "docs": [
+        "Returns the sha256 digest of `bytes` as 64 lowercase hex digits."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::name::sha::sha256",
+      "name": "sha256",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:56",
+      "docs": [
+        "Returns the 32-byte sha256 digest of `bytes`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 32
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::name::sha::short",
+      "name": "short",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:80",
+      "docs": [
+        "Returns the first eight hex digits of the sha256 digest of `bytes`, the id a name prints."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Config::default",
+      "name": "default",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:136",
+      "docs": [
+        "Returns the default Config."
+      ],
+      "owner": "core::paint::Config",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::paint::Config"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Edition::all",
+      "name": "all",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:14",
+      "docs": [
+        "Returns every Edition in canonical order."
+      ],
+      "owner": "core::paint::Edition",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "core::paint::Edition"
+        },
+        "len": 7
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Edition::mode",
+      "name": "mode",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:96",
+      "docs": [
+        "Returns the cell-painting mode this edition renders with, or None for Random, which scatters."
+      ],
+      "owner": "core::paint::Edition",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "enum",
+          "path": "core::Mode"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Edition::name",
+      "name": "name",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:14",
+      "docs": [
+        "Returns the Edition's display name."
+      ],
+      "owner": "core::paint::Edition",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "core::paint::Ink::all",
+      "name": "all",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:35",
+      "docs": [
+        "Returns every Ink in canonical order."
+      ],
+      "owner": "core::paint::Ink",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "core::paint::Ink"
+        },
+        "len": 15
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Ink::color",
+      "name": "color",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:111",
+      "docs": [
+        "Returns the ink's color."
+      ],
+      "owner": "core::paint::Ink",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Ink::name",
+      "name": "name",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:35",
+      "docs": [
+        "Returns the Ink's display name."
+      ],
+      "owner": "core::paint::Ink",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "core::paint::Paint::is_simple",
+      "name": "is_simple",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:175",
+      "docs": [
+        "Returns true for the Simple edition."
+      ],
+      "owner": "core::paint::Paint",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Paint::new",
+      "name": "new",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:164",
+      "docs": [
+        "Builds a black-primary, fill-target, multicolor paint for an edition."
+      ],
+      "owner": "core::paint::Paint",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "edition",
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Edition"
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "core::paint::Paint",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Scheme::all",
+      "name": "all",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:72",
+      "docs": [
+        "Returns every Scheme in canonical order."
+      ],
+      "owner": "core::paint::Scheme",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "core::paint::Scheme"
+        },
+        "len": 2
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Scheme::name",
+      "name": "name",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:72",
+      "docs": [
+        "Returns the Scheme's display name."
+      ],
+      "owner": "core::paint::Scheme",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "core::paint::Target::all",
+      "name": "all",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:83",
+      "docs": [
+        "Returns every Target in canonical order."
+      ],
+      "owner": "core::paint::Target",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "core::paint::Target"
+        },
+        "len": 2
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Target::name",
+      "name": "name",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:83",
+      "docs": [
+        "Returns the Target's display name."
+      ],
+      "owner": "core::paint::Target",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "core::paint::apply",
+      "name": "apply",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:404",
+      "docs": [
+        "Colors the cell from the paint's inks under its edition mode, scattering the Random edition from the stream.",
+        "",
+        "# Errors",
+        "",
+        "Errs when a multitone paint carries no base color to shade."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "paint",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "class",
+              "path": "core::paint::Paint",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unit"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::coat",
+      "name": "coat",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:446",
+      "docs": [
+        "Replays a stored paint onto a cell, tagging first and applying it from the stream.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the tagging or the coloring does."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "paint",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "class",
+              "path": "core::paint::Paint",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Tensor",
+                "dim": null
+              }
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unit"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::paint",
+      "name": "paint",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:456",
+      "docs": [
+        "Draws a random paint under the config, applies it to the cell, and returns the recipe.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the tagging or the coloring does."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "config",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "core::paint::Config"
+            }
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Tensor",
+                "dim": null
+              }
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "core::paint::Paint",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::prime",
+      "name": "prime",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:360",
+      "docs": [
+        "Tags the cell for Layers and Neighbors paints and sizes the palette to the tag count.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the tagging does."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "paint",
+          "ty": {
+            "t": "class",
+            "path": "core::paint::Paint",
+            "dim": null
+          }
+        },
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Tensor",
+                "dim": null
+              }
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "core::paint::Paint",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::random_edition",
+      "name": "random_edition",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:185",
+      "docs": [
+        "Draws a random edition from the allowed list, or from all seven."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "editions",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "slice",
+              "mutable": false,
+              "item": {
+                "t": "enum",
+                "path": "core::paint::Edition"
+              }
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "enum",
+        "path": "core::paint::Edition"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::reroll",
+      "name": "reroll",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:236",
+      "docs": [
+        "Redraws the paint's secondary inks and shades under its scheme."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "paint",
+          "ty": {
+            "t": "class",
+            "path": "core::paint::Paint",
+            "dim": null
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "core::paint::Paint",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::setup",
+      "name": "setup",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:259",
+      "docs": [
+        "Draws the paint's scheme, target and primary under the config, then rerolls the rest."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "paint",
+          "ty": {
+            "t": "class",
+            "path": "core::paint::Paint",
+            "dim": null
+          }
+        },
+        {
+          "name": "config",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "core::paint::Config"
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "core::paint::Paint",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::tag",
+      "name": "tag",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:328",
+      "docs": [
+        "Tags the cell for the Layers and Neighbors editions and returns the distinct tag count on the secondary side.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the Neighbors mask does not fit the cell."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "edition",
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Edition"
+          }
+        },
+        {
+          "name": "target",
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Target"
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Tensor",
+                "dim": null
+              }
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "usize"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::ramp::color",
+      "name": "color",
+      "module": "core::ramp",
+      "defined_at": "core/ramp.rs:61",
+      "docs": [
+        "Returns the color for one value against the range maximum: the background at zero, the top of the ramp from the maximum up.",
+        "",
+        "```",
+        "use mrly_core::{colors::WHITE, ramp::color, Colorizer};",
+        "assert_eq!(color(&Colorizer::heat(), 0, 10), WHITE);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "colorizer",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "core::Colorizer"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "max",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::ramp::colors",
+      "name": "colors",
+      "module": "core::ramp",
+      "defined_at": "core/ramp.rs:77",
+      "docs": [
+        "Maps a slice of values to rgba pixels against the range maximum."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "colorizer",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "core::Colorizer"
+            }
+          }
+        },
+        {
+          "name": "values",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "max",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "array",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          },
+          "len": 4
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::resample",
+      "name": "resample",
+      "module": "core",
+      "defined_at": "core/resample.rs:61",
+      "docs": [
+        "Resamples rgba pixels to a new size.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a side of zero, a pixels length that is not width by height, or an output size that overflows.",
+        "",
+        "```",
+        "let pixels = [[255, 0, 0, 255], [0, 0, 255, 255]];",
+        "let filter = mrly_core::resample::Filter::Nearest;",
+        "let wide = mrly_core::resample::resample(&pixels, 2, 1, 4, 1, filter).unwrap();",
+        "assert_eq!(wide, vec![pixels[0], pixels[0], pixels[1], pixels[1]]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "out_w",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "out_h",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "filter",
+          "ty": {
+            "t": "enum",
+            "path": "core::Filter"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "array",
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            },
+            "len": 4
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::below",
+      "name": "below",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:68",
+      "docs": [
+        "Draws an integer below n, or zero when n is zero."
+      ],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "n",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::boolean",
+      "name": "boolean",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:80",
+      "docs": [
+        "Draws a fair coin flip."
+      ],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::chance",
+      "name": "chance",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:84",
+      "docs": [
+        "Returns true with probability p."
+      ],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "p",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::choice",
+      "name": "choice",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:92",
+      "docs": [
+        "Draws one element of the slice.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the slice is empty."
+      ],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "items",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": "'a",
+            "item": {
+              "t": "slice",
+              "mutable": false,
+              "item": {
+                "t": "unknown",
+                "text": "generic T"
+              }
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "ref",
+          "mutable": false,
+          "lifetime": "'a",
+          "item": {
+            "t": "unknown",
+            "text": "generic T"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::rng::new",
+      "name": "new",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:26",
+      "docs": [
+        "Builds the stream from a seed.",
+        "",
+        "```",
+        "use mrly_core::Rng;",
+        "let mut rng = Rng::new(42);",
+        "assert_eq!(rng.below(6), Rng::new(42).below(6));",
+        "```"
+      ],
+      "owner": "core::Rng",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "seed",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Rng",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::range",
+      "name": "range",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:72",
+      "docs": [
+        "Draws an integer between lo and hi inclusive, or lo when hi is not above lo."
+      ],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "lo",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        },
+        {
+          "name": "hi",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "i64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::sample_indices",
+      "name": "sample_indices",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:105",
+      "docs": [
+        "Draws amount distinct indices below length, or every index when amount is larger."
+      ],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "length",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "amount",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "usize"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::shuffle",
+      "name": "shuffle",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:99",
+      "docs": [
+        "Shuffles the slice in place."
+      ],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "seq",
+          "ty": {
+            "t": "slice",
+            "mutable": true,
+            "item": {
+              "t": "unknown",
+              "text": "generic T"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "unit"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::rng::unit",
+      "name": "unit",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:64",
+      "docs": [
+        "Draws a float at or above zero and below one."
+      ],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::at",
+      "name": "at",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:300",
+      "docs": [
+        "Returns the element at a flat index, which must be below the size like a slice index."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "flat",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "i64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::binarize",
+      "name": "binarize",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:154",
+      "docs": [
+        "Maps every element to one at or above the threshold, zero below."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "threshold",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::binarize_otsu",
+      "name": "binarize_otsu",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:203",
+      "docs": [
+        "Binarizes at one above the Otsu threshold."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::blur",
+      "name": "blur",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:211",
+      "docs": [
+        "Averages every position over its masked neighborhood, rounded.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a mask of another rank, an even side, or a mask with nothing on."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "wrap",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::bytes",
+      "name": "bytes",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:249",
+      "docs": [
+        "Returns the elements as bytes.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the tensor is wider than one byte."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": false,
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::bytes_mut",
+      "name": "bytes_mut",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:260",
+      "docs": [
+        "Returns the elements as mutable bytes.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the tensor is wider than one byte."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "mut",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": true,
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "mutable borrow return"
+      }
+    },
+    {
+      "path": "core::tensor::count",
+      "name": "count",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:298",
+      "docs": [
+        "Counts the cells holding one value."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::dtype",
+      "name": "dtype",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:237",
+      "docs": [
+        "Returns the element width."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "enum",
+        "path": "core::Dtype"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::exposed",
+      "name": "exposed",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:304",
+      "docs": [
+        "Counts the faces where filled cells meet empty cells or the boundary: perimeter in 2d, surface in 3d."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "u128"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::filled",
+      "name": "filled",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:166",
+      "docs": [
+        "Builds a tensor of the shape and width filled with one value."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        },
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::flip",
+      "name": "flip",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:69",
+      "docs": [
+        "Reverses the tensor along one axis.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the axis is past the rank."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "axis",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::fractal",
+      "name": "fractal",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:39",
+      "docs": [
+        "Folds the tensor into its level-fold Kronecker power.",
+        "",
+        "```",
+        "use mrly_core::tensor::Tensor;",
+        "let f = Tensor::of(vec![1, 1, 0, 1], vec![2, 2]).unwrap().fractal(2);",
+        "assert_eq!(f.shape, vec![4, 4]);",
+        "assert_eq!(f.sum(), 9);",
+        "```"
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::full",
+      "name": "full",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:154",
+      "docs": [
+        "Builds a u8 tensor filled with one value."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::get",
+      "name": "get",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:349",
+      "docs": [
+        "Returns the byte at a multi-index.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the index misses the shape or the tensor is wider than one byte."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "multi",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::i32",
+      "name": "i32",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:233",
+      "docs": [
+        "Wraps an i32 vector as a tensor of the shape.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the data length is not the shape's product."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "i32"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::i32s",
+      "name": "i32s",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:293",
+      "docs": [
+        "Returns the elements as i32s.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the tensor is not four signed bytes wide."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": false,
+          "item": {
+            "t": "scalar",
+            "name": "i32"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::index",
+      "name": "index",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:312",
+      "docs": [
+        "Folds a multi-index into its flat index."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "multi",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::invert",
+      "name": "invert",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:57",
+      "docs": [
+        "Flips every element between zero and one."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::kron",
+      "name": "kron",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:6",
+      "docs": [
+        "Builds the Kronecker product of the two tensors."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "other",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::layers",
+      "name": "layers",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:104",
+      "docs": [
+        "Numbers every position by its concentric ring out from the center."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::neighbors",
+      "name": "neighbors",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:127",
+      "docs": [
+        "Counts each position's masked neighbors holding the target bit.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a mask of another rank or an even side, a target above one, or a count past the dtype."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "target",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "wrap",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::new",
+      "name": "new",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:150",
+      "docs": [
+        "Builds a zeroed u8 tensor of the shape."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::of",
+      "name": "of",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:184",
+      "docs": [
+        "Wraps a byte vector as a tensor of the shape.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the data length is not the shape's product.",
+        "",
+        "```",
+        "use mrly_core::tensor::Tensor;",
+        "assert_eq!(Tensor::of(vec![1, 0, 0, 1], vec![2, 2]).unwrap().sum(), 2);",
+        "assert!(Tensor::of(vec![1, 0, 0], vec![2, 2]).is_err());",
+        "```"
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::otsu_threshold",
+      "name": "otsu_threshold",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:163",
+      "docs": [
+        "Returns the Otsu threshold splitting the histogram at greatest variance."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u8"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::pad",
+      "name": "pad",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:140",
+      "docs": [
+        "Wraps the tensor in a count-thick border of one value."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "count",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::perforate",
+      "name": "perforate",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:272",
+      "docs": [
+        "Stamps the value wherever the tiled mask is nonzero.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a mask of another rank or a side that does not evenly tile the tensor."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::put",
+      "name": "put",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:304",
+      "docs": [
+        "Writes the element at a flat index, which must be below the size like a slice index."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "flat",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "unit"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::rot90",
+      "name": "rot90",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:128",
+      "docs": [
+        "Rotates the tensor k quarter turns in the plane of two axes.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the axes are not two distinct axes of the tensor.",
+        "",
+        "```",
+        "use mrly_core::tensor::Tensor;",
+        "let a = Tensor::of(vec![1, 2, 3, 4], vec![2, 2]).unwrap();",
+        "assert_eq!(a.rot90(1, (0, 1)).unwrap().bytes().unwrap(), &[2, 4, 1, 3]);",
+        "assert!(a.rot90(1, (0, 2)).is_err());",
+        "```"
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "axes",
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::set",
+      "name": "set",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:358",
+      "docs": [
+        "Writes the byte at a multi-index.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the index misses the shape or the tensor is wider than one byte."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "multi",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unit"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::size",
+      "name": "size",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:241",
+      "docs": [
+        "Returns the number of elements."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::slice",
+      "name": "slice",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:101",
+      "docs": [
+        "Drops one axis by fixing it at an index.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the axis is past the rank or the index is past the axis.",
+        "",
+        "```",
+        "let block = mrly_core::tensor::Tensor::full(vec![2, 3, 4], 1);",
+        "assert_eq!(block.slice(2, 0).unwrap(), mrly_core::tensor::Tensor::full(vec![2, 3], 1));",
+        "```"
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "axis",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "index",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::sum",
+      "name": "sum",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:308",
+      "docs": [
+        "Returns the sum of all elements."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::tile",
+      "name": "tile",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:156",
+      "docs": [
+        "Repeats the tensor the given number of times along each axis.",
+        "",
+        "# Errors",
+        "",
+        "Errs without one count per axis."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "reps",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::transpose",
+      "name": "transpose",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:82",
+      "docs": [
+        "Swaps two axes.",
+        "",
+        "# Errors",
+        "",
+        "Errs when either axis is past the rank."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "a",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "b",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::typed",
+      "name": "typed",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:158",
+      "docs": [
+        "Builds a zeroed tensor of the shape and width."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u16",
+      "name": "u16",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:217",
+      "docs": [
+        "Wraps a u16 vector as a tensor of the shape.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the data length is not the shape's product.",
+        "",
+        "```",
+        "use mrly_core::tensor::{Dtype, Tensor};",
+        "let t = Tensor::u16(vec![1, 2, 3, 4], vec![2, 2]).unwrap();",
+        "assert_eq!((t.dtype(), t.sum()), (Dtype::U16, 10));",
+        "assert!(Tensor::u16(vec![1, 2, 3], vec![2, 2]).is_err());",
+        "```"
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u16"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u16s",
+      "name": "u16s",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:271",
+      "docs": [
+        "Returns the elements as u16s.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the tensor is not two bytes wide."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": false,
+          "item": {
+            "t": "scalar",
+            "name": "u16"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u32",
+      "name": "u32",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:225",
+      "docs": [
+        "Wraps a u32 vector as a tensor of the shape.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the data length is not the shape's product."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u32s",
+      "name": "u32s",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:282",
+      "docs": [
+        "Returns the elements as u32s.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the tensor is not four unsigned bytes wide."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": false,
+          "item": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u8",
+      "name": "u8",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:202",
+      "docs": [
+        "Wraps a u8 vector as a tensor of the shape, the same door as `Tensor::of`.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the data length is not the shape's product."
+      ],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    }
+  ]
+}

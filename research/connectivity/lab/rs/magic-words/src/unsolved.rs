@@ -1,7 +1,7 @@
 use crate::cocycle::{morse, value, COLUMN, DIAGONAL, FULL, GASKET, ROW, UNIT};
 use crate::series::{Frac, Rep};
 use crate::word::{render, CODES};
-use mrly::core::rng::Rng;
+use mrly_core::rng::Rng;
 
 pub const DEEP: usize = 13;
 pub const SEEN: usize = 7;

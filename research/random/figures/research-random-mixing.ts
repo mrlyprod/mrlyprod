@@ -1,4 +1,4 @@
-import { frame, Grid, type Ink, type Pen } from "#view";
+import { frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
 const LEVEL = 5;
 const SIDE = 1 << LEVEL;

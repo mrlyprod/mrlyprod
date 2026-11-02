@@ -1,0 +1,17 @@
+[package]
+name = "mrly-font-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The mrly-font command: every public function of mrly-font from the shell, JSON in, JSON out."
+publish = false
+
+[[bin]]
+name = "mrly-font"
+path = "src/main.rs"
+
+[dependencies]
+mrly-font.workspace = true
+mrly-core-cli-hand = { path = "../../core/cli/hand" }
+serde_json.workspace = true

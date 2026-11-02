@@ -2,6 +2,7 @@ mod cli;
 mod config;
 mod disk;
 mod js;
+mod leaf;
 mod model;
 mod parse;
 mod py;
@@ -16,23 +17,20 @@ use config::Config;
 use model::{Manifest, Result};
 use std::path::Path;
 
-type Backend = fn(&Manifest, &Path, &config::Layout) -> Result<()>;
-
-const BACKENDS: &[(&str, Backend)] = &[
-    ("cli", cli::write),
-    ("py", py::write),
-    ("js", js::write),
-    ("version", version::write),
-];
-
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let done = config::load(&config::home()).and_then(|config| {
-        let (root, manifest) = (config.root.clone(), config.layout.manifest.clone());
+        let root = config.root.clone();
+        let leaves: Vec<_> = config
+            .mounts
+            .iter()
+            .filter_map(|m| m.leaf.as_ref())
+            .map(|leaf| (leaf.unit.clone(), leaf.manifest.clone()))
+            .collect();
         match args.iter().map(String::as_str).collect::<Vec<_>>()[..] {
             [] => run(config),
             ["check"] => check(config),
-            ["bump"] => version::bump(&root, &manifest),
+            ["bump"] => version::bump(&root, &leaves),
             _ => Err("usage: bridge [check|bump]".to_string()),
         }
     });
@@ -82,32 +80,40 @@ fn listed(root: &Path) -> String {
 fn run(config: Config) -> Result<()> {
     let Config {
         root,
-        layout,
+        skip,
         mounts,
         hands,
     } = config;
     let root = root.as_path();
     model::install(hands);
-    let files = parse::load_crates(&mounts)?;
     let version = version::read(root)?;
-    let built = resolve::build(&files, &version)?;
-    let json = serde_json::to_string_pretty(&built.manifest).map_err(|e| e.to_string())?;
-    disk::save(&root.join(&layout.manifest), &(json + "\n"))?;
-    for line in report::skip_lines(&built.manifest) {
+    let built = leaf::build(&mounts, &version)?;
+    let mut owns: Vec<Manifest> = Vec::new();
+    let mut errors = Vec::new();
+    for (leaf, built) in &built {
+        let own = leaf::only(&built.manifest, &leaf.unit);
+        let json = serde_json::to_string_pretty(&own).map_err(|e| e.to_string())?;
+        disk::save(&root.join(&leaf.manifest), &(json + "\n"))?;
+        owns.push(own);
+        errors.extend(built.collisions.iter().cloned());
+    }
+    let units: Vec<String> = mounts.iter().map(|m| m.unit.clone()).collect();
+    let macros = parse::parse(&parse::load_crates(&mounts, &units)?)?.macro_body_fns;
+    for line in report::skip_lines(&owns) {
         println!("{line}");
     }
-    for line in report::summary(&built.manifest, built.macro_body_fns) {
+    for line in report::summary(&owns, macros) {
         println!("{line}");
     }
-    let skip_txt = std::fs::read_to_string(root.join(&layout.skip)).unwrap_or_default();
-    let mut errors = built.collisions;
-    errors.extend(report::check_skip(&built.manifest, &skip_txt));
+    let skip_txt = std::fs::read_to_string(root.join(&skip)).unwrap_or_default();
+    errors.sort();
+    errors.dedup();
+    errors.extend(report::check_skip(&owns, &skip_txt));
     if !errors.is_empty() {
         return Err(errors.join("\n"));
     }
-    for (name, write) in BACKENDS {
-        write(&built.manifest, root, &layout).map_err(|e| format!("{name}: {e}"))?;
-    }
+    leaf::write(&built, root).map_err(|e| format!("leaf: {e}"))?;
+    version::write(root, &version).map_err(|e| format!("version: {e}"))?;
     let before = listed(root);
     let orphans = disk::orphans(root, &before);
     disk::save(

@@ -1,7 +1,7 @@
 # mrly-num
 
 - The integers: primes, divisors, series, sieves, lattices and spectra.
-- Part of [mrly](https://crates.io/crates/mrly), released in lockstep with it; most users depend on `mrly` and reach this crate as `mrly::num`.
+- Released in lockstep with the other `mrly-*` crates; its bindings sit beside it: `js/` (`@mrlyprod/num`), `py/` (`mrly.num`) and `cli/` (`mrly-num`).
 - Docs: [docs.rs/mrly-num](https://docs.rs/mrly-num).
 
 ```rust

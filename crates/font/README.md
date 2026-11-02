@@ -1,7 +1,7 @@
 # mrly-font
 
 - The alphabet: a stroked pixel font of 108 characters, painted whole or written stroke by stroke.
-- Part of [mrly](https://crates.io/crates/mrly), released in lockstep with it; most users depend on `mrly` and reach this crate as `mrly::font`.
+- Released in lockstep with the other `mrly-*` crates; its bindings sit beside it: `js/` (`@mrlyprod/font`), `py/` (`mrly.font`) and `cli/` (`mrly-font`).
 - Docs: [docs.rs/mrly-font](https://docs.rs/mrly-font).
 
 ```rust

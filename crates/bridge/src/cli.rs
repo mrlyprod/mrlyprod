@@ -1,17 +1,39 @@
-use crate::config::Layout;
 use crate::disk::save;
+use crate::leaf::{self, Leaf};
 use crate::model::{
-    Cross, Function, Manifest, Result, SelfKind, Source, Ty, Type, TypeCross, TypeKind,
+    Cross, Function, Leafed, Manifest, Result, SelfKind, Source, Ty, Type, TypeCross, TypeKind,
+    rust,
 };
 use std::collections::BTreeMap;
 use std::path::Path;
 
 pub const DOORS: &str = "src/doors.gen.rs";
 
-pub fn write(manifest: &Manifest, root: &Path, layout: &Layout) -> Result<()> {
+pub fn write_leaf(manifest: &Manifest, root: &Path, leaf: &Leaf) -> Result<()> {
+    let _leafed = Leafed::on();
     let book = Book::new(manifest);
-    let doors = doors(&book, manifest)?;
-    save(&root.join(&layout.cli).join(DOORS), &render(&doors))
+    let doors = doors(&book, &leaf::only(manifest, &leaf.unit))?;
+    let dir = root.join(&leaf.cli);
+    save(&dir.join(DOORS), &render(&doors))?;
+    save(&dir.join("Cargo.toml"), &leaf_cargo(leaf))?;
+    save(&dir.join("src/main.rs"), &leaf_main(leaf))
+}
+
+fn leaf_cargo(leaf: &Leaf) -> String {
+    let unit = &leaf.unit;
+    let hand = leaf::relative(&leaf.cli, &leaf.hands.cli);
+    format!(
+        "[package]\nname = \"mrly-{unit}-cli\"\nversion.workspace = true\nedition.workspace = true\nlicense.workspace = true\nrepository.workspace = true\ndescription = \"The mrly-{unit} command: every public function of mrly-{unit} from the shell, JSON in, JSON out.\"\npublish = false\n\n[[bin]]\nname = \"mrly-{unit}\"\npath = \"src/main.rs\"\n\n[dependencies]\n{}mrly-{}-cli-hand = {{ path = \"{hand}\" }}\nserde_json.workspace = true\n",
+        leaf::deps(leaf),
+        leaf.base
+    )
+}
+
+fn leaf_main(leaf: &Leaf) -> String {
+    format!(
+        "use mrly_{}_cli_hand::*;\n\n#[path = \"doors.gen.rs\"]\nmod doors;\n\nfn main() -> std::process::ExitCode {{\n    run(\"mrly-{}\", doors::DOORS)\n}}\n",
+        leaf.base, leaf.unit
+    )
 }
 
 // BOOK
@@ -40,7 +62,7 @@ impl<'a> Book<'a> {
             .hands
             .get(name)
             .ok_or_else(|| format!("no hand type named {name}"))?;
-        Ok(format!("mrly::{path}"))
+        Ok(rust(path))
     }
     fn derives(&self, path: &str, what: &str) -> bool {
         self.types
@@ -227,7 +249,7 @@ fn owned(book: &Book, ty: &Ty, dim: Option<u8>) -> Result<String> {
             if book.wide(path) {
                 return Err(format!("{path} has a const generic"));
             }
-            format!("mrly::{path}")
+            rust(path)
         }
         Ty::Opaque { path } => return Err(format!("{path} does not cross")),
         Ty::Unknown { text } => return Err(format!("{text} does not cross")),
@@ -427,21 +449,21 @@ fn callee(book: &Book, function: &Function, dim: Option<u8>) -> String {
     let name = &function.name;
     match (&function.owner, &function.via) {
         (Some(owner), Some(via)) if function.source == Source::Trait => {
-            format!("<mrly::{owner} as mrly::{via}>::{name}")
+            format!("<{} as {}>::{name}", rust(owner), rust(via))
         }
         (Some(owner), _) => {
             let turbo = match dim {
                 Some(n) if book.wide(owner) => format!("::<{n}>"),
                 _ => String::new(),
             };
-            format!("mrly::{owner}{turbo}::{name}")
+            format!("{}{turbo}::{name}", rust(owner))
         }
         (None, _) => {
             let turbo = match dim {
                 Some(n) => format!("::<{n}>"),
                 None => String::new(),
             };
-            format!("mrly::{}{turbo}", function.path)
+            format!("{}{turbo}", rust(&function.path))
         }
     }
 }
@@ -455,7 +477,7 @@ fn hold(book: &Book, ty: &Ty, at: usize, dim: Option<u8>) -> Result<Bind> {
     } = ty
     {
         if rng(item) {
-            let open = format!("mrly::core::Rng::new(seed(name, {at}, &{slot})?)");
+            let open = format!("{}::new(seed(name, {at}, &{slot})?)", rust("core::Rng"));
             return Ok(Bind::Open(
                 format!("let mut a{at} = {open};"),
                 format!("&mut a{at}"),
@@ -471,7 +493,7 @@ fn hold(book: &Book, ty: &Ty, at: usize, dim: Option<u8>) -> Result<Bind> {
         } = item.as_ref()
     {
         if rng(held) {
-            let open = format!("mrly::core::Rng::new(seed(name, {at}, &{slot})?)");
+            let open = format!("{}::new(seed(name, {at}, &{slot})?)", rust("core::Rng"));
             return Ok(Bind::Open(
                 format!("let mut a{at} = if {slot}.is_null() {{ None }} else {{ Some({open}) }};"),
                 format!("a{at}.as_mut()"),

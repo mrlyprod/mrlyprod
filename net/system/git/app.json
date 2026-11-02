@@ -1,0 +1,5 @@
+{
+  "title": "Code",
+  "line": "The source of {repo}: every tracked file in a tree, its raw bytes under /raw/.",
+  "deep": true
+}

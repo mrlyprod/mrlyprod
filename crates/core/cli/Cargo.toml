@@ -1,0 +1,17 @@
+[package]
+name = "mrly-core-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The mrly-core command: every public function of mrly-core from the shell, JSON in, JSON out."
+publish = false
+
+[[bin]]
+name = "mrly-core"
+path = "src/main.rs"
+
+[dependencies]
+mrly-core.workspace = true
+mrly-core-cli-hand = { path = "hand" }
+serde_json.workspace = true

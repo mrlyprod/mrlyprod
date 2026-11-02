@@ -1,6 +1,6 @@
-import * as core from "@mrlyprod/mrly/core";
-import * as math from "@mrlyprod/mrly/math";
-import { field, type Ink, type Pen } from "#view";
+import * as core from "@mrlyprod/core";
+import { field, type Ink, type Pen } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
 
 type Profile = { rings: Float64Array; lo: number; hi: number };
 

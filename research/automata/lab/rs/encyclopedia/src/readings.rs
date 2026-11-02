@@ -1,8 +1,8 @@
 use crate::engine::{Frame, Run, Stop};
 use crate::grid::Grid;
-use mrly::core::{json, Json};
-use mrly::life::{churn, entropy};
-use mrly::Result;
+use mrly_core::{json, Json};
+use mrly_life::{churn, entropy};
+use mrly_core::Result;
 
 pub fn growth(boxes: &[u32]) -> f64 {
     let points: Vec<(f64, f64)> = boxes

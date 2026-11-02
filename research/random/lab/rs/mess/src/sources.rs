@@ -1,4 +1,4 @@
-use mrly::life::source::{counts, Source};
+use mrly_life::source::{counts, Source};
 
 pub const KMAX: usize = 64;
 

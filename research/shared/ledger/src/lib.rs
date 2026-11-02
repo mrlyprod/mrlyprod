@@ -17,10 +17,10 @@ pub use measure::{Cost, Measure};
 pub use records::{identify, Record, RECORDS};
 pub use terms::{closed, fill_polynomial, terms};
 
-use mrly::core::error::{value_error, Result};
-use mrly::core::name::Named;
-use mrly::math::bang::baseq;
-use mrly::math::name::{Bang, Sequence as SequenceName};
+use mrly_core::error::{value_error, Result};
+use mrly_core::name::Named;
+use mrly_math::bang::baseq;
+use mrly_math::name::{Bang, Sequence as SequenceName};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 

@@ -1,0 +1,1416 @@
+{
+  "krate": "mrly-font",
+  "version": "0.2.0",
+  "modules": [
+    {
+      "path": "font",
+      "file": "font/lib.rs",
+      "docs": [
+        "The alphabet: a stroked pixel font of 108 characters, painted whole or written stroke by stroke.",
+        "",
+        "- `bitmaps` holds the raw on/off rows; `glyph` builds them into glyphs and trims them.",
+        "- `pens` holds every glyph's hand-penned strokes; `paths` reads them and drafts new ones.",
+        "- `names` gives a character its Unicode name.",
+        "- `raster` lays a text out as one 0/1 grid; `animate` writes it cell by cell and loops the cycle.",
+        "",
+        "The font is the uppers, their corner-rounded lowers, the digits, the punctuation and arrows, and four specials; most glyphs are five rows of five, the ten that dip below the baseline are seven.",
+        "",
+        "The doors: `glyph`, `supported`, `map`, `raster`, `path`, `floor`, `animate`, `merge`, `cycle` and `name_of`.",
+        "",
+        "`cargo run -p mrly-font --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor."
+      ],
+      "items": 27
+    },
+    {
+      "path": "font::animate",
+      "file": "font/animate.rs",
+      "docs": [
+        "The stroke-order writing animations of text."
+      ],
+      "items": 0
+    },
+    {
+      "path": "font::bitmaps",
+      "file": "font/bitmaps.rs",
+      "docs": [
+        "The raw bitmap tables of the font."
+      ],
+      "items": 0
+    },
+    {
+      "path": "font::glyph",
+      "file": "font/glyph.rs",
+      "docs": [
+        "The glyph, its trimming and descenders, and the builders for uppers, lowers, digits, extras and specials."
+      ],
+      "items": 0
+    },
+    {
+      "path": "font::names",
+      "file": "font/names.rs",
+      "docs": [
+        "The Unicode names of the font's characters."
+      ],
+      "items": 0
+    },
+    {
+      "path": "font::paths",
+      "file": "font/paths.rs",
+      "docs": [
+        "The stroke orders that write each character."
+      ],
+      "items": 1
+    },
+    {
+      "path": "font::pens",
+      "file": "font/pens.rs",
+      "docs": [
+        "The hand-penned stroke tables, one per glyph."
+      ],
+      "items": 7
+    },
+    {
+      "path": "font::raster",
+      "file": "font/raster.rs",
+      "docs": [
+        "The 0/1 grid a text renders to."
+      ],
+      "items": 0
+    }
+  ],
+  "types": [
+    {
+      "path": "font::Anim",
+      "name": "Anim",
+      "defined_at": "font/animate.rs:14",
+      "docs": [
+        "A frame-by-frame animation over a fixed board."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "rows",
+          "public": true,
+          "docs": [
+            "The board height in cells."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "cols",
+          "public": true,
+          "docs": [
+            "The board width in cells."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "fps",
+          "public": true,
+          "docs": [
+            "The playback rate in frames per second."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "frames",
+          "public": true,
+          "docs": [
+            "The frames, each a sorted list of lit row-major cell indices."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "usize"
+              }
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "font::Glyph",
+      "name": "Glyph",
+      "defined_at": "font/glyph.rs:6",
+      "docs": [
+        "One character's pixel bitmap."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "char",
+          "public": true,
+          "docs": [
+            "The character the glyph draws."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        },
+        {
+          "name": "rows",
+          "public": true,
+          "docs": [
+            "The bitmap rows of '0' and '1' characters."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "font::pens::Pen",
+      "name": "Pen",
+      "defined_at": "font/pens.rs:9",
+      "docs": [
+        "A glyph's pen: its character and its strokes, one string per stroke, cells as row-col tokens.",
+        "",
+        "- A token is one row digit then one column digit over the trimmed bitmap; rows and columns never pass 6.",
+        "- One stroke per string, cells in drawing order, each 4-adjacent to the one before it.",
+        "- Long strokes: start where a hand starts the shape and lift only where a hand lifts.",
+        "- The tables follow `bitmaps.rs` order: UPPERS, LOWERS, DIGITS, EXTRAS, SPECIALS.",
+        "- Draft a glyph with `cargo run -p mrly-font --example pen -- X`, then edit it by hand.",
+        "- The mechanical rules are tests in `paths.rs`; taste is not, so P keeps its one-cell stroke."
+      ],
+      "kind": "alias",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [],
+      "alias": {
+        "t": "tuple",
+        "items": [
+          {
+            "t": "scalar",
+            "name": "char"
+          },
+          {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": "'static",
+            "item": {
+              "t": "slice",
+              "mutable": false,
+              "item": {
+                "t": "ref",
+                "mutable": false,
+                "lifetime": "'static",
+                "item": {
+                  "t": "str"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "consts": [
+    {
+      "path": "font::FPS",
+      "name": "FPS",
+      "defined_at": "font/animate.rs:7",
+      "docs": [
+        "The playback rate of every animation, in frames per second."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::HOLD",
+      "name": "HOLD",
+      "defined_at": "font/animate.rs:10",
+      "docs": [
+        "The default number of frames a cycle rests between movements."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::pens::DIGITS",
+      "name": "DIGITS",
+      "defined_at": "font/pens.rs:281",
+      "docs": [
+        "The pens of the ten digits."
+      ],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    },
+    {
+      "path": "font::pens::EXTRAS",
+      "name": "EXTRAS",
+      "defined_at": "font/pens.rs:321",
+      "docs": [
+        "The pens of the punctuation, symbol and arrow glyphs."
+      ],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    },
+    {
+      "path": "font::pens::LOWERS",
+      "name": "LOWERS",
+      "defined_at": "font/pens.rs:132",
+      "docs": [
+        "The pens of the twenty-six lowers."
+      ],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    },
+    {
+      "path": "font::pens::SPECIALS",
+      "name": "SPECIALS",
+      "defined_at": "font/pens.rs:558",
+      "docs": [
+        "The pens of the four seven-row specials."
+      ],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    },
+    {
+      "path": "font::pens::UPPERS",
+      "name": "UPPERS",
+      "defined_at": "font/pens.rs:13",
+      "docs": [
+        "The pens of the twenty-six uppers."
+      ],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    }
+  ],
+  "functions": [
+    {
+      "path": "font::Glyph::height",
+      "name": "height",
+      "module": "font",
+      "defined_at": "font/glyph.rs:23",
+      "docs": [
+        "Returns the number of rows."
+      ],
+      "owner": "font::Glyph",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::Glyph::new",
+      "name": "new",
+      "module": "font",
+      "defined_at": "font/glyph.rs:15",
+      "docs": [
+        "Builds a glyph from its character and rows."
+      ],
+      "owner": "font::Glyph",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "char",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        },
+        {
+          "name": "rows",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "font::Glyph",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::Glyph::width",
+      "name": "width",
+      "module": "font",
+      "defined_at": "font/glyph.rs:19",
+      "docs": [
+        "Returns the cell width of the first row, or 0 for an empty glyph."
+      ],
+      "owner": "font::Glyph",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::all",
+      "name": "all",
+      "module": "font",
+      "defined_at": "font/glyph.rs:124",
+      "docs": [
+        "Builds every glyph in font order: uppers, lowers, digits, extras, specials."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::animate",
+      "name": "animate",
+      "module": "font",
+      "defined_at": "font/animate.rs:32",
+      "docs": [
+        "Writes the text in stroke order, one cell per frame, from an empty padded board to the full raster.",
+        "",
+        "```",
+        "let write = mrly_font::animate(\"MRLYPROD\", 1);",
+        "assert_eq!((write.rows, write.cols, write.fps), (7, 49, 25));",
+        "assert!(write.frames[0].is_empty());",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "str"
+          }
+        },
+        {
+          "name": "pad",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "plain",
+        "path": "font::Anim"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::cycle",
+      "name": "cycle",
+      "module": "font",
+      "defined_at": "font/animate.rs:90",
+      "docs": [
+        "Chains the write, the merge and their reversals into one loop, resting hold frames after each movement that has any."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "write",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "font::Anim"
+            }
+          }
+        },
+        {
+          "name": "merge",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "usize"
+              }
+            }
+          }
+        },
+        {
+          "name": "hold",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "plain",
+        "path": "font::Anim"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::digits",
+      "name": "digits",
+      "module": "font",
+      "defined_at": "font/glyph.rs:100",
+      "docs": [
+        "Builds the ten digit glyphs."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::draft",
+      "name": "draft",
+      "module": "font",
+      "defined_at": "font/paths.rs:74",
+      "docs": [
+        "Drafts a stroke order for a trimmed bitmap by walking its lit cells: start at a lowest-left free end, keep heading, lift when stuck."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rows",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::extras",
+      "name": "extras",
+      "module": "font",
+      "defined_at": "font/glyph.rs:108",
+      "docs": [
+        "Builds the punctuation, symbol and arrow glyphs."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::floor",
+      "name": "floor",
+      "module": "font",
+      "defined_at": "font/paths.rs:103",
+      "docs": [
+        "Returns the least strokes that can write a trimmed bitmap: the minimum cover of its lit cells by 4-adjacent paths, zero for a blank."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rows",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::glyph",
+      "name": "glyph",
+      "module": "font",
+      "defined_at": "font/lib.rs:55",
+      "docs": [
+        "Returns an owned copy of the character's glyph, or None outside the font.",
+        "",
+        "```",
+        "let a = mrly_font::glyph('a').unwrap();",
+        "assert_eq!(a.rows[0], \"01110\");",
+        "assert_eq!(mrly_font::glyph('\\u{6f22}'), None);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::lower",
+      "name": "lower",
+      "module": "font",
+      "defined_at": "font/glyph.rs:58",
+      "docs": [
+        "Blanks the four corner cells of an uppercase bitmap into its rounded lowercase form."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rows",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "str"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "string"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::lowers",
+      "name": "lowers",
+      "module": "font",
+      "defined_at": "font/glyph.rs:89",
+      "docs": [
+        "Builds the twenty-six lowercase glyphs by rounding the uppers' corners."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::map",
+      "name": "map",
+      "module": "font",
+      "defined_at": "font/lib.rs:70",
+      "docs": [
+        "Returns the whole font as a map from character to bitmap rows."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "map",
+        "key": {
+          "t": "scalar",
+          "name": "char"
+        },
+        "value": {
+          "t": "vec",
+          "item": {
+            "t": "string"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::merge",
+      "name": "merge",
+      "module": "font",
+      "defined_at": "font/animate.rs:54",
+      "docs": [
+        "Folds the written text's glyphs, frame by frame, into one centered stack."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "str"
+          }
+        },
+        {
+          "name": "pad",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::name_of",
+      "name": "name_of",
+      "module": "font",
+      "defined_at": "font/names.rs:2",
+      "docs": [
+        "Returns the character's Unicode name, or a U+ code point label for a character outside the font."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::path",
+      "name": "path",
+      "module": "font",
+      "defined_at": "font/paths.rs:24",
+      "docs": [
+        "Flattens the character's strokes into one cell-by-cell drawing order.",
+        "",
+        "```",
+        "assert_eq!(mrly_font::path('A')[0], (4, 0));",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "scalar",
+              "name": "usize"
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::paths::penned",
+      "name": "penned",
+      "module": "font::paths",
+      "defined_at": "font/paths.rs:7",
+      "docs": [
+        "Returns the character's hand-penned strokes from the pen tables, or None outside the font."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "vec",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "usize"
+                },
+                {
+                  "t": "scalar",
+                  "name": "usize"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::pens::all",
+      "name": "all",
+      "module": "font::pens",
+      "defined_at": "font/pens.rs:580",
+      "docs": [
+        "Returns every pen in font order: uppers, lowers, digits, extras, specials."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "vec",
+              "item": {
+                "t": "string"
+              }
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::raster",
+      "name": "raster",
+      "module": "font",
+      "defined_at": "font/raster.rs:74",
+      "docs": [
+        "Returns the text as a 0/1 grid, its trimmed glyphs one blank column apart.",
+        "",
+        "```",
+        "assert_eq!(mrly_font::raster(\"42\").len(), 5);",
+        "assert_eq!(mrly_font::raster(\"(1)\").len(), 7);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::specials",
+      "name": "specials",
+      "module": "font",
+      "defined_at": "font/glyph.rs:116",
+      "docs": [
+        "Builds the four seven-row glyphs: dollar, at, copyright and registered."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::strokes",
+      "name": "strokes",
+      "module": "font",
+      "defined_at": "font/paths.rs:15",
+      "docs": [
+        "Returns the character's ordered strokes over its trimmed bitmap, or none for a character outside the font."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::supported",
+      "name": "supported",
+      "module": "font",
+      "defined_at": "font/lib.rs:65",
+      "docs": [
+        "Returns every character in the font, in font order.",
+        "",
+        "```",
+        "let font = mrly_font::supported();",
+        "assert_eq!((font.len(), font[0]), (108, 'A'));",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "char"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::trim",
+      "name": "trim",
+      "module": "font",
+      "defined_at": "font/glyph.rs:39",
+      "docs": [
+        "Cuts blank edge columns from a bitmap, collapsing an all-blank one to a single '0' column; a row shorter than the cut keeps what it has."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rows",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "string"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::uppers",
+      "name": "uppers",
+      "module": "font",
+      "defined_at": "font/glyph.rs:81",
+      "docs": [
+        "Builds the twenty-six uppercase glyphs."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    }
+  ]
+}

@@ -616,4 +616,16 @@ mod tests {
             assert_eq!(built(&parsed.recipe().unwrap()), built(&recipe), "seed {s}");
         }
     }
+    #[test]
+    fn every_tile_on_names_md_is_canonical() {
+        let mut seen = 0;
+        for piece in include_str!("../../core/src/name/NAMES.md").split('`') {
+            if !piece.starts_with(r#"{"kind":"tile""#) {
+                continue;
+            }
+            assert_eq!(Tile::from_json(piece).unwrap().to_json(), piece);
+            seen += 1;
+        }
+        assert!(seen >= 5, "NAMES.md kept only {seen} examples");
+    }
 }

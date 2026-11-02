@@ -1,9 +1,9 @@
 use census::save;
-use mrly::core::error::Result;
-use mrly::core::{json, Rng};
-use mrly::math::bang::Code;
-use mrly::math::two::designs;
-use mrly::math::two::Cell2d;
+use mrly_core::error::Result;
+use mrly_core::{json, Rng};
+use mrly_math::bang::Code;
+use mrly_math::two::designs;
+use mrly_math::two::Cell2d;
 use std::collections::VecDeque;
 
 const NAME: &str = "research-walks";

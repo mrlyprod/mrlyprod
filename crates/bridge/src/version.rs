@@ -1,9 +1,9 @@
-use crate::config::{Layout, slashed};
+use crate::config::slashed;
 use crate::disk::edit;
-use crate::model::{Manifest, Result};
+use crate::model::Result;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const SOURCE: &str = "Cargo.toml";
@@ -11,6 +11,8 @@ const SOURCE: &str = "Cargo.toml";
 const PIN: &str = "version = \"=";
 
 const PATH: &str = "path = \"";
+
+const SPLIT: &str = "crates/bridge/manifest.json";
 
 pub type Semver = (u64, u64, u64);
 
@@ -29,9 +31,9 @@ pub fn read(root: &Path) -> Result<String> {
     Ok(text[start..end].to_string())
 }
 
-pub fn write(manifest: &Manifest, root: &Path, _: &Layout) -> Result<()> {
+pub fn write(root: &Path, version: &str) -> Result<()> {
     let path = root.join(SOURCE);
-    edit(&path, &pin(&load(&path)?, &manifest.version))
+    edit(&path, &pin(&load(&path)?, version))
 }
 
 pub fn pin(text: &str, version: &str) -> String {
@@ -68,11 +70,22 @@ fn load(path: &Path) -> Result<String> {
 
 // BUMP
 
-pub fn bump(root: &Path, manifest: &Path) -> Result<()> {
-    let new = json(&load(&root.join(manifest))?)?;
-    let now = new["version"]
-        .as_str()
-        .ok_or("the manifest has no version")?;
+pub fn bump(root: &Path, leaves: &[(String, PathBuf)]) -> Result<()> {
+    let mut news = Vec::new();
+    for (unit, path) in leaves {
+        news.push((unit, path, json(&load(&root.join(path))?)?));
+    }
+    let mut versions: Vec<&str> = news
+        .iter()
+        .map(|(_, _, new)| new["version"].as_str().unwrap_or_default())
+        .collect();
+    versions.sort();
+    versions.dedup();
+    let [now] = versions[..] else {
+        return Err(format!(
+            "the leaf manifests disagree on the version: {versions:?}"
+        ));
+    };
     let current = semver(now).ok_or_else(|| format!("{now} is not X.Y.Z"))?;
     let tags = git(root, &["tag", "-l", "v*"])?;
     let previous = tags
@@ -84,24 +97,30 @@ pub fn bump(root: &Path, manifest: &Path) -> Result<()> {
         println!("   no other v* tag; {now} is the first release");
         return Ok(());
     };
-    let old = json(&git(
-        root,
-        &["show", &format!("{tag}:{}", slashed(manifest))],
-    )?)?;
-    let diff = diff(&old, &new);
-    for path in &diff.removed {
-        println!("   removed {path}");
+    let mut breaking = false;
+    for (unit, path, new) in &news {
+        let old = match git(root, &["show", &format!("{tag}:{}", slashed(path))]) {
+            Ok(text) => json(&text)?,
+            Err(_) => match git(root, &["show", &format!("{tag}:{SPLIT}")]) {
+                Ok(text) => only(json(&text)?, unit),
+                Err(_) => serde_json::json!({ "functions": [] }),
+            },
+        };
+        let diff = diff(&old, new);
+        for path in &diff.removed {
+            println!("   {unit}: removed {path}");
+        }
+        for path in &diff.changed {
+            println!("   {unit}: changed {path}");
+        }
+        println!(
+            "   {unit}: {tag} to {now}: {} added, {} removed, {} changed",
+            diff.added,
+            diff.removed.len(),
+            diff.changed.len()
+        );
+        breaking |= !diff.removed.is_empty() || !diff.changed.is_empty();
     }
-    for path in &diff.changed {
-        println!("   changed {path}");
-    }
-    println!(
-        "   {tag} to {now}: {} added, {} removed, {} changed",
-        diff.added,
-        diff.removed.len(),
-        diff.changed.len()
-    );
-    let breaking = !diff.removed.is_empty() || !diff.changed.is_empty();
     let floor = need(before, breaking);
     if current < floor {
         let what = if breaking {
@@ -115,6 +134,14 @@ pub fn bump(root: &Path, manifest: &Path) -> Result<()> {
         ));
     }
     Ok(())
+}
+
+fn only(mut manifest: Value, unit: &str) -> Value {
+    if let Some(functions) = manifest["functions"].as_array_mut() {
+        functions
+            .retain(|f| f["module"].as_str().unwrap_or_default().split("::").next() == Some(unit));
+    }
+    manifest
 }
 
 pub fn diff(old: &Value, new: &Value) -> Diff {

@@ -3,7 +3,8 @@ name = "design-census"
 edition = "2021"
 
 [dependencies]
-mrly = { path = "../../../../../crates/mrly" }
+mrly-math = { path = "../../../../../crates/math" }
+mrly-num = { path = "../../../../../crates/num" }
 num-bigint = "0.4"
 num-rational = "0.4"
 

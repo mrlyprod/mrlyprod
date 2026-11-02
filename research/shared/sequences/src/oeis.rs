@@ -1,6 +1,6 @@
 use crate::merge::Class;
 use crate::row::{transform, Row, TRANSFORMS};
-use mrly::core::error::{value_error, Result};
+use mrly_core::error::{value_error, Result};
 use std::collections::{HashMap, HashSet};
 
 pub const WINDOW: usize = 5;

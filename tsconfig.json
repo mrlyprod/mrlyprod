@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["bun"],
+    "strict": true,
+    "noEmit": true,
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": false,
+    "paths": {
+      "@mrlyprod/core": ["./crates/core/js/index"],
+      "@mrlyprod/font": ["./crates/font/js/index"],
+      "@mrlyprod/life": ["./crates/life/js/index"],
+      "@mrlyprod/math": ["./crates/math/js/index"],
+      "@mrlyprod/num": ["./crates/num/js/index"],
+      "@mrlyprod/tile": ["./crates/tile/js/index"],
+      "@mrlyprod/draw": ["./draw/index.ts"],
+      "@mrlyprod/draw/*": ["./draw/*"],
+      "@mrlyprod/shell/*": ["./net/shell/*"],
+      "@mrlyprod/sdk/*": ["./net/sdk/*"],
+      "@mrlyprod/system/*": ["./net/system/*"],
+      "@mrlyprod/design-glass": ["./designs/glass/index.ts"],
+      "@mrlyprod/design-glass/*": ["./designs/glass/*"],
+      "@mrlyprod/design-mrly": ["./designs/mrly/index.ts"],
+      "@mrlyprod/design-mrly/*": ["./designs/mrly/*"],
+      "@mrlyprod/design-classic": ["./designs/classic/index.ts"],
+      "@mrlyprod/design-classic/*": ["./designs/classic/*"],
+      "@mrlyprod/design-blocks": ["./designs/blocks/index.ts"],
+      "@mrlyprod/design-blocks/*": ["./designs/blocks/*"],
+      "@mrlyprod/design-shared/*": ["./designs/shared/*"]
+    }
+  },
+  "include": [
+    "net/**/*.ts",
+    "net/**/*.tsx",
+    "draw/**/*.ts",
+    "org/**/*.ts",
+    "org/**/*.tsx",
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "research/**/figures/*.ts",
+    "aws/*.ts"
+  ],
+  "exclude": ["**/dist/**", "**/node_modules/**"]
+}

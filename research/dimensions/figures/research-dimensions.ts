@@ -1,5 +1,5 @@
-import * as math from "@mrlyprod/mrly/math";
-import { type Ink, type Pen, type Point, plot } from "#view";
+import { type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
 import census from "./research-dimensions.json" with { type: "json" };
 
 const RE_LO = -1;

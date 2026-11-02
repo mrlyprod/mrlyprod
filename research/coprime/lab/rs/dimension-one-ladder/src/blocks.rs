@@ -1,5 +1,5 @@
 use crate::radii::{live, perron, v3, Live};
-use mrly::num::factor::gcd;
+use mrly_num::factor::gcd;
 use std::collections::HashSet;
 
 const Y: u8 = 2;

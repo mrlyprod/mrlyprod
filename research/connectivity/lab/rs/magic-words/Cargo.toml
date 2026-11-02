@@ -3,6 +3,7 @@ name = "magic-words"
 edition = "2021"
 
 [dependencies]
-mrly = { path = "../../../../../crates/mrly" }
+mrly-core = { path = "../../../../../crates/core" }
+mrly-math = { path = "../../../../../crates/math" }
 
 [workspace]

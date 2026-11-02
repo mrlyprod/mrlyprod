@@ -1,4 +1,7 @@
 unit = "core"
+js = "js"
+py = "py"
+cli = "cli"
 
 [[hand]]
 name = "Tensor"

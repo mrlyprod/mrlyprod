@@ -2,8 +2,8 @@ mod design;
 
 use std::collections::BTreeSet;
 
-use mrly::num::factor::{gcd, totients};
-use mrly::num::lattice::{farey, new_nodes};
+use mrly_num::factor::{gcd, totients};
+use mrly_num::lattice::{farey, new_nodes};
 
 const QS: [usize; 7] = [125, 250, 500, 1000, 2000, 4000, 8000];
 

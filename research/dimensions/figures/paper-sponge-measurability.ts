@@ -1,5 +1,5 @@
-import * as math from "@mrlyprod/mrly/math";
-import { type Frame, field, frame, Grid, type Ink, type Pen, plot } from "#view";
+import { type Frame, field, frame, Grid, type Ink, type Pen, plot } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
 
 export const units = { math };
 

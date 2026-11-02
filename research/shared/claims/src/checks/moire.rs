@@ -1,6 +1,6 @@
-use mrly::math::moire::pairs::{correlation, sampled, witness};
-use mrly::num::factor::gcd;
-use mrly::num::prime::is_prime;
+use mrly_math::moire::pairs::{correlation, sampled, witness};
+use mrly_num::factor::gcd;
+use mrly_num::prime::is_prime;
 
 const SAMPLED: [(usize, usize); 7] = [(3, 5), (3, 9), (5, 15), (9, 15), (5, 7), (7, 21), (9, 21)];
 

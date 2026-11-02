@@ -1,4 +1,4 @@
-import type { Ink, Pen, Point } from "#view";
+import type { Ink, Pen, Point } from "@mrlyprod/draw";
 
 const NAME = "paper-polynomial-readings";
 const DEPTH = 12;

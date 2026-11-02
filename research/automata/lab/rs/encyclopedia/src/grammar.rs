@@ -2,8 +2,8 @@ use crate::design::{distinct, standard_shapes, Shape};
 use crate::grid::Grid;
 use crate::mask::MaskSpec;
 use crate::recipe::{Mode, Recipe, Side};
-use mrly::life::Source;
-use mrly::Result;
+use mrly_life::Source;
+use mrly_core::Result;
 
 #[derive(Clone, Debug)]
 pub struct Grammar {

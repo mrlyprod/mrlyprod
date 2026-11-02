@@ -1,0 +1,111 @@
+{
+  "title": "MrlyProd",
+  "wordmark": "MRLYPROD",
+  "root": "https://mrly.net",
+  "since": 2013,
+  "prefix": "mrly-",
+  "mark": "/favicon.svg",
+  "marks": { "png": "/favicon.png", "touch": "/apple-touch-icon.png", "og": "/og.png" },
+  "tint": "indigo",
+  "menu": "/menu/",
+  "cart": true,
+  "desk": "polygons",
+  "tiles": { "id": "mrly", "title": "Mrly" },
+  "design": "glass",
+  "roots": ["../system", "../../org", "../../apps"],
+  "min": [1280, 720],
+  "company": "MrlyProd, Inc.",
+  "tagline": "The mathematics of designs on the corners of a cube, and the instruments that measure them.",
+  "tree": [
+    {
+      "name": "Root",
+      "nodes": [
+        { "name": "robots.txt", "href": "/robots.txt" },
+        { "name": "sitemap.xml", "href": "/sitemap.xml" },
+        { "name": "llms.txt", "href": "/llms.txt" },
+        { "name": "404.html", "href": "/404.html" }
+      ]
+    }
+  ],
+  "socials": [
+    { "name": "GitHub", "href": "https://github.com/mrlyprod" },
+    { "name": "YouTube", "href": "https://youtube.com/@mrlyprod" },
+    { "name": "X", "href": "https://twitter.com/mrlyprod" },
+    { "name": "Instagram", "href": "https://instagram.com/mrlyprod" },
+    { "name": "TikTok", "href": "https://tiktok.com/@mrlyprod" },
+    { "name": "Reddit", "href": "https://reddit.com/r/mrlyprod" },
+    { "name": "Discord", "href": "https://discord.gg/YEKjjvwhcK" }
+  ],
+  "contact": "help@mrly.net",
+  "shots": {
+    "routes": [
+      "/",
+      "/about/",
+      "/blog/launching-mrlyprod-org/",
+      "/menu/",
+      "/research/",
+      "/git/net/hosts/web/infra/push.ts"
+    ],
+    "screen": [1440, 900, 2]
+  },
+  "push": {
+    "prefix": "",
+    "guard": ["cdn/", "stats/stats.json"],
+    "bucket": "MRLYNET_BUCKET",
+    "wasm": "MRLYPROD_BUCKET",
+    "store": { "bucket": "MRLYDEV_BUCKET", "prefix": "build/net" }
+  },
+  "git": { "root": "../..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
+  "llms": {
+    "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, the designs and their numbers coming from the Rust crates compiled to wasm, and the deep zoom and the space flights drawn in JS. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
+    "legend": "Links are page sources in markdown: /raw/org/x/index.md is /x/, /raw/org/blog/x/index.md is /blog/x/, /raw/crates/core/src/name/NAMES.md is /mrlymath/; a link outside /raw/ is the page."
+  },
+  "fonts": {
+    "out": "designs/shared/fonts",
+    "keep": "designs/shared/fonts/keep.css",
+    "faces": [
+      { "family": "Noto Sans", "file": "sans", "axes": "wght@400..700", "weight": "400 700", "licence": "notosans" },
+      { "family": "Noto Serif", "file": "serif", "axes": "wght@400..700", "weight": "400 700", "licence": "notoserif" },
+      {
+        "family": "Noto Sans Mono",
+        "file": "mono",
+        "axes": "wght@400..700",
+        "weight": "400 700",
+        "licence": "notosansmono"
+      },
+      { "family": "Noto Sans Math", "file": "math", "weight": "400", "licence": "notosansmath" },
+      { "family": "Noto Color Emoji", "file": "emoji", "weight": "400", "licence": "notocoloremoji" }
+    ]
+  },
+  "icons": {
+    "names": [
+      "casino",
+      "check",
+      "chevron_right",
+      "close",
+      "download",
+      "expand_more",
+      "fullscreen_exit",
+      "graphic_eq",
+      "grid_view",
+      "info",
+      "ios_share",
+      "keyboard",
+      "keyboard_command_key",
+      "left_panel_close",
+      "left_panel_open",
+      "link",
+      "more_horiz",
+      "music_note",
+      "right_panel_close",
+      "right_panel_open",
+      "search",
+      "shift",
+      "star",
+      "star_fill",
+      "tune",
+      "volume_up"
+    ],
+    "out": "net/sdk/icons.gen.js"
+  }
+}

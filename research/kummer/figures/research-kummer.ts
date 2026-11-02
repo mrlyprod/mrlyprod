@@ -1,4 +1,4 @@
-import { Grid, type Ink, type Pen } from "#view";
+import { Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
 const P = 11;
 const SPAN = Math.floor((2 * P - 1) / 3) + 1;

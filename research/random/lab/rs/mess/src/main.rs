@@ -7,7 +7,7 @@ mod sources;
 mod typical;
 
 use mess::{ceiling, symmetric_table, table};
-use mrly::life::elementary::output;
+use mrly_life::elementary::output;
 
 fn rule_thirty() {
     println!("RULE 30");

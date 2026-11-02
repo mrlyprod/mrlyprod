@@ -4,9 +4,9 @@
 /// The ledger sweep the two integers writers share.
 pub mod integers;
 
-use mrly::core::error::{value_error, Result};
-use mrly::core::Json;
-use mrly::Error;
+use mrly_core::error::{value_error, Result};
+use mrly_core::Json;
+use mrly_core::Error;
 use std::path::PathBuf;
 
 fn path(name: &str) -> Result<PathBuf> {

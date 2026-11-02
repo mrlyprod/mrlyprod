@@ -1,0 +1,8 @@
+{
+  "name": "@mrlyprod/design-shared",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  }
+}

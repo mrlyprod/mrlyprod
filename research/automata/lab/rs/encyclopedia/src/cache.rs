@@ -61,7 +61,7 @@ pub fn free_percent() -> f64 {
     100.0 * free / (used + free)
 }
 
-pub fn line(key: &str, index: usize, readings: &mrly::core::Json) -> String {
+pub fn line(key: &str, index: usize, readings: &mrly_core::Json) -> String {
     format!("{{\"key\":\"{key}\",\"index\":{index},\"readings\":{readings}}}")
 }
 
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn a_cache_line_starts_with_its_key() {
-        let line = line("carpet.3.1 x1 island", 7, &mrly::core::json!({ "a": 1 }));
+        let line = line("carpet.3.1 x1 island", 7, &mrly_core::json!({ "a": 1 }));
         assert_eq!(index_of(&line), Some(7));
         assert_eq!(key_of(&line), Some("carpet.3.1 x1 island"));
         assert!(data_dir().ends_with("data/research/automata/lab/rs/encyclopedia"));

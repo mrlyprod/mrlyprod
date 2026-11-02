@@ -30,7 +30,11 @@ leak() {
   [ -z "$hits" ] || { echo "$hits"; echo "private paths or token shapes in the tree" >&2; return 1; }
 }
 
-pytest_py() { uv run --no-project --with pytest --with ./bindings/py pytest bindings/py; }
+leaves() { for toml in crates/*/js/Cargo.toml; do basename "$(dirname "$(dirname "$toml")")"; done; }
+leaf_js() { for leaf in $(leaves); do (cd "crates/$leaf/js" && bun test) || return 1; done; }
+leaf_node() { for leaf in $(leaves); do node "crates/$leaf/js/node.smoke.js" || return 1; done; }
+leaf_py() { for leaf in $(leaves); do uv run --no-project --with pytest --with "./crates/$leaf/py" pytest "crates/$leaf/py" || return 1; done; }
+leaf_cli() { cargo test $(printf -- '-p mrly-%s-cli ' $(leaves)); }
 
 RUFF="uvx ruff@0.17.2"
 lint_py() { $RUFF format --check . && $RUFF check .; }
@@ -38,8 +42,8 @@ lint_py() { $RUFF format --check . && $RUFF check .; }
 mkdir -p "$DATA_DIR"
 total=$SECONDS
 step leak leak
-step site-install bun install --cwd site --frozen-lockfile
-step biome bun run --cwd site lint
+step web-install bun install --frozen-lockfile
+step biome bun run lint
 step ruff lint_py
 step fmt cargo fmt --all --check
 step bridge scripts/bridge.sh check
@@ -48,12 +52,13 @@ step test cargo test
 step ignored cargo test -p mrly-math -- --ignored
 step doc env RUSTDOCFLAGS=-Dwarnings cargo doc --no-deps --workspace
 step wasm scripts/wasm.sh
-step js bun --cwd bindings/js test
-step node node bindings/js/node.smoke.js
-step py pytest_py
-step site-wasm bun run --cwd site wasm --no-build
-step site-types bun run --cwd site types
-step site-test bun --cwd site test
-step site-build bun run --cwd site build
-step site-check bun run --cwd site check
+step leaf-cli leaf_cli
+step leaf-js leaf_js
+step leaf-node leaf_node
+step leaf-py leaf_py
+step web-wasm bun run wasm --no-build
+step web-types bun run types
+step web-test bun run test
+step web-build bun run build
+step web-check bun run check
 echo "check passed in $((SECONDS - total))s"

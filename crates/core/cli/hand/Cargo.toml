@@ -1,0 +1,12 @@
+[package]
+name = "mrly-core-cli-hand"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The hand-written shell every leaf command shares: the door table, the argument readers and the command line."
+publish = false
+
+[dependencies]
+mrly-core.workspace = true
+serde_json.workspace = true

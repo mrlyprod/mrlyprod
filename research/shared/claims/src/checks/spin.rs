@@ -1,6 +1,6 @@
-use mrly::math::bang::corners_to_code;
-use mrly::math::moire::{stack, Combine, Field, Lattice, Spec};
-use mrly::math::spin::{profile, reach};
+use mrly_math::bang::corners_to_code;
+use mrly_math::moire::{stack, Combine, Field, Lattice, Spec};
+use mrly_math::spin::{profile, reach};
 
 const RINGS: [(usize, usize, f64); 3] = [(3, 5, 0.38), (5, 7, -0.33), (9, 13, 0.38)];
 

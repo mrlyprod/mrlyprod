@@ -1,10 +1,10 @@
 use crate::row::{timed, Row, TERMS};
-use mrly::core::error::Result;
-use mrly::life::source::{counts as source_counts, sequence as source_sequence};
-use mrly::life::Source;
-use mrly::math::bang::{baseq, factory, Code};
-use mrly::math::counts::{self, ladder, six};
-use mrly::math::{arcs, press};
+use mrly_core::error::Result;
+use mrly_life::source::{counts as source_counts, sequence as source_sequence};
+use mrly_life::Source;
+use mrly_math::bang::{baseq, factory, Code};
+use mrly_math::counts::{self, ladder, six};
+use mrly_math::{arcs, press};
 
 const LIMIT: usize = 4000;
 const LONG: usize = 24;
@@ -28,7 +28,7 @@ pub fn ladders() -> Vec<Row> {
             rows.push(
                 Row::new(
                     format!("ladder_base={base}_dim={dimension}"),
-                    "mrly::math::counts::ladder::ladder",
+                    "mrly_math::counts::ladder::ladder",
                     "ladder",
                     terms,
                 )
@@ -37,13 +37,13 @@ pub fn ladders() -> Vec<Row> {
         }
         rows.push(Row::new(
             format!("ladder_fill_base={base}"),
-            "mrly::math::counts::ladder::fill",
+            "mrly_math::counts::ladder::fill",
             "ladder-fill",
             timed(TERMS, |i| ladder::fill(base, i + 1).ok()),
         ));
         rows.push(Row::new(
             format!("ladder_sign_base={base}"),
-            "mrly::math::counts::ladder::sign",
+            "mrly_math::counts::ladder::sign",
             "ladder-sign",
             timed(TERMS, |i| ladder::sign(base, i + 1).ok().map(i128::from)),
         ));
@@ -67,7 +67,7 @@ pub fn hexes() -> Vec<Row> {
         .map(|(slug, slice)| {
             Row::new(
                 format!("solid_slice_{slug}"),
-                &format!("mrly::math::counts::six::solid_slice_{slug}"),
+                &format!("mrly_math::counts::six::solid_slice_{slug}"),
                 &format!("solid-slice-{slug}"),
                 timed(TERMS, |i| slice(2 * i + 1).ok().and_then(wide)),
             )
@@ -76,7 +76,7 @@ pub fn hexes() -> Vec<Row> {
     rows.push(
         Row::new(
             "centered_hexagonal",
-            "mrly::math::counts::centered_hexagonal",
+            "mrly_math::counts::centered_hexagonal",
             "centered-hexagonal",
             timed(TERMS, |i| wide(counts::centered_hexagonal(i + 1))),
         )
@@ -84,13 +84,13 @@ pub fn hexes() -> Vec<Row> {
     );
     rows.push(Row::new(
         "grid_triangles_side=3_axis=level",
-        "mrly::math::counts::six::grid_triangles",
+        "mrly_math::counts::six::grid_triangles",
         "grid-triangles/level",
         timed(TERMS, |i| wide(six::grid_triangles(3, i as u32 + 1))),
     ));
     rows.push(Row::new(
         "grid_triangles_axis=side",
-        "mrly::math::counts::six::grid_triangles",
+        "mrly_math::counts::six::grid_triangles",
         "grid-triangles/side",
         timed(TERMS, |i| wide(six::grid_triangles(2 * i + 3, 1))),
     ));
@@ -108,7 +108,7 @@ pub fn profiles() -> Vec<Row> {
         };
         rows.push(Row::new(
             format!("profile_dim={dimension}_code={code}_level={level}"),
-            "mrly::math::counts::profile_of_tile",
+            "mrly_math::counts::profile_of_tile",
             "profile",
             profile.into_iter().filter_map(wide).collect(),
         ));
@@ -142,7 +142,7 @@ pub fn designs() -> Vec<Row> {
         rows.push(
             Row::new(
                 format!("design_counts_base={base}"),
-                "mrly::math::bang::baseq::sequence",
+                "mrly_math::bang::baseq::sequence",
                 "design-counts",
                 timed(TERMS, |i| {
                     burnside_fits(base, i + 1)
@@ -157,7 +157,7 @@ pub fn designs() -> Vec<Row> {
     rows.push(
         Row::new(
             "bracelets",
-            "mrly::math::bang::baseq::bracelets",
+            "mrly_math::bang::baseq::bracelets",
             "bracelets",
             timed(TERMS, |i| {
                 baseq::distinct_designs(i + 1, 1).ok().and_then(wide)
@@ -168,7 +168,7 @@ pub fn designs() -> Vec<Row> {
     rows.push(
         Row::new(
             "fill_classes",
-            "mrly::math::bang::baseq::class_sequence",
+            "mrly_math::bang::baseq::class_sequence",
             "fill-classes",
             timed(TERMS, |i| {
                 classes_fit(i + 1)
@@ -201,7 +201,7 @@ pub fn presses() -> Vec<Row> {
         };
         rows.push(Row::new(
             format!("press_dim={dimension}_base={base}_code={code}"),
-            "mrly::math::press::members",
+            "mrly_math::press::members",
             "press",
             members.into_iter().filter_map(wide).collect(),
         ));
@@ -218,7 +218,7 @@ pub fn loops() -> Vec<Row> {
     for (base, code, top) in spaces {
         rows.push(Row::new(
             format!("arcs_base={base}_code={code}"),
-            "mrly::math::arcs::draw",
+            "mrly_math::arcs::draw",
             "arcs-loops",
             timed(top, |i| {
                 arcs::draw(Code::from(code), base, i + 1)
@@ -232,7 +232,7 @@ pub fn loops() -> Vec<Row> {
         rows.push(
             Row::new(
                 format!("arcs_law_base={base}_code={code}"),
-                "mrly::math::arcs::law",
+                "mrly_math::arcs::law",
                 "arcs-law",
                 timed(TERMS, |i| {
                     arcs::law(Code::from(code), base, i + 1)
@@ -257,7 +257,7 @@ pub fn sources() -> Vec<Row> {
             rows.push(
                 Row::new(
                     format!("source_{}", source.name()),
-                    "mrly::life::source::sequence",
+                    "mrly_life::source::sequence",
                     "source",
                     take(raw),
                 )
@@ -267,7 +267,7 @@ pub fn sources() -> Vec<Row> {
         if let Ok(raw) = source_counts(source, LIMIT, false, false) {
             rows.push(Row::new(
                 format!("source_counts_{}", source.name()),
-                "mrly::life::source::counts",
+                "mrly_life::source::counts",
                 "source-counts",
                 take(raw),
             ));

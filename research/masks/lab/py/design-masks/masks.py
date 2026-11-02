@@ -22,7 +22,7 @@ from scipy.stats import t as tdist
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", ".."))
 DATA_DIR = os.path.join(REPO, "data", os.path.relpath(HERE, REPO))
-MRLY = os.path.join(REPO, "target", "release", "mrly")
+BIN = os.path.join(REPO, "target", "release")
 FIGURE = os.path.join(REPO, "research", "masks", "figures", "research-masks.json")
 S = 81
 FAMILIES = ["Fractal", "Magic", "Special", "Mosaic", "General"]
@@ -38,7 +38,10 @@ PAIRS_KV, QUERY = 20, 40
 
 def mrly(fn, *args):
     out = subprocess.run(
-        [MRLY, fn, json.dumps(list(args))], capture_output=True, text=True, check=True
+        [os.path.join(BIN, "mrly-" + fn.split(".")[0]), fn, json.dumps(list(args))],
+        capture_output=True,
+        text=True,
+        check=True,
     )
     return json.loads(out.stdout)
 

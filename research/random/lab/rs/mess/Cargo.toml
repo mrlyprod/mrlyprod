@@ -3,6 +3,6 @@ name = "mess"
 edition = "2021"
 
 [dependencies]
-mrly = { path = "../../../../../crates/mrly" }
+mrly-life = { path = "../../../../../crates/life" }
 
 [workspace]

@@ -1,4 +1,4 @@
-import { frame, Grid, type Ink, type Pen } from "#view";
+import { frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
 const SIDE = 32;
 const COUNT = SIDE * SIDE;

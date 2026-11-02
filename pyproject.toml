@@ -11,8 +11,26 @@ dependencies = [
     "torch>=2.14.1",
 ]
 
+[dependency-groups]
+mrly = [
+    "mrly-core",
+    "mrly-font",
+    "mrly-life",
+    "mrly-math",
+    "mrly-num",
+    "mrly-tile",
+]
+
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+mrly-core = { path = "crates/core/py" }
+mrly-font = { path = "crates/font/py" }
+mrly-life = { path = "crates/life/py" }
+mrly-math = { path = "crates/math/py" }
+mrly-num = { path = "crates/num/py" }
+mrly-tile = { path = "crates/tile/py" }
 
 [tool.ruff.lint]
 extend-select = ["I"]

@@ -1,4 +1,4 @@
-import { lambda } from "../site/infra/builder.ts";
+import { lambda } from "../net/hosts/web/infra/builder.ts";
 
 /* WHERE */
 
@@ -8,10 +8,10 @@ const net = lambda({
   dir: "/tmp/src",
   agent: "mrlynet-site-builder",
   bucket: "MRLYDEV_BUCKET",
-  folder: "site",
+  folder: ".",
   sources: ["push", "schedule", "hook", "manual"],
   prepare: async (site, run) => {
-    const out = await run([process.execPath, "infra/wasm.ts"], site);
+    const out = await run([process.execPath, "net/hosts/web/infra/wasm.ts"], site);
     return `wasm ${(out.trim().split(/\s+/)[0] ?? "").slice(0, 12)}`;
   },
 });

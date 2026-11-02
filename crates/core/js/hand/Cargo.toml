@@ -1,0 +1,16 @@
+[package]
+name = "mrly-core-js-hand"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The hand-written crossing every wasm leaf shares: errors, serde, lists, tensors, cells, images, colors and the Rng."
+publish = false
+
+[dependencies]
+mrly-core.workspace = true
+wasm-bindgen.workspace = true
+serde-wasm-bindgen.workspace = true
+js-sys.workspace = true
+serde.workspace = true
+serde_json.workspace = true

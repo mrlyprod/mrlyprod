@@ -1,10 +1,10 @@
 use super::{Axis, Closed, Key, Measure};
-use mrly::core::error::{value_error, Result};
-use mrly::core::tensor::Tensor;
-use mrly::math::bang::{code_to_corners, factory, Code};
-use mrly::math::counts::Placements;
-use mrly::math::{arcs, counts};
-use mrly::math::{six, three, two};
+use mrly_core::error::{value_error, Result};
+use mrly_core::tensor::Tensor;
+use mrly_math::bang::{code_to_corners, factory, Code};
+use mrly_math::counts::Placements;
+use mrly_math::{arcs, counts};
+use mrly_math::{six, three, two};
 
 fn binomial(n: usize, k: usize) -> i128 {
     (0..k).fold(1i128, |acc, i| acc * (n - i) as i128 / (i as i128 + 1))
@@ -235,7 +235,7 @@ fn rendered(key: &Key, count: usize, cells: u128) -> Result<(Vec<i128>, bool)> {
 /// Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`.
 ///
 /// ```
-/// let carpet = mrly::math::bang::code_to_corners(mrly::math::bang::Code::from(7u64), 2, 2).unwrap();
+/// let carpet = mrly_math::bang::code_to_corners(mrly_math::bang::Code::from(7u64), 2, 2).unwrap();
 /// assert_eq!(ledger::fill_polynomial(&carpet, 2), [0, -2, 3]);
 /// ```
 pub fn fill_polynomial(corners: &[Vec<u8>], dimension: usize) -> Vec<i128> {

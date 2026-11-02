@@ -1,0 +1,8 @@
+{
+  "name": "@mrlyprod/shell",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  }
+}

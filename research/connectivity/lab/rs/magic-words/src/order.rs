@@ -259,8 +259,8 @@ pub const PERIODS: [(&[u8], usize); 6] = [
 ];
 
 pub fn block_reduction() -> (usize, usize) {
-    use mrly::math::bang::{magic, MagicLayer};
-    use mrly::math::name::Bang;
+    use mrly_math::bang::{magic, MagicLayer};
+    use mrly_math::name::Bang;
     let mut cases = 0usize;
     let mut bad = 0usize;
     for (period, repeats) in PERIODS.iter() {
@@ -291,8 +291,8 @@ pub fn block_reduction() -> (usize, usize) {
 }
 
 pub fn crate_agreement(length: usize) -> (usize, usize) {
-    use mrly::math::bang::{magic, MagicLayer};
-    use mrly::math::name::Bang;
+    use mrly_math::bang::{magic, MagicLayer};
+    use mrly_math::name::Bang;
     let mut checked = 0usize;
     let mut bad = 0usize;
     for word in words(&CODES, length) {

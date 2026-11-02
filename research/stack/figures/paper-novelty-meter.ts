@@ -1,5 +1,5 @@
-import * as num from "@mrlyprod/mrly/num";
-import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "#view";
+import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
+import * as num from "@mrlyprod/num";
 import census from "./paper-novelty-meter.json" with { type: "json" };
 
 const LOW = 8;

@@ -1,5 +1,5 @@
-use mrly::num::gauss::Ring;
-use mrly::math::radix::{flowsnake, koch, terdragon, twindragon, Base, Radix};
+use mrly_num::gauss::Ring;
+use mrly_math::radix::{flowsnake, koch, terdragon, twindragon, Base, Radix};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 

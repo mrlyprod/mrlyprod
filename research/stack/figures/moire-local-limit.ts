@@ -1,4 +1,4 @@
-import { type Frame, field, frame, type Ink, type Pen, type Point } from "#view";
+import { type Frame, field, frame, type Ink, type Pen, type Point } from "@mrlyprod/draw";
 import census from "./moire-local-limit.json" with { type: "json" };
 
 const SIDE = 410;

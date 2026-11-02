@@ -1,7 +1,7 @@
 # mrly-life
 
 - The engine: a rule over a grid, stepped, recorded, measured and rendered.
-- Part of [mrly](https://crates.io/crates/mrly), released in lockstep with it; most users depend on `mrly` and reach this crate as `mrly::life`.
+- Released in lockstep with the other `mrly-*` crates; its bindings sit beside it: `js/` (`@mrlyprod/life`), `py/` (`mrly.life`) and `cli/` (`mrly-life`).
 - Docs: [docs.rs/mrly-life](https://docs.rs/mrly-life).
 
 ```rust

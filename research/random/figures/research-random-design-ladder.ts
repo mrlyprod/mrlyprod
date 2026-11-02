@@ -1,5 +1,5 @@
-import * as life from "@mrlyprod/mrly/life";
-import { frame, Grid, type Ink, type Pen } from "#view";
+import { frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
+import * as life from "@mrlyprod/life";
 
 export const units = { life };
 

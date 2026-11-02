@@ -1,8 +1,8 @@
 use crate::design::Shape;
 use crate::mask::{parse_design, MaskSpec};
-use mrly::core::error::value_error;
-use mrly::life::{counts, Source};
-use mrly::Result;
+use mrly_core::error::value_error;
+use mrly_life::{counts, Source};
+use mrly_core::Result;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Mode {

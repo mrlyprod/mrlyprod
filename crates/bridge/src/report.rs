@@ -1,31 +1,36 @@
 use crate::js;
-use crate::model::{Cross, Manifest, Source};
-use std::collections::BTreeMap;
+use crate::model::{Cross, Function, Manifest, Source};
+use std::collections::{BTreeMap, BTreeSet};
 
-fn skipped(m: &Manifest) -> Vec<(String, String)> {
-    let mut out: Vec<(String, String)> = m
-        .functions
-        .iter()
-        .filter(|f| f.source != Source::NamedEnum)
-        .filter_map(|f| match &f.cross {
-            Cross::Skip { reason } => Some((f.path.clone(), reason.clone())),
-            _ => None,
-        })
-        .collect();
-    out.extend(js::field_skips(m));
+fn skipped(ms: &[Manifest]) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    for m in ms {
+        out.extend(
+            m.functions
+                .iter()
+                .filter(|f| f.source != Source::NamedEnum)
+                .filter_map(|f| match &f.cross {
+                    Cross::Skip { reason } => Some((f.path.clone(), reason.clone())),
+                    _ => None,
+                }),
+        );
+        out.extend(js::field_skips(m));
+    }
+    let mut seen = BTreeSet::new();
+    out.retain(|(path, _)| seen.insert(path.clone()));
     out
 }
 
-pub fn skip_lines(m: &Manifest) -> Vec<String> {
-    skipped(m)
+pub fn skip_lines(ms: &[Manifest]) -> Vec<String> {
+    skipped(ms)
         .into_iter()
         .map(|(path, reason)| format!("{path} {reason}"))
         .collect()
 }
 
-pub fn check_skip(m: &Manifest, skip_txt: &str) -> Vec<String> {
+pub fn check_skip(ms: &[Manifest], skip_txt: &str) -> Vec<String> {
     let mut errors = vec![];
-    let skipped: Vec<String> = skipped(m).into_iter().map(|(path, _)| path).collect();
+    let skipped: Vec<String> = skipped(ms).into_iter().map(|(path, _)| path).collect();
     let listed: Vec<&str> = skip_txt
         .lines()
         .filter_map(|l| l.split_whitespace().next())
@@ -45,9 +50,10 @@ pub fn check_skip(m: &Manifest, skip_txt: &str) -> Vec<String> {
     errors
 }
 
-pub fn summary(m: &Manifest, macro_body_fns: usize) -> Vec<String> {
+pub fn summary(ms: &[Manifest], macro_body_fns: usize) -> Vec<String> {
+    let functions: Vec<&Function> = ms.iter().flat_map(|m| &m.functions).collect();
     let mut counts: BTreeMap<String, [usize; 3]> = BTreeMap::new();
-    for f in &m.functions {
+    for f in &functions {
         let unit = f.module.split("::").next().unwrap_or_default().to_string();
         let slot = counts.entry(unit).or_default();
         match f.cross {
@@ -65,34 +71,29 @@ pub fn summary(m: &Manifest, macro_body_fns: usize) -> Vec<String> {
     let total: [usize; 3] = counts
         .values()
         .fold([0; 3], |a, b| [a[0] + b[0], a[1] + b[1], a[2] + b[2]]);
-    let written = m
-        .functions
+    let written = functions
         .iter()
         .filter(|f| f.source == Source::Written && !f.constant)
         .count();
-    let constant = m
-        .functions
+    let constant = functions
         .iter()
         .filter(|f| f.source == Source::Written && f.constant)
         .count();
-    let generated = m
-        .functions
+    let generated = functions
         .iter()
         .filter(|f| f.source == Source::NamedEnum)
         .count();
-    let traits = m
-        .functions
+    let traits = functions
         .iter()
         .filter(|f| f.source == Source::Trait)
         .count();
-    let defaults = m
-        .functions
+    let defaults = functions
         .iter()
         .filter(|f| f.source == Source::Default)
         .count();
     lines.push(format!(
         "functions {}: ok {}, skip {}, private {}; {written} pub fn + {constant} pub const fn + {generated} macro-written + {traits} trait methods + {defaults} defaults; {macro_body_fns} pub fn lines inside macro_rules",
-        m.functions.len(),
+        functions.len(),
         total[0],
         total[1],
         total[2]

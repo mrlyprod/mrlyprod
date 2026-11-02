@@ -1,8 +1,8 @@
 use crate::row::{Row, SECONDS, TERMS};
-use mrly::core::error::Result;
-use mrly::math::bang::{baseq, code_to_corners, factory, Code};
-use mrly::math::counts::{self, Exposure};
-use mrly::math::{six, three, two};
+use mrly_core::error::Result;
+use mrly_math::bang::{baseq, code_to_corners, factory, Code};
+use mrly_math::counts::{self, Exposure};
+use mrly_math::{six, three, two};
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 
@@ -141,24 +141,24 @@ impl Measure {
     pub fn generator(self, dimension: usize) -> &'static str {
         let plane = dimension == 2;
         match self {
-            Measure::Fills | Measure::Voids => "mrly::math::counts::fill",
-            Measure::Surface => "mrly::math::counts::Exposure::at",
-            Measure::Peak | Measure::Heights => "mrly::math::counts::profile_of_tile",
+            Measure::Fills | Measure::Voids => "mrly_math::counts::fill",
+            Measure::Surface => "mrly_math::counts::Exposure::at",
+            Measure::Peak | Measure::Heights => "mrly_math::counts::profile_of_tile",
             Measure::Vertices | Measure::Edges | Measure::Euler if plane => {
-                "mrly::math::two::census"
+                "mrly_math::two::census"
             }
-            Measure::Perimeter => "mrly::math::two::census",
+            Measure::Perimeter => "mrly_math::two::census",
             Measure::Vertices | Measure::Edges | Measure::Euler | Measure::Faces => {
-                "mrly::math::three::census"
+                "mrly_math::three::census"
             }
-            Measure::Hidden => "mrly::math::three::hidden",
-            Measure::Triangles => "mrly::math::counts::cut_fills",
-            Measure::Gaps => "mrly::math::counts::cut_voids",
-            Measure::ProFills => "mrly::math::counts::pro_fills",
-            Measure::ProVoids => "mrly::math::counts::pro_voids",
-            Measure::Holes => "mrly::math::six::holes",
-            Measure::Pieces => "mrly::math::six::components",
-            Measure::SliceEuler => "mrly::math::six::euler",
+            Measure::Hidden => "mrly_math::three::hidden",
+            Measure::Triangles => "mrly_math::counts::cut_fills",
+            Measure::Gaps => "mrly_math::counts::cut_voids",
+            Measure::ProFills => "mrly_math::counts::pro_fills",
+            Measure::ProVoids => "mrly_math::counts::pro_voids",
+            Measure::Holes => "mrly_math::six::holes",
+            Measure::Pieces => "mrly_math::six::components",
+            Measure::SliceEuler => "mrly_math::six::euler",
         }
     }
 }

@@ -1,10 +1,10 @@
 use crate::grid::Grid;
-use mrly::core::error::value_error;
-use mrly::math::bang::catalog::{Design, ANTIS_2D, CLASSICS_2D};
-use mrly::math::bang::universe::orbit;
-use mrly::math::bang::Code;
-use mrly::math::two;
-use mrly::Result;
+use mrly_core::error::value_error;
+use mrly_math::bang::catalog::{Design, ANTIS_2D, CLASSICS_2D};
+use mrly_math::bang::universe::orbit;
+use mrly_math::bang::Code;
+use mrly_math::two;
+use mrly_core::Result;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Shape {

@@ -1,11 +1,11 @@
-use mrly::core::Tensor;
-use mrly::math::bang::Code;
-use mrly::math::graph::core_graph;
+use mrly_core::Tensor;
+use mrly_math::bang::Code;
+use mrly_math::graph::core_graph;
 
 const SUBJECTS: [(u128, usize, usize); 2] = [(79, 3, 6), (7, 2, 9)];
 
 fn plane(code: u128, base: usize, level: usize) -> Tensor {
-    mrly::math::two::create(Code::from(code), base, level, 0, base)
+    mrly_math::two::create(Code::from(code), base, level, 0, base)
         .expect("a plane design renders")
         .types()
         .clone()

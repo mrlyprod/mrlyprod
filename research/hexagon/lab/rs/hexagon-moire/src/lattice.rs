@@ -1,5 +1,5 @@
-use mrly::math::three::Cell3d;
-use mrly::tile::recipe::Design;
+use mrly_math::three::Cell3d;
+use mrly_tile::recipe::Design;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Family {
@@ -31,7 +31,7 @@ impl Family {
     }
 
     pub fn cube(self, number: usize) -> Cell3d {
-        mrly::math::three::named(self.design(), number, 1).expect("a named cube")
+        mrly_math::three::named(self.design(), number, 1).expect("a named cube")
     }
 }
 

@@ -1,4 +1,4 @@
-import type { Ink, Pen, Point } from "#view";
+import type { Ink, Pen, Point } from "@mrlyprod/draw";
 
 export const units = {};
 

@@ -1,10 +1,10 @@
 use census::save;
-use mrly::core::error::Result;
-use mrly::core::json;
-use mrly::math::bang::Code;
-use mrly::math::roulette;
-use mrly::math::spirograph::{distinct, nodes as law, pencils, trace, track, Pencil, Track};
-use mrly::math::two;
+use mrly_core::error::Result;
+use mrly_core::json;
+use mrly_math::bang::Code;
+use mrly_math::roulette;
+use mrly_math::spirograph::{distinct, nodes as law, pencils, trace, track, Pencil, Track};
+use mrly_math::two;
 use std::collections::HashSet;
 
 const NAME: &str = "research-spirograph";

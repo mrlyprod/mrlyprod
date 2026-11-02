@@ -1,6 +1,6 @@
-import * as math from "@mrlyprod/mrly/math";
-import type { Ink, Pen } from "#view";
-import { field, frame } from "#view";
+import type { Ink, Pen } from "@mrlyprod/draw";
+import { field, frame } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
 
 export const units = { math };
 

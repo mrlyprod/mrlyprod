@@ -4,9 +4,9 @@ use crate::grammar::Grammar;
 use crate::mask::{Kernel, MaskSpec};
 use crate::recipe::{Mode, Recipe, Side};
 use crate::rows::{each_row, Row};
-use mrly::core::{json, Json};
-use mrly::life::Source;
-use mrly::Result;
+use mrly_core::{json, Json};
+use mrly_life::Source;
+use mrly_core::Result;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
@@ -538,8 +538,8 @@ fn write_tally(t: &Tally, total: usize) -> Result<()> {
         "grid": grid,
     });
     let path = data_dir().join("tally.json");
-    fs::create_dir_all(data_dir()).map_err(|e| mrly::Error::Value(e.to_string()))?;
-    fs::write(&path, format!("{value}\n")).map_err(|e| mrly::Error::Value(e.to_string()))?;
+    fs::create_dir_all(data_dir()).map_err(|e| mrly_core::Error::Value(e.to_string()))?;
+    fs::write(&path, format!("{value}\n")).map_err(|e| mrly_core::Error::Value(e.to_string()))?;
     println!("tally written to {}", path.display());
     Ok(())
 }

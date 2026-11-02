@@ -250,4 +250,54 @@ mod tests {
             assert_eq!(sum, carpet_3d(n).bytes().unwrap());
         }
     }
+    #[test]
+    fn every_atom_is_the_factory_design_its_residue_rule_spells() {
+        use crate::bang::factory::{corners_to_code, create, residue_corners};
+        type Atom = fn(usize) -> Tensor;
+        type Rule = fn(&[usize]) -> bool;
+        fn spelt(dimension: usize, rule: impl Fn(&[usize]) -> bool) -> crate::bang::Code {
+            let filled: Vec<Vec<u8>> = residue_corners(dimension, 2)
+                .into_iter()
+                .filter(|c| rule(&c.iter().map(|&v| v as usize).collect::<Vec<_>>()))
+                .collect();
+            corners_to_code(&filled, dimension, 2)
+        }
+        let flat: [(Atom, Rule); 5] = [
+            (carpet_2d, |c| c[0] + c[1] <= 1),
+            (net_2d, |c| c[0] + c[1] >= 1),
+            (htree_2d, |c| c[0] == 0),
+            (vtree_2d, |c| c[1] == 0),
+            (void_2d, |c| (c[0] + c[1]) % 2 == 0),
+        ];
+        let solid: [(Atom, Rule); 6] = [
+            (carpet_3d, |c| c[0] + c[1] + c[2] <= 1),
+            (net_3d, |c| c[0] + c[1] + c[2] >= 2),
+            (xtree_3d, |c| c[1] == 0 && c[2] == 0),
+            (ytree_3d, |c| c[0] == 0 && c[2] == 0),
+            (ztree_3d, |c| c[0] == 0 && c[1] == 0),
+            (void_3d, |c| c[0] == c[1] && c[1] == c[2]),
+        ];
+        for (atom, rule) in flat {
+            for n in 1..8 {
+                assert_eq!(atom(n), create(spelt(2, rule), n, 2, 2, 1).unwrap());
+            }
+        }
+        for (atom, rule) in solid {
+            for n in 1..6 {
+                assert_eq!(atom(n), create(spelt(3, rule), n, 3, 2, 1).unwrap());
+            }
+        }
+    }
+    #[test]
+    fn the_trees_are_each_others_transpose() {
+        for n in 1..6 {
+            let h = htree_2d(n);
+            let v = vtree_2d(n);
+            for x in 0..n {
+                for y in 0..n {
+                    assert_eq!(h.get(&[x, y]).unwrap(), v.get(&[y, x]).unwrap());
+                }
+            }
+        }
+    }
 }

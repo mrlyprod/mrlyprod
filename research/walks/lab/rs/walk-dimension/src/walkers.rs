@@ -1,6 +1,6 @@
 use crate::design::{coords, strides};
 use crate::gasket::Gasket;
-use mrly::core::{Rng, Tensor};
+use mrly_core::{Rng, Tensor};
 
 pub const SEED: u64 = 7;
 pub const WALKERS: usize = 20000;

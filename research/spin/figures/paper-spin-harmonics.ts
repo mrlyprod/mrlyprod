@@ -1,4 +1,4 @@
-import { Grid, type Ink, type Pen, type Point } from "#view";
+import { Grid, type Ink, type Pen, type Point } from "@mrlyprod/draw";
 import census from "./paper-spin-harmonics.json" with { type: "json" };
 
 const LONG = 4;

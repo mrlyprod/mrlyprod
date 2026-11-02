@@ -1,0 +1,10 @@
+@import "../../designs/shared/palette.gen.css";
+@import "site:design/tokens.css";
+@import "../../designs/shared/base.css";
+@import "./gate.css";
+@import "site:design.css";
+@import "../../designs/shared/fonts/fonts.css";
+@import "../../designs/shared/pages.css";
+@import "../../designs/shared/settings.css";
+@import "site:design/saver.css";
+@import "../../designs/shared/screensavers.css";

@@ -1,7 +1,7 @@
 # mrly-core
 
 - The substrate: tensors, cells, colors, images, resampling, seeded chance and the canonical names.
-- Part of [mrly](https://crates.io/crates/mrly), released in lockstep with it; most users depend on `mrly` and reach this crate as `mrly::core`.
+- Released in lockstep with the other `mrly-*` crates; its bindings sit beside it: `js/` (`@mrlyprod/core`), `py/` (`mrly.core`) and `cli/` (`mrly-core`).
 - Docs: [docs.rs/mrly-core](https://docs.rs/mrly-core).
 
 ```rust

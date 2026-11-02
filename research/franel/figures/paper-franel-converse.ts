@@ -1,6 +1,6 @@
-import * as math from "@mrlyprod/mrly/math";
-import * as num from "@mrlyprod/mrly/num";
-import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "#view";
+import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
+import * as num from "@mrlyprod/num";
 import census from "./paper-franel-converse.json" with { type: "json" };
 
 const BASE = 3;

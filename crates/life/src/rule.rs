@@ -410,4 +410,16 @@ mod tests {
             );
         }
     }
+    #[test]
+    fn every_rule_on_names_md_is_canonical() {
+        let mut seen = 0;
+        for piece in include_str!("../../core/src/name/NAMES.md").split('`') {
+            if !piece.starts_with(r#"{"kind":"rule""#) {
+                continue;
+            }
+            assert_eq!(Rule::from_json(piece).unwrap().to_json(), piece);
+            seen += 1;
+        }
+        assert!(seen >= 2, "NAMES.md kept only {seen} examples");
+    }
 }

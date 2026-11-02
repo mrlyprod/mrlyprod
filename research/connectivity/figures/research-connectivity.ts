@@ -1,6 +1,6 @@
-import * as core from "@mrlyprod/mrly/core";
-import * as math from "@mrlyprod/mrly/math";
-import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "#view";
+import * as core from "@mrlyprod/core";
+import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
 
 export const units = { core, math };
 

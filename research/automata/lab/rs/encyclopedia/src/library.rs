@@ -1,8 +1,8 @@
 use crate::cache::data_dir;
 use crate::laws::class;
 use crate::rows::{each_row, Curve, Row};
-use mrly::core::{json, Json};
-use mrly::Result;
+use mrly_core::{json, Json};
+use mrly_core::Result;
 use std::collections::BTreeMap;
 use std::fs;
 
@@ -80,8 +80,8 @@ pub fn write() -> Result<()> {
     rows.truncate(MOST);
     let value = json!({ "shelves": shelves.len(), "per_cell": PER_CELL, "rows": rows });
     let path = data_dir().join("library.json");
-    fs::create_dir_all(data_dir()).map_err(|e| mrly::Error::Value(e.to_string()))?;
-    fs::write(&path, format!("{value}\n")).map_err(|e| mrly::Error::Value(e.to_string()))?;
+    fs::create_dir_all(data_dir()).map_err(|e| mrly_core::Error::Value(e.to_string()))?;
+    fs::write(&path, format!("{value}\n")).map_err(|e| mrly_core::Error::Value(e.to_string()))?;
     println!(
         "library: {} shelf cells (fate, class, family), {} rows at most {PER_CELL} a cell, {} bytes, {}",
         shelves.len(),

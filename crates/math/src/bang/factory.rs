@@ -443,4 +443,21 @@ mod tests {
         assert!(random_code(2, 2, &mut Rng::new(1), 5).is_err());
         assert!(random_code(7, 2, &mut Rng::new(1), 1).is_err());
     }
+    #[test]
+    fn the_row_fill_counts_every_rendered_letter() {
+        use mrly_num::sieve::{row_fill, row_profile};
+        for dimension in 1..=3usize {
+            for code in 1..(1u128 << (1 << dimension)) {
+                let profile = row_profile(code, dimension).unwrap();
+                for side in 2..=7u64 {
+                    let tile = create(Code::from(code), side as usize, dimension, 2, 1).unwrap();
+                    assert_eq!(
+                        row_fill(&profile, side).unwrap(),
+                        u128::from(tile.sum()),
+                        "dim {dimension} code {code} side {side}"
+                    );
+                }
+            }
+        }
+    }
 }

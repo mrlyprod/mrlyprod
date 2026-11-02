@@ -1,5 +1,5 @@
-import * as num from "@mrlyprod/mrly/num";
-import { type Color, field, type Ink, type Pen, type Point } from "#view";
+import { type Color, field, type Ink, type Pen, type Point } from "@mrlyprod/draw";
+import * as num from "@mrlyprod/num";
 
 export const units = { num };
 

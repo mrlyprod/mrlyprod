@@ -1,11 +1,11 @@
-use mrly::core::Tensor;
-use mrly::math::bang::Code;
+use mrly_core::Tensor;
+use mrly_math::bang::Code;
 use std::collections::BTreeSet;
 
 pub const BASE: usize = 3;
 
 pub fn plane(code: u128, base: usize, level: usize) -> Tensor {
-    mrly::math::two::create(Code::from(code), base, level, 0, base)
+    mrly_math::two::create(Code::from(code), base, level, 0, base)
         .expect("a plane design renders")
         .types()
         .clone()

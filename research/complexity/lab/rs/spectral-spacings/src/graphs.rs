@@ -1,7 +1,7 @@
-use mrly::core::{Rng, Tensor};
-use mrly::math::bang::factory::{corners_to_code, residue_corners};
-use mrly::math::bang::Code;
-use mrly::math::graph::core_graph;
+use mrly_core::{Rng, Tensor};
+use mrly_math::bang::factory::{corners_to_code, residue_corners};
+use mrly_math::bang::Code;
+use mrly_math::graph::core_graph;
 use std::collections::HashMap;
 
 pub struct Graph {
@@ -62,7 +62,7 @@ fn root(parent: &mut [usize], mut node: usize) -> usize {
 
 pub fn carpet(level: usize) -> Graph {
     Graph::of(
-        mrly::math::two::create(Code::from(495u64), 3, level, 0, 3)
+        mrly_math::two::create(Code::from(495u64), 3, level, 0, 3)
             .expect("the carpet renders")
             .types(),
     )
@@ -70,7 +70,7 @@ pub fn carpet(level: usize) -> Graph {
 
 pub fn sierpinski(level: usize) -> Graph {
     Graph::of(
-        mrly::math::two::create(Code::from(7u64), 2, level, 0, 2)
+        mrly_math::two::create(Code::from(7u64), 2, level, 0, 2)
             .expect("the gasket renders")
             .types(),
     )
@@ -86,7 +86,7 @@ fn sponge_code() -> u128 {
 
 pub fn sponge(level: usize) -> Graph {
     Graph::of(
-        mrly::math::three::create(Code::from(sponge_code()), 3, level, 3)
+        mrly_math::three::create(Code::from(sponge_code()), 3, level, 3)
             .expect("the sponge renders")
             .types(),
     )

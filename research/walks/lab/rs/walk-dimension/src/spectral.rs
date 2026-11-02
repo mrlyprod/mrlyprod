@@ -1,6 +1,6 @@
 use crate::design::Graph;
 use faer::{Mat, Side};
-use mrly::core::Rng;
+use mrly_core::Rng;
 
 pub const MODES: usize = 4;
 pub const DENSE_LIMIT: usize = 2000;

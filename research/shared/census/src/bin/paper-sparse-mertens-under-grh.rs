@@ -1,6 +1,6 @@
 use census::save;
-use mrly::core::error::Result;
-use mrly::core::json;
+use mrly_core::error::Result;
+use mrly_core::json;
 
 const NAME: &str = "paper-sparse-mertens-under-grh";
 const BASE: i64 = 7;

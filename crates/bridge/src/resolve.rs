@@ -6,7 +6,6 @@ use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 pub struct Built {
     pub manifest: Manifest,
     pub collisions: Vec<String>,
-    pub macro_body_fns: usize,
 }
 
 type Key = (String, usize);
@@ -18,7 +17,7 @@ enum Target {
     External(Vec<String>),
 }
 
-pub fn build(files: &Files, version: &str) -> Result<Built> {
+pub fn build(files: &Files, krate: &str, version: &str) -> Result<Built> {
     let tree = parse::parse(files)?;
     let reach = reach(&tree);
     let mut builder = Builder {
@@ -29,12 +28,11 @@ pub fn build(files: &Files, version: &str) -> Result<Built> {
         defaults: HashMap::new(),
     };
     builder.classify_types()?;
-    let manifest = builder.manifest(version);
+    let manifest = builder.manifest(krate, version);
     let collisions = collisions(&manifest);
     Ok(Built {
         manifest,
         collisions,
-        macro_body_fns: tree.macro_body_fns,
     })
 }
 
@@ -658,7 +656,7 @@ impl Builder<'_> {
 
     // ENTRIES
 
-    fn manifest(&self, version: &str) -> Manifest {
+    fn manifest(&self, krate: &str, version: &str) -> Manifest {
         let mut types = vec![];
         let mut consts = vec![];
         let mut functions = vec![];
@@ -878,7 +876,7 @@ impl Builder<'_> {
         modules.sort_by(|a, b| a.path.cmp(&b.path));
         modules.dedup_by(|a, b| a.path == b.path);
         Manifest {
-            krate: "mrly".into(),
+            krate: krate.into(),
             version: version.into(),
             modules,
             types,

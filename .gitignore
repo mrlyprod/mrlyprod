@@ -24,13 +24,11 @@ target/
 .DS_Store
 
 # NODE AND WASM
-site/node_modules/
-site/wasm/
-site/wasm.next/
-bindings/js/pkg/
+node_modules/
+net/mrly.net/wasm/
+net/mrly.net/wasm.next/
 
 # PYTHON
 .venv/
 __pycache__/
 .pytest_cache/
-bindings/py/python/mrly/*.so

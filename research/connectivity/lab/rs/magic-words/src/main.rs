@@ -6,7 +6,7 @@ mod series;
 mod unsolved;
 mod word;
 
-use mrly::core::rng::Rng;
+use mrly_core::rng::Rng;
 use series::{build, product, Rep, Table};
 use word::{render, spell, CODES, LIBRARY, SERIES};
 
@@ -406,7 +406,7 @@ fn controls() {
     println!("CONTROLS");
     for length in 2..4usize {
         let (checked, bad) = order::crate_agreement(length);
-        println!("mrly::math::bang::magic agrees cell for cell on all {checked} words of length {length}, mismatches {bad}");
+        println!("mrly_math::bang::magic agrees cell for cell on all {checked} words of length {length}, mismatches {bad}");
         assert_eq!(bad, 0, "the factory and the study draw one word");
     }
     let (cases, bad) = order::block_reduction();

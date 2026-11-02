@@ -1,4 +1,4 @@
-import type { Ink, Pen } from "#view";
+import type { Ink, Pen } from "@mrlyprod/draw";
 import census from "./paper-spectral-tiling-levels.json" with { type: "json" };
 
 type Column = [number[], number[]];

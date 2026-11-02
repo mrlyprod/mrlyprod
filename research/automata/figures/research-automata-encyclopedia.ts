@@ -1,4 +1,4 @@
-import type { Ink, Pen } from "#view";
+import type { Ink, Pen } from "@mrlyprod/draw";
 import census from "./research-automata-encyclopedia.json" with { type: "json" };
 
 export const units = {};

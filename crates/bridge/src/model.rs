@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::cell::Cell;
 use std::sync::OnceLock;
 
 pub type Result<T> = std::result::Result<T, String>;
@@ -32,6 +33,37 @@ pub fn hands() -> &'static [Hand] {
 
 pub fn hand(name: &str) -> Option<&'static Hand> {
     hands().iter().find(|hand| hand.name == name)
+}
+
+thread_local! {
+    static LEAFED: Cell<bool> = const { Cell::new(false) };
+}
+
+pub struct Leafed;
+
+impl Leafed {
+    pub fn on() -> Leafed {
+        LEAFED.with(|leafed| leafed.set(true));
+        Leafed
+    }
+}
+
+impl Drop for Leafed {
+    fn drop(&mut self) {
+        LEAFED.with(|leafed| leafed.set(false));
+    }
+}
+
+pub fn rust(path: &str) -> String {
+    let path = path.strip_prefix("mrly::").unwrap_or(path);
+    if !LEAFED.with(Cell::get) {
+        return format!("mrly::{path}");
+    }
+    match path.split_once("::") {
+        Some((unit, rest)) => format!("mrly_{unit}::{rest}"),
+        None if path.starts_with(char::is_uppercase) => format!("mrly_core::{path}"),
+        None => format!("mrly_{path}"),
+    }
 }
 
 pub fn by_dim(list: &'static [String], dim: Option<u8>) -> Option<&'static str> {

@@ -3,7 +3,9 @@ name = "encyclopedia"
 edition = "2021"
 
 [dependencies]
-mrly = { path = "../../../../../crates/mrly" }
+mrly-core = { path = "../../../../../crates/core" }
+mrly-life = { path = "../../../../../crates/life" }
+mrly-math = { path = "../../../../../crates/math" }
 
 [profile.release]
 opt-level = 3

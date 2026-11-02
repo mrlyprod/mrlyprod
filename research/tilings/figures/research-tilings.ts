@@ -1,5 +1,5 @@
-import * as core from "@mrlyprod/mrly/core";
-import { frame as box, Grid, type Ink, type Pen } from "#view";
+import * as core from "@mrlyprod/core";
+import { frame as box, Grid, type Ink, type Pen } from "@mrlyprod/draw";
 import census from "./research-tilings.json" with { type: "json" };
 
 const LEVELS = 3;

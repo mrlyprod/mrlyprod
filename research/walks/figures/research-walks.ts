@@ -1,5 +1,5 @@
-import * as math from "@mrlyprod/mrly/math";
-import { type Color, type Frame, frame, type Ink, type Pen, plot } from "#view";
+import { type Color, type Frame, frame, type Ink, type Pen, plot } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
 import census from "./research-walks.json" with { type: "json" };
 
 const LEVEL = 4;

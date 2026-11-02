@@ -1,4 +1,4 @@
-use mrly::num::factor::gcd;
+use mrly_num::factor::gcd;
 
 const KMAX: usize = 64;
 const MATCH: f64 = 1e-9;

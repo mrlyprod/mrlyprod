@@ -1,4 +1,4 @@
-use mrly::num::series::{zeta, EULER};
+use mrly_num::series::{zeta, EULER};
 use std::f64::consts::{LN_2, PI};
 
 const LAYERS: usize = 500_000;

@@ -1,5 +1,5 @@
 use crate::radii::{self, Live};
-use mrly::num::factor::gcd;
+use mrly_num::factor::gcd;
 use std::collections::HashMap;
 
 const GASKET: [(u64, u64); 3] = [(0, 0), (1, 0), (0, 1)];

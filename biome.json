@@ -4,19 +4,23 @@
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     "includes": [
-      "site/**",
+      "net/**",
+      "designs/**",
+      "apps/**",
+      "org/**",
+      "draw/**",
       "research/**/figures/**",
       "aws/**",
       "!**/*.gen.*",
       "!**/*.svg",
       "!**/*.html",
       "!**/*.md",
-      "!site/infra/edge.js",
-      "!site/src/styles/fonts",
+      "!net/hosts/web/infra/edge.js",
+      "!designs/shared/fonts",
       "!research/**/figures/*.json",
-      "!site/launchpad.json",
-      "!site/src/lib/sequences/records.json",
-      "!site/src/pages/stats/fixture.json"
+      "!net/mrly.net/launchpad.json",
+      "!apps/shared/sequences/records.json",
+      "!net/system/stats/fixture.json"
     ]
   },
   "formatter": { "indentStyle": "space", "lineWidth": 120, "includes": ["**"] },
@@ -33,7 +37,7 @@
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "overrides": [
     {
-      "includes": ["site/src/designs/glass/dock.tsx", "site/src/pages/stats/index.tsx"],
+      "includes": ["designs/glass/dock.tsx", "net/system/stats/index.tsx"],
       "linter": { "rules": { "suspicious": { "noArrayIndexKey": "off" } } }
     }
   ]

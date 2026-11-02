@@ -5,7 +5,7 @@ mod fills;
 mod quasi;
 mod tables;
 
-use mrly::math::bang::Code;
+use mrly_math::bang::Code;
 use std::path::Path;
 
 fn main() {

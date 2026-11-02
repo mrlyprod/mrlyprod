@@ -1,0 +1,49 @@
+{
+  "name": "mrlynet",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.3",
+  "scripts": {
+    "wasm": "bun net/hosts/web/scripts/wasm.ts",
+    "dev": "bun install && bun net/hosts/web/scripts/dev.ts",
+    "init": "bun net/hosts/web/scripts/init.ts",
+    "build": "bun net/hosts/web/scripts/build.ts",
+    "push": "bun net/hosts/web/infra/push.ts",
+    "check": "bun net/hosts/web/scripts/check.ts",
+    "test": "bun test net designs apps org draw",
+    "types": "tsc -p tsconfig.json",
+    "lint": "biome ci .",
+    "fix": "biome check --write .",
+    "shots": "bun net/hosts/web/scripts/shots.ts",
+    "film": "bun net/hosts/web/scripts/film.ts",
+    "draw": "bun net/hosts/web/scripts/draw.ts",
+    "play": "bun net/hosts/web/scripts/play.ts",
+    "time": "bun net/hosts/web/scripts/time.ts",
+    "vendor": "bun net/hosts/web/scripts/vendor.ts",
+    "library": "bun net/hosts/web/scripts/library.ts"
+  },
+  "dependencies": {
+    "@shikijs/core": "^4.5.0",
+    "@shikijs/engine-javascript": "^4.5.0",
+    "@shikijs/langs": "^4.5.0",
+    "katex": "^0.19.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "three": "^0.186.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.2.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/bun": "^1.4.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2"
+  }
+}

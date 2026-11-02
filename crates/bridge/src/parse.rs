@@ -2,6 +2,7 @@ use crate::config::Mount;
 use crate::model::{Result, SelfKind};
 use quote::ToTokens;
 use std::collections::BTreeMap;
+use std::fmt::Write as _;
 use std::path::Path;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
@@ -143,16 +144,20 @@ pub fn load(src: &Path) -> Result<Files> {
     Ok(files)
 }
 
-pub fn load_crates(mounts: &[Mount]) -> Result<Files> {
+pub fn load_crates(mounts: &[Mount], units: &[String]) -> Result<Files> {
     let mut files = Files::new();
-    for mount in mounts {
+    let mut lib = String::new();
+    for mount in mounts.iter().filter(|m| units.contains(&m.unit)) {
+        let unit = &mount.unit;
         for (key, text) in load(&mount.src)? {
-            match &mount.unit {
-                Some(unit) => files.insert(format!("{unit}/{key}"), text),
-                None => files.insert(key, text),
-            };
+            files.insert(format!("{unit}/{key}"), text);
         }
+        writeln!(lib, "pub use mrly_{unit} as {unit};").ok();
     }
+    if units.iter().any(|u| u == "core") {
+        lib.push_str("pub use mrly_core::{Error, Result};\n");
+    }
+    files.insert("lib.rs".into(), lib);
     Ok(files)
 }
 

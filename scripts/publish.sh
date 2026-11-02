@@ -6,10 +6,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 [ -n "${CARGO_LOCK:-}" ] || exec "$HERE/cargo.sh" "$HERE/publish.sh" "$@"
 cd "$HERE/.."
 
-USAGE="usage: publish.sh <rs|py|js>... [--dry]"
-DATA_DIR="data/scripts/publish"
-MANIFEST=bindings/py/Cargo.toml
-WHEELS="$DATA_DIR/wheels"
+USAGE="usage: publish.sh rs [--dry]"
 VERSION="$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -1)"
 TAG="v$VERSION"
 
@@ -17,7 +14,8 @@ targets=""
 dry=""
 for word in "$@"; do
   case "$word" in
-    rs|py|js) case " $targets " in *" $word "*) ;; *) targets="$targets $word" ;; esac ;;
+    rs) case " $targets " in *" $word "*) ;; *) targets="$targets $word" ;; esac ;;
+    py|js) echo "publish.sh: $word ships per leaf from crates/<unit>/$word; its release step is not written yet" >&2; exit 1 ;;
     --dry) dry=1 ;;
     *) echo "$USAGE" >&2; exit 1 ;;
   esac
@@ -44,8 +42,6 @@ tokens() {
   for target in $targets; do
     case "$target" in
       rs) secret CARGO_REGISTRY_TOKEN ;;
-      py) secret UV_PUBLISH_USERNAME && secret UV_PUBLISH_PASSWORD ;;
-      js) secret NPM_CONFIG_TOKEN ;;
     esac || return 1
   done
 }
@@ -90,49 +86,6 @@ rs() {
     return 0
   fi
   step "cargo publish" env CARGO_REGISTRY_TOKEN="$CARGO_REGISTRY_TOKEN" cargo publish --workspace
-}
-
-# PY
-
-wheel() { uvx maturin build --release -m "$MANIFEST" -o "$WHEELS" "$@"; }
-
-smoke() {
-  local venv="$DATA_DIR/venv"
-  rm -rf "$venv"
-  uv venv -q "$venv" || return 1
-  uv pip install -q -p "$venv/bin/python" --find-links "$WHEELS" "mrly==$VERSION" || return 1
-  "$venv/bin/python" -I -c 'import sys, mrly; sys.exit(mrly.__version__ != sys.argv[1])' "$VERSION"
-}
-
-uv_publish() { UV_PUBLISH_USERNAME="$UV_PUBLISH_USERNAME" UV_PUBLISH_PASSWORD="$UV_PUBLISH_PASSWORD" uv publish "$WHEELS"/*; }
-
-py() {
-  rm -rf "$WHEELS"
-  step "wheel host" wheel
-  step "wheel linux x86_64" wheel --zig --target x86_64-unknown-linux-gnu
-  step "wheel linux aarch64" wheel --zig --target aarch64-unknown-linux-gnu
-  step "sdist" uvx maturin sdist -m "$MANIFEST" -o "$WHEELS"
-  step "wheel imports" smoke
-  if [ -n "$dry" ]; then
-    step "uv publish skipped" ls -1 "$WHEELS"
-    return 0
-  fi
-  step "uv publish" uv_publish
-}
-
-# JS
-
-bun_publish() {
-  local token="$1"; shift
-  (cd bindings/js && NPM_CONFIG_TOKEN="$token" bun publish "$@")
-}
-
-js() {
-  if [ -n "$dry" ]; then
-    step "bun publish --dry-run" bun_publish dry --dry-run
-    return 0
-  fi
-  step "bun publish" bun_publish "$NPM_CONFIG_TOKEN"
 }
 
 # MAIN

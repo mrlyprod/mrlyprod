@@ -1,0 +1,8 @@
+{
+  "name": "@mrlyprod/system",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  }
+}

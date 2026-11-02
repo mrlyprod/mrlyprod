@@ -4,6 +4,6 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-mrly = { path = "../../../../../crates/mrly" }
+mrly-num = { path = "../../../../../crates/num" }
 
 [workspace]

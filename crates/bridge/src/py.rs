@@ -1,5 +1,5 @@
-use crate::config::{Layout, climb};
 use crate::disk::save;
+use crate::leaf::{self, Leaf};
 use crate::model::*;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
@@ -33,19 +33,6 @@ const HAND_NAMES: &[&str] = &[
     "ok", "PyCell", "PyCell2d", "PyCell3d", "PyCell6d", "PyCellNd", "PyCode", "PyColor", "PyImage",
     "PyPixels", "PyRgba", "PyRng", "PySerde", "PyTensor",
 ];
-
-pub fn write(manifest: &Manifest, root: &Path, layout: &Layout) -> Result<()> {
-    let cx = Cx::new(manifest);
-    let tree = build(&cx)?;
-    let pkg = root.join(&layout.py);
-    save(&pkg.join("src/lib.rs"), &lib_file())?;
-    save(&pkg.join("src/doors.rs"), &rust_file(&cx, &tree)?)?;
-    let python = pkg.join("python/mrly");
-    python_files(&cx, &tree, &python)?;
-    save(&python.join("py.typed"), "")?;
-    save(&pkg.join("tests/test_manifest.py"), &test_file(&cx, layout))?;
-    Ok(())
-}
 
 // NAMES
 
@@ -108,6 +95,8 @@ struct Cx<'a> {
     manifest: &'a Manifest,
     types: BTreeMap<&'a str, &'a Type>,
     shadow: RefCell<Vec<String>>,
+    native: String,
+    leaf: Option<String>,
 }
 
 impl<'a> Cx<'a> {
@@ -121,7 +110,28 @@ impl<'a> Cx<'a> {
             manifest,
             types,
             shadow: RefCell::new(Vec::new()),
+            native: NATIVE.to_string(),
+            leaf: None,
         }
+    }
+
+    fn leaf(manifest: &'a Manifest, unit: &str) -> Cx<'a> {
+        Cx {
+            native: format!("mrly.{unit}._{unit}"),
+            leaf: Some(unit.to_string()),
+            ..Cx::new(manifest)
+        }
+    }
+
+    fn streams(&self) -> bool {
+        self.leaf.as_deref().is_some_and(|unit| unit != "core")
+    }
+
+    fn shown(&self, owner: &str, field: &Field) -> bool {
+        let home = owner.split("::").next();
+        let foreign =
+            |t: &Ty| matches!(t, Ty::Class { path, .. } if path.split("::").next() != home);
+        field.public && crossable(&field.ty) && (self.leaf.is_none() || !field.ty.any(&foreign))
     }
 
     fn ty(&self, path: &str) -> Result<&'a Type> {
@@ -535,9 +545,9 @@ fn decl(cx: &Cx, ty: &Ty) -> Result<String> {
             if cx.const_generic(path) {
                 return Err(format!("{path} is const generic inside a container"));
             }
-            format!("PySerde<mrly::{path}>")
+            format!("PySerde<{}>", rust(path))
         }
-        Ty::Enum { path } => format!("PySerde<mrly::{path}>"),
+        Ty::Enum { path } => format!("PySerde<{}>", rust(path)),
         Ty::Class { path, .. } => cx.wrapper(path),
         Ty::Unit | Ty::Result { .. } | Ty::Opaque { .. } | Ty::Unknown { .. } => {
             return Err(format!("{ty:?} cannot cross as a parameter"));
@@ -686,6 +696,16 @@ fn plan(cx: &Cx, var: &str, ty: &Ty) -> Result<Plan> {
             item,
             ..
         } => match &**item {
+            Ty::Hand { name, .. } if name == "Rng" && cx.streams() => {
+                p.decl = "&Bound<'_, PyAny>".into();
+                p.lets.push(format!(
+                    "let mut {var}_owned = crate::hand::rng_from_py({var})?;"
+                ));
+                p.pass = format!("&mut {var}_owned");
+                p.post.push(format!(
+                    "crate::hand::rng_write_back({var}, &{var}_owned)?;"
+                ));
+            }
             Ty::Hand { name, .. } if name == "Rng" => {
                 p.decl = "&mut PyRng".into();
                 p.pass = format!("&mut {var}.0");
@@ -736,6 +756,20 @@ fn plan(cx: &Cx, var: &str, ty: &Ty) -> Result<Plan> {
             p.pass = format!("&{var}");
         }
         Ty::Option { item } => match &**item {
+            Ty::Ref {
+                mutable: true,
+                item: inner,
+                ..
+            } if hand_name(inner) == Some("Rng") && cx.streams() => {
+                p.decl = "Option<&Bound<'_, PyAny>>".into();
+                p.lets.push(format!(
+                    "let mut {var}_owned = {var}.map(crate::hand::rng_from_py).transpose()?;"
+                ));
+                p.pass = format!("{var}_owned.as_mut()");
+                p.post.push(format!(
+                    "if let (Some(rng), Some(stream)) = ({var}, &{var}_owned) {{ crate::hand::rng_write_back(rng, stream)?; }}"
+                ));
+            }
             Ty::Ref {
                 mutable: true,
                 item: inner,
@@ -989,10 +1023,10 @@ fn callee(f: &Function, dim: Option<u8>) -> String {
     };
     match (&f.owner, &f.via) {
         (Some(owner), Some(via)) => {
-            format!("<mrly::{owner} as mrly::{via}>::{}", f.name)
+            format!("<{} as {}>::{}", rust(owner), rust(via), f.name)
         }
-        (Some(owner), None) => format!("mrly::{owner}{turbo}::{}", f.name),
-        (None, _) => format!("mrly::{}{turbo}", f.path),
+        (Some(owner), None) => format!("{}{turbo}::{}", rust(owner), f.name),
+        (None, _) => format!("{}{turbo}", rust(&f.path)),
     }
 }
 
@@ -1372,14 +1406,15 @@ fn emit_class(cx: &Cx, out: &mut String, depth: usize, module: &str, class: &Own
         out.push_str(&format!("{pad}#[derive(Clone)]\n"));
     }
     out.push_str(&format!(
-        "{pad}pub struct {}(pub mrly::{});\n\n",
-        ty.name, ty.path
+        "{pad}pub struct {}(pub {});\n\n",
+        ty.name,
+        rust(&ty.path)
     ));
     out.push_str(&format!("{pad}#[pymethods]\n{pad}impl {} {{\n", ty.name));
     for f in class.fns.iter().filter(|f| is_constructor(f)) {
         emit_constructor(cx, out, depth + 1, f)?;
     }
-    for field in ty.fields.iter().filter(|f| f.public && crossable(&f.ty)) {
+    for field in ty.fields.iter().filter(|f| cx.shown(&ty.path, f)) {
         doc_lines(out, depth + 1, &summary(&field.docs));
         out.push_str(&format!("{inner}#[getter]\n"));
         out.push_str(&format!(
@@ -1617,7 +1652,7 @@ fn emit_items(cx: &Cx, out: &mut String, depth: usize, node: &Node) -> Result<()
         out.push_str(&format!(
             "{deep}m.add({}, {})?;\n",
             quote(&c.name),
-            into(cx, &c.ty, &format!("mrly::{}", c.path))?
+            into(cx, &c.ty, &rust(&c.path))?
         ));
     }
     let names: Vec<String> = node.item_names().iter().map(|n| quote(n)).collect();
@@ -1634,16 +1669,16 @@ fn emit_items(cx: &Cx, out: &mut String, depth: usize, node: &Node) -> Result<()
     out.push_str(&format!("{deep}parent.add({}, &m)?;\n", quote(node.name())));
     out.push_str(&format!(
         "{deep}sys.set_item({}, &m)?;\n",
-        quote(&format!("{NATIVE}.{}", dotted(&node.path)))
+        quote(&format!("{}.{}", cx.native, dotted(&node.path)))
     ));
     out.push_str(&format!("{deep}Ok(())\n{inner}}}\n"));
     Ok(())
 }
 
-fn lib_file() -> String {
-    let module = NATIVE.rsplit_once('.').map_or(NATIVE, |(_, m)| m);
+fn lib_file(native: &str, hand: &str) -> String {
+    let module = native.rsplit_once('.').map_or(native, |(_, m)| m);
     format!(
-        "mod doors;\npub mod hand;\n\nuse pyo3::prelude::*;\n\n#[pymodule]\nfn {module}(py: Python<'_>, module: &Bound<'_, PyModule>) -> PyResult<()> {{\n    module.add(\"__version__\", env!(\"CARGO_PKG_VERSION\"))?;\n    doors::init(py, module)\n}}\n"
+        "mod doors;\n{hand}\n\nuse pyo3::prelude::*;\n\n#[pymodule]\nfn {module}(py: Python<'_>, module: &Bound<'_, PyModule>) -> PyResult<()> {{\n    module.add(\"__version__\", env!(\"CARGO_PKG_VERSION\"))?;\n    doors::init(py, module)\n}}\n"
     )
 }
 
@@ -1903,7 +1938,7 @@ fn stub_members(cx: &Cx, out: &mut String, class: &Owned, here: &str) -> Result<
         ));
         wrote = true;
     }
-    for field in ty.fields.iter().filter(|f| f.public && crossable(&f.ty)) {
+    for field in ty.fields.iter().filter(|f| cx.shown(&ty.path, f)) {
         out.push_str("    @property\n");
         out.push_str(&format!(
             "    def {}(self) -> {}:\n",
@@ -2010,6 +2045,10 @@ fn stub_rng(cx: &Cx, out: &mut String, here: &str) -> Result<()> {
     }
     out.push_str("    def choice(self, seq: Any) -> Any:\n        \"\"\"Draws one item of the sequence, the same draw as Rust's choice.\"\"\"\n");
     out.push_str("    def shuffle(self, seq: list[Any]) -> None:\n        \"\"\"Shuffles the list in place, the same permutation as Rust's shuffle.\"\"\"\n");
+    if cx.leaf.is_some() {
+        out.push_str("    def state(self) -> str:\n        \"\"\"Returns the stream's state as text, the way a stream crosses into another unit.\"\"\"\n");
+        out.push_str("    def restore(self, state: str) -> None:\n        \"\"\"Reads a state back into the stream, the way a stream crosses back out of another unit.\"\"\"\n");
+    }
     out.push('\n');
     Ok(())
 }
@@ -2086,9 +2125,16 @@ fn stub_head(node: &Node, body: &str) -> String {
     out
 }
 
-fn init_file(node: &Node) -> String {
+fn init_file(cx: &Cx, node: &Node) -> String {
     let mut out = String::new();
-    out.push_str(&format!("from {NATIVE}.{} import *\n", dotted(&node.path)));
+    out.push_str(&format!(
+        "from {}.{} import *\n",
+        cx.native,
+        dotted(&node.path)
+    ));
+    if cx.leaf.as_deref() == Some(node.path.as_str()) {
+        out.push_str(&format!("from {} import __version__\n", cx.native));
+    }
     if !node.children.is_empty() {
         let children: Vec<&str> = node.children.keys().map(String::as_str).collect();
         out.push_str(&format!("from . import {}\n", children.join(", ")));
@@ -2100,54 +2146,114 @@ fn init_file(node: &Node) -> String {
     out
 }
 
-fn python_files(cx: &Cx, root: &Node, python: &Path) -> Result<()> {
-    let children: Vec<&str> = root.children.keys().map(String::as_str).collect();
-    let listed: Vec<String> = children.iter().map(|n| py_str(n)).collect();
-    let init = format!(
-        "from mrly import _mrly\nfrom mrly import {}\n\n__version__ = _mrly.__version__\n__all__ = [{}]\n",
-        children.join(", "),
-        listed.join(", ")
-    );
-    save(&python.join("__init__.py"), &init)?;
-    let stub = format!(
-        "from . import {}\n\n__version__: str\n",
-        children.join(", ")
-    );
-    save(&python.join("__init__.pyi"), &stub)?;
+fn node_files(cx: &Cx, root: &Node, python: &Path) -> Result<()> {
     let mut nodes = Vec::new();
     for child in root.children.values() {
         child.walk(&mut nodes);
     }
     for node in nodes {
         let dir = python.join(node.path.replace("::", "/"));
-        save(&dir.join("__init__.py"), &init_file(node))?;
-        save(&dir.join("__init__.pyi"), &stub_file(cx, node)?)?;
+        let mut stub = stub_file(cx, node)?;
+        if cx.leaf.as_deref() == Some(node.path.as_str()) {
+            stub.push_str("\n__version__: str\n");
+        }
+        save(&dir.join("__init__.py"), &init_file(cx, node))?;
+        save(&dir.join("__init__.pyi"), &stub)?;
     }
     Ok(())
 }
 
+// LEAF
+
+pub fn write_leaf(manifest: &Manifest, root: &Path, leaf: &Leaf) -> Result<()> {
+    let _leafed = Leafed::on();
+    let unit = leaf.unit.as_str();
+    let cx = Cx::leaf(manifest, unit);
+    let mut tree = build(&cx)?;
+    tree.children.retain(|name, _| name == unit);
+    let pkg = root.join(&leaf.py);
+    let hand = format!("pub use mrly_{}_py_hand as hand;", leaf.hand);
+    save(&pkg.join("src/lib.rs"), &lib_file(&cx.native, &hand))?;
+    save(&pkg.join("src/doors.rs"), &rust_file(&cx, &tree)?)?;
+    let python = pkg.join("python/mrly");
+    node_files(&cx, &tree, &python)?;
+    save(&python.join(unit).join("py.typed"), "")?;
+    save(&pkg.join("tests/test_manifest.py"), &test_file(&cx, leaf))?;
+    save(&pkg.join("Cargo.toml"), &leaf_cargo(leaf))?;
+    save(&pkg.join("pyproject.toml"), &leaf_pyproject(leaf))
+}
+
+fn leaf_cargo(leaf: &Leaf) -> String {
+    let unit = &leaf.unit;
+    let hand = leaf::relative(&leaf.py, &leaf.hands.py);
+    format!(
+        "[package]\nname = \"mrly-{unit}-py\"\nversion.workspace = true\nedition.workspace = true\nlicense.workspace = true\nrepository.workspace = true\ndescription = \"The Python bridge of mrly-{unit}: the native half of mrly.{unit}.\"\npublish = false\n\n[lib]\nname = \"_{unit}\"\ncrate-type = [\"cdylib\"]\n\n[dependencies]\n{}mrly-{}-py-hand = {{ path = \"{hand}\" }}\npyo3 = {{ version = \"0.29\", features = [\"extension-module\", \"abi3-py310\"] }}\nserde_json.workspace = true\n",
+        leaf::deps(leaf),
+        leaf.hand
+    )
+}
+
+fn leaf_pyproject(leaf: &Leaf) -> String {
+    let unit = &leaf.unit;
+    let mut deps = vec![py_str("numpy>=2")];
+    deps.extend(leaf.pys.iter().map(|(u, _)| py_str(&format!("mrly-{u}"))));
+    let mut keys = vec![
+        "pyproject.toml".to_string(),
+        "Cargo.toml".to_string(),
+        "src/**/*.rs".to_string(),
+        "python/**/*.py*".to_string(),
+        format!("{}/Cargo.toml", leaf::relative(&leaf.py, Path::new(""))),
+    ];
+    for dir in &leaf.keys {
+        keys.push(format!("{}/**/*.rs", leaf::relative(&leaf.py, dir)));
+    }
+    let keys: Vec<String> = keys
+        .iter()
+        .map(|key| format!("{{ file = {} }}", py_str(key)))
+        .collect();
+    let mut out = format!(
+        "[project]\nname = \"mrly-{unit}\"\ndynamic = [\"version\"]\ndescription = \"mrly.{unit}, bridged into Python.\"\nlicense = \"MIT\"\nauthors = [{{ name = \"MrlyProd, Inc.\" }}]\nrequires-python = \">=3.10\"\ndependencies = [{}]\n\n[project.urls]\nHomepage = \"https://mrly.net\"\nRepository = \"https://github.com/mrlyprod/mrlyprod\"\n\n[build-system]\nrequires = [\"maturin>=1.15,<2\"]\nbuild-backend = \"maturin\"\n\n[tool.maturin]\nmodule-name = \"mrly.{unit}._{unit}\"\npython-source = \"python\"\nconfig = [\"profile.release.strip = false\"]\nexclude = [\"**/__pycache__/**\"]\n\n[tool.uv]\ncache-keys = [{}]\n",
+        deps.join(", "),
+        keys.join(", ")
+    );
+    if !leaf.pys.is_empty() {
+        out.push_str("\n[tool.uv.sources]\n");
+        for (other, dir) in &leaf.pys {
+            let path = py_str(&leaf::relative(&leaf.py, dir));
+            out.push_str(&format!("mrly-{other} = {{ path = {path} }}\n"));
+        }
+    }
+    let root = py_str(&format!(
+        "{}/pyproject.toml",
+        leaf::relative(&leaf.py, Path::new(""))
+    ));
+    out.push_str(&format!(
+        "\n[tool.ruff]\nextend = {root}\ntarget-version = \"py310\"\nextend-exclude = [\"python\"]\n"
+    ));
+    out
+}
+
 // TEST
 
-fn test_file(cx: &Cx, layout: &Layout) -> String {
-    let manifest: String = layout
-        .manifest
-        .components()
-        .map(|part| format!(" / {:?}", part.as_os_str().to_string_lossy()))
+fn test_file(cx: &Cx, leaf: &Leaf) -> String {
+    let path = leaf::relative(&leaf.py.join("tests"), &leaf.manifest);
+    let up = path.split('/').take_while(|part| *part == "..").count();
+    let manifest: String = path
+        .split('/')
+        .skip(up)
+        .map(|part| format!(" / {part:?}"))
         .collect();
-    let up = climb(&layout.py) + 1;
     let ok = cx
         .manifest
         .functions
         .iter()
-        .filter(|f| f.cross == Cross::Ok)
+        .filter(|f| f.cross == Cross::Ok && f.module.split("::").next() == Some(&leaf.unit))
         .count();
     format!(
         r#"import importlib
 import json
 import keyword
 import pathlib
-
-import mrly
 
 MANIFEST = pathlib.Path(__file__).resolve().parents[{up}]{manifest}
 

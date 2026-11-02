@@ -1,5 +1,5 @@
-import * as math from "@mrlyprod/mrly/math";
-import type { Ink, Pen } from "#view";
+import type { Ink, Pen } from "@mrlyprod/draw";
+import * as math from "@mrlyprod/math";
 import census from "./paper-sparse-mertens-under-grh.json" with { type: "json" };
 
 export const units = { math };

@@ -1,7 +1,7 @@
 # mrly-math
 
 - The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.
-- Part of [mrly](https://crates.io/crates/mrly), released in lockstep with it; most users depend on `mrly` and reach this crate as `mrly::math`.
+- Released in lockstep with the other `mrly-*` crates; its bindings sit beside it: `js/` (`@mrlyprod/math`), `py/` (`mrly.math`) and `cli/` (`mrly-math`).
 - Docs: [docs.rs/mrly-math](https://docs.rs/mrly-math).
 
 ```rust

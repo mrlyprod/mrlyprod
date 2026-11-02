@@ -1,7 +1,7 @@
 use census::save;
-use mrly::core::error::{value_error, Result};
-use mrly::core::{json, Json};
-use mrly::Error;
+use mrly_core::error::{value_error, Result};
+use mrly_core::{json, Json};
+use mrly_core::Error;
 use std::path::PathBuf;
 
 const NAME: &str = "research-automata-encyclopedia";

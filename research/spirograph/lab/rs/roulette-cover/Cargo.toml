@@ -3,6 +3,6 @@ name = "roulette-cover"
 edition = "2021"
 
 [dependencies]
-mrly = { path = "../../../../../crates/mrly" }
+mrly-math = { path = "../../../../../crates/math" }
 
 [workspace]

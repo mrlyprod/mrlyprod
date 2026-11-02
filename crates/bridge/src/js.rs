@@ -1,8 +1,9 @@
-use crate::config::{Layout, climb, slashed};
+use crate::config::slashed;
 use crate::disk::save;
+use crate::leaf::{self, Leaf};
 use crate::model::{
-    Const, Cross, Function, Hand, Manifest, Result, SelfKind, Ty, Type, TypeCross, TypeKind,
-    by_dim, hand,
+    Const, Cross, Function, Hand, Leafed, Manifest, Result, SelfKind, Ty, Type, TypeCross,
+    TypeKind, by_dim, hand, rust,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
@@ -158,48 +159,74 @@ const ALLOWS: &str = "#![allow(non_camel_case_types, non_snake_case, clippy::too
 
 // FILES
 
-pub fn write(manifest: &Manifest, root: &Path, layout: &Layout) -> Result<()> {
-    let names = units(manifest);
-    let js = root.join(&layout.js);
-    for name in names.iter().map(String::as_str) {
-        let unit = Unit::new(manifest, name);
-        let dir = js.join("units").join(name);
-        save(&dir.join("Cargo.toml"), &cargo_toml(name))?;
-        save(&dir.join("src/lib.rs"), &unit.lib_rs()?)?;
-        save(&js.join(format!("{name}.js")), &unit.wrapper_js())?;
-        save(&js.join(format!("{name}.node.js")), &node_js(name))?;
-        save(&js.join(format!("{name}.d.ts")), &unit.types_dts()?)?;
-    }
-    save(&js.join("index.js"), &index_js(&names, ""))?;
-    save(&js.join("index.node.js"), &index_js(&names, ".node"))?;
-    save(&js.join("index.d.ts"), &index_dts(&names))?;
-    save(
-        &js.join("package.json"),
-        &package_json(&names, &manifest.version, layout),
-    )?;
-    save(&js.join("manifest.test.js"), &manifest_test(layout))?;
-    Ok(())
-}
-
-pub fn units(manifest: &Manifest) -> Vec<String> {
-    let mut names: Vec<String> = manifest
-        .modules
-        .iter()
-        .map(|m| m.path.clone())
-        .filter(|path| !path.is_empty() && !path.contains("::"))
-        .collect();
-    names.sort();
-    names.dedup();
-    names
-}
-
-fn cargo_toml(name: &str) -> String {
-    let head = format!(
-        "[package]\nname = \"mrly-js-{name}\"\nversion.workspace = true\nedition.workspace = true\nlicense.workspace = true\nrepository.workspace = true\n"
+pub fn write_leaf(manifest: &Manifest, root: &Path, leaf: &Leaf) -> Result<()> {
+    let _leafed = Leafed::on();
+    let name = leaf.unit.as_str();
+    let unit = Unit::new(manifest, name);
+    let dir = root.join(&leaf.js);
+    let pkg = |text: String| {
+        text.replace(
+            &format!("./pkg/{name}/mrly_js_{name}"),
+            &format!("./pkg/mrly_{name}_js"),
+        )
+    };
+    let lib = unit.lib_rs()?.replace(
+        "use mrly_js_hand as hand;",
+        &format!("use mrly_{}_js_hand as hand;", leaf.hand),
     );
-    format!(
-        "{head}description = \"The {name} wasm unit of @mrlyprod/mrly: the {name} module of mrly in a browser.\"\npublish = false\n\n[lib]\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[dependencies]\nmrly.workspace = true\nmrly-js-hand.workspace = true\nwasm-bindgen.workspace = true\nserde-wasm-bindgen.workspace = true\njs-sys.workspace = true\nserde.workspace = true\nserde_json.workspace = true\n"
+    save(&dir.join("Cargo.toml"), &leaf_cargo(leaf))?;
+    save(&dir.join("src/lib.rs"), &lib)?;
+    save(&dir.join("index.js"), &pkg(unit.wrapper_js()))?;
+    let node = pkg(node_js(name)).replace(&format!("./{name}.js"), "./index.js");
+    save(&dir.join("index.node.js"), &node)?;
+    save(&dir.join("index.d.ts"), &pkg(unit.types_dts()?))?;
+    save(&dir.join("manifest.test.js"), &manifest_test(leaf))?;
+    save(
+        &dir.join("package.json"),
+        &leaf_package(leaf, &manifest.version),
     )
+}
+
+fn leaf_cargo(leaf: &Leaf) -> String {
+    let unit = &leaf.unit;
+    let hand = leaf::relative(&leaf.js, &leaf.hands.js);
+    format!(
+        "[package]\nname = \"mrly-{unit}-js\"\nversion.workspace = true\nedition.workspace = true\nlicense.workspace = true\nrepository.workspace = true\ndescription = \"The wasm half of @mrlyprod/{unit}: mrly-{unit} in a browser.\"\npublish = false\n\n[lib]\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[dependencies]\n{}mrly-{}-js-hand = {{ path = \"{hand}\" }}\nwasm-bindgen.workspace = true\nserde-wasm-bindgen.workspace = true\njs-sys.workspace = true\nserde.workspace = true\nserde_json.workspace = true\n",
+        leaf::deps(leaf),
+        leaf.hand
+    )
+}
+
+fn leaf_package(leaf: &Leaf, version: &str) -> String {
+    let unit = &leaf.unit;
+    let package = serde_json::json!({
+        "name": format!("@mrlyprod/{unit}"),
+        "version": version,
+        "description": format!("mrly-{unit}, compiled to WebAssembly for the browser and Node."),
+        "keywords": KEYWORDS,
+        "author": "MrlyProd, Inc.",
+        "license": "MIT",
+        "homepage": "https://mrly.net",
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/mrlyprod/mrlyprod",
+            "directory": slashed(&leaf.js),
+        },
+        "private": true,
+        "type": "module",
+        "sideEffects": ["./index.node.js"],
+        "exports": {
+            ".": {
+                "types": "./index.d.ts",
+                "node": "./index.node.js",
+                "default": "./index.js",
+            },
+            "./pkg/*": "./pkg/*",
+            "./package.json": "./package.json",
+        },
+        "files": ["pkg/", "index.js", "index.node.js", "index.d.ts"],
+    });
+    serde_json::to_string_pretty(&package).unwrap_or_default() + "\n"
 }
 
 fn node_js(name: &str) -> String {
@@ -207,37 +234,6 @@ fn node_js(name: &str) -> String {
         "import {{ readFileSync }} from \"node:fs\";\nimport {{ initSync }} from \"./{name}.js\";\n\ninitSync({{ module: readFileSync(new URL(\"./pkg/{name}/mrly_js_{name}_bg.wasm\", import.meta.url)) }});\n\nexport * from \"./{name}.js\";\nexport {{ default }} from \"./{name}.js\";\n"
     )
 }
-
-fn index_js(names: &[String], flavor: &str) -> String {
-    let mut out = String::new();
-    for name in names {
-        writeln!(out, "import * as {name} from \"./{name}{flavor}.js\";").ok();
-    }
-    let list = names.join(", ");
-    let inits: Vec<String> = names
-        .iter()
-        .map(|name| format!("{name}.default()"))
-        .collect();
-    write!(
-        out,
-        "\nexport {{ {list} }};\n\nexport async function init() {{\n    await Promise.all([{}]);\n}}\n\nexport default init;\n",
-        inits.join(", ")
-    )
-    .ok();
-    out
-}
-
-fn index_dts(names: &[String]) -> String {
-    let mut out = String::new();
-    for name in names {
-        writeln!(out, "export * as {name} from \"./{name}.js\";").ok();
-    }
-    out.push_str("\n/** Loads every unit's wasm; each unit also loads on its own with its default export. */\nexport declare function init(): Promise<void>;\n\nexport default init;\n");
-    out
-}
-
-const DESCRIPTION: &str =
-    "MrlyMath, the mathematics of designs, compiled to WebAssembly for the browser and Node.";
 
 const KEYWORDS: &[&str] = &[
     "mathematics",
@@ -247,55 +243,6 @@ const KEYWORDS: &[&str] = &[
     "wasm",
     "webassembly",
 ];
-
-fn package_json(names: &[String], version: &str, layout: &Layout) -> String {
-    let entry = |stem: &str| {
-        serde_json::json!({
-            "types": format!("./{stem}.d.ts"),
-            "node": format!("./{stem}.node.js"),
-            "default": format!("./{stem}.js"),
-        })
-    };
-    let mut exports = serde_json::Map::new();
-    exports.insert(".".into(), entry("index"));
-    for name in names {
-        exports.insert(format!("./{name}"), entry(name));
-    }
-    exports.insert("./pkg/*".into(), "./pkg/*".into());
-    exports.insert("./package.json".into(), "./package.json".into());
-    let mut files = vec![
-        "LICENSE".to_string(),
-        "README.md".to_string(),
-        "pkg/".to_string(),
-    ];
-    for stem in std::iter::once("index").chain(names.iter().map(String::as_str)) {
-        for ext in ["js", "node.js", "d.ts"] {
-            files.push(format!("{stem}.{ext}"));
-        }
-    }
-    let package = serde_json::json!({
-        "name": "@mrlyprod/mrly",
-        "version": version,
-        "description": DESCRIPTION,
-        "keywords": KEYWORDS,
-        "author": "MrlyProd, Inc.",
-        "license": "MIT",
-        "homepage": "https://mrly.net",
-        "repository": {
-            "type": "git",
-            "url": "https://github.com/mrlyprod/mrlyprod",
-            "directory": slashed(&layout.js),
-        },
-        "bugs": { "url": "https://github.com/mrlyprod/mrlyprod/issues" },
-        "type": "module",
-        "sideEffects": ["./*.node.js"],
-        "publishConfig": { "access": "public" },
-        "exports": exports,
-        "files": files,
-        "scripts": { "test": "bun test" },
-    });
-    serde_json::to_string_pretty(&package).unwrap_or_default() + "\n"
-}
 
 pub fn field_skips(manifest: &Manifest) -> Vec<(String, String)> {
     let mut out = vec![];
@@ -514,8 +461,8 @@ impl<'a> Unit<'a> {
             Ty::Str | Ty::String => "String".into(),
             Ty::U128 => "u128".into(),
             Ty::I128 => "i128".into(),
-            Ty::Code => self.hand_pick("Code", None, cx, |row| &row.rust)?.into(),
-            Ty::Json => "mrly::core::Json".into(),
+            Ty::Code => rust(self.hand_pick("Code", None, cx, |row| &row.rust)?),
+            Ty::Json => rust("core::Json"),
             Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Set { item } => {
                 format!("Vec<{}>", self.rust_ty(item, cx)?)
             }
@@ -532,16 +479,16 @@ impl<'a> Unit<'a> {
                 self.rust_ty(key, cx)?,
                 self.rust_ty(value, cx)?
             ),
-            Ty::Hand { name, dim } => self.hand_pick(name, *dim, cx, |row| &row.rust)?.into(),
+            Ty::Hand { name, dim } => rust(self.hand_pick(name, *dim, cx, |row| &row.rust)?),
             Ty::Plain { path } => {
                 let generic = self.ty(path).is_some_and(|t| t.const_generic);
                 if generic {
-                    format!("mrly::{path}<{}>", suffix_dim(cx.fname))
+                    format!("{}<{}>", rust(path), suffix_dim(cx.fname))
                 } else {
-                    format!("mrly::{path}")
+                    rust(path)
                 }
             }
-            Ty::Enum { path } | Ty::Class { path, .. } => format!("mrly::{path}"),
+            Ty::Enum { path } | Ty::Class { path, .. } => rust(path),
             Ty::Opaque { path } => return Err(format!("{}: {path} cannot cross", cx.fname)),
             Ty::Unknown { text } => return Err(format!("{}: {text} cannot cross", cx.fname)),
         })
@@ -1196,7 +1143,7 @@ impl<'a> Unit<'a> {
             format!("::<{}>", cx.dim.unwrap_or(2))
         };
         let call = match owner {
-            Owner::Free => format!("mrly::{}{turbo}({args})", f.path),
+            Owner::Free => format!("{}{turbo}({args})", rust(&f.path)),
             Owner::Hand(t) => match receiver {
                 Some(r) => {
                     let name = match r.post.is_empty() {
@@ -1220,7 +1167,8 @@ impl<'a> Unit<'a> {
                     )?;
                     let base = if self.hand_name(t) == "CellNd" {
                         format!(
-                            "mrly::math::cell::models::CellNd::<{}>",
+                            "{}::<{}>",
+                            rust("math::cell::models::CellNd"),
                             cx.dim.unwrap_or(2)
                         )
                     } else {
@@ -1230,7 +1178,7 @@ impl<'a> Unit<'a> {
                 }
             },
             Owner::Class(t) => {
-                let base = format!("mrly::{}", t.path);
+                let base = rust(&t.path);
                 let copied = self.ty(&t.path).is_some_and(|t| derives(t, "Copy"));
                 let me = match f.self_kind {
                     Some(SelfKind::Value) if copied => "self.inner".to_string(),
@@ -1240,14 +1188,14 @@ impl<'a> Unit<'a> {
                     None => String::new(),
                 };
                 match (&f.via, f.self_kind) {
-                    (Some(via), None) => format!("<{base} as mrly::{via}>::{}({args})", f.name),
+                    (Some(via), None) => format!("<{base} as {}>::{}({args})", rust(via), f.name),
                     (Some(via), Some(_)) => {
                         let all = if args.is_empty() {
                             me
                         } else {
                             format!("{me}, {args}")
                         };
-                        format!("<{base} as mrly::{via}>::{}({all})", f.name)
+                        format!("<{base} as {}>::{}({all})", rust(via), f.name)
                     }
                     (None, None) => format!("{base}::{}({args})", f.name),
                     (None, Some(SelfKind::Value)) => format!("{me}.{}({args})", f.name),
@@ -1256,7 +1204,7 @@ impl<'a> Unit<'a> {
             }
             Owner::Holder(t) => match receiver {
                 Some(r) => format!("{}.{}({args})", r.arg, f.name),
-                None => format!("mrly::{}::{}({args})", t.path, f.name),
+                None => format!("{}::{}({args})", rust(&t.path), f.name),
             },
         };
         let fallible = matches!(f.ret, Ty::Result { .. });
@@ -1293,7 +1241,7 @@ impl<'a> Unit<'a> {
         let name = self.export(&self.local(&c.path));
         writeln!(out, "#[wasm_bindgen]").ok();
         writeln!(out, "pub fn {name}() -> Result<{}, JsValue> {{", ret.sig).ok();
-        writeln!(out, "    let value = mrly::{};", c.path).ok();
+        writeln!(out, "    let value = {};", rust(&c.path)).ok();
         writeln!(out, "    {}", ret.done).ok();
         writeln!(out, "}}").ok();
         Ok(())
@@ -1330,8 +1278,8 @@ impl<'a> Unit<'a> {
         writeln!(out, "#[wasm_bindgen]").ok();
         writeln!(
             out,
-            "pub struct {ident} {{\n    inner: mrly::{},\n}}\n",
-            t.path
+            "pub struct {ident} {{\n    inner: {},\n}}\n",
+            rust(&t.path)
         )
         .ok();
         writeln!(out, "#[wasm_bindgen]\nimpl {ident} {{").ok();
@@ -1946,18 +1894,16 @@ impl<'a> Unit<'a> {
         )
         .ok();
         let words = |path: &str| -> String {
-            self.ty(path)
-                .map(|t| {
+            self.ty(path).map_or_else(
+                || "string".to_string(),
+                |t| {
                     t.variants
                         .iter()
-                        .map(|v| enum_word(t, &v.name, &v.serde))
-                        .collect::<Vec<String>>()
-                })
-                .unwrap_or_default()
-                .iter()
-                .map(|w| format!("{w:?}"))
-                .collect::<Vec<_>>()
-                .join(" | ")
+                        .map(|v| format!("{:?}", enum_word(t, &v.name, &v.serde)))
+                        .collect::<Vec<_>>()
+                        .join(" | ")
+                },
+            )
         };
         let projection = words("math::six::Projection");
         let orientation = words("math::six::Orientation");
@@ -2330,33 +2276,22 @@ fn rename_all(name: &str, rule: &str) -> String {
 
 // TEST
 
-fn manifest_test(layout: &Layout) -> String {
+fn manifest_test(leaf: &Leaf) -> String {
     let reserved: Vec<String> = JS_RESERVED.iter().map(|word| format!("{word:?}")).collect();
-    let manifest = format!(
-        "{}{}",
-        "../".repeat(climb(&layout.js)),
-        slashed(&layout.manifest)
-    );
     MANIFEST_TEST
         .replace("RESERVED_WORDS", &reserved.join(", "))
-        .replace("MANIFEST_PATH", &manifest)
+        .replace("MANIFEST_PATH", &leaf::relative(&leaf.js, &leaf.manifest))
+        .replace("UNIT_NAME", &leaf.unit)
 }
 
 const MANIFEST_TEST: &str = r#"import { expect, test } from "bun:test";
-import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 
 const manifest = await Bun.file(new URL("MANIFEST_PATH", import.meta.url)).json();
-const units = readdirSync(new URL("./units", import.meta.url)).sort();
-const pkg = await Bun.file(new URL("./package.json", import.meta.url)).json();
+const unit = "UNIT_NAME";
 const kinds = new Map(manifest.types.map((t) => [t.path, t.cross.kind]));
 const reserved = new Set([RESERVED_WORDS]);
 
-function parent(path) {
-    const at = path.lastIndexOf("::");
-    return at < 0 ? "" : path.slice(0, at);
-}
-
-function relative(unit, path) {
+function relative(path) {
     return path.slice(unit.length + 2);
 }
 
@@ -2370,74 +2305,49 @@ function walk(mod, path) {
     return node;
 }
 
-function holds(unit, path) {
+function holds(path) {
     return path.split("::")[0] === unit;
 }
 
-function check(mod, unit, f) {
+function check(mod, f) {
     const kind = f.owner ? kinds.get(f.owner) : undefined;
     if (kind === "class") {
-        const cls = walk(mod, relative(unit, f.owner));
+        const cls = walk(mod, relative(f.owner));
         if (typeof cls !== "function") return false;
         if (f.self_kind === null && f.name === "new") return true;
         if (f.self_kind === null) return typeof cls[f.name] === "function";
         return typeof cls.prototype[f.name] === "function";
     }
     if (kind === "plain" || kind === "enum") {
-        const holder = walk(mod, relative(unit, f.owner));
+        const holder = walk(mod, relative(f.owner));
         return typeof holder === "function" && typeof holder[f.name] === "function";
     }
-    return typeof walk(mod, relative(unit, f.path)) === "function";
+    return typeof walk(mod, relative(f.path)) === "function";
 }
 
-test("every export ships in files and exists", () => {
-    const listed = new Set(pkg.files);
-    for (const file of ["LICENSE", "README.md"]) {
-        expect(listed.has(file)).toBe(true);
-        expect(existsSync(new URL(`./${file}`, import.meta.url))).toBe(true);
+test(`${unit} exports every ok name`, async () => {
+    const mod = await import("./index.js");
+    const bytes = await Bun.file(new URL(`./pkg/mrly_${unit}_js_bg.wasm`, import.meta.url)).arrayBuffer();
+    mod.initSync({ module: bytes });
+    expect(typeof mod.Rng).toBe("function");
+    const missing = [];
+    const names = new Set();
+    for (const f of manifest.functions) {
+        if (f.cross.status !== "ok" || !holds(f.module)) continue;
+        names.add(f.path);
+        if (!check(mod, f)) missing.push(f.path);
     }
-    const license = new URL("./LICENSE", import.meta.url);
-    expect(lstatSync(license).isSymbolicLink()).toBe(false);
-    expect(readFileSync(license, "utf8")).toBe(readFileSync(new URL("../../LICENSE", import.meta.url), "utf8"));
-    const loose = new Set(["./pkg/*", "./package.json"]);
-    expect(pkg.exports["./package.json"]).toBe("./package.json");
-    for (const [key, entry] of Object.entries(pkg.exports)) {
-        if (loose.has(key)) continue;
-        for (const file of Object.values(entry)) {
-            expect(listed.has(file.slice(2))).toBe(true);
-            expect(existsSync(new URL(file, import.meta.url))).toBe(true);
-        }
+    for (const c of manifest.consts) {
+        if (c.cross.status !== "ok" || !holds(c.path)) continue;
+        names.add(c.path);
+        if (typeof walk(mod, relative(c.path)) !== "function") missing.push(c.path);
     }
-    const subpaths = Object.keys(pkg.exports).filter((key) => key.startsWith("./") && !loose.has(key));
-    expect(subpaths.map((key) => key.slice(2)).sort()).toEqual(units);
+    for (const t of manifest.types) {
+        if (t.cross.kind !== "class" || !holds(t.path)) continue;
+        names.add(t.path);
+        if (typeof walk(mod, relative(t.path)) !== "function") missing.push(t.path);
+    }
+    expect(missing).toEqual([]);
+    console.log(`${unit}: ${names.size} names`);
 });
-
-for (const unit of units) {
-    test(`${unit} exports every ok name`, async () => {
-        expect(pkg.exports[`./${unit}`]).toEqual({ types: `./${unit}.d.ts`, node: `./${unit}.node.js`, default: `./${unit}.js` });
-        const mod = await import(`./${unit}.js`);
-        const bytes = await Bun.file(new URL(`./pkg/${unit}/mrly_js_${unit}_bg.wasm`, import.meta.url)).arrayBuffer();
-        mod.initSync({ module: bytes });
-        expect(typeof mod.Rng).toBe("function");
-        const missing = [];
-        const names = new Set();
-        for (const f of manifest.functions) {
-            if (f.cross.status !== "ok" || !holds(unit, f.module)) continue;
-            names.add(f.path);
-            if (!check(mod, unit, f)) missing.push(f.path);
-        }
-        for (const c of manifest.consts) {
-            if (c.cross.status !== "ok" || !holds(unit, c.path)) continue;
-            names.add(c.path);
-            if (typeof walk(mod, relative(unit, c.path)) !== "function") missing.push(c.path);
-        }
-        for (const t of manifest.types) {
-            if (t.cross.kind !== "class" || !holds(unit, t.path)) continue;
-            names.add(t.path);
-            if (typeof walk(mod, relative(unit, t.path)) !== "function") missing.push(t.path);
-        }
-        expect(missing).toEqual([]);
-        console.log(`${unit}: ${names.size} names`);
-    });
-}
 "#;

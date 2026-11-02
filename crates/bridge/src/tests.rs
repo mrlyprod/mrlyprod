@@ -2,25 +2,19 @@ use crate::model::*;
 use crate::parse::{self, Files};
 use crate::report;
 use crate::resolve::{self, Built};
-use crate::{cli, config, disk, js, py, version};
+use crate::{cli, config, disk, js, leaf, py, version};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
-fn layout() -> config::Layout {
-    config::load(&config::home())
-        .expect("the bridge config loads")
-        .layout
-}
-
-fn doors() -> String {
-    config::slashed(&layout().cli.join(cli::DOORS))
+fn doors(unit: &str) -> String {
+    format!("crates/{unit}/cli/{}", cli::DOORS)
 }
 
 fn build(lib: &str) -> Built {
     let files: Files = [("lib.rs".to_string(), lib.to_string())]
         .into_iter()
         .collect();
-    resolve::build(&files, "0.0.0").expect("the source builds")
+    resolve::build(&files, "mrly-test", "0.0.0").expect("the source builds")
 }
 
 fn manifest(lib: &str) -> Manifest {
@@ -54,12 +48,23 @@ fn kind<'a>(m: &'a Manifest, path: &str) -> &'a TypeCross {
 fn scratch(name: &str, lib: &str) -> PathBuf {
     let root = std::env::temp_dir().join(format!("bridge-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
-    std::fs::create_dir_all(root.join("crates/bridge")).expect("a scratch root");
     let m = manifest(lib);
-    cli::write(&m, &root, &layout()).expect("the cli writes");
-    py::write(&m, &root, &layout()).expect("the python bridge writes");
-    js::write(&m, &root, &layout()).expect("the js bridge writes");
+    let units: Vec<&str> = m
+        .modules
+        .iter()
+        .map(|module| module.path.as_str())
+        .filter(|path| !path.is_empty() && !path.contains("::"))
+        .collect();
+    for unit in &units {
+        write_leaf(&m, &root, &leaf_of(unit, &units));
+    }
     root
+}
+
+fn write_leaf(m: &Manifest, root: &Path, leaf: &leaf::Leaf) {
+    cli::write_leaf(m, root, leaf).expect("the leaf cli writes");
+    py::write_leaf(m, root, leaf).expect("the leaf python writes");
+    js::write_leaf(m, root, leaf).expect("the leaf js writes");
 }
 
 fn read(root: &Path, file: &str) -> String {
@@ -235,25 +240,26 @@ fn an_image_crosses_by_hand_as_one_shaped_array_and_a_list_of_them() {
         (Some(SelfKind::Ref), &Cross::Ok)
     );
     let root = scratch("image", lib);
-    let rust = read(&root, "bindings/py/src/doors.rs");
+    let rust =
+        read(&root, "crates/core/py/src/doors.rs") + &read(&root, "crates/life/py/src/doors.rs");
     assert!(rust.contains("image: PyImage,"));
     assert!(rust.contains("(PyImage(out)).into_bound_py_any(py)"));
     assert!(rust.contains(".map(PyImage)"));
-    let stub = read(&root, "bindings/py/python/mrly/life/__init__.pyi");
+    let stub = read(&root, "crates/life/py/python/mrly/life/__init__.pyi");
     assert!(stub.contains("def frame(scale: int) -> NDArray[Any]:"));
     assert!(stub.contains("def frames(scale: int) -> list[NDArray[Any]]:"));
-    let wasm = read(&root, "bindings/js/units/life/src/lib.rs");
+    let wasm = read(&root, "crates/life/js/src/lib.rs");
     assert!(wasm.contains("hand::image_to_js(&value)"));
     assert!(wasm.contains("hand::list_to_js(&value, hand::image_to_js)"));
-    let core = read(&root, "bindings/js/units/core/src/lib.rs");
+    let core = read(&root, "crates/core/js/src/lib.rs");
     assert!(core.contains("let image = hand::image_from_js(&image)?;"));
-    let dts = read(&root, "bindings/js/life.d.ts");
+    let dts = read(&root, "crates/life/js/index.d.ts");
     assert!(dts.contains(
         "export interface Image {\n    shape: [number, number];\n    colors: Uint8Array<ArrayBuffer>;\n}"
     ));
     assert!(dts.contains("export function frame(scale: number): Image;"));
     assert!(dts.contains("export function frames(scale: number): Image[];"));
-    let cli: String = read(&root, &doors()).split_whitespace().collect();
+    let cli: String = read(&root, &doors("life")).split_whitespace().collect();
     assert!(cli.contains("name:\"life.frames\",signature:\"(scale:usize)->[Image]\""));
     std::fs::remove_dir_all(root).ok();
 }
@@ -273,7 +279,7 @@ fn a_boxed_self_reference_crosses_as_the_type_itself() {
     assert_eq!(shape.variants[1].fields[0].ty, inner());
     assert_eq!(shape.variants[2].fields[0].ty, inner());
     let root = scratch("boxed", lib);
-    let dts = read(&root, "bindings/js/shape.d.ts");
+    let dts = read(&root, "crates/shape/js/index.d.ts");
     assert!(dts.contains(
         "export type Shape = { Ball: { radius: number } } | { Anti: Shape } | { Window: { inner: Shape; low: number[] } };"
     ));
@@ -574,7 +580,9 @@ fn a_name_collision_fails_the_run() {
 
 #[test]
 fn skip_txt_must_name_every_skipped_function_and_nothing_else() {
-    let m = manifest("pub fn genus() -> &'static [u8] { &[] } pub fn fine() {}");
+    let m = [manifest(
+        "pub fn genus() -> &'static [u8] { &[] } pub fn fine() {}",
+    )];
     assert_eq!(report::skip_lines(&m), vec!["genus &'static return"]);
     assert_eq!(
         report::check_skip(&m, ""),
@@ -651,20 +659,22 @@ fn a_public_class_field_gets_a_setter_unless_it_holds_a_borrow() {
         "setter",
         "pub mod life { #[derive(Clone, Copy, Serialize, Deserialize)] pub enum Boundary { Constant, Wrap } #[derive(Clone, Serialize, Deserialize)] pub struct Config { pub boundary: Boundary, pub padding: usize, pub name: &'static str } impl Config { pub fn budget(&self) -> usize { 0 } } }",
     );
-    let rust = read(&root, "bindings/py/src/doors.rs");
+    let rust = read(&root, "crates/life/py/src/doors.rs");
     assert!(rust.contains(
-        "pub fn set_boundary(&mut self, value: PySerde<mrly::life::Boundary>) -> PyResult<()> {"
+        "pub fn set_boundary(&mut self, value: PySerde<mrly_life::Boundary>) -> PyResult<()> {"
     ));
     assert!(rust.contains("self.0.padding = value;"));
     assert!(!rust.contains("set_name"));
-    assert!(read(&root, "bindings/py/python/mrly/life/__init__.pyi").contains("@boundary.setter"));
-    let wasm = read(&root, "bindings/js/units/life/src/lib.rs");
+    assert!(
+        read(&root, "crates/life/py/python/mrly/life/__init__.pyi").contains("@boundary.setter")
+    );
+    let wasm = read(&root, "crates/life/js/src/lib.rs");
     assert!(
         wasm.contains("pub fn set_boundary(&mut self, value: JsValue) -> Result<(), JsValue> {")
     );
     assert!(wasm.contains("self.inner.padding = value;"));
     assert!(!wasm.contains("set_name"));
-    let dts = read(&root, "bindings/js/life.d.ts");
+    let dts = read(&root, "crates/life/js/index.d.ts");
     assert!(dts.contains("set boundary(value: Boundary);"));
     assert!(dts.contains("readonly name: string;"));
     std::fs::remove_dir_all(root).ok();
@@ -719,11 +729,11 @@ fn default_crosses_as_a_static_on_the_type_and_an_alias_fixes_n() {
     );
     let root = scratch("default", lib);
     assert!(
-        read(&root, "bindings/py/python/mrly/tile/__init__.pyi")
+        read(&root, "crates/tile/py/python/mrly/tile/__init__.pyi")
             .contains("class Config2d:\n    @staticmethod\n    def default() -> dict[str, Any]:")
     );
-    assert!(read(&root, "bindings/js/tile.d.ts").contains("static default(): Field;"));
-    let cli: String = read(&root, &doors()).split_whitespace().collect();
+    assert!(read(&root, "crates/tile/js/index.d.ts").contains("static default(): Field;"));
+    let cli: String = read(&root, &doors("tile")).split_whitespace().collect();
     assert!(cli.contains("name:\"tile.Config2d.default\",signature:\"()->tile.ConfigNd\""));
     std::fs::remove_dir_all(root).ok();
 }
@@ -734,10 +744,10 @@ fn the_hand_rng_declares_choice_and_shuffle_in_both_bridges() {
         "rng",
         "pub mod core { pub struct Rng { s: u64 } impl Rng { pub fn new(seed: u64) -> Rng { Rng { s: seed } } pub fn choice<'a, T>(&mut self, items: &'a [T]) -> &'a T { &items[0] } pub fn shuffle<T>(&mut self, seq: &mut [T]) {} } }",
     );
-    let stub = read(&root, "bindings/py/python/mrly/core/__init__.pyi");
+    let stub = read(&root, "crates/core/py/python/mrly/core/__init__.pyi");
     assert!(stub.contains("    def choice(self, seq: Any) -> Any:"));
     assert!(stub.contains("    def shuffle(self, seq: list[Any]) -> None:"));
-    let dts = read(&root, "bindings/js/core.d.ts");
+    let dts = read(&root, "crates/core/js/index.d.ts");
     assert!(dts.contains("    choice<T>(items: ArrayLike<T>): T;"));
     assert!(dts.contains("    shuffle<T>(items: T[]): void;"));
     std::fs::remove_dir_all(root).ok();
@@ -747,7 +757,7 @@ fn the_hand_rng_declares_choice_and_shuffle_in_both_bridges() {
 fn a_nested_type_without_serde_shuts_its_cli_door() {
     let lib = "pub mod num { #[derive(Clone)] pub struct Pair { pub n: u8 } impl Pair { pub fn size(&self) -> u8 { 0 } } pub fn pairs() -> Vec<Pair> { vec![] } }";
     let root = scratch("nested", lib);
-    let cli: String = read(&root, &doors()).split_whitespace().collect();
+    let cli: String = read(&root, &doors("num")).split_whitespace().collect();
     assert!(cli.contains(
         "signature:\"()->[num.Pair]\",docs:\"\",uncallable:Some(\"num::PairhasnoSerialize\"),door:None"
     ));
@@ -759,12 +769,13 @@ fn a_watched_run_names_the_stale_files_and_writes_nothing() {
     let lib = "pub mod core { pub fn add(a: u8, b: u8) -> u8 { a + b } }";
     let root = scratch("check", lib);
     let m = manifest(lib);
-    let (old, gone) = ("bindings/py/src/doors.rs", "bindings/js/core.js");
+    let (old, gone) = ("crates/core/py/src/doors.rs", "crates/core/js/index.js");
     std::fs::write(root.join(old), "stale").expect("a stale file");
     std::fs::remove_file(root.join(gone)).expect("a missing file");
     disk::watch();
-    py::write(&m, &root, &layout()).expect("the python bridge checks");
-    js::write(&m, &root, &layout()).expect("the js bridge checks");
+    let leaf = leaf_of("core", &["core"]);
+    py::write_leaf(&m, &root, &leaf).expect("the python bridge checks");
+    js::write_leaf(&m, &root, &leaf).expect("the js bridge checks");
     assert_eq!(disk::stale(), [root.join(old), root.join(gone)]);
     assert_eq!(read(&root, old), "stale");
     assert!(!root.join(gone).exists());
@@ -776,9 +787,9 @@ fn generated_rust_is_saved_formatted() {
     let lib = "pub mod core { pub fn add(a: u8, b: u8) -> u8 { a + b } }";
     let root = scratch("fmt", lib);
     for file in [
-        &*doors(),
-        "bindings/py/src/doors.rs",
-        "bindings/js/units/core/src/lib.rs",
+        &*doors("core"),
+        "crates/core/py/src/doors.rs",
+        "crates/core/js/src/lib.rs",
     ] {
         let text = read(&root, file);
         assert_eq!(disk::rustfmt(&text).expect("rustfmt runs"), text, "{file}");
@@ -796,17 +807,15 @@ fn every_copy_takes_the_manifest_version() {
     std::fs::write(root.join("Cargo.toml"), cargo).expect("a workspace");
     let mut m = manifest(lib);
     m.version = "1.2.3".into();
-    js::write(&m, &root, &layout()).expect("the js bridge writes");
-    version::write(&m, &root, &layout()).expect("the pins write");
-    assert!(
-        read(&root, "bindings/js/units/core/Cargo.toml").contains("\nversion.workspace = true\n")
-    );
+    js::write_leaf(&m, &root, &leaf_of("core", &["core"])).expect("the js bridge writes");
+    version::write(&root, &m.version).expect("the pins write");
+    assert!(read(&root, "crates/core/js/Cargo.toml").contains("\nversion.workspace = true\n"));
     assert_eq!(
         read(&root, "Cargo.toml"),
         format!("{}{other}", pins.replace("=0.1.0", "=1.2.3"))
     );
     let package: Value =
-        serde_json::from_str(&read(&root, "bindings/js/package.json")).expect("a package");
+        serde_json::from_str(&read(&root, "crates/core/js/package.json")).expect("a package");
     assert_eq!(package["version"], "1.2.3");
     std::fs::remove_dir_all(root).ok();
 }
@@ -850,10 +859,14 @@ fn a_break_needs_the_minor_under_one_and_the_major_from_one() {
 }
 
 #[test]
-fn the_bump_reads_the_tagged_manifest_where_the_bridge_lives() {
+fn the_bump_reads_each_leaf_manifest_at_the_tag() {
     let root = std::env::temp_dir().join(format!("bridge-bump-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
-    let file = root.join(layout().manifest);
+    let leaves = [(
+        "core".to_string(),
+        PathBuf::from("crates/core/manifest.json"),
+    )];
+    let file = root.join(&leaves[0].1);
     std::fs::create_dir_all(file.parent().expect("a folder")).expect("a scratch root");
     let git = |args: &[&str]| {
         let done = std::process::Command::new("git")
@@ -877,23 +890,92 @@ fn the_bump_reads_the_tagged_manifest_where_the_bridge_lives() {
     git(&["commit", "-q", "-m", "one"]);
     git(&["tag", "v0.1.0"]);
     write("0.1.1", "u8");
-    assert_eq!(version::bump(&root, &layout().manifest), Ok(()));
+    assert_eq!(version::bump(&root, &leaves), Ok(()));
     write("0.1.1", "u16");
-    let refused = version::bump(&root, &layout().manifest).expect_err("a break under a patch");
+    let refused = version::bump(&root, &leaves).expect_err("a break under a patch");
     assert!(refused.contains("needs 0.2.0"), "{refused}");
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_tag_before_the_split_reads_the_bridge_manifest_cut_to_the_unit() {
+    let root = std::env::temp_dir().join(format!("bridge-split-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let git = |args: &[&str]| {
+        let done = std::process::Command::new("git")
+            .arg("-C")
+            .arg(&root)
+            .args(["-c", "user.name=bridge"])
+            .args(["-c", "user.email=bridge@localhost"])
+            .args(["-c", "commit.gpgsign=false"])
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(done.status.success(), "git {args:?}");
+    };
+    let at = |module: &str, path: &str, ret: &str| {
+        let mut f = entry(path, ret, "ok");
+        f["module"] = json!(module);
+        f
+    };
+    let save = |path: &str, text: Value| {
+        let file = root.join(path);
+        std::fs::create_dir_all(file.parent().expect("a folder")).expect("a folder");
+        std::fs::write(file, text.to_string()).expect("a manifest");
+    };
+    save(
+        "crates/bridge/manifest.json",
+        json!({"version": "0.1.0", "functions": [at("core", "core::a", "u8"), at("num", "num::b", "u8")]}),
+    );
+    git(&["init", "-q"]);
+    git(&["add", "-A"]);
+    git(&["commit", "-q", "-m", "one"]);
+    git(&["tag", "v0.1.0"]);
+    let leaves = [(
+        "core".to_string(),
+        PathBuf::from("crates/core/manifest.json"),
+    )];
+    let core = |ret: &str| json!({"version": "0.1.1", "functions": [at("core", "core::a", ret)]});
+    save("crates/core/manifest.json", core("u8"));
+    assert_eq!(version::bump(&root, &leaves), Ok(()));
+    save("crates/core/manifest.json", core("u16"));
+    let refused = version::bump(&root, &leaves).expect_err("a break under a patch");
+    assert!(refused.contains("needs 0.2.0"), "{refused}");
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_crate_without_a_unit_is_refused() {
+    let root = std::env::temp_dir().join(format!("bridge-unit-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    for dir in ["crates/bridge", "crates/whole"] {
+        std::fs::create_dir_all(root.join(dir)).expect("a folder");
+    }
+    std::fs::write(root.join("Cargo.lock"), "").expect("a lock");
+    std::fs::write(root.join("crates/bridge/bridge.toml"), "crates = \"..\"\n").expect("a config");
+    std::fs::write(root.join("crates/whole/bridge.toml"), "").expect("a config");
+    let refused = config::load(&root.join("crates/bridge"))
+        .err()
+        .expect("a crate without a unit");
+    assert!(refused.ends_with("a crate without a unit"), "{refused}");
     std::fs::remove_dir_all(root).ok();
 }
 
 fn crate_files() -> Files {
     let config = config::load(&config::home()).expect("the bridge config loads");
-    parse::load_crates(&config.mounts).expect("the crate loads")
+    let units: Vec<String> = config.mounts.iter().map(|m| m.unit.clone()).collect();
+    parse::load_crates(&config.mounts, &units).expect("the crates load")
 }
 
 #[test]
 fn the_crate_parses_the_same_twice() {
     let files = crate_files();
-    let a = resolve::build(&files, "0").expect("first").manifest;
-    let b = resolve::build(&files, "0").expect("second").manifest;
+    let a = resolve::build(&files, "mrly-test", "0")
+        .expect("first")
+        .manifest;
+    let b = resolve::build(&files, "mrly-test", "0")
+        .expect("second")
+        .manifest;
     assert_eq!(a, b);
     assert_eq!(
         serde_json::to_string(&a).unwrap(),
@@ -904,7 +986,7 @@ fn the_crate_parses_the_same_twice() {
 #[test]
 fn function_entries_match_the_pub_fn_grep() {
     let files = crate_files();
-    let built = resolve::build(&files, "0").expect("the crate builds");
+    let built = resolve::build(&files, "mrly-test", "0").expect("the crate builds");
     let grep: usize = files
         .values()
         .map(|t| {
@@ -953,7 +1035,10 @@ fn function_entries_match_the_pub_fn_grep() {
         .filter(|t| matches!(t.cross, TypeCross::Enum { named: true, .. }))
         .count();
     assert_eq!(
-        written + built.macro_body_fns,
+        written
+            + parse::parse(&files)
+                .expect("the crates parse")
+                .macro_body_fns,
         grep,
         "every grep line is a written pub fn or sits inside macro_rules"
     );
@@ -970,7 +1055,7 @@ fn mounted(files: &[(&str, &str)]) -> Manifest {
         .iter()
         .map(|(key, text)| (key.to_string(), text.to_string()))
         .collect();
-    resolve::build(&files, "0.0.0")
+    resolve::build(&files, "mrly-test", "0.0.0")
         .expect("the crates build")
         .manifest
 }
@@ -1051,7 +1136,7 @@ fn a_class_field_of_another_units_class_is_a_js_skip() {
 
 #[test]
 fn no_two_crossing_types_print_the_same_name() {
-    let m = resolve::build(&crate_files(), "0")
+    let m = resolve::build(&crate_files(), "mrly-test", "0")
         .expect("the crate builds")
         .manifest;
     let mut seen: std::collections::BTreeMap<String, String> = Default::default();
@@ -1134,10 +1219,10 @@ fn the_bridge_marks_every_file_it_writes_as_generated_and_keeps_other_lines() {
     assert!(made.starts_with("*.sh text eol=lf\n"));
     assert!(!made.contains("gone.js"));
     for file in [
-        &*doors(),
-        "bindings/js/core.js",
-        "bindings/js/package.json",
-        "bindings/py/src/doors.rs",
+        &*doors("core"),
+        "crates/core/js/index.js",
+        "crates/core/js/package.json",
+        "crates/core/py/src/doors.rs",
     ] {
         assert!(
             made.contains(&format!("\n{file} linguist-generated=true\n")),
@@ -1151,17 +1236,17 @@ fn the_bridge_marks_every_file_it_writes_as_generated_and_keeps_other_lines() {
 #[test]
 fn an_orphan_is_a_listed_file_the_run_did_not_write_and_nothing_else() {
     let root = scratch("gone", "pub mod core { pub fn f() {} }");
-    let js = root.join("bindings/js");
+    let js = root.join("crates/core/js");
     for file in ["gone.d.ts", "gone.js", "hand.js", "hand.d.ts"] {
         std::fs::write(js.join(file), "").expect("a file");
     }
     let before = [
-        "bindings/js/core.js",
-        "bindings/js/gone.d.ts",
-        "bindings/js/gone.js",
-        "bindings/js/missing.js",
-        "bindings/js/*.d.ts",
-        "../bindings/js/hand.js",
+        "crates/core/js/index.js",
+        "crates/core/js/gone.d.ts",
+        "crates/core/js/gone.js",
+        "crates/core/js/missing.js",
+        "crates/core/js/*.d.ts",
+        "../crates/core/js/hand.js",
     ]
     .map(|path| format!("{path} linguist-generated=true\n"))
     .concat();
@@ -1178,7 +1263,7 @@ fn a_stub_name_that_shadows_a_builtin_type_qualifies_the_builtin() {
         "shadow",
         "pub mod core { pub fn bytes(data: Vec<u8>) -> Vec<u8> { data } pub fn sum(data: Vec<u8>) -> u8 { 0 } }",
     );
-    let stub = read(&root, "bindings/py/python/mrly/core/__init__.pyi");
+    let stub = read(&root, "crates/core/py/python/mrly/core/__init__.pyi");
     assert!(stub.starts_with("import builtins\n"), "{stub}");
     assert!(
         stub.contains("def bytes(data: builtins.bytes) -> builtins.bytes:"),
@@ -1193,7 +1278,7 @@ fn a_stub_name_that_shadows_a_builtin_type_qualifies_the_builtin() {
 
 #[test]
 fn every_hand_row_names_a_hand_type_of_the_crate() {
-    let m = resolve::build(&crate_files(), "0")
+    let m = resolve::build(&crate_files(), "mrly-test", "0")
         .expect("the crate builds")
         .manifest;
     for row in hands() {
@@ -1232,4 +1317,131 @@ fn a_bridge_toml_holds_strings_lists_and_hand_rows_and_nothing_else() {
     assert_eq!(doc.arrays[0].1["rust"], Value::List(vec![]));
     assert!(parse("unit = core\n").is_err());
     assert!(parse("unit = \"a\"\nunit = \"b\"\n").is_err());
+}
+
+// LEAVES
+
+fn leaf_of(unit: &str, seen: &[&str]) -> leaf::Leaf {
+    let dir = |unit: &str, end: &str| PathBuf::from(format!("crates/{unit}/{end}"));
+    leaf::Leaf {
+        unit: unit.into(),
+        manifest: dir(unit, "manifest.json"),
+        js: dir(unit, "js"),
+        py: dir(unit, "py"),
+        cli: dir(unit, "cli"),
+        seen: seen.iter().map(|s| s.to_string()).collect(),
+        pys: vec![],
+        keys: vec![],
+        hand: "core".into(),
+        base: "core".into(),
+        hands: leaf::Hands {
+            js: dir("core", "js/hand"),
+            py: dir("core", "py/hand"),
+            cli: dir("core", "cli/hand"),
+        },
+    }
+}
+
+fn scratch_leaf(name: &str, lib: &str, leaf: &leaf::Leaf) -> PathBuf {
+    let root = std::env::temp_dir().join(format!("bridge-leaf-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    write_leaf(&manifest(lib), &root, leaf);
+    root
+}
+
+const STREAM: &str = "pub mod core { pub mod rng { #[derive(Clone, Serialize, Deserialize)] pub struct Rng { s: u64 } impl Rng { pub fn unit(&mut self) -> f64 { 0.0 } } } pub use rng::Rng; pub fn coin(rng: &mut Rng) -> bool { true } } pub mod math { pub fn noise(n: usize, rng: &mut crate::core::Rng) -> u8 { 0 } }";
+
+#[test]
+fn a_leaf_calls_its_units_crates_by_name() {
+    let root = scratch_leaf("names", STREAM, &leaf_of("math", &["core", "math"]));
+    let js = read(&root, "crates/math/js/src/lib.rs");
+    assert!(js.contains("mrly_math::noise(n, rng.stream())"), "{js}");
+    assert!(js.contains("use mrly_core_js_hand as hand;"), "{js}");
+    let cli = read(&root, "crates/math/cli/src/doors.gen.rs");
+    assert!(cli.contains("mrly_core::Rng::new(seed("), "{cli}");
+    for text in [js, cli, read(&root, "crates/math/py/src/doors.rs")] {
+        assert!(!text.contains("mrly::"), "{text}");
+    }
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn outside_core_a_python_stream_crosses_by_its_state() {
+    let math = scratch_leaf("streams", STREAM, &leaf_of("math", &["core", "math"]));
+    let doors = read(&math, "crates/math/py/src/doors.rs");
+    assert!(doors.contains("rng: &Bound<'_, PyAny>"), "{doors}");
+    assert!(doors.contains("crate::hand::rng_from_py(rng)?"), "{doors}");
+    assert!(
+        doors.contains("crate::hand::rng_write_back(rng, &rng_owned)?"),
+        "{doors}"
+    );
+    let core = scratch_leaf("own-stream", STREAM, &leaf_of("core", &["core"]));
+    let doors = read(&core, "crates/core/py/src/doors.rs");
+    assert!(doors.contains("rng: &mut PyRng"), "{doors}");
+    assert!(doors.contains("m.add_class::<PyRng>()?;"), "{doors}");
+    std::fs::remove_dir_all(math).ok();
+    std::fs::remove_dir_all(core).ok();
+}
+
+#[test]
+fn a_leaf_python_package_is_a_portion_of_the_mrly_namespace() {
+    let root = scratch_leaf("namespace", STREAM, &leaf_of("math", &["core", "math"]));
+    let init = read(&root, "crates/math/py/python/mrly/math/__init__.py");
+    assert!(
+        init.starts_with("from mrly.math._math.math import *\n"),
+        "{init}"
+    );
+    assert!(!root.join("crates/math/py/python/mrly/__init__.py").exists());
+    assert!(!root.join("crates/math/py/python/mrly/core").exists());
+    let lib = read(&root, "crates/math/py/src/lib.rs");
+    assert!(lib.contains("fn _math("), "{lib}");
+    let project = read(&root, "crates/math/py/pyproject.toml");
+    assert!(
+        project.contains("module-name = \"mrly.math._math\""),
+        "{project}"
+    );
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_leaf_leaves_out_a_class_field_of_another_unit_in_python() {
+    let lib = "pub mod core { pub struct Paint { pub n: u8 } impl Paint { pub fn ink(&self) -> u8 { 0 } } } pub mod tile { pub struct Variation { pub paint: crate::core::Paint, pub size: u8 } impl Variation { pub fn grow(&self) -> u8 { 0 } } }";
+    let root = scratch_leaf("field", lib, &leaf_of("tile", &["core", "tile"]));
+    let doors = read(&root, "crates/tile/py/src/doors.rs");
+    assert!(doors.contains("#[pyo3(name = \"size\")]"), "{doors}");
+    assert!(!doors.contains("#[pyo3(name = \"paint\")]"), "{doors}");
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_leaf_homes_an_item_in_its_own_unit_when_the_re_exporter_is_out_of_reach() {
+    let config = config::load(&config::home()).expect("the bridge config loads");
+    let leaves = leaf::leaves(&config.mounts).expect("the leaves load");
+    let math = leaves
+        .iter()
+        .find(|l| l.unit == "math")
+        .expect("a math leaf");
+    assert_eq!(math.seen, ["core", "math", "num"]);
+    let m = leaf::manifest(&config.mounts, math, "0")
+        .expect("the math leaf builds")
+        .manifest;
+    assert!(
+        m.types
+            .iter()
+            .any(|t| t.path == "math::bang::catalog::Catalog")
+    );
+    assert!(m.types.iter().all(|t| !t.path.starts_with("tile::")));
+}
+
+#[test]
+fn every_leaf_writes_the_same_twice() {
+    let config = config::load(&config::home()).expect("the bridge config loads");
+    let root = std::env::temp_dir().join(format!("bridge-leaves-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let built = leaf::build(&config.mounts, "0").expect("the leaves build");
+    leaf::write(&built, &root).expect("the leaves write");
+    disk::watch();
+    leaf::write(&built, &root).expect("the leaves write again");
+    assert_eq!(disk::stale(), Vec::<PathBuf>::new());
+    std::fs::remove_dir_all(root).ok();
 }

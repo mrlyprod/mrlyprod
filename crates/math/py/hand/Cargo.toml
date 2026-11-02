@@ -1,0 +1,14 @@
+[package]
+name = "mrly-math-py-hand"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The hand-written crossing of the math types: codes, 2d and 3d cells and hexagonal cells, over the core crossing."
+publish = false
+
+[dependencies]
+mrly-core.workspace = true
+mrly-math.workspace = true
+mrly-core-py-hand = { path = "../../../core/py/hand" }
+pyo3 = { version = "0.29", features = ["abi3-py310"] }

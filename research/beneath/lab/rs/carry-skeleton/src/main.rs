@@ -1,4 +1,4 @@
-use mrly::math::memory::{allowed_windows, kappa, perron, transfer, Rule};
+use mrly_math::memory::{allowed_windows, kappa, perron, transfer, Rule};
 use std::collections::BTreeSet;
 use std::time::Instant;
 

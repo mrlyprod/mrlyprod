@@ -6,24 +6,30 @@ pub const FILE: &str = "bridge.toml";
 
 const SKIP: &str = "skip.txt";
 
+const MANIFEST: &str = "manifest.json";
+
 pub struct Config {
     pub root: PathBuf,
-    pub layout: Layout,
+    pub skip: PathBuf,
     pub mounts: Vec<Mount>,
     pub hands: Vec<Hand>,
 }
 
-pub struct Layout {
+pub struct Mount {
+    pub unit: String,
+    pub src: PathBuf,
+    pub leaf: Option<Leaf>,
+}
+
+pub struct Leaf {
+    pub unit: String,
+    pub src: PathBuf,
     pub manifest: PathBuf,
-    pub skip: PathBuf,
     pub js: PathBuf,
     pub py: PathBuf,
     pub cli: PathBuf,
-}
-
-pub struct Mount {
-    pub unit: Option<String>,
-    pub src: PathBuf,
+    pub uses: Vec<String>,
+    pub hand: bool,
 }
 
 pub fn home() -> PathBuf {
@@ -39,7 +45,6 @@ pub fn load(home: &Path) -> Result<Config> {
         .to_path_buf();
     let mut own = read(home)?;
     let crates = normal(&home.join(text(&mut own.top, "crates", home)?));
-    let manifest = inside(&root, &home.join(text(&mut own.top, "manifest", home)?))?;
     done(&own.top, home)?;
     let mut dirs: Vec<PathBuf> = std::fs::read_dir(&crates)
         .map_err(|e| format!("{}: {e}", crates.display()))?
@@ -48,31 +53,37 @@ pub fn load(home: &Path) -> Result<Config> {
         .filter(|dir| dir.join(FILE).is_file() && normal(dir) != normal(home))
         .collect();
     dirs.sort();
-    let mut facade = None;
     let mut mounts = Vec::new();
     let mut hands = Vec::new();
     for dir in dirs {
         let mut doc = read(&dir)?;
         let src = dir.join("src");
         let Some(unit) = doc.top.remove("unit") else {
-            if facade.is_some() {
-                return Err(format!("{}: a second crate without a unit", dir.display()));
-            }
-            let mut out = |key: &str| -> Result<PathBuf> {
-                inside(&root, &dir.join(text(&mut doc.top, key, &dir)?))
-            };
-            facade = Some((out("js")?, out("py")?, out("cli")?));
-            done(&doc.top, &dir)?;
-            if !doc.arrays.is_empty() {
-                return Err(format!("{}: hand rows belong to a unit", dir.display()));
-            }
-            mounts.insert(0, Mount { unit: None, src });
-            continue;
+            return Err(format!(
+                "{}: a crate without a unit",
+                dir.join(FILE).display()
+            ));
         };
         let Value::Text(unit) = unit else {
             return Err(format!("{}: unit is a string", dir.display()));
         };
+        let outs = match ["js", "py", "cli"].map(|key| doc.top.contains_key(key)) {
+            [false, false, false] => None,
+            [true, true, true] => {
+                let mut out = |key: &str| -> Result<PathBuf> {
+                    inside(&root, &dir.join(text(&mut doc.top, key, &dir)?))
+                };
+                Some((out("js")?, out("py")?, out("cli")?))
+            }
+            _ => {
+                return Err(format!(
+                    "{}: js, py and cli come together",
+                    dir.join(FILE).display()
+                ));
+            }
+        };
         done(&doc.top, &dir)?;
+        let owns = !doc.arrays.is_empty();
         for (name, mut row) in doc.arrays {
             if name != "hand" {
                 return Err(format!("{}: unknown table [[{name}]]", dir.display()));
@@ -83,26 +94,51 @@ pub fn load(home: &Path) -> Result<Config> {
             }
             hands.push(row);
         }
-        mounts.push(Mount {
-            unit: Some(unit),
-            src,
-        });
+        let leaf = match outs {
+            Some((js, py, cli)) => Some(Leaf {
+                uses: uses(&dir)?,
+                src: inside(&root, &src)?,
+                manifest: inside(&root, &dir.join(MANIFEST))?,
+                unit: unit.clone(),
+                js,
+                py,
+                cli,
+                hand: owns,
+            }),
+            None => None,
+        };
+        mounts.push(Mount { unit, src, leaf });
     }
-    let (js, py, cli) = facade.ok_or("no crate without a unit: the facade")?;
-    mounts[1..].sort_by(|a, b| a.unit.cmp(&b.unit));
+    mounts.sort_by(|a, b| a.unit.cmp(&b.unit));
     let skip = inside(&root, &home.join(SKIP))?;
     Ok(Config {
         root,
-        layout: Layout {
-            manifest,
-            skip,
-            js,
-            py,
-            cli,
-        },
+        skip,
         mounts,
         hands,
     })
+}
+
+fn uses(dir: &Path) -> Result<Vec<String>> {
+    let path = dir.join("Cargo.toml");
+    let body = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut table = "";
+    let mut out = Vec::new();
+    for line in body.lines().map(str::trim) {
+        if line.starts_with('[') {
+            table = line;
+        } else if table == "[dependencies]"
+            && let Some(rest) = line.strip_prefix("mrly-")
+        {
+            let unit: String = rest
+                .chars()
+                .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+                .collect();
+            out.push(unit);
+        }
+    }
+    out.sort();
+    Ok(out)
 }
 
 fn read(dir: &Path) -> Result<toml::Doc> {
@@ -170,10 +206,6 @@ fn inside(root: &Path, path: &Path) -> Result<PathBuf> {
         .strip_prefix(normal(root))
         .map(Path::to_path_buf)
         .map_err(|_| format!("{} lies outside the workspace", path.display()))
-}
-
-pub fn climb(dir: &Path) -> usize {
-    dir.components().count()
 }
 
 pub fn slashed(path: &Path) -> String {

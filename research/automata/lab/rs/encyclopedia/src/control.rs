@@ -3,8 +3,8 @@ use crate::engine::{torus, Fate, Rule};
 use crate::grid::Grid;
 use crate::mask::Kernel;
 use crate::recipe::Side;
-use mrly::life::Source;
-use mrly::Result;
+use mrly_life::Source;
+use mrly_core::Result;
 
 pub type Table = Vec<(String, [usize; 4])>;
 

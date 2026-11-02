@@ -1,13 +1,13 @@
 use crate::quasi::{degree, fit, fraction, leading, text};
 use crate::tables::write_csv;
-use mrly::math::bang::baseq::{
+use mrly_math::bang::baseq::{
     canonical, distinct_designs, group, group_order, orbit, representatives, WALK_LIMIT,
 };
-use mrly::math::bang::factory::{corners_to_code, levels_code, residue_corners};
-use mrly::math::bang::universe;
-use mrly::math::bang::Code;
-use mrly::math::counts::{fill, void};
-use mrly::math::rules::render;
+use mrly_math::bang::factory::{corners_to_code, levels_code, residue_corners};
+use mrly_math::bang::universe;
+use mrly_math::bang::Code;
+use mrly_math::counts::{fill, void};
+use mrly_math::rules::render;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 

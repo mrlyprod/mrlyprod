@@ -4,6 +4,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-mrly = { path = "../../../crates/mrly" }
+mrly-math = { path = "../../../crates/math" }
+mrly-num = { path = "../../../crates/num" }
 
 [workspace]

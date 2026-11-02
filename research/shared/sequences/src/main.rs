@@ -1,4 +1,4 @@
-use mrly::core::error::Result;
+use mrly_core::error::Result;
 use sequences::merge::{self, LONG};
 use sequences::oeis::{self, Search};
 use sequences::{io, page_rows, root, walk, write};

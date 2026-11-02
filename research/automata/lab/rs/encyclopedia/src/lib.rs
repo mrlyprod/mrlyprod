@@ -21,7 +21,7 @@ pub use mask::{Kernel, MaskSpec};
 pub use readings::{readings, short};
 pub use recipe::{Mode, Recipe, Side};
 
-pub fn run_named(name: &str) -> mrly::Result<(Recipe, Run)> {
+pub fn run_named(name: &str) -> mrly_core::Result<(Recipe, Run)> {
     let recipe = Recipe::parse(name)?;
     let setup = Setup::of(&recipe)?;
     Ok((recipe, run(&setup)))
