@@ -3198,6 +3198,22 @@ button.cell[data-design="mrly"]:hover {
   background: var(--hue, var(--gray));
 }
 
+@media (min-width: 560px) {
+  .widgets[data-design="mrly"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .widgets[data-design="mrly"] > :not(.widget[data-size="small"]) {
+    grid-column: 1 / -1;
+  }
+
+  .widgets[data-design="mrly"] .widget[data-size="small"] .body {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
 .widgets[data-design="mrly"] .widget[data-held="true"] {
   opacity: 0.66;
 }

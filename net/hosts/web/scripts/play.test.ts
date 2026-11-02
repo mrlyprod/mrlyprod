@@ -38,6 +38,7 @@ test("discovery finds the reducer apps and no other", async () => {
     "sleep",
     "snake",
     "swirl",
+    "twig",
   ])
     expect(found).toContain(id);
   for (const id of ["apollonian", "ulam", "designs", "shared"]) expect(found).not.toContain(id);

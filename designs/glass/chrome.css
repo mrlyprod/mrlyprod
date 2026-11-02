@@ -1981,6 +1981,109 @@ th {
   overflow-wrap: anywhere;
 }
 
+/* HUB */
+
+.hub {
+  max-width: 46rem;
+  margin-bottom: var(--s6);
+  line-height: var(--lh3);
+}
+.hub :is(h2, h3) {
+  margin: var(--s6) 0 var(--s2);
+  line-height: var(--lh1);
+}
+.hub :is(p, ul, ol, pre, blockquote) {
+  margin: 0 0 var(--s4);
+}
+.hub :is(ul, ol) {
+  padding-left: 1.25em;
+}
+.hub li {
+  margin: var(--s1) 0;
+}
+.hub li::marker {
+  color: var(--dim);
+}
+.hub :not(pre) > code {
+  padding: 0.1em 0.3em;
+  border-radius: var(--r-inset);
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+.hub pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  padding: var(--s4) var(--s5);
+  border: var(--hair);
+  border-radius: var(--r-control);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  font: var(--t2) / 1.5 var(--mono);
+  font-variant-ligatures: none;
+  tab-size: 4;
+}
+.hub pre code {
+  font: inherit;
+  white-space: inherit;
+}
+.kids {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: var(--s3);
+  margin: 0 0 var(--s6);
+}
+.kids > a {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-width: 0;
+  padding: var(--s2) var(--s2) var(--s3);
+  border: var(--hair);
+  border-radius: var(--r-panel);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  color: var(--fg);
+  text-decoration: none;
+  transition:
+    border-color var(--pace) var(--ease),
+    background var(--pace) var(--ease);
+}
+.kids > a:hover {
+  border-color: var(--accent);
+  background: var(--panel);
+  text-decoration: none;
+}
+.kids .art {
+  margin: 0 0 var(--s2);
+}
+.kids .art canvas,
+.kids span.art {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: var(--r-inset);
+  background: var(--art);
+  image-rendering: pixelated;
+}
+.kids span.art {
+  color: var(--dim);
+  font: 600 var(--t7) var(--sans);
+}
+.kids .name {
+  padding: 0 var(--s1);
+  font: 600 var(--t3) / var(--lh1) var(--sans);
+}
+.kids .text {
+  display: -webkit-box;
+  padding: 0 var(--s1);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: var(--dim);
+  font: var(--t2) / var(--lh2) var(--sans);
+}
+
 /* OPENER */
 
 .opener {
