@@ -4,33 +4,20 @@ import { paints } from "../../net/sdk/color.ts";
 import { Btn, Group } from "../../net/sdk/controls.tsx";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
-import type { Readout, Three } from "../../net/sdk/hooks.ts";
-import { useReroll, useThree } from "../../net/sdk/hooks.ts";
+import type { Readout } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
-import type { Opts, View } from "../../net/sdk/run.ts";
+import type { Scene as Made, Opts, View } from "../../net/sdk/run.ts";
 import type { Patch, Value } from "../../net/sdk/spec.ts";
 import type { Spot } from "../../net/sdk/touch.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
+import type { Three } from "../shared/three/three.ts";
+import { useThree } from "../shared/three/three.ts";
 import type { Facts, Flat, Graph, Seed } from "./engine.ts";
-import {
-  bounds,
-  deal,
-  design,
-  glimpse,
-  graphs,
-  solid as isSolid,
-  kindOf,
-  lay,
-  plane,
-  SETS,
-  spaceOf,
-  turn,
-} from "./engine.ts";
-import type { Graphs, Handled, Net, Relaxed } from "./scene.ts";
+import { bounds, design, glimpse, graphs, solid as isSolid, kindOf, lay, plane, SETS, spaceOf } from "./engine.ts";
+import type { Graphs, Net, Relaxed } from "./scene.ts";
 import { make, name } from "./scene.ts";
 
 /* TYPES */
@@ -69,8 +56,8 @@ export type PaneProps = {
   onPose: (pose: string) => void;
 };
 
-export type Props = Pick<WidgetProps<Mathy, Handled>, "onChange"> &
-  Partial<Pick<WidgetProps<Mathy, Handled>, "onReady" | "onExport" | "onStatus" | "units">> & {
+export type Props = Pick<WidgetProps<Mathy, Made>, "onChange"> &
+  Partial<Pick<WidgetProps<Mathy, Made>, "onReady" | "onExport" | "onStatus" | "units">> & {
     value: Graphs;
     three?: Three | null;
   };
@@ -252,15 +239,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
     };
     handle.canvas?.addEventListener?.("wheel", spin, { passive: false });
     wheel.current = () => handle.canvas?.removeEventListener?.("wheel", spin);
-    onReady?.({
-      ...handle,
-      toggle: relax,
-      deeper: (by: number) => tell.current({ level: now.current.level + by }),
-      next: (by: number) => tell.current({ graph: turn(now.current, by) }),
-    });
+    onReady?.({ ...handle, toggle: relax });
   };
   useEffect(() => () => wheel.current?.(), []);
-  useReroll(value.seed, (seed) => math && tell.current(deal(math, now.current, rng(seed))));
   const have = Boolean(seen);
   useEffect(() => {
     if (!have) return undefined;

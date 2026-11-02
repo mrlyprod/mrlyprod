@@ -1,7 +1,8 @@
 import type { Site } from "site:routes";
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import { PREFIX, stored, subscribe, write } from "../../shell/prefs.ts";
+import { design } from "../../shell/active.ts";
+import { KNOB, PREFIX, stored, subscribe, write } from "../../shell/prefs.ts";
 import { Action, Pane as Frame, Item, Note, Section } from "./ui.tsx";
 
 /* TYPES */
@@ -27,9 +28,7 @@ export const FIND = [
 
 const NAMES: Partial<Record<string, string>> = {
   theme: "Appearance",
-  font: "Font",
   tint: "Accent colour",
-  glass: "Glass",
   icons: "Icon style",
   "icons-always": "Icons always dark",
   magnify: "Dock magnification",
@@ -58,9 +57,11 @@ const NAMES: Partial<Record<string, string>> = {
   knobs: "Knobs width",
 };
 
+const KNOBS = new Map((design.knobs?.own ?? []).map((one) => [`${KNOB}${one.id}`, one.name]));
+
 const name = (key: string) => {
   const id = key.slice(PREFIX.length);
-  return NAMES[id] ?? id;
+  return KNOBS.get(key) ?? NAMES[id] ?? id;
 };
 
 /* SIZE */
@@ -159,7 +160,7 @@ export default function Pane({ site }: { site: Site }) {
     if (!file) return;
     const rows = parse(await file.text().catch(() => ""));
     setPlan(rows);
-    setFault(rows ? "" : "That file is not a Mrly data export.");
+    setFault(rows ? "" : `That file is not a ${site.title} data export.`);
   }
 
   function load(rows: [string, string][]) {

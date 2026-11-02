@@ -25,7 +25,7 @@ export type Knobs = {
 
 export type Shown = Pick<Knobs, "design" | "number">;
 
-export type Sleep = ReturnType<typeof make> & { step?: (by: number) => void };
+export type Sleep = ReturnType<typeof make>;
 
 const HIDE = () => false;
 
@@ -88,7 +88,7 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowUp"], label: "Previous tile", act: "prev" },
     { key: ["ArrowRight", "ArrowDown"], label: "Next", act: "next" },
   ],
-  actions: { next: (scene) => scene.step?.(1), prev: (scene) => scene.step?.(-1) },
+  acts: { next: (value) => next(value, 1), prev: (value) => next(value, -1) },
 } satisfies Page<Ready & Units, Sleep>;
 
 export const SAVERS = [

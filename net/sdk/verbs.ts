@@ -1,4 +1,3 @@
-import { site } from "site:routes";
 import type { Readout } from "./hooks.ts";
 import type { Key } from "./keys.tsx";
 import type { Option, Patch, Row, Scalar, Spec, Units, Value } from "./spec.ts";
@@ -24,7 +23,7 @@ export type Verb = { name: string; title: string; args: Schema };
 
 export type Model<U = Units> = {
   id: string;
-  user?: string;
+  user: string;
   spec?: Spec<U>;
   keys?: readonly Key<never>[];
   value: Value;
@@ -37,8 +36,6 @@ export type Ports = { change: (patch: Patch) => void; run: (act: string) => unkn
 export type Read = { value: Value; status: Record<string, string> };
 
 type Acts = { act: string; title: string; keys: string[] };
-
-export const user = () => site.title.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 export const ALWAYS = ["reroll", "pause"] as const;
 
@@ -94,7 +91,7 @@ export function schema<U>(row: Row<U>, value: Value, units?: U): Schema {
 
 /* VERBS */
 
-const named = <U>(model: Model<U>, verb: string) => `${model.user ?? user()}.${model.id}.${verb}`;
+const named = <U>(model: Model<U>, verb: string) => `${model.user}.${model.id}.${verb}`;
 
 const shown = (row: Key<never>, value: Value) => (typeof row.label === "function" ? row.label(value, null) : row.label);
 

@@ -13,7 +13,7 @@ import type { View as Sight } from "../shared/fractal/view.ts";
 import { parse, print, spanOf, zoomOf } from "../shared/fractal/view.ts";
 import { blank, context } from "../shared/gl/gl2.ts";
 import type { Kind } from "./places.ts";
-import { DIVES, KINDS, PLACES } from "./places.ts";
+import { DIVES, KINDS, PLACES, roll } from "./places.ts";
 
 /* TYPES */
 
@@ -170,6 +170,7 @@ export const PAGE = {
     out: (handle) => handle.zoom?.(-1),
     julia: (handle) => handle.julia?.(),
   },
+  reroll: (value, seed) => go(roll(value.kind as Kind, seed)),
 } satisfies Page<Ready & Units, Steered>;
 
 const FAMOUS = PLACES.filter((one) => one.kind === "mandelbrot" && one.zoom > 0 && one.zoom <= DEPTHS.shallow - ROOM);

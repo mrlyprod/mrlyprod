@@ -9,13 +9,39 @@
 # OUTPUT
 data/
 dist/
+pkg/
 .cache/
+*.zip
 
 # RUST
 target/
+.cargo/
+*.rlib
+*.rmeta
+
+# WASM
+js/pkg/
+js/bun.lock
+site/wasm/
+net/mrly.net/wasm/
+net/mrly.net/wasm.next/
 
 # LEAN
 .lake/
+
+# NODE
+node_modules/
+.astro/
+.wrangler/
+
+# PYTHON
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
 # IDE
 .vscode/
@@ -23,12 +49,5 @@ target/
 # OS
 .DS_Store
 
-# NODE AND WASM
-node_modules/
-net/mrly.net/wasm/
-net/mrly.net/wasm.next/
-
-# PYTHON
-.venv/
-__pycache__/
-.pytest_cache/
+# LOCAL
+/local/

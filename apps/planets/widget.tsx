@@ -9,7 +9,7 @@ import { globe } from "../shared/space/globe.ts";
 import type { Named } from "../shared/space/worlds.ts";
 import { NAMES, world } from "../shared/space/worlds.ts";
 import type { Knobs, Planets } from "./scene.ts";
-import { make, named, next } from "./scene.ts";
+import { make, named } from "./scene.ts";
 
 /* TYPES */
 
@@ -25,10 +25,7 @@ const tag = (params: World) => {
 
 export function Widget({ value, onChange, onReady }: Props) {
   const now = useRef(value);
-  const tell = useRef(onChange);
   now.current = value;
-  tell.current = onChange;
-  const step = (by: number) => tell.current?.({ world: next(now.current.world, by) });
   const made = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, live: now }),
     [],
@@ -51,11 +48,7 @@ export function Widget({ value, onChange, onReady }: Props) {
   );
   return (
     <>
-      <Scene
-        make={made}
-        value={{ world: current, moons, rings, seed }}
-        onReady={(handle) => onReady?.(handle && { ...handle, step })}
-      />
+      <Scene make={made} value={{ world: current, moons, rings, seed }} onReady={onReady} />
       <Library name="Worlds">
         <Shelf name="Solar system" grid>
           {close.map(([name, params]) => tile(name, params, [name]))}

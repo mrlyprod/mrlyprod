@@ -1,14 +1,13 @@
 import { readFileSync, rmSync } from "node:fs";
 import { cpus, tmpdir } from "node:os";
-import { join, relative } from "node:path";
-import { type Ink, ink, type Pen, raster } from "../../../../draw/index.ts";
+import { join, relative, sep } from "node:path";
+import { type Ink, ink, type Pen, raster } from "@mrlyprod/draw";
 import { dark, light } from "../../../sdk/theme/theme.ts";
-import { mrly, roster } from "./build.ts";
-import { REPO } from "./home.ts";
+import { mrly, RESEARCH, roster } from "./build.ts";
+import { REPO, wasm } from "./home.ts";
 
 /* RECIPE */
 
-const CRATES = join(REPO, "crates");
 const OUT = join(tmpdir(), "figure-time");
 const SIZE: [number, number] = [1024, 1024];
 const WARM = 3;
@@ -33,8 +32,7 @@ async function draw({ file, theme }: Job): Promise<Done> {
   try {
     const figure: Figure = await import(file);
     const units = Object.entries(figure.units ?? {});
-    for (const [unit, door] of units)
-      door.initSync({ module: readFileSync(join(CRATES, unit, "js", "pkg", `mrly_${unit}_js_bg.wasm`)) });
+    for (const [unit, door] of units) door.initSync({ module: readFileSync(wasm(unit)) });
     const [width, height] = (figure.size ?? SIZE) as [number, number];
     const tint = ink(THEMES[theme]);
     const once = () => {
@@ -94,7 +92,7 @@ async function main() {
       warm: 0,
       units: [] as string[],
       error: "",
-      research: relative(REPO, file).startsWith("research/"),
+      research: RESEARCH !== null && file.startsWith(RESEARCH + sep),
     };
     for (const theme of Object.keys(THEMES) as Theme[]) {
       const done = await run({ name, file: join(OUT, relative(REPO, file).replace(/\.ts$/, ".js")), theme });

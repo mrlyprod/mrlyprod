@@ -1,10 +1,9 @@
-import type { Bind, Props } from "../../net/shell/design.ts";
-import { hhmm } from "./clock.ts";
+import { stamp } from "../../net/sdk/clock.ts";
+import type { Props } from "../../net/shell/design.ts";
+import { href } from "../shared/kit.ts";
 import { Glyph } from "./glyphs.tsx";
 
 /* BAR */
-
-const href = (bind: Bind) => String(bind().href ?? "");
 
 export function Bar({ site, app, cart, clock, bind }: Props["bar"]) {
   return (
@@ -13,10 +12,8 @@ export function Bar({ site, app, cart, clock, bind }: Props["bar"]) {
         <img src={site.logo} width="16" height="16" alt="" />
         <b>{site.name}</b>
       </a>
-      <nav className="trio" aria-label="Tasks">
-        <span className="pressed task app" hidden={!app}>
-          {app}
-        </span>
+      <nav className="tasks" aria-label="Tasks">
+        {app && <span className="pressed task">{app}</span>}
       </nav>
       <div className="sunken tray">
         {site.cart && (
@@ -28,8 +25,7 @@ export function Bar({ site, app, cart, clock, bind }: Props["bar"]) {
         <a className="glyph find" href={href(bind.find)} {...bind.find()} aria-label="Search">
           <Glyph art="find" size={14} />
         </a>
-        <time className="date" hidden />
-        <time className="clock">{hhmm(clock)}</time>
+        <time className="clock">{clock && stamp(clock.now, String(clock.hours ?? ""))}</time>
       </div>
     </header>
   );

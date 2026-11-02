@@ -1,7 +1,4 @@
 import { Fold, Segment, Pick as Select, Slider } from "../../../net/sdk/controls.tsx";
-import { useReroll as rerolled } from "../../../net/sdk/hooks.ts";
-import type { Rng } from "../../../net/sdk/rand.ts";
-import { rng } from "../../../net/sdk/rand.ts";
 import type { Option, Patch, Raw } from "../../../net/sdk/spec.ts";
 import { tidy } from "../../../net/sdk/spec.ts";
 import type { Mrly } from "../designs/engine.ts";
@@ -19,8 +16,6 @@ export type SourceProps = RowsProps & { math?: Mrly | null };
 export const read = (value: Raw) => tidy(SOURCE, value) as Src;
 
 const option = (key: "number" | "tile") => SOURCE.find((row) => row.key === key)!.options as readonly Option[];
-
-export const useReroll = (seed: number, roll: (rand: Rng) => void) => rerolled(seed, (next) => roll(rng(next)));
 
 export function gist(value: Raw, math?: Mrly | null): string {
   const src = read(value);

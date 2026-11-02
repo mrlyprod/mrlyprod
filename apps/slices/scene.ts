@@ -5,11 +5,13 @@ import type { Paints } from "../../net/sdk/color.ts";
 import { rgb, TINTS } from "../../net/sdk/color.ts";
 import type { Had, Readout } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Raw, Spec, Value } from "../../net/sdk/spec.ts";
+import type { Patch, Raw, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
 import type { Code, Mrly } from "../shared/designs/engine.ts";
-import { design, memo, named, tag as title } from "../shared/three/engine.ts";
+import { DESIGN, roll } from "../shared/designs/engine.ts";
+import { DIM, design, memo, named, tag as title } from "../shared/three/engine.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
 
@@ -27,11 +29,12 @@ export type Seen = Pick<View, "w" | "h" | "dpr"> & { look: () => Pick<Paints, "a
 
 export type Given = Opts & { math?: Mrly | null; tell?: (info: Told) => void };
 
-export type Hands = { step: (by: number) => void; deeper: (by: number) => void };
+const side = (value: Value, by: number): Patch => ({
+  k: Math.min(TOP, Math.max(1, Number(value.tile) ? Number(value.k) : Number(value.k) + by)),
+  tile: 0,
+});
 
 export type Slices = ReturnType<typeof make>;
-
-export type Handled = Slices & Hands;
 
 export const TOP = 16;
 export const TILES: [number, string][] = [
@@ -100,12 +103,13 @@ export const PAGE = {
     { key: "ArrowRight", label: "Larger side", act: "larger", menu: "View" },
     { key: ["ArrowUp", "ArrowDown"], label: "Level", act: "level", when: tiled },
   ],
-  actions: {
-    smaller: (scene) => scene.step?.(-1),
-    larger: (scene) => scene.step?.(1),
-    level: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
+  acts: {
+    smaller: (value) => side(value, -1),
+    larger: (value) => side(value, 1),
+    level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
   },
-} satisfies Page<Loaded<"math">, Handled>;
+  reroll: (value, seed, units) => ({ code: roll(units!.math, DIM, Number(tidy(DESIGN, value).base), rng(seed)) }),
+} satisfies Page<Loaded<"math">, Slices>;
 
 /* STUDY */
 

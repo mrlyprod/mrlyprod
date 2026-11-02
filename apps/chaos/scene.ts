@@ -81,11 +81,22 @@ export type Facts = {
 
 export type Given = Opts & { math?: Mrly | null; num?: Num | null; onFacts?: (facts: Facts) => void };
 
-export type Hands = { deeper: (by: number) => void; faster: (by: number) => void; flip: () => void };
-
 export type Stage = ReturnType<typeof make>;
 
-export type Handled = Stage & Hands;
+const within = (n: number, low: number, high: number) => Math.max(low, Math.min(high, n));
+
+export const deeper = (value: Value, by: number, cap = LEVELS) => ({
+  level: within(Number(value.level) + by, 1, cap),
+});
+
+export function faster(value: Value, by: number) {
+  const at = SPEEDS.findIndex(([speed]) => speed === Number(value.speed));
+  return { speed: SPEEDS[within(Math.max(at, 0) + by, 0, SPEEDS.length - 1)][0] };
+}
+
+export const flipped = (value: Value) => ({ grid: Number(value.grid) === 1 ? 0 : 1 });
+
+const capped = (value: Value, units?: Doors) => study(units!, tidied(value, units)).cap;
 
 export type Pen = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -246,13 +257,13 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowRight"], label: "Speed", act: "speed" },
     { key: "g", label: "Grid", act: "grid", menu: "View" },
   ],
-  actions: {
-    up: (scene) => scene.deeper?.(1),
-    down: (scene) => scene.deeper?.(-1),
-    speed: (scene, e) => scene.faster?.(e.key === "ArrowLeft" ? -1 : 1),
-    grid: (scene) => scene.flip?.(),
+  acts: {
+    up: (value, _key, units) => deeper(value, 1, capped(value, units)),
+    down: (value, _key, units) => deeper(value, -1, capped(value, units)),
+    speed: (value, key) => faster(value, key === "ArrowLeft" ? -1 : 1),
+    grid: (value) => flipped(value),
   },
-} satisfies Page<Loaded<"math" | "num">, Handled>;
+} satisfies Page<Loaded<"math" | "num">, Stage>;
 
 const R = 1024;
 const DOT = 2;

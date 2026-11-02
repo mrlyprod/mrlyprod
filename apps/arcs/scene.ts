@@ -2,6 +2,7 @@ import type { Paints } from "../../net/sdk/color.ts";
 import { HUES, mix, rgb, TINTS } from "../../net/sdk/color.ts";
 import type { Had } from "../../net/sdk/hooks.ts";
 import type { Mathy, Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Raw, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
@@ -11,10 +12,26 @@ import { palette } from "../../net/sdk/theme/palette.gen.js";
 import type { Name } from "../../net/sdk/theme/theme.ts";
 import { dark, light } from "../../net/sdk/theme/theme.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
+import { next } from "../shared/designs/engine.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
 import type { Curves, Drawn, Fit, Inks, Look, Plan, Shades, Studied, Told } from "./engine.ts";
-import { arc, BASES, cap, DIM, FADE, fit, LOOKS, PAD, picture, resolve, study, thick } from "./engine.ts";
+import {
+  arc,
+  BASES,
+  cap,
+  DIM,
+  FADE,
+  fit,
+  LOOKS,
+  looping,
+  names,
+  PAD,
+  picture,
+  resolve,
+  study,
+  thick,
+} from "./engine.ts";
 
 /* TYPES */
 
@@ -35,11 +52,7 @@ export type Seen = Pick<View, "w" | "h" | "dpr" | "t" | "still" | "wake"> & {
   look: () => Pick<Paints, "paper" | "accent">;
 };
 
-export type Hands = { step: (by: number) => void; deeper: (by: number) => void };
-
 export type Arcs = ReturnType<typeof make>;
-
-export type Handled = Arcs & Hands;
 
 export type Pen = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -96,11 +109,20 @@ export const PAGE = {
   ],
   actions: {
     trace: (scene) => scene.trace?.(),
-    design: (scene, e) => scene.step?.(e.key === "ArrowLeft" ? -1 : 1),
-    up: (scene) => scene.deeper?.(1),
-    down: (scene) => scene.deeper?.(-1),
   },
-} satisfies Page<Loaded<"math">, Handled>;
+  acts: {
+    design: (value, key, units) => {
+      const base = Number(value.base);
+      const list = names(units!.math, base).map(([one]) => one);
+      return { code: next(list, resolve(units!.math, base, value.code), key === "ArrowLeft" ? -1 : 1) };
+    },
+    up: (value) => ({ level: Number(value.level) + 1 }),
+    down: (value) => ({ level: Number(value.level) - 1 }),
+  },
+  reroll: (value, seed, units) => ({
+    code: looping(units!.math, Number(value.base), Number(value.level), rng(seed)),
+  }),
+} satisfies Page<Loaded<"math">, Arcs>;
 
 const CHUNK = 8192;
 

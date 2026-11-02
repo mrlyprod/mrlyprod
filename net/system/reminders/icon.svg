@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3ddccb"/><stop offset=".7" stop-color="#00d1bb"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <circle cx="300" cy="312" r="58" fill="#fff" data-dark="#00d1bb"/>
+  <path d="M412 312H784" fill="none" stroke="#fff" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" data-dark-stroke="#00d1bb"/>
+  <circle cx="300" cy="512" r="58" fill="#fff" data-dark="#00d1bb"/>
+  <path d="M412 512H784" fill="none" stroke="#fff" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" data-dark-stroke="#00d1bb"/>
+  <circle cx="300" cy="712" r="58" fill="#fff" data-dark="#00d1bb"/>
+  <path d="M412 712H784" fill="none" stroke="#fff" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" data-dark-stroke="#00d1bb"/>
+  <polyline points="272,312 294,336 330,290" fill="none" stroke="#00d1bb" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" data-dark-stroke="#fff" data-mono="hide"/>
+</svg>

@@ -1,6 +1,7 @@
 {
   "title": "Nothing here",
   "line": "That page does not exist.",
+  "aliases": ["404", "error", "not found", "nothing here", "help"],
   "hidden": true,
   "route": "/404.html"
 }

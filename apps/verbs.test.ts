@@ -32,6 +32,7 @@ async function staged(id: string) {
   let raw: Value = values({ seed: 0, ...PAGE.defaults }, spec);
   const model = (): Model => ({
     id,
+    user: "mrlyprod",
     spec,
     keys,
     units,

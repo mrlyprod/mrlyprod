@@ -1,11 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useReroll, useStatus } from "../../net/sdk/hooks.ts";
+import { useStatus } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Scalar, Seeded, Units } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
@@ -19,7 +18,6 @@ import { card, FAMOUS, make, SPEC } from "./scene.ts";
 
 type Props = Partial<WidgetProps<Units, Wolfram>> & Pick<WidgetProps<Units, Wolfram>, "onChange"> & { value: Seeded };
 
-const RULES = 256;
 const STEPS = 20;
 const LEGEND = "corner i = 4 x0 + 2 x1 + x2: the top row is l = 0, the columns run 00, 01, 10, 11 in (c, r)";
 const CENSUS = "Exactly 30 of the 256 rules are onto and exactly 6 are reversible: 15, 51, 85, 170, 204 and 240.";
@@ -53,10 +51,6 @@ const cone = (life: Door, rule: number) => life.single_seed(rule, STEPS);
 export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const units = useLife();
   const handle = useRef<Handle<Wolfram> | null>(null);
-  const now = useRef(value);
-  now.current = value;
-  const change = useRef(onChange);
-  change.current = onChange;
   const [stat, setStat] = useState<Stat | null>(null);
   const tick = useTheme();
   const paint = usePaint(handle);
@@ -64,11 +58,9 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units!, onStat: setStat }),
     [units],
   );
-  const turn = (by: number) => change.current({ rule: ((now.current.rule as number) + by + RULES) % RULES });
   const ready = (scene: Handle<Wolfram> | null) => {
-    const rich = scene && { ...scene, turn };
-    handle.current = rich;
-    onReady?.(rich);
+    handle.current = scene;
+    onReady?.(scene);
   };
   const rule = value.rule as number;
   const read = useMemo(() => (units ? card(units.life, rule) : null), [units, rule]);
@@ -84,7 +76,6 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     />
   );
   useStatus(onStatus, status(rule, read, stat));
-  useReroll(value.seed, (seed) => change.current({ rule: Math.floor(rng(seed)() * RULES) }));
   const folds = [
     read && {
       name: "Card",

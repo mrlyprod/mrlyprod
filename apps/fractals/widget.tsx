@@ -2,7 +2,7 @@ import type { MouseEvent, PointerEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useLatest, useReroll, useStatus } from "../../net/sdk/hooks.ts";
+import { useLatest, useStatus } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
@@ -14,7 +14,7 @@ import { float } from "../shared/fractal/orbit.ts";
 import type { View as Sight } from "../shared/fractal/view.ts";
 import { pan, zoomAt, zoomOf } from "../shared/fractal/view.ts";
 import type { Kind } from "./places.ts";
-import { KINDS, PLACES, roll, thumb } from "./places.ts";
+import { KINDS, PLACES, thumb } from "./places.ts";
 import type { Flight, Steered } from "./scene.ts";
 import { at, go, limits, make, seat, spot, where } from "./scene.ts";
 
@@ -119,7 +119,6 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const [flight, setFlight] = useState<Sight | null>(null);
   if (mine.current.view && !mine.current.wrote.includes(where(value))) forget();
   useStatus(onStatus, rows(value, flight ?? seat(value)));
-  useReroll(value.seed, (seed) => onChange(go(roll(now.current.kind as Kind, seed))));
   const rest = useCallback((place: Value | null) => {
     live.current?.pause();
     setFlight(null);

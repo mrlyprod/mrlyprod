@@ -1,7 +1,4 @@
 import { useRef, useState } from "react";
-import { Browser } from "../../../apps/shared/designs/browse.tsx";
-import { Chip } from "../../../apps/shared/designs/chip.tsx";
-import { place } from "../../../apps/shared/designs/store.ts";
 import { blend, HUES } from "../../sdk/color.ts";
 import type { MenuRow } from "../../sdk/controls.tsx";
 import {
@@ -18,11 +15,10 @@ import {
   Text,
   Toggle,
 } from "../../sdk/controls.tsx";
-import { useUnit } from "../../sdk/hooks.ts";
 import { flip } from "../../sdk/keys.tsx";
 import { Knobs } from "../../sdk/knobs.tsx";
 import { Art, Item, Shelf } from "../../sdk/library.tsx";
-import type { Scalar, Spec, Value } from "../../sdk/spec.ts";
+import type { Scalar, Spec } from "../../sdk/spec.ts";
 import { defaults } from "../../sdk/spec.ts";
 import { palette } from "../../sdk/theme/palette.gen.js";
 import type { Name } from "../../sdk/theme/theme.ts";
@@ -59,7 +55,7 @@ export const SPEC: Spec = [
   { key: "mode", label: "Mode", kind: "pick", def: "soft", options: MODES, group: "Choices" },
   { key: "edge", label: "Edge", kind: "segment", def: "round", options: EDGES, group: "Choices" },
   { key: "parts", label: "Parts", kind: "list", def: "a.b", options: PARTS, group: "Choices" },
-  { key: "name", label: "Name", kind: "text", def: "mrly", group: "Choices" },
+  { key: "name", label: "Name", kind: "text", def: "kit", group: "Choices" },
 ];
 
 /* CONTROLS */
@@ -220,29 +216,6 @@ export function Library() {
             {cool.map(item)}
           </Shelf>
         )}
-      </div>
-    </div>
-  );
-}
-
-/* DESIGNS */
-
-const SLOT = { dim: "dim", base: "base", code: "code" };
-
-export function Designs() {
-  const math = useUnit("math");
-  const [design, setDesign] = useState({ dim: 2, base: 2, code: "" });
-  const pick = (patch: Value) => setDesign((was) => ({ ...was, ...patch }));
-  return (
-    <div className="lanes">
-      <div className="line">
-        <div className="frost chipbar">
-          <Chip slot={SLOT} value={design} onChange={pick} math={math} />
-        </div>
-        <span className="fine">{`${design.dim}D, base ${design.base}, ${design.code ? `code ${design.code}` : "home design"}`}</span>
-      </div>
-      <div className="box tall">
-        <Browser compact slot={SLOT} value={design} math={math} onPick={(one) => pick(place(SLOT, one))} />
       </div>
     </div>
   );

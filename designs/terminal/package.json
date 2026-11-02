@@ -1,5 +1,5 @@
 {
-  "name": "@mrlyprod/design-terminal",
+  "name": "@mrlyprod/terminal",
   "private": true,
   "type": "module",
   "exports": {

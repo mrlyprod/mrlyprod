@@ -1,25 +1,25 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import type { BunPlugin } from "bun";
-import { REPO } from "./home.ts";
+import { REPO, SIBLINGS } from "./home.ts";
 
 /* PACKAGES */
 
 type Manifest = { name: string; exports: Record<string, string> };
 
 const HOMES = [
-  "draw",
-  "net/shell",
-  "net/sdk",
-  "net/system",
-  ...readdirSync(join(REPO, "designs")).map((one) => `designs/${one}`),
-].filter((one) => existsSync(join(REPO, one, "package.json")));
+  join(SIBLINGS, "draw"),
+  join(REPO, "net", "shell"),
+  join(REPO, "net", "sdk"),
+  join(REPO, "net", "system"),
+  ...readdirSync(join(REPO, "designs")).map((one) => join(REPO, "designs", one)),
+].filter((dir) => existsSync(join(dir, "package.json")));
 
 export const PACKAGES = new Map(
-  HOMES.map((one) => {
-    const dir = join(REPO, one);
+  HOMES.map((dir) => {
     const { name, exports } = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as Manifest;
-    if (!name.startsWith("@mrlyprod/")) throw new Error(`site: ${one}/package.json names ${name}, outside @mrlyprod/`);
+    if (!name.startsWith("@mrlyprod/"))
+      throw new Error(`site: ${relative(REPO, dir)}/package.json names ${name}, outside @mrlyprod/`);
     return [name, { dir, exports }] as const;
   }),
 );

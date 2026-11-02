@@ -1,10 +1,10 @@
 import type { Cell } from "@mrlyprod/math";
 import { paints, TINTS } from "../../net/sdk/color.ts";
-import type { Had, Three } from "../../net/sdk/hooks.ts";
+import type { Had } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
 import type { Opts, Scene, View } from "../../net/sdk/run.ts";
 import { board } from "../../net/sdk/run.ts";
-import type { Raw, Spec, Value } from "../../net/sdk/spec.ts";
+import type { Patch, Raw, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
 import { rects } from "../../net/sdk/svg.ts";
 import type { Base, Census, Facts, Mrly } from "../shared/designs/engine.ts";
@@ -15,14 +15,18 @@ import {
   DESIGN,
   dimension,
   distinct,
+  drawn,
   facts,
+  gallery,
   grow,
+  next,
   SIDE,
   sequence,
   total,
 } from "../shared/designs/engine.ts";
 import { mesh } from "../shared/designs/mesh.ts";
 import { flat, hue, iso } from "../shared/designs/thumb.ts";
+import type { Three } from "../shared/three/three.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
 import type { Seen } from "./stage.ts";
@@ -66,10 +70,6 @@ export type Stage = {
 type Room = ReturnType<typeof space>;
 
 type Staged = { dim: 2; stage: ReturnType<typeof plane> } | { dim: 3; stage: ReturnType<typeof solid> };
-
-export type Hands = { grow: () => void; step: (by: number) => void; deeper: (by: number) => void };
-
-export type Held = Scene & Partial<Hands>;
 
 export type Designs = ReturnType<typeof make>;
 
@@ -131,13 +131,31 @@ export const PAGE = {
     { key: "ArrowUp", label: "Level", act: "up", menu: "View" },
     { key: "ArrowDown", label: "Level", act: "down", menu: "View" },
   ],
-  actions: {
-    grow: (scene) => scene.grow?.(),
-    design: (scene, e) => scene.step?.(e.key === "ArrowLeft" ? -1 : 1),
-    up: (scene) => scene.deeper?.(1),
-    down: (scene) => scene.deeper?.(-1),
+  acts: {
+    grow: (value, _key, units) => ({
+      level: Number(value.level) >= cap(units!.math, Number(value.dim)) ? 1 : Number(value.level) + 1,
+    }),
+    design: (value, key, units) => step(units!.math, value, key === "ArrowLeft" ? -1 : 1),
+    up: (value) => ({ level: Number(value.level) + 1 }),
+    down: (value) => ({ level: Number(value.level) - 1 }),
   },
-} satisfies Page<Loaded<"math">, Held>;
+  reroll: (value, seed, units) => {
+    const [math, dim, base] = [units!.math, Number(value.dim), Number(value.base)];
+    return {
+      code: drawn(math, dim, base, gallery(math, dim, base, "classes"), canon(math, dim, base, value.code), seed),
+    };
+  },
+} satisfies Page<Loaded<"math">, Scene>;
+
+export const steps = (math: Mrly, dim: number, base: number) =>
+  gallery(math, dim, base, "classes") ?? gallery(math, dim, base, "named");
+
+export function step(math: Mrly, value: Value, by: number): Patch {
+  const [dim, base] = [Number(value.dim), Number(value.base)];
+  const code = canon(math, dim, base, value.code);
+  const list = steps(math, dim, base) ?? [];
+  return { code: next(list, list.includes(code) ? code : facts(math, dim, base, code).rep, by) };
+}
 
 const FIT = 0.86;
 const UNIT = 10;

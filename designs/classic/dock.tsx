@@ -3,13 +3,11 @@ import { Tile } from "./tile.tsx";
 
 /* DOCK */
 
-const none = () => ({});
-
 export function Dock({ launch, groups, bind }: Props["dock"]) {
   return (
-    <nav className="classic dock" aria-label="Desk">
+    <nav className="classic dock" aria-label="Desk" {...bind.root()}>
       <div className="group">
-        <Tile {...launch} named bind={none} />
+        <Tile {...launch} named bind={bind.launch} />
       </div>
       {groups.map((group, g) => (
         <div key={group.map((tile) => tile.id).join(" ")} className="group" {...bind.group(g)()}>

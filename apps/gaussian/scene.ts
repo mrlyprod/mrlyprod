@@ -1,10 +1,12 @@
 import type { Paints } from "../../net/sdk/color.ts";
 import { TINTS } from "../../net/sdk/color.ts";
-import type { Ready } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Spec, Units, Value } from "../../net/sdk/spec.ts";
+import type { Patch, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
+import type { Units as Loaded } from "../shared/units/index.ts";
+import { wasm } from "../shared/units/index.ts";
 import type { Box, Num, Pair, Plan, Point, Setting, Word } from "./engine.ts";
 import {
   cap,
@@ -20,6 +22,7 @@ import {
   RINGS,
   reached,
   share,
+  shuffle,
   study,
   styleOf,
   THUMB,
@@ -48,11 +51,7 @@ export type Seen = Pick<View, "w" | "h" | "dpr" | "t" | "still" | "wake"> & {
 
 export type Given = Opts & { num?: Num | null };
 
-export type Hands = { walk: (dir: number) => void; turn: (dir: number) => void };
-
 export type Gaussian = ReturnType<typeof make>;
-
-export type Handled = Omit<Gaussian, keyof Hands> & Hands;
 
 type Pen = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -61,6 +60,16 @@ type Sheet = { layer: OffscreenCanvas; pen: OffscreenCanvasRenderingContext2D; b
 const plain = (value: Value) => value.look === "plain";
 
 export const picked = (value: Value) => parse(value.click) !== null;
+
+export const units = wasm("num");
+
+function stepped(value: Value, num: Num, dir: number, turning: boolean): Patch {
+  const knobs = tidy(SPEC, value) as Knobs;
+  const plan = study(num, knobs.ring, knobs.limit);
+  const pick = chosen(num, plan, knobs);
+  const next = turning ? pick && turned(pick, dir) : walk(plan, pick ? pick.index : 0, dir);
+  return next ? { click: coords(...next) } : {};
+}
 
 export const named = (value: Value) =>
   [
@@ -121,10 +130,13 @@ export const PAGE = {
   ],
   actions: {
     grow: (scene) => scene.grow?.(),
-    walk: (scene, e) => scene.walk?.(e.key === "ArrowLeft" ? -1 : 1),
-    turn: (scene, e) => scene.turn?.(e.key === "ArrowDown" ? -1 : 1),
   },
-} satisfies Page<Ready & Units, Handled>;
+  acts: {
+    walk: (value, key, units) => stepped(value, units!.num, key === "ArrowLeft" ? -1 : 1, false),
+    turn: (value, key, units) => stepped(value, units!.num, key === "ArrowDown" ? -1 : 1, true),
+  },
+  reroll: (_value, seed) => ({ ...shuffle(rng(seed)), click: "" }),
+} satisfies Page<Loaded<"num">, Gaussian>;
 
 const TAU = Math.PI * 2;
 const CHUNK = 4096;

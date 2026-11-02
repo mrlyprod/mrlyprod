@@ -11,7 +11,7 @@ import type { Side } from "./frame.tsx";
 import { Bar, Frame, SIDES, usePanes } from "./frame.tsx";
 import { patch as diff, fresh, redo, record as remember, undo } from "./history.ts";
 import type { Bag, Readout, Ready, Thunk } from "./hooks.ts";
-import { Rolls, rolls, useUnits } from "./hooks.ts";
+import { useUnits } from "./hooks.ts";
 import type { Island } from "./island.tsx";
 import { island } from "./island.tsx";
 import type { Fired, Key, Press, Act as Run, Shown } from "./keys.tsx";
@@ -23,8 +23,8 @@ import type { Ratio, Take } from "./record.ts";
 import { record as capture } from "./record.ts";
 import type { Scene as Made, Make, Opts, Stop } from "./run.ts";
 import { run } from "./run.ts";
-import type { Patch, Row, Scalar, Spec, Units, Value } from "./spec.ts";
-import { asked, defaults as knobs, optionsOf, tidy, viewing } from "./spec.ts";
+import type { Nudge, Patch, Roll, Row, Scalar, Spec, Units, Value } from "./spec.ts";
+import { asked, defaults as knobs, optionsOf, rolled, tidy, viewing } from "./spec.ts";
 
 /* TYPES */
 
@@ -70,6 +70,8 @@ export type Page<L extends Loadable = Ready & Units, S extends Made = Made> = {
   units?: Thunk<L>;
   keys?: Key<Handle<S>>[];
   actions?: Record<string, Act<S>>;
+  acts?: Record<string, Nudge<Bag<L>>>;
+  reroll?: Roll<Bag<L>>;
   gestures?: boolean;
   record?: boolean;
   about?: string[];
@@ -85,6 +87,8 @@ export type AppProps<U extends Mathy = Units, S extends Made = Made> = {
   units?: U;
   keys: Key<Handle<S>>[];
   actions: Record<string, Act<S>>;
+  acts?: Record<string, Nudge<U>>;
+  reroll?: Roll<U>;
   gestures?: boolean;
   record?: boolean;
   about?: string[];
@@ -276,6 +280,8 @@ function App<U extends Mathy, S extends Made>({
   units,
   keys,
   actions,
+  acts: nudges = {},
+  reroll: rolls,
   gestures,
   record,
   about = [],
@@ -305,7 +311,6 @@ function App<U extends Mathy, S extends Made>({
   const stack = useRef(fresh());
   const [, setDepth] = useState(0);
   const touched = useRef(false);
-  const told = useMemo(rolls, []);
   const panes = usePanes();
   const folds = useAccordion(id, spec);
   const stage = useMemo(() => ({ still: calm }), [calm]);
@@ -429,11 +434,7 @@ function App<U extends Mathy, S extends Made>({
     const timer = setInterval(tick, 250);
     return () => clearInterval(timer);
   }, [taking]);
-  const reroll = () => {
-    const seed = roll();
-    onChange({ seed });
-    told.tell(seed);
-  };
+  const reroll = () => onChange(rolled(value, roll(), units, rolls));
   const reset = () => onChange(knobbed(spec, design ? owned(design) : []));
   const base: Record<string, Run> = {
     pause,
@@ -442,6 +443,9 @@ function App<U extends Mathy, S extends Made>({
     record: () => (take.current ? cut() : begin(ratio.current)),
     ...Object.fromEntries(
       Object.entries(actions).map(([act, fn]): [string, Run] => [act, (e) => scene.current && fn(scene.current, e)]),
+    ),
+    ...Object.fromEntries(
+      Object.entries(nudges).map(([act, fn]): [string, Run] => [act, (e) => onChange(fn(value, e.key ?? "", units))]),
     ),
   };
   const acts: Record<string, Run> = Object.fromEntries(
@@ -494,6 +498,7 @@ function App<U extends Mathy, S extends Made>({
     const [name, key] = act.split("@");
     const fn = (
       {
+        ...acts,
         export: () => flip("dialog.export"),
         copy,
         undo: () => travel(-1),
@@ -501,7 +506,6 @@ function App<U extends Mathy, S extends Made>({
         reset,
         keys: () => flip("dialog.keys"),
         info: () => flip("dialog.info"),
-        ...acts,
       } as Partial<Record<string, Run>>
     )[name];
     const row = map.find((one) => one.act === name);
@@ -522,105 +526,103 @@ function App<U extends Mathy, S extends Made>({
     return () => removeEventListener("keydown", press);
   }, []);
   return (
-    <Rolls.Provider value={told}>
-      <Accordion.Provider value={folds}>
-        <Stage.Provider value={stage}>
-          <Frame label={title} gestures={gestures} panes={panes}>
-            <Widget
-              value={value}
-              onChange={onChange}
-              onReady={ready}
-              onExport={setMore}
-              onStatus={status}
-              units={units}
-            />
-            <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
-              <Icon name="fullscreen_exit" />
+    <Accordion.Provider value={folds}>
+      <Stage.Provider value={stage}>
+        <Frame label={title} gestures={gestures} panes={panes}>
+          <Widget
+            value={value}
+            onChange={onChange}
+            onReady={ready}
+            onExport={setMore}
+            onStatus={status}
+            units={units}
+          />
+          <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
+            <Icon name="fullscreen_exit" />
+          </Btn>
+          {spec && (
+            <Bar side="right">
+              <Knobs spec={spec} value={value} units={units} onChange={onChange} />
+            </Bar>
+          )}
+          {spec && (
+            <Bar side="tail">
+              <Fold
+                name="Seed"
+                live={String(value.seed)}
+                open={folds.has("Seed")}
+                onToggle={(on) => folds.flip("Seed", on)}
+              >
+                <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
+              </Fold>
+            </Bar>
+          )}
+          <Bar side="status">
+            {known && (
+              <Btn className="icon info" aria-label="Info" onClick={() => flip("dialog.info")}>
+                <Icon name="info" />
+              </Btn>
+            )}
+            <span>seed {value.seed}</span>
+            {!mode.still && resting(scene.current, mode.own, paused) && <span>paused</span>}
+            {taking && <span>{rec}</span>}
+            {copied && <span>link copied</span>}
+            {rows.slice(0, SHOWN).map(([label, v]) => (
+              <span key={label} className="out">
+                {label} {v}
+              </span>
+            ))}
+          </Bar>
+          <Bar side="hints">
+            <Hints map={shown} />
+            <Btn className="icon keys" aria-label="Keys" onClick={() => flip("dialog.keys")}>
+              <Icon name="keyboard" />
             </Btn>
-            {spec && (
-              <Bar side="right">
-                <Knobs spec={spec} value={value} units={units} onChange={onChange} />
-              </Bar>
+          </Bar>
+          <Bar side="actions">
+            {design && (!design.when || design.when(value)) && (
+              <Chip slot={design} value={url} onChange={onChange} math={units?.math} />
             )}
-            {spec && (
-              <Bar side="tail">
-                <Fold
-                  name="Seed"
-                  live={String(value.seed)}
-                  open={folds.has("Seed")}
-                  onToggle={(on) => folds.flip("Seed", on)}
-                >
-                  <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
-                </Fold>
-              </Bar>
+            {view && (
+              <div className="views">
+                <Knob row={view} value={value[view.key]} values={value} units={units} onChange={onChange} />
+              </div>
             )}
-            <Bar side="status">
-              {known && (
-                <Btn className="icon info" aria-label="Info" onClick={() => flip("dialog.info")}>
-                  <Icon name="info" />
-                </Btn>
-              )}
-              <span>seed {value.seed}</span>
-              {!mode.still && resting(scene.current, mode.own, paused) && <span>paused</span>}
-              {taking && <span>{rec}</span>}
-              {copied && <span>link copied</span>}
-              {rows.slice(0, SHOWN).map(([label, v]) => (
-                <span key={label} className="out">
-                  {label} {v}
-                </span>
-              ))}
-            </Bar>
-            <Bar side="hints">
-              <Hints map={shown} />
-              <Btn className="icon keys" aria-label="Keys" onClick={() => flip("dialog.keys")}>
-                <Icon name="keyboard" />
+            {taking && (
+              <Btn primary onClick={cut}>
+                Stop
               </Btn>
-            </Bar>
-            <Bar side="actions">
-              {design && (!design.when || design.when(value)) && (
-                <Chip slot={design} value={url} onChange={onChange} math={units?.math} />
-              )}
-              {view && (
-                <div className="views">
-                  <Knob row={view} value={value[view.key]} values={value} units={units} onChange={onChange} />
-                </div>
-              )}
-              {taking && (
-                <Btn primary onClick={cut}>
-                  Stop
-                </Btn>
-              )}
-              {primary && (
-                <Btn primary onClick={acts[primary.act]}>
-                  {primary.label}
-                </Btn>
-              )}
-              <Btn className="reroll" onClick={acts.reroll}>
-                <Icon name="casino" />
-                Reroll
+            )}
+            {primary && (
+              <Btn primary onClick={acts[primary.act]}>
+                {primary.label}
               </Btn>
-              <Btn className="export" onClick={() => flip("dialog.export")}>
-                <Icon name="download" />
-                Export
-              </Btn>
-              <Btn className="share" onClick={copy}>
-                <Icon name="ios_share" />
-                Share
-              </Btn>
-            </Bar>
-            <Keys map={shown} />
-            {known && <Info about={about} rows={rows} />}
-            <Export
-              canvas={() => scene.current?.canvas ?? document.querySelector(".frame canvas")}
-              name={file}
-              draw={() => scene.current?.draw?.()}
-              fix={fixed && !taking ? (next) => scene.current?.fix?.(next) : undefined}
-              more={files}
-            />
-          </Frame>
-        </Stage.Provider>
-      </Accordion.Provider>
-    </Rolls.Provider>
+            )}
+            <Btn className="reroll" onClick={acts.reroll}>
+              <Icon name="casino" />
+              Reroll
+            </Btn>
+            <Btn className="export" onClick={() => flip("dialog.export")}>
+              <Icon name="download" />
+              Export
+            </Btn>
+            <Btn className="share" onClick={copy}>
+              <Icon name="ios_share" />
+              Share
+            </Btn>
+          </Bar>
+          <Keys map={shown} />
+          {known && <Info about={about} rows={rows} />}
+          <Export
+            canvas={() => scene.current?.canvas ?? document.querySelector(".frame canvas")}
+            name={file}
+            draw={() => scene.current?.draw?.()}
+            fix={fixed && !taking ? (next) => scene.current?.fix?.(next) : undefined}
+            more={files}
+          />
+        </Frame>
+      </Stage.Provider>
+    </Accordion.Provider>
   );
 }
 
@@ -641,6 +643,8 @@ export function page<L extends Loadable, S extends Made>(
     units,
     keys = [],
     actions = {},
+    acts,
+    reroll,
     gestures = false,
     record = false,
     about = [],
@@ -665,6 +669,8 @@ export function page<L extends Loadable, S extends Made>(
           spec={spec}
           keys={keys}
           actions={actions}
+          acts={acts}
+          reroll={reroll}
           gestures={gestures}
           record={record}
           about={about}

@@ -1,8 +1,11 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { decode } from "../../../sdk/git/view.ts";
 import shell from "../../../shell/index.html";
 import { decide, joined } from "../infra/edge.ts";
+import { HALL, PAGE } from "../infra/guard.js";
+import { hall, lockOf, type Site } from "../infra/locked.ts";
 import { kind } from "../infra/mime.ts";
 import { globals, ready, typed, withSite } from "./build.ts";
 import { HOME, REPO, SITE } from "./home.ts";
@@ -10,6 +13,9 @@ import { HOME, REPO, SITE } from "./home.ts";
 if (process.cwd() !== REPO)
   throw new Error("dev: run from the repo root (bun run dev), where bunfig.toml hands the plugin to Bun");
 const made = await ready();
+const LOCK = process.env.MRLY_LOCK === "1" ? lockOf(SITE as Site) : null;
+const HOLD = LOCK ? mkdtempSync(join(tmpdir(), "lock-")) : "";
+if (LOCK) await hall(LOCK, HOLD, SITE as Site);
 const files = new Map([...made.assets, ...globals(made)].map((one) => [`/${one.path}`, one]));
 files.set("/boot.js", files.get(made.boot)!);
 const reply = (body: string | Uint8Array, type: string) =>
@@ -44,7 +50,11 @@ const server = Bun.serve({
     const url = new URL(request.url);
     const step = decide(decode(url.pathname));
     if (step.redirect) return Response.redirect(joined(step.redirect, url.search), 301);
-    const path = step.uri!;
+    const path = LOCK && (step.uri === "/index.html" || step.uri === "/404.html") ? PAGE : step.uri!;
+    if (LOCK && path.startsWith(HALL)) {
+      const held = join(HOLD, path);
+      if (existsSync(held)) return reply(readFileSync(held), kind(held));
+    }
     if (path === "/index.html" || path === "/404.html")
       return reply(
         withSite((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${REPO}/`, "/"), made.bar),

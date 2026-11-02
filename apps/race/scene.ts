@@ -157,8 +157,11 @@ export const MATCHUPS: [string, string][] = [
   ["494", "254"],
 ];
 
+export const units = wasm("math");
+
 export const PAGE = {
   spec: SPEC,
+  units,
   design: { dim: DIM, base: "base", code: "a" },
   record: true,
   about: ABOUT,
@@ -202,8 +205,6 @@ export const SAVERS = [
     pick: () => ({ base: 3, number: 5, level: 3, finish: 28, walkers: 500, speed: 240, heat: 40 }),
   },
 ];
-
-export const units = wasm("math");
 
 const TAU = Math.PI * 2;
 const PAD = 16;

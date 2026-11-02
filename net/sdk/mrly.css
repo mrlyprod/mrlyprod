@@ -785,3 +785,28 @@ dialog.modal.browse::backdrop {
 .page.source > :is(.prose, .lede) {
   margin-inline: 0;
 }
+
+/* WORLD */
+
+.tree {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--s1) var(--s3);
+  margin: 0;
+  padding: 0;
+  font: var(--t3) / var(--lh3) var(--mono);
+}
+.tree > dt {
+  color: var(--dim);
+}
+.tree > dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+ol.tree {
+  grid-template-columns: minmax(0, 1fr);
+  list-style: none;
+}
+.tree .leaf {
+  color: var(--fg);
+}

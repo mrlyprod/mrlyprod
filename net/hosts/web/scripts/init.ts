@@ -5,13 +5,13 @@ import { REPO } from "./home.ts";
 
 /* OPTIONS */
 
-export const DESIGNS = ["glass", "mrly", "classic", "blocks", "terminal"] as const;
+export const DESIGNS = ["modern", "boxy", "classic", "bricks", "terminal"] as const;
 
 export type Design = (typeof DESIGNS)[number];
 
 export type Options = { title: string; domain: string; design: Design };
 
-export const DEFAULTS: Options = { title: "Example", domain: "example.com", design: "glass" };
+export const DEFAULTS: Options = { title: "Example", domain: "example.com", design: "modern" };
 
 /* FILES */
 
@@ -43,7 +43,8 @@ const site = ({ title, domain, design }: Options) => ({
   tiles: { id: "tiles", title: "Tiles" },
   design,
   roots: ["pages"],
-  min: [320, 480],
+  screen: [1440, 900, 2],
+  min: [1280, 720],
   company: title,
   tagline: `${title}, a site on MrlyNet.`,
   tree: [
@@ -59,7 +60,7 @@ const site = ({ title, domain, design }: Options) => ({
   ],
   socials: [],
   contact: `hello@${domain}`,
-  shots: { routes: ["/", "/about/", "/menu/", "/nowhere/"], screen: [1440, 900, 2] },
+  shots: { routes: ["/", "/about/", "/menu/", "/nowhere/"] },
   push: {
     prefix: "",
     guard: ["build/"],
@@ -232,7 +233,8 @@ export function options(argv: string[]): { dir: string; options: Options } {
     options: { title: { type: "string" }, domain: { type: "string" }, design: { type: "string" } },
   });
   const [dir, extra] = positionals;
-  if (!dir || extra) throw new Error("init: bun run init <dir> [--title Name] [--domain example.com] [--design glass]");
+  if (!dir || extra)
+    throw new Error("init: bun run init <dir> [--title Name] [--domain example.com] [--design modern]");
   const design = (values.design ?? DEFAULTS.design) as Design;
   if (!DESIGNS.includes(design)) throw new Error(`init: the design is one of ${DESIGNS.join(", ")}`);
   const domain = (values.domain ?? DEFAULTS.domain).replace(/^https?:\/\//, "").replace(/\/.*$/, "");

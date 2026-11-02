@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import type { Rng } from "./rand.ts";
 import { rng } from "./rand.ts";
 import type { Opts, View } from "./run.ts";
-import { board, run } from "./run.ts";
+import { board, run, seek } from "./run.ts";
 
 type Fonts = { load: (font: string) => Promise<unknown> };
 
@@ -333,4 +333,16 @@ test("seek steps a scene to a world time without the frame loop, the same draws 
   const one = once();
   expect(one).toEqual(once());
   expect([one.went, one.last]).toEqual([[true, true, false], 100]);
+});
+
+test("the world seeks only when every live scene seeks", () => {
+  stage();
+  const ahead = run(box(), () => ({ draw: () => {} }));
+  const behind = run(box(), () => ({ draw: () => {} }));
+  ahead.seek(100);
+  const went = [seek(50), seek(200)];
+  ahead();
+  behind();
+  unstage();
+  expect(went).toEqual([false, true]);
 });

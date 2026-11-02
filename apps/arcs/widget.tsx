@@ -2,20 +2,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
 import type { Had, Readout } from "../../net/sdk/hooks.ts";
-import { useReroll } from "../../net/sdk/hooks.ts";
 import type { Paint } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Patch } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
-import { next } from "../shared/designs/engine.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Lawful, Told } from "./engine.ts";
-import { BASES, cap, curves, laws, looping, names, resolve } from "./engine.ts";
-import type { Arcs, Handled, Knobs } from "./scene.ts";
+import { BASES, cap, curves, laws, resolve } from "./engine.ts";
+import type { Arcs, Knobs } from "./scene.ts";
 import { file, make, shades, sketch } from "./scene.ts";
 
 /* TYPES */
@@ -24,7 +21,7 @@ type Seeded = Knobs & { seed: number };
 
 export type LawsProps = { math: Mrly; value: Knobs; tick: number; onChange: (patch: Patch) => void };
 
-type Props = WidgetProps<Had<"math">, Handled> & { value: Seeded };
+type Props = WidgetProps<Had<"math">, Arcs> & { value: Seeded };
 
 type Hooks = Partial<Pick<Props, "onChange" | "onStatus">>;
 
@@ -97,7 +94,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const hooks = useRef<Hooks>({});
   hooks.current = { onChange, onStatus };
   const [facts, setFacts] = useState<Told | null>(null);
-  useReroll(value.seed, (seed) => unit && onChange({ code: looping(unit, value.base, value.level, rng(seed)) }));
   const tell = useCallback((f: Told) => {
     setFacts(f);
     hooks.current.onStatus?.(rows(f));
@@ -106,21 +102,10 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math: unit, onTell: tell }),
     [unit, tell],
   );
-  const step = (by: number) => {
-    const { base, code } = now.current;
-    hooks.current.onChange!({
-      code: next(
-        names(unit!, base).map(([one]) => one),
-        resolve(unit!, base, code),
-        by,
-      ),
-    });
-  };
-  const deeper = (by: number) => hooks.current.onChange!({ level: now.current.level + by });
   const ready = (handle: Handle<Arcs> | null) => {
     live.current = handle;
     if (!handle) hooks.current.onStatus?.([]);
-    onReady?.(handle && { ...handle, step, deeper });
+    onReady?.(handle);
   };
   const keep = () => {
     const picture = live.current?.svg?.();

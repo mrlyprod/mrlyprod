@@ -1,9 +1,0 @@
-[package]
-license = "MIT"
-name = "arc-loops"
-edition = "2021"
-
-[dependencies]
-mrly-math = { path = "../../../../../crates/math" }
-
-[workspace]

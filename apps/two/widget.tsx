@@ -11,17 +11,17 @@ import type { Patch, Seeded, Value } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Counts } from "../shared/two/engine.ts";
-import { cap, read, tag } from "../shared/two/engine.ts";
+import { read, tag } from "../shared/two/engine.ts";
 import type { Pane } from "../shared/two/parts.tsx";
-import { design, Folds, knobs, useReroll, useShots, useStatus } from "../shared/two/parts.tsx";
-import type { Handled, Hands, Two } from "./scene.ts";
+import { design, Folds, knobs, useShots, useStatus } from "../shared/two/parts.tsx";
+import type { Two } from "./scene.ts";
 import { name as called, make, SHEETS, SPEC, sketch } from "./scene.ts";
 
 /* TYPES */
 
 export type SheetsProps = { value: Value; onChange: (patch: Patch) => void; unit: Mrly };
 
-type Props = WidgetProps<Mathy, Handled> & { value: Seeded };
+type Props = WidgetProps<Mathy, Two> & { value: Seeded };
 
 /* ROWS */
 
@@ -91,7 +91,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const now = useRef(value);
   now.current = value;
   const [have, setHave] = useState(false);
-  useReroll(value, onChange, unit);
   useStatus(live, `${have}:${JSON.stringify(value)}`, onStatus, rows);
   useShots(onExport, live, have, () => called(now.current));
   const scene = useCallback(
@@ -101,20 +100,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const ready = (handle: Handle<Two> | null) => {
     live.current = handle;
     setHave(Boolean(handle));
-    if (!handle) return onReady?.(null);
-    const at = () => now.current;
-    const hands: Hands = {
-      seams: () => onChange({ seams: at().seams ? 0 : 1 }),
-      deeper: (by) =>
-        onChange({
-          level: Math.max(
-            1,
-            Math.min(cap(unit!, Number(at().number), Number(at().x) * Number(at().y)), Number(at().level) + by),
-          ),
-        }),
-      wider: (by) => onChange({ x: Math.max(1, Math.min(12, Number(at().x) + by)) }),
-    };
-    onReady?.({ ...handle, ...hands });
+    onReady?.(handle);
   };
   return (
     <>

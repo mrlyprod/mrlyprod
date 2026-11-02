@@ -1,16 +1,13 @@
 import "./mount.ts";
-import { stamp } from "../sdk/clock.ts";
 import { handle } from "../sdk/handle.ts";
 import { state } from "../sdk/history.ts";
 import { px } from "../sdk/px.ts";
-import { track, type } from "./catalog.ts";
-import { canvas, desk, greeting, knock, listen, mark, route, visit } from "./desk.ts";
+import { seek, track, type } from "./catalog.ts";
+import { canvas, desk, greeting, listen, meet, route, visit } from "./desk.ts";
 import { measure } from "./measure.ts";
 import { menus } from "./menus.ts";
 import {
   calm,
-  face,
-  glass,
   icons,
   KEY,
   magnify,
@@ -19,7 +16,7 @@ import {
   root,
   screen,
   shade,
-  subscribe,
+  shine,
   theme,
   tint,
   turn,
@@ -34,10 +31,6 @@ import { expand, turns } from "./tree.ts";
 type Width = [string, string, number];
 
 type Piece = { start: () => void };
-
-type Carted = { qty?: unknown };
-
-const EDGES = ["left", "right"];
 
 /* SCROLL */
 
@@ -122,27 +115,6 @@ function shut() {
   return true;
 }
 
-/* CART */
-
-function count() {
-  try {
-    const items: unknown = JSON.parse(read(KEY.cart) || "[]");
-    return Array.isArray(items) ? items.reduce((sum: number, item: Carted) => sum + (Number(item.qty) || 1), 0) : 0;
-  } catch {
-    return 0;
-  }
-}
-
-function cart() {
-  const n = count();
-  for (const link of document.querySelectorAll("[data-cart]")) {
-    link.setAttribute("aria-label", n ? `Cart, ${n} item${n === 1 ? "" : "s"}` : "Cart");
-    link.querySelectorAll(".dot").forEach((dot, i) => {
-      dot.classList.toggle("on", i < n);
-    });
-  }
-}
-
 /* CONTENTS */
 
 const eyes = new Map<Element, IntersectionObserver>();
@@ -179,28 +151,6 @@ function contents(nav: Element) {
   eyes.set(nav, eye);
 }
 
-/* CLOCK */
-
-let ticking: ReturnType<typeof setTimeout> | 0 = 0;
-
-const two = (n: number) => String(n).padStart(2, "0");
-
-function tick() {
-  const now = new Date();
-  const date = document.querySelector<HTMLTimeElement>(".bar .date");
-  const clock = document.querySelector<HTMLTimeElement>(".bar .clock");
-  if (date) {
-    date.textContent = now.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
-    date.dateTime = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
-  }
-  if (clock) {
-    clock.textContent = stamp(now, read(KEY.hours));
-    clock.dateTime = `${two(now.getHours())}:${two(now.getMinutes())}`;
-  }
-  clearTimeout(ticking);
-  ticking = setTimeout(tick, 60000 - (now.getSeconds() * 1000 + now.getMilliseconds()) + 50);
-}
-
 /* WINDOW */
 
 const WIDTHS: Record<"page" | "wide", Width> & Partial<Record<string, Width>> = {
@@ -211,16 +161,13 @@ const step = (n: number) => Math.round(n / measure.step) * measure.step;
 
 function edges() {
   const box = document.querySelector<HTMLElement>(".window");
-  if (!box || box.querySelector(":scope > .edge")) return;
+  if (!box) return;
   const kind = () => WIDTHS[root().dataset.window ?? ""] ?? WIDTHS.page;
   const room = () => innerWidth - 2 * measure.gutter * rem();
   const get = () => box.getBoundingClientRect().width;
   const put = (n: number) => root().style.setProperty(kind()[0], px(step(n)));
-  for (const side of EDGES) {
-    const grip = document.createElement("div");
-    grip.className = "edge";
-    grip.dataset.side = side;
-    box.append(grip);
+  for (const grip of document.querySelectorAll<HTMLElement>("[data-edge]")) {
+    const side = grip.dataset.edge;
     handle(grip, {
       get,
       set: put,
@@ -236,7 +183,8 @@ function edges() {
 }
 
 function zoom(button: Element) {
-  const box = button.closest(".window")!;
+  const box = document.querySelector(".window");
+  if (!box) return;
   const on = !box.classList.contains("zoomed");
   box.classList.toggle("zoomed", on);
   button.setAttribute("aria-pressed", String(on));
@@ -280,7 +228,7 @@ function ahead(e: KeyboardEvent) {
 
 /* PIECES */
 
-const pieces: Record<"dock" | "widgets", Promise<void> | null> = { dock: null, widgets: null };
+const pieces: Record<"bar" | "dock" | "widgets", Promise<void> | null> = { bar: null, dock: null, widgets: null };
 
 function lay(name: keyof typeof pieces, load: () => Promise<Piece>) {
   pieces[name] ??= load()
@@ -316,21 +264,19 @@ function wire(event?: CustomEvent<Wired>) {
   sync();
   unread();
   theme(root().dataset.theme ?? "");
-  face(root().dataset.font ?? "");
   tint(root().dataset.tint ?? "");
-  glass(read(KEY.glass));
+  shine();
   icons(read(KEY.icons), read(KEY.always) === "1");
   screen(read(KEY.saver));
   magnify(read(KEY.magnify) === "1");
-  cart();
   once(".contents", contents);
   once(".tree summary", turns);
-  once(".bar .mark", knock);
   if (greeting() === "open") listen();
   if (route === "/") root().dataset.desk = "";
   else delete root().dataset.desk;
   desk();
-  mark();
+  meet();
+  lay("bar", () => import("./bar.tsx"));
   lay("dock", () => import("./dock.tsx"));
   if (route === "/") lay("widgets", () => import("./widgets.tsx"));
   if (!lit) {
@@ -345,9 +291,8 @@ function boot() {
   root().classList.add("js");
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   theme(read(KEY.theme));
-  face(read(KEY.font));
   tint(read(KEY.tint));
-  glass(read(KEY.glass));
+  shine();
   icons(read(KEY.icons), read(KEY.always) === "1");
   screen(read(KEY.saver));
   magnify(read(KEY.magnify) === "1");
@@ -356,45 +301,32 @@ function boot() {
   track();
   menus();
   stow();
-  tick();
-  subscribe((key) => (key === null || key === KEY.hours) && tick());
   edges();
   watch();
   document.addEventListener("click", (e) => {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
     const button = target.closest<HTMLElement>("[data-pane]");
-    if (button) return button.closest(".pane") ? shut() : toggle(button.dataset.pane!);
+    if (button) return button.closest("#right") ? shut() : toggle(button.dataset.pane!);
     if (target.closest("[data-theme-toggle]")) return turn();
-    if (target.closest(".window > .title .close")) return close(e);
-    const zoomer = target.closest(".window > .title .zoom");
+    if (target.closest("[data-close]")) return close(e);
+    const zoomer = target.closest("[data-zoom]");
     if (zoomer) return zoom(zoomer);
-    if (target.closest(".scrim") || target.closest(".pane a[href]")) shut();
+    if (target.closest("[data-scrim]") || target.closest("#right a[href]")) shut();
   });
   document.addEventListener("toggle", expand, true);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !document.querySelector("dialog[open]") && shut()) return e.preventDefault();
     if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "k") {
       e.preventDefault();
-      const field =
-        location.pathname === "/menu/" ? document.querySelector<HTMLInputElement>(".launchpad .find input") : null;
-      if (field) {
-        field.focus();
-        field.select();
-        return;
-      }
-      document.querySelector<HTMLElement>(".bar .find")?.click();
+      seek();
       return;
     }
     ahead(e);
   });
-  document.addEventListener("visibilitychange", () => !document.hidden && tick());
   window.addEventListener("wire", wire);
-  window.addEventListener("cart", cart);
-  window.addEventListener("storage", cart);
-  window.addEventListener("pageshow", cart);
   window.addEventListener("pagehide", keep);
-  cart();
+  import("./world.ts").then(({ start }) => start()).catch((error) => console.error(error));
 }
 
 if (typeof document !== "undefined") boot();

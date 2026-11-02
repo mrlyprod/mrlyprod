@@ -134,6 +134,40 @@
   cursor: pointer;
 }
 
+.terminal input[type="checkbox"]:not(.control *) {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  display: inline-block;
+  width: 3ch;
+  height: 20px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.terminal input[type="checkbox"]:not(.control *)::before {
+  content: "[ ]";
+  white-space: pre;
+}
+
+.terminal input[type="checkbox"]:not(.control *):checked::before {
+  content: "[x]";
+  color: var(--hi);
+}
+
+.terminal input[type="checkbox"]:not(.control *):disabled {
+  color: var(--dim);
+  cursor: default;
+}
+
+.terminal input[type="checkbox"]:not(.control *):focus-visible {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+  outline: 0;
+}
+
 .terminal button:focus-visible,
 .terminal a:focus-visible,
 .terminal summary:focus-visible,
@@ -322,7 +356,7 @@
   color: var(--band);
 }
 
-.terminal.bar .trio {
+.terminal.bar .tasks {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -1441,7 +1475,7 @@
   min-height: 28px;
 }
 
-.terminal .settings .push {
+.terminal .settings :is(.push, .screensaver-peek) {
   display: inline-flex;
   align-items: center;
   gap: 1ch;
@@ -1455,15 +1489,15 @@
   box-shadow: none;
 }
 
-.terminal .settings .push::before {
+.terminal .settings :is(.push, .screensaver-peek)::before {
   content: "[";
 }
 
-.terminal .settings .push::after {
+.terminal .settings :is(.push, .screensaver-peek)::after {
   content: "]";
 }
 
-.terminal .settings .push:hover {
+.terminal .settings :is(.push, .screensaver-peek):hover {
   background: var(--pick);
   color: var(--on-accent);
 }
@@ -2479,19 +2513,6 @@
   color: var(--off);
 }
 
-body:has(.terminal) > .appicons {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
-.terminal .appicon {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
 .terminal .appicon .lift,
 .terminal .appicon .glow,
 .terminal .appicon .rim,
@@ -2713,63 +2734,14 @@ body:has(.terminal) > .appicons {
   color: inherit;
 }
 
-/* LIBRARY */
+/* TREE */
 
-.terminal.library {
-  height: 100%;
-  padding: 4px 1ch;
-  overflow: auto;
-}
-
-.terminal.library .chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 1ch;
-  margin-bottom: 4px;
-  padding-bottom: 4px;
-  border-bottom: 1px dashed var(--soft);
-}
-
-.terminal.library .chips button {
-  height: 20px;
-  padding: 0 1ch;
-  color: var(--dim);
-}
-
-.terminal.library .chips button.on {
-  background: var(--pick);
-  color: var(--on-accent);
-  text-shadow: none;
-}
-
-.terminal.library ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.terminal.library summary {
-  height: 20px;
-  display: flex;
-  align-items: center;
-  gap: 1ch;
-  list-style: none;
-  color: var(--hi);
-  cursor: pointer;
-}
-
-.terminal.library summary::-webkit-details-marker {
-  display: none;
-}
-
-.terminal.library .branch > li,
 .terminal.tree ul > li,
 .terminal .tree ul > li {
   position: relative;
   padding-left: 4ch;
 }
 
-.terminal.library .branch > li::before,
 .terminal .tree ul > li::before {
   content: "|--";
   position: absolute;
@@ -2779,69 +2751,9 @@ body:has(.terminal) > .appicons {
   white-space: pre;
 }
 
-.terminal.library .branch > li:last-child::before,
 .terminal .tree ul > li:last-child::before {
   content: "`--";
 }
-
-.terminal.library .leaf {
-  width: 100%;
-  min-height: 20px;
-  display: flex;
-  align-items: center;
-  gap: 1ch;
-  padding: 0 1ch;
-  color: var(--fg);
-  text-align: left;
-  text-decoration: none;
-}
-
-.terminal.library .leaf:hover {
-  background: var(--well);
-}
-
-.terminal.library .leaf.on {
-  background: var(--pick);
-  color: var(--on-accent);
-  text-shadow: none;
-}
-
-.terminal.library .label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.terminal.library .sub {
-  flex: none;
-  margin-left: auto;
-  color: var(--dim);
-  white-space: nowrap;
-}
-
-.terminal.library .leaf.on .sub {
-  color: inherit;
-}
-
-.terminal.library .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 64px);
-  gap: 4px;
-  padding-left: 2ch;
-}
-
-.terminal.library .grid .leaf {
-  flex-direction: column;
-  padding: 2px;
-  text-align: center;
-}
-
-.terminal.library canvas {
-  image-rendering: pixelated;
-}
-
-/* TREE */
 
 .terminal .tree,
 .terminal .tree ul {
@@ -3555,6 +3467,26 @@ body:has(.terminal) > .appicons {
   }
 }
 
+.terminal.lock .prompt {
+  display: flex;
+  align-items: baseline;
+  white-space: pre;
+}
+
+.terminal.lock .prompt .field {
+  flex: 1;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--hi);
+  font: inherit;
+}
+
+.terminal.lock .wrong {
+  color: var(--hi);
+}
+
 /* SAVER */
 
 .terminal.saver {
@@ -3607,4 +3539,22 @@ body:has(.terminal) > .appicons {
 
 :root[data-saver] .terminal.desk > .ground {
   visibility: visible;
+}
+
+/* PREVIEW */
+
+.terminal.still {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  container-type: inline-size;
+  background: var(--bg);
+}
+
+.terminal.still .still-screen {
+  color: var(--fg);
+  font: 4.6cqi / 1.25 var(--mono);
+  text-shadow: var(--glow);
+  white-space: pre;
 }

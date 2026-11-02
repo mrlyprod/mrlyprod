@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import { blend, veil } from "../../net/sdk/color.ts";
 import type { Ready } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Spec, Units, Value } from "../../net/sdk/spec.ts";
 import type { Inks } from "../shared/sequences/design.ts";
@@ -21,7 +22,7 @@ import {
   tones,
   wrap,
 } from "../shared/sequences/paint.ts";
-import type { Art, ArtOf, Built } from "./cards.ts";
+import type { Art, ArtOf, Built, Picked } from "./cards.ts";
 import { CARDS, pick, shown } from "./cards.ts";
 
 /* TYPES */
@@ -34,9 +35,7 @@ export type Found = { record: Pick<Entry, "id" | "name">; at: number };
 
 export type Formed = { closed: string; records: { formula: string; short: boolean; found: readonly Found[] } };
 
-export type Hands = { turn?: (by: number) => void; walk?: (by: number) => void };
-
-export type Tour = ReturnType<typeof make> & Hands;
+export type Tour = ReturnType<typeof make>;
 
 const at = (value: Value) => CARDS[pick(value).card];
 
@@ -83,12 +82,31 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowRight"], label: "Card", act: "card" },
     { key: ["ArrowUp", "ArrowDown"], label: "Step", act: "step" },
   ],
-  actions: {
-    next: (scene) => scene.turn?.(1),
-    card: (scene, e) => scene.turn?.(e.key === "ArrowLeft" ? -1 : 1),
-    step: (scene, e) => scene.walk?.(e.key === "ArrowDown" ? -1 : 1),
+  acts: {
+    next: (value) => turned(Number(value.card), 1),
+    card: (value, key) => turned(Number(value.card), key === "ArrowLeft" ? -1 : 1),
+    step: (value, key) => walked(Number(value.card), Number(value.step), key === "ArrowDown" ? -1 : 1),
   },
+  reroll: (_value, seed) => rolled(seed),
 } satisfies Page<Ready & Units, Tour>;
+
+export function rolled(seed: number): Picked {
+  const rand = rng(seed >>> 0);
+  const card = Math.floor(rand() * CARDS.length);
+  const one = CARDS[card];
+  return { card, step: one.min + Math.floor(rand() * (one.max - one.min + 1)) };
+}
+
+export const turned = (card: number, by: number): Picked => {
+  const next = (card + by + CARDS.length) % CARDS.length;
+  return { card: next, step: CARDS[next].first };
+};
+
+export const walked = (card: number, step: number, by: number) => {
+  const one = CARDS[card];
+  const next = step + by;
+  return { step: next > one.max ? one.min : next < one.min ? one.max : next };
+};
 
 const STORY = 4;
 

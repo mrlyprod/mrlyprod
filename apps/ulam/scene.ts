@@ -1,10 +1,12 @@
 import type { Paints } from "../../net/sdk/color.ts";
 import { TINTS } from "../../net/sdk/color.ts";
-import type { Ready } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Spec, Units, Value } from "../../net/sdk/spec.ts";
+import type { Patch, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
+import type { Units as Loaded } from "../shared/units/index.ts";
+import { wasm } from "../shared/units/index.ts";
 import type { Facts, Geo, Marking, Num, Pair, Plan, Quadratic, Setting, Tones } from "./engine.ts";
 import {
   DIM,
@@ -28,7 +30,9 @@ import {
   SIDES,
   SOIL,
   share,
+  shuffle,
   span,
+  step,
   study,
   table,
   toned,
@@ -60,9 +64,11 @@ export type Given = Opts & { num?: Num | null; onFacts?: (facts: Told) => void }
 
 export type Ulam = ReturnType<typeof make>;
 
-export type Hands = { line?: (by: number) => void };
+export const units = wasm("num");
 
-export type Handled = Ulam & Hands;
+const line = (value: Value, by: number, num: Num): Patch => ({
+  c: Number(value.a) > 0 ? step(num, Number(value.c), by, REACH) : Number(value.c),
+});
 
 type Pen = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -92,6 +98,7 @@ export const named = (value: Value) =>
 
 export const PAGE = {
   spec: SPEC,
+  units,
   name: named,
   about: [
     "Write 1 in the middle, wind 2, 3, 4 and on outward in a spiral, and light the primes. Diagonals appear: a straight line through the spiral takes one number from each ring, and those numbers are the values of a quadratic a k² + b k + c.",
@@ -103,11 +110,12 @@ export const PAGE = {
     { key: "Enter", label: "Next c", act: "next", button: true, when: lined, menu: "Edit" },
     { key: ["ArrowLeft", "ArrowRight"], label: "Step c", act: "line", when: lined },
   ],
-  actions: {
-    next: (scene) => scene.line?.(1),
-    line: (scene, e) => scene.line?.(e.key === "ArrowLeft" ? -1 : 1),
+  acts: {
+    next: (value, _key, units) => line(value, 1, units!.num),
+    line: (value, key, units) => line(value, key === "ArrowLeft" ? -1 : 1, units!.num),
   },
-} satisfies Page<Ready & Units, Handled>;
+  reroll: (_value, seed, units) => shuffle(units!.num, rng(seed)),
+} satisfies Page<Loaded<"num">, Ulam>;
 
 const GAP = 8;
 const INSET = 0.07;

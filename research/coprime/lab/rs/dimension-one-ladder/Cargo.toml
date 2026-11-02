@@ -1,9 +1,0 @@
-[package]
-name = "dimension-one-ladder"
-edition = "2021"
-license = "MIT"
-
-[dependencies]
-mrly-num = { path = "../../../../../crates/num" }
-
-[workspace]

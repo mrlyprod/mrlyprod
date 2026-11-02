@@ -1,5 +1,7 @@
 import { TINTS } from "../../net/sdk/color.ts";
 import type { Page } from "../../net/sdk/page.tsx";
+import type { Rng } from "../../net/sdk/rand.ts";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, Scene, View } from "../../net/sdk/run.ts";
 import type { Spec } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
@@ -51,7 +53,10 @@ export const PAGE = {
     "L steps by two and stays even, since odd L shifts the constant by 1/8. The slope is read from L/2 to L, and only when L is divisible by four. Widening the band W walks the coefficient onto the width law -(K + b)/(4(2K + 1)) at K = floor(W/2), so an odd W reads the same band as the even one under it.",
     "The proofs and the frames the star was measured in are on [the hexagon page](/research/hexagon/).",
   ],
+  reroll: (_value, seed) => drawn(rng(seed)),
 } satisfies Page;
+
+export const drawn = (rand: Rng) => ({ layers: LEAST + 2 * Math.floor(rand() * ((MOST - LEAST) / 2 + 1)) });
 
 const read = (opts: Given) => ({ ...tidy(SPEC, opts), seed: Number(opts.seed) >>> 0 }) as Star;
 

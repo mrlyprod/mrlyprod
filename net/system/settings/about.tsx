@@ -1,5 +1,6 @@
 import type { Site } from "site:routes";
-import type { Vars } from "../../shell/parts.tsx";
+import { useEffect, useState } from "react";
+import { current, start } from "../../shell/world.ts";
 import { Pane as Frame, Item, Nav, Section } from "./ui.tsx";
 
 export const FIND = [
@@ -15,32 +16,23 @@ export const FIND = [
   "sitemap",
   "llms",
   "copyright",
+  "world",
+  "seed",
+  "rules",
 ];
-
-/* MARK */
-
-const MARK = "##### #.#.# #.#.# #.#.# #.#.#".split(" ");
-
-function Mark() {
-  return (
-    <span className="about-icon" aria-hidden="true">
-      <svg
-        className="glyphs"
-        viewBox={`0 0 ${MARK[0].length} ${MARK.length}`}
-        style={{ "--rows": MARK.length, "--cols": MARK[0].length } as Vars}
-        aria-hidden="true"
-      >
-        {MARK.flatMap((line, y) => [...line].flatMap((c, x) => (c === "#" ? [[x, y]] : []))).map(([x, y]) => (
-          <rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" />
-        ))}
-      </svg>
-    </span>
-  );
-}
 
 /* PANE */
 
 export default function Pane({ site }: { site: Site }) {
+  const [store, setStore] = useState(current);
+  useEffect(() => {
+    let on = true;
+    start().then((one) => on && setStore(one));
+    return () => {
+      on = false;
+    };
+  }, []);
+  const world = store?.world() ?? null;
   const version = site.version ?? "";
   const units = site.units ?? [];
   const licences = site.licences ?? [];
@@ -52,7 +44,7 @@ export default function Pane({ site }: { site: Site }) {
   return (
     <Frame title="About">
       <div className="about-head">
-        <Mark />
+        <img className="about-icon" src={site.mark} alt="" />
         <strong className="about-name">{site.title}</strong>
         {version && <span className="dim">Version {version}</span>}
         {site.tagline && <span className="about-tag dim">{site.tagline}</span>}
@@ -71,6 +63,18 @@ export default function Pane({ site }: { site: Site }) {
         <Nav label="Source" href="/git/" />
         {slug && <Nav label="GitHub" hint={slug} href={`https://github.com/${slug}`} />}
       </Section>
+      {world && (
+        <Section title="World" foot="A fresh seed on every load; a rule is pinned or drawn from the seed at boot.">
+          <Item label="Seed">
+            <span className="num">{world.seed}</span>
+          </Item>
+          {Object.entries(world.rules).map(([rule, value]) => (
+            <Item key={rule} label={rule}>
+              <span className="num">{JSON.stringify(value)}</span>
+            </Item>
+          ))}
+        </Section>
+      )}
       {licences.length > 0 && (
         <Section title="Licences">
           {licences.map((one) => (
@@ -78,7 +82,7 @@ export default function Pane({ site }: { site: Site }) {
           ))}
         </Section>
       )}
-      <Section title="Follow Mrly">
+      <Section title={`Follow ${site.title}`}>
         {socials.map((one) => (
           <Nav key={one.href} label={one.name} href={one.href} />
         ))}

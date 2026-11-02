@@ -20,7 +20,8 @@ declare module "site:routes" {
     savers: import("../sdk/rows.ts").Saver[];
     launchpad: import("../sdk/rows.ts").Pad;
     redirects: Record<string, { to: string; since: string }>;
-    version: string;
+    version: string | null;
+    research: boolean;
     units: string[];
     licences: { name: string; href: string }[];
     socials: { name: string; href: string }[];
@@ -38,6 +39,11 @@ declare module "site:routes" {
 declare module "site:icons" {
   export const defs: string;
   export const arts: Record<string, string>;
+}
+
+declare module "site:widgets" {
+  export const order: string[];
+  export const widgets: Record<string, import("../sdk/rows.ts").Desk>;
 }
 
 declare module "site:frame" {
@@ -67,20 +73,20 @@ declare module "site:apps" {
 
 declare module "site:figures" {
   export const units: Record<string, string>;
-  export const figures: Record<string, () => Promise<import("../../draw/figure.ts").Figure>>;
+  export const figures: Record<string, () => Promise<import("@mrlyprod/draw/figure.ts").Figure>>;
   export const plates: string[];
+}
+
+declare module "site:world" {
+  export const apps: import("../kernel/index.ts").App[];
+  export const config: import("../kernel/index.ts").Config | null;
+  export const players: import("./world.ts").Players | undefined;
 }
 
 declare module "apps:scenes" {
   export const scenes: Record<string, () => Promise<import("./savers.ts").Scene>>;
 }
 
-declare module "*?gate" {
-  export const Gate: typeof import("./app.tsx").Gate;
-  export const gated: typeof import("./app.tsx").gated;
+declare module "*?page" {
   export const page: typeof import("./app.tsx").page;
-}
-
-declare module "*?post" {
-  export const Post: typeof import("./prose.tsx").Post;
 }

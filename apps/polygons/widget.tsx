@@ -1,13 +1,12 @@
 import type { PointerEvent } from "react";
 import { useRef } from "react";
 import { paints } from "../../net/sdk/color.ts";
-import { useLatest } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
 import type { Units } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
-import type { Mosaic, Poly, Polygons, Sets } from "./scene.ts";
+import type { Mosaic, Poly, Polygons } from "./scene.ts";
 import { make, SETS } from "./scene.ts";
 import { inks, swatch } from "./swatch.ts";
 
@@ -74,15 +73,9 @@ export function Shelves({ value, onChange }: ShelvesProps) {
 
 export function Widget({ value, onChange, onReady }: Props) {
   const live = useRef<Handle<Poly> | null>(null);
-  const now = useLatest(value);
-  const tell = useLatest(onChange);
-  const cycle = (key: keyof Sets, by: number) => {
-    const list = SETS[key];
-    tell.current?.({ [key]: list[(list.indexOf(now.current[key] as string) + by + list.length) % list.length] });
-  };
   const ready = (handle: Handle<Poly> | null) => {
     live.current = handle;
-    onReady?.(handle && { ...handle, cycle });
+    onReady?.(handle);
   };
   const tap = (e: PointerEvent<HTMLCanvasElement>) => {
     const box = e.currentTarget.getBoundingClientRect();

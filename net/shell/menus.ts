@@ -1,12 +1,18 @@
 import { pulldown } from "site:design/pulldown";
 import { rows } from "site:routes";
 import type { Item, Menu, Model } from "../sdk/menus.ts";
+import { button, item, sheet } from "../sdk/pulldown.ts";
 import { px } from "../sdk/px.ts";
 import type { Note } from "./catalog.ts";
 import { app, notes, recent, shelves } from "./catalog.ts";
+import type { Pulldown } from "./design.ts";
 import { siblings } from "./launch.ts";
 
 const RECENT = 5;
+
+const PLAIN: Pulldown = { drop: 6, button, sheet: () => sheet(), item };
+
+const look = pulldown ?? PLAIN;
 
 /* MODEL */
 
@@ -53,7 +59,9 @@ const mac = () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAge
 
 /* OPEN */
 
-const bar = () => document.querySelector(".trio .menus");
+let given: HTMLElement | null = null;
+
+const bar = () => (given?.isConnected ? given : document.querySelector<HTMLElement>("[data-menus]"));
 const drops = () => [...document.querySelectorAll<HTMLElement>("[data-menu][popover]")];
 const buttons = () => [...(bar()?.querySelectorAll("button") ?? [])];
 const shown = () => drops().find((one) => one.matches(":popover-open")) ?? null;
@@ -62,7 +70,7 @@ const live = (drop: HTMLElement) => [
 ];
 
 function place(drop: HTMLElement, button: HTMLElement) {
-  const gap = pulldown?.drop ?? 0;
+  const gap = look.drop;
   const at = button.getBoundingClientRect();
   drop.style.left = px(Math.max(gap, Math.min(at.left, innerWidth - drop.offsetWidth - gap)));
   drop.style.top = px(at.bottom + gap);
@@ -109,8 +117,7 @@ function render() {
   for (const one of drops()) one.remove();
   if (!nav) return;
   nav.replaceChildren();
-  if (!held || !pulldown) return;
-  const look = pulldown;
+  if (!held) return;
   const apple = mac();
   full(held).forEach((menu, n) => {
     const button = look.button(menu.name);
@@ -160,7 +167,7 @@ function pick(e: Event) {
 
 function press(e: KeyboardEvent) {
   const drop = shown();
-  const inBar = e.target instanceof Element && e.target.closest(".trio .menus");
+  const inBar = e.target instanceof Element && e.target.closest("[data-menus]");
   if (!drop && !inBar) return;
   const keys: Partial<Record<string, () => void>> = drop
     ? {
@@ -200,6 +207,12 @@ function learn() {
     topics = list;
     if (held) render();
   });
+}
+
+export function host(one: HTMLElement | null) {
+  if (!one || one === given) return;
+  given = one;
+  render();
 }
 
 export function menus() {

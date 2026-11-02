@@ -39,7 +39,7 @@ export type ShotOptions = {
 
 export type Shot = { cam: Cam; sun: Vec3 };
 
-export type Planets = ReturnType<typeof make> & { step?: (by: number) => void };
+export type Planets = ReturnType<typeof make>;
 
 const HIDE = () => false;
 
@@ -102,7 +102,10 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowUp"], label: "Previous world", act: "prev", menu: "View" },
     { key: ["ArrowRight", "ArrowDown"], label: "Next", act: "next" },
   ],
-  actions: { next: (scene) => scene.step?.(1), prev: (scene) => scene.step?.(-1) },
+  acts: {
+    next: (value) => ({ world: next(String(value.world), 1) }),
+    prev: (value) => ({ world: next(String(value.world), -1) }),
+  },
   record: true,
 } satisfies Page<Ready & Units, Planets>;
 

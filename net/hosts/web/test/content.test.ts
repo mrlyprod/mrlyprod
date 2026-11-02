@@ -1,8 +1,8 @@
 import { beforeAll, expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { folders, type Row, state } from "../scripts/build.ts";
-import { SITE } from "../scripts/home.ts";
+import { dirname, join, relative, resolve } from "node:path";
+import { folders, type Row, rawFile, state } from "../scripts/build.ts";
+import { HOME, SITE } from "../scripts/home.ts";
 import { dead } from "../scripts/links.ts";
 import { dist, out } from "./dist.ts";
 
@@ -30,23 +30,27 @@ const plain = (doc: Doc) => {
 };
 
 const LINK = /\[[^\]\n]*\]\(([^)\s]+)\)/g;
-const SKIP = new Set(["node_modules", "target"]);
+const SKIP = new Set(["node_modules", "target", "data"]);
 
-const places = ["net/system", "org", "apps"]
+const roots = SITE.roots.map((one) => relative(repo, resolve(HOME, one)));
+const places = roots
   .flatMap((top) => folders(at(top)).map((id) => `${top}/${id}`))
   .filter((dir) => there(`${dir}/app.json`));
 const pages = places.filter((dir) => there(`${dir}/index.md`)).map((dir) => read(`${dir}/index.md`));
-const posts = folders(at("org/blog"))
-  .filter((slug) => there(`org/blog/${slug}/index.md`))
-  .map((slug) => read(`org/blog/${slug}/index.md`));
+const blog = roots.map((top) => `${top}/blog`).find((dir) => there(dir));
+const posts = (blog ? folders(at(blog)) : [])
+  .filter((slug) => there(`${blog}/${slug}/index.md`))
+  .map((slug) => read(`${blog}/${slug}/index.md`));
 const sources = places
   .flatMap((dir) => (JSON.parse(readFileSync(at(`${dir}/app.json`), "utf8")).source ?? []) as string[])
   .map((name) => read(name));
-const notes = there("research")
-  ? (readdirSync(at("research"), { recursive: true }) as string[])
+const held = (SITE as { research?: string }).research;
+const research = held ? relative(repo, resolve(HOME, held)) : null;
+const notes = research
+  ? (readdirSync(at(research), { recursive: true }) as string[])
       .filter((name) => name.endsWith(".md") && !name.split("/").some((part) => part.startsWith(".") || SKIP.has(part)))
       .sort()
-      .map((name) => read(`research/${name}`))
+      .map((name) => read(`${research}/${name}`))
   : [];
 
 const routes = new Set(state().rows.map((row) => row.route));
@@ -63,7 +67,7 @@ test("every markdown link in a page, a post or a source lands, a rooted one on a
         if (target === "" || /^(https?:|mailto:)/.test(target)) continue;
         if (target.startsWith("/")) {
           if (!routes.has(target)) bad.push(`${doc.name}:${n} ${target} is no route`);
-        } else if (!existsSync(resolve(home, target))) bad.push(`${doc.name}:${n} ${target}`);
+        } else if (!existsSync(rawFile(relative(repo, resolve(home, target))))) bad.push(`${doc.name}:${n} ${target}`);
       }
   }
   expect(bad).toEqual([]);
@@ -72,7 +76,8 @@ test("every markdown link in a page, a post or a source lands, a rooted one on a
 test("every link in a research note lands, a rooted page link on a route", () => {
   const bad: string[] = [];
   for (const doc of notes) {
-    const home = doc.name === "research/shared/ledger/src/prose.md" ? at("research/shared") : dirname(at(doc.name));
+    const home =
+      doc.name === `${research}/shared/ledger/src/prose.md` ? at(`${research}/shared`) : dirname(at(doc.name));
     for (const [n, line] of plain(doc))
       for (const hit of line
         .replace(/`[^`]*`/g, "")
@@ -101,7 +106,7 @@ test("pages, posts and notes keep the house rules: no two blank lines, no em or 
       if (i > 0 && line === "" && doc.lines[i - 1] === "") bad.push(`${doc.name}:${i + 1} two blank lines`);
     });
     for (const [n, line] of plain(doc)) {
-      if (/[–—]/.test(line)) bad.push(`${doc.name}:${n} em-dash or en-dash`);
+      if (/[\u2013\u2014]/.test(line)) bad.push(`${doc.name}:${n} em-dash or en-dash`);
       if (line.startsWith("#") && n < doc.lines.length && doc.lines[n] !== "")
         bad.push(`${doc.name}:${n} heading without a blank line`);
     }

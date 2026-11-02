@@ -1,12 +1,13 @@
 import { lock as saver } from "site:apps";
 import { source } from "../sdk/feed.ts";
+import type { Click } from "./catalog.ts";
 import type { Lock } from "./lock.ts";
 import { calm, KEY, read, root, screen, write } from "./prefs.ts";
 import type { Wired } from "./route.ts";
 
 /* TYPES */
 
-type Shown = { box: HTMLDivElement; stop: Lock | null; want: string; drop?: () => void };
+type Shown = { box: HTMLDivElement; stop: Lock | null; want: string; bare?: boolean; drop?: () => void };
 
 type Pinned = { pick: string; as: string };
 
@@ -14,7 +15,7 @@ type Path = (t: number, height: number) => number;
 
 type Drawn = typeof import("./parts.tsx");
 
-/* MARK */
+/* ARRIVAL */
 
 export let route = "";
 let homed: boolean | null = null;
@@ -23,11 +24,10 @@ export function visit(detail: Wired) {
   ({ route } = detail);
 }
 
-export function mark() {
+export function meet() {
   const home = route === "/";
   if (!route || home === homed) return;
   homed = home;
-  if (!document.querySelector(".bar .mark")) return;
   if (home) return arrive();
   depart();
 }
@@ -184,20 +184,18 @@ function unlisten() {
   watch = null;
 }
 
-export function knock(mark: HTMLElement) {
-  mark.addEventListener("click", (e) => {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const now = performance.now();
-    const twice = now - tapped < TWICE;
-    tapped = twice ? 0 : now;
-    if (route === "/" && greeting() === "shut" && hall()) {
-      e.preventDefault();
-      return greet();
-    }
-    if (!twice) return;
+export function knock(e: Click) {
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const now = performance.now();
+  const twice = now - tapped < TWICE;
+  tapped = twice ? 0 : now;
+  if (route === "/" && greeting() === "shut" && hall()) {
     e.preventDefault();
-    if (!greeting()) owed = true;
-  });
+    return greet();
+  }
+  if (!twice) return;
+  e.preventDefault();
+  if (!greeting()) owed = true;
 }
 
 async function arrive() {
@@ -258,7 +256,12 @@ export async function desk() {
   shown = mine;
   document.body.append(box);
   const surface = await ground(box);
-  if (shown !== mine || !surface) return;
+  if (shown !== mine) return;
+  if (!surface) {
+    mine.bare = true;
+    if (greeting() === "open") lid();
+    return;
+  }
   const want = read(KEY.saver);
   const use = pinned?.pick === want ? pinned.as : want;
   const stop = await saver()
@@ -283,7 +286,7 @@ function face(state: "wake" | "rest") {
 }
 
 function lid() {
-  if (!drawn || !shown?.stop || playing || greeting() !== "open") return;
+  if (!drawn || !(shown?.stop || shown?.bare) || playing || greeting() !== "open") return;
   face("wake");
   doze();
 }

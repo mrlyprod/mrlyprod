@@ -2,7 +2,7 @@ import type { Page } from "../../net/sdk/page.tsx";
 import type { Rng } from "../../net/sdk/rand.ts";
 import { pick } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Spec } from "../../net/sdk/spec.ts";
+import type { Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { look as aim } from "../shared/gl/camera.ts";
@@ -10,8 +10,8 @@ import { blank, context } from "../shared/gl/gl2.ts";
 import type { Post } from "../shared/gl/post.ts";
 import { post } from "../shared/gl/post.ts";
 import { add } from "../shared/gl/vec.ts";
-import type { State } from "../shared/space/bang.ts";
-import { canon, NAMES, name, route, SPEED, teach } from "../shared/space/bang.ts";
+import type { Choice, State } from "../shared/space/bang.ts";
+import { canon, codes, NAMES, name, pickCode, route, SPEED, teach } from "../shared/space/bang.ts";
 import type { Hyper } from "../shared/space/hyper.ts";
 import { hyper } from "../shared/space/hyper.ts";
 import type { March, Tone } from "../shared/space/march.ts";
@@ -44,7 +44,7 @@ export type Owned = { drop: () => void };
 
 export type Zoom = ReturnType<typeof make>;
 
-export type Zoomed = Zoom & { step?: (by: number) => void };
+export type Zoomed = Zoom;
 
 const HIDE = () => false;
 const FAMILY = NAMES.map(([code]) => code);
@@ -143,7 +143,13 @@ export const PAGE = {
     { key: "ArrowRight", label: "Next shape", act: "next", menu: "View" },
     { key: "ArrowLeft", label: "Previous shape", act: "prev", menu: "View" },
   ],
-  actions: { next: (scene) => scene.step?.(1), prev: (scene) => scene.step?.(-1) },
+  acts: {
+    next: (value, _key, units) => stepped(value, 1, units!.math),
+    prev: (value, _key, units) => stepped(value, -1, units!.math),
+  },
+  reroll: (value, seed, units) => ({
+    code: pickCode(units!.math, { ...(value as unknown as Choice), code: -1 }, seed),
+  }),
   record: true,
 } satisfies Page<Loaded<"math">, Zoomed>;
 
@@ -163,6 +169,10 @@ export const SAVERS = [
   { id: "graphic", title: "Graphic", pick: flight("graphic") },
   { id: "haze", title: "Haze", pick: flight("haze") },
 ];
+
+function stepped(value: Value, by: number, math: Mrly) {
+  return { code: step(codes(math, Number(value.n), String(value.pick)), Number(value.code), by) };
+}
 
 export function step(pool: readonly number[], code: number, by: number) {
   const at = pool.indexOf(code);

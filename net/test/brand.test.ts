@@ -22,7 +22,6 @@ const KNOWN: Record<string, number> = {
   "hosts/web/scripts/wasm.ts: prefix: mrly-": 1,
   "shell/index.html: mark: apple-touch-icon": 1,
   "system/settings/about.tsx: social: github.com/": 1,
-  "system/settings/appearance.tsx: font: MrlyFont": 1,
 };
 
 function files() {
@@ -54,4 +53,31 @@ test("no brand fact enters net/ beyond the known ones, which only shrink; a site
   for (const hit of hits()) seen[hit] = (seen[hit] ?? 0) + 1;
   const fresh = Object.entries(seen).filter(([hit, n]) => n > (KNOWN[hit] ?? 0));
   expect(fresh).toEqual([]);
+});
+
+const OWN = /^(?:shell|system)\/[^.]+(?:\/[^.]+)*\.(?:ts|tsx|css|html)$/;
+
+const WORD = /(?<!@)mrly/gi;
+
+const SPARED: Record<string, number> = {
+  "shell/app.tsx: mrly": 1,
+};
+
+test("the shell and the system apps never name the brand, in any case, beyond the spared ones, which only shrink", () => {
+  const seen: Record<string, number> = {};
+  for (const name of files().filter((one) => OWN.test(one) && !one.includes(".test.")))
+    for (const [hit] of readFileSync(join(NET, name), "utf8").matchAll(WORD))
+      seen[`${name}: ${hit}`] = (seen[`${name}: ${hit}`] ?? 0) + 1;
+  expect([
+    Object.entries(seen).filter(([hit, n]) => n > (SPARED[hit] ?? 0)),
+    Object.keys(SPARED).filter((hit) => !seen[hit]),
+  ]).toEqual([[], []]);
+});
+
+const HOUSE = /mrlyprod|mrlymath/gi;
+
+test("mrly.net's config names MrlyProd only in its copyright, its llms line and the home of its code", () => {
+  const config = (name: string) => readFileSync(join(NET, "mrly.net", name), "utf8");
+  const site = { ...JSON.parse(config("site.json")), company: "", llms: "", socials: "", git: "" };
+  expect([JSON.stringify(site), config("launchpad.json"), config("redirects.json")].join("\n").match(HOUSE)).toBeNull();
 });

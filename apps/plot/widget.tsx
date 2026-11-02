@@ -3,34 +3,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
 import type { Had, Readout } from "../../net/sdk/hooks.ts";
-import { useReroll } from "../../net/sdk/hooks.ts";
 import { Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Make } from "../../net/sdk/run.ts";
-import { next, roll } from "../shared/designs/engine.ts";
 import { KINDS } from "../shared/sequences/chart.ts";
 import type { Key, Row } from "../shared/sequences/engine.ts";
-import {
-  applies,
-  csv,
-  DEEP,
-  json,
-  ledger,
-  MEASURES,
-  measureOf,
-  parse,
-  print,
-  TERMS,
-} from "../shared/sequences/engine.ts";
+import { applies, booked, csv, DEEP, json, MEASURES, measureOf, parse, print } from "../shared/sequences/engine.ts";
 import { facts, found, hit } from "../shared/sequences/facts.ts";
 import { title } from "../shared/sequences/paint.ts";
 import { Record } from "../shared/sequences/parts.tsx";
 import type { Num } from "./engine.ts";
 import { combine, decimal, named, PAIRED, rule } from "./engine.ts";
-import type { Feed, Held, Knobs, Panel, Stage } from "./scene.ts";
-import { filed, make } from "./scene.ts";
+import type { Feed, Knobs, Panel, Stage } from "./scene.ts";
+import { filed, make, space } from "./scene.ts";
 
 /* TYPES */
 
@@ -38,7 +24,7 @@ export type Asked = Knobs & { seed: number; dim: number; base: number; code: str
 
 export type Asking = Pick<Asked, "dim" | "base" | "code" | "measure" | "axis">;
 
-type Contract = WidgetProps<Had<"math" | "num">, Held>;
+type Contract = WidgetProps<Had<"math" | "num">, Stage>;
 
 export type Props = Pick<Contract, "value" | "onChange"> &
   Partial<Pick<Contract, "onReady" | "onExport" | "onStatus" | "units">>;
@@ -50,8 +36,6 @@ const AXES: [string, string][] = [
 
 const SLICE = 8;
 const PULSE = 90;
-
-const space = (dim: number, base: number) => ({ dim, base: dim === 3 ? 2 : base });
 
 export const key = ({ dim, base, code, measure, axis }: Asking): Key | null => {
   const one = { ...space(dim, base), code: String(code ?? "").trim(), measure, axis };
@@ -95,8 +79,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: un
   now.current = value as Asked;
   tell.current = onChange;
   const math = unit?.math;
-  const book = useMemo(() => math && ledger(math), [math]);
-  const { dim, base, code, measure, axis, terms, chart, digits, seed, scode, smeasure, op, arg } = value as Asked;
+  const book = useMemo(() => math && booked(math), [math]);
+  const { dim, base, code, measure, axis, terms, chart, digits, scode, smeasure, op, arg } = value as Asked;
   const mixed = Number(value.mix) === 1;
   const paired = mixed && PAIRED.includes(op);
   const one = key({ dim, base, code, measure, axis });
@@ -106,11 +90,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: un
   useEffect(() => {
     if (dim === 3 && base !== 2) tell.current?.({ base: 2 });
   }, [dim, base]);
-  useReroll(seed, (fresh) => {
-    if (!math) return;
-    const { dim: d, base: q } = space(now.current.dim, now.current.base);
-    tell.current?.({ code: roll(math, d, q, rng(fresh >>> 0)) });
-  });
   useEffect(() => {
     if (!book || !a) return undefined;
     let timer: ReturnType<typeof setTimeout> | 0 = 0;
@@ -146,24 +125,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: un
     live.current = { panels: shown, version: live.current.version + 1 };
     stage.current?.draw?.();
   }, [shown]);
-  const codes = () =>
-    book
-      ? book
-          .designs(space(now.current.dim, now.current.base).dim, space(now.current.dim, now.current.base).base)
-          .map((one) => one.code)
-      : [];
-  const handle = {
-    mix: () => tell.current?.({ mix: Number(now.current.mix) === 1 ? 0 : 1 }),
-    design: (by: number) => tell.current?.({ code: next(codes(), now.current.code, by) }),
-    terms: (by: number) => tell.current?.({ terms: Math.max(TERMS.min, Math.min(TERMS.max, now.current.terms + by)) }),
-    cycle: () => {
-      const at = KINDS.findIndex(([slug]) => slug === now.current.chart);
-      tell.current?.({ chart: KINDS[(at + 1) % KINDS.length][0] });
-    },
-  };
   const ready = (got: Handle<Stage> | null) => {
     stage.current = got;
-    onReady?.(got && { ...got, ...handle });
+    onReady?.(got);
   };
   const scene = useCallback<Make<Stage>>((canvas, view, opts) => make(canvas, view, { ...opts, live }), []);
   const tap = (e: PointerEvent<HTMLCanvasElement>) => {

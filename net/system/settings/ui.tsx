@@ -66,6 +66,26 @@ type SwatchesProps = {
   disabled?: boolean;
 };
 
+/* GLYPH */
+
+export function Glyph({ art }: { art: string }) {
+  const rows = art.split(" ");
+  return (
+    <svg
+      className="glyphs"
+      viewBox={`0 0 ${rows[0].length} ${rows.length}`}
+      style={{ "--rows": rows.length, "--cols": rows[0].length } as Vars}
+      aria-hidden="true"
+    >
+      {rows
+        .flatMap((line, y) => [...line].flatMap((c, x) => (c === "#" ? [[x, y]] : [])))
+        .map(([x, y]) => (
+          <rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" />
+        ))}
+    </svg>
+  );
+}
+
 /* WORDS */
 
 const told = (...ids: (string | undefined)[]) => ids.filter(Boolean).join(" ") || undefined;

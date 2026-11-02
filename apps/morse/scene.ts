@@ -1,17 +1,20 @@
 import { rgb } from "../../net/sdk/color.ts";
 import type { Page } from "../../net/sdk/page.tsx";
+import type { Rng } from "../../net/sdk/rand.ts";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Raw, Spec, Value } from "../../net/sdk/spec.ts";
-import { tidy } from "../../net/sdk/spec.ts";
+import type { Raw, Row, Spec, Value } from "../../net/sdk/spec.ts";
+import { maxOf, minOf, tidy } from "../../net/sdk/spec.ts";
 import { palette } from "../../net/sdk/theme/palette.gen.js";
 import { dark, light } from "../../net/sdk/theme/theme.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
-import { DESIGN } from "../shared/designs/engine.ts";
+import { DESIGN, next } from "../shared/designs/engine.ts";
 import type { Design } from "../shared/designs/store.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
-import type { Bar, Doors, Grid, Inks, Knobs, Morse, Num, Plan } from "./engine.ts";
+import type { Bar, Doors, Grid, Inks, Kind, Knobs, Morse, Num, Plan } from "./engine.ts";
 import {
+  based,
   CELLS,
   COLOURS,
   cap,
@@ -21,15 +24,19 @@ import {
   FOLDS,
   fits,
   GRIDS,
+  KINDS,
   LEVELS,
   LIFTS,
   lay,
   PAD,
   PAINTS,
+  PICTURES,
   picture,
   pictureOf,
+  place,
   READS,
   ROUNDS,
+  roll,
   sideOf,
   sides,
   study,
@@ -44,8 +51,6 @@ export type Seen = Pick<View, "w" | "h" | "dpr">;
 export type Given = Opts & { num?: Num | null; math?: Mrly | null };
 
 export type Hands = {
-  deeper: (by: number) => void;
-  turn: (by: number) => void;
   toggle: () => void;
   playing: () => boolean;
 };
@@ -155,6 +160,51 @@ export function file(value: Raw, given?: Pick<Doors, "math">) {
   return ["morse", ...parts].join("-");
 }
 
+const row = (key: string): Row => SPEC.find((one) => one.key === key)!;
+
+export const KNOBS: Record<Kind, string> = { word: "round", plane: "level", power: "power", filter: "depth" };
+
+const within = (n: number, low: number, high: number) => Math.max(low, Math.min(high, n));
+
+export function shift(value: Value, by: number, wrap = false) {
+  const key = KNOBS[pictureOf(value)];
+  const spec = row(key);
+  const low = minOf(spec, value)!;
+  const top = maxOf(spec, value)!;
+  const to = (value[key] as number) + by;
+  return { [key]: wrap ? (to > top ? low : to < low ? top : to) : within(to, low, top) };
+}
+
+export const tapped = (value: Value) =>
+  value.view === "plane" ? { lift: next(KINDS, value.lift, 1) } : shift(value, 1, true);
+
+export const turned = (value: Value, by: number) => place(next(PICTURES, pictureOf(value), by));
+
+const among = <T>(list: readonly T[], rand: Rng) => list[Math.floor(rand() * list.length)];
+
+const span = (top: number) => Array.from({ length: top }, (_, i) => i + 1);
+
+export function rerolled(math: Mrly, value: Value, rand: Rng) {
+  const kind = pictureOf(value);
+  if (kind === "plane")
+    return {
+      lift: among(
+        KINDS.filter((one) => one !== value.lift),
+        rand,
+      ),
+      level: among(span(LEVELS), rand),
+    };
+  if (kind === "word")
+    return {
+      round: among(
+        span(ROUNDS).filter((one) => one !== value.round),
+        rand,
+      ),
+      colour: among(COLOURS, rand)[0],
+    };
+  return { code: roll(math, sideOf(value), based(value), rand) };
+}
+
 export const PAGE = {
   defaults: { base: 2, code: "9" },
   spec: SPEC,
@@ -182,10 +232,13 @@ export const PAGE = {
   ],
   actions: {
     play: (scene) => scene.toggle?.(),
-    up: (scene) => scene.deeper?.(1),
-    down: (scene) => scene.deeper?.(-1),
-    view: (scene, e) => scene.turn?.(e.key === "ArrowLeft" ? -1 : 1),
   },
+  acts: {
+    up: (value) => shift(value, 1),
+    down: (value) => shift(value, -1),
+    view: (value, key) => turned(value, key === "ArrowLeft" ? -1 : 1),
+  },
+  reroll: (value, seed, units) => rerolled(units!.math, value, rng(seed)),
 } satisfies Page<Loaded<"math" | "num">, Handled>;
 
 export function inks(canvas: Element | null | undefined): Inks {

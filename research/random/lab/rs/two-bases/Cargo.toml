@@ -1,7 +1,0 @@
-[package]
-name = "two-bases"
-edition = "2021"
-
-[dependencies]
-
-[workspace]

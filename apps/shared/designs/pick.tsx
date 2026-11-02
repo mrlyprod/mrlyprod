@@ -4,10 +4,13 @@ import { Btn, Icon, Segment, Pick as Select, Slider, Text } from "../../../net/s
 import { useUnit } from "../../../net/sdk/hooks.ts";
 import type { Patch, Raw, Value } from "../../../net/sdk/spec.ts";
 import { tidy } from "../../../net/sdk/spec.ts";
+import { useTheme } from "../../../net/sdk/theme/watch.ts";
 import type { Mrly } from "./engine.ts";
 import { cap, classes, DESIGN, roll } from "./engine.ts";
 import type { Design } from "./store.ts";
 import { enqueue, thumb } from "./thumb.ts";
+
+export { useTheme };
 
 /* TYPES */
 
@@ -42,23 +45,6 @@ export type PickProps = { value: Value; onChange: (value: Value) => void; math?:
 const STRIP = 32;
 const FILL = { width: "100%" };
 const MARGIN = "160px";
-
-/* UNIT */
-
-export function useTheme(): number {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const bump = () => setTick((was) => was + 1);
-    const shade = typeof matchMedia === "function" ? matchMedia("(prefers-color-scheme: dark)") : null;
-    addEventListener("theme", bump);
-    shade?.addEventListener("change", bump);
-    return () => {
-      removeEventListener("theme", bump);
-      shade?.removeEventListener("change", bump);
-    };
-  }, []);
-  return tick;
-}
 
 /* SIGHT */
 
@@ -168,7 +154,7 @@ export function Picker({ value, onChange, math, dims = [2, 3] }: PickerProps) {
           onChange={(v) => onChange({ level: v })}
         />
       )}
-      <Btn disabled={!math} onClick={() => write({ code: roll(math!, dim, base) })}>
+      <Btn disabled={!math} onClick={() => write({ code: roll(math!, dim, base, Math.random) })}>
         <Icon name="casino" />
         Random
       </Btn>

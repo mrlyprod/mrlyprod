@@ -18,6 +18,10 @@ export type Fn<T, U = Units> = (value: Value, units?: U) => T | undefined;
 
 export type Live<T, U = Units> = T | Fn<T, U>;
 
+export type Roll<U = Units> = (value: Value, seed: number, units?: U) => Patch;
+
+export type Nudge<U = Units> = (value: Value, key: string, units?: U) => Patch;
+
 export type Option = Scalar | [Scalar, Scalar];
 
 export type Kind = "slider" | "number" | "toggle" | "pick" | "segment" | "list" | "text";
@@ -182,3 +186,8 @@ export function places<U>(spec: Spec<U> = []): Places {
   const at = (after?: string) => (after !== undefined && (after === lead || rest.includes(after)) ? of(after) + 1 : 2);
   return { lead, of, at };
 }
+
+export const rolled = <U>(value: Value, seed: number, units?: U, roll?: Roll<U>): Patch => ({
+  ...roll?.(value, seed, units),
+  seed,
+});

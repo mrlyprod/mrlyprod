@@ -1,8 +1,8 @@
 import { rgb } from "../../net/sdk/color.ts";
-import type { Three } from "../../net/sdk/hooks.ts";
 import type { View } from "../../net/sdk/run.ts";
 import type { mesh } from "../shared/designs/mesh.ts";
 import { eye, frustum, SWING, THETA, TILT } from "../shared/designs/mesh.ts";
+import type { Three } from "../shared/three/three.ts";
 
 /* TYPES */
 

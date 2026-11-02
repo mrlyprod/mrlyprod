@@ -1,10 +1,11 @@
 import type { Site } from "site:routes";
 import type { Saver } from "../../sdk/rows.ts";
 import { AppIcon } from "../../shell/appicon.tsx";
-import type { Vars } from "../../shell/parts.tsx";
+import { app as routed } from "../../shell/catalog.ts";
 import { clock, idle, KEY, offs, savers } from "../../shell/prefs.ts";
+import { PLAIN } from "../../shell/tiles.ts";
 import type { Choice } from "./ui.tsx";
-import { Action, Item, Nav, Note, Pane as Page, Section, Select, Switch } from "./ui.tsx";
+import { Action, Glyph, Item, Nav, Note, Pane as Page, Section, Select, Switch } from "./ui.tsx";
 import { usePref } from "./use.ts";
 
 /* TYPES */
@@ -28,22 +29,11 @@ const play = (only?: string) => import("../../shell/idle.ts").then(({ start }) =
 
 /* FACE */
 
-const TILE = "#.#.# .#.#. #.#.# .#.#. #.#.#".split(" ");
-
 function Face({ app }: { app: string }) {
-  if (app !== "mrly") return <AppIcon id={app} className="screensaver-face" />;
+  if (routed(app)) return <AppIcon id={app} className="screensaver-face" />;
   return (
     <span className="screensaver-face screensaver-plain" aria-hidden="true">
-      <svg
-        className="glyphs"
-        viewBox={`0 0 ${TILE[0].length} ${TILE.length}`}
-        style={{ "--rows": TILE.length, "--cols": TILE[0].length } as Vars}
-        aria-hidden="true"
-      >
-        {TILE.flatMap((line, y) => [...line].flatMap((c, x) => (c === "#" ? [[x, y]] : []))).map(([x, y]) => (
-          <rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" />
-        ))}
-      </svg>
+      <Glyph art={PLAIN} />
     </span>
   );
 }

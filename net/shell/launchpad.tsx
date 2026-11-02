@@ -76,6 +76,7 @@ const APPS = [...KNOWN].map((id) => ({
   id,
   title: app(id)!.title,
   more: `${app(id)!.lead} ${section(id)}`,
+  aliases: app(id)!.meta.aliases ?? [],
   href: app(id)!.route,
 }));
 
@@ -87,7 +88,7 @@ let pull: (() => void) | null = null;
 
 export function opened(host: ParentNode) {
   pull?.();
-  const field = host.querySelector<HTMLInputElement>(".find input");
+  const field = host.querySelector<HTMLInputElement>("input[data-find]");
   if (!field || (!field.value && !matchMedia("(hover: hover)").matches)) return;
   field.focus({ preventScroll: true });
   field.setSelectionRange(field.value.length, field.value.length);
@@ -274,18 +275,9 @@ export function Launchpad() {
       live.current = saved();
       setShelves(live.current);
     };
-    const press = (e: MouseEvent) => {
-      const target = e.target instanceof Element ? e.target : null;
-      if (!target || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      if (target.closest(".trio .launch, .dock .launch")) {
-        e.preventDefault();
-        e.stopPropagation();
-        away();
-      } else if (target.closest(".tray .find")) {
-        e.preventDefault();
-        e.stopPropagation();
-        field.current?.focus();
-      }
+    const find = () => {
+      field.current?.focus();
+      field.current?.select();
     };
     const key = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(":popover-open, dialog[open]")) return;
@@ -294,7 +286,7 @@ export function Launchpad() {
     };
     addEventListener("recent", fresh);
     addEventListener("shelves", reload);
-    document.addEventListener("click", press, true);
+    addEventListener("find", find);
     document.addEventListener("keydown", key);
     pull = () => {
       const more = take();
@@ -304,7 +296,7 @@ export function Launchpad() {
       pull = null;
       removeEventListener("recent", fresh);
       removeEventListener("shelves", reload);
-      document.removeEventListener("click", press, true);
+      removeEventListener("find", find);
       document.removeEventListener("keydown", key);
       clearTimeout(clock.current);
     };
@@ -519,6 +511,7 @@ export function Launchpad() {
         veil: () => ({ onClick: away }),
         find: () => ({
           ref: field,
+          "data-find": "",
           placeholder: "Search apps, notes, settings",
           "aria-label": "Search",
           role: "combobox",

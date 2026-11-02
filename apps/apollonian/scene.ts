@@ -31,6 +31,7 @@ import {
   SIX,
   STRIDE,
   shade,
+  step,
   study,
 } from "./engine.ts";
 import type { Label, Rect } from "./shapes.ts";
@@ -47,11 +48,7 @@ export type Given = Opts & { num?: Num | null; onTell?: (facts: Told) => void };
 export type Seen = Pick<View, "w" | "h" | "dpr" | "t" | "still"> &
   Partial<Pick<View, "lock">> & { look: () => Pick<Paints, "paper" | "accent"> };
 
-export type Hands = { deeper: (by: number) => void };
-
 export type Apollonian = ReturnType<typeof make>;
-
-export type Handled = Apollonian & Hands;
 
 type Axis = (at: number) => number;
 
@@ -96,10 +93,9 @@ export const PAGE = {
   name: file,
   about: ABOUT,
   keys: [{ key: ["ArrowUp", "ArrowDown"], label: "Cap T", act: "cap", menu: "View" }],
-  actions: {
-    cap: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
-  },
-} satisfies Page<Loaded<"num">, Handled>;
+  acts: { cap: (value, key) => ({ cap: step(Number(value.cap), key === "ArrowDown" ? -1 : 1) }) },
+  reroll: (_value, seed) => roll(rng(seed)),
+} satisfies Page<Loaded<"num">, Apollonian>;
 
 export const SAVERS = [
   {

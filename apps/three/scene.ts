@@ -2,14 +2,16 @@ import type { Palette } from "@mrlyprod/draw";
 import { ink as inks } from "@mrlyprod/draw";
 import type { Paints } from "../../net/sdk/color.ts";
 import { rgb, TINTS } from "../../net/sdk/color.ts";
-import type { Had, Readout, Three } from "../../net/sdk/hooks.ts";
+import type { Had, Readout } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts } from "../../net/sdk/run.ts";
-import type { Row, Scalar, Spec, Value } from "../../net/sdk/spec.ts";
+import type { Patch, Row, Scalar, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
 import { palette } from "../../net/sdk/theme/palette.gen.js";
 import { dark, light } from "../../net/sdk/theme/theme.ts";
 import type { Code, Mrly } from "../shared/designs/engine.ts";
+import { DESIGN, roll } from "../shared/designs/engine.ts";
 import type {
   Axis,
   Centre,
@@ -34,6 +36,7 @@ import {
   counted,
   cropped,
   DEN,
+  DIM,
   design,
   FACES,
   faces,
@@ -58,6 +61,7 @@ import {
   top,
   walls,
 } from "../shared/three/engine.ts";
+import type { Three } from "../shared/three/three.ts";
 import type { Units } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
 import type { Body, Seen, Stage } from "./stage.ts";
@@ -119,8 +123,6 @@ export type Study = {
 };
 
 export type Hands = {
-  deeper: (by: number) => void;
-  widen: (by: number) => void;
   toggle: () => void;
   playing: () => boolean;
 };
@@ -326,6 +328,14 @@ export const units = wasm("math");
 export const name = (value: Value) =>
   `three-${String(value.code ?? "").trim() || CARPET}-${value.source === "field" ? "field" : `l${value.level}`}${value.crop ? `-${value.crop}` : ""}`;
 
+const COMBINE = ["sum", "xor"];
+
+export function rerolled(value: Value, seed: number, math: Mrly): Patch {
+  const rand = rng(seed);
+  const code = roll(math, DIM, Number(tidy(DESIGN, value).base), rand);
+  return value.source === "field" ? { code, combine: COMBINE[Math.floor(rand() * COMBINE.length)] } : { code };
+}
+
 export const PAGE: Page<Units<"math">, Held> = {
   defaults: { base: 2, code: "23" },
   design: { dim: 3, base: "base", code: "code" },
@@ -347,9 +357,12 @@ export const PAGE: Page<Units<"math">, Held> = {
     { key: "2", label: "Edge", act: "edge", menu: "View" },
     { key: "3", label: "Face", act: "face", menu: "View" },
   ],
+  acts: {
+    level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
+    radius: (value, key) => ({ radius: Number(value.radius) + (key === "ArrowLeft" ? -1 : 1) }),
+  },
+  reroll: (value, seed, units) => rerolled(value, seed, units!.math),
   actions: {
-    level: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
-    radius: (scene, e) => scene.widen?.(e.key === "ArrowLeft" ? -1 : 1),
     corner: (scene) => scene.look?.("corner"),
     edge: (scene) => scene.look?.("edge"),
     face: (scene) => scene.look?.("face"),

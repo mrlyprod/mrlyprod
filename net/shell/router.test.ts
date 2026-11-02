@@ -25,7 +25,7 @@ type Link = HTMLAnchorElement & {
   closest: () => Link | null;
 };
 
-type Drawn = Node & { row: Row; text: string; form: string | undefined; innerHTML: string };
+type Drawn = Node & { row: Row; text: string; innerHTML: string };
 
 const ROOT = "https://example.com";
 
@@ -164,7 +164,6 @@ const heard = {
   wire: [] as string[],
   gone: [] as string[],
   unmounts: 0,
-  form: null as (() => Promise<void>) | null,
 };
 const body = el("body");
 const main = el("main");
@@ -216,13 +215,7 @@ Object.assign(globalThis, {
   scrollTo: () => {},
   scrollY: 0,
   addEventListener: () => {},
-  MutationObserver: class {
-    constructor(fn: () => Promise<void>) {
-      heard.form = fn;
-    }
 
-    observe() {}
-  },
   fetch: async (url: string) => ({ ok: url in texts, status: url in texts ? 200 : 404, text: async () => texts[url] }),
 });
 
@@ -237,18 +230,16 @@ const shell = () => ({
     layout: {},
     render: (one: Row, _site: unknown, host: Node, { text }: { text: string }) => {
       if (breaks.has(row.route)) throw new Error("no chunk");
-      Object.assign(host, { row: one, text, form: document.documentElement.dataset.form });
+      Object.assign(host, { row: one, text });
     },
     unmount: () => heard.unmounts++,
   }),
 });
 
-const app = () => ({ ...shell(), gated: (row: Row) => Boolean(row.meta.scene) });
-
 mock.module("./mount.ts", () => ({}));
 mock.module("site:css", () => ({ css: {} }));
 mock.module("site:routes", () => ({ rows: ROWS, site: SITE }));
-mock.module("./app.tsx", app);
+mock.module("./app.tsx", shell);
 mock.module("./prose.tsx", shell);
 
 const { go } = await import("./router.ts");
@@ -339,27 +330,6 @@ test("a page that fails to load reloads once, then shows the error page", async 
     [`${ROOT}/about/`],
     "lede",
     true,
-  ]);
-});
-
-test("a gated app redraws when the form turns, and any other page stays", async () => {
-  const { dataset } = document.documentElement;
-  dataset.form = "desk";
-  await visit("/about/");
-  dataset.form = "phone";
-  await heard.form!();
-  const about = shown().form;
-  await visit("/life/");
-  const before = heard.unmounts;
-  dataset.form = "desk";
-  await heard.form!();
-  delete dataset.form;
-  expect([about, shown().row.route, shown().form, heard.unmounts - before, location.pathname]).toEqual([
-    "desk",
-    "/life/",
-    "desk",
-    1,
-    "/life/",
   ]);
 });
 

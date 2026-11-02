@@ -220,15 +220,9 @@ test("a theme change recolours the wheel and a size lays the stage again without
 });
 
 test("Enter is the primary, Stop or Spin as the scene plays, and 1 to 5 set the needles, on the turntable only", () => {
-  const got: (number | string)[] = [];
-  const hands = Object.assign({} as Handle<Spun>, {
-    needle: (rpm: number) => got.push(rpm),
-    toggle: () => got.push("toggle"),
-  });
-  PAGE.actions.needle(hands, { key: "5" });
-  PAGE.actions.needle(hands, { key: "1" });
-  PAGE.actions.spin(hands);
-  expect(got).toEqual([900, 33, "toggle"]);
+  const got: string[] = [];
+  PAGE.actions.spin(Object.assign({} as Handle<Spun>, { toggle: () => got.push("toggle") }));
+  expect([PAGE.acts.needle({}, "5"), PAGE.acts.needle({}, "1"), got]).toEqual([{ rpm: 900 }, { rpm: 33 }, ["toggle"]]);
   const enter = PAGE.keys.find((row) => row.key === "Enter")!;
   if (typeof enter.label !== "function") throw new Error("Enter wants a live label");
   expect([

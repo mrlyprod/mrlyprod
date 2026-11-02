@@ -11,30 +11,17 @@ import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Patch, Seeded, Value } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Doors, Source } from "./engine.ts";
-import { games, HEXES, LEVELS, MOSAICS, SPEEDS, study, VIEWS } from "./engine.ts";
-import type { Facts, Handled, Hands, Stage } from "./scene.ts";
+import { games, HEXES, MOSAICS, study, VIEWS } from "./engine.ts";
+import type { Facts, Stage } from "./scene.ts";
 import { file, make, sketch, tidied } from "./scene.ts";
 
 /* TYPES */
 
 export type ShelvesProps = { units: Doors; value: Value; tick: number; onChange: (patch: Patch) => void };
 
-type Props = WidgetProps<Doors, Handled> & { value: Seeded };
+type Props = WidgetProps<Doors, Stage> & { value: Seeded };
 
 type Entry = [string, Patch, string?];
-
-const within = (n: number, low: number, high: number) => Math.max(low, Math.min(high, n));
-
-export const deeper = (value: Value, by: number, cap = LEVELS) => ({
-  level: within(Number(value.level) + by, 1, cap),
-});
-
-export function faster(value: Value, by: number) {
-  const at = SPEEDS.findIndex(([speed]) => speed === Number(value.speed));
-  return { speed: SPEEDS[within(Math.max(at, 0) + by, 0, SPEEDS.length - 1)][0] };
-}
-
-export const flipped = (value: Value) => ({ grid: Number(value.grid) === 1 ? 0 : 1 });
 
 /* ROWS */
 
@@ -143,13 +130,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   );
   const ready = (handle: Handle<Stage> | null) => {
     live.current = handle;
-    if (!handle) return onReady?.(null);
-    const hands: Hands = {
-      deeper: (by) => hooks.current(deeper(now.current, by, handle.source().cap)),
-      faster: (by) => hooks.current(faster(now.current, by)),
-      flip: () => hooks.current(flipped(now.current)),
-    };
-    onReady?.({ ...handle, ...hands });
+    onReady?.(handle);
   };
   const tap = (e: PointerEvent<HTMLCanvasElement>) => {
     const got = live.current;

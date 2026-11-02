@@ -10,12 +10,6 @@ export const PANES: Pane[] = [
     more: "theme dark light mode font text size tint accent colour color icon icons style tinted clock time hours 12-hour 24-hour",
   },
   {
-    id: "glass",
-    title: "Glass",
-    art: "..#.. .###. #.### ##### .###.",
-    more: "liquid clear tinted frosted transparency blur",
-  },
-  {
     id: "desktop",
     title: "Desktop & Dock",
     art: "##### #...# ##### ..#.. .###.",

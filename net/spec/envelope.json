@@ -1,0 +1,91 @@
+{
+  "spec": "0.1",
+  "title": "Envelope",
+  "line": "One frame for a screen or a wire: the answer to every call and every read.",
+  "type": "object",
+  "properties": {
+    "spec": {
+      "type": "string"
+    },
+    "tick": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "route": {
+      "type": "object",
+      "properties": {
+        "app": {}
+      },
+      "required": ["app"],
+      "additionalProperties": false
+    },
+    "state": {},
+    "moves": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*$"
+      }
+    },
+    "beat": {},
+    "last": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "note": {}
+      },
+      "required": ["ok", "note"],
+      "additionalProperties": false
+    },
+    "wishes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "data": {},
+          "reply": {
+            "type": "object",
+            "properties": {
+              "verb": {
+                "type": "string"
+              }
+            },
+            "required": ["verb"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["kind", "data"],
+        "additionalProperties": false
+      }
+    },
+    "notices": {
+      "type": "array"
+    },
+    "paid": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": ["from", "to", "amount"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["spec", "tick", "route", "state", "moves", "beat", "last", "wishes", "notices"],
+  "additionalProperties": false
+}

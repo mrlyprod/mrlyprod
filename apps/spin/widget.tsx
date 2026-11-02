@@ -7,9 +7,9 @@ import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Patch } from "../../net/sdk/spec.ts";
-import { drawn, NEEDLES, RPM, title } from "../shared/spin/engine.ts";
+import { NEEDLES, title } from "../shared/spin/engine.ts";
 import { Moires } from "../shared/spin/shelves.tsx";
-import { read, Source, useReroll } from "../shared/spin/source.tsx";
+import { Source } from "../shared/spin/source.tsx";
 import type { Facts, Pace, Spin, Spun } from "./scene.ts";
 import { make, spinning } from "./scene.ts";
 
@@ -67,10 +67,6 @@ export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
   const now = useLatest(value);
   const change = useLatest(onChange);
   const table = spinning(value);
-  useReroll(
-    value.seed,
-    (rand) => unit && change.current({ ...drawn(unit, read(now.current), rand), rpm: Math.floor(rand() * (RPM + 1)) }),
-  );
   useEffect(() => onStatus?.(rows(facts, pace)), [facts, pace]);
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
@@ -84,11 +80,7 @@ export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
   const ready = (handle: Handle | null) => {
     live.current = handle;
     setPace(null);
-    const hands = {
-      speed: (by: number) => change.current({ rpm: now.current.rpm + by }),
-      needle: (rpm: number) => change.current({ rpm }),
-    };
-    onReady?.(handle && { ...handle, ...hands });
+    onReady?.(handle);
   };
   return (
     <>

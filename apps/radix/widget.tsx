@@ -4,21 +4,19 @@ import { paints } from "../../net/sdk/color.ts";
 import { Btn, Fold, Pick, Text } from "../../net/sdk/controls.tsx";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
-import type { Had, Readout } from "../../net/sdk/hooks.ts";
-import { useReroll, useUnits } from "../../net/sdk/hooks.ts";
+import type { Readout } from "../../net/sdk/hooks.ts";
+import { useUnits } from "../../net/sdk/hooks.ts";
 import type { Change } from "../../net/sdk/knobs.tsx";
 import { Knob } from "../../net/sdk/knobs.tsx";
 import type { Paint } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Patch } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import { thumb } from "../shared/designs/thumb.ts";
-import { wasm } from "../shared/units/index.ts";
-import type { Design, Dialed, Facts, Pair, Preset, Shaped, Word } from "./engine.ts";
+import type { Design, Dialed, Facts, Pair, Word } from "./engine.ts";
 import {
   BASES,
   BOX,
@@ -34,26 +32,20 @@ import {
   LETTERS,
   PRESETS,
   pair,
-  preset,
   RINGS,
   rebase,
-  rolled,
   spell,
   toggle,
   turn,
   twisted,
   wears,
 } from "./engine.ts";
-import type { Handled, Knobs, Moves, Radix, Sketch } from "./scene.ts";
-import { file, make, SPEC, sketch } from "./scene.ts";
+import type { Doors, Knobs, Listed, Moves, Radix, Sketch } from "./scene.ts";
+import { file, make, SPEC, presets as shelf, sketch, units as UNITS } from "./scene.ts";
 
 /* TYPES */
 
-type Doors = Had<"math" | "num">;
-
 type Put = (patch: Patch | null) => void;
-
-export type Listed = [Preset, Shaped | null];
 
 export type ChipsProps = { dialed: Dialed | null; onToggle: (cls: number) => void };
 
@@ -77,7 +69,7 @@ export type DesignsProps = {
   change: Put;
 };
 
-type Contract = WidgetProps<Doors, Handled>;
+type Contract = WidgetProps<Doors, Radix>;
 
 type Props = Partial<Contract> & Pick<Contract, "value" | "onChange"> & { value: Knobs & { seed: number } };
 
@@ -88,8 +80,6 @@ type Now = {
   units: Doors | null;
   name: string;
 };
-
-const UNITS = wasm("math", "num");
 
 const row = (key: string) => SPEC.find((one) => one.key === key);
 
@@ -116,12 +106,6 @@ export const rows = (f: Facts | null): Readout[] =>
     : [];
 
 export const degrees = (k: number, n: number) => `${Math.round((360 * k) / n)}°`;
-
-export function next(name: string, by: number) {
-  const at = PRESETS.findIndex(([one]) => one === name);
-  if (at < 0) return PRESETS[by > 0 ? 0 : PRESETS.length - 1][0];
-  return PRESETS[(at + by + PRESETS.length) % PRESETS.length][0];
-}
 
 export const deeper = (value: { level: number; d?: unknown }) => (value.level >= cap(value) ? 1 : value.level + 1);
 
@@ -317,10 +301,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
     () => units && dial(units.num, units.math, value),
     [units, value.ring, value.base, value.d, value.t],
   );
-  const presets = useMemo(
-    () => (units ? PRESETS.map(([name]): Listed => [name, preset(units.num, units.math, name)]) : []),
-    [units],
-  );
+  const presets = useMemo(() => (units ? shelf(units) : []), [units]);
   const name = presets.find(([, one]) => wears(value, one))?.[0] ?? "";
   const label = PRESETS.find(([one]) => one === name)?.[1] ?? "Custom";
   const now = useRef<Now | null>(null);
@@ -333,18 +314,12 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
   const moves: Moves = {
     flat: () => now.current!.dialed && change(flat(now.current!.dialed)),
     every: () => now.current!.dialed && change(every(now.current!.dialed)),
-    deeper: (by) => change({ level: now.current!.value.level + by }),
-    step: (by) => {
-      const { units: held, name: was } = now.current!;
-      if (held) change(preset(held.num, held.math, next(was, by)));
-    },
   };
   const ready = (handle: Handle<Radix> | null) => {
     live.current = handle;
     if (!handle) setFacts(null);
-    onReady?.(handle && { ...handle, ...moves });
+    onReady?.(handle);
   };
-  useReroll(value.seed, (seed) => dialed && change(rolled(dialed, rng(seed))));
   const told: Readout[] = facts ? [["design", label], ...rows(facts)] : [];
   const key = JSON.stringify(told);
   useEffect(() => onStatus?.(told), [key]);

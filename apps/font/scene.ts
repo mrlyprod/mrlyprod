@@ -119,8 +119,11 @@ export const ABOUT = [
   "Text writes your own words cell by cell, then folds them into one stack and back. A tap rewrites a pen or the text; a click in the gallery adds a glyph.",
 ];
 
+export const units = wasm("font");
+
 export const PAGE = {
   spec: SPEC,
+  units,
   name: named,
   about: ABOUT,
   record: true,
@@ -155,8 +158,6 @@ export const SAVERS = [
     }),
   },
 ];
-
-export const units = wasm("font");
 
 const FIT = 0.92;
 

@@ -1,7 +1,0 @@
-[package]
-name = "design-ladder"
-edition = "2021"
-
-[dependencies]
-
-[workspace]

@@ -10,10 +10,9 @@ import { Knobs, useAccordion } from "../../net/sdk/knobs.tsx";
 import { defaults } from "../../net/sdk/spec.ts";
 import { all, mount, text } from "../../net/test/dom.ts";
 import { dial, PRESETS, preset, study } from "./engine.ts";
-import type { Knobs as Knobbed } from "./scene.ts";
-import { SPEC } from "./scene.ts";
-import type { Listed } from "./widget.tsx";
-import { Chips, Designs, deeper, degrees, next, Pane, rows, Widget } from "./widget.tsx";
+import type { Knobs as Knobbed, Listed } from "./scene.ts";
+import { next, SPEC } from "./scene.ts";
+import { Chips, Designs, deeper, degrees, Pane, rows, Widget } from "./widget.tsx";
 
 const value = { ...(defaults(SPEC) as Knobbed), seed: 1 };
 

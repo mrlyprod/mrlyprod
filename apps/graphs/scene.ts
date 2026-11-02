@@ -1,10 +1,9 @@
 import type { graph } from "@mrlyprod/math";
 import type { Paints } from "../../net/sdk/color.ts";
 import { HUES, mix, rgb } from "../../net/sdk/color.ts";
-import type { Three } from "../../net/sdk/hooks.ts";
 import type { Mathy, Page } from "../../net/sdk/page.tsx";
 import type { Rng } from "../../net/sdk/rand.ts";
-import { pick } from "../../net/sdk/rand.ts";
+import { pick, rng } from "../../net/sdk/rand.ts";
 import type { Scene as Made, Opts, View } from "../../net/sdk/run.ts";
 import type { Spec, Units, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
@@ -12,6 +11,7 @@ import { tints } from "../../net/sdk/theme/hues.ts";
 import { palette } from "../../net/sdk/theme/palette.gen.js";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { canon } from "../shared/designs/engine.ts";
+import type { Three } from "../shared/three/three.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
 import type { Ask, Graph, Knobs, Laid, Plan, Seed } from "./engine.ts";
@@ -37,6 +37,7 @@ import {
   spaceOf,
   study,
   top,
+  turn,
   VIEWS,
 } from "./engine.ts";
 import type { Args, Moves, Room } from "./space.ts";
@@ -72,10 +73,6 @@ export type Stage = Partial<Moves> & {
 };
 
 export type Net = ReturnType<typeof make>;
-
-export type Steps = { deeper: (by: number) => void; next: (by: number) => void };
-
-export type Handled = Made & Steps;
 
 const NEVER = () => false;
 const BASES: [number, string][] = [
@@ -158,10 +155,13 @@ export const PAGE = {
   ],
   actions: {
     relax: (scene) => scene.toggle?.(),
-    level: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
-    graph: (scene, e) => scene.next?.(e.key === "ArrowLeft" ? -1 : 1),
   },
-} satisfies Page<Loaded<"math">, Handled>;
+  acts: {
+    level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
+    graph: (value, key) => ({ graph: turn(value, key === "ArrowLeft" ? -1 : 1) }),
+  },
+  reroll: (value, seed, units) => deal(units!.math, value as unknown as Knobs, rng(seed)),
+} satisfies Page<Loaded<"math">, Made>;
 
 /* SAVERS */
 

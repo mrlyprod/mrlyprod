@@ -1,11 +1,10 @@
 import type { PointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useReroll, useUnits } from "../../net/sdk/hooks.ts";
+import { useUnits } from "../../net/sdk/hooks.ts";
 import { Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Units } from "../../net/sdk/spec.ts";
 import { ledger } from "../shared/sequences/engine.ts";
@@ -13,7 +12,7 @@ import { wasm } from "../shared/units/index.ts";
 import type { Picked } from "./cards.ts";
 import { build, CARDS, shown } from "./cards.ts";
 import type { Feed, Tour } from "./scene.ts";
-import { make } from "./scene.ts";
+import { make, walked } from "./scene.ts";
 
 /* TYPES */
 
@@ -27,24 +26,6 @@ const UNITS = wasm("math", "num");
 
 const STILL = {};
 
-export function rolled(seed: number): Picked {
-  const rand = rng(seed >>> 0);
-  const card = Math.floor(rand() * CARDS.length);
-  const one = CARDS[card];
-  return { card, step: one.min + Math.floor(rand() * (one.max - one.min + 1)) };
-}
-
-export const turned = (card: number, by: number): Picked => {
-  const next = (card + by + CARDS.length) % CARDS.length;
-  return { card: next, step: CARDS[next].first };
-};
-
-export const walked = (card: number, step: number, by: number) => {
-  const one = CARDS[card];
-  const next = step + by;
-  return { step: next > one.max ? one.min : next < one.min ? one.max : next };
-};
-
 export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const units = useUnits(UNITS);
   const live = useRef<Feed>({ made: null, version: 0 });
@@ -54,8 +35,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
   now.current = value;
   tell.current = onChange;
   const book = useMemo(() => units && ledger(units.math), [units]);
-  const { card, step, seed } = value;
-  useReroll(seed, (fresh) => tell.current?.(rolled(fresh)));
+  const { card, step } = value;
   const made = useMemo(() => (units && book ? build({ ...units, book }, card, step) : null), [units, book, card, step]);
   const said = shown(card, step);
   useEffect(() => {
@@ -83,13 +63,9 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
       ]);
     onStatus?.(rows);
   }, [toldKey]);
-  const handle = {
-    turn: (by: number) => tell.current?.(turned(now.current.card, by)),
-    walk: (by: number) => tell.current?.(walked(now.current.card, now.current.step, by)),
-  };
   const ready = (got: Handle<Tour> | null) => {
     stage.current = got;
-    onReady?.(got && { ...got, ...handle });
+    onReady?.(got);
   };
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, live }),
@@ -100,7 +76,8 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     if (!got?.tap) return;
     const box = e.currentTarget.getBoundingClientRect();
     const k = e.currentTarget.width / (box.width || 1);
-    if (got.tap((e.clientX - box.left) * k, (e.clientY - box.top) * k)?.picture) handle.walk(1);
+    if (got.tap((e.clientX - box.left) * k, (e.clientY - box.top) * k)?.picture)
+      tell.current?.(walked(now.current.card, now.current.step, 1));
   };
   const one = CARDS[card];
   if (!units) return null;

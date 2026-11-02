@@ -5,7 +5,7 @@ import { Bar, usePanes } from "../../net/sdk/frame.tsx";
 import { state } from "../../net/sdk/history.ts";
 import { Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import { index, resolve } from "../../net/sdk/md/links.ts";
-import { front, mathml, render as md } from "../../net/sdk/md/md.ts";
+import { front, reader } from "../../net/sdk/md/md.ts";
 import { COPY, library, Reader, rule, useCopy } from "../../net/sdk/reader.tsx";
 import type { Row, Topic } from "../../net/sdk/rows.ts";
 import type { Drawn } from "../../net/shell/figures.ts";
@@ -45,7 +45,7 @@ async function read(slug: string, title: string) {
   if (!reply.ok) throw new Error(`research: /raw/${source} answered ${reply.status}`);
   const { body } = front(await reply.text());
   const text = /^#\s/.test(body.trimStart()) ? body : `# ${title}\n\n${body}`;
-  return md(text, { math: await mathml(text), lazy: true, link: (url) => resolve(source, url, NONE) });
+  return (await reader()).markdown(text, { lazy: true, link: (url) => resolve(source, url, NONE) });
 }
 
 const go = (href: string) => dispatchEvent(new CustomEvent("go", { detail: href }));

@@ -1,6 +1,6 @@
 # APPS
 
-- Every folder here but `shared/` is one app, one route, `/<id>/`; `shared/` holds the app families; `../net/system/` and `../org/` hold the other routes; `../net/README.md` has the `app.json` fields and the build checks.
+- Every folder here but `shared/` is one app, one route, `/<id>/`, served by mrlyprod.com through the `roots` of its `site.json`; mrly.net no longer does; `shared/` holds the app families; `../net/system/` and `../org/` hold the other routes; `../net/README.md` has the `app.json` fields and the build checks.
 - `bun test apps` from the repo root runs the apps' tests, the families' tests, `apps.test.ts` and `verbs.test.ts`.
 - The code holds every constant: a timing, a colour or a size lives in its file, never here.
 
@@ -12,6 +12,7 @@
 - `scene.ts` names its wasm units with `export const units = wasm('math', ...)` from `shared/units/`; a widget that needs one before the page hands it over takes it with `useUnit(name, given)` from `../net/sdk/hooks.ts`; no scene, engine or widget imports a unit, a figure names its own, and the test preload initialises them.
 - A family shares its code through `shared/<family>/`, the head app included; `shared/README.md` has them; no app imports another (`../net/test/imports.test.ts`).
 - `shared/designs/` is the shared design kit: the rules and `DESIGN` in `engine.ts`, the picker (`Pick`, `Picker`, `Thumbs`) in `pick.tsx`.
+- `designs/desk.tsx` is the Design of the day widget: one design a date for everyone, from the classes of the 2D and 3D spaces whose dimension is past half their own; a site shows it by naming `designs` in `site.json` `widgets`.
 - An id is typed nowhere but its folder: the chrome and the lock name no saver (`apps.test.ts`).
 
 ## SCENE
@@ -27,14 +28,18 @@
 - The lock reads `hold()` and `windDown(onDone)`, and a saver's `units`, whose `ready` it awaits before spreading the units into `opts`.
 - `run(canvas, make, opts, { still, lock })` in `../net/sdk/run.ts` drives a scene and returns `stop`, with `pause`, `play`, `coast`, `fix`, `set` and `scene`.
 - `stop.fix({ frame, step, dpr })` pins the store and the step for a take or a sized export: `view.fixed` true for a take; a frame with its own `dpr` is a still; `stop.fix()` returns to the box.
+- `PAGE.reroll(value, seed, units)`: the knobs a reroll writes, a pure `Roll` (`../net/sdk/spec.ts`) of the tidied value and the new seed; the page draws the seed (a human's random), the kernel's `reroll` verb draws it from the world, and both write `rolled(value, seed, units, reroll)`, so one seed gives one set of knobs.
+- `PAGE.acts`: the key acts that only turn knobs, each a pure `Nudge` `(value, key, units) => patch`, `key` the key pressed; the page runs them on its keys and the kernel lists each as a verb `<user>.<app>.<act>`, its args the act's keys (`{ key }` when it has several).
+- `PAGE.actions` keeps the acts that touch the scene and not the knobs (play, pause, trace, a camera, a sound, an export); they stay on the page and never become verbs.
+- Neither touches a handle, a clock or `Math.random`; a family shares its reroll through its engine (`shared/two/engine.ts`).
 
 ## REDUCER
 
 - A reducer app's `engine.ts` is pure over one JSON state: `boot(config)`, `moves(state)`, `step(state, act)`, `read(state, path?)`; today snake, race, chaos, life, matrix and sleep.
 - State holds integers, strings and nulls only, the generator's state included (`seed`, a `../net/sdk/rand.ts` xorshift); no clock, no `Math.random`, no DOM, and `step` never mutates its input.
-- Each also exports `deal(value, table)`: the opening for a value, the table `{ seed, rand, units }` plus the stage `{ w, h, dpr, lock }` where the app needs one; the scene deals through it or the pieces it joins, and `bun run play` calls it, so the terminal deals what the page deals.
+- Each also exports `deal(value, table)`: the opening for a value, the table `{ seed, rand, units }` plus the stage `{ w, h, dpr, lock }` where the app needs one; the scene deals through it or the pieces it joins, and the kernel's adapter (`../net/sdk/apps.ts`) calls it, so the terminal deals what the page deals.
 - The scene calls `step`; a player or policy (`policy.ts`, its names in a `SPEC` row beside `me`) picks from `moves` and stays outside the state.
-- `bun run play` drives every reducer app from the terminal over JSON lines; `../net/hosts/web/scripts/README.md` has it.
+- In the kernel a reducer app keeps its knobs at the top of its state and its game under `play`; its acts are verbs beside `set` and `reroll` (`mrlyprod.snake.turn`), driven by `bun run mrlynet` (`../net/doors/README.md`).
 - Snake has a `policy.ts`.
 - Race boots from its two boards as strings of `0` and `1`; its trail and reach log only paint, so its series keeps them outside the state.
 - Chaos boots from its source's moves and letters; a hex point's floats ride as exact number strings, and its meter and move log stay in the scene.
@@ -51,12 +56,12 @@
 - `<Scene make value onReady ...canvas props />` (`../net/sdk/page.tsx`) is one canvas and one `run` per `make`, so a widget binds its units into `make` with `useCallback`.
 - `<Bar side>` portals into a slot: `left` (the Library panel), `right` (folds beside the spec's), `status`, `hints`, `actions`.
 - `Library`, `Shelf`, `Item` and `Art` (`../net/sdk/library.tsx`) fill the left panel: a title, an optional search field and filter chips, then named shelves of rows or thumb tiles; `Art` draws a cheap thumb lazily, one a frame.
-- `useReroll(seed, fn)` (`../net/sdk/hooks.ts`) runs `fn(next)` when the user rerolls (the key, the button, the menu), never when the url or Undo changes the seed; a widget that writes on a reroll uses it.
 - `Fold` from `../net/sdk/controls.tsx` with no `open` joins the accordion; `Knob` from `../net/sdk/knobs.tsx` draws one spec row inside a widget fold.
 
 ## PAGE
 
-- `PAGE` in `scene.ts` holds the `page()` options: `defaults`, `spec` (`SPEC`), `units` (the `wasm()` thunk), `keys`, `actions` (an `act` to `(handle, event)`), `gestures`, `record`, `about`, `still`, `name`, `design`.
+- `PAGE` in `scene.ts` holds the `page()` options: `defaults`, `spec` (`SPEC`), `units` (the `wasm()` thunk), `keys`, `acts` and `reroll` (SCENE), `actions` (an `act` to `(handle, event)`), `gestures`, `record`, `about`, `still`, `name`, `design`.
+- `units` names every unit a spec row, an act or the reroll reads, so the kernel loads what the page loads.
 - `design` is the slot of an app that takes a design: `{ dim, base, code, dims, bases, spaces }`, a string naming the url key, a number fixing it, `dims` may include 1 (a line design grown as a one-row strip), `spaces` the `[dim, base]` pairs when not every pair works, `holds(design, value)` keeps only the designs that work with the other knobs, `when(value)` hides the chip, `blank` names an empty code that means something else than the home design (`Random`); the chip in the actions pill picks through it, and a url with no code opens on the current design (`shared/designs/store.ts`).
 - `gestures: true` hands touch to the canvas; `record: true` adds the Video exports, `v` and Stop.
 - `about`: plain paragraphs at the top of Info; `[text](/route/)` is a link.
@@ -84,13 +89,13 @@
 - Right panel: the spec's groups and the widget's folds in one accordion, the open set kept per app in sessionStorage `knobs:<id>`, the first fold met open, Seed last; a summary shows its live values.
 - Bar menus (`../net/sdk/menus.ts`, drawn by `../net/shell/menus.ts`): File (Export, its rows, Copy Link), Edit (Undo, Redo, Reroll, Reset Knobs), View (the view segment, Show Library, Show Knobs, Zen), Go (Home, Launchpad, recent apps, the section's other apps), Help (Keys, Info, the topic's research note); a keys row with `menu` joins its menu.
 - Undo and Redo (Cmd or Ctrl with Z, Shift for Redo): an in-app stack of url values, changes closer than 500 ms one step; a text field keeps its own.
-- Reset Knobs puts every spec row back to its default but the design's keys.
+- Reset Knobs puts every spec row back to its default but the design's keys; the page's own acts (`copy`, `undo`, `redo`, `reset`, `export`, `keys`, `info`) win over an app act of the same name.
 - Export: a dialog of PNG or WebP, a size pick, the app's rows and the Video rows; `../net/sdk/export.ts` saves, `../net/sdk/svg.ts` writes every SVG.
 - Info: `about`, then every readout; offered when the app has either.
 - Keys (`../net/sdk/keys.tsx`): Space pause, the app's rows, `r` reroll, `e` export, `i` info, `z` zen, `?` the keys card; an app row on a base key replaces it.
 - A key in the knobs pane, a field or a select stays there; a pointer-changed control lets go of focus, so keys reach the page.
 - Zen (`z`, the View menu, Escape or the corner button out): `data-zen` on `html`, the canvas alone; never kept.
-- The glass reads the app canvas mirrored past its edge, so the panels and pills bend the picture beside them.
+- The app canvas is a source of `../net/sdk/feed.ts`; a design whose glass refracts it (the `liquid` prototype) reads it mirrored past its edge, so the panels and pills bend the picture beside them.
 
 ## RULES
 

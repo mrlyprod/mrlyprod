@@ -3,13 +3,19 @@
   const home = ["/", "/index.html"].includes(location.pathname);
   d.classList.add("js");
   const p = d.dataset.prefix || "";
+  const knob = `${p}knob-`;
   try {
-    for (const k of ["theme", "font", "tint", "glass", "text", "motion", "contrast", "targets"]) {
+    for (const k of ["theme", "tint", "text", "motion", "contrast", "targets"]) {
       const v = localStorage.getItem(`${p}${k}`);
       if (v) d.dataset[k] = v;
     }
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i) || "";
+      const v = k.startsWith(knob) && localStorage.getItem(k);
+      if (v) d.dataset[k.slice(knob.length)] = v;
+    }
     if (localStorage.getItem(`${p}clear`) === "1" || matchMedia("(prefers-reduced-transparency: reduce)").matches)
-      d.dataset.glass = "off";
+      d.dataset.clear = "1";
     const icons = localStorage.getItem(`${p}icons`);
     const tone =
       localStorage.getItem(`${p}icons-always`) ||
@@ -30,10 +36,4 @@
     d.dataset.desk = "";
     d.dataset.window = "none";
   }
-  const forms = ["(pointer: coarse) and (max-width: 44rem)", "(max-width: 40rem)"].map((one) => matchMedia(one));
-  const form = () => {
-    d.dataset.form = forms.some((one) => one.matches) ? "phone" : "desk";
-  };
-  form();
-  for (const one of forms) one.addEventListener("change", form);
 })();

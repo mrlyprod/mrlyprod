@@ -1,7 +1,0 @@
-[package]
-name = "squares"
-edition = "2021"
-
-[dependencies]
-
-[workspace]

@@ -1,21 +1,16 @@
-import type { MouseEvent as Clicked, ComponentType } from "react";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { order, widgets } from "site:widgets";
+import type { MouseEvent as Clicked } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { flushSync } from "react-dom";
-import type { Mrly } from "../../apps/shared/designs/engine.ts";
-import { classes, dimension } from "../../apps/shared/designs/engine.ts";
-import { useTheme } from "../../apps/shared/designs/pick.tsx";
-import { thumb } from "../../apps/shared/designs/thumb.ts";
 import { stamp } from "../sdk/clock.ts";
-import { paints } from "../sdk/color.ts";
 import type { Draft } from "../sdk/drag.ts";
 import { placed, sortable } from "../sdk/drag.ts";
-import { useUnit } from "../sdk/hooks.ts";
 import { px } from "../sdk/px.ts";
+import type { Desk } from "../sdk/rows.ts";
 import { parts } from "./active.ts";
 import { AppIcon } from "./appicon.tsx";
-import type { Note } from "./catalog.ts";
-import { app, KNOWN, notes, recent } from "./catalog.ts";
-import { ago, daily, gist, today } from "./launch.ts";
+import { app, recent } from "./catalog.ts";
+import { ago, gist } from "./launch.ts";
 import type { Spot } from "./lens.ts";
 import { measure } from "./measure.ts";
 import { show } from "./parts.tsx";
@@ -24,21 +19,14 @@ import type { Wired } from "./route.ts";
 
 /* TYPES */
 
-export type Widget = { id: string; name: string; size: "wide" | "small"; Body: ComponentType };
-
-export type Daily = { dim: number; base: number; code: string; label: string; href: string };
+export type Widget = Desk & { id: string };
 
 export type Box = { w: number; h: number };
 
 type Hooks = { preview: (next: Draft | null) => void; commit: (next: Draft | null) => void };
 
 const MINUTE = 60000;
-const SPACES: [number, number][] = [
-  [2, 2],
-  [3, 2],
-  [2, 3],
-];
-const SKIP = "a, button, input, textarea, select, [popover], .bar, .docked";
+const SKIP = "a, button, input, textarea, select, [popover], .barred, .docked";
 const EDGE = measure.edge;
 
 const two = (n: number) => String(n).padStart(2, "0");
@@ -98,52 +86,6 @@ function Clock() {
   );
 }
 
-/* DAY */
-
-export function chosen(math: Mrly, day: string): Daily | null {
-  const pool = SPACES.flatMap(([dim, base]) =>
-    (classes(math, dim, base) ?? [])
-      .map((one) => String(one.code))
-      .filter((code) => {
-        const d = dimension(math, dim, base, code);
-        return d > dim / 2 && d < dim;
-      })
-      .map((code) => ({ dim, base, code })),
-  );
-  const one = pool[daily(day, pool.length)];
-  if (!one) return null;
-  const name = math.name.of(one.code, one.dim, one.base) ?? "code";
-  return {
-    ...one,
-    label: `${name} ${one.code} · ${one.dim}D${one.base === 3 ? ", base 3" : ""}`,
-    href: `/designs/?dim=${one.dim}&base=${one.base}&code=${one.code}`,
-  };
-}
-
-function Day() {
-  const math = useUnit("math");
-  const tick = useTheme();
-  const now = useNow();
-  const day = today(now);
-  const pick = useMemo(() => (math ? chosen(math, day) : null), [math, day]);
-  const art = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = art.current;
-    if (!canvas || !pick) return;
-    const side = Math.round((canvas.getBoundingClientRect().width || 96) * Math.min(devicePixelRatio || 1, 2));
-    canvas.width = side;
-    canvas.height = side;
-    thumb(canvas.getContext("2d")!, math!, pick.dim, pick.base, pick.code, side, paints(canvas));
-  }, [pick, tick]);
-  return (
-    <a className="fill" href={pick?.href ?? "/designs/"}>
-      <h2>Design of the day</h2>
-      <canvas className="art" ref={art} aria-hidden="true" />
-      <p>{pick?.label ?? "Designs"}</p>
-    </a>
-  );
-}
-
 /* CONTINUE */
 
 function Continue() {
@@ -174,61 +116,17 @@ function Continue() {
   );
 }
 
-/* RESEARCH */
-
-function Research() {
-  const [topics, setTopics] = useState<Note[] | null>(null);
-  useEffect(() => {
-    let on = true;
-    notes().then((list) => on && setTopics(list));
-    return () => {
-      on = false;
-    };
-  }, []);
-  const top = topics?.length
-    ? [...topics].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? "") || a.title.localeCompare(b.title))[0]
-    : null;
-  if (!top) {
-    return (
-      <a className="fill" href="/research/">
-        <h2>Research</h2>
-        <p className="dim">{topics ? "The notes are on their way." : ""}</p>
-      </a>
-    );
-  }
-  const kin = KNOWN.has(top.slug) ? app(top.slug) : null;
-  const when = top.date
-    ? new Date(`${top.date}T12:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })
-    : "";
-  const n = top.figures?.length ?? 0;
-  return (
-    <>
-      <a className="fill" href={top.href}>
-        <span className="visually-hidden">{top.title}</span>
-      </a>
-      <h2>Research{when ? ` · ${when}` : ""}</h2>
-      <h3>{top.title}</h3>
-      <p className="lead">{top.lead}</p>
-      <p className="tags">
-        {n > 0 && <span className="chip">{n === 1 ? "1 figure" : `${n} figures`}</span>}
-        {kin && (
-          <a className="chip" href={kin.route}>
-            {kin.title} app
-          </a>
-        )}
-      </p>
-    </>
-  );
-}
-
 /* CATALOG */
 
-export const WIDGETS: Widget[] = [
-  { id: "clock", name: "Clock", size: "wide", Body: Clock },
-  { id: "day", name: "Design of the day", size: "small", Body: Day },
-  { id: "continue", name: "Continue", size: "small", Body: Continue },
-  { id: "research", name: "Research", size: "wide", Body: Research },
-];
+const OWN: Record<string, Desk> = {
+  clock: { name: "Clock", size: "wide", Body: Clock },
+  continue: { name: "Continue", size: "small", Body: Continue },
+};
+
+export const WIDGETS: Widget[] = order.flatMap((id) => {
+  const one = widgets[id] ?? OWN[id];
+  return one ? [{ id, ...one }] : [];
+});
 
 const BY = new Map(WIDGETS.map((one) => [one.id, one] as const));
 
@@ -243,6 +141,8 @@ export function kept(text: string): string[] {
 }
 
 /* MENU */
+
+const DESK = [{ label: "Edit Widgets" }, { label: "Change Wallpaper", href: "/settings/desktop/" }];
 
 export const clamp = (at: Spot, w: number, h: number, view: Box): Spot => ({
   x: Math.max(EDGE, Math.min(at.x, view.w - w - EDGE)),
@@ -331,7 +231,7 @@ function Widgets() {
       armed = null;
       if (!target) return;
       if (target === aside.current || target === column.current) armed = e.pointerId;
-      else if (!ours(target) && !target.closest(".bar")) setEditing(false);
+      else if (!ours(target) && !target.closest(".barred")) setEditing(false);
     };
     const up = (e: PointerEvent) => e.pointerId === armed && setEditing(false);
     const cancel = () => {
@@ -379,13 +279,12 @@ function Widgets() {
     return () => document.removeEventListener("contextmenu", open);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const box = pop.current;
     if (!menu || !box) return undefined;
-    box.showPopover?.();
-    const { x, y } = clamp(menu, box.offsetWidth, box.offsetHeight, { w: innerWidth, h: innerHeight });
-    box.style.setProperty("--x", px(x));
-    box.style.setProperty("--y", px(y));
+    if (!box.matches(":popover-open")) box.showPopover?.();
+    const at = clamp(menu, box.offsetWidth, box.offsetHeight, { w: innerWidth, h: innerHeight });
+    if (at.x !== menu.x || at.y !== menu.y) setMenu(at);
     box.querySelector<HTMLElement>("button, a")?.focus();
     const gone = (e: ToggleEvent) => e.newState === "closed" && setMenu(null);
     box.addEventListener("toggle", gone);
@@ -411,43 +310,50 @@ function Widgets() {
     return one ? [{ id, name: one.name, size: one.size, body: <one.Body />, held: id === held }] : [];
   });
 
+  const picks = [
+    () => {
+      setMenu(null);
+      setEditing(true);
+    },
+    () => pop.current?.hidePopover?.(),
+  ];
+
   return (
-    <parts.widgets
-      cards={cards}
-      editing={editing}
-      gallery={WIDGETS.map((one) => ({
-        id: one.id,
-        name: one.name,
-        size: one.size,
-        body: <one.Body />,
-        added: list.includes(one.id),
-      }))}
-      menu={
-        menu && {
-          list: () => ({ ref: pop, popover: "auto" }),
-          edit: () => ({
-            onClick: () => {
-              setMenu(null);
-              setEditing(true);
-            },
-          }),
-          wallpaper: () => ({ href: "/settings/desktop/", onClick: () => pop.current?.hidePopover?.() }),
-        }
-      }
-      onEdit={setEditing}
-      onAdd={(id) => keep([...live.current, id])}
-      onRemove={remove}
-      bind={{
-        root: () => ({ ref: aside }),
-        column: () => ({ ref: column, onClickCapture: inert }),
-        card: (id) => () => ({ "data-id": id }),
-        edit: () => ({ ref: edit }),
-        gallery: () => ({ ref: gallery }),
-        shelf: () => ({ ref: shelf }),
-        pick: (id) => () => ({ "data-id": list.includes(id) ? undefined : id }),
-        done: () => ({ ref: done }),
-      }}
-    />
+    <>
+      <parts.widgets
+        cards={cards}
+        editing={editing}
+        gallery={WIDGETS.map((one) => ({
+          id: one.id,
+          name: one.name,
+          size: one.size,
+          body: <one.Body />,
+          added: list.includes(one.id),
+        }))}
+        onEdit={setEditing}
+        onAdd={(id) => keep([...live.current, id])}
+        onRemove={remove}
+        bind={{
+          root: () => ({ ref: aside }),
+          column: () => ({ ref: column, onClickCapture: inert }),
+          card: (id) => () => ({ "data-id": id }),
+          edit: () => ({ ref: edit }),
+          gallery: () => ({ ref: gallery }),
+          shelf: () => ({ ref: shelf }),
+          pick: (id) => () => ({ "data-id": list.includes(id) ? undefined : id }),
+          done: () => ({ ref: done }),
+        }}
+      />
+      {menu && (
+        <parts.menu
+          name="Desktop"
+          items={DESK}
+          anchor={new DOMRect(menu.x, menu.y, 0, 0)}
+          mac={false}
+          bind={{ list: () => ({ ref: pop, popover: "auto" }), item: (i) => () => ({ onClick: picks[i] }) }}
+        />
+      )}
+    </>
   );
 }
 

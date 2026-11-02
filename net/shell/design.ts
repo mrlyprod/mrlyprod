@@ -16,7 +16,7 @@ export const REQUIRED = [
   "launcher",
 ] as const;
 
-export const OPTIONAL = ["desk", "dock", "widgets", "library", "lock", "saver"] as const;
+export const OPTIONAL = ["desk", "dock", "widgets", "lock", "saver", "preview"] as const;
 
 export type Required = (typeof REQUIRED)[number];
 
@@ -47,15 +47,16 @@ export type Scalar = string | number;
 
 export type Clock = { now: Date; hours: 12 | 24 | null };
 
+export type Ask = { wrong: boolean; busy: boolean; bind: { form: Bind; field: Bind } };
+
 export type Props = {
   desk: { canvas: Bind; home: boolean };
   bar: {
     site: { name: string; logo: string; word: string; cart?: boolean };
     app: string | null;
-    menus: { name: string; bind: Bind }[];
     cart: number;
-    clock: Clock;
-    bind: { launch: Bind; mark: Bind; cart: Bind; find: Bind };
+    clock: Clock | null;
+    bind: { launch: Bind; mark: Bind; cart: Bind; find: Bind; menus: Bind };
   };
   menu: {
     name: string;
@@ -71,11 +72,12 @@ export type Props = {
     tools: boolean;
     drawer: boolean;
     width: number;
-    menus?: { name: string; bind: Bind }[];
     bind: {
       close: Bind;
       zoom: Bind;
       tools: Bind;
+      title: Bind;
+      menus: Bind;
       edge: (side: Side) => Bind;
       scroll: Bind;
       main: Bind;
@@ -174,30 +176,13 @@ export type Props = {
       undo: Bind | null;
     };
   };
-  library: {
-    label: string;
-    chips: [string, string][];
-    chip: string;
-    onChip: (chip: string) => void;
-    shelves: {
-      name: string;
-      grid: boolean;
-      items: {
-        label: string;
-        sub?: string;
-        on: boolean;
-        href?: string;
-        paint?: (pen: CanvasRenderingContext2D, side: number) => void;
-        bind: Bind;
-      }[];
-    }[];
-  };
   dock: {
     launch: Tile;
     groups: Tile[][];
     magnify: boolean;
     bind: {
       root: Bind;
+      launch: Bind;
       group: (g: number) => Bind;
       tile: (id: string) => Bind;
       lens: { item: (id: string) => Bind; gap: (g: number) => Bind };
@@ -207,7 +192,6 @@ export type Props = {
     cards: { id: string; name: string; size: "wide" | "small"; body: ReactNode; held: boolean }[];
     editing: boolean;
     gallery: { id: string; name: string; size: "wide" | "small"; body: ReactNode; added: boolean }[];
-    menu: { list: Bind; edit: Bind; wallpaper: Bind } | null;
     onEdit: (on: boolean) => void;
     onAdd: (id: string) => void;
     onRemove: (id: string) => void;
@@ -222,8 +206,9 @@ export type Props = {
       done: Bind;
     };
   };
-  lock: { word: string; state: "wake" | "rest" | "leaving"; bind: Bind };
+  lock: { word: string; state: "wake" | "rest" | "leaving"; bind: Bind; ask?: Ask };
   saver: { clock: Clock | null; state?: "on" | "out"; stage: Bind };
+  preview: { title: string; theme: "light" | "dark" };
 };
 
 /* DESIGN */
@@ -254,6 +239,10 @@ export type Pulldown = {
 
 export type Parts = { [K in Required]: ComponentType<Props[K]> } & { [K in Optional]?: ComponentType<Props[K]> };
 
+export type Knob = { id: string; name: string; options: [string, string][]; hint?: string };
+
+export type Knobs = { icons?: boolean; own?: Knob[] };
+
 export type Design = {
   id: string;
   title: string;
@@ -262,6 +251,7 @@ export type Design = {
   css: string[];
   measure: Measure;
   parts: Parts;
+  knobs?: Knobs;
   pulldown?: string;
   start?: (world: World) => () => void;
 };

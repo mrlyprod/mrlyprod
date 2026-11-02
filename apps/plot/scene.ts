@@ -1,11 +1,13 @@
 import type { RefObject } from "react";
 import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts } from "../../net/sdk/run.ts";
 import type { Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
+import { next, roll } from "../shared/designs/engine.ts";
 import { KINDS } from "../shared/sequences/chart.ts";
 import type { Key, Row, Slug } from "../shared/sequences/engine.ts";
-import { applies, MEASURES, print, TERMS } from "../shared/sequences/engine.ts";
+import { applies, booked, MEASURES, print, TERMS } from "../shared/sequences/engine.ts";
 import type { Grown, Rect, Series, Slots, Tones, View } from "../shared/sequences/paint.ts";
 import {
   chart,
@@ -47,11 +49,11 @@ export type Feed = { panels: Panel[]; version: number };
 
 export type Fed = Opts & Partial<Feed> & { live?: RefObject<Feed> };
 
-export type Hands = { mix: () => void; design: (by: number) => void; terms: (by: number) => void; cycle: () => void };
-
 export type Stage = ReturnType<typeof make>;
 
-export type Held = Stage & Hands;
+export const space = (dim: number, base: number) => ({ dim, base: dim === 3 ? 2 : base });
+
+const spaced = (value: Value) => space(Number(value.dim), Number(value.base));
 
 const measures = (value: Value) =>
   MEASURES.filter((one) => applies(one, value.dim ?? 2, value.base ?? 2)).map((one): [string, string] => [
@@ -142,7 +144,7 @@ export const filed = (value: Value) => {
 
 export const units = wasm("math", "num");
 
-export const PAGE: Page<Units<"math" | "num">, Held> = {
+export const PAGE: Page<Units<"math" | "num">, Stage> = {
   defaults: { dim: 2, base: 2, code: "7" },
   design: {
     dim: "dim",
@@ -169,11 +171,23 @@ export const PAGE: Page<Units<"math" | "num">, Held> = {
     { key: ["ArrowUp", "ArrowDown"], label: "Terms", act: "terms" },
     { key: "c", label: "Chart", act: "cycle", menu: "View" },
   ],
-  actions: {
-    mix: (scene) => scene.mix?.(),
-    design: (scene, e) => scene.design?.(e.key === "ArrowLeft" ? -1 : 1),
-    terms: (scene, e) => scene.terms?.(e.key === "ArrowDown" ? -1 : 1),
-    cycle: (scene) => scene.cycle?.(),
+  acts: {
+    mix: (value) => ({ mix: Number(value.mix) === 1 ? 0 : 1 }),
+    design: (value, key, units) => {
+      const { dim, base } = spaced(value);
+      const list = booked(units!.math)
+        .designs(dim, base)
+        .map((one) => one.code);
+      return { code: next(list, value.code, key === "ArrowLeft" ? -1 : 1) };
+    },
+    terms: (value, key) => ({
+      terms: Math.max(TERMS.min, Math.min(TERMS.max, Number(value.terms) + (key === "ArrowDown" ? -1 : 1))),
+    }),
+    cycle: (value) => ({ chart: KINDS[(KINDS.findIndex(([slug]) => slug === value.chart) + 1) % KINDS.length][0] }),
+  },
+  reroll: (value, seed, units) => {
+    const { dim, base } = spaced(value);
+    return { code: roll(units!.math, dim, base, rng(seed)) };
   },
 };
 

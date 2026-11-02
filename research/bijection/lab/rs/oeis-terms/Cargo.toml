@@ -1,9 +1,0 @@
-[package]
-name = "oeis-terms"
-edition = "2021"
-
-[dependencies]
-mrly-num = { path = "../../../../../crates/num" }
-num-bigint = "0.4"
-
-[workspace]

@@ -1,22 +1,12 @@
 import { start } from "../../sdk/git/client.ts";
-import type { View } from "../../sdk/git/view.ts";
-import type { Link } from "../../sdk/md/md.ts";
+import type { Tools, View } from "../../sdk/git/view.ts";
+import { front, reader } from "../../sdk/md/md.ts";
 
-/* MARKDOWN */
+/* LAZY */
 
-async function md(text: string, link: Link) {
-  const [{ front, render }, katex] = await Promise.all([
-    import("../../sdk/md/md.ts"),
-    text.includes("$") ? import("katex") : null,
-  ]);
-  const math = katex
-    ? (tex: string, display: boolean) =>
-        katex.default.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display })
-    : undefined;
-  return render(front(text).body, { math, link });
-}
+const md: NonNullable<Tools["md"]> = (text, link) => reader().then((one) => one.markdown(front(text).body, { link }));
 
-const paint = () => import("../../sdk/git/code.ts").then((one) => one.paint);
+const paint = () => import("./code.ts").then((one) => one.paint);
 
 /* VIEWER */
 

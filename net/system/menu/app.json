@@ -1,4 +1,5 @@
 {
   "title": "Menu",
-  "line": "Every door of {domain}."
+  "line": "Every door of {domain}.",
+  "aliases": ["launchpad", "apps", "all apps", "doors"]
 }

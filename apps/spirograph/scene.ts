@@ -3,7 +3,7 @@ import { mix, paints, rgb, veil } from "../../net/sdk/color.ts";
 import type { Readout } from "../../net/sdk/hooks.ts";
 import type { Mathy, Page } from "../../net/sdk/page.tsx";
 import type { Rng } from "../../net/sdk/rand.ts";
-import { pick } from "../../net/sdk/rand.ts";
+import { pick, rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Row, Scalar, Units, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
@@ -227,6 +227,7 @@ export const PAGE = {
     },
   ],
   actions: { toggle: (scene) => scene.toggle() },
+  reroll: (value, seed, units) => ({ code: roll(units!.math, Number(value.base), rng(seed)) }),
 } satisfies Page<Loaded<"math">, Played>;
 
 /* SAVERS */

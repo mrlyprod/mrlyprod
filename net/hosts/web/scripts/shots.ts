@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
 import { decode } from "../../../sdk/git/view.ts";
 import { decide, joined } from "../infra/edge.ts";
 import { kind } from "../infra/mime.ts";
 import { COLS } from "./film/grid.ts";
-import { HOME } from "./home.ts";
+import { HOME, SITE, top } from "./home.ts";
 
 /* WHERE */
 
@@ -13,20 +13,55 @@ export type Screen = [number, number, number];
 
 export type Block = { routes: string[]; screen: Screen };
 
+export type Clock = "world" | "wall" | "still";
+
+export type Verdict = "same" | "DIFF" | "new" | "baseline";
+
 export type Frame = {
   file: string;
   route: string;
   n: number;
   t: number;
-  clock: "world" | "wall" | "still";
+  clock: Clock;
   sha: string;
+  verdict: Verdict;
+  overflow: string[];
+  noise: string[];
 };
+
+export type Answer = (path: string) => { uri?: string; redirect?: string };
+
+export type Opts = {
+  root: string;
+  routes: string[];
+  screen: Screen;
+  dist?: string;
+  answer?: Answer;
+  run?: string;
+  baseline?: boolean;
+  print?: boolean;
+  motion?: boolean;
+  nojs?: boolean;
+  first?: boolean;
+  walk?: boolean;
+  probe?: string;
+  scheme?: string;
+  keys?: string[];
+  count?: number;
+  every?: number;
+};
+
+export type Shot = { out: string; chrome: string; frames: Frame[]; failures: string[] };
 
 const CHROME = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const PORT = 9335;
 const SERVE = 3335;
 const LIVE = (process.env.SITE_URL ?? "").replace(/\/$/, "");
 const CSP = process.env.CSP ?? "";
+const LOCALE = "en-US";
+const ZONE = "Europe/Rome";
+const GL = /GL Driver Message \(OpenGL, Performance,/;
+const SIGNALS = ["SIGINT", "SIGTERM", "SIGHUP"] as const;
 const CELL = 320;
 const PATIENCE = 15000;
 const REPLY = 30000;
@@ -37,10 +72,11 @@ const SETTLE = 600;
 const TAP = 60;
 
 export function block(config: Record<string, unknown>): Block {
-  const found = config.shots as Block | undefined;
-  if (!found?.routes?.length || found.screen?.length !== 3)
-    throw new Error("shots: site.json has no shots block with a screen");
-  return found;
+  const routes = (config.shots as { routes?: string[] } | undefined)?.routes;
+  const screen = config.screen as Screen | undefined;
+  if (!routes?.length || screen?.length !== 3)
+    throw new Error("shots: site.json needs shots.routes and a screen of [width, height, dpr]");
+  return { routes, screen };
 }
 
 /* SERVER */
@@ -48,13 +84,7 @@ export function block(config: Record<string, unknown>): Block {
 const doc = (bytes: Uint8Array) =>
   new TextDecoder().decode(bytes.subarray(0, 15)).toLowerCase().startsWith("<!doctype html");
 
-export type Answer = (path: string) => { uri?: string; redirect?: string };
-
 const edge: Answer = (path) => decide(decode(path));
-
-function top(dir: string): string {
-  return existsSync(join(dir, ".git")) || dirname(dir) === dir ? dir : top(dirname(dir));
-}
 
 export function screened(text: string): Screen {
   const m = /^(\d+)x(\d+)(?:@(\d))?$/.exec(text);
@@ -65,7 +95,7 @@ export function screened(text: string): Screen {
 function serve(dist: string, answer: Answer) {
   const file = (path: string): Response | null => {
     const want = join(dist, path.endsWith("/") ? `${path}index.html` : path);
-    if (!want.startsWith(dist) || !existsSync(want) || !statSync(want).isFile()) return null;
+    if (!want.startsWith(dist + sep) || !existsSync(want) || !statSync(want).isFile()) return null;
     const bytes = new Uint8Array(readFileSync(want));
     const type = kind(doc(bytes) ? ".html" : want);
     const headers: Record<string, string> = { "content-type": type };
@@ -73,6 +103,7 @@ function serve(dist: string, answer: Answer) {
     return new Response(bytes, { headers });
   };
   return Bun.serve({
+    hostname: "127.0.0.1",
     port: SERVE,
     fetch(req) {
       const url = new URL(req.url);
@@ -117,7 +148,6 @@ async function targets(): Promise<Target[] | null> {
 }
 
 async function launch(profile: string) {
-  if (await targets()) throw new Error(`shots: something already answers on port ${PORT}; kill it first`);
   if (!LIVE) rmSync(profile, { recursive: true, force: true });
   mkdirSync(profile, { recursive: true });
   const proc = Bun.spawn(
@@ -129,6 +159,7 @@ async function launch(profile: string) {
       "--use-angle=swiftshader",
       "--no-first-run",
       "--hide-scrollbars",
+      `--lang=${LOCALE}`,
       `--user-data-dir=${profile}`,
       `--remote-debugging-port=${PORT}`,
       "about:blank",
@@ -145,6 +176,15 @@ async function launch(profile: string) {
   throw new Error(`shots: no chrome at ${CHROME}; set CHROME to the binary`);
 }
 
+function reaper(profile: string) {
+  const marks = [`--user-data-dir=${profile}`, `--remote-debugging-port=${PORT}`];
+  const alive = () => marks.some((mark) => Bun.spawnSync(["pgrep", "-f", "--", mark]).exitCode === 0);
+  const reap = () => {
+    for (const mark of marks) Bun.spawnSync(["pkill", "-9", "-f", "--", mark]);
+  };
+  return { alive, reap };
+}
+
 type Remote = {
   type?: string;
   value?: unknown;
@@ -158,6 +198,7 @@ type Reply = {
   exceptionDetails?: { text: string; exception?: { description?: string } };
   cssContentSize: { width: number; height: number };
   data: string;
+  product: string;
 };
 
 type Params = { requestId: string; frame: { parentId?: string } };
@@ -186,7 +227,11 @@ function driver(ws: WebSocket) {
       said(`${m.params.type}: ${(m.params.args ?? []).map(flat).join(" ")}`);
     } else if (m.method === "Runtime.exceptionThrown") {
       said(`exception: ${m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text}`);
-    } else if (m.method === "Log.entryAdded" && /error|warning/.test(m.params.entry.level)) {
+    } else if (
+      m.method === "Log.entryAdded" &&
+      /error|warning/.test(m.params.entry.level) &&
+      !GL.test(m.params.entry.text)
+    ) {
       said(`${m.params.entry.level}: ${m.params.entry.text} ${m.params.entry.url ?? ""}`);
     } else if (m.method && heard.has(m.method)) {
       heard.get(m.method)!(m.params);
@@ -223,12 +268,15 @@ async function until(send: Send, expression: string, ms: number): Promise<boolea
 
 /* PROBES */
 
-const MOUNTED = `new Promise((r) => { const root = document.querySelector("#root, #app"); const t0 = Date.now(); const poll = () => (((!root || root.children.length) && !document.querySelector('[aria-busy="true"]')) || Date.now() - t0 > 8000 ? r() : setTimeout(poll, 50)); poll(); })`;
+const MOUNTED = `new Promise((r) => { const root = document.querySelector("#root, #app"); const t0 = performance.now(); const poll = () => (((!root || root.children.length) && !document.querySelector('[aria-busy="true"]')) || performance.now() - t0 > 8000 ? r() : setTimeout(poll, 50)); poll(); })`;
 
 const STILL = `document.head.insertAdjacentHTML("beforeend", "<style>canvas { visibility: hidden !important; }</style>")`;
 
+const SEEK = (s: number) =>
+  `typeof window.world?.seek === "function" && window.world.seek(${Math.round(s * 1000)}) === true`;
+
 const ready = (motion: boolean) =>
-  `${MOUNTED}.then(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; return (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = i.onerror = r; })).then(() => i.decode().catch(() => 0)); }))).then(() => document.fonts.ready)${motion ? "" : `.then(() => { ${STILL}; })`}.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))).then(() => 1)`;
+  `${MOUNTED}.then(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; return (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = i.onerror = r; })).then(() => i.decode().catch(() => 0)); }))).then(() => document.fonts.ready).then(() => ${motion ? "false" : `(${SEEK(0)}) || (${STILL}, false)`}).then((world) => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(world)))))`;
 
 const PAINTED = `![...document.querySelectorAll('[aria-busy="true"]')].some((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; })`;
 
@@ -239,16 +287,15 @@ const painted = (born: number) =>
 
 const WIDE = `JSON.stringify([...document.querySelectorAll("body *")].filter((el) => !el.closest(".pane, .scrim") && getComputedStyle(el).visibility !== "hidden").map((el) => [el, el.getBoundingClientRect()]).filter(([, r]) => r.right > innerWidth + 1 && r.width > 0).sort((a, b) => b[1].right - a[1].right).slice(0, 4).map(([el, r]) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\\s+/).join(".") : "") + " right=" + Math.round(r.right) + " width=" + Math.round(r.width)))`;
 
-const SEEK = (t: number) => `typeof window.world?.seek === "function" && window.world.seek(${t}) === true`;
-
 const FRAMED = "new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(1))))";
 
-const PINNED = `(() => { const T = Date.UTC(2026, 0, 1, 8, 41); const t0 = performance.now(); const D = Date; const at = () => T + performance.now() - t0; class Pinned extends D { constructor(...a) { super(...(a.length ? a : [at()])); } static now() { return at(); } } globalThis.Date = Pinned; let s = 0x9e3779b9; Math.random = () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return (s >>> 0) / 4294967296; }; })()`;
+const pinned = (frozen: boolean) =>
+  `(() => { const T = Date.UTC(2026, 0, 1, 8, 41); const t0 = performance.now(); const D = Date; const at = () => ${frozen ? "T" : "T + performance.now() - t0"}; class Pinned extends D { constructor(...a) { super(...(a.length ? a : [at()])); } static now() { return at(); } } globalThis.Date = Pinned; let s = 0x9e3779b9; Math.random = () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return (s >>> 0) / 4294967296; }; })()`;
 
 export function every(text: string): number {
   const m = /^(\d+(?:\.\d+)?)(ms|s)?$/.exec(text.trim());
   if (!m) throw new Error(`shots: --every takes seconds, as 2s, 0.5 or 500ms, not ${text}`);
-  return Math.round(Number(m[1]) * (m[2] === "ms" ? 1 : 1000));
+  return Math.round(Number(m[1]) * (m[2] === "ms" ? 1 : 1000)) / 1000;
 }
 
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex").slice(0, 8);
@@ -319,65 +366,73 @@ const landed = (to: string, from: string) =>
 const moved = (from: string) =>
   `(${HERE} !== ${JSON.stringify(from)} || window.__popped === true) && document.readyState === "complete"`;
 
-/* RUN */
+/* SHOOT */
 
-const VALUED = ["--js", "--theme", "--keys", "--count", "--every", "--run", "--screen"];
-
-export async function main(
-  root: string,
-  config?: Record<string, unknown>,
-  dist = join(root, "dist"),
-  answer: Answer = edge,
-): Promise<void> {
-  const conf = config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Record<string, unknown>);
-  const { routes, screen: told } = block(conf);
-  const args = process.argv.slice(2);
-  const screen = args.includes("--screen") ? screened(args[args.indexOf("--screen") + 1] ?? "") : told;
+export async function shoot(opts: Opts): Promise<Shot> {
+  const { root, routes: pages, screen, answer = edge } = opts;
   const [width, height, dpr] = screen;
-  const repo = top(root);
-  const DATA_DIR = join(repo, "data", relative(repo, root), "scripts");
-  const flag = (name: string) => (args.includes(name) ? (args[args.indexOf(name) + 1] ?? "") : "");
-  const print = args.includes("--print");
-  const baseline = args.includes("--baseline");
-  const motion = args.includes("--motion");
-  const nojs = args.includes("--nojs");
-  const first = args.includes("--first");
-  const walk = args.includes("--walk");
-  const probe = flag("--js");
-  const scheme = flag("--theme");
-  const keys = flag("--keys") ? flag("--keys").split(",") : [];
-  const count = args.includes("--count") ? Number(flag("--count")) : 0;
-  const step = args.includes("--every") ? every(flag("--every")) : 1000;
-  const label = flag("--run") || (baseline ? "baseline" : "latest");
-  const asked = args.filter((a, i) => !a.startsWith("--") && !VALUED.includes(args[i - 1] ?? ""));
-  const pages = asked.length ? asked : routes;
-  if (args.includes("--count") && !(Number.isInteger(count) && count >= 1 && count <= 60))
+  const [print, baseline, motion, nojs, first, walk] = [
+    opts.print,
+    opts.baseline,
+    opts.motion,
+    opts.nojs,
+    opts.first,
+    opts.walk,
+  ].map(Boolean);
+  const probe = opts.probe ?? "";
+  const scheme = opts.scheme ?? "";
+  const keys = opts.keys ?? [];
+  const count = opts.count ?? 0;
+  const step = Math.round((opts.every ?? 1) * 1000);
+  const label = opts.run || (baseline ? "baseline" : "latest");
+  if (!(Number.isInteger(count) && count >= 0 && count <= 60))
     throw new Error("shots: --count takes a whole number from 1 to 60");
+  if (!(step > 0)) throw new Error("shots: --every takes a time above 0");
   if (!/^[a-z0-9-]+$/.test(label)) throw new Error("shots: --run takes lowercase letters, digits and hyphens");
   if (first && (walk || keys.length || count))
     throw new Error("shots: --first shoots alone, without --walk, --keys or --count");
+  if (await targets()) throw new Error(`shots: something already answers on port ${PORT}; kill it first`);
+  const repo = top(root);
+  const DATA_DIR = join(repo, "data", relative(repo, root), "scripts");
   const out = join(DATA_DIR, "shots", label);
-  const ran: Frame[] = [];
   const base = join(DATA_DIR, "shots", "baseline");
+  const profile = join(DATA_DIR, "profile");
   const origin = LIVE || `http://127.0.0.1:${SERVE}`;
+  const frames: Frame[] = [];
+  const failures: string[] = [];
+  const fail = (line: string) => {
+    console.log(line);
+    failures.push(line);
+  };
   const name = (route: string, act: number, stage = "") =>
     `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}${print ? "-print" : ""}${motion ? "-motion" : ""}${nojs ? "-nojs" : ""}${scheme ? `-${scheme}` : ""}${keys.length ? "-keys" : ""}${walk ? "-walk" : ""}${stage}.png`;
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  const server = LIVE ? null : serve(resolve(dist), answer);
-  const { proc, page } = await launch(join(DATA_DIR, "profile"));
-  let shot = 0;
-  let changed = 0;
-  let fresh = 0;
+  const server = LIVE ? null : serve(resolve(opts.dist ?? join(root, "dist")), answer);
+  const { alive, reap } = reaper(profile);
+  const quit = (signal: NodeJS.Signals) => {
+    reap();
+    server?.stop(true);
+    if (!LIVE) rmSync(profile, { recursive: true, force: true });
+    for (const one of SIGNALS) process.off(one, quit);
+    process.kill(process.pid, signal);
+  };
+  for (const one of SIGNALS) process.on(one, quit);
+  let proc: Awaited<ReturnType<typeof launch>>["proc"] | null = null;
+  let chrome = "";
   try {
-    const ws = new WebSocket(page.webSocketDebuggerUrl);
+    const launched = await launch(profile);
+    proc = launched.proc;
+    const ws = new WebSocket(launched.page.webSocketDebuggerUrl);
     await new Promise((r) => (ws.onopen = r));
     const { send, once, on, noise } = driver(ws);
+    chrome = (await send("Browser.getVersion")).product;
     await send("Page.enable");
     await send("Runtime.enable");
     await send("Log.enable");
-    await send("Page.addScriptToEvaluateOnNewDocument", { source: PINNED });
-    await send("Emulation.setTimezoneOverride", { timezoneId: "Europe/Rome" });
+    await send("Page.addScriptToEvaluateOnNewDocument", { source: pinned(!motion && !count) });
+    await send("Emulation.setTimezoneOverride", { timezoneId: ZONE });
+    await send("Emulation.setLocaleOverride", { locale: LOCALE });
     await send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: out });
     await send("Emulation.setEmulatedMedia", {
       media: print ? "print" : "",
@@ -401,8 +456,8 @@ export async function main(
     });
     const value = async (expression: string) =>
       (await send("Runtime.evaluate", { expression, returnByValue: true })).result?.value;
-    const said = () => {
-      for (const line of [...new Set(noise)]) console.log(`  ${line}`);
+    const said = (since = 0) => {
+      for (const line of [...new Set(noise.slice(since))]) console.log(`  ${line}`);
     };
     const probed = async () => {
       if (!probe) return;
@@ -415,35 +470,34 @@ export async function main(
     };
     const fit = (w: number, h: number, scale = dpr) =>
       send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: scale, mobile: false });
-    const take = async (file: string, note = "", tell = true, frame?: Omit<Frame, "file" | "sha">) => {
+    type At = Pick<Frame, "route" | "n" | "t" | "clock">;
+    const take = async (file: string, note: string, tell: boolean, at: At) => {
       const { cssContentSize } = await send("Page.getLayoutMetrics");
       const cap = await send("Page.captureScreenshot", { format: "png" });
       const bytes = new Uint8Array(Buffer.from(cap.data, "base64"));
       await Bun.write(join(out, file), bytes);
-      shot++;
-      ran.push({ route: "", n: 0, t: 0, clock: "still", ...frame, file, sha: sha(bytes) });
-      const wide = Math.ceil(cssContentSize.width) > width;
+      const hash = sha(bytes);
       const was = join(base, file);
-      let verdict = "";
-      if (!baseline && existsSync(was)) {
-        const same = sha(new Uint8Array(readFileSync(was))) === sha(bytes);
-        verdict = same ? " same" : " DIFF";
-        if (!same) changed++;
-      } else if (!baseline) {
-        verdict = " new";
-        fresh++;
-      }
+      const verdict: Verdict = baseline
+        ? "baseline"
+        : !existsSync(was)
+          ? "new"
+          : sha(new Uint8Array(readFileSync(was))) === hash
+            ? "same"
+            : "DIFF";
+      const wide = Math.ceil(cssContentSize.width);
+      const overflow =
+        wide > width ? [`content width=${wide}`, ...(JSON.parse(String(await value(WIDE))) as string[])] : [];
+      const heard = [...new Set(noise)];
+      frames.push({ file, ...at, sha: hash, verdict, overflow, noise: heard });
       console.log(
-        `shots: ${file} ${width}x${height}@${dpr} ${sha(bytes)}${note}${wide ? " OVERFLOW" : ""}${verdict}${tell && noise.length ? ` ${noise.length} NOISE` : ""}`,
+        `shots: ${file} ${width}x${height}@${dpr} ${hash}${note}${overflow.length ? " OVERFLOW" : ""}${baseline ? "" : ` ${verdict}`}${tell && heard.length ? ` ${heard.length} NOISE` : ""}`,
       );
       if (tell) {
         said();
         await probed();
       }
-      if (wide) {
-        const { result } = await send("Runtime.evaluate", { expression: WIDE, returnByValue: true });
-        for (const line of JSON.parse(String(result.value)) as string[]) console.log(`  ${line}`);
-      }
+      for (const line of overflow.slice(1)) console.log(`  ${line}`);
       return bytes;
     };
     const calm = async () => {
@@ -486,19 +540,22 @@ export async function main(
       await fit(width, height);
     };
     const shown = motion || count > 0;
-    const settle = async () => {
+    const settle = async (): Promise<Clock> => {
+      let world = false;
       if (nojs) {
         await until(send, QUIET, PATIENCE);
         if (!shown) await send("Runtime.evaluate", { expression: STILL });
       } else
-        await Promise.race([
-          send("Runtime.evaluate", { expression: ready(shown), awaitPromise: true, returnByValue: true }).catch(
-            () => 0,
+        world = await Promise.race([
+          send("Runtime.evaluate", { expression: ready(shown), awaitPromise: true, returnByValue: true }).then(
+            (reply) => reply.result?.value === true,
+            () => false,
           ),
-          wait(PATIENCE),
+          wait(PATIENCE).then(() => false),
         ]);
       await until(send, PAINTED, PATIENCE);
       await wait(PAUSE);
+      return world ? "world" : "still";
     };
     const run = async (act: string) => {
       const { result, exceptionDetails } = await send(
@@ -506,40 +563,43 @@ export async function main(
         { expression: act, returnByValue: true, awaitPromise: true },
         ACT,
       );
-      if (exceptionDetails)
-        console.log(`  act failed: ${exceptionDetails.exception?.description ?? exceptionDetails.text}`);
+      if (exceptionDetails) fail(`  act FAILED: ${exceptionDetails.exception?.description ?? exceptionDetails.text}`);
       else if (result?.value !== undefined && result.value !== 0) console.log(`  act: ${JSON.stringify(result.value)}`);
     };
-    const finish = async (route: string, file: (stage: string) => string, moved: boolean, tell = true) => {
+    const finish = async (route: string, file: (stage: string) => string, moved: boolean, tell: boolean, at: Clock) => {
       for (const one of keys) {
         await stroke(send, one);
         await wait(TAP);
       }
       if (!count) {
         if (moved || keys.length) await wait(SETTLE);
-        await take(file(""), "", tell, { route, n: 0, t: 0, clock: "still" });
+        await take(file(""), at === "world" ? " t=0s world" : "", tell, { route, n: 0, t: 0, clock: at });
         return;
       }
       const world = !LIVE && (await value(SEEK(0))) === true;
       if (world) await calm();
-      const clock = world ? "world" : "wall";
+      const clock: Clock = world ? "world" : "wall";
       const from = Date.now();
       const tiles: Uint8Array[] = [];
       for (let n = 0; n < count; n++) {
-        let t = n * step;
+        let ms = n * step;
         if (world) {
-          if (n) await value(SEEK(t));
+          if (n && (await value(SEEK(ms / 1000))) !== true) {
+            fail(`shots: ${file(`-${n}`)} FAILED the world refused to seek to ${ms / 1000}s`);
+            break;
+          }
           await send("Runtime.evaluate", { expression: FRAMED, awaitPromise: true });
         } else {
-          await wait(Math.max(0, t - (Date.now() - from)));
-          t = Date.now() - from;
+          await wait(Math.max(0, ms - (Date.now() - from)));
+          ms = Date.now() - from;
         }
+        const t = ms / 1000;
         const one = count > 1 ? `-${n}` : "";
-        tiles.push(await take(file(one), ` t=${t}ms ${clock}`, tell && n === count - 1, { route, n, t, clock }));
+        tiles.push(await take(file(one), ` t=${t}s ${clock}`, tell && n === count - 1, { route, n, t, clock }));
       }
       if (count > 1) await contact(file("-sheet"), tiles);
     };
-    const shoot = async (turn: number, want: string) => {
+    const visit = async (turn: number, want: string) => {
       const [route = "/", act] = want.split("@");
       const born = first ? Number(await value("performance.timeOrigin")) : 0;
       const loaded = once("Page.loadEventFired").then(
@@ -557,30 +617,28 @@ export async function main(
           await wait(PAUSE);
           top = Number(await value("Math.round(scrollY)"));
           await take(early, ` scroll=${top}`, true, { route, n: 0, t: 0, clock: "still" });
-        } else console.log(`shots: ${early} FAILED nothing parsed within ${FIRST / 1000} s with every script held`);
+        } else fail(`shots: ${early} FAILED nothing parsed within ${FIRST / 1000} s with every script held`);
         holding = false;
         for (const id of held.splice(0)) pass(id);
       }
       const file = (stage: string) => name(route, !first && act ? turn : -1, first ? "-after" : stage);
       const lost = await loaded;
-      if (lost) {
-        console.log(`shots: ${file("")} FAILED ${lost}`);
-        return;
-      }
-      await settle();
+      if (lost) return fail(`shots: ${file("")} FAILED ${lost}`);
+      const at = await settle();
       if (act) await run(act);
-      if (!first) return finish(route, file, Boolean(act));
+      if (!first) return finish(route, file, Boolean(act), true, at);
       if (act) await wait(SETTLE);
       const now = Number(await value("Math.round(scrollY)"));
-      await take(file(""), ` scroll=${now}${now === top ? "" : " JUMP"}`, true, { route, n: 0, t: 0, clock: "still" });
+      await take(file(""), ` scroll=${now}${now === top ? "" : " JUMP"}`, true, { route, n: 0, t: 0, clock: at });
     };
     const stroll = async () => {
       loads = 0;
+      noise.length = 0;
       for (const [n, want] of pages.entries()) {
         const [to = "/", act] = want.split("@");
         const from = n ? String(await value(HERE)) : "";
+        const since = noise.length;
         let how = "load";
-        noise.length = 0;
         if (!n) {
           const loaded = once("Page.loadEventFired").then(
             () => "",
@@ -588,7 +646,7 @@ export async function main(
           );
           await send("Page.navigate", { url: `${origin}${to}` });
           const lost = await loaded;
-          if (lost) return console.log(`walk: ${n} ${to} FAILED ${lost}`);
+          if (lost) return fail(`walk: ${n} ${to} FAILED ${lost}`);
         } else if (to === "reload") {
           how = to;
           const loaded = once("Page.loadEventFired").then(
@@ -597,17 +655,16 @@ export async function main(
           );
           await send("Page.reload");
           const lost = await loaded;
-          if (lost) return console.log(`walk: ${n} ${to} FAILED ${lost}`);
+          if (lost) return fail(`walk: ${n} ${to} FAILED ${lost}`);
         } else if (to === "back" || to === "forward") {
           how = to;
           await send("Runtime.evaluate", {
             expression: `window.__popped = false; addEventListener("popstate", () => { window.__popped = true; }, { once: true }); history.${to}()`,
           });
-          if (!(await until(send, moved(from), PATIENCE)))
-            return console.log(`walk: ${n} ${to} FAILED ${from} never left`);
+          if (!(await until(send, moved(from), PATIENCE))) return fail(`walk: ${n} ${to} FAILED ${from} never left`);
         } else {
           const spot = String(await value(hop(to)));
-          if (spot === "none") return console.log(`walk: ${n} ${to} FAILED ${from} holds no link to it`);
+          if (spot === "none") return fail(`walk: ${n} ${to} FAILED ${from} holds no link to it`);
           how = spot === "synthetic" ? spot : "click";
           if (how === "click") {
             const [x, y] = JSON.parse(spot) as [number, number];
@@ -616,42 +673,89 @@ export async function main(
             await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
           }
           if (!(await until(send, landed(to, from), PATIENCE)))
-            return console.log(`walk: ${n} ${to} FAILED the ${how} on ${from} never landed`);
+            return fail(`walk: ${n} ${to} FAILED the ${how} on ${from} never landed`);
         }
-        await settle();
+        const at = await settle();
         if (act) await run(act);
         const here = String(await value(HERE));
-        if (n === pages.length - 1) await finish(here, (stage) => name(here, -1, stage), true, false);
+        if (n === pages.length - 1) await finish(here, (stage) => name(here, -1, stage), true, false, at);
         else if (act) await wait(PAUSE);
         const over = await value(`${OVER}?.dataset.page ?? ""`);
+        const fresh = new Set(noise.slice(since)).size;
         console.log(
-          `walk: ${n} ${here} ${how} loads=${loads} scroll=${await value("Math.round(scrollY)")}${over ? ` dialog=${over}` : ""}${noise.length ? ` ${noise.length} NOISE` : ""}`,
+          `walk: ${n} ${here} ${how} loads=${loads} scroll=${await value("Math.round(scrollY)")}${over ? ` dialog=${over}` : ""}${fresh ? ` ${fresh} NOISE` : ""}`,
         );
-        said();
+        said(since);
         await probed();
       }
       console.log(`walk: ${pages.length} hops, ${loads} page loads`);
     };
     await fit(width, height);
     if (walk) await stroll();
-    for (const [turn, want] of walk ? [] : pages.entries()) await shoot(turn, want);
+    for (const [turn, want] of walk ? [] : pages.entries()) await visit(turn, want);
     ws.close();
   } finally {
-    proc.kill();
-    await proc.exited;
-    const marks = [`--user-data-dir=${join(DATA_DIR, "profile")}`, `--remote-debugging-port=${PORT}`];
-    const alive = () => marks.some((mark) => Bun.spawnSync(["pgrep", "-f", mark]).exitCode === 0);
+    for (const one of SIGNALS) process.off(one, quit);
+    proc?.kill();
+    await proc?.exited;
     for (let i = 0; i < 50 && alive(); i++) await wait(100);
-    for (const mark of marks) Bun.spawnSync(["pkill", "-9", "-f", mark]);
+    reap();
     for (let i = 0; i < 50 && alive(); i++) await wait(100);
     if (alive()) console.log("shots: WARNING a chrome process outlived the kill");
-    if (!LIVE) rmSync(join(DATA_DIR, "profile"), { recursive: true, force: true });
+    if (!LIVE) rmSync(profile, { recursive: true, force: true });
     server?.stop(true);
   }
-  writeFileSync(join(out, "run.json"), `${JSON.stringify({ origin, screen, frames: ran }, null, 2)}\n`);
-  const tail = baseline ? "baseline written" : `${changed} differ from baseline, ${fresh} new`;
-  console.log(`shots: ${shot} shots in ${out}, ${tail}, chrome killed`);
-  process.exit(0);
+  writeFileSync(
+    join(out, "run.json"),
+    `${JSON.stringify({ origin, chrome, locale: LOCALE, zone: ZONE, screen, unit: "s", frames, failures }, null, 2)}\n`,
+  );
+  const tally = (verdict: Verdict) => frames.filter((one) => one.verdict === verdict).length;
+  const tail = baseline ? "baseline written" : `${tally("DIFF")} differ from baseline, ${tally("new")} new`;
+  console.log(`shots: ${frames.length} shots in ${out}, ${tail}, chrome killed`);
+  return { out, chrome, frames, failures };
 }
 
-if (import.meta.main) await main(HOME, undefined, process.env.MRLY_DIST || undefined);
+export function faults(shot: Pick<Shot, "frames" | "failures">, same = false): string[] {
+  return [
+    ...shot.failures.map((line) => line.trim()),
+    ...shot.frames.flatMap((one) => [
+      ...(one.overflow.length ? [`${one.file} OVERFLOW`] : []),
+      ...(one.noise.length ? [`${one.file} NOISE`] : []),
+      ...(same && (one.verdict === "DIFF" || one.verdict === "new") ? [`${one.file} ${one.verdict}`] : []),
+    ]),
+  ];
+}
+
+/* CLI */
+
+const VALUED = ["--js", "--theme", "--keys", "--count", "--every", "--run", "--screen"];
+
+async function main(args: string[]) {
+  const told = block(SITE as Record<string, unknown>);
+  const flag = (name: string) => (args.includes(name) ? (args[args.indexOf(name) + 1] ?? "") : "");
+  const asked = args.filter((a, i) => !a.startsWith("--") && !VALUED.includes(args[i - 1] ?? ""));
+  if (args.includes("--count") && !(Number(flag("--count")) >= 1)) throw new Error("shots: --count takes 1 to 60");
+  const shot = await shoot({
+    root: HOME,
+    dist: process.env.MRLY_DIST || undefined,
+    routes: asked.length ? asked : told.routes,
+    screen: args.includes("--screen") ? screened(flag("--screen")) : told.screen,
+    run: flag("--run"),
+    baseline: args.includes("--baseline"),
+    print: args.includes("--print"),
+    motion: args.includes("--motion"),
+    nojs: args.includes("--nojs"),
+    first: args.includes("--first"),
+    walk: args.includes("--walk"),
+    probe: flag("--js"),
+    scheme: flag("--theme"),
+    keys: flag("--keys") ? flag("--keys").split(",") : [],
+    count: args.includes("--count") ? Number(flag("--count")) : 0,
+    every: args.includes("--every") ? every(flag("--every")) : 1,
+  });
+  const bad = faults(shot, args.includes("--same"));
+  if (bad.length) console.log(`shots: exit 1, ${bad.length} faults: ${bad.join("; ")}`);
+  process.exit(bad.length ? 1 : 0);
+}
+
+if (import.meta.main) await main(process.argv.slice(2));

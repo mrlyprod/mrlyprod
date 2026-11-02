@@ -1,0 +1,46 @@
+{
+  "spec": "0.1",
+  "title": "Line",
+  "line": "One journal line: an act stamped with its tick; n counts repeats folded into it.",
+  "type": "object",
+  "properties": {
+    "tick": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "at": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "who": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "handle": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": ["human", "org", "bot", "agent"]
+        }
+      },
+      "required": ["id", "kind"],
+      "additionalProperties": false
+    },
+    "verb": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*$"
+    },
+    "args": {
+      "type": "object"
+    },
+    "n": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": ["tick", "at", "who", "verb", "args", "n"],
+  "additionalProperties": false
+}

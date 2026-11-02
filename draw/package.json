@@ -1,9 +1,0 @@
-{
-  "name": "@mrlyprod/draw",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./index.ts",
-    "./*": "./*"
-  }
-}

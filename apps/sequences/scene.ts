@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
-import type { Loadable, Page } from "../../net/sdk/page.tsx";
+import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts } from "../../net/sdk/run.ts";
 import type { Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
@@ -7,7 +8,7 @@ import { KINDS } from "../shared/sequences/chart.ts";
 import type { Picture, Plan } from "../shared/sequences/design.ts";
 import { draw as art, inks, picture, said } from "../shared/sequences/design.ts";
 import type { Mrly } from "../shared/sequences/engine.ts";
-import { AXES, CANON, MEASURES, picks, TERMS } from "../shared/sequences/engine.ts";
+import { AXES, booked, CANON, filter, lead, MEASURES, picks, TERMS } from "../shared/sequences/engine.ts";
 import type { Grown, Series, Slots, Spot, View } from "../shared/sequences/paint.ts";
 import {
   caption,
@@ -22,6 +23,8 @@ import {
   slotAt,
   tones,
 } from "../shared/sequences/paint.ts";
+import type { Units as Loaded } from "../shared/units/index.ts";
+import { wasm } from "../shared/units/index.ts";
 
 /* TYPES */
 
@@ -43,7 +46,7 @@ export type Fed = Opts & Partial<Feed> & { math?: Mrly | null; live?: RefObject<
 
 export type Hits = { legend: Spot[]; slots: Slots | null };
 
-export type Hands = { browse: (by: number) => void; find: () => void; cycle: () => void; plot: () => void };
+export type Hands = { browse: (by: number) => void; find: () => void; plot: () => void };
 
 export type Stage = ReturnType<typeof make>;
 
@@ -117,9 +120,14 @@ export const SPEC: Spec = [
 export const named = (value: Value) =>
   ["sequences", picks(value.pick as string)[0] ?? value.seed, value.chart].join("-");
 
-export const PAGE: Page<Loadable, Held> = {
+export const units = wasm("math");
+
+export const roll = (seed: number, n: number) => Math.floor(rng(seed >>> 0)() * n);
+
+export const PAGE: Page<Loaded<"math">, Held> = {
   defaults: { q: "", pick: CANON },
   spec: SPEC,
+  units,
   name: named,
   about: [
     "A design fills cells. Count them level by level, or widen the odd side at level one, and every count is an integer sequence: the fills, the voids, the exposed faces, the cells on the deepest diagonal plane, the pieces of the middle cut.",
@@ -139,7 +147,17 @@ export const PAGE: Page<Loadable, Held> = {
     browse: (scene, e) => scene.browse?.(e.key === "ArrowUp" ? -1 : 1),
     term: (scene, e) => scene.step?.(e.key === "ArrowLeft" ? -1 : 1),
     search: (scene) => scene.find?.(),
-    cycle: (scene) => scene.cycle?.(),
+  },
+  acts: {
+    cycle: (value) => ({ chart: KINDS[(KINDS.findIndex(([slug]) => slug === value.chart) + 1) % KINDS.length][0] }),
+  },
+  reroll: (value, seed, units) => {
+    const book = booked(units!.math);
+    const space = filter(book.keys(value.dim, value.base), String(value.measure), String(value.axis));
+    if (!space.length) return {};
+    const held = picks(String(value.pick))[0] ?? lead(book, space, roll(Number(value.seed), space.length))?.key;
+    const row = lead(book, space, roll(seed, space.length), held);
+    return row ? { pick: row.key } : {};
   },
 };
 

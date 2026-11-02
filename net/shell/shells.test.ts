@@ -1,21 +1,29 @@
 import { expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { entry, NAMES, own, spells, state } from "../hosts/web/scripts/build.ts";
+import { entry, NAMES, own, spells, state, viewer } from "../hosts/web/scripts/build.ts";
 import type { App } from "../sdk/rows.ts";
 
 const apps = new Map(state().apps.map((one): [string | undefined, App] => [one.id, one]));
 
-const source = (one: App) => (spells(one.page, "scene") ? entry(one.dir) : Bun.file(join(one.dir, one.page!)).text());
+const source = (one: App) =>
+  spells(one.page, "scene")
+    ? entry(one.dir)
+    : spells(one.page, "world")
+      ? viewer(one.id)
+      : Bun.file(join(one.dir, one.page!)).text();
 
-test("every row is an app or prose, an app row with its index or its scene and widget, a prose row with a source, and each kind has its shell", () => {
+test("every row is an app or prose, an app row with its index, its scene and widget or its app.ts, a prose row with a source, and each kind has its shell", () => {
   const { rows } = state();
-  expect([...new Set(rows.map((row) => row.kind))].sort()).toEqual(["app", "prose"]);
+  expect(rows.filter((row) => row.kind !== "app" && row.kind !== "prose").map((row) => row.route)).toEqual([]);
   expect((["app", "prose"] as const).filter((kind) => !existsSync(join(import.meta.dir, NAMES[kind])))).toEqual([]);
   const page = (one: App) =>
-    (spells(one.page, "scene") ? (["scene", "widget"] as const) : (["index"] as const)).every((name) =>
-      existsSync(join(one.dir, NAMES[name])),
-    );
+    (spells(one.page, "scene")
+      ? (["scene", "widget"] as const)
+      : spells(one.page, "world")
+        ? (["world"] as const)
+        : (["index"] as const)
+    ).every((name) => existsSync(join(one.dir, NAMES[name])));
   expect(
     rows.filter((row) => (row.kind === "app" ? !page(apps.get(row.meta.id)!) : !row.source)).map((row) => row.route),
   ).toEqual([]);

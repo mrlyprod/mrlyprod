@@ -1,14 +1,13 @@
 import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/math";
-import type { Handle } from "../../net/sdk/page.tsx";
 import { rng } from "../../net/sdk/rand.ts";
 import type { View } from "../../net/sdk/run.ts";
-import type { Value } from "../../net/sdk/spec.ts";
+import type { Patch, Value } from "../../net/sdk/spec.ts";
 import { defaults } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { OUT } from "../shared/spin/engine.ts";
 import { PAD, SOURCE } from "../shared/spin/scene.ts";
-import type { Facts, Rosette } from "./scene.ts";
+import type { Facts } from "./scene.ts";
 import { make, PAGE, SPEC, units } from "./scene.ts";
 
 type Call = [string | symbol, ...unknown[]];
@@ -140,16 +139,13 @@ test("Enter snaps back to a full turn only from a partial orbit; the arrows step
   const enter = (full: number) => PAGE.keys.filter((row) => row.key === "Enter" && row.when!({ full })).length;
   expect([enter(1), enter(0)]).toEqual([0, 1]);
   expect(PAGE.keys.filter((row) => row.menu).map((row) => row.act)).toEqual(["whole", "copies"]);
-  const got: (string | number)[] = [];
-  const hands = Object.assign({} as Handle<Rosette>, {
-    whole: () => got.push("whole"),
-    copies: (by: number) => got.push(by),
-    step: (by: number) => got.push(by),
-  });
-  PAGE.actions.copies(hands, { key: "ArrowLeft" });
-  PAGE.actions.step(hands, { key: "ArrowUp" });
-  PAGE.actions.whole(hands);
-  expect(got).toEqual([-1, 0.5, "whole"]);
+  const value = { copies: 6, full: 0, step: 60 };
+  expect<Patch[]>([
+    PAGE.acts.copies(value, "ArrowLeft"),
+    PAGE.acts.step(value, "ArrowUp"),
+    PAGE.acts.step({ ...value, full: 1 }, "ArrowDown"),
+    PAGE.acts.whole(),
+  ]).toEqual([{ copies: 5 }, { full: 0, step: 60.5 }, { full: 0, step: 59.5 }, { full: 1 }]);
 });
 
 test("without the unit the scene clears and throws nothing", () => {

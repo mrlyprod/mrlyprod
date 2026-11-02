@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { build } from "../scripts/build.ts";
 import { HOME } from "../scripts/home.ts";
+import { locked } from "./locked.ts";
 import { kind } from "./mime.ts";
 import { client, del, getText, need, putBytes } from "./s3.ts";
 
@@ -262,4 +263,4 @@ export async function main(root: string, build: () => Promise<Built>): Promise<v
   );
 }
 
-if (import.meta.main) await main(HOME, () => build());
+if (import.meta.main) await main(HOME, () => build().then((done) => locked(done)));

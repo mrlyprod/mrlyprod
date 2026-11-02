@@ -1,6 +1,5 @@
 import type { RefObject } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useTheme } from "../../../apps/shared/designs/pick.tsx";
 import type { Paints } from "../../sdk/color.ts";
 import { HUES, paints } from "../../sdk/color.ts";
 import type { IconName } from "../../sdk/controls.tsx";
@@ -9,8 +8,11 @@ import { fed, source } from "../../sdk/feed.ts";
 import { tints } from "../../sdk/theme/hues.ts";
 import { palette } from "../../sdk/theme/palette.gen.js";
 import type { Name } from "../../sdk/theme/theme.ts";
+import { useTheme } from "../../sdk/theme/watch.ts";
+import { design } from "../../shell/active.ts";
+import type { Knob } from "../../shell/design.ts";
 import type { Vars } from "../../shell/parts.tsx";
-import { glass, icons, KEY, read, subscribe, theme, tint } from "../../shell/prefs.ts";
+import { dial, icons, KEY, knob, read, subscribe, theme, tint } from "../../shell/prefs.ts";
 import { Tile } from "../../shell/tile.tsx";
 
 /* TYPES */
@@ -127,12 +129,10 @@ function Backdrop({ stage }: BackdropProps) {
 
 /* GLASS */
 
-const STYLES: [string, string][] = [
-  ["clear", "Clear"],
-  ["", "Tinted"],
-  ["frosted", "Frosted"],
-  ["off", "Off"],
-];
+function Dial({ one }: { one: Knob }) {
+  const value = usePref(dial(one.id));
+  return <Segment label={one.name} value={value} options={one.options} onChange={(next) => knob(one.id, next)} />;
+}
 
 const ROUND: [IconName, string][] = [
   ["info", "Info"],
@@ -144,15 +144,16 @@ const ROUND: [IconName, string][] = [
 const MENU = ["Copy link", "Duplicate", "Move to", "Delete"];
 
 export function Glass() {
-  const style = usePref(KEY.glass);
   const stage = useRef<HTMLCanvasElement>(null);
   const [depth, setDepth] = useState(40);
   const [rim, setRim] = useState(1);
   return (
     <>
       <div className="controls">
-        <Group name="Glass">
-          <Segment label="Style" value={style} options={STYLES} onChange={glass} />
+        <Group name={design.title}>
+          {(design.knobs?.own ?? []).map((one) => (
+            <Dial key={one.id} one={one} />
+          ))}
         </Group>
       </div>
       <div className="backdrop">

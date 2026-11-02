@@ -1,14 +1,14 @@
 import { useCallback, useMemo, useState } from "react";
-import { useLatest, useReroll } from "../../net/sdk/hooks.ts";
+import { useLatest } from "../../net/sdk/hooks.ts";
 import type { Chip } from "../../net/sdk/library.tsx";
 import { Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import { Thumb, useTheme } from "../shared/designs/pick.tsx";
-import { codes, pickCode } from "../shared/space/bang.ts";
+import { codes } from "../shared/space/bang.ts";
 import type { Knobs, Zoom, Zoomed } from "./scene.ts";
-import { make, step } from "./scene.ts";
+import { make } from "./scene.ts";
 
 /* TYPES */
 
@@ -29,7 +29,6 @@ export function Widget({ units, value, onChange, onReady }: Props) {
   const math = units?.math;
   const [q, setQ] = useState("");
   const theme = useTheme();
-  const now = useLatest(value);
   const tell = useLatest(onChange);
   const { pick, ...flown } = value;
   const pool = useMemo(() => (math ? codes(math, value.n, pick) : []), [math, value.n, pick]);
@@ -41,19 +40,11 @@ export function Widget({ units, value, onChange, onReady }: Props) {
   const shown = want
     ? pool.filter((one) => String(one).startsWith(want) || names.get(one)!.toLowerCase().includes(want))
     : pool;
-  useReroll(value.seed, (seed) => math && tell.current({ code: pickCode(math, { ...now.current, code: -1 }, seed) }));
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units }),
     [units],
   );
-  const ready = (handle: Handle<Zoom> | null) =>
-    onReady?.(
-      handle && {
-        ...handle,
-        step: (by: number) =>
-          tell.current({ code: step(codes(math!, now.current.n, now.current.pick), now.current.code, by) }),
-      },
-    );
+  const ready = (handle: Handle<Zoom> | null) => onReady?.(handle);
   if (!math) return null;
   return (
     <>

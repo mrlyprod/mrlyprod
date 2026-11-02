@@ -7,10 +7,10 @@ import { Dialog } from "./dialog.tsx";
 import { Dock } from "./dock.tsx";
 import { Group } from "./group.tsx";
 import { Launcher } from "./launcher.tsx";
-import { Library } from "./library.tsx";
 import { Lock } from "./lock.tsx";
 import { MEASURE } from "./measure.ts";
 import { Menu } from "./menu.tsx";
+import { Preview } from "./preview.tsx";
 import { Prose } from "./prose.tsx";
 import { Saver } from "./saver.tsx";
 import { DARK, LIGHT } from "./skin.ts";
@@ -42,8 +42,8 @@ export const classic: Design = {
     desk: Desk,
     dock: Dock,
     widgets: Widgets,
-    library: Library,
     lock: Lock,
     saver: Saver,
+    preview: Preview,
   },
 };

@@ -1,0 +1,5 @@
+{
+  "title": "Mail",
+  "line": "Mail between users: threads, inbox, sent and archive.",
+  "aliases": ["email", "inbox", "sent", "letter", "compose"]
+}

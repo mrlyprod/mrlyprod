@@ -1,10 +1,12 @@
 import type { Cell, Tensor } from "@mrlyprod/math";
-import type { Raw } from "../../../net/sdk/spec.ts";
+import type { Mathy } from "../../../net/sdk/page.tsx";
+import { rng } from "../../../net/sdk/rand.ts";
+import type { Patch, Raw, Value } from "../../../net/sdk/spec.ts";
 import { tidy } from "../../../net/sdk/spec.ts";
 import type { Run } from "../../../net/sdk/svg.ts";
 import { runs } from "../../../net/sdk/svg.ts";
 import type { Code, Mrly } from "../designs/engine.ts";
-import { canon, DESIGN } from "../designs/engine.ts";
+import { canon, DESIGN, roll } from "../designs/engine.ts";
 import type { Design } from "../designs/store.ts";
 
 /* TYPES */
@@ -71,6 +73,10 @@ export function memo<T>(): Memo<T> {
 export const read = (value: Raw) => tidy(DESIGN, value) as Design;
 
 export const design = (math: Mrly, base: number, code: Code | null | undefined) => canon(math, DIM, base, code);
+
+export const reroll = (value: Value, seed: number, units?: Mathy): Patch => ({
+  code: roll(units!.math!, DIM, read(value).base, rng(seed)),
+});
 
 export const named = (math: Mrly, code: Code, base: number) => math.name.of(code, DIM, base) ?? "";
 

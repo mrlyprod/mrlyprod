@@ -4,13 +4,11 @@ import type { Action } from "../../../net/sdk/controls.tsx";
 import { Fold } from "../../../net/sdk/controls.tsx";
 import { download, text } from "../../../net/sdk/export.ts";
 import type { Readout } from "../../../net/sdk/hooks.ts";
-import { useReroll as onRoll } from "../../../net/sdk/hooks.ts";
 import { Knob } from "../../../net/sdk/knobs.tsx";
 import type { Mathy } from "../../../net/sdk/page.tsx";
-import { rng } from "../../../net/sdk/rand.ts";
-import type { Patch, Row, Seeded, Spec, Value } from "../../../net/sdk/spec.ts";
+import type { Patch, Row, Spec, Value } from "../../../net/sdk/spec.ts";
 import type { Mrly } from "../designs/engine.ts";
-import { canon, roll } from "../designs/engine.ts";
+import { canon } from "../designs/engine.ts";
 import { DIM, named, read } from "./engine.ts";
 import { SIZES } from "./scene.ts";
 
@@ -27,10 +25,6 @@ export type FoldsProps = { groups: readonly Pane[] };
 export type Titled<U> = Row<U> & { label: string };
 
 const WAIT = 90;
-
-export function useReroll(value: Seeded, onChange: (patch: Patch) => void, math: Mrly | null | undefined) {
-  onRoll(value.seed, (seed) => math && onChange({ code: roll(math, DIM, read(value).base, rng(seed)) }));
-}
 
 export function useStatus<F>(
   live: RefObject<Factual<F> | null>,

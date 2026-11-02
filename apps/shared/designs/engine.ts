@@ -91,15 +91,18 @@ export function codes(math: Mrly, dim: number, base: number): string[] | null {
   return count <= LIMIT ? Array.from({ length: count }, (_, code) => String(code)) : null;
 }
 
-export function roll(math: Mrly, dim: number, base: number, rand: Rng = Math.random): string {
+export function roll(math: Mrly, dim: number, base: number, rand: Rng): string {
   return math.bang.random_code(dim, base, new math.Rng(Math.floor(rand() * 2 ** 32)), 1);
 }
 
-export function settle(math: Mrly, dim: number, base: number, code: Code | null | undefined, rand?: Rng): string {
-  const text = String(code ?? "").trim();
-  if (text === "" || !Number.isFinite(Number(text))) return roll(math, dim, base, rand);
+const wrap = (math: Mrly, dim: number, base: number, text: string) => {
   const count = total(math, dim, base);
   return String(((Math.floor(Number(text)) % count) + count) % count);
+};
+
+export function settle(math: Mrly, dim: number, base: number, code: Code | null | undefined, rand: Rng): string {
+  const text = String(code ?? "").trim();
+  return text === "" || !Number.isFinite(Number(text)) ? roll(math, dim, base, rand) : wrap(math, dim, base, text);
 }
 
 export function home(math: Mrly, dim: number, base: number): string {
@@ -109,7 +112,7 @@ export function home(math: Mrly, dim: number, base: number): string {
 
 export function canon(math: Mrly, dim: number, base: number, code: Code | null | undefined): string {
   const text = String(code ?? "").trim();
-  return text === "" || !Number.isFinite(Number(text)) ? home(math, dim, base) : settle(math, dim, base, text);
+  return text === "" || !Number.isFinite(Number(text)) ? home(math, dim, base) : wrap(math, dim, base, text);
 }
 
 export function drawn(
@@ -118,7 +121,7 @@ export function drawn(
   base: number,
   list: readonly string[] | null | undefined,
   code: Code | null | undefined,
-  seed?: number | null,
+  seed: number,
 ): string {
   const rand = rng(seed);
   const others = (list ?? []).filter((one) => one !== String(code));

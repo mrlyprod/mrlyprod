@@ -5,7 +5,7 @@ import { dragging, placed, sortable } from "../sdk/drag.ts";
 import { px } from "../sdk/px.ts";
 import { parts } from "./active.ts";
 import { AppIcon } from "./appicon.tsx";
-import { app, dock, redock } from "./catalog.ts";
+import { app, dock, launch as fold, redock } from "./catalog.ts";
 import type { Tile } from "./design.ts";
 import { route } from "./desk.ts";
 import type { Item } from "./lens.ts";
@@ -160,12 +160,7 @@ function Dock() {
       move: (e) => {
         x = e.clientX;
         want =
-          Boolean(shape) &&
-          e.pointerType !== "touch" &&
-          !dragging() &&
-          html.hasAttribute("data-magnify") &&
-          html.dataset.form !== "phone" &&
-          !calm();
+          Boolean(shape) && e.pointerType !== "touch" && !dragging() && html.hasAttribute("data-magnify") && !calm();
         if (want) kick();
         else redo();
       },
@@ -248,6 +243,7 @@ function Dock() {
           onPointerMove: (e: { nativeEvent: PointerEvent }) => pointer.current?.move(e.nativeEvent),
           onPointerLeave: () => pointer.current?.leave(),
         }),
+        launch: () => ({ onClick: fold }),
         group: (g) => () => ({ ref: listed(g) }),
         tile: (id) => () => ({ "data-id": id, "data-held": held.has(id) ? "" : undefined }),
         lens: { item: (id) => () => ({ ref: mark(id, true) }), gap: (g) => () => ({ ref: mark(`gap ${g}`, false) }) },

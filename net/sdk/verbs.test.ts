@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { createElement } from "react";
 import type { Row } from "./spec.ts";
 import type { Model } from "./verbs.ts";
-import { call, list, read, schema, user } from "./verbs.ts";
+import { call, list, read, schema } from "./verbs.ts";
 
 const of = (row: Row) => schema(row, { [row.key]: row.def });
 
@@ -58,6 +58,7 @@ test("a list is a string of its items joined by its sep", () => {
 
 const SNAKE: Model = {
   id: "snake",
+  user: "someone",
   spec: [{ key: "size", kind: "slider", def: 16, min: 8, max: 32, step: 2 }],
   keys: [
     { key: "ArrowLeft", label: "Turn", act: "turn" },
@@ -76,11 +77,11 @@ const SNAKE: Model = {
 test("list names set, reroll, pause and one verb per live key act, a key arg when the act has several", () => {
   const verbs = list(SNAKE);
   expect(verbs.map((one) => [one.name, one.title, one.args.properties?.key?.enum ?? []])).toEqual([
-    [`${user()}.snake.set`, "Set", []],
-    [`${user()}.snake.reroll`, "Reroll", []],
-    [`${user()}.snake.pause`, "Pause", []],
-    [`${user()}.snake.turn`, "Turn", ["ArrowLeft", "ArrowRight", "ArrowUp"]],
-    [`${user()}.snake.grow`, "Grow", []],
+    ["someone.snake.set", "Set", []],
+    ["someone.snake.reroll", "Reroll", []],
+    ["someone.snake.pause", "Pause", []],
+    ["someone.snake.turn", "Turn", ["ArrowLeft", "ArrowRight", "ArrowUp"]],
+    ["someone.snake.grow", "Grow", []],
   ]);
   expect(Object.keys(verbs[0].args.properties!)).toEqual(["seed", "size"]);
 });
@@ -95,12 +96,12 @@ test("read tidies the value and writes each readout as text", () => {
 test("call sends set to change, any other verb to run with its key, and refuses what list does not name", () => {
   const said: unknown[] = [];
   const ports = { change: (patch: object) => said.push(patch), run: (act: string) => said.push(act) };
-  call(SNAKE, ports, `${user()}.snake.set`, { size: 24 });
-  call(SNAKE, ports, `${user()}.snake.pause`);
-  call(SNAKE, ports, `${user()}.snake.turn`, { key: "ArrowUp" });
-  call(SNAKE, ports, `${user()}.snake.grow`);
+  call(SNAKE, ports, "someone.snake.set", { size: 24 });
+  call(SNAKE, ports, "someone.snake.pause");
+  call(SNAKE, ports, "someone.snake.turn", { key: "ArrowUp" });
+  call(SNAKE, ports, "someone.snake.grow");
   expect(said).toEqual([{ size: 24 }, "pause", "turn@ArrowUp", "grow@g"]);
-  expect(() => call(SNAKE, ports, `${user()}.snake.hide`)).toThrow("no verb");
-  expect(() => call(SNAKE, ports, `${user()}.snake.set`, { speed: 2 })).toThrow("takes no speed");
-  expect(() => call(SNAKE, ports, `${user()}.snake.turn`, { key: "x" })).toThrow("takes key");
+  expect(() => call(SNAKE, ports, "someone.snake.hide")).toThrow("no verb");
+  expect(() => call(SNAKE, ports, "someone.snake.set", { speed: 2 })).toThrow("takes no speed");
+  expect(() => call(SNAKE, ports, "someone.snake.turn", { key: "x" })).toThrow("takes key");
 });

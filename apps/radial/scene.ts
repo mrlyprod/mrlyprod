@@ -1,4 +1,6 @@
 import type { Mathy, Page } from "../../net/sdk/page.tsx";
+import type { Rng } from "../../net/sdk/rand.ts";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, Scene, View } from "../../net/sdk/run.ts";
 import type { Raw, Spec, Value } from "../../net/sdk/spec.ts";
 import { defaults, tidy } from "../../net/sdk/spec.ts";
@@ -8,6 +10,7 @@ import {
   BLENDS,
   COPIES,
   degrees,
+  drawn,
   edge,
   key,
   layout,
@@ -38,7 +41,7 @@ export type Facts = Pick<Plan, "kind" | "code" | "name" | "side" | "order" | "le
 
 export type Given = Opts & { math?: Mrly | null; onFacts?: (facts: Facts) => void };
 
-export type Rosette = Scene & { whole?: () => void; copies?: (by: number) => void; step?: (by: number) => void };
+export type Rolled = Partial<Src> & Pick<Stack, "copies" | "blend"> & { full: number };
 
 const HIDE = () => false;
 
@@ -84,6 +87,19 @@ export const STACKS: [string, Orbit][] = [
 
 const STEP: Record<string, number> = { ArrowUp: 0.5, ArrowDown: -0.5 };
 
+const BLEND = BLENDS.map(([one]) => one).filter((one) => one !== "meet");
+
+export const wrap = (copies: number, by: number) => ((copies - 1 + by + COPIES) % COPIES) + 1;
+
+export function rolled(math: Mrly, value: Raw, rand: Rng): Rolled {
+  return {
+    ...drawn(math, read(value), rand),
+    copies: 1 + Math.floor(rand() * COPIES),
+    blend: BLEND[Math.floor(rand() * BLEND.length)],
+    full: 1,
+  };
+}
+
 const ABOUT = [
   "Copy a design, turn the copy about the centre, lay it on the first, and repeat. The blend merges the copies: their mean, sum, union, meet, parity, or what the first keeps that no other has.",
   "A full turn shared over q copies is what a screen shows when a spinning design advances p/q of a turn a frame. The stack keeps only the circular harmonics whose order is a multiple of q, so a design of rotation order g shows lcm(q, g) petals.",
@@ -114,12 +130,21 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowRight"], label: "Copies", act: "copies", menu: "Edit" },
     { key: Object.keys(STEP), label: "Step", act: "step" },
   ],
-  actions: {
-    whole: (scene) => scene.whole?.(),
-    copies: (scene, e) => scene.copies?.(e.key === "ArrowLeft" ? -1 : 1),
-    step: (scene, e) => scene.step?.(STEP[e.key!]),
+  acts: {
+    whole: () => ({ full: 1 }),
+    copies: (value, key) => ({
+      copies: Math.min(COPIES, Math.max(1, Number(value.copies) + (key === "ArrowLeft" ? -1 : 1))),
+    }),
+    step: (value, key) => ({
+      full: 0,
+      step: Math.min(
+        360,
+        Math.max(0, (Number(value.full) === 1 ? 360 / Number(value.copies) : Number(value.step)) + STEP[key]),
+      ),
+    }),
   },
-} satisfies Page<Loaded<"math">, Rosette>;
+  reroll: (value, seed, units) => rolled(units!.math, value, rng(seed)),
+} satisfies Page<Loaded<"math">, Scene>;
 
 const LOOKS: (keyof Radial)[] = ["ramp", "levels", "invert", "tint", "copies", "full", "step", "blend", "samples"];
 

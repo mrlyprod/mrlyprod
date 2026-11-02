@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test";
-import { render as md } from "../md/md.ts";
-import { paint } from "./code.ts";
+import { render as md } from "../../system/preview/md.ts";
 import { seti } from "./seti/seti.ts";
 import {
   away,
@@ -17,11 +16,6 @@ import {
   type Tools,
   type Wood,
 } from "./view.ts";
-
-const shiki = await import("@shikijs/core").then(
-  () => true,
-  () => false,
-);
 
 /* RULES */
 
@@ -225,19 +219,4 @@ test("a code block numbers its lines and a huge one stays plain", () => {
 
 test("the gutter class counts the digits of the last line", () => {
   expect(block("x\n".repeat(400), "text")).toContain('<div class="code d3"');
-});
-
-/* PAINT */
-
-test.skipIf(!shiki)("a rust snippet paints one string per line", async () => {
-  const out = await paint("fn main() {\n    let a = 1;\n}\n", "rust");
-  expect(out).not.toBeNull();
-  expect(out!.length).toBe(3);
-  expect(out![1]).toContain('<span class="tk-keyword">let</span>');
-  expect(out!.join("")).not.toContain("style=");
-});
-
-test("an unknown extension paints nothing", async () => {
-  expect(await paint("hello\n", lang("notes.bin"))).toBeNull();
-  expect(await paint("hello\n", "text")).toBeNull();
 });

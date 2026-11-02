@@ -2,9 +2,9 @@ import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { values } from "../../net/sdk/page.tsx";
 import { CARDS } from "./cards.ts";
-import { SPEC } from "./scene.ts";
+import { rolled, SPEC, turned, walked } from "./scene.ts";
 import type { Asked } from "./widget.tsx";
-import { rolled, turned, Widget, walked } from "./widget.tsx";
+import { Widget } from "./widget.tsx";
 
 test("a seed rolls a card and a step inside its range, the same every time", () => {
   for (const seed of [1, 2, 3, 99, 4294967295]) {

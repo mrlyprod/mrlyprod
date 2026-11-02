@@ -12,16 +12,16 @@ import type { Mrly } from "../shared/designs/engine.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import { read, tag } from "../shared/two/engine.ts";
 import type { Pane } from "../shared/two/parts.tsx";
-import { design, Folds, useReroll, useShots, useStatus } from "../shared/two/parts.tsx";
-import { RMAX, SHAPES, top } from "./engine.ts";
-import type { Crop, Facts, Handled, Hands } from "./scene.ts";
+import { design, Folds, useShots, useStatus } from "../shared/two/parts.tsx";
+import { SHAPES } from "./engine.ts";
+import type { Crop, Facts } from "./scene.ts";
 import { name as called, make, SPEC, sketch, WINDOWS } from "./scene.ts";
 
 /* TYPES */
 
 export type CropsProps = { value: Value; onChange: (patch: Patch) => void; unit: Mrly };
 
-type Props = WidgetProps<Mathy, Handled> & { value: Seeded };
+type Props = WidgetProps<Mathy, Crop> & { value: Seeded };
 
 /* ROWS */
 
@@ -116,7 +116,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   now.current = value;
   const grip = useRef(false);
   const [have, setHave] = useState(false);
-  useReroll(value, onChange, unit);
   useStatus(live, `${have}:${JSON.stringify(value)}`, onStatus, rows);
   useShots(onExport, live, have, () => called(now.current));
   const scene = useCallback(
@@ -126,15 +125,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const ready = (handle: Handle<Crop> | null) => {
     live.current = handle;
     setHave(Boolean(handle));
-    if (!handle) return onReady?.(null);
-    const at = () => now.current;
-    const hands: Hands = {
-      flip: () => onChange({ mode: at().mode === "anti" ? "crop" : "anti" }),
-      grow: (by) => onChange({ radius: Math.max(0, Math.min(RMAX, Number(at().radius) + by)) }),
-      deeper: (by) =>
-        onChange({ level: Math.max(1, Math.min(top(unit!, Number(at().number)), Number(at().level) + by)) }),
-    };
-    onReady?.({ ...handle, ...hands });
+    onReady?.(handle);
   };
   const point = (e: PointerEvent<HTMLCanvasElement>): [number, number] => {
     const canvas = e.currentTarget;

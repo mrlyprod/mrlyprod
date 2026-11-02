@@ -1,8 +1,8 @@
-import type { Clock, Props } from "./design.ts";
+import type { Props } from "./design.ts";
 import type { Spot } from "./lens.ts";
 import type { Lock } from "./lock.ts";
 import { ending, hide, saves, veil } from "./parts.tsx";
-import { calm, KEY, minutes, read, root, subscribe } from "./prefs.ts";
+import { calm, cycle, KEY, minutes, read, root, subscribe } from "./prefs.ts";
 
 /* TYPES */
 
@@ -108,11 +108,6 @@ export function watch() {
 }
 
 /* CLOCK */
-
-const cycle = (): Clock["hours"] => {
-  const mode = read(KEY.hours);
-  return mode === "12" ? 12 : mode === "24" ? 24 : null;
-};
 
 function draw(mine: Running) {
   veil(mine.box, {

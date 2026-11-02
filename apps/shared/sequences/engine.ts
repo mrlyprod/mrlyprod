@@ -486,6 +486,13 @@ export function ledger(math: Mrly) {
 
 export type Ledger = ReturnType<typeof ledger>;
 
+let kept: { math: Mrly; book: Ledger } | null = null;
+
+export function booked(math: Mrly): Ledger {
+  if (kept?.math !== math) kept = { math, book: ledger(math) };
+  return kept.book;
+}
+
 /* LEAD */
 
 export const flat = (terms: string[]) => terms.length > 1 && terms.every((one) => one === terms[0]);

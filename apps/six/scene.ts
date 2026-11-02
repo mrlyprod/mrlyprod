@@ -11,7 +11,7 @@ import { canon, DESIGN } from "../shared/designs/engine.ts";
 import type { Design } from "../shared/designs/store.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
-import type { Built, Facts, Knobs, Shade, Study } from "./engine.ts";
+import type { Built, Facts, Knobs, Look, Shade, Study } from "./engine.ts";
 import {
   cap,
   copies,
@@ -23,6 +23,7 @@ import {
   NUMBERS,
   REPEATS,
   RINGS,
+  reroll,
   SCALE,
   SHEETS,
   studio,
@@ -36,9 +37,11 @@ export type Given = Opts & { math?: Mrly | null; onFacts?: (facts: Facts) => voi
 
 export type Tones = Record<Shade, Color> & Partial<Record<string, Color>>;
 
-export type Hands = { crop: () => void; view: (step: number) => void; deeper: (step: number) => void };
+const ORDER = VIEWS.map(([key]) => key);
 
-export type Held = Scene & Partial<Hands>;
+export const turn = (value: Value, by: number) => ({
+  view: ORDER[(ORDER.indexOf(value.view as Look) + by + ORDER.length) % ORDER.length],
+});
 
 export type Sheet = ReturnType<typeof make>;
 
@@ -120,13 +123,14 @@ export const PAGE = {
     { key: "ArrowUp", label: "Level", act: "up", menu: "View" },
     { key: "ArrowDown", label: "Level", act: "down", menu: "View" },
   ],
-  actions: {
-    crop: (scene) => scene.crop?.(),
-    view: (scene, e) => scene.view?.(e.key === "ArrowLeft" ? -1 : 1),
-    up: (scene) => scene.deeper?.(1),
-    down: (scene) => scene.deeper?.(-1),
+  acts: {
+    crop: (value) => ({ overhang: value.overhang === 1 ? 0 : 1 }),
+    view: (value, key) => turn(value, key === "ArrowLeft" ? -1 : 1),
+    up: (value) => ({ level: Number(value.level) + 1 }),
+    down: (value) => ({ level: Number(value.level) - 1 }),
   },
-} satisfies Page<Loaded<"math">, Held>;
+  reroll: (value, seed, units) => ({ code: reroll(units!.math, Number(tidy(DESIGN, value).base), seed) }),
+} satisfies Page<Loaded<"math">, Scene>;
 
 const PAD = 24;
 const EDGE = 0.06;

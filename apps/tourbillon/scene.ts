@@ -102,8 +102,11 @@ export const SPEC: Spec = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
+export const units = wasm("math");
+
 export const PAGE = {
   spec: SPEC,
+  units,
   record: true,
   gestures: true,
   name: (value) => `tourbillon-${trim(value.increment)}`,
@@ -124,6 +127,7 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowRight"], label: "Nudge", act: "nudge" },
   ],
   actions: { play: (scene) => scene.toggle?.(), nudge: (scene, e) => scene.nudge?.(e.key === "ArrowLeft" ? -1 : 1) },
+  reroll: () => ({ sched: "random" }),
 } satisfies Page<Loadable, Player>;
 
 /* SAVERS */
@@ -154,8 +158,6 @@ export const SAVERS = [
   },
   { id: "lace", title: "Lace", pick: (rand: Rng) => stack(rand, 21, 35, { weights: "harmonic", mode: "edges" }) },
 ];
-
-export const units = wasm("math");
 
 const read = (opts: Given) => ({ ...tidy(SPEC, opts), seed: Number(opts.seed) >>> 0 }) as Tourbillon;
 

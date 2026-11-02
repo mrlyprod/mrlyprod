@@ -6,7 +6,7 @@ export type Seen = { id: string; url: string; at?: unknown };
 
 export type Visit = { id: string; url: string; at: number };
 
-export type Ranked = { title: string; more?: string };
+export type Ranked = { title: string; more?: string; aliases?: string[] };
 
 type Loose = { name?: unknown; apps?: unknown } | null;
 
@@ -16,7 +16,6 @@ export const RECENT = 9;
 export const KEPT = 24;
 export const SPARE = "New Section";
 
-const two = (n: number) => String(n).padStart(2, "0");
 const parse = (text: string): unknown => {
   try {
     return text ? JSON.parse(text) : null;
@@ -138,7 +137,7 @@ export function ago(at: number, now = Date.now()) {
 
 export const terms = (query: string) => query.toLowerCase().split(/\s+/).filter(Boolean);
 
-export function score(words: string[], title: string, more = "") {
+export function score(words: string[], title: string, more = "", aliases: readonly string[] = []) {
   const name = title.toLowerCase();
   const rest = more.toLowerCase();
   let total = 0;
@@ -146,6 +145,7 @@ export function score(words: string[], title: string, more = "") {
     const at = name.indexOf(word);
     if (at === 0) total += 4;
     else if (at > 0 && /[^\p{L}\p{N}]/u.test(name[at - 1])) total += 3;
+    else if (aliases.some((alias) => alias.startsWith(word))) total += 3;
     else if (at > 0) total += 2;
     else if (word.length >= 3 && rest.includes(word)) total += 1;
     else return 0;
@@ -157,20 +157,9 @@ export function rank<T extends Ranked>(query: string, items: T[], cap = Infinity
   const words = terms(query);
   if (!words.length) return [];
   return items
-    .map((one): [T, number] => [one, score(words, one.title, one.more)])
+    .map((one): [T, number] => [one, score(words, one.title, one.more, one.aliases)])
     .filter(([, n]) => n > 0)
     .sort((a, b) => b[1] - a[1] || a[0].title.localeCompare(b[0].title))
     .slice(0, cap)
     .map(([one]) => one);
-}
-
-/* DAY */
-
-export const today = (now = new Date()) =>
-  `${now.getUTCFullYear()}-${two(now.getUTCMonth() + 1)}-${two(now.getUTCDate())}`;
-
-export function daily(day: string, n: number) {
-  let h = 0x811c9dc5;
-  for (const c of day) h = Math.imul(h ^ c.charCodeAt(0), 0x01000193) >>> 0;
-  return n > 0 ? h % n : 0;
 }

@@ -5,8 +5,8 @@ import { defaults } from "../../net/sdk/spec.ts";
 import { all, mount, text } from "../../net/test/dom.ts";
 import { CARPET, DEEP, LEAST, law, MOST, STACKS } from "./engine.ts";
 import type { Star } from "./scene.ts";
-import { SPEC } from "./scene.ts";
-import { drawn, rows, Shelves } from "./widget.tsx";
+import { drawn, SPEC } from "./scene.ts";
+import { rows, Shelves } from "./widget.tsx";
 
 test("the readings lead with the decay, mark a layer off the law, and say when the slope is refused", () => {
   const star = new math.six.star.Star(CARPET);

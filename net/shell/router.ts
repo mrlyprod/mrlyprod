@@ -30,8 +30,6 @@ export type Own = {
 
 export type Shell = { page: (row: Row) => Own | Promise<Own> };
 
-export type Gated = Shell & { gated: (row: Row) => boolean };
-
 export type Mode = "push" | "replace" | "pop" | "boot";
 
 type Sheet = { link: HTMLLinkElement; ready: Promise<unknown> };
@@ -45,13 +43,12 @@ type Next = {
   host: HTMLElement;
   sheet: Sheet | null;
   side: HTMLDivElement;
-  form: string | undefined;
 };
 
 const FRESH = 30000;
 const ONCE = `${site.prefix}reload`;
 const SHELLS = {
-  app: (): Promise<Gated> => import("./app.tsx"),
+  app: (): Promise<Shell> => import("./app.tsx"),
   prose: (): Promise<Shell> => import("./prose.tsx"),
 };
 
@@ -60,7 +57,6 @@ const SHELLS = {
 const html = document.documentElement;
 const main = document.getElementById("main")!;
 const pane = () => document.querySelector<HTMLElement>(".window");
-const bar = () => document.querySelector(".window > .title");
 const drawer = document.getElementById("right")!;
 const DEEP = deeps(rows);
 const place = (at: Place) => walled(at.pathname, DEEP) || at.pathname;
@@ -115,7 +111,6 @@ function wear(name: string | undefined): Sheet | null {
 /* RENDER */
 
 async function prepare(row: Row, url: URL): Promise<Next> {
-  const form = html.dataset.form;
   const [kind, text] = await Promise.all([page(row), source(row)]);
   const layout = kind.layout ?? {};
   const sheet = wear(layout.sheet);
@@ -124,7 +119,7 @@ async function prepare(row: Row, url: URL): Promise<Next> {
   const side = document.createElement("div");
   await kind.render(row, site, host, { text, rows, url, right: side });
   await sheet?.ready;
-  return { row, layout, kind, host, sheet, side, form };
+  return { row, layout, kind, host, sheet, side };
 }
 
 /* HEAD */
@@ -159,7 +154,7 @@ function head(row: Row, url: URL) {
 const kind = (layout: Layout) => layout.window ?? (layout.wide ? "wide" : "page");
 
 function title(row: Row) {
-  const name = bar()?.querySelector(".name");
+  const name = document.querySelector("[data-title]");
   if (name) name.textContent = row.title;
 }
 
@@ -171,19 +166,15 @@ function dress(next: Next) {
   if (box) {
     box.setAttribute("aria-label", row.title);
     box.dataset.app = row.kind === "app" ? (row.meta?.id ?? "") : "";
-    if (shape === "page" || shape === "wide") box.dataset.lens = "window";
-    else delete box.dataset.lens;
   }
   title(row);
-  const app = document.querySelector(".trio .app");
-  if (app) app.textContent = shape === "app" ? row.title : "";
   main.className = layout.wide ? "wide" : "";
   const fill = side.childNodes.length > 0;
   drawer.replaceChildren(...(fill ? [side] : []));
   drawer.hidden = false;
   if (fill && !drawer.isConnected) main.after(drawer);
   if (!fill) drawer.remove();
-  const button = document.querySelector<HTMLElement>('.window > .title [data-pane="right"]');
+  const button = document.querySelector<HTMLElement>("[data-tools]");
   if (button) button.hidden = !fill;
   html.dataset.right = "shut";
   for (const { link } of sheets.values()) link.media = link === next.sheet?.link ? "" : "not all";
@@ -302,17 +293,6 @@ export async function go(asked: URL, how: Mode = "push", y = 0, still = calm()) 
   }
   if (mine !== turn) return;
   html.removeAttribute("aria-busy");
-  await reform();
-}
-
-/* FORM */
-
-async function reform() {
-  const row = current?.row;
-  if (row?.kind !== "app" || current!.form === html.dataset.form || html.getAttribute("aria-busy") === "true") return;
-  const one = await SHELLS.app().catch(() => null);
-  if (one?.gated(row) && current?.row === row && current.form !== html.dataset.form)
-    await go(new URL(location.href), "replace", Math.round(main.scrollTop));
 }
 
 /* EVENTS */
@@ -375,7 +355,6 @@ function boot() {
   main.addEventListener("scrollend", note);
   addEventListener("pagehide", note);
   addEventListener("pageshow", back);
-  new MutationObserver(reform).observe(html, { attributeFilter: ["data-form"] });
   document.addEventListener("visibilitychange", () => document.hidden && note());
   go(new URL(location.href), "boot");
 }

@@ -25,7 +25,7 @@ const ACROSS = 72;
 
 const SOFT = 0.5;
 
-const PLAIN = "#.#.# .#.#. #.#.# .#.#. #.#.#";
+export const PLAIN = "#.#.# .#.#. #.#.# .#.#. #.#.#";
 
 const FLIPS: Flip[][] = [
   [(r, c) => [r, N - 1 - c]],

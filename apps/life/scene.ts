@@ -254,8 +254,11 @@ const slug = (text: Scalar) =>
 export const worn = (presets: readonly Preset[], value: Value) =>
   presets.find(([, one]) => wears(value, one))?.[0] ?? "";
 
+export const units = wasm("life", "math");
+
 export const PAGE = {
   spec: SPEC,
+  units,
   design: { dim: "dim", base: 2, code: "code", dims: [1, 2] },
   gestures: true,
   record: true,
@@ -288,16 +291,17 @@ export const PAGE = {
     },
     { key: "n", label: "Step", act: "step", menu: "Edit" },
     { key: "f", label: (value: Value) => (fixed(value) ? "Run to fate" : "Run to stop"), act: "fate", menu: "Edit" },
-    { key: ["0", "Home"], label: "Reset", act: "reset" },
+    { key: ["0", "Home"], label: "Reset", act: "restart" },
     { key: "c", label: "Clear", act: "clear", when: fixed },
   ],
   actions: {
     play: (scene) => scene.toggle(),
     step: (scene) => scene.step(),
     fate: (scene) => scene.doom(),
-    reset: (scene) => scene.reset(),
+    restart: (scene) => scene.reset(),
     clear: (scene) => scene.clear(),
   },
+  reroll: (value) => (fixed(value) ? { from: "noise" } : {}),
 } satisfies Page<Ready & Units, Life>;
 
 export const SAVERS = [
@@ -347,8 +351,6 @@ export const SAVERS = [
     }),
   },
 ];
-
-export const units = wasm("life", "math");
 
 export const HOLD = 3000;
 

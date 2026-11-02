@@ -93,8 +93,9 @@ const live = new Set<Pick<Stop, "seek">>();
 
 export function seek(t: number): boolean {
   if (!live.size || !Number.isFinite(t)) return false;
-  for (const one of live) one.seek(t);
-  return true;
+  let all = true;
+  for (const one of live) all = one.seek(t) && all;
+  return all;
 }
 
 const calm = () =>

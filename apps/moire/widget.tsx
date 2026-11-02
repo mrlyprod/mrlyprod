@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useLatest, useReroll, useStatus, useUnit } from "../../net/sdk/hooks.ts";
+import { useLatest, useStatus, useUnit } from "../../net/sdk/hooks.ts";
 import type { Paint } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
@@ -13,7 +13,7 @@ import { useTouch } from "../../net/sdk/touch.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Preset } from "../shared/moire/engine.ts";
-import { drawn, matrix, presetOf, presets, swatch } from "../shared/moire/engine.ts";
+import { matrix, presetOf, presets, swatch } from "../shared/moire/engine.ts";
 import { stamp } from "../shared/moire/sheet.ts";
 import type { Facts, Moire, Player } from "./scene.ts";
 import { make } from "./scene.ts";
@@ -112,7 +112,6 @@ export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
     onReady?.(scene);
   };
   const touch = useTouch(handle, change);
-  useReroll(value.seed, (seed) => math && change.current(drawn(math, seed)));
   useStatus(onStatus, rows(facts));
   return (
     <>

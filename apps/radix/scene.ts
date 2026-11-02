@@ -1,18 +1,24 @@
 import type { Paints } from "../../net/sdk/color.ts";
 import { TINTS } from "../../net/sdk/color.ts";
-import type { Had, Ready } from "../../net/sdk/hooks.ts";
-import type { Handle, Page } from "../../net/sdk/page.tsx";
+import type { Had } from "../../net/sdk/hooks.ts";
+import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Spec, Units, Value } from "../../net/sdk/spec.ts";
+import type { Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
-import type { Box, Design, Facts, Num, Pair, Plan, Word } from "./engine.ts";
+import type { Units as Loaded } from "../shared/units/index.ts";
+import { wasm } from "../shared/units/index.ts";
+import type { Box, Design, Facts, Num, Pair, Plan, Preset, Shaped, Word } from "./engine.ts";
 import {
   bases,
   cap,
   corners,
   count,
   DRAWN,
+  dial,
+  every,
+  flat,
   GAP,
   glance,
   KEEP,
@@ -21,15 +27,19 @@ import {
   lattice,
   lay,
   PAD,
+  PRESETS,
   pair,
   picture,
+  preset,
   RINGS,
   reach,
+  rolled,
   SMALL,
   spell,
   study,
   THIN,
   twisted,
+  wears,
 } from "./engine.ts";
 
 /* TYPES */
@@ -42,11 +52,30 @@ export type Given = Opts & { math?: Mrly | null; num?: Num | null; onFacts?: (fa
 
 export type Seen = Pick<View, "w" | "h" | "dpr"> & { look: () => Pick<Paints, "paper" | "accent"> };
 
-export type Moves = { flat: () => void; every: () => void; deeper: (by: number) => void; step: (by: number) => void };
+export type Moves = { flat: () => void; every: () => void };
+
+export type Doors = Had<"math" | "num">;
+
+export type Listed = [Preset, Shaped | null];
 
 export type Radix = ReturnType<typeof make>;
 
-export type Handled = Radix & Omit<Moves, "every">;
+export const units = wasm("math", "num");
+
+let shelved: { num: Num; list: Listed[] } | null = null;
+
+export function presets({ num, math }: Doors): Listed[] {
+  if (shelved?.num !== num) shelved = { num, list: PRESETS.map(([name]): Listed => [name, preset(num, math, name)]) };
+  return shelved.list;
+}
+
+export function next(name: string, by: number) {
+  const at = PRESETS.findIndex(([one]) => one === name);
+  if (at < 0) return PRESETS[by > 0 ? 0 : PRESETS.length - 1][0];
+  return PRESETS[(at + by + PRESETS.length) % PRESETS.length][0];
+}
+
+const dialed = (value: Value, units?: Doors) => dial(units!.num, units!.math, value as unknown as Design);
 
 export type Pen = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -116,13 +145,18 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowRight"], label: "Preset", act: "preset" },
     { key: "a", label: "Every residue", act: "every", menu: "Edit" },
   ],
-  actions: {
-    flat: (scene) => scene.flat?.(),
-    level: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
-    preset: (scene, e) => scene.step?.(e.key === "ArrowLeft" ? -1 : 1),
-    every: (scene: Handle<Handled> & Partial<Pick<Moves, "every">>) => scene.every?.(),
+  units,
+  acts: {
+    flat: (value, _key, units) => flat(dialed(value, units)),
+    level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
+    preset: (value, key, units) => {
+      const was = presets(units!).find(([, one]) => wears(value as unknown as Design, one))?.[0] ?? "";
+      return preset(units!.num, units!.math, next(was, key === "ArrowLeft" ? -1 : 1)) ?? {};
+    },
+    every: (value, _key, units) => every(dialed(value, units)),
   },
-} satisfies Page<Ready & Units, Handled>;
+  reroll: (value, seed, units) => rolled(dialed(value, units), rng(seed)),
+} satisfies Page<Loaded<"math" | "num">, Radix>;
 
 const CHUNK = 8192;
 const DESIGN: (keyof Knobs)[] = ["ring", "base", "d", "t"];

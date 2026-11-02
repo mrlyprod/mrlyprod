@@ -2,16 +2,15 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
-import { inked, SIZE } from "../../../../draw/figure.ts";
-import { type Color, type Ink, type Pen, raster, svg } from "../../../../draw/index.ts";
+import { type Color, type Ink, type Pen, raster, svg } from "@mrlyprod/draw";
+import { inked, SIZE } from "@mrlyprod/draw/figure.ts";
 import { palette } from "../../../sdk/theme/palette.gen.js";
 import { mrly, plates, roster } from "./build.ts";
-import { REPO, SITE } from "./home.ts";
+import { REPO, SITE, wasm as unitWasm } from "./home.ts";
 
 /* PATHS */
 
 const repo = REPO;
-const CRATES = join(repo, "crates");
 const DATA_DIR = join(repo, "data", relative(repo, import.meta.dir));
 const SHEET = readFileSync(join(repo, "designs", "shared", "palette.gen.css"), "utf8");
 const THEMES = ["dark", "light"] as const;
@@ -86,11 +85,7 @@ function straight({ shape, colors }: Pixels): Pixels {
 const compiled = new Map<string, WebAssembly.Module>();
 
 function wasm(unit: string) {
-  if (!compiled.has(unit))
-    compiled.set(
-      unit,
-      new WebAssembly.Module(readFileSync(join(CRATES, unit, "js", "pkg", `mrly_${unit}_js_bg.wasm`))),
-    );
+  if (!compiled.has(unit)) compiled.set(unit, new WebAssembly.Module(readFileSync(unitWasm(unit))));
   return compiled.get(unit)!;
 }
 

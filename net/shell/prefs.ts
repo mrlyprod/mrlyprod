@@ -5,9 +5,7 @@ import { px } from "../sdk/px.ts";
 export const PREFIX = (typeof document !== "undefined" && document.documentElement.dataset.prefix) || "";
 export const KEY = {
   theme: `${PREFIX}theme`,
-  font: `${PREFIX}font`,
   tint: `${PREFIX}tint`,
-  glass: `${PREFIX}glass`,
   saver: `${PREFIX}saver`,
   cart: `${PREFIX}cart`,
   welcome: `${PREFIX}welcome`,
@@ -37,7 +35,7 @@ export type Fan = (key: string | null) => void;
 
 export type Access = "text" | "motion" | "contrast" | "targets";
 
-export type Settings = Partial<Record<Name, string>>;
+export type Settings = Record<string, string>;
 
 export const read = (key: string) => {
   try {
@@ -112,21 +110,31 @@ export function turn() {
   theme(now === "" ? "light" : now === "light" ? "dark" : "");
 }
 
-/* GLASS */
+/* KNOBS */
+
+export const KNOB = `${PREFIX}knob-`;
+
+export const dial = (id: string) => `${KNOB}${id}`;
+
+export function knob(id: string, next: string) {
+  if (next) root().dataset[id] = next;
+  else delete root().dataset[id];
+  write(dial(id), next);
+}
+
+/* CLEAR */
 
 const CLEAR = "(prefers-reduced-transparency: reduce)";
 
-export function glass(next: string) {
-  const want =
-    read(KEY.clear) === "1" || (typeof matchMedia === "function" && matchMedia(CLEAR).matches) ? "off" : next;
-  if (want) root().dataset.glass = want;
-  else delete root().dataset.glass;
-  write(KEY.glass, next);
+export function shine() {
+  const on = read(KEY.clear) === "1" || (typeof matchMedia === "function" && matchMedia(CLEAR).matches);
+  if (on) root().dataset.clear = "1";
+  else delete root().dataset.clear;
 }
 
 export function clear(on: boolean) {
   write(KEY.clear, on ? "1" : "");
-  glass(read(KEY.glass));
+  shine();
 }
 
 /* ICONS */
@@ -160,14 +168,6 @@ export function magnify(on: boolean) {
   if (on) root().dataset.magnify = "";
   else delete root().dataset.magnify;
   write(KEY.magnify, on ? "1" : "");
-}
-
-/* FONT */
-
-export function face(next: string) {
-  if (next) root().dataset.font = next;
-  else delete root().dataset.font;
-  write(KEY.font, next);
 }
 
 /* ACCESSIBILITY */
@@ -218,6 +218,11 @@ export function minutes() {
 
 export const hours = (next: string) => write(KEY.hours, next);
 
+export function cycle(): 12 | 24 | null {
+  const mode = read(KEY.hours);
+  return mode === "12" ? 12 : mode === "24" ? 24 : null;
+}
+
 /* REPLAY */
 
 function width(name: "page" | "wide", prop: string) {
@@ -234,9 +239,7 @@ export function widths() {
 const REPLAY: Partial<Record<Name, () => void>> = {
   theme: () => theme(read(KEY.theme)),
   tint: () => tint(read(KEY.tint)),
-  font: () => face(read(KEY.font)),
-  glass: () => glass(read(KEY.glass)),
-  clear: () => glass(read(KEY.glass)),
+  clear: shine,
   icons: shade,
   always: shade,
   magnify: () => magnify(read(KEY.magnify) === "1"),
@@ -249,7 +252,18 @@ const REPLAY: Partial<Record<Name, () => void>> = {
   wide: () => width("wide", "--wide"),
 };
 
+function knobs() {
+  return stored().filter(([key]) => key.startsWith(KNOB));
+}
+
 export function replay(key: string | null) {
+  for (const [one, value] of knobs()) {
+    if (key !== null && key !== one) continue;
+    const id = one.slice(KNOB.length);
+    if (value) root().dataset[id] = value;
+    else delete root().dataset[id];
+  }
+  if (key?.startsWith(KNOB) && !read(key)) delete root().dataset[key.slice(KNOB.length)];
   for (const [name, fn] of Object.entries(REPLAY) as [Name, () => void][]) {
     if (key !== null && key !== KEY[name]) continue;
     try {
@@ -270,22 +284,31 @@ if (typeof window !== "undefined") {
 /* SETTINGS */
 
 export const SETTINGS =
-  "theme tint font text glass icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad page wide".split(
+  "theme tint text icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad page wide".split(
     " ",
   ) as Name[];
 
+const KNOBBED = /^knob-[a-z]+$/;
+
 export const pack = (): Settings =>
-  Object.fromEntries(SETTINGS.map((name) => [name, read(KEY[name])]).filter(([, value]) => value));
+  Object.fromEntries(
+    [
+      ...SETTINGS.map((name) => [name, read(KEY[name])]),
+      ...knobs().map(([key, value]) => [key.slice(PREFIX.length), value]),
+    ].filter(([, value]) => value),
+  );
 
 export function unpack(data: unknown) {
   const kind = data && typeof data === "object" ? Object.getPrototypeOf(data) : undefined;
   if (kind !== Object.prototype && kind !== null) throw new Error("This is not a settings file.");
   for (const [name, value] of Object.entries(data as Record<string, unknown>)) {
-    if (!(SETTINGS as string[]).includes(name)) throw new Error(`Unknown setting "${name}".`);
+    if (!(SETTINGS as string[]).includes(name) && !KNOBBED.test(name)) throw new Error(`Unknown setting "${name}".`);
     if (typeof value !== "string") throw new Error(`The setting "${name}" is not text.`);
   }
   const given = data as Record<string, string>;
   for (const name of SETTINGS) write(KEY[name], Object.hasOwn(given, name) ? given[name] : "");
+  for (const [key] of knobs()) write(key, "");
+  for (const [name, value] of Object.entries(given)) if (KNOBBED.test(name)) write(`${PREFIX}${name}`, value);
 }
 
 export function encode(data: unknown) {

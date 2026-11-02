@@ -451,3 +451,25 @@ code {
     break-inside: avoid;
   }
 }
+
+/* LAYER */
+
+:root {
+  --z-desk: -1;
+  --z-lens: -1;
+  --z-widgets: 5;
+  --z-window: 10;
+  --z-veil: 11;
+  --z-pad: 12;
+  --z-dock: 20;
+  --z-gallery: 25;
+  --z-scrim: 30;
+  --z-drawer: 40;
+  --z-sheet: 45;
+  --z-bar: 50;
+  --z-lock: 54;
+  --z-welcome: 55;
+  --z-skip: 60;
+  --z-drag: 70;
+  --z-saver: 80;
+}

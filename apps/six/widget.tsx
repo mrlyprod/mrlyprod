@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useReroll } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
@@ -10,18 +9,16 @@ import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Patch, Seeded, Value } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { read, useTheme } from "../shared/designs/pick.tsx";
-import type { Facts, Knobs, Look, Preset } from "./engine.ts";
-import { copies, holds, PRESETS, reroll, sample, titled, VIEWS } from "./engine.ts";
-import type { Hands, Held, Sheet } from "./scene.ts";
-import { make, name, sketch } from "./scene.ts";
+import type { Facts, Knobs, Preset } from "./engine.ts";
+import { copies, holds, PRESETS, sample, titled } from "./engine.ts";
+import type { Sheet } from "./scene.ts";
+import { make, name, sketch, turn } from "./scene.ts";
 
 /* TYPES */
 
-type Props = Partial<WidgetProps<Mathy, Held>> & Pick<WidgetProps<Mathy, Held>, "onChange"> & { value: Seeded };
+type Props = Partial<WidgetProps<Mathy, Sheet>> & Pick<WidgetProps<Mathy, Sheet>, "onChange"> & { value: Seeded };
 
 type SheetsProps = { math: Mrly; value: Value; tick: number; onChange: (patch: Patch) => void };
-
-const ORDER = VIEWS.map(([key]) => key);
 
 const by = ([w, h]: readonly number[]) => `${w} x ${h}`;
 
@@ -101,22 +98,15 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const change = useRef(onChange);
   now.current = value;
   change.current = onChange;
-  useReroll(value.seed, (seed) => unit && onChange({ code: reroll(unit, read(value).base, seed) }));
   useEffect(() => onStatus?.(rows(facts)), [facts]);
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
       make(canvas, view, { ...opts, math: unit, onFacts: setFacts }),
     [unit],
   );
-  const hands: Hands = {
-    crop: () => change.current({ overhang: now.current.overhang === 1 ? 0 : 1 }),
-    view: (step) =>
-      change.current({ view: ORDER[(ORDER.indexOf(now.current.view as Look) + step + ORDER.length) % ORDER.length] }),
-    deeper: (step) => change.current({ level: (now.current.level as number) + step }),
-  };
   const ready = (handle: Handle<Sheet> | null) => {
     live.current = handle;
-    onReady?.(handle && { ...handle, ...hands });
+    onReady?.(handle);
   };
   const keep = (kind: "svg" | "tile", tail: string) => () => {
     const picture = live.current?.[kind]?.();
@@ -144,7 +134,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
           onReady={ready}
           role="img"
           aria-label={label(facts)}
-          onClick={() => hands.view(1)}
+          onClick={() => change.current(turn(now.current, 1))}
         />
       )}
       {unit && (

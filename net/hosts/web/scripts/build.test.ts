@@ -10,7 +10,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
 import { figures as named } from "../../../sdk/md/md.ts";
 import { tintCss } from "../../../sdk/theme/tint.ts";
 import { dist, out } from "../test/dist.ts";
@@ -33,10 +33,25 @@ import {
   spells,
   state,
   tiles,
+  world,
 } from "./build.ts";
-import { HOME, REPO, SITE } from "./home.ts";
+import { HOME, REPO, SITE, unit } from "./home.ts";
 
 const repo = REPO;
+
+const held = (SITE as { research?: string }).research;
+
+const RESEARCH = held ? resolve(HOME, held) : null;
+
+const BLOG = SITE.roots.map((one) => join(resolve(HOME, one), "blog")).find((dir) => existsSync(dir));
+
+const drawings = (dir: string) =>
+  existsSync(join(dir, "figures"))
+    ? readdirSync(join(dir, "figures"))
+        .filter((name) => /^[^.]+\.ts$/.test(name))
+        .map((name) => name.slice(0, -3))
+        .sort()
+    : [];
 
 const files = (dir: string, at = ""): string[] =>
   readdirSync(join(dir, at), { withFileTypes: true }).flatMap((one) =>
@@ -105,9 +120,11 @@ test("the built shell fills its tint style with the rules of the site tint", () 
 
 test("every lone image in the markdown, the rows' sources and the research notes, names a live figure", () => {
   const live = new Set(roster().map((one) => one.name));
-  const notes = (readdirSync(join(repo, "research"), { recursive: true }) as string[])
-    .filter((path) => path.endsWith(".md") && !/(^|\/)(\.|node_modules\/|target\/)/.test(path))
-    .map((path) => `research/${path}`);
+  const notes = RESEARCH
+    ? (readdirSync(RESEARCH, { recursive: true }) as string[])
+        .filter((path) => path.endsWith(".md") && !/(^|\/)(\.|node_modules\/|target\/)/.test(path))
+        .map((path) => relative(repo, join(RESEARCH, path)))
+    : [];
   const sources = [...state().rows.flatMap((row) => (row.source ? [row.source] : [])), ...notes];
   expect(
     sources.flatMap((source) => named(readFileSync(join(repo, source), "utf8"))).filter((name) => !live.has(name)),
@@ -119,22 +136,14 @@ test("the roster is every page and app icon by its id, every post icon as blog-<
     readdirSync(dir, { withFileTypes: true })
       .filter((one) => one.isDirectory())
       .map((one) => one.name);
-  const research = folders(join(repo, "research")).flatMap((topic) =>
-    existsSync(join(repo, "research", topic, "figures"))
-      ? readdirSync(join(repo, "research", topic, "figures"))
-          .filter((name) => /^[^.]+\.ts$/.test(name))
-          .map((name) => name.slice(0, -3))
-      : [],
-  );
+  const research = RESEARCH ? folders(RESEARCH).flatMap((topic) => drawings(join(RESEARCH, topic))) : [];
   const drawn = (dir: string) => existsSync(join(dir, NAMES.icon));
   const routes = SITE.roots
     .map((one) => resolve(HOME, one))
     .flatMap((root) => folders(root).filter((id) => id !== "shared" && drawn(join(root, id))));
   const want = [
     ...routes,
-    ...folders(join(repo, "org", "blog"))
-      .filter((slug) => drawn(join(repo, "org", "blog", slug)))
-      .map((slug) => `blog-${slug}`),
+    ...(BLOG ? folders(BLOG) : []).filter((slug) => drawn(join(BLOG!, slug))).map((slug) => `blog-${slug}`),
     ...research,
   ].sort();
   const names = roster().map((one) => one.name);
@@ -145,7 +154,7 @@ test("the roster is every page and app icon by its id, every post icon as blog-<
 test("an app icon is a plate on a clear ground; a post or research figure keeps its ground", () => {
   const all = roster();
   const flat = plates(all);
-  expect(flat).toContain("life");
+  expect(flat).toContain("home");
   expect(flat.some((name) => name.startsWith("blog-"))).toBe(false);
   expect(flat.length).toBe(
     all.filter((one) => /\/icon\.[jt]s$/.test(one.file) && !one.name.startsWith("blog-")).length,
@@ -177,17 +186,42 @@ test("a route is accepted with the TypeScript spelling of its page, parts and ic
         "scene.ts": "export const PAGE = { defaults: {} };\n",
         "widget.tsx": "export const Widget = () => null;\n",
       }),
+      place("world", { "app.json": app, "icon.svg": "<svg/>", "icon.ts": draw, "app.ts": "export default {};\n" }),
     ]);
     expect(list.map((one) => [one.id, one.page, one.icon])).toEqual([
       ["home", "index.tsx", true],
       ["parts", "scene.ts", true],
+      ["world", "app.ts", true],
     ]);
     expect(own(list)).toEqual(["home"]);
     expect(list.filter((one) => spells(one.page, "scene")).map((one) => one.id)).toEqual(["parts"]);
     expect(hosts(list).map((one) => one.file)).toContain(join(dir, "parts", "scene.ts"));
     expect(entry(join(dir, "parts"))).toContain(join(dir, "parts", "widget.tsx"));
     expect(() => apps([place("none", { "app.json": app, "icon.svg": "<svg/>", "icon.ts": draw })])).toThrow(
-      "index.tsx, index.md, a source, or scene.ts with widget.tsx, and has none",
+      "index.tsx, index.md, a source, scene.ts with widget.tsx, or app.ts, and has none",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("site:world holds the app.ts routes world.json boots; the build stops on one it leaves out and on a config that does not boot", () => {
+  const list = state().apps;
+  const dir = mkdtempSync(join(tmpdir(), "world-"));
+  const file = (config: object) => {
+    const at = join(dir, `${Object.keys(config).length}-${JSON.stringify(config).length}.json`);
+    writeFileSync(at, JSON.stringify(config));
+    return at;
+  };
+  const all = list.filter((one) => one.page === "app.ts").map((one) => one.id);
+  try {
+    expect(world(list).files.map(([id]) => id)).toEqual(all);
+    expect(all).toContain("messages");
+    expect(() => world(list, file({ name: "w", apps: all.filter((id) => id !== "messages") }))).toThrow(
+      "leaves out messages",
+    );
+    expect(() => world(list, file({ name: "w", apps: [...all, "nope"] }))).toThrow(
+      "does not boot: no app nope is installed",
     );
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -207,34 +241,30 @@ test("an app row wears its own id, a post blog-<slug>, a hidden app may wear non
   expect(rows.filter((row) => !row.hidden && !row.figure).map((row) => row.route)).toEqual([]);
 });
 
-test("research ships under /raw/ and git.json, and each topic is a card in research.json with every figure of its folder and a README line in llms.txt", () => {
+test("research.json and the Research lines of llms.txt ship exactly when the site holds research, a card per topic with every figure of its folder", () => {
+  const llms = readFileSync(join(out, "llms.txt"), "utf8");
+  if (!RESEARCH) {
+    expect([existsSync(join(out, "research.json")), llms.includes("## Research")]).toEqual([false, false]);
+    return;
+  }
+  const at = RESEARCH.startsWith(repo + sep) ? relative(repo, RESEARCH) : "research";
   const { topics } = JSON.parse(readFileSync(join(out, "research.json"), "utf8")) as {
     topics: { slug: string; figures: string[] }[];
   };
-  const drawn = (slug: string) =>
-    existsSync(join(repo, "research", slug, "figures"))
-      ? readdirSync(join(repo, "research", slug, "figures"))
-          .filter((name) => /^[^.]+\.ts$/.test(name))
-          .map((name) => name.slice(0, -3))
-          .sort()
-      : [];
-  expect(topics.filter((one) => one.figures.join() !== drawn(one.slug).join()).map((one) => one.slug)).toEqual([]);
-  const llms = readFileSync(join(out, "llms.txt"), "utf8");
-  expect(existsSync(join(out, "raw", "research", "README.md"))).toBe(true);
   expect(
-    JSON.parse(readFileSync(join(out, "git.json"), "utf8")).c.some((one: { n: string }) => one.n === "research"),
-  ).toBe(true);
+    topics.filter((one) => one.figures.join() !== drawings(join(RESEARCH, one.slug)).join()).map((one) => one.slug),
+  ).toEqual([]);
   expect(topics.map((one) => one.slug)).not.toContain("shared");
   expect(
     topics
       .filter(
         (one) =>
-          !existsSync(join(out, "raw", "research", one.slug, "README.md")) ||
-          !llms.includes(`/raw/research/${one.slug}/README.md`),
+          !existsSync(join(out, "raw", at, one.slug, "README.md")) ||
+          !llms.includes(`/raw/${at}/${one.slug}/README.md`),
       )
       .map((one) => one.slug),
   ).toEqual([]);
-  expect(llms.includes("/raw/research/README.md)")).toBe(topics.length > 0);
+  expect(llms.includes(`/raw/${at}/README.md)`)).toBe(topics.length > 0);
 });
 
 test("no html outside raw/ but the shell and its 404 copy", () => {
@@ -337,15 +367,15 @@ test("the savers run the desk app's first, then the apps by name, then the shell
     "a/two",
     "c/one",
     "c/two",
-    "mrly/one",
-    "mrly/two",
+    `${SHELL.id}/one`,
+    `${SHELL.id}/two`,
   ]);
 });
 
 test("routes.json names the package version, the live units, a shipped file for every licence and the savers, the desk among them", () => {
   const { site } = JSON.parse(readFileSync(join(out, "routes.json"), "utf8")) as {
     site: {
-      version: string;
+      version: string | null;
       units: string[];
       licences: { name: string; href: string }[];
       savers: { id: string }[];
@@ -353,7 +383,7 @@ test("routes.json names the package version, the live units, a shipped file for 
     };
   };
   expect(site.version).toBe(
-    JSON.parse(readFileSync(join(repo, "crates", "core", "js", "package.json"), "utf8")).version,
+    made.units.length ? JSON.parse(readFileSync(join(unit("core"), "package.json"), "utf8")).version : null,
   );
   expect(site.units).toEqual(made.units);
   expect(site.licences.filter((one) => !one.name || !existsSync(join(out, one.href))).map((one) => one.href)).toEqual(
@@ -361,4 +391,36 @@ test("routes.json names the package version, the live units, a shipped file for 
   );
   expect(site.licences.some((one) => one.href === "/raw/LICENSE")).toBe(existsSync(join(out, "raw", "LICENSE")));
   expect(site.savers.map((one) => one.id)).toContain(site.desk);
+});
+
+test("a route's aliases are 1 to 12 lowercase words of 1 to 24 characters, none twice, and ride its row's meta", () => {
+  const dir = mkdtempSync(join(tmpdir(), "alias-"));
+  const place = (id: string, aliases: unknown) => {
+    rmSync(join(dir, id), { recursive: true, force: true });
+    mkdirSync(join(dir, id));
+    writeFileSync(join(dir, id, "app.json"), JSON.stringify({ title: "A", line: "A line.", aliases }));
+    writeFileSync(join(dir, id, "icon.svg"), "<svg/>");
+    writeFileSync(join(dir, id, "icon.ts"), "export default () => null;\n");
+    writeFileSync(join(dir, id, "app.ts"), "export default {};\n");
+    return { id, dir: join(dir, id) };
+  };
+  try {
+    expect(apps([place("home", ["watch", "tv shows"])])[0]!.aliases).toEqual(["watch", "tv shows"]);
+    expect(apps([place("home", undefined)])[0]!.aliases).toBeUndefined();
+    expect(state().rows.find((row) => row.meta.id === "tv")!.meta.aliases).toContain("watch");
+    expect(state().rows.find((row) => row.meta.id === "missing")!.meta.aliases).toContain("404");
+    for (const bad of [
+      [],
+      ["Watch"],
+      ["a", "a"],
+      Array.from({ length: 13 }, (_, i) => `a${i}`),
+      ["x".repeat(25)],
+      "watch",
+    ])
+      expect(() => apps([place("home", bad)])).toThrow(
+        "aliases are 1 to 12 lowercase words of 1 to 24 characters, none twice",
+      );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

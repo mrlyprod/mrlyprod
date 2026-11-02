@@ -20,7 +20,9 @@ import {
   sketch,
   slug,
   stamp,
+  stepped,
   study,
+  turned,
   VIEWS,
   warm,
 } from "./engine.ts";
@@ -32,8 +34,6 @@ export type Seen = Pick<View, "w" | "h" | "dpr"> & { look: () => { paper: string
 export type Given = Opts & { num?: Num | null; onFacts?: (facts: Facts) => void; later?: (job: () => void) => void };
 
 export type Hands = {
-  deeper: (by: number) => void;
-  turn: (by: number) => void;
   toggle: () => void;
   playing: () => boolean;
 };
@@ -126,10 +126,13 @@ export const PAGE = {
   ],
   actions: {
     play: (scene) => scene.toggle?.(),
-    up: (scene) => scene.deeper?.(1),
-    down: (scene) => scene.deeper?.(-1),
-    view: (scene, e) => scene.turn?.(e.key === "ArrowLeft" ? -1 : 1),
   },
+  acts: {
+    up: (value) => stepped(value, 1),
+    down: (value) => stepped(value, -1),
+    view: (value, key) => turned(value, key === "ArrowLeft" ? -1 : 1),
+  },
+  reroll: (value) => stepped(value, 1),
 } satisfies Page<Loaded<"num">, Handled>;
 
 const soon = (job: () => void) => setTimeout(job, 0);

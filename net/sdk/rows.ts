@@ -1,3 +1,5 @@
+import type { ComponentType } from "react";
+
 /* ROWS */
 
 export type Row = {
@@ -9,7 +11,14 @@ export type Row = {
   lead: string;
   figure: string | null;
   hidden: boolean;
-  meta: { id?: string; scene?: true; deep?: true; prose?: "source" | "page" | "post"; date?: string };
+  meta: {
+    id?: string;
+    scene?: true;
+    deep?: true;
+    prose?: "source" | "page" | "post";
+    date?: string;
+    aliases?: string[];
+  };
 };
 
 export type App = {
@@ -17,6 +26,7 @@ export type App = {
   dir: string;
   title: string;
   line: string;
+  aliases?: string[];
   saver?: true;
   hidden?: true;
   deep?: true;
@@ -42,3 +52,5 @@ export type Host = { id: string; title: string; saver?: true; file: string };
 export type Shelf = { name: string; apps: string[] };
 
 export type Pad = { sections: Shelf[]; dock: string[][] };
+
+export type Desk = { name: string; size: "wide" | "small"; Body: ComponentType };

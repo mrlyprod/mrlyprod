@@ -1,5 +1,4 @@
 import { paints } from "../../net/sdk/color.ts";
-import { useLatest } from "../../net/sdk/hooks.ts";
 import type { Paint } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { WidgetProps } from "../../net/sdk/page.tsx";
@@ -8,7 +7,7 @@ import type { Units } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import { DESIGNS, ink, NUMBERS, tile } from "../shared/designs/tiles.ts";
 import type { Sleep } from "./scene.ts";
-import { make, next } from "./scene.ts";
+import { make } from "./scene.ts";
 
 /* TYPES */
 
@@ -70,12 +69,9 @@ export function Shelves({ value, onChange }: ShelvesProps) {
 }
 
 export function Widget({ value, onChange, onReady }: Props) {
-  const now = useLatest(value);
-  const tell = useLatest(onChange);
-  const step = (by: number) => tell.current?.(next(now.current, by));
   return (
     <>
-      <Scene make={make} value={value} onReady={(handle) => onReady?.(handle && { ...handle, step })} />
+      <Scene make={make} value={value} onReady={onReady} />
       <Shelves value={value} onChange={onChange} />
     </>
   );

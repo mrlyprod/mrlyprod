@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/math";
 import type { TypedArray } from "three";
-import type { Three } from "../../net/sdk/hooks.ts";
 import { rng } from "../../net/sdk/rand.ts";
 import type { Scene } from "../../net/sdk/run.ts";
 import type { Patch } from "../../net/sdk/spec.ts";
 import { defaults, tidy, unitOf } from "../../net/sdk/spec.ts";
 import { palette } from "../../net/sdk/theme/palette.gen.js";
+import type { Three } from "../shared/three/three.ts";
 import { COOL, PAD, TICK } from "./engine.ts";
 import type { Viewer } from "./scene.ts";
 import { HOLD, make, PAGE, SPEC, tones } from "./scene.ts";

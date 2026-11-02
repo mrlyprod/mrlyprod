@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { Btn, Pick, Segment, Toggle } from "../../net/sdk/controls.tsx";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useReroll, useStatus } from "../../net/sdk/hooks.ts";
+import { useStatus } from "../../net/sdk/hooks.ts";
 import type { Chip } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
@@ -148,7 +148,6 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     ));
   };
   useStatus(onStatus, status(stat));
-  useReroll(value.seed, () => fixed(value) && onChange({ from: "noise" }));
   const buttons = [
     <Btn key="step" onClick={act("step")}>
       Step

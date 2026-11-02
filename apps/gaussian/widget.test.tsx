@@ -6,8 +6,8 @@ import { Knobs } from "../../net/sdk/knobs.tsx";
 import { rng } from "../../net/sdk/rand.ts";
 import { defaults } from "../../net/sdk/spec.ts";
 import { hit, shuffle, study } from "./engine.ts";
-import { SPEC } from "./scene.ts";
-import { rerolled, rows } from "./widget.tsx";
+import { PAGE, SPEC } from "./scene.ts";
+import { rows } from "./widget.tsx";
 
 const value = { ...defaults(SPEC), seed: 1, limit: 12 };
 
@@ -41,7 +41,7 @@ test("the Cell knob reads Fit at 0, not 0 px, and its pixels once pinned", () =>
 });
 
 test("a reroll writes a shuffled ring, reach and colour from the new seed and lets the point go", () => {
-  expect(rerolled(7)).toEqual({ ...shuffle(rng(7)), click: "" });
+  expect(PAGE.reroll({}, 7)).toEqual({ ...shuffle(rng(7)), click: "" });
 });
 
 test("the readouts lead with the clicked point, then the window, a missed tap first, and the colour key only under fate", () => {

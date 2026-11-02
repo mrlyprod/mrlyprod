@@ -1,5 +1,19 @@
 import { expect, test } from "bun:test";
-import { decode, encode, idle, KEY, minutes, offs, pack, read, savers, subscribe, unpack, write } from "./prefs.ts";
+import {
+  decode,
+  dial,
+  encode,
+  idle,
+  KEY,
+  minutes,
+  offs,
+  pack,
+  read,
+  savers,
+  subscribe,
+  unpack,
+  write,
+} from "./prefs.ts";
 
 const memory = () => {
   const box = new Map<string, string>();
@@ -7,6 +21,10 @@ const memory = () => {
     getItem: (key: string) => (box.has(key) ? box.get(key) : null),
     setItem: (key: string, value: string) => box.set(key, String(value)),
     removeItem: (key: string) => box.delete(key),
+    key: (i: number) => [...box.keys()][i] ?? null,
+    get length() {
+      return box.size;
+    },
   };
 };
 
@@ -31,17 +49,19 @@ test("a subscriber hears a write that changes the stored value, not one that kee
   });
 });
 
-test("pack keeps the set settings and unpack writes them back, clearing the names it lacks and nothing else", () => {
+test("pack keeps the set settings and knobs, and unpack writes them back, clearing the names it lacks and nothing else", () => {
   fresh(() => {
     write(KEY.theme, "dark");
     write(KEY.idle, "never");
     write(KEY.cart, "[1]");
+    write(dial("material"), "frosted");
     const data = pack();
     write(KEY.tint, "red");
+    write(dial("font"), "serif");
     unpack(data);
     expect([data, pack(), read(KEY.cart)]).toEqual([
-      { theme: "dark", idle: "never" },
-      { theme: "dark", idle: "never" },
+      { theme: "dark", idle: "never", "knob-material": "frosted" },
+      { theme: "dark", idle: "never", "knob-material": "frosted" },
       "[1]",
     ]);
   });

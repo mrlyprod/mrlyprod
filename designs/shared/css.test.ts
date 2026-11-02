@@ -25,7 +25,7 @@ const selectors = (css: string) => {
 
 /* CSS */
 
-const GLASS = join(import.meta.dir, "..", "glass");
+const MODERN = join(import.meta.dir, "..", "modern");
 
 const sheets = (dir: string) =>
   readdirSync(dir)
@@ -34,7 +34,7 @@ const sheets = (dir: string) =>
     .map((one) => join(dir, one));
 
 const SHELL = join(import.meta.dir, "..", "..", "net", "shell");
-const ALL = [...sheets(import.meta.dir), ...sheets(SHELL), ...sheets(GLASS)];
+const ALL = [...sheets(import.meta.dir), ...sheets(SHELL), ...sheets(MODERN)];
 
 test("the site css never repeats a top-level selector with another rule between", () => {
   for (const file of ALL) {
@@ -65,7 +65,7 @@ test("the git and app sheets import nothing the shell sheet already links", () =
 
 /* TOKENS */
 
-const SHEETS = ["../glass/chrome.css", "../glass/desk.css", "base.css", "pages.css", "../../net/sdk/mrly.css"];
+const SHEETS = ["../modern/chrome.css", "../modern/desk.css", "base.css", "pages.css", "../../net/sdk/mrly.css"];
 
 const bare = (name: string) => readFileSync(resolve(import.meta.dir, name), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
@@ -90,8 +90,8 @@ test("the site css and the demo css set no bare numeric z-index", () => {
   }
 });
 
-test("tokens.css defines every type and layer token the site css reads", () => {
-  const tokens = bare("../glass/tokens.css");
+test("modern's tokens.css defines every type token and base.css every layer token the site css reads", () => {
+  const tokens = bare("../modern/tokens.css") + bare("base.css");
   for (const name of [...ALL.filter((one) => !one.endsWith("tokens.css")), join(SHELL, "..", "sdk", "mrly.css")]) {
     for (const [, token] of bare(name).matchAll(/var\(--((?:t|lh)\d+|z-[a-z]+)\b/g)) {
       if (!new RegExp(`--${token}\\s*:`).test(tokens)) throw new Error(`${name}: --${token} undefined`);

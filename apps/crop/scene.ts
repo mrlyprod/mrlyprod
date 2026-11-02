@@ -10,7 +10,7 @@ import type { Mrly } from "../shared/designs/engine.ts";
 import { DESIGN } from "../shared/designs/engine.ts";
 import type { Design } from "../shared/designs/store.ts";
 import type { Memo, Paint, Pen } from "../shared/two/engine.ts";
-import { cell, DIM, design, lay, memo, named, shot, stamp } from "../shared/two/engine.ts";
+import { cell, DIM, design, lay, memo, named, reroll, shot, stamp } from "../shared/two/engine.ts";
 import type { Titled } from "../shared/two/parts.tsx";
 import { second } from "../shared/two/scene.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
@@ -85,11 +85,7 @@ export type Seen = Pick<View, "w" | "h" | "dpr"> & Looks;
 
 export type Given = Opts & { math?: Mrly | null };
 
-export type Hands = { flip: () => void; grow: (by: number) => void; deeper: (by: number) => void };
-
 export type Crop = ReturnType<typeof make>;
-
-export type Handled = Crop & Hands;
 
 const never = () => false;
 
@@ -223,12 +219,20 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowRight"], label: "Radius", act: "radius" },
     { key: ["ArrowUp", "ArrowDown"], label: "Level", act: "level", menu: "View" },
   ],
-  actions: {
-    mode: (scene) => scene.flip?.(),
-    radius: (scene, e) => scene.grow?.(e.key === "ArrowLeft" ? -1 : 1),
-    level: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
+  acts: {
+    mode: (value) => ({ mode: value.mode === "anti" ? "crop" : "anti" }),
+    radius: (value, key) => ({
+      radius: Math.max(0, Math.min(RMAX, Number(value.radius) + (key === "ArrowLeft" ? -1 : 1))),
+    }),
+    level: (value, key, units) => ({
+      level: Math.max(
+        1,
+        Math.min(top(units!.math, Number(value.number)), Number(value.level) + (key === "ArrowDown" ? -1 : 1)),
+      ),
+    }),
   },
-} satisfies Page<Loaded<"math">, Handled>;
+  reroll,
+} satisfies Page<Loaded<"math">, Crop>;
 
 const BOX = 0.06;
 const FAINT = 0.2;

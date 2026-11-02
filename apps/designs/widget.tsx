@@ -1,11 +1,11 @@
 import type { PointerEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Action } from "../../net/sdk/controls.tsx";
 import { Group } from "../../net/sdk/controls.tsx";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
-import type { Readout, Three } from "../../net/sdk/hooks.ts";
-import { useReroll, useThree, useUnit } from "../../net/sdk/hooks.ts";
+import type { Readout } from "../../net/sdk/hooks.ts";
+import { useUnit } from "../../net/sdk/hooks.ts";
 import { Library } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
@@ -14,27 +14,23 @@ import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Seeded, Units } from "../../net/sdk/spec.ts";
 import { Browser } from "../shared/designs/browse.tsx";
 import type { Mrly } from "../shared/designs/engine.ts";
-import { cap, drawn, gallery, next } from "../shared/designs/engine.ts";
 import type { Design } from "../shared/designs/store.ts";
 import { choose, place, read } from "../shared/designs/store.ts";
-import type { Designs, Hands, Held, Info } from "./scene.ts";
-import { make, named, PAGE } from "./scene.ts";
+import type { Three } from "../shared/three/three.ts";
+import { useThree } from "../shared/three/three.ts";
+import type { Designs, Info } from "./scene.ts";
+import { make, named, PAGE, step } from "./scene.ts";
 
 /* TYPES */
 
-type Props = Partial<WidgetProps<Units, Held>> &
-  Pick<WidgetProps<Units, Held>, "onChange"> & { value: Seeded; unit?: Mrly | null; three?: Three | null };
+type Props = Partial<WidgetProps<Units, Designs>> &
+  Pick<WidgetProps<Units, Designs>, "onChange"> & { value: Seeded; unit?: Mrly | null; three?: Three | null };
 
 type Press = { x: number; y: number; far: number };
-
-type Now = { list: string[]; at: string; code: string; level: number; dim: number; base: number };
 
 const TAP = 6;
 
 const SLOT = PAGE.design;
-
-export const steps = (math: Mrly, dim: number, base: number) =>
-  gallery(math, dim, base, "classes") ?? gallery(math, dim, base, "named");
 
 export function rows(info: Info) {
   const out: Readout[] = [["Design", info.name ? `${info.name} ${info.code}` : info.code]];
@@ -68,22 +64,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   const [info, setInfo] = useState<Info | null>(null);
   const tell = useCallback((next: Info) => setInfo(next), []);
   const here = info?.dim === dim && info?.base === base ? info : null;
-  const list = useMemo(() => (math ? (steps(math, dim, base) ?? []) : []), [math, dim, base]);
-  const at = here ? (list.includes(here.code) ? here.code : here.rep) : code;
-  const now = useRef<Now | null>(null);
-  now.current = { list, at, code: here?.code ?? code, level: value.level as number, dim, base };
+  const now = useRef(value);
+  now.current = { ...value, code: here?.code ?? code };
   useEffect(() => onStatus?.(here ? rows(here) : []), [here]);
-  useReroll(
-    value.seed,
-    (seed) =>
-      math && onChange({ code: drawn(math, dim, base, gallery(math, dim, base, "classes"), now.current!.code, seed) }),
-  );
-  const hands: Hands = {
-    grow: () =>
-      change.current({ level: now.current!.level >= cap(math!, now.current!.dim) ? 1 : now.current!.level + 1 }),
-    step: (by) => change.current({ code: next(now.current!.list, now.current!.at, by) }),
-    deeper: (by) => change.current({ level: now.current!.level + by }),
-  };
   const staged = Boolean(math && (dim !== 3 || three));
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math: math!, three, tell }),
@@ -91,7 +74,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   );
   const ready = (handle: Handle<Designs> | null) => {
     live.current = handle;
-    onReady?.(handle && { ...handle, ...hands });
+    onReady?.(handle);
   };
   const down = (e: PointerEvent<HTMLCanvasElement>) => {
     if (e.button) return;
@@ -110,9 +93,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   const up = (e: PointerEvent<HTMLCanvasElement>) => {
     const from = press.current;
     press.current = null;
-    if (from && e.type === "pointerup" && from.far < TAP) hands.step(1);
+    if (math && from && e.type === "pointerup" && from.far < TAP) change.current(step(math, now.current, 1));
   };
-  const keep = (body: string | undefined, kind: string) => body && text(body, named(now.current!), kind);
+  const keep = (body: string | undefined, kind: string) => body && text(body, named(now.current), kind);
   useEffect(
     () =>
       onExport?.([

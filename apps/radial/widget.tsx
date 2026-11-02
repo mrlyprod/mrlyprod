@@ -5,32 +5,25 @@ import { useLatest } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import type { Rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Patch, Raw, Scalar } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
-import type { Src, Stack } from "../shared/spin/engine.ts";
-import { BLENDS, COPIES, degrees, drawn, key, sketch, study, title } from "../shared/spin/engine.ts";
+import type { Stack } from "../shared/spin/engine.ts";
+import { BLENDS, degrees, key, sketch, study, title } from "../shared/spin/engine.ts";
 import type { Look } from "../shared/spin/scene.ts";
 import { Moires, stamp } from "../shared/spin/shelves.tsx";
-import { read, Source, useReroll } from "../shared/spin/source.tsx";
-import type { Facts, Orbit, Radial, Rosette } from "./scene.ts";
-import { make, STACKS } from "./scene.ts";
+import { read, Source } from "../shared/spin/source.tsx";
+import type { Facts, Orbit, Radial } from "./scene.ts";
+import { make, STACKS, wrap } from "./scene.ts";
 
 /* TYPES */
 
-export type Rolled = Partial<Src> & Pick<Stack, "copies" | "blend"> & { full: number };
-
 export type RosettesProps = { value: Stack & Look & Raw; onChange: (patch: Patch) => void; math?: Mrly | null };
 
-type Props = WidgetProps<Mathy, Rosette> & { value: Radial & { seed: number } };
+type Props = WidgetProps<Mathy> & { value: Radial & { seed: number } };
 
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
-
-const BLEND = BLENDS.map(([one]) => one).filter((one) => one !== "meet");
-
-export const wrap = (copies: number, by: number) => ((copies - 1 + by + COPIES) % COPIES) + 1;
 
 export function rows(facts: Facts | null): Readout[] {
   if (!facts) return [];
@@ -44,15 +37,6 @@ export function rows(facts: Facts | null): Readout[] {
     ["order 0", pct(facts.share)],
     ...facts.leading.map((one): Readout => [`order ${one.order}`, pct(one.share)]),
   ];
-}
-
-export function rolled(math: Mrly, value: Raw, rand: Rng): Rolled {
-  return {
-    ...drawn(math, read(value), rand),
-    copies: 1 + Math.floor(rand() * COPIES),
-    blend: BLEND[Math.floor(rand() * BLEND.length)],
-    full: 1,
-  };
 }
 
 export const lit = (value: Raw, patch: Orbit) =>
@@ -106,7 +90,6 @@ export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
   const now = useLatest(value);
   const change = useLatest(onChange);
   const was = useRef(value);
-  useReroll(value.seed, (rand) => unit && change.current(rolled(unit, now.current, rand)));
   useEffect(() => {
     const before = was.current;
     was.current = value;
@@ -119,24 +102,17 @@ export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
       make(canvas, view, { ...opts, math: unit, onFacts: setFacts }),
     [unit],
   );
-  const copies = (by: number, loop: boolean) => {
-    const at = now.current.copies;
-    change.current({ copies: loop ? wrap(at, by) : Math.min(COPIES, Math.max(1, at + by)) });
-  };
-  const ready = (handle: Handle | null) => {
-    const hands = {
-      whole: () => change.current({ full: 1 }),
-      copies: (by: number) => copies(by, false),
-      step: (by: number) => {
-        const { full: whole, step, copies: n } = now.current;
-        change.current({ full: 0, step: Math.min(360, Math.max(0, (Number(whole) === 1 ? 360 / n : step) + by)) });
-      },
-    };
-    onReady?.(handle && { ...handle, ...hands });
-  };
+  const ready = (handle: Handle | null) => onReady?.(handle);
   return (
     <>
-      {unit && <Scene make={scene} value={value} onReady={ready} onClick={() => copies(1, true)} />}
+      {unit && (
+        <Scene
+          make={scene}
+          value={value}
+          onReady={ready}
+          onClick={() => change.current({ copies: wrap(now.current.copies, 1) })}
+        />
+      )}
       <Library>
         <Rosettes value={value} onChange={onChange} math={unit} />
         <Moires value={value} onChange={onChange} math={unit} />

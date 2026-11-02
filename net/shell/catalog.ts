@@ -73,8 +73,9 @@ export function track() {
 
 let topics: Promise<Note[]> | null = null;
 
-export const notes = (): Promise<Note[]> =>
-  (topics ??= fetch("/research.json")
+export function notes(): Promise<Note[]> {
+  if (!site.research) return Promise.resolve([]);
+  topics ??= fetch("/research.json")
     .then((reply) =>
       reply.ok ? reply.json() : Promise.reject(new Error(`research: /research.json answered ${reply.status}`)),
     )
@@ -90,7 +91,9 @@ export const notes = (): Promise<Note[]> =>
     .catch(() => {
       topics = null;
       return [];
-    }));
+    });
+  return topics;
+}
 
 /* LAUNCH */
 
@@ -108,3 +111,28 @@ export const take = () => {
 
 export const away = () =>
   (state().depth ?? 0) > 0 ? history.back() : dispatchEvent(new CustomEvent("go", { detail: "/" }));
+
+/* LAUNCHPAD */
+
+export type Click = Pick<MouseEvent, "button" | "metaKey" | "ctrlKey" | "shiftKey" | "altKey" | "preventDefault">;
+
+export const plain = (e: Click) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+
+const up = () => location.pathname === site.menu;
+
+export function seek() {
+  if (up()) return tell("find");
+  dispatchEvent(new CustomEvent("go", { detail: site.menu }));
+}
+
+export function launch(e: Click) {
+  if (!plain(e) || !up()) return;
+  e.preventDefault();
+  away();
+}
+
+export function find(e: Click) {
+  if (!plain(e) || !up()) return;
+  e.preventDefault();
+  tell("find");
+}

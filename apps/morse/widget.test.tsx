@@ -9,8 +9,8 @@ import type { Patch, Raw } from "../../net/sdk/spec.ts";
 import { defaults } from "../../net/sdk/spec.ts";
 import type { FactsOf } from "./engine.ts";
 import { study } from "./engine.ts";
-import { SPEC, tidied } from "./scene.ts";
-import { Pictures, ROWS, rerolled, shift, tapped, turned } from "./widget.tsx";
+import { rerolled, SPEC, shift, tapped, tidied, turned } from "./scene.ts";
+import { Pictures, ROWS } from "./widget.tsx";
 
 const units = { num, math };
 

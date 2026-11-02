@@ -1,5 +1,5 @@
 import { TINTS } from "../../net/sdk/color.ts";
-import type { Loadable, Page } from "../../net/sdk/page.tsx";
+import type { Page } from "../../net/sdk/page.tsx";
 import type { Box, Opts, View } from "../../net/sdk/run.ts";
 import type { Scalar, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
@@ -15,6 +15,7 @@ import {
   crop,
   css,
   DEEPEST,
+  drawn,
   field,
   GRAIN,
   heat,
@@ -29,6 +30,8 @@ import {
   TOP,
 } from "../shared/moire/engine.ts";
 import { fit, shell } from "../shared/moire/sheet.ts";
+import type { Units as Loaded } from "../shared/units/index.ts";
+import { wasm } from "../shared/units/index.ts";
 
 /* TYPES */
 
@@ -172,10 +175,13 @@ export const DESIGN = { base: 2, code: "9" };
 const named = (value: Value) =>
   value.view === "matrix" ? `moire-matrix-${value.limit}` : `moire-${value.code}-${value.limit}`;
 
+export const units = wasm("math");
+
 export const PAGE = {
   defaults: DESIGN,
   design: { dim: 2, base: "base", code: "code" },
   spec: SPEC,
+  units,
   record: true,
   gestures: true,
   name: named,
@@ -195,7 +201,8 @@ export const PAGE = {
     },
   ],
   actions: { play: (scene) => scene.toggle?.() },
-} satisfies Page<Loadable, Player>;
+  reroll: (_value, seed, units) => drawn(units!.math, seed),
+} satisfies Page<Loaded<"math">, Player>;
 
 const read = (opts: Given) =>
   ({ ...tidy(SPEC, opts), base: opts.base, code: opts.code, seed: Number(opts.seed) >>> 0 }) as Moire;

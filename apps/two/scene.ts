@@ -10,7 +10,21 @@ import type { Mrly } from "../shared/designs/engine.ts";
 import { DESIGN } from "../shared/designs/engine.ts";
 import type { Design } from "../shared/designs/store.ts";
 import type { Counts, Layers, Memo, Paint, Pen, Seam } from "../shared/two/engine.ts";
-import { cap, count, DIM, design, joins, lay, layers, memo, sheet, shot, stamp, stroke } from "../shared/two/engine.ts";
+import {
+  cap,
+  count,
+  DIM,
+  design,
+  joins,
+  lay,
+  layers,
+  memo,
+  reroll,
+  sheet,
+  shot,
+  stamp,
+  stroke,
+} from "../shared/two/engine.ts";
 import type { Titled } from "../shared/two/parts.tsx";
 import { second } from "../shared/two/scene.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
@@ -49,11 +63,7 @@ export type Seen = Pick<View, "w" | "h"> & { look: () => Pick<Paints, "paper" | 
 
 export type Given = Opts & { math?: Mrly | null };
 
-export type Hands = { seams: () => void; deeper: (by: number) => void; wider: (by: number) => void };
-
 export type Two = ReturnType<typeof make>;
-
-export type Handled = Two & Hands;
 
 export const SHEETS: Sheet[] = [
   ["Single", 1, 1],
@@ -132,12 +142,21 @@ export const PAGE = {
     { key: ["ArrowUp", "ArrowDown"], label: "Level", act: "level", menu: "View" },
     { key: ["ArrowLeft", "ArrowRight"], label: "Across", act: "across" },
   ],
-  actions: {
-    seams: (scene) => scene.seams?.(),
-    level: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
-    across: (scene, e) => scene.wider?.(e.key === "ArrowLeft" ? -1 : 1),
+  acts: {
+    seams: (value) => ({ seams: value.seams ? 0 : 1 }),
+    level: (value, key, units) => ({
+      level: Math.max(
+        1,
+        Math.min(
+          cap(units!.math, Number(value.number), Number(value.x) * Number(value.y)),
+          Number(value.level) + (key === "ArrowDown" ? -1 : 1),
+        ),
+      ),
+    }),
+    across: (value, key) => ({ x: Math.max(1, Math.min(12, Number(value.x) + (key === "ArrowLeft" ? -1 : 1))) }),
   },
-} satisfies Page<Loaded<"math">, Handled>;
+  reroll,
+} satisfies Page<Loaded<"math">, Two>;
 
 const FIT = 0.9;
 

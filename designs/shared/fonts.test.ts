@@ -5,7 +5,8 @@ import { brotliDecompressSync } from "node:zlib";
 import katex from "katex";
 import { state } from "../../net/hosts/web/scripts/build.ts";
 import { REPO } from "../../net/hosts/web/scripts/home.ts";
-import { front, render } from "../../net/sdk/md/md.ts";
+import { front } from "../../net/sdk/md/md.ts";
+import { render } from "../../net/system/preview/md.ts";
 
 const repo = REPO;
 const fonts = join(import.meta.dir, "fonts");

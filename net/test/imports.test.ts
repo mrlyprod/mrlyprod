@@ -4,49 +4,58 @@ import { dirname, join, relative, resolve } from "node:path";
 
 const REPO = resolve(import.meta.dir, "..", "..");
 
-const TOPS = ["net/shell", "net/sdk", "net/system", "designs", "apps", "org", "draw"];
+const TOPS = [
+  "net/spec",
+  "net/kernel",
+  "net/doors",
+  "net/hosts/local",
+  "net/sim",
+  "net/shell",
+  "net/sdk",
+  "net/system",
+  "designs",
+  "apps",
+  "org",
+];
 
 const SPEC = /(?:\bfrom|\bimport)\s*\(?\s*(['"])(\.{1,2}\/[^'"\n]*)\1/g;
 
 const AREAS: [RegExp, (m: RegExpMatchArray) => string][] = [
+  [/^net\/spec\//, () => "spec"],
+  [/^net\/kernel\//, () => "kernel"],
+  [/^net\/doors\//, () => "doors"],
   [/^net\/shell\//, () => "shell"],
   [/^net\/sdk\//, () => "sdk"],
   [/^net\/system\/([^/]+)\//, (m) => `system/${m[1]}`],
   [/^net\/hosts\//, () => "hosts"],
+  [/^net\/sim\//, () => "sim"],
   [/^(?:designs\/shared|site\/src\/styles)\//, () => "designs/shared"],
   [/^(?:designs|site\/src\/designs)\/([^/]+)\//, (m) => `designs/${m[1]}`],
   [/^(?:apps\/shared|site\/src\/lib)\/([^/]+)\//, (m) => `family/${m[1]}`],
   [/^(?:apps|site\/src\/apps)\/([^/]+)\//, (m) => `apps/${m[1]}`],
   [/^org\/([^/]+)\//, (m) => `org/${m[1]}`],
-  [/^draw\//, () => "draw"],
 ];
 
 const MAY: Record<string, string[]> = {
-  shell: ["sdk"],
-  sdk: [],
+  spec: [],
+  kernel: ["spec"],
+  doors: ["kernel", "hosts", "sdk", "sim"],
+  hosts: ["kernel", "sdk", "sim"],
+  sim: ["kernel", "sdk", "spec"],
+  shell: ["sdk", "kernel"],
+  sdk: ["kernel"],
   system: ["sdk", "shell"],
   org: ["sdk", "shell"],
   apps: ["sdk", "family"],
-  family: ["sdk", "family", "draw"],
+  family: ["sdk", "family"],
   designs: ["sdk", "designs/shared"],
-  draw: [],
 };
 
 const SEAM = ["net/shell/active.ts", "net/shell/design.ts", "net/shell/measure.ts"];
 
 const CONTRACT = ["net/shell/design.ts"];
 
-const KNOWN = [
-  "designs/glass -> family/font",
-  "designs/mrly -> family/font",
-  "draw -> sdk",
-  "family/units -> other",
-  "sdk -> family/designs",
-  "sdk -> family/units",
-  "shell -> draw",
-  "shell -> family/designs",
-  "system/kit -> family/designs",
-];
+const KNOWN = ["designs/boxy -> family/font", "sdk -> family/designs", "sdk -> family/units"];
 
 const area = (path: string) => {
   for (const [look, name] of AREAS) {

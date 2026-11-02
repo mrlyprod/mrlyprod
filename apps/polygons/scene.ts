@@ -52,7 +52,12 @@ export type Poly = ReturnType<typeof make>;
 
 export type Sets = typeof SETS;
 
-export type Polygons = Poly & { cycle?: (key: keyof Sets, by: number) => void };
+export type Polygons = Poly;
+
+const cycle = (value: Value, key: keyof Sets, by: number): Patch => {
+  const list: readonly string[] = SETS[key];
+  return { [key]: list[(list.indexOf(String(value[key])) + by + list.length) % list.length] };
+};
 
 type Saver = { id: string; title: string; pick: (rand: Rng) => Patch; still?: number };
 
@@ -159,8 +164,10 @@ export const PAGE = {
   ],
   actions: {
     again: (scene) => scene.again(),
-    shape: (scene, e) => scene.cycle?.("shape", e.key === "ArrowLeft" ? -1 : 1),
-    palette: (scene, e) => scene.cycle?.("palette", e.key === "ArrowUp" ? -1 : 1),
+  },
+  acts: {
+    shape: (value, key) => cycle(value, "shape", key === "ArrowLeft" ? -1 : 1),
+    palette: (value, key) => cycle(value, "palette", key === "ArrowUp" ? -1 : 1),
   },
   record: true,
 } satisfies Page<Ready & Units, Polygons>;

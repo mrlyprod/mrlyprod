@@ -3,23 +3,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useReroll, useUnit } from "../../net/sdk/hooks.ts";
+import { useUnit } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Seeded } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
-import { roll } from "../shared/designs/engine.ts";
-import { read, useTheme } from "../shared/designs/pick.tsx";
-import { DIM } from "../shared/three/engine.ts";
-import type { Handled, Hands, Slices, Told } from "./scene.ts";
+import { useTheme } from "../shared/designs/pick.tsx";
+import type { Slices, Told } from "./scene.ts";
 import { codesOf, glance, make, name, TOP, thumb } from "./scene.ts";
 
 /* TYPES */
 
-type Props = WidgetProps<Mathy, Handled> & { value: Seeded; unit?: Mrly | null };
+type Props = WidgetProps<Mathy, Slices> & { value: Seeded; unit?: Mrly | null };
 
 type Live = { seek?: (x: number, y: number) => number; svg?: () => Promise<string> };
 
@@ -35,18 +32,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: P
   now.current = value;
   const tell = useCallback((next: Told) => setRows(next.rows), []);
   useEffect(() => onStatus?.(rows), [rows]);
-  useReroll(value.seed, (seed) => math && onChange({ code: roll(math, DIM, read(now.current).base, rng(seed)) }));
   const ready = (handle: Handle<Slices> | null) => {
     live.current = handle;
-    const hands: Hands = {
-      step: (by) =>
-        onChange({
-          k: Math.min(TOP, Math.max(1, Number(now.current.tile) ? Number(now.current.k) : Number(now.current.k) + by)),
-          tile: 0,
-        }),
-      deeper: (by) => onChange({ level: Number(now.current.level) + by }),
-    };
-    onReady?.(handle && { ...handle, ...hands });
+    onReady?.(handle);
   };
   const at = (e: PointerEvent<HTMLCanvasElement>) => {
     const canvas = e.currentTarget;

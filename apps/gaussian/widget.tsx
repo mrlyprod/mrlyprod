@@ -3,22 +3,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useLatest, useReroll, useStatus, useUnit } from "../../net/sdk/hooks.ts";
+import { useLatest, useStatus, useUnit } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Scalar, Seeded, Units } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Facts, Num, Pair, Point, Word } from "./engine.ts";
-import { clicked, coords, FATES, hit, name, parse, product, shelves, shuffle, study, verdict } from "./engine.ts";
-import type { Gaussian, Handled, Hands } from "./scene.ts";
+import { clicked, coords, FATES, hit, name, parse, product, shelves, study, verdict } from "./engine.ts";
+import type { Gaussian } from "./scene.ts";
 import { make, named, sketch } from "./scene.ts";
 
 /* TYPES */
 
-type Props = WidgetProps<Units, Handled> & { value: Seeded; unit?: Num | null };
+type Props = WidgetProps<Units, Gaussian> & { value: Seeded; unit?: Num | null };
 
 const TAP = 8;
 
@@ -27,8 +26,6 @@ const ART = 112;
 const KEY = "blue split · orange inert · pink ramified · green units";
 
 const pct = (x: number) => `${(x * 100).toFixed(2)}%`;
-
-export const rerolled = (seed: number) => ({ ...shuffle(rng(seed)), click: "" });
 
 function told(word: Word, p: Point | null): Readout[] {
   if (!p) return [];
@@ -85,7 +82,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const key = JSON.stringify(value);
   useEffect(() => setMissed(false), [key]);
   const tick = useTheme();
-  useReroll(value.seed, (seed) => change.current(rerolled(seed)));
   useStatus(onStatus, rows(plan?.facts, point, missed, value.look));
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, num: unit }),
@@ -97,11 +93,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   };
   const ready = (handle: Handle<Gaussian> | null) => {
     live.current = handle;
-    const hands: Hands = {
-      walk: (dir) => pin(handle!.walk(dir)),
-      turn: (dir) => pin(handle!.turn(dir)),
-    };
-    onReady?.(handle && { ...handle, ...hands });
+    onReady?.(handle);
   };
   const down = (e: PointerEvent<HTMLCanvasElement>) => {
     from.current = [e.clientX, e.clientY];

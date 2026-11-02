@@ -3,11 +3,9 @@ import { join, relative, resolve } from "node:path";
 import { palette } from "../../../sdk/theme/palette.gen.js";
 import { SIZE, sheet } from "./film/page.ts";
 import { HOME, REPO, SITE } from "./home.ts";
-import { main } from "./shots.ts";
+import { shoot } from "./shots.ts";
 
-const root = HOME;
-const repo = REPO;
-const DATA_DIR = join(repo, "data", relative(repo, import.meta.dir));
+const DATA_DIR = join(REPO, "data", relative(REPO, import.meta.dir));
 const PAGE = join(import.meta.dir, "film", "page.ts");
 const FPS = 30;
 const LONGEST = 30;
@@ -111,26 +109,23 @@ if (import.meta.main) {
   console.log(
     `film: ${run.name} ${run.video ? `${run.frames} frames at ${FPS} fps, ${w}x${h} webm` : `${run.frames} frames every ${run.step} ms from ${run.from}, sheet ${w}x${h}`} in ${out}`,
   );
-  const latest = join(DATA_DIR, "shots", "latest");
-  const took = join(latest, run.video ? `${run.name}-16x9.webm` : `${run.name}-open0-motion.png`);
   const kept = join(out, run.video ? `${run.name}.webm` : `${run.name}.png`);
   rmSync(kept, { force: true });
-  process.once("exit", () => {
-    if (!existsSync(took)) return console.log(`film: FAILED no ${run.video ? "webm" : "sheet"} came back`);
-    renameSync(took, kept);
-    console.log(`film: ${kept}`);
+  const shot = await shoot({
+    root: HOME,
+    dist: films,
+    answer: (path) => ({ uri: path }),
+    routes: [`/${run.name}/@window.film`],
+    screen: run.video ? [SIZE[0]!, SIZE[1]!, 1] : [w!, Math.min(h!, TALL), 1],
+    run: `film-${run.name}`,
+    motion: true,
   });
-  process.argv = [process.argv[0]!, process.argv[1]!, "--motion"];
-  const routes = [`/${run.name}/@window.film`];
-  await main(
-    root,
-    {
-      shots: {
-        routes,
-        screen: run.video ? [SIZE[0]!, SIZE[1]!, 1] : [w!, Math.min(h!, TALL), 1],
-      },
-    },
-    films,
-    (path) => ({ uri: path }),
-  );
+  const took = join(shot.out, run.video ? `${run.name}-16x9.webm` : (shot.frames[0]?.file ?? "none"));
+  if (shot.failures.length || !existsSync(took)) {
+    console.log(`film: FAILED no ${run.video ? "webm" : "sheet"} came back`);
+    process.exit(1);
+  }
+  renameSync(took, kept);
+  console.log(`film: ${kept}`);
+  process.exit(0);
 }

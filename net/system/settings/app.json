@@ -1,5 +1,6 @@
 {
   "title": "Settings",
   "line": "Appearance, glass, desktop, screen saver and accessibility, kept in this browser.",
+  "aliases": ["preferences", "system", "appearance", "design", "theme", "accessibility", "options"],
   "deep": true
 }

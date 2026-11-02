@@ -1,8 +1,8 @@
 import type { Cell, moire, three } from "@mrlyprod/math";
 import type { Group, Object3D, OrthographicCamera, PerspectiveCamera } from "three";
-import type { Three } from "../../net/sdk/hooks.ts";
 import type { View } from "../../net/sdk/run.ts";
 import type { Plane, Wall } from "../shared/three/engine.ts";
+import type { Three } from "../shared/three/three.ts";
 import type { Angles, Pose } from "../shared/three/thumbs.ts";
 
 /* TYPES */

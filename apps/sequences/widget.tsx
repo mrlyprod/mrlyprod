@@ -3,12 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { paints, veil } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
-import { useReroll, useUnit } from "../../net/sdk/hooks.ts";
+import { useUnit } from "../../net/sdk/hooks.ts";
 import type { Chip } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Make } from "../../net/sdk/run.ts";
 import type { Units } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
@@ -16,6 +15,7 @@ import { KINDS } from "../shared/sequences/chart.ts";
 import type { Hit, Row } from "../shared/sequences/engine.ts";
 import {
   applies,
+  booked,
   csv,
   DEEP,
   filter,
@@ -23,7 +23,6 @@ import {
   json,
   keyed,
   lead,
-  ledger,
   MOST,
   measureOf,
   numbers,
@@ -36,7 +35,7 @@ import { facts, hit, RECORDS } from "../shared/sequences/facts.ts";
 import { glyph, title } from "../shared/sequences/paint.ts";
 import { Found, Record, shift } from "../shared/sequences/parts.tsx";
 import type { Feed, Held, Knobs, Stage } from "./scene.ts";
-import { make } from "./scene.ts";
+import { make, roll } from "./scene.ts";
 
 /* TYPES */
 
@@ -56,8 +55,6 @@ const MODES: Chip[] = [
   ["one", "One"],
   ["many", "Compare"],
 ];
-
-const roll = (seed: number, n: number) => Math.floor(rng(seed >>> 0)() * n);
 
 const terse = (terms: string[], count: number) =>
   terms.slice(0, count).join(", ") + (terms.length > count ? ", …" : "");
@@ -114,7 +111,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
   const chosen = useRef<Row[]>([]);
   now.current = value;
   tell.current = onChange;
-  const book = useMemo(() => math && ledger(math), [math]);
+  const book = useMemo(() => math && booked(math), [math]);
   const { dim, base, measure, axis, chart, digits, terms, seed, q, pick } = value as Asked;
   const space = useMemo(
     () => (book ? filter(book.keys(dim, base), measure, axis) : []),
@@ -147,12 +144,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
   chosen.current = rows;
   const chosenKey = rows.map((row) => row.key).join(".");
   const write = (next: string[]) => tell.current?.({ pick: next.slice(0, MOST).join(".") });
-  useReroll(seed, (next) => {
-    if (!book) return;
-    const from = listed.current.length ? listed.current : space;
-    const row = from.length ? lead(book, from, roll(next, from.length), chosen.current[0]?.key) : null;
-    if (row) write([row.key]);
-  });
   const typed = numbers(q);
   const asked = typed && typed.length > 1;
   const first = list[0]?.key ?? "";
@@ -213,17 +204,13 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
     if (next) write([next.key]);
   };
   const find = () => document.querySelector<HTMLInputElement>(".library .find input")?.focus();
-  const cycle = () => {
-    const at = KINDS.findIndex(([slug]) => slug === now.current.chart);
-    tell.current?.({ chart: KINDS[(at + 1) % KINDS.length][0] });
-  };
   const plot = () => {
     const row = chosen.current[0];
     if (row) location.assign(plotted(row, now.current.terms as number));
   };
   const ready = (handle: Handle<Stage> | null) => {
     stage.current = handle;
-    onReady?.(handle && { ...handle, browse, find, cycle, plot });
+    onReady?.(handle && { ...handle, browse, find, plot });
   };
   const scene = useCallback<Make<Stage>>((canvas, view, opts) => make(canvas, view, { ...opts, live, math }), [math]);
   const tap = (e: PointerEvent<HTMLCanvasElement>) => {

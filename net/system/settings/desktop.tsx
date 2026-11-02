@@ -2,28 +2,28 @@ import type { Site } from "site:routes";
 import type { ReactNode } from "react";
 import { useReducer } from "react";
 import type { Saver } from "../../sdk/rows.ts";
+import { parts } from "../../shell/active.ts";
 import { AppIcon } from "../../shell/appicon.tsx";
 import { app, KNOWN, PAD, redock } from "../../shell/catalog.ts";
 import { desk } from "../../shell/desk.ts";
 import { docked } from "../../shell/launch.ts";
-import type { Vars } from "../../shell/parts.tsx";
+import { measure } from "../../shell/measure.ts";
 import { KEY, magnify, root, screen, write } from "../../shell/prefs.ts";
+import { PLAIN } from "../../shell/tiles.ts";
 import { kept, WIDGETS } from "../../shell/widgets.tsx";
 import type { Choice } from "./ui.tsx";
-import { Action, Nav, Note, Pane as Page, Section, Select, Switch, Tiles } from "./ui.tsx";
+import { Action, Glyph, Nav, Note, Pane as Page, Section, Select, Switch, Tiles } from "./ui.tsx";
 import { usePref } from "./use.ts";
 
+const DOCK = Boolean(parts.dock);
+
+const LENS = DOCK && Boolean(measure.lens);
+
 export const FIND = [
-  "Wallpaper",
-  "Desktop picture",
-  "Random",
-  "Widgets",
-  "Dock",
-  "Dock apps",
-  "Add to Dock",
-  "Remove from Dock",
-  "Magnify",
-  "Reset dock",
+  ...(parts.desk ? ["Wallpaper", "Desktop picture", "Random"] : []),
+  ...(parts.widgets ? ["Widgets"] : []),
+  ...(DOCK ? ["Dock", "Dock apps", "Add to Dock", "Remove from Dock", "Reset dock"] : []),
+  ...(LENS ? ["Magnify"] : []),
   "Launchpad",
   "Window width",
   "Reset window width",
@@ -32,24 +32,11 @@ export const FIND = [
 /* MARK */
 
 const DICE = "#...# ..... ..#.. ..... #...#";
-const TILE = "#.#.# .#.#. #.#.# .#.#. #.#.#";
 
 function Mark({ art }: { art: string }) {
-  const rows = art.split(" ");
   return (
     <span className="desk-mark">
-      <svg
-        className="glyphs"
-        viewBox={`0 0 ${rows[0].length} ${rows.length}`}
-        style={{ "--rows": rows.length, "--cols": rows[0].length } as Vars}
-        aria-hidden="true"
-      >
-        {rows
-          .flatMap((line, y) => [...line].flatMap((c, x) => (c === "#" ? [[x, y]] : [])))
-          .map(([x, y]) => (
-            <rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" />
-          ))}
-      </svg>
+      <Glyph art={art} />
     </span>
   );
 }
@@ -74,7 +61,7 @@ function choices(list: Saver[]) {
     ...list.map((one) => ({
       value: one.id,
       text: caption(one),
-      art: <Art>{one.app === "mrly" ? <Mark art={TILE} /> : <AppIcon id={one.app} />}</Art>,
+      art: <Art>{app(one.app) ? <AppIcon id={one.app} /> : <Mark art={PLAIN} />}</Art>,
     })),
   ];
 }
@@ -162,7 +149,7 @@ function Dock() {
   const on = usePref(KEY.magnify) === "1";
   return (
     <Section title="Dock">
-      <Switch label="Magnify" hint="Icons grow under the pointer." value={on} onChange={magnify} />
+      {LENS && <Switch label="Magnify" hint="Icons grow under the pointer." value={on} onChange={magnify} />}
       <Action label="Reset dock" hint="Put the default apps back in the dock." onClick={() => write(KEY.dock, "")}>
         Reset
       </Action>
@@ -200,10 +187,10 @@ function Windows() {
 export default function Pane({ site }: { site: Site }) {
   return (
     <Page title="Desktop & Dock">
-      <Picture site={site} />
-      <Widgets />
-      <Dock />
-      <Apps />
+      {parts.desk && <Picture site={site} />}
+      {parts.widgets && <Widgets />}
+      {DOCK && <Dock />}
+      {DOCK && <Apps />}
       <Windows />
     </Page>
   );

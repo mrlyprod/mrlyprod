@@ -35,6 +35,10 @@ const SKIP = new Set([
   "data",
   "pkg",
   "wasm",
+  ".lake",
+  ".cargo",
+  ".ruff_cache",
+  ".pytest_cache",
 ]);
 
 function crawl(root: string, at: string, out: string[]) {
@@ -48,7 +52,10 @@ function crawl(root: string, at: string, out: string[]) {
 
 export function tree(root: string): string[] {
   if (existsSync(join(root, ".git"))) {
-    const run = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: root, stderr: "ignore" });
+    const run = Bun.spawnSync(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"], {
+      cwd: root,
+      stderr: "ignore",
+    });
     const list = run.success
       ? run.stdout
           .toString()
@@ -66,7 +73,7 @@ export function tree(root: string): string[] {
 
 const icon = (name: string) => seti(name).replace(/^si( si-)?/, "");
 
-export function forest(git: Git, paths: string[]): Wood {
+export function forest(git: Git, paths: string[], file = (path: string) => join(git.root, path)): Wood {
   const kids = new Map<string, Twig[]>([["", []]]);
   const dir = (at: string): Twig[] => {
     const held = kids.get(at);
@@ -80,7 +87,7 @@ export function forest(git: Git, paths: string[]): Wood {
     const twig: Twig = { n: stem(path), k: "f" };
     const i = icon(twig.n);
     if (i) twig.i = i;
-    twig.s = statSync(join(git.root, path)).size;
+    twig.s = statSync(file(path)).size;
     dir(home(path)).push(twig);
   }
   for (const list of kids.values())

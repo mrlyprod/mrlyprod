@@ -41,6 +41,7 @@ import {
   REACH,
   RING,
   reading,
+  roll,
   STAIR,
   STEP,
   snap,
@@ -130,8 +131,11 @@ const ABOUT = [
   "Every number comes from Rust: Euler-Maclaurin low on the line, Riemann-Siegel above it, and the zeros by bisection to a billionth.",
 ];
 
+export const units = wasm("num");
+
 export const PAGE = {
   spec: SPEC,
+  units,
   record: true,
   gestures: true,
   about: ABOUT,
@@ -147,6 +151,7 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowRight"], label: "Zero to zero", act: "hop", when: walks, menu: "View" },
   ],
   actions: { go: (scene) => scene.go?.(), hop: (scene, e) => scene.hop?.(e.key === "ArrowLeft" ? -1 : 1) },
+  reroll: (_value, seed) => roll(seed),
 } satisfies Page<Loaded<"num">, Zeta>;
 
 const between = (rand: Rng, lo: number, hi: number) => lo + Math.floor(rand() * (hi - lo + 1));
@@ -169,8 +174,6 @@ export const SAVERS = [
     pick: (rand: Rng) => ({ view: "stairs", zeros: between(rand, 12, 40), x: between(rand, 30, 150) }),
   },
 ];
-
-export const units = wasm("num");
 
 const TAU = Math.PI * 2;
 const TELL = 125;

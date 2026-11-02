@@ -3,7 +3,7 @@
 - The code viewer: `/git/` browses the repo the site lives in, `/raw/` serves its exact bytes.
 - The input is always this repo's own tree, never another; the `git` block in `site.json` is `{ root, slug, branch }`, `branch` defaulting to `main`.
 - `/git/` is the `git` app with `deep`: the router answers every path under it with that row, and the browser draws each file and folder.
-- `../../hosts/web/scripts/git.ts` is the build half, with `fs` and `git ls-files`; `view.ts` draws, with neither; `client.ts` runs the page; `code.ts` paints.
+- `../../hosts/web/scripts/git.ts` is the build half, with `fs` and `git ls-files`; `view.ts` draws, with neither; `client.ts` runs the page; `../../system/git/code.ts` paints, in the git app, whose `package.json` owns Shiki.
 - `../../hosts/web/scripts/build.ts` calls `tree()` for the raw list and `forest()` for `git.json`; `../../system/git/git.ts` calls `start()`.
 
 ## TREE
@@ -29,7 +29,7 @@
 - A file is its path bar with Raw and GitHub links: an image inline, a PDF in an `<embed>`, a file over 1 MB a download link, all with no fetch.
 - Text is fetched from `/raw/`: a numbered `<pre>`, markdown through `md`, a binary a download link; text over 200 KB drops the numbers.
 - The page draws at once and fills when the bytes land; a listing's README fills above its rows the same way, and `aria-busy` holds until the fill and the paint are done.
-- `md` and `paint` are the lazy halves: the site's `md` imports the pipeline, and KaTeX only for a text with a `$`; `paint` imports `code.ts`.
+- `md` and `paint` are the lazy halves: the git app's `md` opens the reader through `../md/md.ts` `reader()`, which brings the pipeline and KaTeX only for a text with a `$`; `paint` imports `../../system/git/code.ts`.
 - Each draw sets the title, the canonical link and the tree's current node, opening the lazy folders above it and scrolling it into view in its pane; `after(view)` runs after each draw and each fill, and a click mid-load wins over the old draw.
 - An unknown path is a not-found view in the shell; a folder asked for without its slash is its listing.
 
@@ -43,7 +43,7 @@
 
 ## HIGHLIGHT
 
-- `code.ts` is the built-in highlighter: Shiki core, the JavaScript regex engine (`forgiving`), no oniguruma and no wasm.
+- `../../system/git/code.ts` is the built-in highlighter: Shiki core, the JavaScript regex engine (`forgiving`), no oniguruma and no wasm; the git app's `package.json` declares the three Shiki packages, and the lane `../../test/deps.test.ts` holds it to them.
 - One highlighter per page, no grammar loaded until a file wants it; a grammar that fails to load is remembered as a miss.
 - The theme is `createCssVariablesTheme` with prefix `--code-`, and nothing ships that variable: every token becomes a `tk-*` class, so no output carries a `style` attribute.
 - 16 grammars: c css csv html javascript json jsx markdown python rust shellscript toml tsx typescript wgsl yaml. Anything else paints nothing and the escaped text stands.

@@ -7,8 +7,8 @@ import type { Patch, Raw } from "../../net/sdk/spec.ts";
 import { defaults } from "../../net/sdk/spec.ts";
 import { study } from "./engine.ts";
 import type { Facts } from "./scene.ts";
-import { SPEC, tidied } from "./scene.ts";
-import { deeper, faster, flipped, rows, Shelves, Widget } from "./widget.tsx";
+import { deeper, faster, flipped, SPEC, tidied } from "./scene.ts";
+import { rows, Shelves, Widget } from "./widget.tsx";
 
 const units = { math, num };
 

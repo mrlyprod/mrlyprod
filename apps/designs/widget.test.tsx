@@ -3,13 +3,13 @@ import * as math from "@mrlyprod/math";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Frame } from "../../net/sdk/frame.tsx";
-import type { Three } from "../../net/sdk/hooks.ts";
 import type { Value } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { classes } from "../shared/designs/engine.ts";
+import type { Three } from "../shared/three/three.ts";
 import type { Knobs } from "./scene.ts";
-import { plan } from "./scene.ts";
-import { rows, steps, Widget } from "./widget.tsx";
+import { plan, steps } from "./scene.ts";
+import { rows, Widget } from "./widget.tsx";
 
 const value: Knobs & { seed: number } = { seed: 1, dim: 2, base: 2, code: "", level: 3, tint: "degree", spin: 0 };
 

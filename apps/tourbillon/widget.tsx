@@ -3,7 +3,7 @@ import { paints } from "../../net/sdk/color.ts";
 import { Btn, Fold, Slider, Text } from "../../net/sdk/controls.tsx";
 import { Bar } from "../../net/sdk/frame.tsx";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useLatest, useReroll, useStatus, useUnit } from "../../net/sdk/hooks.ts";
+import { useLatest, useStatus, useUnit } from "../../net/sdk/hooks.ts";
 import type { Paint } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
@@ -126,7 +126,6 @@ export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
   };
   const nudge = (by: number) => handle.current?.nudge?.(by);
   const touch = useTouch(handle, change);
-  useReroll(value.seed, () => change.current({ sched: "random" }));
   useStatus(onStatus, rows(facts));
   const shownNow = facts?.playing ? facts.angle! : value.increment;
   const sched = SCHEDULES.find(([key]) => key === value.sched)?.[1] ?? value.sched;

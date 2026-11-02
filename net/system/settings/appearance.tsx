@@ -1,11 +1,17 @@
 import type { Site } from "site:routes";
 import { useSyncExternalStore } from "react";
 import { HUES, tints } from "../../sdk/theme/hues.ts";
+import { design, parts } from "../../shell/active.ts";
 import { AppIcon } from "../../shell/appicon.tsx";
-import { face, hours, icons, KEY, look, read, root, text, theme, tint } from "../../shell/prefs.ts";
+import type { Knob } from "../../shell/design.ts";
+import { dial, hours, icons, KEY, knob, look, read, root, text, theme, tint } from "../../shell/prefs.ts";
 import type { Choice, Swatch } from "./ui.tsx";
-import { Note, Pane as Page, Section, Segment, Select, Swatches, Tiles } from "./ui.tsx";
+import { Pane as Page, Section, Segment, Select, Swatches, Tiles } from "./ui.tsx";
 import { usePref } from "./use.ts";
+
+const ICONS = design.knobs?.icons === true;
+
+const OWN = design.knobs?.own ?? [];
 
 export const FIND = [
   "Appearance",
@@ -20,14 +26,9 @@ export const FIND = [
   "Tint",
   "Colour",
   "Color",
-  "Font",
-  "Typeface",
   "Text size",
-  "Icon & widget style",
-  "Icons",
-  "Clear",
-  "Tinted",
-  "Icons go dark",
+  ...(ICONS ? ["Icon & widget style", "Icons", "Clear", "Tinted", "Icons go dark"] : []),
+  ...OWN.flatMap((one) => [one.name, ...one.options.map(([, label]) => label)]),
   "Clock",
   "Time format",
   "12-hour",
@@ -60,11 +61,17 @@ const useDark = () => useSyncExternalStore(watch, dark, () => false);
 
 /* APPEARANCE */
 
-const Desk = ({ tone }: { tone: string }) => (
+const Still = parts.preview;
+
+const Desk = ({ tone }: { tone: "light" | "dark" }) => (
   <span className="theme-art" data-tone={tone}>
-    <span className="theme-win">
-      <i />
-    </span>
+    {Still ? (
+      <Still title={design.title} theme={tone} />
+    ) : (
+      <span className="theme-win">
+        <i />
+      </span>
+    )}
   </span>
 );
 
@@ -91,14 +98,6 @@ const swatches = (site: Site): Swatch[] => {
 };
 
 /* TEXT */
-
-const FACES: Choice[] = [
-  ["", "Default"],
-  ["sans", "Noto Sans"],
-  ["serif", "Noto Serif"],
-  ["mono", "Noto Sans Mono"],
-  ["mrly", "MrlyFont"],
-];
 
 const SIZES: Choice[] = [
   ["small", "Small"],
@@ -134,6 +133,21 @@ const Icons = ({ value }: { value: string }) => (
 const styles = (always: boolean, night: boolean) =>
   STYLES.map(([value, name]) => ({ value, text: name, art: <Icons value={look(value, always, night)} /> }));
 
+/* KNOBS */
+
+function Dial({ one }: { one: Knob }) {
+  const value = usePref(dial(one.id));
+  return (
+    <Select
+      label={one.name}
+      hint={one.hint}
+      value={value}
+      options={one.options}
+      onChange={(next) => knob(one.id, next)}
+    />
+  );
+}
+
 /* CLOCK */
 
 const CYCLES: Choice[] = [
@@ -147,7 +161,6 @@ const CYCLES: Choice[] = [
 export default function Pane({ site }: { site: Site }) {
   const mode = usePref(KEY.theme);
   const hue = usePref(KEY.tint);
-  const font = usePref(KEY.font);
   const size = usePref(KEY.text);
   const style = usePref(KEY.icons);
   const always = usePref(KEY.always) === "1";
@@ -160,30 +173,35 @@ export default function Pane({ site }: { site: Site }) {
         <Swatches label="Accent colour" value={hue} options={swatches(site)} onChange={tint} />
       </Section>
       <Section>
-        <Select label="Font" value={font} options={FACES} onChange={face} />
         <Segment label="Text size" value={size} options={SIZES} onChange={text} />
-        <Note>
-          <span className="face-sample">The quick brown fox jumps over the lazy dog.</span>
-        </Note>
       </Section>
-      <Section
-        title="Icon & widget style"
-        foot="Auto turns Dark, Clear and Tinted icons dark in dark mode. Always keeps them dark."
-      >
-        <Tiles
-          label="Icon & widget style"
-          value={style}
-          options={styles(always, night)}
-          onChange={(next) => icons(next, always)}
-        />
-        <Segment
-          label="Icons go dark"
-          value={always ? "always" : ""}
-          options={WHEN}
-          onChange={(next) => icons(read(KEY.icons), next === "always")}
-          disabled={!style}
-        />
-      </Section>
+      {OWN.length > 0 && (
+        <Section title={design.title}>
+          {OWN.map((one) => (
+            <Dial key={one.id} one={one} />
+          ))}
+        </Section>
+      )}
+      {ICONS && (
+        <Section
+          title="Icon & widget style"
+          foot="Auto turns Dark, Clear and Tinted icons dark in dark mode. Always keeps them dark."
+        >
+          <Tiles
+            label="Icon & widget style"
+            value={style}
+            options={styles(always, night)}
+            onChange={(next) => icons(next, always)}
+          />
+          <Segment
+            label="Icons go dark"
+            value={always ? "always" : ""}
+            options={WHEN}
+            onChange={(next) => icons(read(KEY.icons), next === "always")}
+            disabled={!style}
+          />
+        </Section>
+      )}
       <Section title="Clock" foot="Auto follows your browser's language and region.">
         <Segment label="Time format" value={cycle} options={CYCLES} onChange={hours} />
       </Section>

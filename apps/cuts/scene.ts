@@ -5,11 +5,13 @@ import type { Paints } from "../../net/sdk/color.ts";
 import { rgb, TINTS } from "../../net/sdk/color.ts";
 import type { Had, Readout } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
+import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Raw, Scalar, Spec, Value } from "../../net/sdk/spec.ts";
+import type { Nudge, Raw, Scalar, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
 import type { Code, Mrly } from "../shared/designs/engine.ts";
-import { design, memo, named, tag as title } from "../shared/three/engine.ts";
+import { DESIGN, roll } from "../shared/designs/engine.ts";
+import { DIM, design, memo, named, tag as title } from "../shared/three/engine.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
 
@@ -48,11 +50,7 @@ export type Seen = Pick<View, "w" | "h" | "dpr"> & { look: () => Pick<Paints, "a
 
 export type Given = Opts & { math?: Mrly | null; tell?: (info: Info) => void };
 
-export type Hands = { slide: (by: number) => void; deeper: (by: number) => void };
-
 export type Cuts = ReturnType<typeof make>;
-
-export type Handled = Cuts & Hands;
 
 export const GASKET = "126";
 export const NUMBER = 2;
@@ -125,12 +123,16 @@ export const PAGE = {
     { key: "ArrowRight", label: "Height up", act: "higher", menu: "View" },
     { key: ["ArrowUp", "ArrowDown"], label: "Level", act: "level" },
   ],
-  actions: {
-    lower: (scene) => scene.slide?.(-1),
-    higher: (scene) => scene.slide?.(1),
-    level: (scene, e) => scene.deeper?.(e.key === "ArrowDown" ? -1 : 1),
+  acts: {
+    lower: slide(-1),
+    higher: slide(1),
+    level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
   },
-} satisfies Page<Loaded<"math">, Handled>;
+  reroll: (value, seed, units) => ({
+    code: roll(units!.math, DIM, Number(tidy(DESIGN, value).base), rng(seed)),
+    height: "",
+  }),
+} satisfies Page<Loaded<"math">, Cuts>;
 
 /* STUDY */
 
@@ -189,7 +191,7 @@ export function section(math: Mrly, code: Code, base: number, level: number) {
   return drawings(`section ${code} ${base} ${level}`, () => math.six.cut_design(code, NUMBER, level, base));
 }
 
-export function study(math: Mrly, value: Raw) {
+export function plane(math: Mrly, value: Raw) {
   const { base, code } = design(math, {
     ...value,
     base: Number(value.base),
@@ -197,7 +199,18 @@ export function study(math: Mrly, value: Raw) {
   });
   const level = Math.min(Number(value.level), lid(math, String(value.view)));
   const cut = profile(math, code, base, level);
-  const list = heights(cut, value);
+  return { base, code, level, cut, list: heights(cut, value) };
+}
+
+function slide(by: number): Nudge<Had<"math">> {
+  return (value, _key, units) => {
+    const { cut, list } = plane(units!.math, value);
+    return cut.empty ? {} : { height: Math.min(cut.high, Math.max(cut.low, list[0] + by)), both: 0 };
+  };
+}
+
+export function study(math: Mrly, value: Raw) {
+  const { base, code, level, cut, list } = plane(math, value);
   const counts = list.map((h) => cut.counts[h] ?? 0);
   const drawn = value.view === "section" ? "-" : String(counts.reduce((a, b) => a + b, 0));
   const facts: Readout[] = cut.empty

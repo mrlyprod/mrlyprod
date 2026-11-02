@@ -1,4 +1,5 @@
 {
   "title": "Stats",
-  "line": "The CDN, the Lambdas and the bucket, charted from the bucket's stats every minute."
+  "line": "The CDN, the Lambdas and the bucket, charted from the bucket's stats every minute.",
+  "aliases": ["cdn", "infra", "metrics", "lambdas", "bucket"]
 }

@@ -23,20 +23,23 @@ export function wasmHash(dir: string): string {
 
 /* PIN */
 
-export type Pin = { lock: string; local: string | null };
+export type Pin = { lock: string | null; local: string | null };
+
+const pinned = (root: string) =>
+  existsSync(join(root, "wasm.lock")) ? readFileSync(join(root, "wasm.lock"), "utf8").trim() : null;
 
 export function pin(root = HOME): Pin {
   const dir = join(root, "wasm");
-  const lock = readFileSync(join(root, "wasm.lock"), "utf8").trim();
-  return { lock, local: existsSync(dir) && wasmFiles(dir).length > 0 ? wasmHash(dir) : null };
+  return { lock: pinned(root), local: existsSync(dir) && wasmFiles(dir).length > 0 ? wasmHash(dir) : null };
 }
 
 /* FETCH */
 
-export async function ensureWasm(root = HOME): Promise<string> {
+export async function ensureWasm(root = HOME): Promise<string | null> {
   const dir = join(root, "wasm");
+  const hash = pinned(root);
+  if (!hash) return null;
   if (existsSync(dir) && wasmFiles(dir).length > 0) return dir;
-  const hash = readFileSync(join(root, "wasm.lock"), "utf8").trim();
   const prefix = `pkg/${hash}/`;
   const named = (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as { push?: { wasm?: string } }).push?.wasm;
   if (!named) throw new Error("wasm: site.json names no push.wasm, the env var that holds the wasm bucket");
@@ -63,6 +66,10 @@ export async function ensureWasm(root = HOME): Promise<string> {
 
 if (import.meta.main) {
   const dir = await ensureWasm();
+  if (!dir) {
+    console.log("none 0 -");
+    process.exit(0);
+  }
   const { lock, local } = pin();
   console.log(`${local} ${wasmFiles(dir).length} ${dir}`);
   if (local !== lock) {

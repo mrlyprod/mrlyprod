@@ -26,7 +26,6 @@ test("the page names its sections in order and links each from the top", () => {
     "icons:Icon styles",
     "controls:Controls",
     "library:Library",
-    "designs:Design picker",
     "type:Type and shape",
   ]);
   expect([...html.matchAll(/<a class="chip" href="#([a-z]+)"/g)].map(([, id]) => id)).toEqual(

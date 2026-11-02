@@ -1,7 +1,7 @@
 import type { CylinderGeometry, InstancedMesh, SphereGeometry } from "three";
-import type { Three } from "../../net/sdk/hooks.ts";
 import type { View } from "../../net/sdk/run.ts";
 import { eye, frustum, TILT } from "../shared/designs/mesh.ts";
+import type { Three } from "../shared/three/three.ts";
 import type { Plan } from "./engine.ts";
 
 /* TYPES */

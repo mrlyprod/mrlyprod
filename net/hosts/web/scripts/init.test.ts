@@ -20,7 +20,7 @@ test("a scaffolded site builds on the host with its home, about, menu and missin
     env: { ...process.env, MRLY_ROOT: site, MRLY_DIST: dist },
   });
   expect(run.stderr.toString()).toBe("");
-  expect(run.stdout.toString()).toMatch(/^site: design glass, 4 rows, /);
+  expect(run.stdout.toString()).toMatch(/^site: design modern, 4 rows, /);
   const { site: built, rows } = JSON.parse(readFileSync(join(dist, "routes.json"), "utf8")) as {
     site: { title: string; root: string };
     rows: { route: string; kind: string }[];

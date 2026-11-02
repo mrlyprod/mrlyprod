@@ -1,8 +1,0 @@
-[package]
-name = "mess"
-edition = "2021"
-
-[dependencies]
-mrly-life = { path = "../../../../../crates/life" }
-
-[workspace]

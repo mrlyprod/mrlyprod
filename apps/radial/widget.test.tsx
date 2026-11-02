@@ -3,8 +3,9 @@ import * as math from "@mrlyprod/math";
 import { renderToStaticMarkup } from "react-dom/server";
 import { rng } from "../../net/sdk/rand.ts";
 import type { Facts } from "./scene.ts";
+import { rolled, wrap } from "./scene.ts";
 import type { RosettesProps } from "./widget.tsx";
-import { lit, Rosettes, rolled, rows, wrap } from "./widget.tsx";
+import { lit, Rosettes, rows } from "./widget.tsx";
 
 test("a reroll draws the design, the copies and a blend other than meet, on a full turn", () => {
   const all = Array.from({ length: 40 }, (_, seed) => rolled(math, { source: "flat" }, rng(seed)));

@@ -27,7 +27,13 @@ type Group = [string, (row: Listed) => boolean, (a: Listed, b: Listed) => number
 
 const newest = (a: Listed, b: Listed) => (b.date ?? "").localeCompare(a.date ?? "") || a.title.localeCompare(b.title);
 
-export function sections(rows: Listed[], raw: Set<string>, shelves: Shelf[] = [], topics: Topic[] = []): Section[] {
+export function sections(
+  rows: Listed[],
+  raw: Set<string>,
+  shelves: Shelf[] = [],
+  topics: Topic[] = [],
+  folder = "research",
+): Section[] {
   const left = rows.filter((row) => !row.hidden);
   const line = (row: Listed): Line => ({
     name: row.title,
@@ -49,8 +55,8 @@ export function sections(rows: Listed[], raw: Set<string>, shelves: Shelf[] = []
     name: "Research",
     lines: topics.length
       ? [
-          { name: "Research", note: "", href: "/raw/research/README.md" },
-          ...topics.map((one) => ({ name: one.title, note: "", href: `/raw/research/${one.slug}/README.md` })),
+          { name: "Research", note: "", href: `/raw/${folder}/README.md` },
+          ...topics.map((one) => ({ name: one.title, note: "", href: `/raw/${folder}/${one.slug}/README.md` })),
         ]
       : [],
   };
@@ -67,6 +73,7 @@ export function llms(
   raw: Set<string>,
   shelves: Shelf[] = [],
   topics: Topic[] = [],
+  folder = "research",
 ): string {
   const list = (lines: Line[]) =>
     lines.map((one) => `- [${one.name}](${root}${one.href})${one.note ? `: ${one.note}` : ""}`).join("\n");
@@ -75,7 +82,7 @@ export function llms(
     `> ${root}`,
     words.about,
     words.legend,
-    ...sections(rows, raw, shelves, topics).map((one) => `## ${one.name}\n\n${list(one.lines)}`),
+    ...sections(rows, raw, shelves, topics, folder).map((one) => `## ${one.name}\n\n${list(one.lines)}`),
   ];
   return `${blocks.filter(Boolean).join("\n\n")}\n`;
 }

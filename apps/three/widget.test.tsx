@@ -2,11 +2,11 @@ import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/math";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Frame } from "../../net/sdk/frame.tsx";
-import type { Three } from "../../net/sdk/hooks.ts";
 import { Knobs } from "../../net/sdk/knobs.tsx";
 import type { Patch, Value } from "../../net/sdk/spec.ts";
 import { defaults } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
+import type { Three } from "../shared/three/three.ts";
 import { SPEC } from "./scene.ts";
 import { hands, Widget } from "./widget.tsx";
 

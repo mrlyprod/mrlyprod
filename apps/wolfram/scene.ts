@@ -4,7 +4,7 @@ import type { Ready } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
 import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Option, Spec, Units } from "../../net/sdk/spec.ts";
+import type { Option, Spec, Units, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import type { Door, Start } from "../shared/life/engine.ts";
@@ -21,7 +21,11 @@ export type Given = Opts & { life: Door; math: Mrly; onStat?: (stat: Stat) => vo
 
 export type Card = ReturnType<typeof card>;
 
-export type Wolfram = ReturnType<typeof make> & { turn?: (by: number) => void };
+export type Wolfram = ReturnType<typeof make>;
+
+const RULES = 256;
+
+const turn = (value: Value, by: number) => ({ rule: (Number(value.rule) + by + RULES) % RULES });
 
 type Sheet = { rows: number; cols: number; data: Tensor["data"] };
 
@@ -96,7 +100,8 @@ export const PAGE = {
     { key: ["ArrowRight", "Enter", "."], label: "Next rule", act: "next", button: true, menu: "View" },
     { key: ["ArrowLeft", ","], label: "Previous rule", act: "prev", menu: "View" },
   ],
-  actions: { next: (scene) => scene.turn?.(1), prev: (scene) => scene.turn?.(-1) },
+  acts: { next: (value) => turn(value, 1), prev: (value) => turn(value, -1) },
+  reroll: (_value, seed) => ({ rule: Math.floor(rng(seed)() * RULES) }),
 } satisfies Page<Ready & Units, Wolfram>;
 
 const FIT = 0.96;

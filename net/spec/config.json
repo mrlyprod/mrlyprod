@@ -1,0 +1,38 @@
+{
+  "spec": "0.1",
+  "title": "Config",
+  "line": "What boots a world: its name, seed, time and apps.",
+  "type": "object",
+  "properties": {
+    "spec": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "time": {
+      "enum": ["timeline", "stream"]
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "apps": {
+      "type": "array",
+      "minItems": 1
+    },
+    "actors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rules": {
+      "type": "object"
+    }
+  },
+  "required": ["name", "apps"],
+  "additionalProperties": false
+}

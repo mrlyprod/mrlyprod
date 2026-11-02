@@ -2,19 +2,18 @@ import type { CSSProperties, PointerEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
-import type { Had, Three } from "../../net/sdk/hooks.ts";
-import { useReroll, useThree, useUnit } from "../../net/sdk/hooks.ts";
+import type { Had } from "../../net/sdk/hooks.ts";
+import { useUnit } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Make } from "../../net/sdk/run.ts";
 import type { Patch, Seeded, Value } from "../../net/sdk/spec.ts";
 import type { Spot } from "../../net/sdk/touch.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
-import { roll } from "../shared/designs/engine.ts";
-import { read, useTheme } from "../shared/designs/pick.tsx";
-import { DIM } from "../shared/three/engine.ts";
+import { useTheme } from "../shared/designs/pick.tsx";
+import type { Three } from "../shared/three/three.ts";
+import { useThree } from "../shared/three/three.ts";
 import type { Pose } from "../shared/three/thumbs.ts";
 import { BLOCK, block, glance, POSES } from "../shared/three/thumbs.ts";
 import type { Hands, Held, Sponge, Told } from "./scene.ts";
@@ -38,7 +37,6 @@ const LOOKS: [Pose, string, string][] = [
   ["edge", "Edge", "2"],
   ["face", "Face", "3"],
 ];
-const COMBINE = ["sum", "xor"];
 
 const warn: CSSProperties = {
   position: "absolute",
@@ -53,8 +51,6 @@ const warn: CSSProperties = {
 };
 
 export const hands = (at: () => Value, onChange: (patch: Patch) => void): Hands => ({
-  deeper: (by) => onChange({ level: (at().level as number) + by }),
-  widen: (by) => onChange({ radius: (at().radius as number) + by }),
   toggle: () => onChange({ spin: Number(at().spin) === 1 ? 0 : 1 }),
   playing: () => Number(at().spin) === 1,
 });
@@ -70,15 +66,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   now.current = value;
   const tell = useCallback((next: Told) => setInfo(next), []);
   useEffect(() => onStatus?.(info?.rows ?? []), [info]);
-  const rolled = (seed: number) => {
-    if (!math) return;
-    const base = read(now.current).base;
-    const rand = rng(seed);
-    const patch: Patch = { code: roll(math, DIM, base, rand) };
-    if (now.current.source === "field") patch.combine = COMBINE[Math.floor(rand() * COMBINE.length)];
-    onChange(patch);
-  };
-  useReroll(value.seed, rolled);
   const mode = useRef(`${value.source} ${Boolean(value.crop)}`);
   useEffect(() => {
     const next = `${value.source} ${Boolean(value.crop)}`;

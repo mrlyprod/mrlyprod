@@ -1,9 +1,8 @@
-import type { Bind, Props } from "../../net/shell/design.ts";
-import { hhmm } from "./clock.ts";
+import { stamp } from "../../net/sdk/clock.ts";
+import type { Props } from "../../net/shell/design.ts";
+import { href } from "../shared/kit.ts";
 
 /* BAR */
-
-const href = (bind: Bind) => String(bind().href ?? "");
 
 const path = (app: string | null) => (app ? `~/${app.toLowerCase().replace(/\s+/g, "-")}` : "~");
 
@@ -14,26 +13,23 @@ export function Bar({ site, app, cart, clock, bind }: Props["bar"]) {
         <img src={site.logo} width="14" height="14" alt="" />
         <b>{site.name.toLowerCase()}</b>
       </a>
-      <nav className="trio" aria-label="Tasks">
+      <nav className="tasks" aria-label="Tasks">
         <span className="prompt" aria-hidden="true">
-          :{path(app)}$
+          {`:${path(app)}$`}
         </span>
-        <span className="task app" hidden={!app}>
-          {app}
-        </span>
+        {app && <span className="task">{app}</span>}
         <span className="cursor" aria-hidden="true" />
       </nav>
       <div className="tray">
         {site.cart && (
           <a className="cart" href={href(bind.cart)} {...bind.cart()} hidden={cart < 1} aria-label={`Cart, ${cart}`}>
-            cart:{cart}
+            {`cart:${cart}`}
           </a>
         )}
         <a className="glyph find" href={href(bind.find)} {...bind.find()} aria-label="Search">
           [/]
         </a>
-        <time className="date" hidden />
-        <time className="clock">{hhmm(clock)}</time>
+        <time className="clock">{clock && stamp(clock.now, String(clock.hours ?? ""))}</time>
       </div>
     </header>
   );

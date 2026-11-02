@@ -1,39 +1,17 @@
 import { useCallback, useEffect, useRef } from "react";
 import { text } from "../../net/sdk/export.ts";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useReroll } from "../../net/sdk/hooks.ts";
 import type { Paint } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import type { Rng } from "../../net/sdk/rand.ts";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Patch, Row, Scalar, Seeded, Value } from "../../net/sdk/spec.ts";
-import { maxOf, minOf } from "../../net/sdk/spec.ts";
-import type { Mrly } from "../shared/designs/engine.ts";
-import { next } from "../shared/designs/engine.ts";
+import type { Patch, Scalar, Seeded, Value } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Doors, FactsOf, Kind } from "./engine.ts";
-import {
-  based,
-  COLOURS,
-  FORMULA,
-  fits,
-  KINDS,
-  LEVELS,
-  PICTURES,
-  pictureOf,
-  place,
-  READS,
-  ROUNDS,
-  roll,
-  sideOf,
-  study,
-  survey,
-} from "./engine.ts";
+import { COLOURS, FORMULA, fits, KINDS, READS, study, survey } from "./engine.ts";
 import type { Handled, Hands, Stage } from "./scene.ts";
-import { file, inks, make, SPEC, sketch, tidied } from "./scene.ts";
+import { file, inks, make, shift, sketch, tapped, tidied } from "./scene.ts";
 
 /* TYPES */
 
@@ -46,51 +24,6 @@ type Entry = [string, Patch, string?];
 const STEP = 700;
 
 const SMALL = { round: 5, level: 4, power: 2, depth: 1 };
-
-const row = (key: string): Row => SPEC.find((one) => one.key === key)!;
-
-export const KNOBS: Record<Kind, string> = { word: "round", plane: "level", power: "power", filter: "depth" };
-
-const within = (n: number, low: number, high: number) => Math.max(low, Math.min(high, n));
-
-export function shift(value: Value, by: number, wrap = false) {
-  const key = KNOBS[pictureOf(value)];
-  const spec = row(key);
-  const low = minOf(spec, value)!;
-  const top = maxOf(spec, value)!;
-  const to = (value[key] as number) + by;
-  return { [key]: wrap ? (to > top ? low : to < low ? top : to) : within(to, low, top) };
-}
-
-export const tapped = (value: Value) =>
-  value.view === "plane" ? { lift: next(KINDS, value.lift, 1) } : shift(value, 1, true);
-
-export const turned = (value: Value, by: number) => place(next(PICTURES, pictureOf(value), by));
-
-const among = <T,>(list: readonly T[], rand: Rng) => list[Math.floor(rand() * list.length)];
-
-const span = (top: number) => Array.from({ length: top }, (_, i) => i + 1);
-
-export function rerolled(math: Mrly, value: Value, rand: Rng) {
-  const kind = pictureOf(value);
-  if (kind === "plane")
-    return {
-      lift: among(
-        KINDS.filter((one) => one !== value.lift),
-        rand,
-      ),
-      level: among(span(LEVELS), rand),
-    };
-  if (kind === "word")
-    return {
-      round: among(
-        span(ROUNDS).filter((one) => one !== value.round),
-        rand,
-      ),
-      colour: among(COLOURS, rand)[0],
-    };
-  return { code: roll(math, sideOf(value), based(value), rand) };
-}
 
 /* ROWS */
 
@@ -233,7 +166,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   useEffect(() => {
     if (!word || (timer.current && value.round !== wrote.current)) play(false);
   }, [word, value.round]);
-  useReroll(value.seed, (seed) => units && onChange(rerolled(units.math, value, rng(seed))));
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units }),
     [units],
@@ -242,8 +174,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
     live.current = handle;
     if (!handle) return onReady?.(null);
     const hands: Hands = {
-      deeper: (by) => hooks.current(shift(now.current, by)),
-      turn: (by) => hooks.current(turned(now.current, by)),
       toggle: () => play(!timer.current),
       playing: () => Boolean(timer.current),
     };

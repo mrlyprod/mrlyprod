@@ -1,15 +1,7 @@
 import { expect, test } from "bun:test";
-import { useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { classed, find, mount, text } from "../test/dom.ts";
-import { source } from "./feed.ts";
 import { Bar, calm, Frame, fit, floats, pushed, slot } from "./frame.tsx";
-
-function Fed() {
-  const at = useRef<HTMLCanvasElement>(null);
-  useEffect(() => source(at.current!), []);
-  return <canvas ref={at} />;
-}
 
 test("on the server a frame is its stage alone: a filled Bar claims its side only after layout", () => {
   expect(
@@ -105,46 +97,4 @@ test("the tail bar lands after every right bar, whatever mounts first, and opens
     return [alone, text(at())];
   });
   expect(pane).toEqual(["seed", "lookseed"]);
-});
-
-test("a frame with no canvas fed to the glass frosts its panes and pills, and a fed one keeps them lenses", async () => {
-  const looks = await mount(async (draw, host) => {
-    const look = () =>
-      ["right", "actions", "status"].map((name) => {
-        const at = find(host, classed(name))!;
-        return [at.attributes.class, at.attributes["data-lens"] ?? null];
-      });
-    const bars = [
-      <Bar key="right" side="right">
-        look
-      </Bar>,
-      <Bar key="actions" side="actions">
-        go
-      </Bar>,
-      <Bar key="status" side="status">
-        seed
-      </Bar>,
-    ];
-    await draw(<Frame label="Read">{bars}</Frame>);
-    const read = look();
-    await draw(
-      <Frame label="Sky">
-        <Fed />
-        {bars}
-      </Frame>,
-    );
-    return [read, look()];
-  });
-  expect(looks).toEqual([
-    [
-      ["pane right frost", null],
-      ["actions frost", null],
-      ["status frost", null],
-    ],
-    [
-      ["pane right", "panel"],
-      ["actions", "pill"],
-      ["status", "pill"],
-    ],
-  ]);
 });

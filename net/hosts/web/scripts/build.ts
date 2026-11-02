@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import type { BuildArtifact, BunPlugin } from "bun";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { Config, App as Made } from "../../../kernel/index.ts";
+import { Fault, kernel } from "../../../kernel/index.ts";
 import { appicon } from "../../../sdk/appicon.ts";
 import { ext, HUGE, IMAGE, reads } from "../../../sdk/git/view.ts";
 import { front, NAME, figures as named, plain, summary } from "../../../sdk/md/md.ts";
@@ -15,7 +17,7 @@ import type { Design } from "../../../shell/design.ts";
 import { rawKind } from "../infra/mime.ts";
 import { draw, pulldown, runtime, SHELVES, sheets, shelf, source } from "./design.ts";
 import { forest, config as gitConfig, TREE, tree } from "./git.ts";
-import { HOME, REPO, SITE } from "./home.ts";
+import { HOME, REPO, SITE, UNITS, unit } from "./home.ts";
 import { llms, type Shelf } from "./llms.ts";
 import { packages, where } from "./packages.ts";
 
@@ -26,6 +28,7 @@ export const NAMES = {
   scene: "scene.ts",
   widget: "widget.tsx",
   icon: "icon.ts",
+  desk: "desk.tsx",
   page: "page.tsx",
   lock: "lock.ts",
   tiles: "tiles.ts",
@@ -33,6 +36,8 @@ export const NAMES = {
   app: "app.tsx",
   prose: "prose.tsx",
   git: "git.ts",
+  world: "app.ts",
+  view: "view.tsx",
 } as const;
 
 type Name = keyof typeof NAMES;
@@ -46,12 +51,14 @@ export const spells = <N extends Name>(file: string | null, name: N): file is (t
 const repo = REPO;
 const DIST = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(HOME, "dist");
 const root = (process.env.MRLY_SITE ?? SITE.root).replace(/\/$/, "");
-const CRATES = join(repo, "crates");
 const ROOTS = SITE.roots.map((one) => resolve(HOME, one));
 const BLOG = ROOTS.map((one) => join(one, "blog")).find((one) => existsSync(one)) ?? join(ROOTS[0], "blog");
 const GIT = gitConfig(HOME, SITE.git)!;
-const RESEARCH = join(GIT.root, "research");
+const HELD = (SITE as { research?: string }).research;
+export const RESEARCH = HELD ? resolve(HOME, HELD) : null;
+const HELD_OUT = RESEARCH !== null && !RESEARCH.startsWith(GIT.root + sep);
 const LAUNCHPAD = join(HOME, "launchpad.json");
+const WORLD = join(HOME, "world.json");
 const shellFile = (name: Name) => under(join(repo, "net", "shell"), name);
 const SHELLS = [shellFile("app"), shellFile("prose")];
 const LOCK = shellFile("lock");
@@ -63,6 +70,8 @@ const NAMING = { entry: "[name]-[hash].[ext]", chunk: "lib-[hash].[ext]", asset:
 const read = (file: string) => readFileSync(file, "utf8");
 const sha = (data: string | Uint8Array) => createHash("sha256").update(data).digest("hex");
 const rel = (file: string) => relative(GIT.root, file);
+export const rawFile = (path: string) =>
+  HELD_OUT && path.startsWith("research/") ? join(RESEARCH!, path.slice("research/".length)) : join(GIT.root, path);
 
 /* TYPES */
 
@@ -74,7 +83,10 @@ type Post = { slug: string; route: string; title: string; date: string; lead: st
 
 export type Figure = { name: string; file: string };
 
+export type World = { config: Config | null; files: [string, string][] };
+
 export type State = {
+  world: World;
   rows: Row[];
   site: Record<string, unknown>;
   figures: Figure[];
@@ -83,6 +95,7 @@ export type State = {
   posts: Post[];
   topics: Topic[];
   raw: string[];
+  widgets: string[];
   dropped: number;
 };
 
@@ -121,11 +134,18 @@ const scanners = new Map<string, Bun.Transpiler>([
 
 const scan = (file: string) => (scanners.get(ext(file)) ?? scanner).scan(read(file));
 
-const UNITS = readdirSync(CRATES)
-  .filter((unit) => existsSync(join(CRATES, unit, "js", "package.json")))
-  .sort();
+export const folders = (dir: string) =>
+  existsSync(dir)
+    ? readdirSync(dir, { withFileTypes: true })
+        .filter((item) => item.isDirectory() && !item.name.startsWith("."))
+        .map((item) => item.name)
+        .sort()
+    : [];
 
-const MANIFEST = JSON.parse(read(join(CRATES, UNITS[0]!, "js", "package.json"))) as { version: string };
+const version = () => {
+  const held = UNITS.map((name) => join(unit(name), "package.json")).find((file) => existsSync(file));
+  return held ? (JSON.parse(read(held)) as { version: string }).version : null;
+};
 
 const UNIT = /@mrlyprod\/([a-z]+)|mrly_([a-z]+)_js/g;
 
@@ -135,21 +155,13 @@ const LOADERS = join(repo, "apps", "shared", "units");
 
 const TABLE = join(LOADERS, "load.ts");
 
-const LEAF = new RegExp(`^@mrlyprod/(${UNITS.join("|")})$`);
+const LEAF = new RegExp(`^@mrlyprod/(${UNITS.join("|") || "(?!)"})$`);
 
 const GLUE = /(?:^|\/)pkg\/mrly_([a-z]+)_js\.js$/;
 
 const WASM = /(?:^|\/)pkg\/mrly_([a-z]+)_js_bg\.wasm$/;
 
 const unitWasm = (unit: string) => join(HOME, "wasm", unit, `mrly_${unit}_js_bg.wasm`);
-
-export const folders = (dir: string) =>
-  existsSync(dir)
-    ? readdirSync(dir, { withFileTypes: true })
-        .filter((item) => item.isDirectory() && !item.name.startsWith("."))
-        .map((item) => item.name)
-        .sort()
-    : [];
 
 const stem = (name: string) => name.slice(0, -3);
 
@@ -174,10 +186,10 @@ export function roster(): Figure[] {
   const found = [
     ...places().map(({ id, dir }) => ({ name: id, file: under(dir, "icon") })),
     ...folders(BLOG).map((slug) => ({ name: `blog-${slug}`, file: under(join(BLOG, slug), "icon") })),
-    ...folders(RESEARCH).flatMap((topic) =>
-      drawn(join(RESEARCH, topic, "figures")).map((name) => ({
+    ...(RESEARCH ? folders(RESEARCH) : []).flatMap((topic) =>
+      drawn(join(RESEARCH!, topic, "figures")).map((name) => ({
         name: name.slice(0, -3),
-        file: join(RESEARCH, topic, "figures", name),
+        file: join(RESEARCH!, topic, "figures", name),
       })),
     ),
   ].filter((one) => existsSync(one.file));
@@ -199,7 +211,7 @@ export const mrly: BunPlugin = {
   name: "mrly",
   setup(build) {
     build.onResolve({ filter: LEAF }, ({ path }) => ({
-      path: join(CRATES, path.slice("@mrlyprod/".length), "js", "index.js"),
+      path: join(unit(path.slice("@mrlyprod/".length)), "index.js"),
     }));
     packages.setup(build);
   },
@@ -238,11 +250,12 @@ function posts(): Post[] {
     .sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 }
 
-function topics(known: Set<string>): Topic[] {
-  return folders(RESEARCH)
-    .filter((slug) => slug !== "shared" && existsSync(join(RESEARCH, slug, "README.md")))
+export function topics(known: Set<string>, at = RESEARCH): Topic[] {
+  if (!at) return [];
+  return folders(at)
+    .filter((slug) => slug !== "shared" && existsSync(join(at, slug, "README.md")))
     .flatMap((slug) => {
-      const { data } = front(read(join(RESEARCH, slug, "README.md")));
+      const { data } = front(read(join(at, slug, "README.md")));
       if (!data.title) return [];
       if (!SLUG.test(slug))
         throw new Error(`site: research/${slug} is not a slug; use lowercase words and digits joined by hyphens`);
@@ -254,7 +267,7 @@ function topics(known: Set<string>): Topic[] {
         throw new Error(
           `site: research/${slug}/README.md dates itself ${data.date ?? "nowhere"}; its front matter needs a date, YYYY-MM-DD`,
         );
-      const figures = drawn(join(RESEARCH, slug, "figures"))
+      const figures = drawn(join(at, slug, "figures"))
         .map((name) => name.slice(0, -3))
         .filter((name) => known.has(name));
       return [
@@ -271,7 +284,9 @@ function topics(known: Set<string>): Topic[] {
     .sort((a, b) => a.title.localeCompare(b.title) || a.slug.localeCompare(b.slug));
 }
 
-const FIELDS = new Set(["title", "line", "saver", "hidden", "deep", "source", "route"]);
+const FIELDS = new Set(["title", "line", "aliases", "saver", "hidden", "deep", "source", "route"]);
+
+const ALIASES = { list: 12, each: 24 };
 
 const PARTS: Name[] = ["scene", "widget"];
 
@@ -279,12 +294,13 @@ const PAGER = under(join(repo, "net", "sdk"), "page");
 
 const WORDS: Record<string, () => string> = {
   title: () => SITE.title,
+  tagline: () => SITE.tagline,
   domain: () => new URL(root).host,
   repo: () => GIT.name,
 };
 
 const words = (text: string) =>
-  text.replace(/\{(title|domain|repo)\}/g, (_, key: string) => JSON.stringify(WORDS[key]!()).slice(1, -1));
+  text.replace(/\{(title|tagline|domain|repo)\}/g, (_, key: string) => JSON.stringify(WORDS[key]!()).slice(1, -1));
 
 export function apps(found = places()): App[] {
   const list = found.map(({ id, dir }): App => {
@@ -298,20 +314,36 @@ export function apps(found = places()): App[] {
     const extra = Object.keys(one).find((key) => !FIELDS.has(key));
     if (extra) throw say(`sets ${extra}, and the fields are ${[...FIELDS].join(", ")}`);
     if (!one.title || !one.line) throw say("needs a title and a line");
+    if (one.aliases !== undefined) {
+      const list = one.aliases;
+      const bad =
+        !Array.isArray(list) ||
+        !list.length ||
+        list.length > ALIASES.list ||
+        new Set(list).size !== list.length ||
+        list.some((alias) => typeof alias !== "string" || !alias.length || alias.length > ALIASES.each) ||
+        list.some((alias) => alias !== alias.toLowerCase());
+      if (bad)
+        throw say(
+          `sets aliases, and aliases are 1 to ${ALIASES.list} lowercase words of 1 to ${ALIASES.each} characters, none twice`,
+        );
+    }
     for (const key of ["saver", "hidden", "deep"] as const)
       if (one[key] !== undefined && one[key] !== true) throw say(`sets ${key} to ${one[key]}; it is true or absent`);
     if (one.route !== undefined && !one.route.startsWith("/")) throw say(`routes to ${one.route}, which is not rooted`);
-    if (one.source !== undefined && !existsSync(join(GIT.root, one.source)))
+    if (one.source !== undefined && !existsSync(rawFile(one.source)))
       throw say(`reads ${one.source}, which does not exist`);
     const parts = PARTS.every((name) => existsSync(at(NAMES[name])));
     const given = [
       ...[NAMES.index, "index.md"].filter((name) => existsSync(at(name))),
       ...(one.source ? ["source"] : []),
     ];
-    const pages = given.length || !parts ? given : [NAMES.scene];
+    const pages = given.length
+      ? given
+      : [...(parts ? [NAMES.scene] : []), ...(existsSync(at(NAMES.world)) ? [NAMES.world] : [])];
     if (pages.length !== 1)
       throw say(
-        `needs exactly one page of ${NAMES.index}, index.md, a source, or ${NAMES.scene} with ${NAMES.widget}, and has ${pages.length ? pages.join(" and ") : "none"}`,
+        `needs exactly one page of ${NAMES.index}, index.md, a source, ${NAMES.scene} with ${NAMES.widget}, or ${NAMES.world}, and has ${pages.length ? pages.join(" and ") : "none"}`,
       );
     const lost = one.saver ? PARTS.find((name) => !existsSync(at(NAMES[name]))) : undefined;
     if (lost) throw say(`is a saver, and ${rel(dir)}/${NAMES[lost]} is missing`);
@@ -324,6 +356,32 @@ export function apps(found = places()): App[] {
   });
   if (!list.some((one) => one.id === "home")) throw new Error("site: no route root holds home/, and home is /");
   return list.sort((a, b) => Number(b.id === "home") - Number(a.id === "home") || a.id.localeCompare(b.id));
+}
+
+/* WORLD */
+
+const inWorld = (config: Config) => (config.apps ?? []).map((one) => (typeof one === "string" ? one : one.id));
+
+export function world(list: App[], file = WORLD): World {
+  if (!existsSync(file)) return { config: null, files: [] };
+  const say = (text: string) => new Error(`site: ${rel(file)} ${text}`);
+  const files = list
+    .filter((one) => existsSync(under(one.dir, "world")))
+    .map((one): [string, string] => [one.id, under(one.dir, "world")]);
+  const config = JSON.parse(read(file)) as Config;
+  const lost = files.map(([id]) => id).filter((id) => !inWorld(config).includes(id));
+  if (lost.length) throw say(`leaves out ${lost.join(", ")}; every route with an ${NAMES.world} lives in the world`);
+  const made = files.map(([id, path]) => {
+    const one = (require(path) as { default?: Made }).default;
+    if (!one || one.id !== id) throw new Error(`site: ${rel(path)} exports no default app() whose id is ${id}`);
+    return one;
+  });
+  try {
+    kernel(made).boot(config);
+  } catch (error) {
+    throw say(`does not boot: ${error instanceof Fault ? error.note : (error as Error).message}`);
+  }
+  return { config, files };
 }
 
 /* SAVERS */
@@ -412,6 +470,34 @@ export function savers(
   return { list: all, desk: found.id };
 }
 
+/* WIDGETS */
+
+export const DESK = ["clock", "continue"];
+
+export function widgets(list: App[], given: unknown = (SITE as { widgets?: unknown }).widgets ?? DESK): string[] {
+  const say = (text: string) => new Error(`site: site.json widgets ${text}`);
+  if (!Array.isArray(given)) throw say("is a list of widget ids");
+  const own = new Set(list.filter((one) => existsSync(under(one.dir, "desk"))).map((one) => one.id));
+  const seen = new Set<string>();
+  for (const id of given) {
+    if (!DESK.includes(id) && !own.has(id))
+      throw say(`names ${id}, which is neither a shell widget (${DESK.join(", ")}) nor a route holding ${NAMES.desk}`);
+    if (seen.has(id)) throw say(`names ${id} twice`);
+    seen.add(id);
+  }
+  return [...given];
+}
+
+export function gadgets(list: App[], order: string[]): string {
+  const dirs = new Map(list.filter((one) => existsSync(under(one.dir, "desk"))).map((one) => [one.id, one.dir]));
+  const routed = order.filter((id) => dirs.has(id));
+  return [
+    ...routed.map((id, i) => `import { widget as w${i} } from ${JSON.stringify(under(dirs.get(id)!, "desk"))};`),
+    `export const order = ${JSON.stringify(order)};`,
+    `export const widgets = { ${routed.map((id, i) => `${JSON.stringify(id)}: w${i}`).join(", ")} };`,
+  ].join("\n");
+}
+
 /* LAUNCHPAD */
 
 export const launchable = (list: App[]) =>
@@ -475,10 +561,11 @@ function rows(list: App[], blog: Post[]): Row[] {
       ...(spells(app.page, "scene") ? { scene: true } : {}),
       ...(app.deep ? { deep: true } : {}),
       ...(source ? { prose: app.source ? "source" : "page" } : {}),
+      ...(app.aliases ? { aliases: app.aliases } : {}),
     };
     out.push({
       route,
-      kind: spells(app.page, "index") || spells(app.page, "scene") ? "app" : "prose",
+      kind: spells(app.page, "index") || spells(app.page, "scene") || spells(app.page, "world") ? "app" : "prose",
       title: app.title,
       source,
       date: null,
@@ -545,12 +632,11 @@ export function reach(seeds: string[]): string[] {
 const dressing = (name = process.env.MRLY_DESIGN || (SITE as { design?: string }).design) =>
   name ? [join(shelf(name), name)] : SHELVES;
 
-export const shipped = (figures: Figure[]) =>
+export const shipped = (figures: Figure[], list: App[] = apps()) =>
   reach([
-    ...[...ROOTS, join(repo, "net", "shell"), join(repo, "net", "sdk"), ...dressing()].flatMap((dir) =>
-      existsSync(dir) ? walk(dir) : [],
-    ),
+    ...[...ROOTS, join(repo, "net", "shell"), ...dressing()].flatMap((dir) => (existsSync(dir) ? walk(dir) : [])),
     under(join(repo, "net", "system", "git"), "git"),
+    ...(list.some((one) => spells(one.page, "scene")) ? [PAGER] : []),
     ...figures.map((one) => one.file),
   ]);
 
@@ -559,8 +645,8 @@ const names = (text: string) => [
   ...[...text.matchAll(CALL)].flatMap((hit) => [...hit[1]!.matchAll(/"([a-z]+)"/g)].map((one) => one[1]!)),
 ];
 
-export function live(figures: Figure[] = roster()): string[] {
-  const used = new Set(shipped(figures).flatMap((file) => names(read(file))));
+export function live(figures: Figure[] = roster(), list: App[] = apps()): string[] {
+  const used = new Set(shipped(figures, list).flatMap((file) => names(read(file))));
   return UNITS.filter((unit) => used.has(unit));
 }
 
@@ -584,14 +670,14 @@ export function state(): State {
     if (row.figure && !known.has(row.figure))
       throw new Error(`site: ${row.route} wears the figure ${row.figure}, which no roster file draws`);
     if (!row.source) continue;
-    if (!existsSync(join(GIT.root, row.source)))
+    if (!existsSync(rawFile(row.source)))
       throw new Error(`site: ${row.route} reads ${row.source}, which does not exist`);
-    for (const name of named(read(join(GIT.root, row.source))))
+    for (const name of named(read(rawFile(row.source))))
       if (!known.has(name)) throw new Error(`site: ${row.source} shows the figure ${name}, which no roster file draws`);
   }
   if (!all.some((row) => row.meta.id === "missing"))
     throw new Error("site: no route root holds missing/, and its row draws every path that is no route");
-  const units = live(figures);
+  const units = live(figures, list);
   for (const unit of units)
     if (!existsSync(unitWasm(unit)))
       throw new Error(
@@ -599,7 +685,7 @@ export function state(): State {
       );
   const moves = JSON.parse(read(join(HOME, "redirects.json"))) as Record<string, { to: string; since: string }>;
   const kept = Object.fromEntries(Object.entries(moves).filter(([, row]) => seen.has(row.to.split("?")[0]!)));
-  const raw = tree(git.root);
+  const raw = [...tree(git.root), ...(HELD_OUT ? tree(RESEARCH!).map((path) => `research/${path}`) : [])].sort();
   tiles(list);
   const shown = savers(hosts(list), evaluate);
   const site = {
@@ -621,7 +707,8 @@ export function state(): State {
       ].map((key) => [key, SITE[key as keyof typeof SITE]]),
     ),
     root,
-    version: MANIFEST.version,
+    version: units.length ? version() : null,
+    research: Boolean(RESEARCH),
     units,
     savers: shown.list,
     desk: shown.desk,
@@ -631,6 +718,7 @@ export function state(): State {
     git: { slug: git.slug, branch: git.branch },
   };
   held = {
+    world: world(list),
     rows: all,
     site,
     figures,
@@ -639,6 +727,7 @@ export function state(): State {
     posts: blog,
     topics: research,
     raw,
+    widgets: widgets(list),
     dropped: Object.keys(moves).length - Object.keys(kept).length,
   };
   return held;
@@ -658,7 +747,7 @@ const appFiles = (list: App[]): [string, string][] =>
   list.flatMap((one): [string, string][] =>
     spells(one.page, "index")
       ? [[one.id, join(one.dir, one.page)]]
-      : spells(one.page, "scene")
+      : spells(one.page, "scene") || spells(one.page, "world")
         ? [[one.id, `app:${one.id}`]]
         : [],
   );
@@ -674,6 +763,25 @@ export const entry = (dir: string) =>
     `import { PAGE } from ${JSON.stringify(under(dir, "scene"))};`,
     `import { Widget } from ${JSON.stringify(under(dir, "widget"))};`,
     "export const { mount, unmount } = page(Widget, { seed: 0, ...PAGE.defaults }, PAGE);",
+  ].join("\n");
+
+const VIEWER = under(join(repo, "net", "sdk"), "view");
+
+export const viewer = (id: string) =>
+  [
+    `import { view } from ${JSON.stringify(VIEWER)};`,
+    `export const { mount, unmount } = view(${JSON.stringify(id)});`,
+  ].join("\n");
+
+const PLAYERS = join(repo, "net", "sim", "bots.ts");
+
+export const worlds = ({ config, files }: World) =>
+  [
+    ...files.map(([, file], i) => `import app${i} from ${JSON.stringify(file)};`),
+    `export const apps = [${files.map((_, i) => `app${i}`).join(", ")}];`,
+    `export const config = ${JSON.stringify(config)};`,
+    `import { round } from ${JSON.stringify(PLAYERS)};`,
+    "export const players = (table, who, at) => round(table, who, at, apps);",
   ].join("\n");
 
 export const own = (list: App[]) =>
@@ -700,13 +808,18 @@ export function modules(ready: Ready): Record<string, string> {
     "site:apps": `export const apps = ${thunks(appFiles(ready.apps))};\nexport const own = new Set(${JSON.stringify(own(ready.apps))});\nexport const lock = () => import(${JSON.stringify(LOCK)});`,
     "site:css": `export const css = ${JSON.stringify(ready.css)};`,
     "site:icons": icons(ready.apps),
+    "site:widgets": gadgets(ready.apps, ready.widgets),
     "site:frame": `export const frame = ${JSON.stringify(ready.frame)};`,
     "site:design": source(ready.design),
     "site:design/pulldown": pulldown(ready.design, ready.pulldown),
     ...sheets(ready.design, ready.sheets, ready.skin),
     "apps:scenes": `export const scenes = ${thunks(scenes(ready))};`,
+    "site:world": worlds(ready.world),
     ...Object.fromEntries(
       ready.apps.filter((one) => spells(one.page, "scene")).map((one) => [`app:${one.id}`, entry(one.dir)]),
+    ),
+    ...Object.fromEntries(
+      ready.apps.filter((one) => spells(one.page, "world")).map((one) => [`app:${one.id}`, viewer(one.id)]),
     ),
   };
 }
@@ -717,9 +830,9 @@ export const plugin = (get: () => Ready): BunPlugin => ({
     mrly.setup(build);
     build.onResolve({ filter: WASM }, ({ path }) => ({ path: unitWasm(WASM.exec(path)![1]!) }));
     build.onResolve({ filter: GLUE }, ({ path, importer }) => {
-      const unit = GLUE.exec(path)![1]!;
-      const copy = join(HOME, "wasm", unit, `mrly_${unit}_js.js`);
-      return importer.startsWith(join(CRATES, unit, "js")) && existsSync(copy) ? { path: copy } : undefined;
+      const name = GLUE.exec(path)![1]!;
+      const copy = join(HOME, "wasm", name, `mrly_${name}_js.js`);
+      return importer.startsWith(unit(name)) && existsSync(copy) ? { path: copy } : undefined;
     });
     build.onResolve({ filter: /^\// }, ({ path }) => (existsSync(path) ? undefined : { path, external: true }));
     build.onLoad({ filter: /\/apps\/shared\/units\/load\.ts$/ }, () => ({
@@ -915,15 +1028,16 @@ export function globals(ready: State): Out[] {
         new Set(ready.raw),
         (ready.site.launchpad as Pad).sections,
         ready.topics,
+        RESEARCH ? (HELD_OUT ? "research" : rel(RESEARCH)) : "",
       ),
     },
-    { path: "research.json", bytes: `${JSON.stringify({ topics: ready.topics })}\n` },
+    ...(RESEARCH ? [{ path: "research.json", bytes: `${JSON.stringify({ topics: ready.topics })}\n` }] : []),
     ...sitemaps([
       ...shown.map((row) => ({ route: row.route, date: row.date })),
       ...ready.raw.map((path) => ({ route: `/raw/${path}`, date: null })),
     ]),
     { path: "robots.txt", bytes: robots() },
-    { path: TREE, bytes: JSON.stringify(forest(git, ready.raw)), type: "application/json" },
+    { path: TREE, bytes: JSON.stringify(forest(git, ready.raw, rawFile)), type: "application/json" },
     { path: "redirects.json", bytes: `${JSON.stringify(ready.site.redirects, null, 2)}\n` },
   ];
 }
@@ -935,7 +1049,7 @@ export const typed = (path: string, bytes: Uint8Array) =>
 
 function copies(ready: State): Out[] {
   const raw = ready.raw.map((path) => {
-    const bytes = readFileSync(join(GIT.root, path));
+    const bytes = readFileSync(rawFile(path));
     return { path: `raw/${path}`, bytes, type: typed(path, bytes) };
   });
   const pub = walk(join(HOME, "public")).map((file) => ({
@@ -1063,6 +1177,6 @@ if (import.meta.main) {
   const done = await build();
   const size = done.files.reduce((sum, one) => sum + statSync(join(done.out, one.path)).size, 0);
   console.log(
-    `site: design ${done.design}, ${done.rows.length} rows, ${done.raw} raw files, ${done.files.length} files (${(size / 1e6).toFixed(1)} MB) in ${done.out.startsWith(`${repo}/`) ? relative(repo, done.out) : done.out}, wasm ${done.units.join(" ")}, ${done.dropped} redirects dropped for a target that is no route`,
+    `site: design ${done.design}, ${done.rows.length} rows, ${done.raw} raw files, ${done.files.length} files (${(size / 1e6).toFixed(1)} MB) in ${done.out.startsWith(`${repo}/`) ? relative(repo, done.out) : done.out}, wasm ${done.units.join(" ") || "none"}, ${done.dropped} redirects dropped for a target that is no route`,
   );
 }

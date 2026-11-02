@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
 import * as math from "@mrlyprod/math";
 import type { TypedArray } from "three";
-import type { Three } from "../../net/sdk/hooks.ts";
 import { rng } from "../../net/sdk/rand.ts";
 import type { Patch } from "../../net/sdk/spec.ts";
 import { defaults } from "../../net/sdk/spec.ts";
+import type { Three } from "../shared/three/three.ts";
 import type { Told } from "./scene.ts";
 import { make, name, SPEC } from "./scene.ts";
 import { angle, LOOKS, ORBIT, room, span, stand } from "./stage.ts";

@@ -1,7 +1,7 @@
 import type { Row } from "../../sdk/rows.ts";
 import { Lede } from "../../shell/parts.tsx";
 import { Glass, Icons, Theme } from "./look.tsx";
-import { Controls, Designs, Library } from "./parts.tsx";
+import { Controls, Library } from "./parts.tsx";
 
 /* TYPES */
 
@@ -69,7 +69,6 @@ const SECTIONS = [
   { id: "icons", title: "Icon styles", body: <Icons /> },
   { id: "controls", title: "Controls", body: <Controls /> },
   { id: "library", title: "Library", body: <Library /> },
-  { id: "designs", title: "Design picker", body: <Designs /> },
   { id: "type", title: "Type and shape", body: <Scale /> },
 ];
 

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useReroll } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
@@ -10,7 +9,7 @@ import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Patch, Seeded, Value } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Bar, Doors, Facts, FactsOf, Kind, Reading } from "./engine.ts";
-import { CUT, FEATURED, holds, inks, place, READINGS, said, stepped, thumb, turned } from "./engine.ts";
+import { CUT, FEATURED, holds, inks, place, READINGS, said, stepped, thumb } from "./engine.ts";
 import type { Handled, Hands, Stage } from "./scene.ts";
 import { file, make } from "./scene.ts";
 
@@ -180,7 +179,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   useEffect(() => {
     if (timer.current && Number(value.power) !== wrote.current) play(false);
   }, [value.power]);
-  useReroll(value.seed, () => hooks.current(stepped(now.current, 1)));
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units, onFacts: setFacts }),
     [units],
@@ -190,8 +188,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
     setFacts(handle?.facts() ?? null);
     if (!handle) return onReady?.(null);
     const hands: Hands = {
-      deeper: (by) => hooks.current(stepped(now.current, by)),
-      turn: (by) => hooks.current(turned(now.current, by)),
       toggle: () => play(!timer.current),
       playing: () => Boolean(timer.current),
     };

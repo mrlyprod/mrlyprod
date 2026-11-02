@@ -23,9 +23,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
   const live = useRef<Handle<Sfx> | null>(null);
   const loud = useRef(0);
   const now = useRef(value);
-  const tell = useRef(onChange);
   now.current = value;
-  tell.current = onChange;
   const working = useRef(false);
   const [sound, setSound] = useState(0);
   const scene = useCallback(
@@ -62,13 +60,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
     live.current?.cue();
   };
   const mute = () => hear(loud.current ? 0 : 1);
-  const step = (by: number) => {
-    const at = NAMES.indexOf(now.current.effect);
-    tell.current?.({ effect: NAMES[(at + by + NAMES.length) % NAMES.length] });
-  };
   const ready = (handle: Handle<Sfx> | null) => {
     live.current = handle;
-    onReady?.(handle && { ...handle, go, mute, step });
+    onReady?.(handle && { ...handle, go, mute });
   };
   const save = async () => {
     if (working.current) return;

@@ -5,23 +5,22 @@ import type { Action } from "../../net/sdk/controls.tsx";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useReroll, useUnit } from "../../net/sdk/hooks.ts";
+import { useUnit } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Units } from "../../net/sdk/spec.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Entry, Num, Run, Setting } from "./engine.ts";
-import { factors, formula, holds, POLYS, REACH, SPIRALS, shuffle, step } from "./engine.ts";
-import type { Handled, Knobs, Spot, Told, Ulam } from "./scene.ts";
+import { factors, formula, holds, POLYS, SPIRALS } from "./engine.ts";
+import type { Knobs, Spot, Told, Ulam } from "./scene.ts";
 import { make, named, sketch } from "./scene.ts";
 
 /* TYPES */
 
-type Props = Partial<WidgetProps<Units, Handled>> &
-  Pick<WidgetProps<Units, Handled>, "value" | "onChange"> & { value: Knobs & { seed: number }; unit?: Num | null };
+type Props = Partial<WidgetProps<Units, Ulam>> &
+  Pick<WidgetProps<Units, Ulam>, "value" | "onChange"> & { value: Knobs & { seed: number }; unit?: Num | null };
 
 const ART = 112;
 
@@ -82,7 +81,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const change = useRef(onChange);
   change.current = onChange;
   const tick = useTheme();
-  useReroll(value.seed, (next) => unit && change.current(shuffle(unit, rng(next))));
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
       make(canvas, view, { ...opts, num: unit, onFacts: setFacts }),
@@ -91,12 +89,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const ready = (handle: Handle<Ulam> | null) => {
     live.current = handle;
     setFacts(handle?.facts ?? null);
-    const line = (by: number) => {
-      const { a, c } = now.current;
-      const next = a > 0 ? step(unit!, c, by, REACH) : c;
-      if (next !== c) change.current({ c: next });
-    };
-    onReady?.(handle && { ...handle, line });
+    onReady?.(handle);
   };
   const tap = (e: MouseEvent<HTMLCanvasElement>) => {
     const box = e.currentTarget.getBoundingClientRect();

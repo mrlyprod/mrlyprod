@@ -1,7 +1,7 @@
 import { rgb } from "../../net/sdk/color.ts";
 import type { Mathy, Page } from "../../net/sdk/page.tsx";
 import type { Rng } from "../../net/sdk/rand.ts";
-import { pick } from "../../net/sdk/rand.ts";
+import { pick, rng } from "../../net/sdk/rand.ts";
 import type { Opts, Scene, View } from "../../net/sdk/run.ts";
 import type { Patch, Raw, Spec, Value } from "../../net/sdk/spec.ts";
 import { defaults, tidy } from "../../net/sdk/spec.ts";
@@ -10,6 +10,7 @@ import type { Disc, Plan, Src } from "../shared/spin/engine.ts";
 import {
   BEAT,
   cells,
+  drawn,
   edge,
   key,
   LIMIT,
@@ -48,7 +49,7 @@ export type Given = Opts & {
   onFacts?: (facts: Facts) => void;
 };
 
-export type Spun = Scene & { speed?: (by: number) => void; needle?: (rpm: number) => void };
+export type Spun = Scene;
 
 type Saver = { id: string; title: string; pick: (rand: Rng) => Patch; still?: number };
 
@@ -109,8 +110,14 @@ export const PAGE = {
   ],
   actions: {
     spin: (scene) => scene.toggle?.(),
-    speed: (scene, e) => scene.speed?.(SPEED[e.key!]),
-    needle: (scene, e) => scene.needle?.(NEEDLES[Number(e.key) - 1]),
+  },
+  acts: {
+    speed: (value, key) => ({ rpm: Number(value.rpm) + SPEED[key] }),
+    needle: (_value, key) => ({ rpm: NEEDLES[Number(key) - 1] }),
+  },
+  reroll: (value, seed, units) => {
+    const rand = rng(seed);
+    return { ...drawn(units!.math, read(value), rand), rpm: Math.floor(rand() * (RPM + 1)) };
   },
 } satisfies Page<Loaded<"math">, Spun>;
 

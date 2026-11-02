@@ -3,7 +3,6 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-[ -n "${CARGO_LOCK:-}" ] || exec "$HERE/cargo.sh" "$HERE/check.sh" "$@"
 cd "$HERE/.."
 
 DATA_DIR="data/scripts/check"
@@ -25,40 +24,20 @@ step() {
 
 leak() {
   local hits code=0
-  hits="$( { echo "$LEAKS"; [ ! -f .leak ] || sed '/^$/d' .leak; } | git grep --untracked -nIE -f - -- ':!scripts/check.sh' ':!.leak')" || code=$?
+  [ -n "${MRLY_LEAK:-}" ] && [ -f "$MRLY_LEAK" ] || { echo "leak: no list in MRLY_LEAK, the push tool runs it"; return 0; }
+  hits="$( { echo "$LEAKS"; sed '/^$/d' "$MRLY_LEAK"; } | git grep --untracked -nIE -f - -- ':!scripts/check.sh')" || code=$?
   [ "$code" -le 1 ] || { echo "git grep failed with $code" >&2; return 1; }
   [ -z "$hits" ] || { echo "$hits"; echo "private paths or token shapes in the tree" >&2; return 1; }
 }
 
-leaves() { for toml in crates/*/js/Cargo.toml; do basename "$(dirname "$(dirname "$toml")")"; done; }
-leaf_js() { for leaf in $(leaves); do (cd "crates/$leaf/js" && bun test) || return 1; done; }
-leaf_node() { for leaf in $(leaves); do node "crates/$leaf/js/node.smoke.js" || return 1; done; }
-leaf_py() { for leaf in $(leaves); do uv run --no-project --with pytest --with "./crates/$leaf/py" pytest "crates/$leaf/py" || return 1; done; }
-leaf_cli() { cargo test $(printf -- '-p mrly-%s-cli ' $(leaves)); }
-
-RUFF="uvx ruff@0.17.2"
-lint_py() { $RUFF format --check . && $RUFF check .; }
-
 mkdir -p "$DATA_DIR"
 total=$SECONDS
 step leak leak
-step web-install bun install --frozen-lockfile
-step biome bun run lint
-step ruff lint_py
-step fmt cargo fmt --all --check
-step bridge scripts/bridge.sh check
-step clippy cargo clippy --workspace -- -D warnings
-step test cargo test
-step ignored cargo test -p mrly-math -- --ignored
-step doc env RUSTDOCFLAGS=-Dwarnings cargo doc --no-deps --workspace
-step wasm scripts/wasm.sh
-step leaf-cli leaf_cli
-step leaf-js leaf_js
-step leaf-node leaf_node
-step leaf-py leaf_py
-step web-wasm bun run wasm --no-build
-step web-types bun run types
-step web-test bun run test
-step web-build bun run build
-step web-check bun run check
+step install bun install --frozen-lockfile
+step lint bun run lint
+step types bun run types
+step wasm bun run wasm --copy
+step test bun run test
+step build bun run build
+step content bun run content
 echo "check passed in $((SECONDS - total))s"

@@ -2,13 +2,11 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
 import type { Readout } from "../../net/sdk/hooks.ts";
-import { useLatest, useReroll, useStatus, useUnit } from "../../net/sdk/hooks.ts";
+import { useLatest, useStatus, useUnit } from "../../net/sdk/hooks.ts";
 import type { Paint } from "../../net/sdk/library.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import type { Rng } from "../../net/sdk/rand.ts";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Scene as Made, Opts, View } from "../../net/sdk/run.ts";
 import type { Patch } from "../../net/sdk/spec.ts";
 import { useTouch } from "../../net/sdk/touch.ts";
@@ -16,7 +14,7 @@ import type { Mrly } from "../shared/designs/engine.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import { fixed } from "../shared/moire/parts.tsx";
 import { stamp } from "../shared/moire/sheet.ts";
-import { cutter, DEEP, LEAST, MOST, STACKS, swatch, TILE } from "./engine.ts";
+import { cutter, DEEP, STACKS, swatch, TILE } from "./engine.ts";
 import type { Facts, Star } from "./scene.ts";
 import { make } from "./scene.ts";
 
@@ -27,8 +25,6 @@ export type ShelvesProps = { value: Star; onChange: (patch: Patch) => void; math
 type Props = WidgetProps<Mathy, Made> & { value: Star; unit?: Mrly | null };
 
 const sign = (n: number) => (n > 0 ? `+${n}` : String(n));
-
-export const drawn = (rand: Rng) => ({ layers: LEAST + 2 * Math.floor(rand() * ((MOST - LEAST) / 2 + 1)) });
 
 export function rows(f: Facts | null): Readout[] {
   if (!f) return [];
@@ -115,7 +111,6 @@ export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
     onReady?.(scene);
   };
   const touch = useTouch(handle, change);
-  useReroll(value.seed, (seed) => change.current(drawn(rng(seed))));
   useStatus(onStatus, rows(facts));
   return (
     <>

@@ -122,7 +122,7 @@ export function resolve(math: Mrly, base: number, text: Scalar | null | undefine
 const loops = (math: Mrly, code: Code, base: number, level: number) =>
   math.arcs.draw(String(code), base, level).loops > 0;
 
-export function looping(math: Mrly, base: number, level: number, rand: Rng = Math.random): string {
+export function looping(math: Mrly, base: number, level: number, rand: Rng): string {
   const count = total(math, DIM, base);
   let code = 1;
   for (let i = 0; i < TRIES; i++) {

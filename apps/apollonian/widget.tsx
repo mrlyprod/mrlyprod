@@ -3,21 +3,19 @@ import { useCallback, useEffect, useRef } from "react";
 import { paints } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
 import type { Had, Readout } from "../../net/sdk/hooks.ts";
-import { useReroll } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Stack } from "./engine.ts";
-import { quadruple, ROOTS, roll, said, step } from "./engine.ts";
-import type { Apollonian, Handled, Knobs, Told } from "./scene.ts";
+import { quadruple, ROOTS, said } from "./engine.ts";
+import type { Apollonian, Knobs, Told } from "./scene.ts";
 import { file, make, portrait } from "./scene.ts";
 
 /* TYPES */
 
-type Props = WidgetProps<Had<"num">, Handled> & { value: Knobs & { seed: number } };
+type Props = WidgetProps<Had<"num">, Apollonian> & { value: Knobs & { seed: number } };
 
 type Hooks = Partial<Pick<Props, "onChange" | "onStatus">>;
 
@@ -72,20 +70,15 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const hooks = useRef<Hooks>({});
   hooks.current = { onChange, onStatus };
   const tick = useTheme();
-  useReroll(value.seed, (next) => hooks.current.onChange?.(roll(rng(next))));
   const tell = useCallback((facts: Told) => hooks.current.onStatus?.(rows(facts)), []);
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, num: unit, onTell: tell }),
     [unit, tell],
   );
-  const deeper = (by: number) => {
-    const cap = step(now.current.cap, by);
-    if (cap !== now.current.cap) hooks.current.onChange?.({ cap });
-  };
   const ready = (handle: Handle<Apollonian> | null) => {
     live.current = handle;
     if (!handle) hooks.current.onStatus?.([]);
-    onReady?.(handle && { ...handle, deeper });
+    onReady?.(handle);
   };
   const down = (e: PointerEvent<HTMLCanvasElement>) => {
     if (e.button) return;

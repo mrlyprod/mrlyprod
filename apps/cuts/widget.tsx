@@ -4,23 +4,20 @@ import { paints } from "../../net/sdk/color.ts";
 import { Group, Slider } from "../../net/sdk/controls.tsx";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
-import { useReroll, useUnit } from "../../net/sdk/hooks.ts";
+import { useUnit } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, Mathy, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import type { Seeded } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
-import { roll } from "../shared/designs/engine.ts";
-import { read, useTheme } from "../shared/designs/pick.tsx";
-import { DIM } from "../shared/three/engine.ts";
-import type { Cuts, Handled, Hands, Info } from "./scene.ts";
+import { useTheme } from "../shared/designs/pick.tsx";
+import type { Cuts, Info } from "./scene.ts";
 import { make, name, near, plot, shelf, thumb } from "./scene.ts";
 
 /* TYPES */
 
-type Props = WidgetProps<Mathy, Handled> & { value: Seeded; unit?: Mrly | null };
+type Props = WidgetProps<Mathy, Cuts> & { value: Seeded; unit?: Mrly | null };
 
 type Live = { seek?: (x: number, y: number) => number | null; svg?: () => Promise<string> };
 
@@ -30,11 +27,9 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: P
   const now = useRef(value);
   const held = useRef(false);
   const [info, setInfo] = useState<Info | null>(null);
-  const seen = useRef<Info | null>(null);
   const plane = useRef({ key: `${value.code} ${value.base} ${value.level}`, height: String(value.height ?? "") });
   const tick = useTheme();
   now.current = value;
-  seen.current = info;
   const tell = useCallback((next: Info) => setInfo(next), []);
   useEffect(() => onStatus?.(info?.rows ?? []), [info]);
   useEffect(() => {
@@ -43,23 +38,11 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: P
     plane.current = next;
     if (was.key !== next.key && was.height === next.height && next.height !== "") onChange({ height: "" });
   }, [value.code, value.base, value.level, value.height]);
-  useReroll(
-    value.seed,
-    (seed) => math && onChange({ code: roll(math, DIM, read(now.current).base, rng(seed)), height: "" }),
-  );
   const cut = info?.cut;
   const at = info?.heights?.[0];
   const ready = (handle: Handle<Cuts> | null) => {
     live.current = handle;
-    const hands: Hands = {
-      slide: (by) => {
-        const got = seen.current;
-        if (!got || got.cut.empty) return;
-        onChange({ height: Math.min(got.cut.high, Math.max(got.cut.low, got.heights[0] + by)), both: 0 });
-      },
-      deeper: (by) => onChange({ level: Number(now.current.level) + by }),
-    };
-    onReady?.(handle && { ...handle, ...hands });
+    onReady?.(handle);
   };
   const spot = (e: PointerEvent<HTMLCanvasElement>) => {
     const canvas = e.currentTarget;

@@ -1,5 +1,5 @@
 import type { Site } from "site:routes";
-import type { ChangeEvent, MouseEvent as Clicked, ComponentType, KeyboardEvent as Pressed } from "react";
+import type { ChangeEvent, ComponentType, KeyboardEvent as Pressed } from "react";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Icon, Menu } from "../../sdk/controls.tsx";
@@ -18,10 +18,9 @@ import About, { FIND as about } from "./about.tsx";
 import Accessibility, { FIND as accessibility } from "./accessibility.tsx";
 import Appearance, { FIND as appearance } from "./appearance.tsx";
 import Desktop, { FIND as desktop } from "./desktop.tsx";
-import Glass, { FIND as glass } from "./glass.tsx";
 import Privacy, { FIND as privacy } from "./privacy.tsx";
 import Screensaver, { FIND as screensaver } from "./screensaver.tsx";
-import { useForm } from "./use.ts";
+import { Glyph } from "./ui.tsx";
 
 /* TYPES */
 
@@ -31,7 +30,7 @@ type Live = { open: (to: string, how?: How) => void; pop: () => void };
 
 type Page = { row: Titled; site: Site };
 
-type RowProps = { one: Pane; on: boolean; labels: string[]; phone: boolean };
+type RowProps = { one: Pane; on: boolean; labels: string[] };
 
 type OfferProps = { code: string; drop: () => void };
 
@@ -48,7 +47,6 @@ const SHOWN = 3;
 
 const VIEWS: Partial<Record<string, ComponentType<{ site: Site }>>> = {
   appearance: Appearance,
-  glass: Glass,
   desktop: Desktop,
   screensaver: Screensaver,
   accessibility: Accessibility,
@@ -57,7 +55,6 @@ const VIEWS: Partial<Record<string, ComponentType<{ site: Site }>>> = {
 };
 const FINDS: Partial<Record<string, string[]>> = {
   appearance,
-  glass,
   desktop,
   screensaver,
   accessibility,
@@ -93,7 +90,6 @@ function refocus() {
 
 const HUES: Partial<Record<string, string>> = {
   appearance: "purple",
-  glass: "cyan",
   desktop: "indigo",
   screensaver: "pink",
   accessibility: "blue",
@@ -102,26 +98,14 @@ const HUES: Partial<Record<string, string>> = {
 };
 
 function Square({ art, hue }: Pick<Pane, "art"> & { hue: string }) {
-  const rows = art.split(" ");
   return (
     <span className="symbol" style={{ "--hue": `var(--${hue})` } as Vars} aria-hidden="true">
-      <svg
-        className="glyphs"
-        viewBox={`0 0 ${rows[0].length} ${rows.length}`}
-        style={{ "--rows": rows.length, "--cols": rows[0].length } as Vars}
-        aria-hidden="true"
-      >
-        {rows
-          .flatMap((line, y) => [...line].flatMap((c, x) => (c === "#" ? [[x, y]] : [])))
-          .map(([x, y]) => (
-            <rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" />
-          ))}
-      </svg>
+      <Glyph art={art} />
     </span>
   );
 }
 
-function Row({ one, on, labels, phone }: RowProps) {
+function Row({ one, on, labels }: RowProps) {
   return (
     <li>
       <a href={one.href} aria-current={on ? "page" : undefined}>
@@ -130,7 +114,6 @@ function Row({ one, on, labels, phone }: RowProps) {
           <span className="name">{one.title}</span>
           {labels.length > 0 && <span className="hint">{labels.join(", ")}</span>}
         </span>
-        {phone && <Icon name="chevron_right" size={16} />}
       </a>
     </li>
   );
@@ -185,7 +168,6 @@ function Offer({ code, drop }: OfferProps) {
 /* SETTINGS */
 
 function Settings({ row, site, start }: SettingsProps) {
-  const phone = useForm() === "phone";
   const [here, setHere] = useState(() => spot(start.pathname) + start.search);
   const [query, setQuery] = useState("");
   const [said, setSaid] = useState("");
@@ -200,7 +182,7 @@ function Settings({ row, site, start }: SettingsProps) {
   const path = cut < 0 ? here : here.slice(0, cut);
   const code = cut < 0 ? null : new URLSearchParams(here.slice(cut)).get("apply");
   const id = path.slice(ROOT.length, -1);
-  const shown = id || (phone ? "" : FIRST);
+  const shown = id || FIRST;
   const View = VIEWS[shown];
   const words = terms(query);
   const hits = words.length ? rank(query, ITEMS) : ITEMS;
@@ -218,7 +200,7 @@ function Settings({ row, site, start }: SettingsProps) {
     if (how === "push") {
       history.replaceState({ ...state(), y: Math.round(main()?.scrollTop ?? 0) }, "");
       const was = state();
-      history.pushState({ ...was, y: 0, depth: (was.depth ?? 0) + 1, up: path === ROOT }, "", href);
+      history.pushState({ ...was, y: 0, depth: (was.depth ?? 0) + 1 }, "", href);
     } else history.replaceState(state(), "", href);
     flushSync(() => setHere(href));
     roll(0);
@@ -343,76 +325,60 @@ function Settings({ row, site, start }: SettingsProps) {
     else links[Math.min(to, links.length - 1)].focus();
   };
 
-  const back = (e: Clicked<HTMLAnchorElement>) => {
-    if (!state().up) return;
-    e.preventDefault();
-    history.back();
-  };
-
-  const side = !phone || !id;
   const pane = View !== undefined;
   const offer = code !== null && <Offer key={code} code={code} drop={drop} />;
 
   return (
-    <div className={side && pane ? "settings two" : "settings"} ref={box}>
-      {side && (
-        <div className="side">
-          {phone && <h1>{row.title}</h1>}
-          {!pane && offer}
-          <div className="top">
-            <form role="search" className="find" onSubmit={(e) => e.preventDefault()}>
-              <Icon name="search" size={16} />
-              <input
-                ref={field}
-                type="search"
-                value={query}
-                placeholder="Search"
-                aria-label="Search settings"
-                autoComplete="off"
-                spellCheck={false}
-                enterKeyHint="go"
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={press}
-              />
-            </form>
-            <Menu
-              className="icon"
-              aria-label="More"
-              rows={[
-                ["Copy settings link", copy, "link"],
-                ["Export settings", keep, "download"],
-                ["Import settings…", () => file.current?.click()],
-              ]}
-            >
-              <Icon name="more_horiz" />
-            </Menu>
-            <input ref={file} type="file" accept="application/json,.json" hidden onChange={load} />
-            <p className="said" role="status">
-              {said}
-            </p>
-          </div>
-          <nav aria-label="Settings">
-            {hits.length ? (
-              <ul className="list" ref={list} onKeyDown={walk}>
-                {hits.map((one) => (
-                  <Row key={one.id} one={one} on={one.id === shown} labels={found(one)} phone={phone} />
-                ))}
-              </ul>
-            ) : (
-              <p className="none">No results</p>
-            )}
-          </nav>
+    <div className={pane ? "settings two" : "settings"} ref={box}>
+      <div className="side">
+        {!pane && offer}
+        <div className="top">
+          <form role="search" className="find" onSubmit={(e) => e.preventDefault()}>
+            <Icon name="search" size={16} />
+            <input
+              ref={field}
+              type="search"
+              value={query}
+              placeholder="Search"
+              aria-label="Search settings"
+              autoComplete="off"
+              spellCheck={false}
+              enterKeyHint="go"
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={press}
+            />
+          </form>
+          <Menu
+            className="icon"
+            aria-label="More"
+            rows={[
+              ["Copy settings link", copy, "link"],
+              ["Export settings", keep, "download"],
+              ["Import settings…", () => file.current?.click()],
+            ]}
+          >
+            <Icon name="more_horiz" />
+          </Menu>
+          <input ref={file} type="file" accept="application/json,.json" hidden onChange={load} />
+          <p className="said" role="status">
+            {said}
+          </p>
         </div>
-      )}
+        <nav aria-label="Settings">
+          {hits.length ? (
+            <ul className="list" ref={list} onKeyDown={walk}>
+              {hits.map((one) => (
+                <Row key={one.id} one={one} on={one.id === shown} labels={found(one)} />
+              ))}
+            </ul>
+          ) : (
+            <p className="none">No results</p>
+          )}
+        </nav>
+      </div>
       {pane && (
         <div className="detail">
           {offer}
-          {phone && (
-            <a className="back" href={ROOT} onClick={back}>
-              <Icon name="chevron_right" size={20} />
-              {row.title}
-            </a>
-          )}
           <View key={shown} site={site} />
         </div>
       )}

@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { REPO } from "./home.ts";
+import { REPO, SIBLINGS } from "./home.ts";
 
 /* TYPES */
 
@@ -32,7 +32,7 @@ export type Library = { shelves: number; per_cell: number; rows: Row[] };
 /* PATHS */
 
 const repo = REPO;
-const FROM = join(repo, "data", "research", "automata", "lab", "rs", "encyclopedia", "library.json");
+const FROM = join(SIBLINGS, "research", "data", "automata", "lab", "rs", "encyclopedia", "library.json");
 const TO = join(repo, "apps", "life", "library.gen.json");
 const PER_CELL = 4;
 

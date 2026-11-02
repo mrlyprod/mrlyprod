@@ -1,9 +1,0 @@
-[package]
-name = "circle-crop"
-edition = "2021"
-
-[dependencies]
-mrly-core = { path = "../../../../../crates/core" }
-mrly-math = { path = "../../../../../crates/math" }
-
-[workspace]

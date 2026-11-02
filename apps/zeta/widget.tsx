@@ -4,14 +4,14 @@ import { paints } from "../../net/sdk/color.ts";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
 import type { Had, Readout } from "../../net/sdk/hooks.ts";
-import { useReroll, useUnit } from "../../net/sdk/hooks.ts";
+import { useUnit } from "../../net/sdk/hooks.ts";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
 import type { Opts, View } from "../../net/sdk/run.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Num, Setting } from "./engine.ts";
-import { REACH, roll, shelves, study, ZEROS } from "./engine.ts";
+import { REACH, shelves, study, ZEROS } from "./engine.ts";
 import type { Knobs, Told, Zeta } from "./scene.ts";
 import { inked, make, PAGE, sketch } from "./scene.ts";
 
@@ -70,7 +70,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   hooks.current = { onChange, onStatus };
   const grab = useRef<Grab | null>(null);
   const tick = useTheme();
-  useReroll(value.seed, (next) => hooks.current.onChange?.(roll(next)));
   const tell = useCallback((said: Told) => {
     if (said.t !== now.current.t) hooks.current.onChange?.({ t: said.t });
     hooks.current.onStatus?.(rows(now.current.view, said));

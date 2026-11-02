@@ -4,18 +4,16 @@ import { paints } from "../../net/sdk/color.ts";
 import { Fold } from "../../net/sdk/controls.tsx";
 import { text } from "../../net/sdk/export.ts";
 import { Bar } from "../../net/sdk/frame.tsx";
-import { useReroll } from "../../net/sdk/hooks.ts";
 import { gist, Knob } from "../../net/sdk/knobs.tsx";
 import { Art, Item, Library, Shelf } from "../../net/sdk/library.tsx";
 import type { Handle, WidgetProps } from "../../net/sdk/page.tsx";
 import { Scene } from "../../net/sdk/page.tsx";
-import { rng } from "../../net/sdk/rand.ts";
 import type { Fix, Opts, View } from "../../net/sdk/run.ts";
 import type { Patch, Units, Value } from "../../net/sdk/spec.ts";
 import type { Mrly } from "../shared/designs/engine.ts";
 import { useTheme } from "../shared/designs/pick.tsx";
 import type { Glance, Roll } from "./engine.ts";
-import { fit, glance, resolve, roll, TRACKS } from "./engine.ts";
+import { fit, glance, resolve, TRACKS } from "./engine.ts";
 import type { Played, Spirograph, Stat } from "./scene.ts";
 import { file, make, parked, SPEC, scrub, status } from "./scene.ts";
 
@@ -155,7 +153,6 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
     (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math: unit, tell }),
     [unit, tell],
   );
-  useReroll(value.seed, (seed) => unit && change.current({ code: roll(unit, now.current.base, rng(seed)) }));
   const ready = (handle: Handle<Played> | null) => {
     live.current = handle;
     const fix = (next?: Fix | null) => {

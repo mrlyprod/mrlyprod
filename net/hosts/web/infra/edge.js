@@ -1,3 +1,4 @@
+/*LOCK*/
 var MOVED = /*MOVED*/{};
 
 function decide(uri) {
@@ -39,12 +40,22 @@ function search(query) {
     return parts.length ? '?' + parts.join('&') : '';
 }
 
-function handler(event) {
+async function handler(event) {
     var request = event.request;
     var host = request.headers.host ? request.headers.host.value : '';
     var tail = search(request.querystring);
     if (host.indexOf('www.') === 0) {
         return redirect('https://' + host.substring(4) + request.uri + tail);
+    }
+    if (typeof gate === 'function') {
+        var shut = await guard(request);
+        if (shut.status) {
+            return respond(shut);
+        }
+        if (!shut.pass) {
+            request.uri = shut.uri;
+            return request;
+        }
     }
     var step = decide(request.uri);
     if (step.redirect) {
@@ -52,6 +63,41 @@ function handler(event) {
     }
     request.uri = step.uri;
     return request;
+}
+
+async function guard(request) {
+    var kit = { hmac: hmac, sha256: sha256 };
+    var names = needs(request.uri);
+    for (var i = 0; i < names.length; i++) {
+        try {
+            kit[names[i]] = await kvs.get(names[i]);
+        } catch (e) {
+            kit[names[i]] = '';
+        }
+    }
+    var cookie = request.cookies && request.cookies[COOKIE] ? request.cookies[COOKIE].value : '';
+    var said = request.headers[HEADER] ? request.headers[HEADER].value : '';
+    var ask = { uri: request.uri, cookie: cookie, password: said, now: Math.floor(Date.now() / 1000) };
+    return gate(ask, kit);
+}
+
+function hmac(key, text) {
+    return crypto.createHmac('sha256', key).update(text).digest('hex');
+}
+
+function sha256(text) {
+    return crypto.createHash('sha256').update(text).digest('hex');
+}
+
+function respond(shut) {
+    var out = { statusCode: shut.status, headers: { 'cache-control': { value: 'no-store' } }, cookies: {} };
+    if (shut.location) {
+        out.headers.location = { value: shut.location };
+    }
+    if (shut.cookie) {
+        out.cookies[COOKIE] = shut.cookie;
+    }
+    return out;
 }
 
 function redirect(location) {

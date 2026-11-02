@@ -2,7 +2,7 @@ import { veil } from "../../net/sdk/color.ts";
 import type { Readout, Ready } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
 import type { Opts, View } from "../../net/sdk/run.ts";
-import type { Option, Spec, Units } from "../../net/sdk/spec.ts";
+import type { Option, Spec, Units, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
 import type { Score } from "../shared/audio/audio.ts";
 import { render } from "../shared/audio/audio.ts";
@@ -28,7 +28,7 @@ export type Given = Opts & {
 
 export type Sfx = ReturnType<typeof make>;
 
-export type Hands = { go: () => void; mute: () => void; step: (by: number) => void };
+export type Hands = { go: () => void; mute: () => void };
 
 export type Held = Sfx & Hands;
 
@@ -37,6 +37,10 @@ const HIDE = () => false;
 export const named = (word: string) => word[0].toUpperCase() + word.slice(1);
 
 export const NAMES = Object.keys(EFFECTS);
+
+const shifted = (value: Value, by: number) => ({
+  effect: NAMES[(NAMES.indexOf(String(value.effect)) + by + NAMES.length) % NAMES.length],
+});
 
 const effect = (name: string) => {
   const one = EFFECTS[name];
@@ -71,10 +75,9 @@ export const PAGE = {
   ],
   actions: {
     go: (scene) => scene.go?.(),
-    prev: (scene) => scene.step?.(-1),
-    next: (scene) => scene.step?.(1),
     mute: (scene) => scene.mute?.(),
   },
+  acts: { prev: (value) => shifted(value, -1), next: (value) => shifted(value, 1) },
 } satisfies Page<Ready & Units, Held>;
 
 export const SHAPE: (keyof Shape)[] = ["pitch", "length", "bright", "drive", "space"];
