@@ -94,6 +94,12 @@ test("ink throws on a string that is no hex color", () => {
   expect(() => ink({ ...bytes, fg: "abc" })).toThrow("fg is not a color");
 });
 
+test("ink reads #rgb and #rgba as their long forms", () => {
+  const bytes = swatches((color) => [...color]);
+  expect(ink({ ...bytes, fg: "#000" }).fg).toEqual([0, 0, 0, 255]);
+  expect(ink({ ...bytes, fg: "#f80c" }).fg).toEqual([255, 136, 0, 204]);
+});
+
 test("ramp ends are its end stops", () => {
   const ramp = theme.Ramp.heat();
   expect(ramp.at(0)).toEqual(theme.ground);

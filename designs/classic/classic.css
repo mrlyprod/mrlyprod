@@ -2,6 +2,49 @@
 
 :root:has(.classic) {
   color-scheme: light dark;
+  --t1: 10px;
+  --t2: 11px;
+  --t3: 11px;
+  --t4: 12px;
+  --t5: 14px;
+  --t6: 16px;
+  --t7: 20px;
+  --lh1: 1.2;
+  --lh2: 1.35;
+  --lh3: 1.5;
+  --text: var(--t3);
+  --read-text: var(--t5);
+  --s1: 2px;
+  --s2: 4px;
+  --s3: 8px;
+  --s4: 12px;
+  --s5: 16px;
+  --s6: 24px;
+  --s7: 32px;
+  --s8: 48px;
+  --r-window: 0;
+  --r-panel: 0;
+  --r-control: 0;
+  --r-inset: 0;
+  --round: 0;
+  --hair: 1px solid var(--sh);
+  --ring: 1px dotted var(--fg);
+  --rim: none;
+  --lift: none;
+  --float: none;
+  --deep: color-mix(in srgb, var(--box) 40%, var(--bg));
+  --solid: var(--box);
+  --frost: var(--box);
+  --art: var(--bg);
+  --gap: 8px;
+  --touch: 44px;
+  --title: 18px;
+  --top: 0px;
+  --below: 28px;
+  --read: 640px;
+  --page: 984px;
+  --pace: 0ms;
+  --ease: linear;
 }
 
 :root[data-theme="light"]:has(.classic) {
@@ -265,7 +308,7 @@
 .classic.launcher .item:hover,
 .classic.launcher .item.on,
 .classic.launcher .section:hover > .item {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
   outline: 0;
 }
@@ -289,7 +332,7 @@
 
 .classic.menu .off,
 .classic.launcher .off {
-  color: var(--dim);
+  color: var(--off);
   text-shadow: 1px 1px var(--lt);
   pointer-events: none;
 }
@@ -467,7 +510,7 @@
 
 .classic.window .pane .contents a:hover,
 .classic.window .pane .contents a[aria-current] {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -794,7 +837,7 @@
 
 .classic .field::selection,
 .classic.control input::selection {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -802,6 +845,13 @@
   min-width: 44px;
   justify-content: flex-end;
   font-family: var(--mono);
+}
+
+.classic.slider .num {
+  flex: none;
+  width: 60px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .classic.slider .track {
@@ -946,7 +996,7 @@
 }
 
 .classic.pick select:focus-visible {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -1066,12 +1116,18 @@
   pointer-events: auto;
 }
 
+.classic.group > summary > .sign {
+  margin: 0 1px 0 0;
+  padding: 0;
+  background: var(--bg);
+}
+
 .classic.group .live {
   margin-left: auto;
   color: var(--dim);
 }
 
-.classic .box {
+.classic .sign {
   width: 9px;
   height: 9px;
   padding: 0;
@@ -1080,13 +1136,13 @@
   flex: none;
 }
 
-.classic .box .pixel {
+.classic .sign .pixel {
   width: 7px;
   height: 7px;
 }
 
-.classic details:not([open]) > summary .box .open,
-.classic details[open] > summary .box .shut {
+.classic details:not([open]) > summary .sign .open,
+.classic details[open] > summary .sign .shut {
   display: none;
 }
 
@@ -1134,12 +1190,199 @@
 .classic.dialog.light {
   padding: 4px 6px;
   background: var(--tip);
-  border: 1px solid var(--dk);
+  border: 1px solid var(--tip-line);
   box-shadow: none;
+  color: var(--tip-fg);
 }
 
 .classic.dialog.light > .body {
   padding: 0;
+}
+
+/* SETTINGS */
+
+.classic .settings {
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+.classic .settings.two {
+  background: linear-gradient(var(--sh), var(--sh)) var(--rail) 0 / 1px 100% no-repeat;
+}
+
+.classic .settings .side {
+  background: var(--panel);
+  box-shadow: inset -1px 0 var(--lt);
+}
+
+.classic .settings .find > input {
+  min-height: 22px;
+  border-radius: 0;
+  background: var(--bg);
+  box-shadow: var(--sunken);
+}
+
+.classic .settings .top .icon {
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--fg);
+  box-shadow: var(--raised);
+}
+
+.classic .settings .list a {
+  min-height: 22px;
+  border-radius: 0;
+}
+
+.classic .settings .list a:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+.classic .settings .list a[aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  font-weight: 400;
+}
+
+.classic .settings .symbol {
+  border-radius: 0;
+  background: var(--hue);
+  box-shadow: var(--raised);
+}
+
+.classic .settings h1 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.classic .settings .block > h2 {
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.classic .settings .box {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: var(--etch);
+  padding: 2px;
+}
+
+.classic .settings .box > * + *,
+.classic .settings .box > * + fieldset:not(.choices) > :first-child {
+  background-image: linear-gradient(var(--sh), var(--sh)), linear-gradient(var(--lt), var(--lt));
+  background-position:
+    8px 0,
+    8px 1px;
+  background-size:
+    calc(100% - 16px) 1px,
+    calc(100% - 16px) 1px;
+}
+
+.classic .settings .item {
+  min-height: 30px;
+}
+
+.classic .settings .push {
+  min-height: 23px;
+  padding: 0 12px;
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--fg);
+  font-size: 11px;
+  box-shadow: var(--raised);
+}
+
+.classic .settings .push:active {
+  box-shadow: var(--pressed);
+}
+
+.classic .settings .push.main {
+  background: var(--panel);
+  color: var(--fg);
+  font-weight: 700;
+  box-shadow:
+    0 0 0 1px var(--dk),
+    var(--raised);
+}
+
+.classic .settings .menu > select {
+  appearance: none;
+  min-height: 22px;
+  padding: 0 22px 0 4px;
+  border-radius: 0;
+  background: var(--bg);
+  font-size: 11px;
+  text-align: left;
+  text-align-last: left;
+  box-shadow: var(--sunken);
+}
+
+.classic .settings .menu > select:hover {
+  background: var(--bg);
+}
+
+.classic .settings .seg {
+  gap: 2px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.classic .settings .seg > label {
+  min-height: 22px;
+  padding: 0 10px;
+  border-radius: 0;
+  background: var(--panel);
+  font-size: 11px;
+  box-shadow: var(--raised);
+}
+
+.classic .settings .seg > label:hover {
+  background: var(--panel);
+}
+
+.classic .settings .seg > label:has(:checked) {
+  padding: 1px 9px 0 11px;
+  background: var(--dither);
+  font-weight: 700;
+  box-shadow: var(--pressed);
+}
+
+.classic .settings .choice > .art {
+  border-radius: 0;
+  background: var(--panel);
+  box-shadow: var(--raised);
+}
+
+.classic .settings .choice:hover > .art {
+  box-shadow: var(--raised);
+}
+
+.classic .settings .choice:has(:checked) > .art {
+  box-shadow:
+    var(--sunken),
+    0 0 0 2px var(--pick);
+}
+
+.classic .settings .choice:has(:checked) > .text {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic .settings .dot {
+  box-shadow: var(--sunken);
+}
+
+.classic .settings .banner {
+  border: 1px solid var(--tip-line);
+  border-radius: 0;
+  background: var(--tip);
+  color: var(--tip-fg);
 }
 
 /* PROSE */
@@ -1161,8 +1404,66 @@
   padding-bottom: 16px;
 }
 
-.classic.prose.hub > :not(.icons):not(h1) {
+.classic.prose.hub > :not(.icons):not(h1):not(.intro) {
   max-width: 640px;
+}
+
+.classic.prose.hub ~ p,
+.classic.prose.hub ~ ul,
+.classic.prose.hub ~ ol,
+.classic.prose.hub ~ .scroll {
+  max-width: 640px;
+  margin: 0 18px 12px;
+  color: var(--fg);
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: auto;
+}
+
+.classic.prose.hub ~ :last-child {
+  margin-bottom: 18px;
+}
+
+.classic.prose.hub ~ p a {
+  color: var(--web);
+  text-decoration: underline;
+}
+
+.classic.prose.hub ~ .scroll {
+  overflow-x: auto;
+}
+
+.classic.prose.hub ~ .scroll table {
+  border: 1px solid;
+  border-color: var(--lt) var(--dk) var(--dk) var(--lt);
+  border-spacing: 2px;
+  background: var(--box);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.classic.prose.hub ~ .scroll th {
+  padding: 3px 8px;
+  background: var(--box);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  box-shadow: var(--raised);
+}
+
+.classic.prose.hub ~ .scroll td {
+  padding: 3px 8px;
+  background: var(--bg);
+  box-shadow:
+    inset 1px 1px var(--sh),
+    inset -1px -1px var(--lt);
+}
+
+.classic.prose.hub ~ .scroll td code {
+  font-family: var(--mono);
+  font-size: 12px;
 }
 
 .classic.prose > h1,
@@ -1222,9 +1523,9 @@
 .classic.prose > .intro {
   margin: 0 0 18px;
   padding: 8px 10px;
-  border: 1px solid var(--dk);
+  border: 1px solid var(--tip-line);
   background: var(--tip);
-  color: var(--fg);
+  color: var(--tip-fg);
   font-family: var(--sans);
   font-size: 12px;
   line-height: 1.45;
@@ -1317,6 +1618,42 @@
   height: 32px;
 }
 
+/* KIT */
+
+.classic.prose > .intro > .jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.classic.prose > .intro > .jump > a.chip {
+  padding: 3px 8px;
+  background: var(--box);
+  color: var(--fg);
+  font-size: 11px;
+  text-decoration: none;
+  box-shadow: var(--raised);
+}
+
+.classic.prose > .intro > .jump > a.chip:active {
+  box-shadow: var(--pressed);
+}
+
+.classic .kit > section {
+  padding: 0 18px 12px;
+}
+
+.classic .kit > section > h2 {
+  margin: 12px 0 8px;
+  padding: 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow:
+    inset 0 -1px var(--lt),
+    inset 0 -2px var(--sh);
+}
+
 /* READ */
 
 .classic.app .column.stage > .well:has(> .page:not(.source)) {
@@ -1366,7 +1703,7 @@
 :is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h2 {
   margin: 24px 0 8px;
   padding: 0 0 4px;
-  color: var(--accent);
+  color: var(--pick);
   font-family: var(--sans);
   font-size: 16px;
   font-weight: 700;
@@ -1395,7 +1732,7 @@
 }
 
 :is(.classic.prose, .classic.app .page > .prose:not(.classic)) a:not(.button):not(.icon) {
-  color: var(--link);
+  color: var(--web);
   text-decoration: underline;
   text-decoration-color: currentColor;
   text-decoration-thickness: 1px;
@@ -1422,6 +1759,79 @@
 
 :is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul ul {
   list-style: circle;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links {
+  padding-left: 4px;
+  list-style: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li {
+  position: relative;
+  padding-left: 22px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li::before {
+  content: "";
+  position: absolute;
+  top: 0.35em;
+  left: 2px;
+  width: 11px;
+  height: 13px;
+  background:
+    linear-gradient(var(--sh), var(--sh)) 2px 3px / 5px 1px no-repeat,
+    linear-gradient(var(--sh), var(--sh)) 2px 6px / 5px 1px no-repeat,
+    linear-gradient(var(--sh), var(--sh)) 2px 9px / 5px 1px no-repeat,
+    var(--lt);
+  box-shadow:
+    inset 0 0 0 1px var(--dk),
+    1px 1px 0 var(--sh);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li > a:first-child {
+  font-family: var(--sans);
+  font-weight: 700;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links:has(> li > a:first-child > img:first-child) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 2px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li:has(> a:first-child > img:first-child) {
+  margin: 0;
+  padding: 8px 8px 10px;
+  background: var(--box);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.35;
+  box-shadow: var(--raised);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li:has(> a:first-child > img:first-child)::before {
+  content: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li > a:first-child > img:first-child {
+  display: block;
+  width: calc(100% - 4px);
+  height: auto;
+  margin: 2px 2px 8px;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  background: var(--bg);
+  box-shadow:
+    -1px -1px var(--sh),
+    1px 1px var(--lt),
+    -2px -2px var(--dk),
+    2px 2px var(--box);
 }
 
 :is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li {
@@ -1576,8 +1986,213 @@
 
 :is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) mark {
   padding: 0 1px;
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
+}
+
+/* FEATURES */
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > figure:first-child {
+  margin: 0 2px 18px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figure > img {
+  max-width: 100%;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figcaption {
+  font-style: italic;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > pre {
+  margin: 4px -18px 16px;
+  padding: 10px 18px 12px;
+  border: 0;
+  background: var(--console);
+  color: var(--console-fg);
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow:
+    inset 0 2px var(--sh),
+    inset 0 -2px var(--lt);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > pre::selection,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > pre ::selection {
+  background: var(--console-fg);
+  color: var(--console);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) blockquote {
+  position: relative;
+  margin: 22px 0 16px;
+  padding: 14px 14px 10px;
+  color: var(--fg);
+  font-size: 15px;
+  font-style: normal;
+  line-height: 1.45;
+  box-shadow: var(--etch);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) blockquote::before {
+  content: "Note";
+  position: absolute;
+  top: -8px;
+  left: 8px;
+  padding: 0 4px 0 22px;
+  background:
+    linear-gradient(var(--on-accent), var(--on-accent)) 8px 4px / 2px 2px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 8px 7px / 2px 5px no-repeat,
+    linear-gradient(var(--pick), var(--pick)) 4px 2px / 10px 12px no-repeat,
+    var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3:has(> code:only-child) {
+  margin: 22px 0 8px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3 > code:only-child,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li > code:last-child {
+  display: inline-block;
+  padding: 2px 6px 3px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+  box-shadow: var(--sunken);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3 > code:only-child {
+  min-width: 120px;
+  padding: 4px 8px 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li:has(> code:last-child) {
+  display: flow-root;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li > code:last-child {
+  float: right;
+  margin: 1px 0 2px 10px;
+  font-size: 11px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3:has(> code:only-child) + blockquote {
+  margin-top: 18px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3:has(> code:only-child) + blockquote::before {
+  content: "Question";
+  background:
+    linear-gradient(var(--on-accent), var(--on-accent)) 6px 3px / 4px 2px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 5px 4px / 2px 1px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 9px 4px / 2px 3px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 8px 7px / 2px 1px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 7px 8px / 2px 2px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 7px 11px / 2px 2px no-repeat,
+    linear-gradient(var(--pick), var(--pick)) 4px 2px / 10px 12px no-repeat,
+    var(--bg);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td:first-child {
+  min-width: calc(6.5em + 16px);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li
+  > a:not(:first-child)[href*="mrly.net/"] {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 8px 2px;
+  background: var(--box);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.3;
+  text-decoration: none;
+  -webkit-font-smoothing: none;
+  box-shadow: var(--raised);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li
+  > a:not(:first-child)[href*="mrly.net/"]::before {
+  content: ">> ";
+  font-weight: 700;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li
+  > a:not(:first-child)[href*="mrly.net/"]:active {
+  color: var(--fg);
+  box-shadow: var(--pressed);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.contains-task-list {
+  padding-left: 2px;
+  list-style: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li.task-list-item {
+  position: relative;
+  padding-left: 22px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li.task-list-item > input {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  background: var(--bg);
+  box-shadow: var(--sunken);
+  appearance: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li.task-list-item > input:disabled {
+  opacity: 1;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li.task-list-item > input:checked {
+  background:
+    linear-gradient(var(--fg), var(--fg)) 3px 5px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 4px 6px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 5px 7px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 6px 6px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 7px 5px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 8px 4px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 9px 3px / 1px 3px no-repeat,
+    var(--bg);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) th.center,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td.center {
+  text-align: center;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) th.right,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td.right {
+  text-align: right;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td a code {
+  background: none;
 }
 
 /* ICONS */
@@ -1690,7 +2305,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-conic-gradient(var(--accent) 0 25%, transparent 0 50%) 0 0 / 2px 2px;
+  background: repeating-conic-gradient(var(--pick) 0 25%, transparent 0 50%) 0 0 / 2px 2px;
   opacity: 0;
   pointer-events: none;
 }
@@ -1750,7 +2365,7 @@
 .classic.window .gallery.grid > a.tile:focus-visible > h2,
 .classic.app .gallery.grid > a.tile:hover > h2,
 .classic.app .gallery.grid > a.tile:focus-visible > h2 {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
   outline: 1px dotted var(--fg);
   outline-offset: 0;
@@ -1822,7 +2437,7 @@
 
 .classic.tile[aria-current] .name,
 .classic.tile:focus-visible .name {
-  background: var(--accent);
+  background: var(--pick);
   outline: 1px dotted var(--on-accent);
 }
 
@@ -1864,7 +2479,7 @@
 .classic.launcher .results .tile:hover,
 .classic.launcher .results li.on > .tile,
 .classic.launcher .results li.on > .item {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -1987,7 +2602,7 @@
 }
 
 .classic.launcher .link {
-  color: var(--link);
+  color: var(--web);
   text-decoration: underline;
 }
 
@@ -2020,7 +2635,7 @@
 }
 
 .classic.launcher .section:focus-within > .item {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -2046,8 +2661,8 @@
   margin: 0;
   padding: 4px 8px;
   background: var(--tip);
-  border: 1px solid var(--dk);
-  color: var(--fg);
+  border: 1px solid var(--tip-line);
+  color: var(--tip-fg);
 }
 
 .classic.launcher .said .link {
@@ -2110,7 +2725,7 @@
 }
 
 .classic.library .leaf.on .label {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -2140,6 +2755,72 @@
 
 .classic.library canvas {
   image-rendering: pixelated;
+}
+
+/* TREE */
+
+.classic .tree,
+.classic .tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.classic .tree {
+  padding: 2px;
+}
+
+.classic .tree ul {
+  margin-left: 6px;
+  padding-left: 10px;
+  border-left: 1px dotted var(--dim);
+}
+
+.classic .tree a,
+.classic .tree summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 18px;
+  padding: 0 2px;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.classic .tree summary {
+  list-style: none;
+  cursor: default;
+}
+
+.classic .tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.classic .tree summary > svg {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  rotate: -90deg;
+}
+
+.classic .tree details[open] > summary > svg {
+  rotate: none;
+}
+
+.classic .tree summary > a {
+  padding: 0;
+}
+
+.classic .tree a:hover {
+  text-decoration: underline;
+}
+
+.classic .tree a[aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  outline: 1px dotted var(--fg);
+  outline-offset: -1px;
 }
 
 /* GALLERY */
@@ -2207,7 +2888,7 @@
 }
 
 .classic.app .library:not(.classic) .find input::selection {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -2353,7 +3034,7 @@
 
 .classic.app .shelf [data-item].on > .label,
 .classic.app .shelf [data-item][aria-current] > .label {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -2490,7 +3171,7 @@
   left: 8px;
   width: 48px;
   height: 48px;
-  background: repeating-conic-gradient(var(--accent) 0 25%, transparent 0 50%) 0 0 / 2px 2px;
+  background: repeating-conic-gradient(var(--pick) 0 25%, transparent 0 50%) 0 0 / 2px 2px;
   pointer-events: none;
 }
 
@@ -2508,7 +3189,7 @@
 
 .classic.app .designs > button.on small,
 .classic.app .designs > button[aria-pressed="true"] small {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -2640,7 +3321,7 @@ body:has(.classic) > .appicons {
 }
 
 .classic.widgets .list button:hover {
-  background: var(--accent);
+  background: var(--pick);
   color: var(--on-accent);
 }
 
@@ -2694,7 +3375,7 @@ body:has(.classic) > .appicons {
 .classic.lock .fill {
   height: 100%;
   display: block;
-  background: repeating-linear-gradient(to right, var(--accent) 0 16px, transparent 16px 18px);
+  background: repeating-linear-gradient(to right, var(--pick) 0 16px, transparent 16px 18px);
   animation: classic-fill 2s steps(12) both;
 }
 

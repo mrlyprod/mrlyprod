@@ -3,6 +3,8 @@
 //! Every number the censuses reach by walking a built cell, this folder reaches by formula:
 //! fills, grids, exposed surfaces, hex slices and the base-q carry ladder.
 
+/// The closed forms a design sequence carries: powers, differences, odd-side polynomials and recurrences.
+pub mod closed;
 /// The closed-form fill and grid counts of coded fractals.
 pub mod counting;
 /// The diagonal profile of any tile's power, as a digit polynomial.
@@ -16,6 +18,7 @@ pub mod six;
 /// The closed-form exposed-surface counts of 3d fractals.
 pub mod surface;
 
+pub use closed::{Closed, fill_polynomial, odd_power};
 pub use counting::{
     dimension, fill, fill_from_corners, grid, limit, positions, ratio, rational, void,
 };

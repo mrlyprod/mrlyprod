@@ -3,6 +3,16 @@ from typing import Any, Literal
 from numpy.typing import NDArray
 from . import diagonal, ladder, six
 
+class Closed:
+    """A closed form of a design sequence."""
+    def text(self) -> str:
+        """Spells the closed form."""
+    @staticmethod
+    def from_dict(data: Any) -> Closed:
+        """Reads plain data into the class."""
+    def to_dict(self) -> Any:
+        """Returns the value as plain data."""
+
 class Exposure:
     """The counts the exposure recurrence runs on: the filled cells and exposed faces of the tile, and per axis its adjacent pairs and spanning positions."""
     @property
@@ -100,11 +110,17 @@ def fill(code: int, number: int, dimension: int, level: int, base: int) -> int:
 def fill_from_corners(filled: list[bytes], number: int, _dimension: int, level: int, base: int) -> int:
     """Sums each corner's position products into a base fill and raises it to the level."""
 
+def fill_polynomial(corners: list[bytes], dimension: int) -> list[int]:
+    """Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`."""
+
 def grid(number: int, dimension: int, level: int) -> int:
     """Returns the total cells of the grid, number to the dimension, to the level."""
 
 def limit(code: int, dimension: int, level: int, base: int) -> tuple[int, int]:
     """Returns the fill ratio the code walks toward as the side number grows, reduced."""
+
+def odd_power(dimension: int) -> list[int]:
+    """Expands the whole grid at side `2k - 1`, `(2k - 1)^dimension`, into coefficients by rising power of `k`."""
 
 def pairs(tile: NDArray[Any]) -> list[tuple[int, int]]:
     """Counts, per axis, the adjacent filled pairs and the cross positions whose two end cells are both filled."""

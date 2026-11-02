@@ -37,6 +37,7 @@ mrly-math = { path = "crates/math", version = "=0.2.0" }
 mrly-tile = { path = "crates/tile", version = "=0.2.0" }
 mrly-life = { path = "crates/life", version = "=0.2.0" }
 mrly-font = { path = "crates/font", version = "=0.2.0" }
+mrly-sequences = { path = "crates/sequences", version = "=0.2.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 wasm-bindgen = "=0.2.125"

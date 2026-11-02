@@ -230,6 +230,8 @@ const STILL = `document.head.insertAdjacentHTML("beforeend", "<style>canvas { vi
 const ready = (motion: boolean) =>
   `${MOUNTED}.then(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; return (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = i.onerror = r; })).then(() => i.decode().catch(() => 0)); }))).then(() => document.fonts.ready)${motion ? "" : `.then(() => { ${STILL}; })`}.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))).then(() => 1)`;
 
+const PAINTED = `![...document.querySelectorAll('[aria-busy="true"]')].some((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; })`;
+
 const QUIET = `(() => { for (const i of document.images) { i.loading = "eager"; i.decoding = "sync"; } return document.readyState === "complete" && [...document.images].every((i) => i.complete) && document.fonts.status !== "loading"; })()`;
 
 const painted = (born: number) =>
@@ -495,6 +497,7 @@ export async function main(
           ),
           wait(PATIENCE),
         ]);
+      await until(send, PAINTED, PATIENCE);
       await wait(PAUSE);
     };
     const run = async (act: string) => {

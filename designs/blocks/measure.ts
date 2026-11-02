@@ -7,7 +7,7 @@ export const STUD = 24;
 const studs = (n: number) => n * STUD;
 
 export const MEASURE: Measure = {
-  page: studs(25),
+  page: studs(38),
   wide: studs(41),
   least: studs(15),
   step: STUD,

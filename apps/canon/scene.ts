@@ -1,4 +1,4 @@
-import { bright, TINTS, veil } from "../../net/sdk/color.ts";
+import { blend, bright, TINTS, veil } from "../../net/sdk/color.ts";
 import type { Fired } from "../../net/sdk/keys.tsx";
 import type { Page } from "../../net/sdk/page.tsx";
 import type { Rng } from "../../net/sdk/rand.ts";
@@ -7,6 +7,7 @@ import type { Opts, Scene, View } from "../../net/sdk/run.ts";
 import { board } from "../../net/sdk/run.ts";
 import type { Option, Spec, Value } from "../../net/sdk/spec.ts";
 import { tidy } from "../../net/sdk/spec.ts";
+import { palette } from "../../net/sdk/theme/palette.gen.js";
 import type { Mrly } from "../shared/designs/engine.ts";
 import type { Units as Loaded } from "../shared/units/index.ts";
 import { wasm } from "../shared/units/index.ts";
@@ -49,6 +50,8 @@ export type Hands = {
 export type Held = Scene & Partial<Hands>;
 
 export type Canon = ReturnType<typeof make>;
+
+type Pen = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 const HIDE = () => false;
 
@@ -144,29 +147,39 @@ const FIT = 0.88;
 const GAP = 0.14;
 const ROUND = 0.26;
 const FREE = 0.1;
-const OWN = 0.08;
+const OWN = 0.09;
 const GROUND = 0.04;
-const WEB = 0.12;
-const DUSK = 1.8;
+const WEB = 0.14;
 const CROWD = 216;
-const THREAD = 0.7;
-const HINT = 0.3;
+const THREAD = 0.85;
+const HINT = 0.5;
 const WIDTH = 0.08;
 const LINE = 1.5;
 const PACE = 520;
-const SPIN = 280;
+const SPIN = 300;
 const HOLD = 3200;
-const BLOOM = 1200;
-const GLOW = 0.18;
+const BLOOM = 1400;
+const GLOW = 0.22;
 const TAIL = 100;
 const SLOW = 820;
 const TURN = 640;
 const REST = 6400;
 const FADE = 1400;
 const LEAVE = 900;
+const VOICE = 90;
+const RIPPLE = 760;
+const BED = 0.9;
+const SPOT = 0.75;
+const LAMP = 0.16;
+const BREATH = 3600;
+const BEAD = 2400;
+const WHITE = "#ffffff";
+const BLACK = "#000000";
 const DEAL: (keyof Knobs)[] = ["number", "level", "code"];
 
 const ease = (k: number) => (k >= 1 ? 1 : 1 - (1 - k) ** 3);
+
+const snap = (k: number) => (k >= 1 ? 1 : 1 + 2.4 * (k - 1) ** 3 + 1.4 * (k - 1) ** 2);
 
 const fade = (k: number) => ease(Math.max(0, k));
 
@@ -175,7 +188,11 @@ const fade = (k: number) => ease(Math.max(0, k));
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const math = opts.math;
   if (!math) throw new Error("canon: the scene wants @mrlyprod/math as opts.math");
-  const ctx = canvas.getContext("2d")!;
+  const screen = canvas.getContext("2d")!;
+  let ctx: Pen = screen;
+  let sheet: OffscreenCanvas | null = null;
+  let drawn: State | null = null;
+  let keyed = "";
   let value = tidy(SPEC, opts) as Knobs;
   let seed = opts.seed;
   let state: State;
@@ -210,7 +227,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     state = step(state, act);
     if (state === was) return;
     acted = view.t;
-    busy = view.t + twirl;
+    busy = view.t + Math.max(twirl, RIPPLE) + state.level * (lock ? VOICE * 1.8 : VOICE);
     if (state.over) {
       ended = view.t;
       busy = view.t + (lock ? rest : BLOOM);
@@ -264,7 +281,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
       ctx.arc(x, y, size / 2, 0, 2 * Math.PI);
     } else ctx.roundRect(x - size / 2, y - size / 2, size, size, size * ROUND);
   };
-  const thread = (cells: number[], left: number, top: number, c: number) => {
+  const thread = (cells: number[], left: number, top: number, c: number, closed = true) => {
     if (cells.length < 2) return;
     ctx.beginPath();
     cells.forEach((cell, i) => {
@@ -272,7 +289,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
       if (i) ctx.lineTo(x, y);
       else ctx.moveTo(x, y);
     });
-    if (cells.length > 2) ctx.closePath();
+    if (cells.length > 2 && closed) ctx.closePath();
     ctx.stroke();
   };
   const shade = () => {
@@ -281,77 +298,267 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     const leave = state.over ? 1 - fade((t - ended - rest + FADE) / FADE) : 1;
     return Math.min(enter, leave, 1 - fade((view.t - down) / LEAVE));
   };
+  const after = (from: number, span: number) => Math.max(0, Math.min(1, (view.t - from) / span));
   const paint = () => {
-    const { x: left, y: top, cell: c } = layout();
+    const { x: left, y: top, w: span, cell: c } = layout();
     const { paper, accent, ink } = view.look();
-    const tone = (who: number) => (who === ONE ? accent : ink);
-    const lift = (who: number) => (who === ONE && !bright(paper) ? DUSK : 1);
+    const dark = !bright(paper);
+    const one = dark ? palette.orange : blend(palette.orange, BLACK, 0.12);
+    const two = dark ? blend(palette.pink, WHITE, 0.08) : blend(palette.pink, BLACK, 0.04);
+    const tone = (who: number) => (who === ONE ? one : two);
+    const shine = (who: number) => blend(tone(who), WHITE, dark ? 0.45 : 0.3);
     const f = fills(state.motif).length;
     const level = state.level;
-    const at = starts(f, level);
-    const { owners } = tally(state);
-    const tile = (from: number, count: number) => {
-      for (let cell = from; cell < from + count; cell++)
+    const count = state.board.length;
+    const tile = (from: number, many: number) => {
+      for (let cell = from; cell < from + many; cell++)
         ctx.rect(left + spots[cell * 2] * c, top + spots[cell * 2 + 1] * c, c, c);
     };
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, view.w, view.h);
-    if (lock) ctx.globalAlpha = shade();
-    ctx.fillStyle = veil(ink, GROUND);
-    ctx.beginPath();
-    tile(0, state.board.length);
-    ctx.fill();
-    for (let d = 0; d < level; d++) {
-      const count = f ** (level - d);
-      for (const who of [ONE, TWO]) {
-        ctx.beginPath();
-        for (let p = 0; p < at[d + 1] - at[d]; p++) if (owners[at[d] + p] === who) tile(p * count, count);
-        ctx.fillStyle = veil(tone(who), OWN * lift(who));
-        ctx.fill();
-      }
-    }
+    const ground = blend(paper, accent, dark ? 0.06 : 0.05);
     const won = state.over === "one" ? ONE : state.over === "two" ? TWO : 0;
-    const bloom = won ? Math.max(0, 1 - (view.t - ended) / BLOOM) : 0;
-    if (bloom > 0) {
-      ctx.fillStyle = veil(tone(won), GLOW * bloom);
-      ctx.beginPath();
-      tile(0, state.board.length);
-      ctx.fill();
-    }
-    ctx.lineWidth = Math.max(1, c * WIDTH);
-    ctx.lineJoin = "round";
-    const thin = Math.min(1, CROWD / Math.max(1, state.board.length));
-    for (const who of [ONE, TWO]) {
-      ctx.strokeStyle = veil(tone(who), WEB * lift(who) * thin);
-      for (let cell = 0; cell < state.board.length; cell++) {
-        if (state.board.charCodeAt(cell) - 48 !== who) continue;
-        const echo = echoes(state, cell);
-        if (Math.min(...echo) === cell && !echo.includes(state.last)) thread(echo, left, top, c);
-      }
-    }
+    const done = won ? fade(after(ended, BLOOM)) : 0;
+    const since = Math.max(0, view.t - ended);
+    const breath = done > 0 && !view.still ? 0.5 - 0.5 * Math.cos((2 * Math.PI * since) / BREATH) : 0;
+    const pad = Math.max(0, Math.min(c * BED + span * 0.02, Math.min(left, top) * 0.75));
     const lastly = state.last >= 0 ? echoes(state, state.last) : [];
     const mover = state.turn === ONE ? TWO : ONE;
-    const grow = view.still ? 1 : ease((view.t - acted) / twirl);
-    if (lastly.length) {
-      ctx.strokeStyle = veil(tone(mover), THREAD * grow);
-      thread(lastly, left, top, c);
+    const fine = c < 10;
+    const size = c * (1 - 2 * (fine ? GAP / 3 : GAP));
+    const pieces = (who: number, cells: number[], scaled: (cell: number) => number, dx = 0, dy = 0) => {
+      ctx.beginPath();
+      for (const cell of cells) {
+        if (state.board.charCodeAt(cell) - 48 !== who) continue;
+        const [x, y] = center(cell, left, top, c);
+        mark(who, x + dx, y + dy, Math.max(0, size * scaled(cell)));
+      }
+    };
+    const gloss = (who: number, cells: number[], scaled: (cell: number) => number) => {
+      if (fine) return;
+      ctx.beginPath();
+      for (const cell of cells) {
+        if (state.board.charCodeAt(cell) - 48 !== who) continue;
+        const [x, y] = center(cell, left, top, c);
+        const s = Math.max(0, size * scaled(cell));
+        mark(who, x - s * 0.12, y - s * 0.14, s * 0.42);
+      }
+      ctx.fillStyle = veil(WHITE, dark ? 0.32 : 0.38);
+      ctx.fill();
+    };
+    const still = () => {
+      const at = starts(f, level);
+      const { owners, points } = tally(state);
+      const floor = dark ? blend(blend(paper, BLACK, 0.4), accent, 0.08) : blend(WHITE, accent, 0.05);
+      const big = Math.max(1, Math.max(view.w, view.h) * SPOT);
+      const lit = won ? tone(won) : accent;
+      const lamp = ctx.createRadialGradient(view.w / 2, view.h / 2, 0, view.w / 2, view.h / 2, big);
+      lamp.addColorStop(0, veil(lit, (dark ? LAMP : LAMP / 2) + (won ? 0.08 : 0)));
+      lamp.addColorStop(1, veil(lit, 0));
+      ctx.fillStyle = lamp;
+      ctx.fillRect(0, 0, view.w, view.h);
+      ctx.save();
+      ctx.shadowColor = `rgba(0, 0, 0, ${dark ? 0.5 : 0.16})`;
+      ctx.shadowBlur = Math.max(1, pad * 1.2);
+      ctx.shadowOffsetY = pad * 0.2;
+      ctx.beginPath();
+      ctx.roundRect(left - pad, top - pad, span + 2 * pad, span + 2 * pad, Math.max(0, pad * 0.7));
+      ctx.fillStyle = floor;
+      ctx.fill();
+      ctx.shadowColor = "transparent";
+      ctx.strokeStyle = veil(dark ? WHITE : ink, dark ? 0.07 : 0.08);
+      ctx.lineWidth = Math.max(0.5, c * 0.06);
+      ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = veil(ink, dark ? GROUND * 1.4 : GROUND);
+      ctx.beginPath();
+      tile(0, count);
+      ctx.fill();
+      for (let d = 0; d < level; d++) {
+        const many = f ** (level - d);
+        for (const who of [ONE, TWO]) {
+          ctx.beginPath();
+          for (let p = 0; p < at[d + 1] - at[d]; p++) if (owners[at[d] + p] === who) tile(p * many, many);
+          ctx.fillStyle = veil(tone(who), (dark ? OWN * 1.4 : OWN) * (fine ? 1.6 : 1));
+          ctx.fill();
+        }
+      }
+      ctx.lineWidth = Math.max(1, c * WIDTH);
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      const thin = Math.min(1, CROWD / Math.max(1, count));
+      for (const who of [ONE, TWO]) {
+        ctx.strokeStyle = veil(tone(who), WEB * thin * (dark ? 1.2 : 0.7));
+        for (let cell = 0; cell < count; cell++) {
+          if (state.board.charCodeAt(cell) - 48 !== who) continue;
+          const echo = echoes(state, cell);
+          if (Math.min(...echo) === cell && !echo.includes(state.last)) thread(echo, left, top, c);
+        }
+      }
+      ctx.beginPath();
+      for (let cell = 0; cell < count; cell++) {
+        if (state.board[cell] !== "0") continue;
+        const [x, y] = center(cell, left, top, c);
+        mark(ONE, x, y, size * (fine ? 0.9 : 0.72));
+      }
+      ctx.fillStyle = veil(blend(ink, accent, 0.25), dark ? FREE * 1.4 : FREE * 1.2);
+      ctx.fill();
+      const whole = () => 1;
+      const calm = Array.from({ length: count }, (_, cell) => cell).filter((cell) => !lastly.includes(cell));
+      for (const who of [ONE, TWO]) {
+        ctx.save();
+        ctx.shadowColor = `rgba(0, 0, 0, ${dark ? 0.55 : 0.22})`;
+        ctx.shadowBlur = Math.max(0, c * 0.25);
+        ctx.shadowOffsetY = c * 0.06;
+        if (won === who) {
+          ctx.shadowColor = shine(who);
+          ctx.shadowBlur = Math.max(1, c * 0.9);
+          ctx.shadowOffsetY = 0;
+        }
+        pieces(who, calm, whole);
+        ctx.fillStyle = tone(who);
+        ctx.fill();
+        ctx.restore();
+        gloss(who, calm, whole);
+      }
+      const bar = Math.max(2, Math.min(pad * 0.3, span * 0.014));
+      const by = top + span + pad * 0.5 - bar / 2;
+      const all = (level + 1) * count;
+      if (by + bar > view.h || all <= 0) return;
+      const a = (points[0] / all) * span;
+      const b = (points[1] / all) * span;
+      ctx.beginPath();
+      ctx.roundRect(left, by, span, bar, bar / 2);
+      ctx.fillStyle = veil(ink, dark ? 0.12 : 0.08);
+      ctx.fill();
+      if (a > 0) {
+        ctx.beginPath();
+        ctx.roundRect(left, by, a, bar, Math.min(bar, a) / 2);
+        ctx.fillStyle = one;
+        ctx.fill();
+      }
+      if (b > 0) {
+        ctx.beginPath();
+        ctx.roundRect(left + span - b, by, b, bar, Math.min(bar, b) / 2);
+        ctx.fillStyle = two;
+        ctx.fill();
+      }
+      if (points[0] + points[1] > 0) {
+        ctx.fillStyle = veil(ink, 0.5);
+        ctx.fillRect(left + span / 2 - 0.5, by - bar * 0.5, 1, bar * 2);
+      }
+    };
+    screen.setTransform(1, 0, 0, 1, 0, 0);
+    screen.globalAlpha = 1;
+    screen.fillStyle = ground;
+    screen.fillRect(0, 0, view.w, view.h);
+    const alpha = lock ? shade() : 1;
+    const key = `${view.w}|${view.h}|${paper}|${accent}|${ink}`;
+    if (typeof OffscreenCanvas === "function") {
+      const w = Math.max(1, Math.ceil(view.w));
+      const h = Math.max(1, Math.ceil(view.h));
+      if (!sheet || sheet.width !== w || sheet.height !== h) {
+        sheet = new OffscreenCanvas(w, h);
+        drawn = null;
+      }
+      if (drawn !== state || keyed !== key) {
+        const pen = sheet.getContext("2d")!;
+        pen.setTransform(1, 0, 0, 1, 0, 0);
+        pen.globalAlpha = 1;
+        pen.clearRect(0, 0, w, h);
+        ctx = pen;
+        still();
+        ctx = screen;
+        drawn = state;
+        keyed = key;
+      }
+      screen.globalAlpha = alpha;
+      screen.drawImage(sheet, 0, 0);
+    } else {
+      screen.globalAlpha = alpha;
+      still();
+    }
+    ctx = screen;
+    if (done > 0) {
+      ctx.fillStyle = veil(tone(won), GLOW * (1 - 0.6 * done) + 0.06 * breath);
+      ctx.beginPath();
+      tile(0, count);
+      ctx.fill();
+    }
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    const voice = lock ? VOICE * 1.8 : VOICE;
+    const enter = (i: number) => (view.still ? 1 : after(acted + i * voice, twirl));
+    const grown = lastly.map((_, i) => snap(enter(i)));
+    if (lastly.length > 1) {
+      const reach = lastly.filter((_, i) => view.still || view.t >= acted + i * voice).length;
+      const links = lastly.slice(0, Math.max(1, reach));
+      const closed = links.length === lastly.length;
+      ctx.strokeStyle = veil(tone(mover), dark ? 0.22 : 0.16);
+      ctx.lineWidth = Math.max(2, c * WIDTH * 5);
+      thread(links, left, top, c, closed);
+      ctx.strokeStyle = veil(tone(mover), THREAD);
+      ctx.lineWidth = Math.max(1, c * WIDTH * 1.6);
+      thread(links, left, top, c, closed);
     }
     const aimed = shown && cursor >= 0 && !state.over && human(state.turn);
     const hinted = aimed && state.board[cursor] === "0" ? echoes(state, cursor) : [];
     if (hinted.length) {
+      ctx.save();
+      ctx.lineWidth = Math.max(1, c * WIDTH);
+      ctx.setLineDash([Math.max(1, c * 0.25), Math.max(1, c * 0.25)]);
       ctx.strokeStyle = veil(tone(state.turn), HINT);
       thread(hinted, left, top, c);
+      ctx.restore();
     }
-    const size = c * (1 - 2 * GAP);
-    for (const who of [0, ONE, TWO]) {
-      ctx.beginPath();
-      for (let cell = 0; cell < state.board.length; cell++) {
-        if (state.board.charCodeAt(cell) - 48 !== who) continue;
-        const scale = who && grow < 1 && lastly.includes(cell) ? grow : 1;
+    const scaled = (cell: number) => {
+      const i = lastly.indexOf(cell);
+      return i < 0 ? 1 : grown[i];
+    };
+    for (const who of [ONE, TWO]) {
+      if (!lastly.some((cell) => state.board.charCodeAt(cell) - 48 === who)) continue;
+      pieces(who, lastly, scaled, 0, c * 0.08);
+      ctx.fillStyle = `rgba(0, 0, 0, ${dark ? 0.45 : 0.18})`;
+      ctx.fill();
+      pieces(who, lastly, scaled);
+      ctx.fillStyle = tone(who);
+      ctx.fill();
+      gloss(who, lastly, scaled);
+    }
+    if (!view.still)
+      lastly.forEach((cell, i) => {
+        const k = after(acted + i * voice, RIPPLE);
+        if (k <= 0 || k >= 1) return;
         const [x, y] = center(cell, left, top, c);
-        mark(who === 0 ? ONE : who, x, y, size * scale);
-      }
-      ctx.fillStyle = who === 0 ? veil(ink, FREE) : tone(who);
+        ctx.save();
+        ctx.globalAlpha *= (1 - k) * 0.9;
+        ctx.strokeStyle = shine(mover);
+        ctx.lineWidth = Math.max(1, c * 0.14 * (1 - k));
+        ctx.beginPath();
+        mark(mover, x, y, c * (0.9 + 2.2 * ease(k)));
+        ctx.stroke();
+        ctx.restore();
+      });
+    if (lock && !view.still && lastly.length > 1 && !state.over) {
+      const loop = lastly.map((cell) => center(cell, left, top, c));
+      const s = ((view.t - acted) / BEAD) % 1;
+      const lengths = loop.map((p, i) => {
+        const q = loop[(i + 1) % loop.length];
+        return Math.hypot(q[0] - p[0], q[1] - p[1]);
+      });
+      const total = lengths.reduce((a, b) => a + b, 0);
+      let along = s * total;
+      let i = 0;
+      while (i < lengths.length - 1 && along > lengths[i]) along -= lengths[i++];
+      const k = lengths[i] > 0 ? along / lengths[i] : 0;
+      const [ax, ay] = loop[i];
+      const [bx, by] = loop[(i + 1) % loop.length];
+      const bead = Math.max(0.5, c * 0.14);
+      ctx.fillStyle = veil(shine(mover), 0.25);
+      ctx.beginPath();
+      ctx.arc(ax + (bx - ax) * k, ay + (by - ay) * k, bead * 3, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = shine(mover);
+      ctx.beginPath();
+      ctx.arc(ax + (bx - ax) * k, ay + (by - ay) * k, bead, 0, 2 * Math.PI);
       ctx.fill();
     }
     if (!aimed) return;
@@ -383,7 +590,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const draw = () => {
     if (view.t !== last) advance();
     last = view.t;
-    if (view.t <= busy + TAIL) paint();
+    if (view.t <= busy + TAIL || (lock && !view.still)) paint();
     if (view.t >= down + LEAVE) land();
   };
   const land = () => {

@@ -9,5 +9,6 @@ mrly-core = { path = "../../../crates/core" }
 mrly-life = { path = "../../../crates/life" }
 mrly-math = { path = "../../../crates/math" }
 mrly-num = { path = "../../../crates/num" }
+mrly-sequences = { path = "../../../crates/sequences" }
 
 [workspace]

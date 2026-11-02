@@ -26,6 +26,7 @@
         "- `moire` layers one design at many scales into an interference field.",
         "- `press` weighs the integers a design's digit rule keeps.",
         "- `arcs` lays two quarter arcs in every cell and follows the loops they join into.",
+        "- `coprime` counts the gasket's coprime points.",
         "",
         "# Line and Dirichlet designs",
         "",
@@ -222,6 +223,14 @@
       "items": 8
     },
     {
+      "path": "math::coprime",
+      "file": "math/coprime.rs",
+      "docs": [
+        "The coprime points of a design: the Sierpinski gasket's pairs with no common divisor, counted row by row."
+      ],
+      "items": 2
+    },
+    {
       "path": "math::counts",
       "file": "math/counts/mod.rs",
       "docs": [
@@ -230,7 +239,15 @@
         "Every number the censuses reach by walking a built cell, this folder reaches by formula:",
         "fills, grids, exposed surfaces, hex slices and the base-q carry ladder."
       ],
-      "items": 39
+      "items": 43
+    },
+    {
+      "path": "math::counts::closed",
+      "file": "math/counts/closed.rs",
+      "docs": [
+        "The closed forms a design sequence carries: powers, differences, odd-side polynomials and recurrences."
+      ],
+      "items": 0
     },
     {
       "path": "math::counts::counting",
@@ -3945,6 +3962,128 @@
         }
       ],
       "variants": [],
+      "alias": null
+    },
+    {
+      "path": "math::counts::Closed",
+      "name": "Closed",
+      "defined_at": "math/counts/closed.rs:5",
+      "docs": [
+        "A closed form of a design sequence."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Power",
+          "word": null,
+          "docs": [
+            "`fill^level`."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "u128"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Difference",
+          "word": null,
+          "docs": [
+            "`cells^level - fill^level`."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "u128"
+              }
+            },
+            {
+              "name": "1",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "u128"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Polynomial",
+          "word": null,
+          "docs": [
+            "A polynomial in `k` by rising power, at side `2k - 1`."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "i128"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recurrence",
+          "word": null,
+          "docs": [
+            "`a(level) = c[0] a(level-1) + c[1] a(level-2) + ...`."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "i128"
+                }
+              }
+            }
+          ]
+        }
+      ],
       "alias": null
     },
     {
@@ -13314,6 +13453,21 @@
       }
     },
     {
+      "path": "math::coprime::GASKET_LEVELS",
+      "name": "GASKET_LEVELS",
+      "defined_at": "math/coprime.rs:4",
+      "docs": [
+        "The highest level `gasket` counts."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::counts::diagonal::WIDEST",
       "name": "WIDEST",
       "defined_at": "math/counts/diagonal.rs:6",
@@ -21247,6 +21401,79 @@
       }
     },
     {
+      "path": "math::coprime::gasket",
+      "name": "gasket",
+      "module": "math::coprime",
+      "defined_at": "math/coprime.rs:31",
+      "docs": [
+        "Counts the coprime points of the Sierpinski gasket at a level: the pairs `0 <= i, j < 2^level` with `i AND j = 0` and `gcd(i, j) = 1`, the sequence [A396934](https://oeis.org/A396934).",
+        "",
+        "Walks the rows `m = i + j = i OR j`: only odd rows hold a coprime pair, `gcd(i, j) = gcd(i, m)`, the odd submasks `i` of `m` are kept when coprime to `m`, and the swap `(i, j) -> (j, i)` doubles them.",
+        "",
+        "```",
+        "let terms: Vec<u64> = (0..=6).map(|level| mrly_math::coprime::gasket(level).unwrap()).collect();",
+        "assert_eq!(terms, [0, 2, 4, 12, 34, 122, 362]);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Fails past `GASKET_LEVELS`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "u64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::Closed::text",
+      "name": "text",
+      "module": "math::counts",
+      "defined_at": "math/counts/closed.rs:34",
+      "docs": [
+        "Spells the closed form.",
+        "",
+        "```",
+        "use mrly_math::counts::Closed;",
+        "assert_eq!(Closed::Polynomial(vec![0, -2, 3]).text(), \"3k^2 - 2k\");",
+        "assert_eq!(Closed::Recurrence(vec![28, -160]).text(), \"a(level) = 28 a(level-1) - 160 a(level-2)\");",
+        "```"
+      ],
+      "owner": "math::counts::Closed",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::counts::Exposure::at",
       "name": "at",
       "module": "math::counts",
@@ -22197,6 +22424,58 @@
       }
     },
     {
+      "path": "math::counts::fill_polynomial",
+      "name": "fill_polynomial",
+      "module": "math::counts",
+      "defined_at": "math/counts/closed.rs:93",
+      "docs": [
+        "Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`.",
+        "",
+        "```",
+        "let carpet = mrly_math::bang::code_to_corners(mrly_math::bang::Code::from(7u64), 2, 2).unwrap();",
+        "assert_eq!(mrly_math::counts::fill_polynomial(&carpet, 2), [0, -2, 3]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "corners",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              }
+            }
+          }
+        },
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "i128"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::counts::grid",
       "name": "grid",
       "module": "math::counts",
@@ -22934,6 +23213,43 @@
               "t": "u128"
             }
           ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::counts::odd_power",
+      "name": "odd_power",
+      "module": "math::counts",
+      "defined_at": "math/counts/closed.rs:110",
+      "docs": [
+        "Expands the whole grid at side `2k - 1`, `(2k - 1)^dimension`, into coefficients by rising power of `k`.",
+        "",
+        "```",
+        "assert_eq!(mrly_math::counts::odd_power(2), [1, -4, 4]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "i128"
         }
       },
       "dims": [],

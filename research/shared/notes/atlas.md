@@ -13,7 +13,7 @@ The figure is the whole census on one square. Each cell is one distinct sequence
 
 ## The object
 
-A sequence of the tree is a list of exact integers with three labels: a name, the generator that printed it, and a measure. The name is a key such as `sequence_dim=3_code=23_measure=surface_axis=side`; the generator is a crate function such as `mrly::math::counts::Exposure::at`; the measure is a short slug such as `surface/side`. A row may also carry a closed form (when the generator proves one) and a stated OEIS id (when a topic already cited one).
+A sequence of the tree is a list of exact integers with three labels: a name, the generator that printed it, and a measure. The name is a key such as `sequence_dim=3_code=23_measure=surface_axis=side`; the generator is a crate function such as `mrly_math::counts::Exposure::at`; the measure is a short slug such as `surface/side`. A row may also carry a closed form (when the generator proves one) and a stated OEIS id (when a topic already cited one).
 
 ### The designs and the two axes
 
@@ -35,18 +35,18 @@ Symmetry folds codes into orbits, and the ledger keeps one code per orbit. That 
 
 The design rows carry 36 measures, counting each axis apart. Grouped by the generator that writes them:
 
-- Closed: fills and voids by the fill law (`mrly::math::counts::fill`), surface by the exposure recurrence (`mrly::math::counts::Exposure::at`); 54502 and 30708 rows.
-- Convolved: the peak and the number of nonzero heights of the diagonal profile (`mrly::math::counts::profile_of_tile`); 5217 rows.
-- Rendered: perimeter, vertices, edges, faces, Euler characteristic and hidden faces of the drawn design (`mrly::math::two::census`, `mrly::math::three::census`, `mrly::math::three::hidden`); 6742 rows in the plane, 614 and 132 in space.
-- The hex slice of dim 3, base 2: triangles, gaps, the profile fills and voids (`mrly::math::counts::cut_fills` and its siblings, 160 rows each), holes, pieces and the slice Euler characteristic (`mrly::math::six::holes`, `components`, `euler`).
+- Closed: fills and voids by the fill law (`mrly_math::counts::fill`), surface by the exposure recurrence (`mrly_math::counts::Exposure::at`); 54502 and 30708 rows.
+- Convolved: the peak and the number of nonzero heights of the diagonal profile (`mrly_math::counts::profile_of_tile`); 5217 rows.
+- Rendered: perimeter, vertices, edges, faces, Euler characteristic and hidden faces of the drawn design (`mrly_math::two::census`, `mrly_math::three::census`, `mrly_math::three::hidden`); 6742 rows in the plane, 614 and 132 in space.
+- The hex slice of dim 3, base 2: triangles, gaps, the profile fills and voids (`mrly_math::counts::cut_fills` and its siblings, 160 rows each), holes, pieces and the slice Euler characteristic (`mrly_math::six::holes`, `components`, `euler`).
 
 Beside the designs, the atlas walks every other sequence-shaped generator in the tree:
 
-- The carry ladder at bases 3, 5, 7 and dims 2 to 6 (`mrly::math::counts::ladder::ladder`, 15 rows), its fill and its sign.
-- The solid slice closed forms (`mrly::math::counts::six::solid_slice_*`, seven rows), the centered hexagonal numbers and the grid triangle counts.
-- The design counts, bracelets and fill classes (`mrly::math::bang::baseq`).
-- The press at small bases and dims (`mrly::math::press::members`, 160 rows).
-- The arc loops drawn and the proved loop laws (`mrly::math::arcs::draw`, 41 rows; `mrly::math::arcs::law`, 15 rows).
+- The carry ladder at bases 3, 5, 7 and dims 2 to 6 (`mrly_math::counts::ladder::ladder`, 15 rows), its fill and its sign.
+- The solid slice closed forms (`mrly_math::counts::six::solid_slice_*`, seven rows), the centered hexagonal numbers and the grid triangle counts.
+- The design counts, bracelets and fill classes (`mrly_math::bang::baseq`).
+- The press at small bases and dims (`mrly_math::press::members`, 160 rows).
+- The arc loops drawn and the proved loop laws (`mrly_math::arcs::draw`, 41 rows; `mrly_math::arcs::law`, 15 rows).
 - The 23 life sources, each read twice: as printed, and with its zeros and ones dropped.
 - The rows of the ledger page `../sequences.md` as rendered, 93 of them, so that the page and the walk can be compared.
 
@@ -120,7 +120,7 @@ The side axis at base 2 is simple enough that a surface can be counted by hand. 
 - `bang dim 3, code 126` keeps every corner but the all-even and the all-odd one, and fills `6k^3 - 9k^2 + 3k` cells. A pair along `x` is filled only when its other two coordinates have mixed parity: `2k(k-1)` choices, times `2k-2`, times 3. The surface is `6(6k^3 - 9k^2 + 3k) - 24k(k-1)^2 = 12k^3 - 6k^2 - 6k`, twelve times A160378 at `k`.
 - `bang dim 3, code 136` keeps the two corners whose last two coordinates are odd, so it is a set of separate rods of length `n` along the first axis, `(k-1)^2` of them, each with surface `4n + 2`. Its surface is `2(k-1)^2(4k-1)`, and the sponge's voids are `(2k-1)^3 - (4k^3 - 3k^2) = (k-1)^2(4k-1)`, A395241 at `k-1`. The rods expose exactly twice as many faces as the sponge leaves empty.
 
-The atlas reaches each of these three surfaces at sides 3 to 33 (`mrly::math::counts::Exposure::at`, 16 terms each), and each agrees with its closed form at every term.
+The atlas reaches each of these three surfaces at sides 3 to 33 (`mrly_math::counts::Exposure::at`, 16 terms each), and each agrees with its closed form at every term.
 
 ### A Fibonacci peak
 
@@ -132,7 +132,7 @@ The same argument works for any base `q >= 2` and any tile of side `q` with one 
 
 ### One function under two names
 
-The solid slice closed forms in `mrly::math::counts::six` carry two functions, `solid_slice_core_edges` and `solid_slice_interior`, whose bodies both return `36k^2 - 42k + 12`. The atlas puts their 16 terms in one class, and so this is a sequence of the tree under two names in the strictest sense: the same code. Their class matches A033570 after division by 6, and `solid_slice_edges`, `36k^2 - 30k + 6 = 6(2k-1)(3k-1)`, is six times A033568.
+The solid slice closed forms in `mrly_math::counts::six` carry two functions, `solid_slice_core_edges` and `solid_slice_interior`, whose bodies both return `36k^2 - 42k + 12`. The atlas puts their 16 terms in one class, and so this is a sequence of the tree under two names in the strictest sense: the same code. Their class matches A033570 after division by 6, and `solid_slice_edges`, `36k^2 - 30k + 6 = 6(2k-1)(3k-1)`, is six times A033568.
 
 ### The sponge's slice, read on the side axis
 

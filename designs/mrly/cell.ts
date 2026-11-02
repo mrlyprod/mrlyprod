@@ -41,13 +41,16 @@ export function hued({ root }: World) {
   const box = root.querySelector<HTMLElement>('.window[data-design="mrly"]');
   if (!box) return () => {};
   const paint = () => {
-    const hue = box.dataset.app ? hash(box.dataset.app) : "gray";
+    const shape = document.documentElement.dataset.window;
+    const read = shape === "page" || shape === "wide";
+    const hue = read ? hash(location.pathname) : box.dataset.app ? hash(box.dataset.app) : "gray";
     box.dataset.hue = hue;
     box.style.setProperty("--hue", `var(--${hue})`);
   };
   paint();
   const eye = new MutationObserver(paint);
-  eye.observe(box, { attributeFilter: ["data-app"] });
+  eye.observe(box, { attributeFilter: ["data-app", "aria-label"] });
+  eye.observe(document.documentElement, { attributeFilter: ["data-window"] });
   return () => eye.disconnect();
 }
 

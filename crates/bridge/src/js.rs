@@ -170,10 +170,7 @@ pub fn write_leaf(manifest: &Manifest, root: &Path, leaf: &Leaf) -> Result<()> {
             &format!("./pkg/mrly_{name}_js"),
         )
     };
-    let lib = unit.lib_rs()?.replace(
-        "use mrly_js_hand as hand;",
-        &format!("use mrly_{}_js_hand as hand;", leaf.hand),
-    );
+    let lib = unit.lib_rs(&leaf.hand)?;
     save(&dir.join("Cargo.toml"), &leaf_cargo(leaf))?;
     save(&dir.join("src/lib.rs"), &lib)?;
     save(&dir.join("index.js"), &pkg(unit.wrapper_js()))?;
@@ -1377,11 +1374,11 @@ impl<'a> Unit<'a> {
         Ok(())
     }
 
-    fn lib_rs(&self) -> Result<String> {
+    fn lib_rs(&self, hand: &str) -> Result<String> {
         let mut out = String::new();
         writeln!(
             out,
-            "{ALLOWS}\n\nuse mrly_js_hand as hand;\nuse wasm_bindgen::prelude::*;\n"
+            "{ALLOWS}\n\nuse mrly_{hand}_js_hand as hand;\nuse wasm_bindgen::prelude::*;\n"
         )
         .ok();
         let groups = self.groups();

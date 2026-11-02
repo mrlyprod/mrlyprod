@@ -24,8 +24,10 @@ export const SKIN: { light: Tokens; dark: Tokens } = {
     "--black": "#262626",
     "--black-lip": "#000000",
     "--accent": "#0a5bc4",
+    "--pick": "#0a5bc4",
     "--on-accent": "#ffffff",
     "--link": "#0a5bc4",
+    "--web": "#0a5bc4",
     "--scrim": "#1b1b1b66",
   },
   dark: {
@@ -49,8 +51,10 @@ export const SKIN: { light: Tokens; dark: Tokens } = {
     "--black": "#1a1a1a",
     "--black-lip": "#000000",
     "--accent": "#5aa0ff",
+    "--pick": "#5aa0ff",
     "--on-accent": "#ffffff",
     "--link": "#7ab4ff",
+    "--web": "#7ab4ff",
     "--scrim": "#000000a6",
   },
 };

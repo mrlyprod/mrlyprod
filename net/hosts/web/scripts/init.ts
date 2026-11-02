@@ -5,7 +5,7 @@ import { REPO } from "./home.ts";
 
 /* OPTIONS */
 
-export const DESIGNS = ["glass", "mrly", "classic", "blocks"] as const;
+export const DESIGNS = ["glass", "mrly", "classic", "blocks", "terminal"] as const;
 
 export type Design = (typeof DESIGNS)[number];
 

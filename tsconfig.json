@@ -32,6 +32,8 @@
       "@mrlyprod/design-classic/*": ["./designs/classic/*"],
       "@mrlyprod/design-blocks": ["./designs/blocks/index.ts"],
       "@mrlyprod/design-blocks/*": ["./designs/blocks/*"],
+      "@mrlyprod/design-terminal": ["./designs/terminal/index.ts"],
+      "@mrlyprod/design-terminal/*": ["./designs/terminal/*"],
       "@mrlyprod/design-shared/*": ["./designs/shared/*"]
     }
   },

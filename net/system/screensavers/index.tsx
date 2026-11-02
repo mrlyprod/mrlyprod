@@ -127,7 +127,7 @@ function Card({ one, off, hot, point, icon }: CardProps) {
         onFocus={enter}
         onBlur={leave}
       >
-        <span className="thumb">
+        <span className="thumb" aria-busy={shot ? undefined : "true"}>
           {shot?.url ? (
             <img src={shot.url} alt="" />
           ) : (

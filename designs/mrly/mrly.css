@@ -5,12 +5,11 @@
   --ground: var(--paper);
   --bg: var(--paper);
   --panel: var(--paper);
-  --deep: var(--fill);
+  --deep: #f0f0f0;
   --solid: var(--paper);
   --frost: var(--paper);
   --fg: var(--ink);
   --dim: var(--muted);
-  --link: var(--ink);
   --on-accent: var(--white);
   --art: var(--paper);
   --mono: "Noto Sans Mono", monospace, "Noto Sans Math", "Noto Color Emoji";
@@ -72,6 +71,17 @@
 
 :root[data-theme="dark"]:has([data-design="mrly"]) {
   color-scheme: dark;
+  --deep: #0f0f0f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):has([data-design="mrly"]) {
+    --deep: #0f0f0f;
+  }
+}
+
+body:has([data-design="mrly"]) {
+  --link: var(--ink);
 }
 
 /* PRIVATE */
@@ -85,7 +95,15 @@
   --m-huge: 38px;
   --m-page: 500px;
   --m-wide: 980px;
+  --m-read: 760px;
   --m-pixel: "MrlyFont", var(--mono);
+  --m-face: "Noto Sans", "Noto Sans Math", "Noto Color Emoji", var(--mono);
+  --m-body: 17px;
+  --m-lede: 21px;
+  --m-head: 19px;
+  --m-lead: 1.7;
+  --m-code: 0.85em;
+  --m-pre: 12px;
   --m-lift: 0 18px 50px #0000002e;
   --m-chrome: 335px;
 }
@@ -95,6 +113,16 @@
   width: 0;
   height: 0;
   overflow: hidden;
+}
+
+[data-design="mrly"] .appicon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+[data-design="mrly"] .appicon :is(.lift, .glow, .rim, .shade) {
+  display: none;
 }
 
 :root:has([data-design="mrly"]) body > .desk {
@@ -458,6 +486,11 @@ button.cell[data-design="mrly"]:hover {
 .window[data-design="mrly"][data-kind="wide"],
 :root:is([data-window="wide"], [data-window="app"]) .window[data-design="mrly"] {
   width: var(--m-wide);
+}
+
+:root[data-window="page"]
+  .window[data-design="mrly"]:not([data-zoomed="true"], .zoomed):has(.prose[data-design="mrly"]) {
+  width: var(--m-read);
 }
 
 .window[data-design="mrly"]:is([data-zoomed="true"], .zoomed) {
@@ -1034,6 +1067,10 @@ button.cell[data-design="mrly"]:hover {
     color var(--pace) var(--ease);
 }
 
+.app[data-design="mrly"] .shelf [data-item]:not(:has(> :is(figure, canvas, svg, img, .art))) {
+  padding-left: var(--s3);
+}
+
 .app[data-design="mrly"] .shelf [data-item]:is(:hover, .on) {
   background: var(--ink);
   color: var(--paper);
@@ -1174,6 +1211,143 @@ button.cell[data-design="mrly"]:hover {
   background: var(--paper);
   color: var(--muted);
   font-size: var(--m-small);
+}
+
+/* TREE */
+
+.app[data-design="mrly"] .tree,
+.app[data-design="mrly"] .tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app[data-design="mrly"] .tree {
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh1) var(--mono);
+}
+
+.app[data-design="mrly"] .tree li {
+  margin: 0;
+}
+
+.app[data-design="mrly"] .tree ul ul {
+  margin-left: var(--s3);
+  padding-left: var(--s2);
+  border-left: 1px solid var(--hairline);
+}
+
+.app[data-design="mrly"] .tree :is(a, summary) {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 32px;
+  padding: 0 var(--s2);
+  border-radius: var(--m-unit);
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.app[data-design="mrly"] .tree summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.app[data-design="mrly"] .tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.app[data-design="mrly"] .tree summary > a {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+}
+
+.app[data-design="mrly"] .tree summary > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  rotate: -90deg;
+  transition: rotate var(--pace) var(--ease);
+}
+
+.app[data-design="mrly"] .tree details[open] > summary > svg {
+  rotate: none;
+}
+
+.app[data-design="mrly"] .tree :is(a, summary):hover,
+.app[data-design="mrly"] .tree a[aria-current] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.app[data-design="mrly"] .tree summary:hover > a {
+  background: none;
+  color: inherit;
+}
+
+.app[data-design="mrly"] .tree .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app[data-design="mrly"] .stage > .page.source {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: var(--s3) var(--s4) var(--s5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.app[data-design="mrly"] .stage > .page.source .lede h1 {
+  margin: var(--s4) 0 var(--s2);
+  font: var(--m-huge) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.app[data-design="mrly"] .stage > .page.source .lede .lead {
+  color: var(--muted);
+  font: var(--t3) / var(--lh2) var(--mono);
+}
+
+.app[data-design="mrly"] .stage > .page.source .readme {
+  --face: var(--m-face);
+  max-width: var(--m-read);
+  margin-top: var(--s5);
+  font-size: var(--m-body);
+  line-height: var(--m-lead);
+}
+
+.app[data-design="mrly"] .stage > .page.source .path {
+  font: var(--m-small) / var(--lh2) var(--mono);
+}
+
+.app[data-design="mrly"] .stage > .page.source :is(.files, .code, .doc) {
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+}
+
+.app[data-design="mrly"] .stage > .page.source .files li {
+  border-top-color: var(--hairline);
+}
+
+.app[data-design="mrly"] .stage > .page.source .files li:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.app[data-design="mrly"] .stage > .page.source .files li:hover :is(a, .n, .ico) {
+  color: inherit;
 }
 
 /* CONTROL */
@@ -1392,14 +1566,276 @@ button.cell[data-design="mrly"]:hover {
   }
 }
 
+/* SETTINGS */
+
+.window[data-design="mrly"]:not([data-zoomed="true"], .zoomed):has(.settings) {
+  width: var(--m-wide);
+}
+
+.window[data-design="mrly"] .settings {
+  --rail: 280px;
+  --seam: var(--hairline);
+  --hover: var(--fill);
+  --box: var(--paper);
+  color: var(--ink);
+  font: var(--t3) / var(--lh2) var(--mono);
+}
+
+.window[data-design="mrly"] .settings.two {
+  gap: var(--m-unit);
+  background: none;
+}
+
+.window[data-design="mrly"] .settings .side {
+  gap: var(--m-unit);
+  padding: 0;
+}
+
+.window[data-design="mrly"] .settings .top {
+  gap: 0 var(--m-unit);
+}
+
+.window[data-design="mrly"] .settings .find > input {
+  box-sizing: border-box;
+  min-height: var(--m-cell);
+  border: 0;
+  border-radius: var(--round);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+}
+
+.window[data-design="mrly"] .settings .find > input::placeholder {
+  color: var(--muted);
+}
+
+.window[data-design="mrly"] .settings .top .icon {
+  flex: none;
+  width: var(--m-cell);
+  height: var(--m-cell);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.window[data-design="mrly"] .settings .top .icon:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.window[data-design="mrly"] .settings .said:not(:empty) {
+  margin-top: var(--m-unit);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--muted);
+}
+
+.window[data-design="mrly"] .settings .list {
+  gap: var(--m-unit);
+}
+
+.window[data-design="mrly"] .settings .list a {
+  min-height: var(--m-cell);
+  padding: 0 var(--s3);
+  gap: var(--s3);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.window[data-design="mrly"] .settings .list a:is(:hover, [aria-current]) {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 400;
+}
+
+.window[data-design="mrly"] .settings .list :is(.name, .hint) {
+  color: inherit;
+}
+
+.window[data-design="mrly"] .settings .list .hint {
+  opacity: 0.6;
+}
+
+.window[data-design="mrly"] .settings .symbol {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--m-unit);
+  background: var(--hue);
+  box-shadow: none;
+}
+
+.window[data-design="mrly"] .settings .none {
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--muted);
+}
+
+.window[data-design="mrly"] .settings .detail {
+  padding: 0 0 var(--s4);
+}
+
+.window[data-design="mrly"] .settings .detail > :is(.form, .banner) {
+  max-width: none;
+}
+
+.window[data-design="mrly"] .settings .form {
+  gap: var(--s4);
+}
+
+.window[data-design="mrly"] .settings h1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  margin: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+}
+
+.window[data-design="mrly"] .settings .form > h1 + .intro {
+  margin-top: calc(var(--s2) - var(--s4));
+}
+
+.window[data-design="mrly"] .settings :is(.intro, .foot, .block > h2) {
+  color: var(--black);
+}
+
+.window[data-design="mrly"] .settings .intro {
+  padding: 0 var(--s3);
+  text-align: center;
+}
+
+.window[data-design="mrly"] .settings .back {
+  min-height: var(--m-cell);
+  margin: 0;
+  padding: 0 var(--s3);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.window[data-design="mrly"] .settings .block {
+  gap: var(--m-unit);
+}
+
+.window[data-design="mrly"] .settings .block > h2 {
+  padding: 0 var(--s3);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.window[data-design="mrly"] .settings .box {
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+}
+
+.window[data-design="mrly"] .settings .item {
+  min-height: var(--m-cell);
+  padding: var(--s2) var(--s4);
+}
+
+.window[data-design="mrly"] .settings .words > .hint,
+.window[data-design="mrly"] .settings .note,
+.window[data-design="mrly"] .settings .chosen {
+  color: var(--muted);
+}
+
+.window[data-design="mrly"] .settings .nav:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.window[data-design="mrly"] .settings .nav:hover :is(.name, .hint, svg) {
+  color: inherit;
+}
+
+.window[data-design="mrly"] .settings .push {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  box-shadow: none;
+  color: var(--ink);
+}
+
+.window[data-design="mrly"] .settings .push:hover,
+.window[data-design="mrly"] .settings .push.main {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.window[data-design="mrly"] .settings .menu > select {
+  min-height: 36px;
+  border-radius: var(--m-unit);
+}
+
+.window[data-design="mrly"] .settings .seg {
+  gap: var(--m-unit);
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.window[data-design="mrly"] .settings .seg > label {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.window[data-design="mrly"] .settings .seg > label:hover {
+  background: var(--fill);
+}
+
+.window[data-design="mrly"] .settings .seg > label:has(:checked) {
+  background: var(--ink);
+  box-shadow: none;
+  color: var(--paper);
+}
+
+.window[data-design="mrly"] .settings .choice > .art {
+  border-radius: var(--m-unit);
+  background: var(--fill);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.window[data-design="mrly"] .settings .choice:has(:checked) > .art {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.window[data-design="mrly"] .settings .banner {
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+  background: var(--paper);
+  color: var(--ink);
+}
+
 /* PROSE */
 
 .prose[data-design="mrly"] {
   display: flex;
   flex-direction: column;
   gap: var(--s2);
-  max-width: var(--m-page);
+  max-width: var(--m-read);
   margin: 0 auto;
+}
+
+.window[data-design="mrly"] main > .prose:not([data-design]):has(> .prose[data-design="mrly"]) {
+  max-width: none;
 }
 
 .prose[data-design="mrly"][data-kind="hub"] {
@@ -1409,7 +1845,7 @@ button.cell[data-design="mrly"]:hover {
 .prose[data-design="mrly"][data-kind="hub"] > :not(.cards) {
   box-sizing: border-box;
   width: 100%;
-  max-width: var(--m-page);
+  max-width: var(--m-read);
   margin-inline: auto;
 }
 
@@ -1478,6 +1914,7 @@ button.cell[data-design="mrly"]:hover {
   border: 1px solid var(--line);
   border-radius: var(--s2);
   background: var(--paper);
+  object-fit: contain;
 }
 
 .prose[data-design="mrly"] > p:has(> .button) {
@@ -1504,6 +1941,149 @@ button.cell[data-design="mrly"]:hover {
   text-align: center;
 }
 
+/* AFTER */
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ :is(p, .scroll) {
+  box-sizing: border-box;
+  max-width: var(--m-read);
+  margin: 0 auto;
+  padding: var(--s2) var(--s5);
+  border-inline: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-body) / var(--m-lead) var(--m-face);
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] + :is(p, .scroll) {
+  margin-top: var(--s2);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line);
+  border-radius: var(--s2) var(--s2) 0 0;
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ :is(p, .scroll):last-child {
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 var(--s2) var(--s2);
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] + :is(p, .scroll):last-child {
+  border-radius: var(--s2);
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ p > a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hue, var(--line));
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ .scroll {
+  overflow-x: auto;
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ .scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--t3) / var(--lh2) var(--mono);
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ .scroll :is(th, td) {
+  padding: var(--s2) var(--s3);
+  border: 0;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ .scroll th {
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ .scroll tr:last-child td {
+  border-bottom: 0;
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ .scroll td code {
+  padding: 2px var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue, var(--deep));
+  color: var(--black);
+  font-size: inherit;
+  white-space: nowrap;
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ .scroll td a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.window[data-design="mrly"] main .prose[data-design="mrly"][data-kind="hub"] ~ .scroll td a:hover {
+  text-decoration: underline;
+}
+
+.window[data-design="mrly"] .kit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.window[data-design="mrly"] .kit .jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--m-unit);
+  margin-top: var(--s3);
+}
+
+.window[data-design="mrly"] .kit .card .jump > a.chip:not(.cell) {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--m-huge);
+  margin: 0;
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: var(--round);
+  background: var(--fill-strong);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  text-decoration: none;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.window[data-design="mrly"] .kit .card .jump > a.chip:not(.cell):hover {
+  background: var(--ink);
+  box-shadow: none;
+  color: var(--paper);
+}
+
+.window[data-design="mrly"] .kit > section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin: 0;
+}
+
+.window[data-design="mrly"] .kit > section > h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  margin: var(--s2) 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+}
+
 /* READ */
 
 .app[data-design="mrly"] .page:not(.source) > .prose:not([data-design]) {
@@ -1518,14 +2098,22 @@ button.cell[data-design="mrly"]:hover {
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) {
-  font: var(--t4) / var(--m-line) var(--mono);
+  font: var(--m-body) / var(--m-lead) var(--m-face);
   overflow-wrap: break-word;
+}
+
+.prose[data-design="mrly"] > .card.body {
+  padding: var(--s6);
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) p {
+  text-wrap: pretty;
 }
 
 [data-design="mrly"]
   :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
   :where(p, ul, ol, pre, blockquote, .table, figure, math[display="block"]) {
-  margin: 0 0 var(--s3);
+  margin: 0 0 var(--s4);
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) h1 {
@@ -1537,25 +2125,26 @@ button.cell[data-design="mrly"]:hover {
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) h2 {
   position: relative;
-  margin: var(--s6) 0 var(--s3);
-  padding-left: var(--s4);
+  margin: var(--s7) 0 var(--s4);
+  padding-left: var(--s6);
   font: var(--m-large) / var(--lh1) var(--m-pixel);
   letter-spacing: 0;
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) h2::before {
   position: absolute;
-  top: calc((var(--lh1) * var(--m-large) - var(--s2)) / 2);
+  top: calc((var(--lh1) * var(--m-large) - var(--s4)) / 2);
   left: 0;
-  width: var(--s2);
-  height: var(--s2);
+  width: var(--s4);
+  height: var(--s4);
+  border-radius: var(--m-unit);
   background: var(--hue, var(--gray));
   content: "";
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) :is(h3, h4) {
-  margin: var(--s5) 0 var(--m-unit);
-  font: var(--t4) / var(--m-line) var(--mono);
+  margin: var(--s6) 0 var(--s1);
+  font: var(--m-head) / var(--lh2) var(--m-face);
   font-weight: 650;
   letter-spacing: 0;
 }
@@ -1608,17 +2197,12 @@ button.cell[data-design="mrly"]:hover {
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ul > li::before {
   position: absolute;
-  top: calc((var(--m-line) - var(--m-unit)) / 2);
+  top: calc(0.5lh - var(--m-unit) / 2);
   left: calc(var(--m-unit) / 2 - var(--s4));
   width: var(--m-unit);
   height: var(--m-unit);
   background: var(--hue, var(--gray));
   content: "";
-}
-
-[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ol > li::marker {
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) li {
@@ -1627,7 +2211,7 @@ button.cell[data-design="mrly"]:hover {
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) li + li,
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) li > :is(ul, ol) {
-  margin-top: var(--m-unit);
+  margin-top: var(--s1);
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) li > :is(ul, ol, p) {
@@ -1642,7 +2226,7 @@ button.cell[data-design="mrly"]:hover {
   padding: 1px var(--m-unit);
   border-radius: var(--m-unit);
   background: var(--fill-strong);
-  font: var(--m-small) / var(--lh1) var(--mono);
+  font: var(--m-code) / var(--lh1) var(--mono);
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) pre {
@@ -1663,7 +2247,8 @@ button.cell[data-design="mrly"]:hover {
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) blockquote {
-  padding: var(--s2) var(--s3) var(--s2) var(--s4);
+  padding: var(--s3) var(--s4) var(--s3) var(--s5);
+  font: var(--m-lede) / var(--lh2) var(--m-face);
   border: 0;
   border-radius: var(--m-unit);
   background: var(--fill);
@@ -1697,7 +2282,7 @@ button.cell[data-design="mrly"]:hover {
   border-spacing: var(--m-unit);
   border-radius: var(--m-unit);
   background: var(--hue, var(--gray));
-  font: var(--m-small) / var(--lh2) var(--mono);
+  font: var(--t3) / var(--lh2) var(--m-face);
 }
 
 [data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) :is(th, td) {
@@ -1769,6 +2354,26 @@ button.cell[data-design="mrly"]:hover {
   color: var(--ink);
 }
 
+.prose[data-design="mrly"] > .card.lede:has(> p.lead:only-child) {
+  padding: 0 var(--s4) var(--s3);
+  border: 0;
+  background: none;
+  text-align: center;
+}
+
+.prose[data-design="mrly"] > .card.lede:has(> p.lead:only-child) > p.lead {
+  font: var(--m-lede) / var(--lh2) var(--m-face);
+  text-wrap: balance;
+}
+
+:root:not([data-window="none"])
+  .window[data-design="mrly"]
+  .prose[data-design="mrly"]
+  > .card.lede:has(> p.lead:only-child)
+  > p.lead {
+  color: var(--black);
+}
+
 .prose[data-design="mrly"] .card.lede > p.by {
   color: var(--muted);
   font: var(--m-small) / var(--m-line) var(--mono);
@@ -1776,6 +2381,305 @@ button.cell[data-design="mrly"]:hover {
 
 .prose[data-design="mrly"] .card.lede > p.by + p.lead {
   margin-top: var(--m-unit);
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ol {
+  padding-left: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ol > li {
+  position: relative;
+  box-sizing: border-box;
+  min-height: var(--m-cell);
+  padding: calc((var(--m-cell) - 1lh) / 2) var(--s3) calc((var(--m-cell) - 1lh) / 2) calc(var(--m-cell) + var(--s3));
+  border-radius: var(--s2);
+  background: var(--fill);
+  counter-increment: step;
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ol > li::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: var(--m-cell);
+  height: var(--m-cell);
+  border-radius: var(--s2);
+  background: var(--step);
+  color: var(--black);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+  content: counter(step);
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ul.links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--s2);
+  padding-left: 0;
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ul.links > li {
+  position: relative;
+  margin: 0;
+  padding: var(--s4) var(--s3) var(--s3);
+  border-radius: var(--s2);
+  background: var(--fill);
+  box-shadow: inset 0 var(--m-unit) 0 var(--step);
+  color: var(--muted);
+  font: var(--t4) / var(--lh2) var(--m-face);
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ul.links > li::before {
+  content: none;
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ul.links > li > a:first-child {
+  color: var(--ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  ul.links
+  > li
+  > a:first-child::after {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--s2);
+  content: "";
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  ul.links
+  > li
+  > a:not(:first-child) {
+  position: relative;
+  z-index: 1;
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  ul.links
+  > li:has(> a:first-child > img:first-child) {
+  overflow: hidden;
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  ul.links
+  > li
+  > a:first-child
+  > img:first-child {
+  display: block;
+  width: calc(100% + 2 * var(--s3));
+  max-width: none;
+  height: auto;
+  margin: calc(var(--m-unit) - var(--s4)) calc(-1 * var(--s3)) var(--s3);
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ul.links > li:hover {
+  background: var(--step);
+  color: var(--black);
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ul.links > li:hover > a,
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  ul.links
+  > li
+  > a:first-child:hover {
+  background: none;
+  color: var(--black);
+  box-shadow: none;
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 1) {
+  --step: var(--red);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 2) {
+  --step: var(--orange);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 3) {
+  --step: var(--yellow);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 4) {
+  --step: var(--green);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 5) {
+  --step: var(--mint);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 6) {
+  --step: var(--teal);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 7) {
+  --step: var(--cyan);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 8) {
+  --step: var(--blue);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 9) {
+  --step: var(--indigo);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 10) {
+  --step: var(--purple);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 11) {
+  --step: var(--pink);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n + 12) {
+  --step: var(--brown);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  :is(ol, ul.links)
+  > li:nth-child(13n) {
+  --step: var(--gray);
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) :is(h3, h4) > code:only-child {
+  display: inline-block;
+  padding: 2px var(--s2);
+  border-radius: var(--round);
+  background: var(--hue, var(--gray));
+  color: var(--black);
+  font: var(--m-head) / var(--lh2) var(--mono);
+  font-weight: 650;
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) ul.contains-task-list {
+  padding-left: 0;
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) li.task-list-item {
+  position: relative;
+  padding: var(--s3) var(--s3) var(--s3) calc(2 * var(--s3) + var(--s5));
+  border-radius: var(--s2);
+  background: var(--fill);
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) li.task-list-item::before {
+  content: none;
+}
+
+[data-design="mrly"] :is(.page:not(.source) > .prose:not([data-design]), .prose > .card) li.task-list-item > input {
+  position: absolute;
+  top: calc(var(--s3) + 0.5lh - var(--s5) / 2);
+  left: var(--s3);
+  width: var(--s5);
+  height: var(--s5);
+  margin: 0;
+  border: var(--m-unit) solid var(--hue, var(--gray));
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  appearance: none;
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  li.task-list-item
+  > input:checked {
+  background: var(--hue, var(--gray));
+}
+
+.prose[data-design="mrly"][data-kind] > .card.body > pre {
+  margin-inline: calc(-1 * var(--s6));
+  padding: var(--s4);
+  border-radius: 0;
+  font: var(--m-pre) / var(--s4) var(--mono);
+}
+
+[data-design="mrly"]
+  :is(.page:not(.source) > .prose:not([data-design]), .prose > .card)
+  ul.links
+  > li
+  > code:last-child {
+  display: block;
+  width: fit-content;
+  margin-top: var(--s2);
+  padding: 2px var(--s2);
+  border-radius: var(--round);
+  background: var(--step);
+  color: var(--black);
+}
+
+.prose[data-design="mrly"][data-kind] > .card.body > figure:first-child {
+  margin: calc(-1 * var(--s6)) calc(-1 * var(--s6)) var(--s6);
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: calc(var(--s2) - 1px) calc(var(--s2) - 1px) 0 0;
+  overflow: hidden;
+  background: none;
+}
+
+.prose[data-design="mrly"] > .card.body > figure:first-child > img {
+  border-radius: 0;
+  background: none;
+}
+
+.prose[data-design="mrly"] > .card.body > figure:first-child > figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 /* CARDS */
@@ -1890,6 +2794,10 @@ button.cell[data-design="mrly"]:hover {
   margin: 0;
 }
 
+[data-design="mrly"] .gallery.grid > .tile > figure > figcaption {
+  flex: 1 0 auto;
+}
+
 [data-design="mrly"] .gallery.grid > .tile > figure > canvas {
   display: block;
   width: 100%;
@@ -1981,9 +2889,15 @@ button.cell[data-design="mrly"]:hover {
   padding: 0;
 }
 
-.tile[data-design="mrly"] .art > :is(svg, img, canvas):first-child {
+.tile[data-design="mrly"] .art > :is(svg, img, canvas, .face):first-child {
   width: 50%;
   height: 50%;
+}
+
+.tile[data-design="mrly"] .art > .face:first-child > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 [data-design="mrly"] .tile .text {
@@ -2059,7 +2973,10 @@ button.cell[data-design="mrly"]:hover {
 }
 
 .launchpad[data-design="mrly"] .more {
-  border: 1px solid var(--line);
+  border: 0;
+  border-radius: var(--round);
+  background: var(--fill-strong);
+  letter-spacing: 0.1em;
 }
 
 .launchpad[data-design="mrly"] .names {
@@ -2357,16 +3274,6 @@ button.cell[data-design="mrly"]:hover {
   flex: none;
   width: var(--m-cell);
   height: var(--m-cell);
-}
-
-.widgets[data-design="mrly"] .body .appicon {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.widgets[data-design="mrly"] .body .appicon :is(.lift, .glow, .rim, .shade) {
-  display: none;
 }
 
 /* DESK */

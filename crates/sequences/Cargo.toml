@@ -1,0 +1,21 @@
+[package]
+name = "mrly-sequences"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "The sequence rows: a design sequence's address, its measure and axis, its terms and its status."
+readme = "README.md"
+include = ["src/**", "README.md", "LICENSE"]
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-core.workspace = true
+mrly-math.workspace = true

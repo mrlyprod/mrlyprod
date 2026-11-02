@@ -3,8 +3,6 @@
 
 /// The markdown page the ledger renders.
 pub mod markdown;
-/// The measures and their cost classes.
-pub mod measure;
 /// The curated OEIS records and the identification against them.
 pub mod records;
 /// The term generators and the closed forms.
@@ -13,14 +11,13 @@ pub mod terms;
 pub mod windows;
 
 pub use markdown::markdown;
-pub use measure::{Cost, Measure};
+pub use mrly_math::counts::{fill_polynomial, Closed};
+pub use mrly_sequences::{Axis, Cost, Key, Measure, Sequence, Tag};
 pub use records::{identify, Record, RECORDS};
-pub use terms::{closed, fill_polynomial, terms};
+pub use terms::{closed, terms};
 
 use mrly_core::error::{value_error, Result};
-use mrly_core::name::Named;
 use mrly_math::bang::baseq;
-use mrly_math::name::{Bang, Sequence as SequenceName};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 
@@ -44,219 +41,6 @@ pub const BUDGET: u128 = 500_000;
 
 /// The terms a catalog row holds.
 pub const TERMS: usize = 8;
-
-/// The index a sequence runs along.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Axis {
-    /// The fractal level from 1, at side `max(base, 3)`.
-    Level,
-    /// The odd side `2k - 1` from `k = 2`, at level 1.
-    Side,
-    /// The window side `k` from 1, over every level of the design at side `max(base, 3)`.
-    Window,
-}
-
-impl Axis {
-    /// Every axis, level first.
-    pub const ALL: [Axis; 3] = [Axis::Level, Axis::Side, Axis::Window];
-    /// Returns the axis's one-word name.
-    pub fn slug(self) -> &'static str {
-        match self {
-            Axis::Level => "level",
-            Axis::Side => "side",
-            Axis::Window => "window",
-        }
-    }
-    /// Parses a one-word name back into its axis, or an error for any other word.
-    pub fn parse(slug: &str) -> Result<Axis> {
-        match slug {
-            "level" => Ok(Axis::Level),
-            "side" => Ok(Axis::Side),
-            "window" => Ok(Axis::Window),
-            other => value_error(format!("unknown axis {other:?}.")),
-        }
-    }
-    /// Returns the ledger index of the first term: the level 1, the `k` of side 3 or the window side 1.
-    pub fn start(self) -> i32 {
-        match self {
-            Axis::Level | Axis::Window => 1,
-            Axis::Side => 2,
-        }
-    }
-    /// Returns the side number and level of the term at the index; on the window axis the level slot carries the window side.
-    pub fn place(self, index: usize, number: usize) -> (usize, u32) {
-        match self {
-            Axis::Level | Axis::Window => (number, index as u32 + 1),
-            Axis::Side => (2 * index + 3, 1),
-        }
-    }
-}
-
-/// The status a claim carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Tag {
-    /// Proved on this tree.
-    Proved,
-    /// Checked against a record or a second generator.
-    Verified,
-    /// Stated and not yet checked.
-    Conjecture,
-    /// Checked and found false.
-    Refuted,
-}
-
-impl Tag {
-    /// Returns the tag's capitalised word.
-    pub fn text(self) -> &'static str {
-        match self {
-            Tag::Proved => "Proved",
-            Tag::Verified => "Verified",
-            Tag::Conjecture => "Conjecture",
-            Tag::Refuted => "Refuted",
-        }
-    }
-}
-
-/// A design sequence's address: the design, the measure and the axis.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Key {
-    /// The design's code.
-    pub code: u128,
-    /// The design's dimension.
-    pub dimension: usize,
-    /// The numeral base of the corners.
-    pub base: usize,
-    /// The reading taken.
-    pub measure: Measure,
-    /// The index the reading runs along.
-    pub axis: Axis,
-}
-
-impl Key {
-    /// Pins a design sequence to its address.
-    pub const fn new(
-        code: u128,
-        dimension: usize,
-        base: usize,
-        measure: Measure,
-        axis: Axis,
-    ) -> Key {
-        Key {
-            code,
-            dimension,
-            base,
-            measure,
-            axis,
-        }
-    }
-    /// Returns the sequence name this key addresses.
-    pub fn named(&self) -> SequenceName {
-        SequenceName::new(
-            self.code,
-            self.dimension,
-            self.base,
-            self.measure.slug(),
-            self.axis.slug(),
-        )
-    }
-    /// Returns the sequence's file name.
-    ///
-    /// ```
-    /// use ledger::{Axis, Key, Measure};
-    /// let key = Key::new(23, 3, 2, Measure::Surface, Axis::Level);
-    /// assert_eq!(key.name(), "sequence_dim=3_code=23_measure=surface_axis=level");
-    /// assert_eq!(key.id(), "753b6b49");
-    /// ```
-    pub fn name(&self) -> String {
-        self.named().to_file().unwrap_or_default()
-    }
-    /// Returns the first eight hex digits of the sha256 of the sequence's canonical JSON.
-    pub fn id(&self) -> String {
-        self.named().to_id()
-    }
-    /// Returns the design pinned to its dimension and base.
-    pub fn design(&self) -> Bang {
-        Bang::new(self.code, self.dimension, self.base)
-    }
-    /// Returns the side number the level axis runs at.
-    pub fn number(&self) -> usize {
-        self.base.max(3)
-    }
-}
-
-/// A closed form of a sequence.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Closed {
-    /// `fill^level`.
-    Power(u128),
-    /// `cells^level - fill^level`.
-    Difference(u128, u128),
-    /// A polynomial in `k` by rising power, at side `2k - 1`.
-    Polynomial(Vec<i128>),
-    /// `a(level) = c[0] a(level-1) + c[1] a(level-2) + ...`.
-    Recurrence(Vec<i128>),
-}
-
-fn signed(text: &mut String, coefficient: i128, first: bool) {
-    if first {
-        if coefficient < 0 {
-            text.push('-');
-        }
-    } else {
-        text.push_str(if coefficient < 0 { " - " } else { " + " });
-    }
-}
-
-impl Closed {
-    /// Spells the closed form.
-    pub fn text(&self) -> String {
-        match self {
-            Closed::Power(f) => format!("{f}^level"),
-            Closed::Difference(g, f) => format!("{g}^level - {f}^level"),
-            Closed::Polynomial(coefficients) => {
-                let mut text = String::new();
-                for (power, &c) in coefficients.iter().enumerate().rev() {
-                    if c == 0 {
-                        continue;
-                    }
-                    let first = text.is_empty();
-                    signed(&mut text, c, first);
-                    if c.abs() != 1 || power == 0 {
-                        text.push_str(&c.abs().to_string());
-                    }
-                    match power {
-                        0 => {}
-                        1 => text.push('k'),
-                        _ => text.push_str(&format!("k^{power}")),
-                    }
-                }
-                if text.is_empty() {
-                    text.push('0');
-                }
-                text
-            }
-            Closed::Recurrence(coefficients) => {
-                let mut text = String::new();
-                for (back, &c) in coefficients.iter().enumerate() {
-                    if c == 0 {
-                        continue;
-                    }
-                    let first = text.is_empty();
-                    signed(&mut text, c, first);
-                    if c.abs() != 1 {
-                        text.push_str(&c.abs().to_string());
-                        text.push(' ');
-                    }
-                    text.push_str(&format!("a(level-{})", back + 1));
-                }
-                if text.is_empty() {
-                    text.push('0');
-                }
-                format!("a(level) = {text}")
-            }
-        }
-    }
-}
 
 /// A cost tier of the catalog.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -317,26 +101,18 @@ impl Tier {
     }
 }
 
-/// One row of the catalog: a design sequence with its terms, its closed form and its record.
+/// One row of the catalog: a design sequence with the record its terms match.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Sequence {
-    /// The sequence's address.
-    pub key: Key,
-    /// The first terms.
-    pub terms: Vec<i128>,
-    /// Whether the cell budget or a u128 stopped the terms short.
-    pub capped: bool,
-    /// The closed form, when one is known.
-    pub closed: Option<Closed>,
+pub struct Row {
+    /// The design sequence.
+    pub sequence: Sequence,
     /// The record the terms match, with the record's index less the ledger's.
     pub record: Option<(&'static Record, i32)>,
-    /// The status of the match: the record's when the record names this key, else a collision to explain.
-    pub tag: Option<Tag>,
 }
 
-impl Sequence {
+impl Row {
     fn mentions(&self, needle: &str) -> bool {
-        self.key.name().contains(needle)
+        self.sequence.key.name().contains(needle)
             || self.record.is_some_and(|(record, _)| {
                 record.id.to_lowercase().contains(needle)
                     || record.name.to_lowercase().contains(needle)
@@ -400,7 +176,7 @@ fn attach(key: &Key, terms: &[i128]) -> Option<(&'static Record, i32)> {
 }
 
 /// Reads one design sequence: its terms within the budget, its closed form and the record it matches.
-pub fn sequence(key: &Key, count: usize, cells: u128) -> Result<Sequence> {
+pub fn sequence(key: &Key, count: usize, cells: u128) -> Result<Row> {
     let (terms, capped) = terms(key, count, cells)?;
     let closed = closed(key)?;
     let record = attach(key, &terms);
@@ -411,18 +187,20 @@ pub fn sequence(key: &Key, count: usize, cells: u128) -> Result<Sequence> {
             Tag::Conjecture
         }
     });
-    Ok(Sequence {
-        key: *key,
-        terms,
-        capped,
-        closed,
+    Ok(Row {
+        sequence: Sequence {
+            key: *key,
+            terms,
+            capped,
+            closed,
+            tag,
+        },
         record,
-        tag,
     })
 }
 
 /// Reads every sequence of a tier at the count of terms, within the standing cell budget.
-pub fn catalog(tier: Tier, count: usize) -> Vec<Sequence> {
+pub fn catalog(tier: Tier, count: usize) -> Vec<Row> {
     keys(tier)
         .iter()
         .filter_map(|key| sequence(key, count, BUDGET).ok())
@@ -442,7 +220,7 @@ pub fn numbers(text: &str) -> Option<Vec<i128>> {
 }
 
 /// Finds the catalog rows a query names: the rows holding the typed terms as a window, or the rows whose name or record holds the typed fragment.
-pub fn search(catalog: &[Sequence], query: &str) -> Vec<usize> {
+pub fn search(catalog: &[Row], query: &str) -> Vec<usize> {
     let query = query.trim();
     if query.is_empty() {
         return (0..catalog.len()).collect();
@@ -452,7 +230,8 @@ pub fn search(catalog: &[Sequence], query: &str) -> Vec<usize> {
             .iter()
             .enumerate()
             .filter(|(_, row)| {
-                row.terms
+                row.sequence
+                    .terms
                     .windows(window.len())
                     .any(|w| w == window.as_slice())
             })
@@ -475,12 +254,12 @@ mod tests {
     #[test]
     fn the_classics_read_their_records() {
         let carpet = sequence(&Key::new(7, 2, 2, Measure::Fills, Axis::Side), 4, BUDGET).unwrap();
-        assert_eq!(carpet.terms, [8, 21, 40, 65]);
+        assert_eq!(carpet.sequence.terms, [8, 21, 40, 65]);
         assert_eq!(carpet.record.map(|(r, s)| (r.id, s)), Some(("A000567", 0)));
-        assert_eq!(carpet.tag, Some(Tag::Proved));
-        assert_eq!(carpet.closed.unwrap().text(), "3k^2 - 2k");
+        assert_eq!(carpet.sequence.tag, Some(Tag::Proved));
+        assert_eq!(carpet.sequence.closed.unwrap().text(), "3k^2 - 2k");
         let tree = sequence(&Key::new(3, 2, 2, Measure::Fills, Axis::Side), 4, BUDGET).unwrap();
-        assert_eq!(tree.terms[..3], [6, 15, 28]);
+        assert_eq!(tree.sequence.terms[..3], [6, 15, 28]);
         assert_eq!(tree.record.map(|(r, s)| (r.id, s)), Some(("A000384", 0)));
         let sponge = sequence(
             &Key::new(23, 3, 2, Measure::Surface, Axis::Level),
@@ -488,9 +267,9 @@ mod tests {
             BUDGET,
         )
         .unwrap();
-        assert_eq!(sponge.terms, [72, 1056, 18048]);
+        assert_eq!(sponge.sequence.terms, [72, 1056, 18048]);
         assert_eq!(
-            sponge.closed.unwrap().text(),
+            sponge.sequence.closed.unwrap().text(),
             "a(level) = 28 a(level-1) - 160 a(level-2)"
         );
         let slice = sequence(
@@ -499,12 +278,12 @@ mod tests {
             BUDGET,
         )
         .unwrap();
-        assert_eq!(slice.terms, [42, 306, 2250, 16578]);
-        assert!(slice.capped);
+        assert_eq!(slice.sequence.terms, [42, 306, 2250, 16578]);
+        assert!(slice.sequence.capped);
         assert_eq!(slice.record.map(|(r, s)| (r.id, s)), Some(("A299916", 1)));
         let void = sequence(&Key::new(9, 2, 2, Measure::Voids, Axis::Side), 3, BUDGET).unwrap();
-        assert_eq!(void.closed.unwrap().text(), "2k^2 - 2k");
-        assert_eq!(void.terms, [4, 12, 24]);
+        assert_eq!(void.sequence.closed.unwrap().text(), "2k^2 - 2k");
+        assert_eq!(void.sequence.terms, [4, 12, 24]);
     }
 
     #[test]
@@ -520,11 +299,12 @@ mod tests {
             .iter()
             .all(|key| key.measure.cost(key.axis) == Cost::Closed));
         assert!(designs(3, 3).is_err());
+        assert_eq!(Tier::parse("side").unwrap(), Tier::SideGrid);
     }
 
     #[test]
     fn the_search_finds_terms_and_names() {
-        let rows: Vec<Sequence> = [
+        let rows: Vec<Row> = [
             Key::new(7, 2, 2, Measure::Fills, Axis::Level),
             Key::new(7, 2, 2, Measure::Surface, Axis::Level),
             Key::new(23, 3, 2, Measure::Fills, Axis::Level),
@@ -541,25 +321,5 @@ mod tests {
         assert!(search(&rows, "5, 6, 7").is_empty());
         assert_eq!(numbers("1, 2 3"), Some(vec![1, 2, 3]));
         assert_eq!(numbers("1, x"), None);
-    }
-
-    #[test]
-    fn the_closed_forms_spell_themselves() {
-        assert_eq!(Closed::Power(8).text(), "8^level");
-        assert_eq!(Closed::Difference(9, 8).text(), "9^level - 8^level");
-        assert_eq!(Closed::Polynomial(vec![1, -2, 2]).text(), "2k^2 - 2k + 1");
-        assert_eq!(Closed::Polynomial(vec![0, 0, 1]).text(), "k^2");
-        assert_eq!(Closed::Polynomial(vec![-1, 0, -1]).text(), "-k^2 - 1");
-        assert_eq!(Closed::Polynomial(vec![0]).text(), "0");
-        assert_eq!(
-            Closed::Recurrence(vec![11, -24]).text(),
-            "a(level) = 11 a(level-1) - 24 a(level-2)"
-        );
-        assert_eq!(Closed::Recurrence(vec![1]).text(), "a(level) = a(level-1)");
-        assert_eq!(Closed::Recurrence(vec![0]).text(), "a(level) = 0");
-        assert_eq!(Axis::Side.place(0, 3), (3, 1));
-        assert_eq!(Axis::Level.place(2, 3), (3, 3));
-        assert_eq!(Tier::parse("side").unwrap(), Tier::SideGrid);
-        assert!(Axis::parse("depth").is_err());
     }
 }

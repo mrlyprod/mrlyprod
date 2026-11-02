@@ -177,6 +177,6 @@ test("every blocks rule is scoped to the design", () => {
   const loose = [...rules]
     .flatMap(([, one]) => one!.split(/,(?![^(]*\))/))
     .map((one) => one.trim())
-    .filter((one) => one && !/^(?::root:has\()?\[data-design="blocks"\]/.test(one));
+    .filter((one) => one && !/^(?::root(?:\[data-theme="(?:light|dark)"\])?:has\()?\[data-design="blocks"\]/.test(one));
   expect(loose).toEqual([]);
 });

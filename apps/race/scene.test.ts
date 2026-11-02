@@ -18,14 +18,18 @@ type Sheet = { width: number; height: number; log: Call[]; image: Picture | null
 
 type Said = (value: Value, scene: Pick<Race, "phase"> | null) => string;
 
+const STOPS = { addColorStop: () => {} };
+
 const pen = (log: Call[]) =>
   new Proxy<Pen>(
     {},
     {
       get:
         (_, key) =>
-        (...args: unknown[]) =>
-          log.push([key, ...args.map((arg) => (arg && typeof arg === "object" ? "page" : arg))]),
+        (...args: unknown[]) => {
+          log.push([key, ...args.map((arg) => (arg && typeof arg === "object" ? "page" : arg))]);
+          return STOPS;
+        },
       set: (_, key, v: unknown) => {
         log.push([key, v]);
         return true;
@@ -128,7 +132,8 @@ const ms = (tick: number, speed = 720) => Math.ceil((tick * 1000) / speed);
 
 const arcs = (log: Call[]) => log.filter(([name]) => name === "arc");
 
-const blits = (log: Call[]) => log.filter(([name]) => name === "drawImage");
+const blits = (log: Call[]) =>
+  log.filter(([name], i) => name === "drawImage" && log[i - 1]?.[0] === "imageSmoothingEnabled" && !log[i - 1][1]);
 
 const widths = (log: Call[]) => log.filter(([name]) => name === "lineWidth").map(([, w]) => w);
 
@@ -335,7 +340,7 @@ test("a new finish moves the goal ring at once, ends a race already past it and 
   live.set({ finish: 22 });
   expect(live.scene.phase()).toBe("running");
   const log = live.at(ms(400));
-  expect(arcs(log)[0][3]).toBe(22 * 9);
+  expect(arcs(log)[0][3]).toBe(22 * 8);
 });
 
 test("new walkers start a fresh race on the same boards that waits at step 0", () => {
@@ -482,4 +487,88 @@ test("the scene boots the state deal deals from the value and the seed", () => {
       const seed = (value as { seed?: number }).seed ?? VALUE.seed;
       expect(open(value, { lock }).scene.state()).toEqual(deal(knobs, { seed, units: { math } }));
     }
+});
+
+test("every colour handed to the pen is finite, at the start and after world seeks, in light, dark and the lock", () => {
+  const bad: unknown[] = [];
+  const check = (value: unknown) => {
+    if (typeof value === "string" && /NaN|Infinity|undefined/.test(value)) bad.push(value);
+  };
+  const ctx = new Proxy({} as CanvasRenderingContext2D, {
+    get: (_, key) =>
+      String(key).endsWith("Gradient")
+        ? () => ({ addColorStop: (_at: number, color: string) => check(color) })
+        : () => {},
+    set: (_, _key, value) => {
+      check(value);
+      return true;
+    },
+  });
+  const was = (globalThis as { getComputedStyle?: unknown }).getComputedStyle;
+  try {
+    for (const bg of ["#070707", "#f8f8f9"]) {
+      Object.assign(globalThis, {
+        getComputedStyle: () => ({ getPropertyValue: (name: string) => (name === "--bg" ? bg : "") }),
+      });
+      for (const [value, lock] of [
+        [{}, false],
+        [SAVERS[0].pick(rng(2)), true],
+        [SAVERS[1].pick(rng(2)), true],
+      ] as [Partial<Knobs>, boolean][]) {
+        const view: Seen = {
+          rand: rng(1),
+          look: () => ({ accent: "#6768fa" }),
+          still: false,
+          lock,
+          w: 800,
+          h: 600,
+          dpr: 2,
+          t: 0,
+        };
+        const scene = make(Object.assign({} as HTMLCanvasElement, { getContext: () => ctx }), view, {
+          ...VALUE,
+          math,
+          ...value,
+        });
+        scene.go();
+        for (const until of [500, 3000, 12000]) {
+          while (view.t < until) {
+            view.t += 1000 / 60;
+            scene.draw();
+          }
+        }
+      }
+    }
+  } finally {
+    Object.assign(globalThis, { getComputedStyle: was });
+  }
+  expect(bad).toEqual([]);
+});
+
+test("a stage smaller than its margins never hands the pen a negative radius", () => {
+  for (const [w, h] of [
+    [20, 20],
+    [60, 40],
+  ]) {
+    const live = open({}, { w, h });
+    live.at(0);
+    live.scene.go();
+    const log = live.at(ms(END) + 200);
+    const bent = log.filter(
+      ([key, , , ...r]) =>
+        (key === "arc" && Number(r[0]) < 0) || (key === "roundRect" && [r[2]].flat().some((v) => Number(v) < 0)),
+    );
+    expect([w, h, bent]).toEqual([w, h, []]);
+  }
+});
+
+test("the lit floor is drawn once per layout, not once per frame, and the finish plays out then holds", () => {
+  const live = running();
+  for (let t = 0; t <= ms(END) + 3000; t += 1000 / 60) live.at(t);
+  const floor = pages.filter((page) => page.width === 1600 && page.height === 1000).at(-1)!;
+  expect(floor.log.filter(([name]) => name === "createRadialGradient")).toHaveLength(1);
+  const fresh = running();
+  fresh.at(ms(END));
+  expect(fresh.at(ms(END) + 500).length).toBeGreaterThan(0);
+  expect(fresh.at(ms(END) + 60000)).toEqual([]);
 });

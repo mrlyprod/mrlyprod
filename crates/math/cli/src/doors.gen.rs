@@ -1214,6 +1214,20 @@ pub(crate) static DOORS: &[Function] = &[
         door: Some(door_math_cell_serializer_types_field),
     },
     Function {
+        name: "math.coprime.gasket",
+        signature: "(level: u32) -> u64",
+        docs: "Counts the coprime points of the Sierpinski gasket at a level: the pairs `0 <= i, j < 2^level` with `i AND j = 0` and `gcd(i, j) = 1`, the sequence [A396934](https://oeis.org/A396934).\n\nWalks the rows `m = i + j = i OR j`: only odd rows hold a coprime pair, `gcd(i, j) = gcd(i, m)`, the odd submasks `i` of `m` are kept when coprime to `m`, and the swap `(i, j) -> (j, i)` doubles them.\n\n# Errors\n\nFails past `GASKET_LEVELS`.",
+        uncallable: None,
+        door: Some(door_math_coprime_gasket),
+    },
+    Function {
+        name: "math.counts.Closed.text",
+        signature: "(self: math.counts.Closed) -> String",
+        docs: "Spells the closed form.",
+        uncallable: None,
+        door: Some(door_math_counts_closed_text),
+    },
+    Function {
         name: "math.counts.Exposure.at",
         signature: "(self: math.counts.Exposure, level: u32) -> u128?",
         docs: "Returns the exposed faces of the level-fold Kronecker power, or none past a u128.",
@@ -1368,6 +1382,13 @@ pub(crate) static DOORS: &[Function] = &[
         door: Some(door_math_counts_fill_from_corners),
     },
     Function {
+        name: "math.counts.fill_polynomial",
+        signature: "(corners: [[u8]], dimension: usize) -> [i128]",
+        docs: "Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`.",
+        uncallable: None,
+        door: Some(door_math_counts_fill_polynomial),
+    },
+    Function {
         name: "math.counts.grid",
         signature: "(number: usize, dimension: usize, level: u32) -> u128",
         docs: "Returns the total cells of the grid, number to the dimension, to the level.",
@@ -1464,6 +1485,13 @@ pub(crate) static DOORS: &[Function] = &[
         docs: "Returns the fill ratio the code walks toward as the side number grows, reduced.\n\nThe ratio is the corner count over the corner slots, so it is always rational: the\ncarpet holds three corners of four and the sponge four of eight.\n\n# Errors\n\nErrors when the code is out of range, or the limit overflows at this level.",
         uncallable: None,
         door: Some(door_math_counts_limit),
+    },
+    Function {
+        name: "math.counts.odd_power",
+        signature: "(dimension: usize) -> [i128]",
+        docs: "Expands the whole grid at side `2k - 1`, `(2k - 1)^dimension`, into coefficients by rising power of `k`.",
+        uncallable: None,
+        door: Some(door_math_counts_odd_power),
     },
     Function {
         name: "math.counts.pairs",
@@ -6932,6 +6960,21 @@ fn door_math_cell_serializer_types_field(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_coprime_gasket(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u32 = take!(name, 0, &args[0]);
+    match mrly_math::coprime::gasket(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Error::Library(error.to_string())),
+    }
+}
+
+fn door_math_counts_closed_text(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrly_math::counts::Closed = take!(name, 0, &args[0]);
+    Ok(give!(mrly_math::counts::Closed::text(&a0)))
+}
+
 fn door_math_counts_exposure_at(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrly_math::counts::Exposure = take!(name, 0, &args[0]);
@@ -7081,6 +7124,19 @@ fn door_math_counts_fill_from_corners(name: &str, args: &[Value]) -> Done {
     Ok(Value::String(
         mrly_math::counts::fill_from_corners(&a0, a1, a2, a3, a4).to_string(),
     ))
+}
+
+fn door_math_counts_fill_polynomial(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<Vec<u8>> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrly_math::counts::fill_polynomial(&a0, a1) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_counts_grid(name: &str, args: &[Value]) -> Done {
@@ -7314,6 +7370,18 @@ fn door_math_counts_limit(name: &str, args: &[Value]) -> Done {
         }),
         Err(error) => Err(Error::Library(error.to_string())),
     }
+}
+
+fn door_math_counts_odd_power(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrly_math::counts::odd_power(a0) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_counts_pairs(name: &str, args: &[Value]) -> Done {

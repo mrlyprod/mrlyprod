@@ -4802,6 +4802,128 @@
       "alias": null
     },
     {
+      "path": "math::counts::Closed",
+      "name": "Closed",
+      "defined_at": "math/counts/closed.rs:5",
+      "docs": [
+        "A closed form of a design sequence."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Power",
+          "word": null,
+          "docs": [
+            "`fill^level`."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "u128"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Difference",
+          "word": null,
+          "docs": [
+            "`cells^level - fill^level`."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "u128"
+              }
+            },
+            {
+              "name": "1",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "u128"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Polynomial",
+          "word": null,
+          "docs": [
+            "A polynomial in `k` by rising power, at side `2k - 1`."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "i128"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recurrence",
+          "word": null,
+          "docs": [
+            "`a(level) = c[0] a(level-1) + c[1] a(level-2) + ...`."
+          ],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "i128"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "alias": null
+    },
+    {
       "path": "math::counts::Exposure",
       "name": "Exposure",
       "defined_at": "math/counts/surface.rs:53",

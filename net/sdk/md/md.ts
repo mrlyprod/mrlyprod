@@ -1,5 +1,5 @@
 import type { Element, Root as Hast, RootContent as HastContent } from "hast";
-import type { Heading, Nodes, Paragraph, Root } from "mdast";
+import type { Heading, ListItem, Nodes, Paragraph, Root } from "mdast";
 import rehypeStringify from "rehype-stringify";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -163,6 +163,11 @@ function figure(src: string, node: Paragraph, opts: Options, lazy: boolean): Raw
   };
 }
 
+const led = (item: ListItem) => {
+  const first = item.children[0];
+  return first?.type === "paragraph" && first.children[0]?.type === "link";
+};
+
 function shape(src: string, opts: Options) {
   return (tree: Root) => {
     const ids = new Map<string, number>();
@@ -182,8 +187,11 @@ function shape(src: string, opts: Options) {
         const seen = ids.get(base) ?? 0;
         ids.set(base, seen + 1);
         node.data = { ...node.data, hProperties: { id: seen ? `${base}-${seen}` : base } };
-      } else if (node.type === "list") node.spread = false;
-      else if (node.type === "listItem") node.spread = false;
+      } else if (node.type === "list") {
+        node.spread = false;
+        if (node.children.length > 1 && node.children.every(led))
+          node.data = { ...node.data, hProperties: { className: ["links"] } };
+      } else if (node.type === "listItem") node.spread = false;
       else if (node.type === "image" || node.type === "imageReference") {
         if (node.type === "image" && opts.link) node.url = opts.link(node.url, true) ?? node.url;
         if (images++) node.data = { ...node.data, hProperties: { loading: "lazy", decoding: "async" } };

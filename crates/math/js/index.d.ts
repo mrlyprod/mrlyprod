@@ -600,6 +600,12 @@ export declare namespace cell {
         export function types_field(data: any): any;
     }
 }
+export declare namespace coprime {
+    /** Counts the coprime points of the Sierpinski gasket at a level: the pairs `0 <= i, j < 2^level` with `i AND j = 0` and `gcd(i, j) = 1`, the sequence [A396934](https://oeis.org/A396934). */
+    export function gasket(level: number): bigint;
+    /** The highest level `gasket` counts. */
+    export function GASKET_LEVELS(): number;
+}
 export declare namespace core {
     /** A rule that turns counter values into colors. */
     export type Colorizer = { Bins: { background: ColorData; ramp: ColorData[] } };
@@ -629,10 +635,14 @@ export declare namespace counts {
     export function fill(code: string | number | bigint, number: number, dimension: number, level: number, base: number): string;
     /** Sums each corner's position products into a base fill and raises it to the level. */
     export function fill_from_corners(filled: ArrayLike<number>[], number: number, _dimension: number, level: number, base: number): string;
+    /** Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`. */
+    export function fill_polynomial(corners: ArrayLike<number>[], dimension: number): string[];
     /** Returns the total cells of the grid, number to the dimension, to the level. */
     export function grid(number: number, dimension: number, level: number): string;
     /** Returns the fill ratio the code walks toward as the side number grows, reduced. */
     export function limit(code: string | number | bigint, dimension: number, level: number, base: number): [string, string];
+    /** Expands the whole grid at side `2k - 1`, `(2k - 1)^dimension`, into coefficients by rising power of `k`. */
+    export function odd_power(dimension: number): string[];
     /** Counts, per axis, the adjacent filled pairs and the cross positions whose two end cells are both filled. */
     export function pairs(tile: Tensor): [string, string][];
     /** Counts the indices below number that equal residue modulo base. */
@@ -657,6 +667,18 @@ export declare namespace counts {
     export function surface(code: string | number | bigint, number: number, level: number, base: number): string;
     /** Returns the empty cell count, grid minus fill. */
     export function void_(code: string | number | bigint, number: number, dimension: number, level: number, base: number): string;
+    export type ClosedData = { Power: bigint } | { Difference: [bigint, bigint] } | { Polynomial: bigint[] } | { Recurrence: bigint[] };
+    /** A closed form of a design sequence. */
+    export class Closed {
+        private constructor();
+        free(): void;
+        /** Reads the Closed from its plain data. */
+        static from(data: ClosedData): Closed;
+        /** Writes the Closed as plain data. */
+        toJSON(): ClosedData;
+        /** Spells the closed form. */
+        text(): string;
+    }
     export interface ExposureData {
         /** The filled cells of the tile. */
         occupancy: bigint;

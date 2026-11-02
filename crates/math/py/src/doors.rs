@@ -3289,6 +3289,38 @@ pub mod math {
         }
     }
 
+    /// The coprime points of a design: the Sierpinski gasket's pairs with no common divisor, counted row by row.
+    pub mod coprime {
+        use crate::hand::ok;
+        use pyo3::IntoPyObjectExt;
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+
+        /// Counts the coprime points of the Sierpinski gasket at a level: the pairs `0 <= i, j < 2^level` with `i AND j = 0` and `gcd(i, j) = 1`, the sequence [A396934](https://oeis.org/A396934).
+        #[pyfunction]
+        #[pyo3(name = "gasket", signature = (level))]
+        pub fn gasket<'py>(py: Python<'py>, level: u32) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly_math::coprime::gasket(level);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrly.math.coprime")?;
+            m.setattr("__doc__", "The coprime points of a design: the Sierpinski gasket's pairs with no common divisor, counted row by row.")?;
+            m.add_function(wrap_pyfunction!(gasket, &m)?)?;
+            m.add("GASKET_LEVELS", mrly_math::coprime::GASKET_LEVELS)?;
+            let names: Vec<&str> = vec!["gasket", "GASKET_LEVELS"];
+            m.add("__all__", names)?;
+            parent.add("coprime", &m)?;
+            sys.set_item("mrly.math._math.math.coprime", &m)?;
+            Ok(())
+        }
+    }
+
     /// The closed-form counts.
     pub mod counts {
         use crate::hand::{PyCode, PyTensor, ok};
@@ -3635,6 +3667,30 @@ pub mod math {
             }
         }
 
+        /// A closed form of a design sequence.
+        #[pyclass(name = "Closed", module = "mrly.math.counts", from_py_object)]
+        #[derive(Clone)]
+        pub struct Closed(pub mrly_math::counts::Closed);
+
+        #[pymethods]
+        impl Closed {
+            /// Spells the closed form.
+            #[pyo3(name = "text", signature = ())]
+            pub fn text<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrly_math::counts::Closed::text(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Reads plain data into the class.
+            #[staticmethod]
+            pub fn from_dict(data: &Bound<'_, PyAny>) -> PyResult<Self> {
+                Ok(Self(crate::hand::serde_from_py(data)?))
+            }
+            /// Returns the value as plain data.
+            pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                crate::hand::serde_into_py(py, &self.0)
+            }
+        }
+
         /// The counts the exposure recurrence runs on: the filled cells and exposed faces of the tile, and per axis its adjacent pairs and spanning positions.
         #[pyclass(name = "Exposure", module = "mrly.math.counts", from_py_object)]
         #[derive(Clone)]
@@ -3966,6 +4022,18 @@ pub mod math {
             (out).into_bound_py_any(py)
         }
 
+        /// Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`.
+        #[pyfunction]
+        #[pyo3(name = "fill_polynomial", signature = (corners, dimension))]
+        pub fn fill_polynomial<'py>(
+            py: Python<'py>,
+            corners: Vec<Vec<u8>>,
+            dimension: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly_math::counts::fill_polynomial(&corners, dimension);
+            (out).into_bound_py_any(py)
+        }
+
         /// Returns the total cells of the grid, number to the dimension, to the level.
         #[pyfunction]
         #[pyo3(name = "grid", signature = (number, dimension, level))]
@@ -3992,6 +4060,14 @@ pub mod math {
             let code = code.0;
             let out = mrly_math::counts::limit(code, dimension, level, base);
             (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Expands the whole grid at side `2k - 1`, `(2k - 1)^dimension`, into coefficients by rising power of `k`.
+        #[pyfunction]
+        #[pyo3(name = "odd_power", signature = (dimension))]
+        pub fn odd_power<'py>(py: Python<'py>, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrly_math::counts::odd_power(dimension);
+            (out).into_bound_py_any(py)
         }
 
         /// Counts, per axis, the adjacent filled pairs and the cross positions whose two end cells are both filled.
@@ -4172,6 +4248,7 @@ pub mod math {
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrly.math.counts")?;
             m.setattr("__doc__", "The closed-form counts.\n\nEvery number the censuses reach by walking a built cell, this folder reaches by formula:\nfills, grids, exposed surfaces, hex slices and the base-q carry ladder.")?;
+            m.add_class::<Closed>()?;
             m.add_class::<Exposure>()?;
             m.add_class::<Placements>()?;
             m.add_class::<Skeleton>()?;
@@ -4185,8 +4262,10 @@ pub mod math {
             m.add_function(wrap_pyfunction!(exposure_recurrence, &m)?)?;
             m.add_function(wrap_pyfunction!(fill, &m)?)?;
             m.add_function(wrap_pyfunction!(fill_from_corners, &m)?)?;
+            m.add_function(wrap_pyfunction!(fill_polynomial, &m)?)?;
             m.add_function(wrap_pyfunction!(grid, &m)?)?;
             m.add_function(wrap_pyfunction!(limit, &m)?)?;
+            m.add_function(wrap_pyfunction!(odd_power, &m)?)?;
             m.add_function(wrap_pyfunction!(pairs, &m)?)?;
             m.add_function(wrap_pyfunction!(positions, &m)?)?;
             m.add_function(wrap_pyfunction!(pro_fills, &m)?)?;
@@ -4210,8 +4289,10 @@ pub mod math {
                 "exposure_recurrence",
                 "fill",
                 "fill_from_corners",
+                "fill_polynomial",
                 "grid",
                 "limit",
+                "odd_power",
                 "pairs",
                 "positions",
                 "pro_fills",
@@ -4224,6 +4305,7 @@ pub mod math {
                 "skeleton_recurrence",
                 "surface",
                 "void",
+                "Closed",
                 "Exposure",
                 "Placements",
                 "Skeleton",
@@ -11986,7 +12068,7 @@ pub mod math {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrly.math")?;
-        m.setattr("__doc__", "The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level into a fractal design, and the same code always unfolds into the same shape, so a design can be named, counted and drawn again from its number alone. Everything rests on the tensors and cells of `mrly_core` and the sequences of `mrly_num`.\n\n# The design pipeline\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `name` holds the bang, sequence and word kinds of the canonical name.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches.\n- `spectrum` reads the Laplacian spectra off a network.\n- `nodal` rings the plate a design cuts: its lowest modes, nodal domains and Courant bounds.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `arcs` lays two quarter arcs in every cell and follows the loops they join into.\n\n# Line and Dirichlet designs\n\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation, their four regions and the chain certificate.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `game`: the chaos game of a design: its de Bruijn schedules, the restricted games that draw the memory dial's sets, and the mosaic and slice games on a graph.\n- `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.\n\n# Wheels\n\n- `spin` spins a raster about its centre.\n- `tourbillon` stacks the turned parity carpets inside the inscribed disc.\n- `spirograph` rolls a byte grid as a wheel and draws the curves of its pencils.\n- `roulette` counts where those curves cross.\n\nThe doors are `crate::atoms::carpet_2d`, `crate::bang::bang`,\n`crate::two::carpet`, `crate::two::census()`, `crate::two::to_json`,\n`crate::counts::fill`, `crate::three::census::surface` and\n`crate::spectrum::laplacian_spectrum`.")?;
+        m.setattr("__doc__", "The designs: codes, cells, cubes and hexagons, their counts, graphs and names, digit designs on the line, and wheels.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level into a fractal design, and the same code always unfolds into the same shape, so a design can be named, counted and drawn again from its number alone. Everything rests on the tensors and cells of `mrly_core` and the sequences of `mrly_num`.\n\n# The design pipeline\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `name` holds the bang, sequence and word kinds of the canonical name.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches.\n- `spectrum` reads the Laplacian spectra off a network.\n- `nodal` rings the plate a design cuts: its lowest modes, nodal domains and Courant bounds.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `arcs` lays two quarter arcs in every cell and follows the loops they join into.\n- `coprime` counts the gasket's coprime points.\n\n# Line and Dirichlet designs\n\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation, their four regions and the chain certificate.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `game`: the chaos game of a design: its de Bruijn schedules, the restricted games that draw the memory dial's sets, and the mosaic and slice games on a graph.\n- `sumset`: the base-3 design plus the base-4 design of Erdos problem 125, its density and energy.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `arrays`: a sparse sensor array, its difference coarray, its essential sensors and the fractal array a generator grows.\n\n# Wheels\n\n- `spin` spins a raster about its centre.\n- `tourbillon` stacks the turned parity carpets inside the inscribed disc.\n- `spirograph` rolls a byte grid as a wheel and draws the curves of its pencils.\n- `roulette` counts where those curves cross.\n\nThe doors are `crate::atoms::carpet_2d`, `crate::bang::bang`,\n`crate::two::carpet`, `crate::two::census()`, `crate::two::to_json`,\n`crate::counts::fill`, `crate::three::census::surface` and\n`crate::spectrum::laplacian_spectrum`.")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         arcs::init(py, &m, sys)?;
@@ -11995,6 +12077,7 @@ pub mod math {
         automaton::init(py, &m, sys)?;
         bang::init(py, &m, sys)?;
         cell::init(py, &m, sys)?;
+        coprime::init(py, &m, sys)?;
         counts::init(py, &m, sys)?;
         design::init(py, &m, sys)?;
         dissection::init(py, &m, sys)?;

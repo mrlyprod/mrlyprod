@@ -25,7 +25,21 @@ async function session(start: Session, lines: string[]) {
 
 test("discovery finds the reducer apps and no other", async () => {
   const found = await reducers();
-  for (const id of ["canon", "chaos", "life", "matrix", "mend", "race", "sleep", "snake"]) expect(found).toContain(id);
+  for (const id of [
+    "beam",
+    "canon",
+    "chaos",
+    "fold",
+    "frost",
+    "life",
+    "matrix",
+    "mend",
+    "race",
+    "sleep",
+    "snake",
+    "swirl",
+  ])
+    expect(found).toContain(id);
   for (const id of ["apollonian", "ulam", "designs", "shared"]) expect(found).not.toContain(id);
 });
 

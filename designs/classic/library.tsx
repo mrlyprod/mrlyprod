@@ -66,7 +66,7 @@ export function Library({ label, chips, chip, onChip, shelves }: Props["library"
           <li key={shelf.name}>
             <details open>
               <summary>
-                <span className="sunken box">
+                <span className="sunken sign">
                   <span className="shut">
                     <Glyph art="plus" />
                   </span>

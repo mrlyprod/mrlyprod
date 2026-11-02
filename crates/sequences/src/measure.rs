@@ -1,5 +1,5 @@
 use super::Axis;
-use mrly_core::error::{value_error, Result};
+use mrly_core::error::{Result, value_error};
 
 /// The cost class of a measure along an axis.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

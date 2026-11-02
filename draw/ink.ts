@@ -54,7 +54,11 @@ const byte = (v: number) => {
 };
 export const clamp = (v: number) => (v < 0 ? 0 : Math.min(v, 1));
 
-function color(value: Swatch, name: string): Color {
+const long = (text: string) =>
+  /^#[0-9a-f]{3,4}$/i.test(text) ? `#${[...text.slice(1)].map((c) => c + c).join("")}` : text;
+
+function color(swatch: Swatch, name: string): Color {
+  const value = typeof swatch === "string" ? long(swatch) : swatch;
   if (typeof value === "string" && /^#?([0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) {
     const hex = value.replace("#", "");
     const n = (i: number) => parseInt(hex.slice(i, i + 2), 16);

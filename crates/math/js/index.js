@@ -192,7 +192,12 @@ export const cell = {
         types_field: wasm.math_cell_serializer_types_field,
     },
 };
+export const coprime = {
+    GASKET_LEVELS: wasm.math_coprime_GASKET_LEVELS,
+    gasket: wasm.math_coprime_gasket,
+};
 export const counts = {
+    Closed: wasm.math_counts_Closed,
     Exposure: wasm.math_counts_Exposure,
     Placements: wasm.math_counts_Placements,
     Skeleton: wasm.math_counts_Skeleton,
@@ -206,8 +211,10 @@ export const counts = {
     exposure_recurrence: wasm.math_counts_exposure_recurrence_,
     fill: wasm.math_counts_fill,
     fill_from_corners: wasm.math_counts_fill_from_corners,
+    fill_polynomial: wasm.math_counts_fill_polynomial,
     grid: wasm.math_counts_grid,
     limit: wasm.math_counts_limit,
+    odd_power: wasm.math_counts_odd_power,
     pairs: wasm.math_counts_pairs,
     positions: wasm.math_counts_positions,
     pro_fills: wasm.math_counts_pro_fills,

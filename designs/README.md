@@ -13,15 +13,16 @@
 - `MRLY_DESIGN=mrly bun run build`, from the repo root, builds mrly.net in another design; the build prints the design it wears.
 - `../net/hosts/web/scripts/design.ts` is the draw and the `site:design*` virtual modules; `../net/hosts/web/scripts/README.md` has them.
 
-## THE FOUR
+## THE FIVE
 
 - `glass/`: mrly.net's pin: glass bubbles over the desk, lit by its WebGL engine (`glass/engine/`), which `start` loads after the first route; a `[data-lens]` piece is solid until the engine lights it (`data-lit`), and `html[data-glass="off"]` keeps everything solid.
 - `mrly/`: hashes each app id to a hue in `start`, and writes in MrlyFont.
 - `classic/`: plain windows and pixel glyphs (`classic/glyphs.tsx`).
 - `blocks/`: hard ink-on-paper blocks with cast shadows (`blocks/brick.ts`).
+- `terminal/`: a phosphor screen in dark and a teletype page in light: monospace only, framed panes, F-key menus, gauges and banners drawn in ASCII (`terminal/banner.ts`).
 - `shared/`: the sheets and fonts every design wears today, `base.css` among them; no `index.ts`, so the draw skips it; `shared/README.md` has them.
 
 ## TESTS
 
-- Each design has its own test beside it (`glass/glass.test.tsx`, `mrly/mrly.test.tsx`, `classic/classic.test.tsx`, `blocks/blocks.test.tsx`); `../net/shell/design.test.ts` holds the contract.
+- Each design has its own test beside it (`glass/glass.test.tsx`, `mrly/mrly.test.tsx`, `classic/classic.test.tsx`, `blocks/blocks.test.tsx`, `terminal/terminal.test.tsx`); `../net/shell/design.test.ts` holds the contract.
 - `bun test designs` from the repo root runs them.

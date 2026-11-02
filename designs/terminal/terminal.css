@@ -1,0 +1,3610 @@
+/* SCOPE */
+
+:root:has(.terminal) {
+  color-scheme: light dark;
+  --math: "Noto Sans Math", math;
+  --t1: 11px;
+  --t2: 12px;
+  --t3: 13px;
+  --t4: 14px;
+  --t5: 14px;
+  --t6: 16px;
+  --t7: 20px;
+  --lh1: 1.25;
+  --lh2: 1.4;
+  --lh3: 1.55;
+  --text: var(--t3);
+  --read-text: var(--t4);
+  --s1: 2px;
+  --s2: 4px;
+  --s3: 8px;
+  --s4: 12px;
+  --s5: 16px;
+  --s6: 24px;
+  --s7: 32px;
+  --s8: 48px;
+  --r-window: 0;
+  --r-panel: 0;
+  --r-control: 0;
+  --r-inset: 0;
+  --round: 0;
+  --hair: 1px solid var(--soft);
+  --ring: 1px dashed var(--fg);
+  --rim: none;
+  --lift: none;
+  --float: none;
+  --deep: var(--well);
+  --solid: var(--bg);
+  --frost: var(--bg);
+  --art: var(--bg);
+  --hover: var(--well);
+  --seam: var(--soft);
+  --gap: 8px;
+  --touch: 44px;
+  --title: 20px;
+  --top: 24px;
+  --below: 24px;
+  --read: 680px;
+  --page: 984px;
+  --pace: 0ms;
+  --ease: linear;
+}
+
+:root[data-theme="light"]:has(.terminal) {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"]:has(.terminal) {
+  color-scheme: dark;
+}
+
+:root:has(.terminal) body {
+  background: var(--ground);
+  font-family: var(--mono);
+}
+
+:root:has(.terminal) ::selection {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+:root:has(.terminal) body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 2px, var(--scan) 2px 3px),
+    radial-gradient(ellipse at center, transparent 55%, var(--bloom) 100%);
+}
+
+.terminal {
+  --double: 3px double var(--line);
+  --single: 1px solid var(--line);
+  --cast: 8px 8px 0 var(--shade);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  font-variant-ligatures: none;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--glow);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* BASE */
+
+.terminal *,
+.terminal *::before,
+.terminal *::after {
+  box-sizing: border-box;
+  border-radius: 0;
+  transition: none;
+}
+
+.terminal [hidden] {
+  display: none !important;
+}
+
+.terminal.frame,
+.terminal .frame {
+  background: var(--bg);
+  border: var(--double);
+}
+
+.terminal button,
+.terminal select,
+.terminal input,
+.terminal textarea {
+  color: inherit;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 20px;
+  text-shadow: inherit;
+  margin: 0;
+}
+
+.terminal button {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.terminal button:focus-visible,
+.terminal a:focus-visible,
+.terminal summary:focus-visible,
+.terminal select:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+.terminal .knob {
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: pre;
+}
+
+.terminal .knob:hover,
+.terminal .knob:focus-visible {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+  outline: 0;
+}
+
+.terminal .cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.2em;
+  background: currentColor;
+  box-shadow: var(--glow);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .terminal .cursor {
+    animation: terminal-blink 1.06s steps(1) infinite;
+  }
+}
+
+@keyframes terminal-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.terminal .field {
+  height: 22px;
+  min-width: 0;
+  padding: 1px 6px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  outline: 0;
+  background: var(--well);
+  color: var(--fg);
+  caret-color: var(--fg);
+  caret-shape: block;
+  font-family: var(--mono);
+}
+
+.terminal .field:focus {
+  border-bottom-color: var(--hi);
+  color: var(--hi);
+}
+
+.terminal .field::placeholder {
+  color: var(--dim);
+  opacity: 1;
+}
+
+.terminal ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: repeating-linear-gradient(to bottom, var(--soft) 0 1px, transparent 1px 4px);
+}
+
+.terminal ::-webkit-scrollbar-thumb {
+  background: var(--dim);
+  border: 2px solid var(--bg);
+}
+
+.terminal ::-webkit-scrollbar-corner {
+  background: var(--bg);
+}
+
+/* TITLE */
+
+.terminal .title {
+  position: relative;
+  z-index: 1;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: -12px 8px 0;
+  padding: 0;
+  color: var(--fg);
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.terminal .title > * {
+  pointer-events: auto;
+}
+
+.terminal .title .name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 1ch;
+  background: var(--bg);
+  color: var(--hi);
+}
+
+.terminal .title .name::before {
+  content: "[ ";
+  color: var(--dim);
+}
+
+.terminal .title .name::after {
+  content: " ]";
+  color: var(--dim);
+}
+
+.terminal .title .close {
+  position: absolute;
+  left: 0;
+  padding: 0 4px;
+  background: var(--bg);
+}
+
+.terminal .title .actions:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
+.terminal .title .actions {
+  position: absolute;
+  right: 0;
+  display: flex;
+  gap: 0;
+  padding: 0 4px;
+  background: var(--bg);
+}
+
+/* BAR */
+
+.terminal.bar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 8px;
+  background: var(--band);
+  color: var(--on-band);
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+.terminal.bar a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.terminal.bar .start {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.terminal.bar .start img {
+  filter: var(--phosphor);
+  opacity: 0.9;
+}
+
+.terminal.bar .start:hover b,
+.terminal.bar .start:focus-visible b {
+  background: var(--on-band);
+  color: var(--band);
+}
+
+.terminal.bar .trio {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.terminal.bar .prompt {
+  opacity: 0.8;
+}
+
+.terminal.bar .task {
+  margin-left: 1ch;
+  font-weight: 700;
+}
+
+.terminal.bar .tray {
+  display: flex;
+  align-items: center;
+  gap: 2ch;
+}
+
+.terminal.bar .tray a:hover,
+.terminal.bar .tray a:focus-visible {
+  background: var(--on-band);
+  color: var(--band);
+  outline: 0;
+}
+
+.terminal.bar .clock {
+  font-weight: 700;
+}
+
+/* MENU */
+
+.terminal.menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 22ch;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  box-shadow: var(--cast);
+}
+
+.terminal.menu[popover] {
+  inset: auto;
+  margin: 0;
+  color: var(--fg);
+  position-area: bottom span-right;
+}
+
+.terminal.menu[popover]:not(:popover-open) {
+  display: none;
+}
+
+.terminal.menu[data-menu] {
+  position-area: none;
+  translate: 0 calc(-100% - 21px);
+  box-shadow: 8px 0 0 var(--shade);
+}
+
+.terminal.menu.context {
+  left: var(--x);
+  top: var(--y);
+  position-area: none;
+}
+
+.terminal.menu .item {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  padding: 0 2ch 0 0;
+  color: var(--fg);
+  text-align: left;
+  text-decoration: none;
+  white-space: pre;
+}
+
+.terminal.menu .item:hover,
+.terminal.menu .item:focus {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+  outline: 0;
+}
+
+.terminal.menu .gutter {
+  width: 5ch;
+  flex: none;
+  text-align: center;
+}
+
+.terminal.menu .label {
+  flex: 1;
+}
+
+.terminal.menu .chord {
+  display: flex;
+  align-items: center;
+  padding-left: 4ch;
+  color: var(--dim);
+}
+
+.terminal.menu .item:hover .chord,
+.terminal.menu .item:focus .chord {
+  color: inherit;
+}
+
+.terminal.menu .chord svg {
+  display: none;
+}
+
+.terminal.menu .off {
+  color: var(--off);
+  pointer-events: none;
+}
+
+.terminal.menu hr {
+  height: 0;
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px dashed var(--soft);
+}
+
+/* WINDOW */
+
+.terminal.window {
+  position: relative;
+  z-index: 1;
+  width: var(--win, var(--width, 736px));
+  max-width: calc(100% - 32px);
+  max-height: calc(100dvh - 80px);
+  display: flex;
+  flex-direction: column;
+  margin: 40px auto 16px;
+  padding: 0 2px;
+  box-shadow: var(--cast);
+}
+
+:root[data-window="wide"] .terminal.window {
+  width: var(--wide, 1248px);
+}
+
+:root[data-window="app"] .terminal.window,
+.terminal.window.zoomed {
+  position: fixed;
+  inset: 34px 0 24px;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  box-shadow: none;
+}
+
+:root[data-window="none"] .terminal.window {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+:root[data-window="none"] .terminal.window > .title,
+:root[data-window="none"] .terminal.window > .menubar,
+:root[data-window="none"] .terminal.window > .edge {
+  display: none;
+}
+
+:root[data-window="none"] .terminal.window .well,
+:root[data-window="none"] .terminal.window > .panes > main {
+  background: none;
+}
+
+.terminal.window > .edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+}
+
+.terminal.window > .edge.left,
+.terminal.window > .edge[data-side="left"] {
+  left: -5px;
+}
+
+.terminal.window > .edge.right,
+.terminal.window > .edge[data-side="right"] {
+  right: -5px;
+}
+
+:root[data-window="app"] .terminal.window > .edge,
+.terminal.window.zoomed > .edge {
+  display: none;
+}
+
+.terminal.window > .panes {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  margin-top: 4px;
+}
+
+.terminal.window > .panes > main > div:has(.terminal.app),
+.terminal.window > .panes > main > div > div:has(> .terminal.app) {
+  height: 100%;
+}
+
+.terminal.window .well,
+.terminal.window > .panes > main {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dim) transparent;
+}
+
+.terminal.window > .panes > main > .prose:not(.terminal) {
+  max-width: none;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.terminal.window .pane {
+  width: 30ch;
+  flex: none;
+  padding: 0 1ch 8px;
+  border-left: var(--single);
+  overflow: auto;
+}
+
+.terminal.window .pane > .head {
+  margin: 0 -1ch 4px;
+  padding: 0 1ch;
+  background: var(--band);
+  color: var(--on-band);
+  text-shadow: none;
+}
+
+.terminal.window .pane > .head::before {
+  content: "# ";
+}
+
+.terminal.window .pane .contents summary {
+  margin: 0 0 4px;
+  color: var(--dim);
+  list-style: none;
+}
+
+.terminal.window .pane .contents summary::-webkit-details-marker {
+  display: none;
+}
+
+.terminal.window .pane .contents summary::before {
+  content: "## ";
+}
+
+.terminal.window .pane .contents ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.terminal.window .pane .contents a {
+  display: block;
+  padding: 0 1ch;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.terminal.window .pane .contents a::before {
+  content: "  ";
+  white-space: pre;
+}
+
+.terminal.window .pane .contents li.h3 a {
+  padding-left: 3ch;
+}
+
+.terminal.window .pane .contents a:hover,
+.terminal.window .pane .contents a[aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.window .pane .contents a[aria-current]::before {
+  content: "> ";
+}
+
+.terminal.window .scrim {
+  display: none;
+}
+
+.terminal .menubar {
+  flex: none;
+  margin: 4px -2px 0;
+  border-top: var(--single);
+}
+
+.terminal .menubar .menus {
+  height: 20px;
+  display: flex;
+  gap: 1ch;
+  padding: 0 1ch;
+  counter-reset: fkey;
+}
+
+.terminal.window > .menubar:has(> .menus:empty) {
+  display: none;
+}
+
+.terminal .menubar .menus button {
+  height: 20px;
+  display: flex;
+  padding: 0 2ch 0 0;
+  background: var(--band);
+  color: var(--on-band);
+  text-shadow: none;
+  counter-increment: fkey;
+}
+
+.terminal .menubar .menus button::before {
+  content: "F" counter(fkey);
+  margin-right: 1ch;
+  padding: 0 0 0 1ch;
+  background: var(--bg);
+  color: var(--hi);
+  font-weight: 700;
+  text-shadow: var(--glow);
+}
+
+.terminal .menubar .menus button:hover,
+.terminal .menubar .menus button[aria-expanded="true"] {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+/* APP */
+
+.terminal.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal.app .wells {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.terminal.app .column {
+  flex: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal.app .column.stage {
+  flex: 1;
+  min-width: 320px;
+}
+
+.terminal.app .column.stage > .well {
+  position: relative;
+  background: var(--art);
+}
+
+.terminal.app .column > .well {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: auto;
+}
+
+.terminal.app .grip {
+  width: 9px;
+  flex: none;
+  background: linear-gradient(var(--line), var(--line)) center / 1px 100% no-repeat;
+  cursor: ew-resize;
+}
+
+.terminal.app .grip:hover {
+  background: repeating-linear-gradient(to bottom, var(--hi) 0 4px, transparent 4px 8px) center / 3px 100% no-repeat;
+}
+
+.terminal.app .actions,
+.terminal.app .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 1ch;
+}
+
+.terminal.app .actions {
+  padding: 4px 1ch;
+  border-top: 1px dashed var(--soft);
+}
+
+.terminal.app .actions:has(> .buttons:empty:only-child) {
+  display: none;
+}
+
+.terminal.app .buttons > .design {
+  height: 20px;
+  max-width: 24ch;
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  min-height: 0;
+  padding: 0 1ch;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.terminal.app .buttons > .design::before {
+  content: "[";
+}
+
+.terminal.app .buttons > .design::after {
+  content: "]";
+}
+
+.terminal.app .buttons > .design:hover {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.app .buttons > .design canvas {
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  image-rendering: pixelated;
+}
+
+.terminal.app .buttons .button svg,
+.terminal.app .cell .button svg,
+.terminal.app .unzen svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  fill: currentColor;
+}
+
+.terminal.app .buttons .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1ch;
+}
+
+.terminal.app .chooser {
+  padding: 4px;
+  background: var(--bg);
+  border: var(--double);
+  box-shadow: var(--cast);
+  color: var(--fg);
+}
+
+.terminal.app.float .wells {
+  position: relative;
+}
+
+.terminal.app.float .column.left,
+.terminal.app.float .column.right {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  z-index: 2;
+  box-shadow: var(--cast);
+}
+
+.terminal.app.float .column.left {
+  left: 8px;
+}
+
+.terminal.app.float .column.right {
+  right: 8px;
+}
+
+.terminal.app .status {
+  height: 21px;
+  display: flex;
+  align-items: stretch;
+  border-top: var(--single);
+}
+
+.terminal.app .cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 2ch;
+  padding: 0 1ch;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--dim);
+}
+
+.terminal.app .cell:not(.hints)::before {
+  content: "-- ";
+}
+
+.terminal.app .cell.hints {
+  flex: none;
+  max-width: 50%;
+}
+
+.terminal.app .cell:empty {
+  display: none;
+}
+
+.terminal.app .cell .button.icon {
+  width: 20px;
+  min-width: 0;
+  height: 20px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.terminal.app .cell .button.icon::before,
+.terminal.app .cell .button.icon::after {
+  content: none;
+}
+
+.terminal.app .cell.hints .button.icon {
+  margin-left: auto;
+}
+
+.terminal.app .column.right > .well {
+  padding: 4px 1ch 8px;
+}
+
+.terminal.app .column.left > .well {
+  padding: 0;
+}
+
+.terminal.app .controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.terminal.app .controls:empty {
+  display: none;
+}
+
+.terminal.app .controls.tail {
+  margin-top: 8px;
+}
+
+.terminal.app .controls > .terminal.group,
+.terminal.app .controls > * > .terminal.group {
+  margin: 12px 0 0;
+}
+
+.terminal.app .hints kbd {
+  margin-right: 1ch;
+  padding: 0 0.5ch;
+  background: var(--band);
+  color: var(--on-band);
+  font-family: var(--mono);
+  text-shadow: none;
+}
+
+.terminal.app .unzen {
+  display: none;
+}
+
+:root[data-zen] .terminal.bar,
+:root[data-zen] .terminal.dock,
+:root[data-zen] .terminal.window > .title,
+:root[data-zen] .terminal.window > .menubar,
+:root[data-zen] .terminal.app .column.left,
+:root[data-zen] .terminal.app .column.right,
+:root[data-zen] .terminal.app .grip,
+:root[data-zen] .terminal.app .actions,
+:root[data-zen] .terminal.app .status {
+  display: none;
+}
+
+:root[data-zen] .terminal.window {
+  inset: 0;
+  padding: 0;
+  border: 0;
+}
+
+:root[data-zen] .terminal.app .unzen {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* CONTROL */
+
+.terminal.control {
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+}
+
+.terminal.control .label {
+  flex: none;
+  min-width: 8ch;
+  color: var(--fg);
+}
+
+.terminal.control .num {
+  min-width: 5ch;
+  color: var(--hi);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.terminal.slider {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0 1ch;
+}
+
+.terminal.slider .label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal.slider .track {
+  position: relative;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  justify-self: start;
+  display: inline-flex;
+}
+
+.terminal.slider .gauge {
+  white-space: pre;
+  letter-spacing: 0;
+}
+
+.terminal.slider input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+}
+
+.terminal.slider:focus-within .gauge,
+.terminal.slider .track:hover .gauge {
+  background: var(--well);
+  color: var(--hi);
+}
+
+.terminal.slider:has(input:focus-visible) .gauge {
+  outline: 1px dashed var(--fg);
+  outline-offset: 1px;
+}
+
+.terminal.number .spin {
+  display: flex;
+  align-items: center;
+}
+
+.terminal.number .field {
+  width: 7ch;
+  text-align: right;
+}
+
+.terminal.toggle {
+  gap: 1ch;
+}
+
+.terminal.toggle .check,
+.terminal.segment label {
+  position: relative;
+}
+
+.terminal.toggle input,
+.terminal.segment input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.terminal.toggle .box::before {
+  content: "[ ]";
+  white-space: pre;
+}
+
+.terminal.toggle input:checked + .box::before {
+  content: "[x]";
+  color: var(--hi);
+}
+
+.terminal.toggle input:focus-visible + .box,
+.terminal.segment input:focus-visible + .dot {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.toggle .label {
+  min-width: 0;
+}
+
+.terminal.pick .drop {
+  position: relative;
+  flex: 1;
+  min-width: 12ch;
+  display: flex;
+}
+
+.terminal.pick select {
+  width: 100%;
+  height: 22px;
+  padding: 0 3ch 0 1ch;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  outline: 0;
+  appearance: none;
+  background: var(--well);
+  color: var(--fg);
+}
+
+.terminal.pick select:focus-visible {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal select option {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.terminal.pick .arrow {
+  position: absolute;
+  top: 1px;
+  right: 1ch;
+  pointer-events: none;
+}
+
+.terminal.segment {
+  align-items: flex-start;
+}
+
+.terminal.segment .options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2ch;
+}
+
+.terminal.segment.stack .options {
+  flex-direction: column;
+}
+
+.terminal.segment label {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  white-space: nowrap;
+}
+
+.terminal.segment .dot::before {
+  content: "( )";
+  white-space: pre;
+}
+
+.terminal.segment input:checked + .dot::before {
+  content: "(*)";
+  color: var(--hi);
+}
+
+.terminal.segment input:checked ~ span:last-child {
+  color: var(--hi);
+}
+
+.terminal.text {
+  flex: 1;
+}
+
+.terminal.text .field {
+  flex: 1;
+  min-width: 12ch;
+}
+
+.terminal.text.wide .field {
+  min-width: 28ch;
+}
+
+.terminal.button,
+.terminal .button.control {
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1ch;
+  padding: 0;
+  color: var(--fg);
+  white-space: pre;
+}
+
+.terminal.button::before {
+  content: "[";
+}
+
+.terminal.button::after {
+  content: "]";
+}
+
+.terminal.button.primary {
+  color: var(--hi);
+  font-weight: 700;
+}
+
+.terminal.button.primary::before {
+  content: "<";
+}
+
+.terminal.button.primary::after {
+  content: ">";
+}
+
+.terminal.button:hover,
+.terminal.button:focus-visible,
+.terminal.button.pressed,
+.terminal.button[aria-pressed="true"] {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+  outline: 0;
+}
+
+.terminal.button:active {
+  background: var(--hi);
+}
+
+.terminal.button[disabled],
+.terminal.button[aria-disabled="true"] {
+  color: var(--off);
+  pointer-events: none;
+}
+
+.terminal.button svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* GROUP */
+
+.terminal.group {
+  position: relative;
+  min-width: 0;
+  margin: 12px 0 4px;
+  padding: 6px 1ch 6px;
+  border: var(--single);
+}
+
+.terminal.group > legend {
+  padding: 0 1ch;
+  color: var(--hi);
+}
+
+.terminal.group.fold {
+  padding: 0;
+  border: 0;
+}
+
+.terminal.group > summary {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  list-style: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.terminal.group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.terminal.group > summary::after {
+  content: "";
+  order: 2;
+  flex: 1;
+  min-width: 2ch;
+  height: 0;
+  border-top: 1px dashed var(--soft);
+}
+
+.terminal.group > summary > .name {
+  color: var(--hi);
+  font-weight: 700;
+}
+
+.terminal.group > summary > .live {
+  order: 3;
+  color: var(--dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.terminal.group > summary:hover > .name {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal .sign::before {
+  content: "[+]";
+  color: var(--dim);
+}
+
+.terminal details[open] > summary .sign::before {
+  content: "[-]";
+}
+
+.terminal.group .row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.terminal.group.fold > .row {
+  padding: 4px 0 4px 2ch;
+}
+
+/* DIALOG */
+
+.terminal.dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  min-width: 36ch;
+  max-width: min(72ch, 100% - 32px);
+  height: fit-content;
+  max-height: calc(100dvh - 64px);
+  padding: 0 2px;
+  color: var(--fg);
+  box-shadow: var(--cast);
+  overflow: visible;
+}
+
+.terminal.dialog::backdrop {
+  background: var(--scrim);
+}
+
+.terminal.dialog > .body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100dvh - 96px);
+  padding: 8px 2ch 12px;
+  overflow: auto;
+}
+
+.terminal.dialog > .body > :last-child:has(> button) {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2ch;
+}
+
+.terminal.dialog.light {
+  padding: 2px 1ch;
+  background: var(--tip);
+  border: 0;
+  box-shadow: none;
+  color: var(--tip-fg);
+  text-shadow: none;
+}
+
+.terminal.dialog.light > .body {
+  padding: 0;
+}
+
+/* SETTINGS */
+
+.terminal .settings {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.terminal .settings.two {
+  background: linear-gradient(var(--line), var(--line)) var(--rail) 0 / 1px 100% no-repeat;
+}
+
+.terminal .settings .side {
+  background: var(--bg);
+}
+
+.terminal .settings .find > input {
+  min-height: 22px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--well);
+  box-shadow: none;
+}
+
+.terminal .settings .top .icon {
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 0;
+  background: none;
+  color: var(--fg);
+  box-shadow: none;
+}
+
+.terminal .settings .top .icon:hover {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.terminal .settings .list a {
+  min-height: 20px;
+  border-radius: 0;
+}
+
+.terminal .settings .list a:hover {
+  background: var(--well);
+}
+
+.terminal .settings .list a[aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  font-weight: 400;
+  text-shadow: none;
+}
+
+.terminal .settings .symbol {
+  border-radius: 0;
+  background: none;
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.terminal .settings .symbol > .glyphs {
+  fill: currentColor;
+}
+
+.terminal .settings .list a[aria-current] * {
+  color: inherit;
+}
+
+.terminal .settings h1 {
+  color: var(--hi);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.terminal .settings h1::before {
+  content: "# ";
+  color: var(--dim);
+}
+
+.terminal .settings .block > h2 {
+  padding: 0 1ch;
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+.terminal .settings .block > h2::before {
+  content: "## ";
+}
+
+.terminal .settings .box {
+  padding: 2px 0;
+  border: var(--single);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.terminal .settings .box > * + *,
+.terminal .settings .box > * + fieldset:not(.choices) > :first-child {
+  background-image: linear-gradient(to right, var(--soft) 50%, transparent 50%);
+  background-position: 0 0;
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+}
+
+.terminal .settings .item {
+  min-height: 28px;
+}
+
+.terminal .settings .push {
+  display: inline-flex;
+  align-items: center;
+  gap: 1ch;
+  min-height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--fg);
+  font-size: 13px;
+  box-shadow: none;
+}
+
+.terminal .settings .push::before {
+  content: "[";
+}
+
+.terminal .settings .push::after {
+  content: "]";
+}
+
+.terminal .settings .push:hover {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.terminal .settings .push.main {
+  background: none;
+  color: var(--hi);
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.terminal .settings .push.main::before {
+  content: "<";
+}
+
+.terminal .settings .push.main::after {
+  content: ">";
+}
+
+.terminal .settings .menu > select {
+  appearance: none;
+  min-height: 22px;
+  padding: 0 3ch 0 1ch;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--well);
+  font-size: 13px;
+  text-align: left;
+  text-align-last: left;
+  box-shadow: none;
+}
+
+.terminal .settings .menu > select:hover {
+  background: var(--well);
+}
+
+.terminal .settings .seg {
+  gap: 1ch;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.terminal .settings .seg > label {
+  min-height: 20px;
+  padding: 0 1ch;
+  border-radius: 0;
+  background: none;
+  font-size: 13px;
+  box-shadow: none;
+}
+
+.terminal .settings .seg > label:hover {
+  background: var(--well);
+}
+
+.terminal .settings .seg > label:has(:checked) {
+  background: var(--pick);
+  color: var(--on-accent);
+  font-weight: 400;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.terminal .settings .choice > .art {
+  border-radius: 0;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--soft);
+}
+
+.terminal .settings .choice:hover > .art {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.terminal .settings .choice:has(:checked) > .art {
+  box-shadow:
+    inset 0 0 0 1px var(--hi),
+    0 0 0 2px var(--bg),
+    0 0 0 3px var(--hi);
+}
+
+.terminal .settings .choice:has(:checked) > .text {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal .settings .dot {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.terminal .settings .banner {
+  border: 1px dashed var(--line);
+  border-radius: 0;
+  background: var(--well);
+  color: var(--fg);
+}
+
+/* PROSE */
+
+.terminal.prose {
+  max-width: 76ch;
+  margin: 0 auto;
+  padding: 16px 3ch 40px;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.terminal.prose.hub {
+  max-width: none;
+  padding-bottom: 16px;
+}
+
+.terminal.prose.hub > :not(.listing):not(h1):not(.intro) {
+  max-width: 76ch;
+}
+
+.terminal.prose.hub ~ p,
+.terminal.prose.hub ~ ul,
+.terminal.prose.hub ~ ol,
+.terminal.prose.hub ~ .scroll {
+  max-width: 76ch;
+  margin: 0 3ch 12px;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 22px;
+  text-shadow: var(--glow);
+}
+
+.terminal.prose.hub ~ :last-child {
+  margin-bottom: 24px;
+}
+
+.terminal.prose.hub ~ p a {
+  color: var(--web);
+}
+
+.terminal.prose.hub ~ .scroll {
+  overflow-x: auto;
+}
+
+.terminal.prose.hub ~ .scroll table {
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.terminal.prose.hub ~ .scroll th {
+  padding: 0 1ch;
+  background: var(--band);
+  color: var(--on-band);
+  font-weight: 700;
+  text-align: left;
+  text-shadow: none;
+}
+
+.terminal.prose.hub ~ .scroll td {
+  padding: 0 1ch;
+  border: 1px solid var(--soft);
+}
+
+.terminal.prose > h1,
+.terminal.app .page > .prose:not(.terminal) h1 {
+  position: relative;
+  display: table;
+  margin: 0 0 22px;
+  padding: 0 0 22px;
+  color: var(--hi);
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 26px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.terminal.prose > h1::after,
+.terminal.app .page > .prose:not(.terminal) h1::after {
+  content: "================================================================================================================";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  overflow: hidden;
+  color: var(--dim);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.terminal.prose > h2 {
+  margin: 8px 0 12px;
+  color: var(--hi);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.terminal.prose > h2::before {
+  content: "## ";
+  color: var(--dim);
+}
+
+.terminal.prose > .by {
+  margin: -16px 0 22px;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.terminal.prose > .by::before {
+  content: "-- ";
+}
+
+.terminal.prose > .opener {
+  margin: 4px 0 22px;
+}
+
+.terminal.prose > .opener canvas {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  aspect-ratio: 2;
+  margin: 0;
+  border-radius: 0;
+  border: var(--single);
+  background: var(--art);
+}
+
+.terminal.prose > .intro {
+  margin: 0 0 22px;
+  padding: 0 0 0 2ch;
+  border-left: 2px solid var(--hi);
+  color: var(--hi);
+}
+
+.terminal.prose > .intro > p {
+  margin: 0 0 11px;
+  max-width: none;
+  color: inherit;
+}
+
+.terminal.prose > .intro > :last-child {
+  margin-bottom: 0;
+}
+
+.terminal.prose > p:has(> .button) {
+  margin: 22px 0 0;
+}
+
+.terminal.prose > p > .button {
+  display: inline-block;
+  padding: 0;
+  color: var(--hi);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: pre;
+}
+
+.terminal.prose > p > .button::before {
+  content: "< ";
+}
+
+.terminal.prose > p > .button::after {
+  content: " >";
+}
+
+.terminal.prose > p > .button:hover {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.prose > .legal {
+  margin: 24px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px dashed var(--soft);
+  color: var(--dim);
+  font-size: 12px;
+  text-align: center;
+}
+
+.terminal.prose > .contents {
+  margin: 0 0 22px;
+  padding: 4px 2ch;
+  border: 1px dashed var(--soft);
+  list-style: none;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.terminal.prose > .contents::before {
+  content: "contents:";
+  color: var(--dim);
+}
+
+.terminal.prose > .contents a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.terminal.prose > .contents a::before {
+  content: "-> ";
+  color: var(--dim);
+}
+
+.terminal.prose > .contents .level3 {
+  margin-left: 3ch;
+}
+
+.terminal.prose > .contents [aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.prose .alert {
+  display: flex;
+  gap: 3ch;
+  max-width: 60ch;
+  margin: 24px auto;
+  padding: 16px 3ch;
+  color: var(--fg);
+  box-shadow: var(--cast);
+}
+
+.terminal.prose .alert .sigil {
+  flex: none;
+  width: 5ch;
+  height: 66px;
+  display: grid;
+  place-items: center;
+  border: var(--double);
+  color: var(--hi);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.terminal.prose .alert h1 {
+  margin: 0 0 6px;
+  color: var(--hi);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.terminal.prose .alert h1::before {
+  content: "error: ";
+  color: var(--dim);
+  font-weight: 400;
+}
+
+.terminal.prose.lost .alert h1::before {
+  content: "not found: ";
+}
+
+.terminal.prose .alert .lead {
+  margin: 0;
+}
+
+/* KIT */
+
+.terminal.prose > .intro > .jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2ch;
+  margin-top: 8px;
+}
+
+.terminal.prose > .intro > .jump > a.chip {
+  padding: 0;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.terminal.prose > .intro > .jump > a.chip::before {
+  content: "[";
+}
+
+.terminal.prose > .intro > .jump > a.chip::after {
+  content: "]";
+}
+
+.terminal.prose > .intro > .jump > a.chip:hover {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal .kit > section {
+  padding: 0 3ch 16px;
+}
+
+.terminal .kit > section > h2 {
+  margin: 16px 0 8px;
+  color: var(--hi);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.terminal .kit > section > h2::before {
+  content: "## ";
+  color: var(--dim);
+}
+
+/* READ */
+
+.terminal.app .column.stage > .well:has(> .page:not(.source)) {
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.terminal.app .column.stage > .well > .page:not(.source) {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0 24px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.terminal.app .page > .prose:not(.terminal) {
+  max-width: 76ch;
+  margin: 0 auto;
+  padding: 16px 3ch 4px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) {
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 22px;
+  overflow-wrap: break-word;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) > :first-child {
+  margin-top: 0;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) p,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ul,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ol,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) blockquote,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) .table,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) figure {
+  margin: 0 0 22px;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h2,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h3,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h4 {
+  color: var(--hi);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h2 {
+  margin: 33px 0 11px;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h3 {
+  margin: 22px 0 11px;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h4 {
+  margin: 22px 0 0;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h2::before {
+  content: "## ";
+  color: var(--dim);
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h3::before {
+  content: "### ";
+  color: var(--dim);
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) h4::before {
+  content: "#### ";
+  color: var(--dim);
+}
+
+:is(.terminal.prose, .terminal.app .page > .prose:not(.terminal)) a:not(.button):not(.icon) {
+  color: var(--web);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+
+:is(.terminal.prose, .terminal.app .page > .prose:not(.terminal)) a:not(.button):not(.icon):visited {
+  color: var(--visited);
+}
+
+:is(.terminal.prose, .terminal.app .page > .prose:not(.terminal)) a:not(.button):not(.icon):hover {
+  background: var(--web);
+  color: var(--bg);
+  text-decoration: none;
+  text-shadow: none;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ul,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ol {
+  padding-left: 3ch;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ul {
+  list-style: none;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ul > li::before {
+  content: "-";
+  float: left;
+  width: 3ch;
+  margin-left: -3ch;
+  color: var(--dim);
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ul ul > li::before {
+  content: "*";
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ol > li::marker {
+  color: var(--dim);
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ul.links {
+  padding-left: 3ch;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ul.links > li::before {
+  content: ">";
+  color: var(--hi);
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) ul.links > li > a:first-child {
+  font-weight: 700;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal))
+  ul.links:has(> li > a:first-child > img:first-child) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(24ch, 1fr));
+  gap: 1lh 2ch;
+  padding-left: 0;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal))
+  ul.links
+  > li:has(> a:first-child > img:first-child)::before {
+  content: none;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal))
+  ul.links
+  > li
+  > a:first-child
+  > img:first-child {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 0.5lh;
+  border: var(--single);
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  background: var(--art);
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) li {
+  margin: 0;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) li > ul,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) li > ol {
+  margin: 0;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) strong,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) b {
+  color: var(--hi);
+  font-weight: 700;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) em {
+  font-style: normal;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) code {
+  padding: 0 0.5ch;
+  border-radius: 0;
+  background: var(--well);
+  color: var(--hi);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) kbd {
+  padding: 0 0.5ch;
+  background: var(--band);
+  color: var(--on-band);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-shadow: none;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) pre {
+  margin: 0 0 22px;
+  padding: 10px 2ch;
+  overflow-x: auto;
+  border: var(--single);
+  border-radius: 0;
+  background: var(--well);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 20px;
+  white-space: pre;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) blockquote {
+  padding: 0 0 0 2ch;
+  border: 0;
+  border-left: 1px solid var(--dim);
+  color: var(--dim);
+  font-style: normal;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) hr {
+  height: 22px;
+  margin: 11px 0 22px;
+  border: 0;
+  background: none;
+  overflow: hidden;
+  color: var(--dim);
+  text-align: center;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) hr::before {
+  content: "*   *   *";
+  white-space: pre;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) .table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) table {
+  width: auto;
+  border: var(--single);
+  border-collapse: collapse;
+  background: none;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) th,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) td {
+  padding: 1px 1ch;
+  border: 1px solid var(--soft);
+  background: none;
+  text-align: left;
+  vertical-align: top;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) th {
+  border-bottom: var(--single);
+  color: var(--hi);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) figure {
+  margin: 22px 0;
+  text-align: center;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) figure > canvas,
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) figure > img {
+  display: block;
+  width: 100%;
+  max-width: 448px;
+  height: auto;
+  margin: 0 auto;
+  border: var(--single);
+  border-radius: 0;
+  background: var(--art);
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) figure > canvas {
+  aspect-ratio: 1;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) figcaption {
+  margin-top: 8px;
+  color: var(--dim);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) figcaption::before {
+  content: "fig: ";
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) mark {
+  padding: 0 1px;
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+:is(.terminal.prose .body, .terminal.app .page > .prose:not(.terminal)) math {
+  font-family: var(--math);
+}
+
+/* LISTING */
+
+.terminal.prose .listing {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36ch, 1fr));
+  gap: 0 3ch;
+  margin: 22px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px dashed var(--soft);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.terminal.prose .listing > .icon {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 0 2ch;
+  min-width: 0;
+  padding: 8px 1ch;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.terminal.prose .listing > .icon > .art {
+  grid-row: 1 / 3;
+  width: 48px;
+  height: 48px;
+  display: block;
+  border: var(--single);
+  overflow: hidden;
+}
+
+.terminal.prose .listing > .icon > .art > figure {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.terminal.prose .listing > .icon > .art canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  background: var(--art);
+}
+
+.terminal.prose .listing > .icon > .art.sheet {
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 6px, var(--soft) 6px 7px) 8px 8px / calc(100% - 16px)
+    calc(100% - 16px) no-repeat;
+}
+
+.terminal.prose .listing > .icon > .name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--hi);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal.prose .listing > .icon > .name::after {
+  content: "/";
+  color: var(--dim);
+  font-weight: 400;
+}
+
+.terminal.prose .listing > .icon > .text {
+  min-width: 0;
+  color: var(--dim);
+}
+
+.terminal.prose .listing > .icon:hover,
+.terminal.prose .listing > .icon:focus-visible {
+  background: var(--well);
+  outline: 0;
+}
+
+.terminal.prose .listing > .icon:hover > .name,
+.terminal.prose .listing > .icon:focus-visible > .name {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.window .gallery.grid,
+.terminal.app .gallery.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20ch, 1fr));
+  align-items: start;
+  gap: 16px 2ch;
+  max-width: none;
+  margin: 0 3ch 24px;
+  padding: 16px 0 0;
+  border-top: 1px dashed var(--soft);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.terminal.app section.gallery.grid {
+  grid-template-columns: repeat(auto-fill, minmax(24ch, 1fr));
+  max-width: 100ch;
+  margin: 8px auto 24px;
+  padding: 16px 2ch;
+}
+
+.terminal.window .gallery.grid > .tile,
+.terminal.app .gallery.grid > .tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  text-align: left;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.terminal.window .gallery.grid > .tile > figure,
+.terminal.app .gallery.grid > .tile > figure {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+}
+
+.terminal.window .gallery.grid > .tile > figure > canvas,
+.terminal.app .gallery.grid > .tile > figure > canvas {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  margin: 0;
+  aspect-ratio: 1;
+  border: var(--single);
+  border-radius: 0;
+  background: var(--art);
+}
+
+.terminal.window .gallery.grid > .tile.plain::before,
+.terminal.app .gallery.grid > .tile.plain::before {
+  content: "";
+  width: 100%;
+  aspect-ratio: 1;
+  border: var(--single);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 10px, var(--soft) 10px 11px) 16px 16px / calc(100% - 32px)
+    calc(100% - 32px) no-repeat;
+}
+
+.terminal.window .gallery.grid > .tile > h2,
+.terminal.app .gallery.grid > .tile > h2,
+.terminal.app .gallery.grid > .tile figcaption {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  color: var(--hi);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.terminal.app .gallery.grid > .tile figcaption {
+  font-weight: 400;
+}
+
+.terminal.window .gallery.grid > a.tile:hover > h2,
+.terminal.window .gallery.grid > a.tile:focus-visible > h2,
+.terminal.app .gallery.grid > a.tile:hover > h2,
+.terminal.app .gallery.grid > a.tile:focus-visible > h2 {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.window .gallery.grid > a.tile:hover > figure > canvas,
+.terminal.app .gallery.grid > a.tile:hover > figure > canvas {
+  border-color: var(--hi);
+}
+
+.terminal.window .gallery.grid > a.tile:focus-visible,
+.terminal.app .gallery.grid > a.tile:focus-visible {
+  outline: 0;
+}
+
+.terminal.window .gallery.grid > .tile > p,
+.terminal.app .gallery.grid > .tile > p {
+  max-width: 100%;
+  margin: 0;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.terminal.window .gallery.grid > .tile > p.dates,
+.terminal.app .gallery.grid > .tile > p.dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1ch;
+}
+
+/* TILE */
+
+.terminal.tile {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  min-width: 0;
+  height: 20px;
+  padding: 0 1ch;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.terminal.tile .art {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  filter: var(--phosphor);
+}
+
+.terminal.tile .art > * {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.terminal.tile .name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.terminal.tile:hover,
+.terminal.tile:focus-visible {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+  outline: 0;
+}
+
+.terminal.tile[aria-current] .name {
+  color: var(--hi);
+  font-weight: 700;
+}
+
+.terminal.tile[aria-current]:hover .name,
+.terminal.tile[aria-current]:focus-visible .name {
+  color: inherit;
+}
+
+.terminal.tile[aria-disabled="true"] {
+  color: var(--off);
+}
+
+body:has(.terminal) > .appicons {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.terminal .appicon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.terminal .appicon .lift,
+.terminal .appicon .glow,
+.terminal .appicon .rim,
+.terminal .appicon .shade {
+  display: none;
+}
+
+.terminal.tile .art > .face {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* LAUNCHER */
+
+.terminal.launcher {
+  position: fixed;
+  inset: 24px 0;
+  z-index: 55;
+}
+
+.terminal.launcher .veil {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+}
+
+.terminal.launcher .panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: min(108ch, 100vw - 32px);
+  height: min(720px, 100dvh - 96px);
+  display: flex;
+  flex-direction: column;
+  padding: 0 2px;
+  box-shadow: var(--cast);
+}
+
+.terminal.launcher .find {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  margin: 4px 2ch 0;
+}
+
+.terminal.launcher .find .sigil {
+  color: var(--hi);
+  font-weight: 700;
+}
+
+.terminal.launcher .find .field {
+  flex: 1;
+  height: 24px;
+  font-size: 14px;
+}
+
+.terminal.launcher .find .field::-webkit-search-decoration,
+.terminal.launcher .find .field::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.terminal.launcher .chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1ch;
+  margin: 8px 2ch 0;
+  padding: 0 0 4px;
+  border-bottom: var(--single);
+}
+
+.terminal.launcher .chips .names {
+  display: contents;
+}
+
+.terminal.launcher .chips button {
+  height: 20px;
+  padding: 0 1ch;
+  color: var(--dim);
+}
+
+.terminal.launcher .chips button.on {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.launcher .chips button:not(.on):hover {
+  color: var(--hi);
+}
+
+.terminal.launcher .chips .field {
+  width: 14ch;
+  height: 20px;
+}
+
+.terminal.launcher .body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 2ch 16px;
+  overflow-y: auto;
+}
+
+.terminal.launcher .results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.terminal.launcher ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.terminal.launcher .link {
+  color: var(--web);
+  text-decoration: underline;
+}
+
+.terminal.launcher .head {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  margin-bottom: 4px;
+  color: var(--hi);
+  font-weight: 700;
+}
+
+.terminal.launcher .head::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  height: 0;
+  border-top: 1px dashed var(--soft);
+}
+
+.terminal.launcher .head .count {
+  order: 2;
+  color: var(--dim);
+  font-weight: 400;
+}
+
+.terminal.launcher .apps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(22ch, 1fr));
+  gap: 0 2ch;
+}
+
+.terminal.launcher .apps .tile,
+.terminal.launcher .results .tile,
+.terminal.launcher .results .item {
+  width: 100%;
+}
+
+.terminal.launcher .results li {
+  display: flex;
+}
+
+.terminal.launcher .results li::before {
+  content: " ";
+  width: 2ch;
+  flex: none;
+  white-space: pre;
+}
+
+.terminal.launcher .results li.on::before {
+  content: ">";
+  color: var(--hi);
+  font-weight: 700;
+}
+
+.terminal.launcher .results .item {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  padding: 0 1ch;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.terminal.launcher .results li.on > .tile,
+.terminal.launcher .results li.on > .item,
+.terminal.launcher .results .item:hover {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.launcher .empty {
+  margin: 0;
+  color: var(--dim);
+}
+
+.terminal.launcher .section [data-held] .tile,
+.terminal.launcher .section li[aria-grabbed="true"] .tile {
+  outline: 1px dashed var(--hi);
+}
+
+.terminal.launcher .said {
+  position: absolute;
+  right: 16px;
+  bottom: 8px;
+  display: flex;
+  gap: 2ch;
+  margin: 0;
+  padding: 0 1ch;
+  background: var(--tip);
+  color: var(--tip-fg);
+  text-shadow: none;
+}
+
+.terminal.launcher .said .link {
+  color: inherit;
+}
+
+/* LIBRARY */
+
+.terminal.library {
+  height: 100%;
+  padding: 4px 1ch;
+  overflow: auto;
+}
+
+.terminal.library .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1ch;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--soft);
+}
+
+.terminal.library .chips button {
+  height: 20px;
+  padding: 0 1ch;
+  color: var(--dim);
+}
+
+.terminal.library .chips button.on {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.library ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.terminal.library summary {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  list-style: none;
+  color: var(--hi);
+  cursor: pointer;
+}
+
+.terminal.library summary::-webkit-details-marker {
+  display: none;
+}
+
+.terminal.library .branch > li,
+.terminal.tree ul > li,
+.terminal .tree ul > li {
+  position: relative;
+  padding-left: 4ch;
+}
+
+.terminal.library .branch > li::before,
+.terminal .tree ul > li::before {
+  content: "|--";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--soft);
+  white-space: pre;
+}
+
+.terminal.library .branch > li:last-child::before,
+.terminal .tree ul > li:last-child::before {
+  content: "`--";
+}
+
+.terminal.library .leaf {
+  width: 100%;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  padding: 0 1ch;
+  color: var(--fg);
+  text-align: left;
+  text-decoration: none;
+}
+
+.terminal.library .leaf:hover {
+  background: var(--well);
+}
+
+.terminal.library .leaf.on {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.library .label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal.library .sub {
+  flex: none;
+  margin-left: auto;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.terminal.library .leaf.on .sub {
+  color: inherit;
+}
+
+.terminal.library .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 64px);
+  gap: 4px;
+  padding-left: 2ch;
+}
+
+.terminal.library .grid .leaf {
+  flex-direction: column;
+  padding: 2px;
+  text-align: center;
+}
+
+.terminal.library canvas {
+  image-rendering: pixelated;
+}
+
+/* TREE */
+
+.terminal .tree,
+.terminal .tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.terminal .tree {
+  padding: 2px 0;
+}
+
+.terminal .tree a,
+.terminal .tree summary {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  min-height: 20px;
+  padding: 0 1ch;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.terminal .tree summary {
+  list-style: none;
+  color: var(--hi);
+  cursor: pointer;
+}
+
+.terminal .tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.terminal .tree summary > svg {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+  rotate: -90deg;
+}
+
+.terminal .tree details[open] > summary > svg {
+  rotate: none;
+}
+
+.terminal .tree summary > a {
+  padding: 0;
+}
+
+.terminal .tree a:hover {
+  background: var(--well);
+}
+
+.terminal .tree a[aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+/* GALLERY */
+
+.terminal.app .column.left > .well:has(> .library) {
+  padding: 4px 1ch 8px;
+}
+
+.terminal.app .library:not(.terminal) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.terminal.app .library:not(.terminal) > h2 {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  margin: 0;
+  color: var(--hi);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.terminal.app .library:not(.terminal) > h2 svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.terminal.app .browser {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.terminal.app .library:not(.terminal) .find {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.terminal.app .library:not(.terminal) .find svg {
+  display: none;
+}
+
+.terminal.app .library:not(.terminal) .find::before {
+  content: ">";
+  position: absolute;
+  left: 1ch;
+  color: var(--hi);
+  pointer-events: none;
+}
+
+.terminal.app .library:not(.terminal) .find input {
+  width: 100%;
+  height: 22px;
+  min-height: 22px;
+  padding: 1px 1ch 1px 3ch;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  outline: 0;
+  appearance: none;
+  background: var(--well);
+  box-shadow: none;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.terminal.app .library:not(.terminal) .find input::placeholder {
+  color: var(--dim);
+}
+
+.terminal.app .library:not(.terminal) .find input::-webkit-search-decoration,
+.terminal.app .library:not(.terminal) .find input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.terminal.app .browser .list {
+  padding: 0;
+  overflow: visible;
+}
+
+.terminal.app .library:not(.terminal) > .chips {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1ch;
+  border-bottom: var(--single);
+}
+
+.terminal.app .library:not(.terminal) > .chips > button {
+  height: 20px;
+  padding: 0 1ch;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--dim);
+  box-shadow: none;
+  font-size: 13px;
+}
+
+.terminal.app .library:not(.terminal) > .chips > button.on {
+  background: var(--pick);
+  color: var(--on-accent);
+  font-weight: 400;
+  text-shadow: none;
+}
+
+.terminal.app .library:not(.terminal) > label.chips {
+  border-bottom: 0;
+}
+
+.terminal.app .library:not(.terminal) > label.chips > select {
+  flex: 1;
+  height: 22px;
+  padding: 0 3ch 0 1ch;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--well);
+  box-shadow: none;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  appearance: none;
+}
+
+.terminal.app .library:not(.terminal) > label.chips > .drop {
+  position: absolute;
+  top: 1px;
+  right: 1ch;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.terminal.app .library:not(.terminal) > label.chips > .drop svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.terminal.app .shelf > .list {
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal.app .shelf > .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 64px);
+  justify-content: space-between;
+  gap: 8px 0;
+}
+
+.terminal.app .shelf [data-item] {
+  min-width: 0;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  padding: 2px 1ch 2px 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  text-decoration: none;
+}
+
+.terminal.app .shelf [data-item]:hover {
+  background: var(--well);
+}
+
+.terminal.app .shelf [data-item] > figure,
+.terminal.app .shelf [data-item] > canvas {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+}
+
+.terminal.app .shelf [data-item] canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background: none;
+  image-rendering: pixelated;
+}
+
+.terminal.app .shelf [data-item] > .label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal.app .shelf [data-item] > .sub {
+  flex: none;
+  margin-left: auto;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.terminal.app .shelf [data-item].on,
+.terminal.app .shelf [data-item][aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.app .shelf [data-item].on > .sub,
+.terminal.app .shelf [data-item][aria-current] > .sub {
+  color: inherit;
+}
+
+.terminal.app .shelf [data-item]:focus-visible {
+  outline: 1px dashed var(--fg);
+  outline-offset: -1px;
+}
+
+.terminal.app .shelf > .grid > [data-item] {
+  width: 64px;
+  height: 72px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0 0;
+  text-align: center;
+}
+
+.terminal.app .shelf > .grid > [data-item] > figure,
+.terminal.app .shelf > .grid > [data-item] > canvas {
+  width: 48px;
+  height: 48px;
+}
+
+.terminal.app .shelf > .grid > [data-item] > .label {
+  max-width: 100%;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.terminal.app .shelf > .grid > [data-item] > .sub {
+  display: none;
+}
+
+.terminal.app .library:not(.terminal) .shelf + .shelf {
+  margin-top: 12px;
+}
+
+.terminal.app .library:not(.terminal) .shelf > h3,
+.terminal.app .browser .shelf h3 {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  margin: 0 0 4px;
+  padding: 0;
+  color: var(--hi);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.terminal.app .library:not(.terminal) .shelf > h3::after,
+.terminal.app .browser .shelf h3::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  height: 0;
+  border-top: 1px dashed var(--soft);
+}
+
+.terminal.app .library:not(.terminal) .shelf > h3 span,
+.terminal.app .browser .shelf h3 span {
+  order: 2;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-weight: 400;
+}
+
+.terminal.app .browser .space {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 8px;
+  padding: 0 0 8px;
+  border-bottom: 1px dashed var(--soft);
+}
+
+.terminal.app .browser .segment {
+  min-height: 20px;
+  gap: 1ch;
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.terminal.app .browser .segment .label {
+  min-width: 5ch;
+  line-height: 20px;
+}
+
+.terminal.app .browser .segment .options {
+  gap: 0 2ch;
+}
+
+.terminal.app .browser .segment label {
+  height: 20px;
+}
+
+.terminal.app .designs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 64px);
+  grid-auto-rows: 72px;
+  justify-content: space-between;
+  gap: 8px 0;
+}
+
+.terminal.app .designs > button {
+  position: relative;
+  width: 64px;
+  height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 0;
+  padding: 4px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--fg);
+  overflow: hidden;
+}
+
+.terminal.app .designs canvas {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  display: block;
+  aspect-ratio: auto;
+  border-radius: 0;
+  background: none;
+  image-rendering: pixelated;
+}
+
+.terminal.app .designs > button.on canvas,
+.terminal.app .designs > button[aria-pressed="true"] canvas {
+  outline: 1px solid var(--hi);
+  outline-offset: 1px;
+}
+
+.terminal.app .designs small {
+  max-width: 100%;
+  padding: 0 2px;
+  overflow: hidden;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal.app .designs > button.on small,
+.terminal.app .designs > button[aria-pressed="true"] small {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.app .designs > button:focus-visible {
+  outline: 0;
+}
+
+.terminal.app .designs > button:focus-visible small {
+  outline: 1px dashed var(--fg);
+}
+
+.terminal.app .browser .none {
+  margin: 4px 0;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+/* DOCK */
+
+.terminal.dock {
+  position: fixed;
+  inset: auto 0 0;
+  height: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 8px;
+  border-top: var(--single);
+  background: var(--bg);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  white-space: nowrap;
+  counter-reset: pane -1;
+}
+
+.terminal.dock .session {
+  margin-right: 1ch;
+  padding: 0 1ch;
+  background: var(--band);
+  color: var(--on-band);
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.terminal.dock .group {
+  display: flex;
+  align-items: center;
+}
+
+.terminal.dock .group + .group::before {
+  content: "|";
+  margin: 0 1ch;
+  color: var(--soft);
+}
+
+.terminal.dock .tile {
+  padding: 0 1ch;
+  counter-increment: pane;
+}
+
+.terminal.dock .tile::before {
+  content: counter(pane) ":";
+  color: var(--dim);
+}
+
+.terminal.dock .tile .art {
+  display: none;
+}
+
+.terminal.dock .tile .name {
+  margin-left: -1ch;
+  text-transform: lowercase;
+}
+
+.terminal.dock .tile[aria-current] .name::after {
+  content: "*";
+  color: var(--hi);
+}
+
+.terminal.dock .tile[aria-current] {
+  background: var(--well);
+}
+
+.terminal.dock .tile:hover::before,
+.terminal.dock .tile:focus-visible::before {
+  color: inherit;
+}
+
+.terminal.dock .tile[data-held] {
+  outline: 1px dashed var(--hi);
+}
+
+/* WIDGETS */
+
+.terminal.widgets {
+  position: fixed;
+  top: 48px;
+  right: 24px;
+  width: 34ch;
+  max-height: calc(100dvh - 96px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow: visible;
+}
+
+.terminal.widgets .widget,
+.terminal.widgets .gallery {
+  padding: 0 2px;
+  box-shadow: var(--cast);
+}
+
+.terminal.widgets .body {
+  padding: 4px 1ch 8px;
+}
+
+.terminal.widgets .body h2:not(:has(+ .big)) {
+  display: none;
+}
+
+.terminal.widgets .body h2 {
+  margin: 0;
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.terminal.widgets .body .big {
+  color: var(--hi);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 36px;
+}
+
+.terminal.widgets .body .fill {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.terminal.widgets .body .who {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+}
+
+.terminal.widgets .body .who > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.terminal.widgets .body .face {
+  display: block;
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.terminal.widgets .body a {
+  color: var(--web);
+}
+
+.terminal.widgets .list {
+  max-height: 160px;
+  margin: 4px 0;
+  padding: 0 1ch;
+  list-style: none;
+  overflow: auto;
+}
+
+.terminal.widgets .list button {
+  width: 100%;
+  height: 20px;
+  padding: 0 1ch;
+  text-align: left;
+}
+
+.terminal.widgets .list button:hover {
+  background: var(--pick);
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+.terminal.widgets .buttons {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1ch 4px;
+}
+
+.terminal.widgets > .buttons {
+  padding: 0;
+}
+
+/* LOCK */
+
+.terminal.lock {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background: var(--ground);
+}
+
+.terminal.lock .boot {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 52ch;
+}
+
+.terminal.lock .word {
+  margin: 0 0 24px;
+  color: var(--hi);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 16px;
+  text-shadow: var(--glow);
+}
+
+.terminal.lock .line {
+  margin: 0;
+  color: var(--fg);
+}
+
+.terminal.lock .line.one {
+  color: var(--dim);
+}
+
+.terminal.lock .progress {
+  position: relative;
+  display: inline-block;
+  white-space: pre;
+}
+
+.terminal.lock .progress::before {
+  content: "[........................]";
+  color: var(--dim);
+}
+
+.terminal.lock .progress::after {
+  content: "########################";
+  position: absolute;
+  top: 0;
+  left: 1ch;
+  width: 24ch;
+  overflow: hidden;
+  color: var(--hi);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .terminal.lock[data-state="wake"] .progress::after {
+    animation: terminal-load 2s steps(24) both;
+  }
+
+  .terminal.lock[data-state="wake"] .line.three {
+    animation: terminal-show 2s steps(1) both;
+  }
+}
+
+@keyframes terminal-load {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes terminal-show {
+  from {
+    visibility: hidden;
+  }
+}
+
+/* SAVER */
+
+.terminal.saver {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--ground);
+}
+
+.terminal.saver .stage {
+  position: absolute;
+  inset: 0;
+}
+
+.terminal.saver .big {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.terminal.saver .big pre {
+  margin: 0;
+  color: var(--hi);
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 24px;
+  text-shadow: var(--glow);
+}
+
+/* DESK */
+
+.terminal.desk {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle, var(--hole) 0 5px, transparent 6px) left 4px top 0 / 14px 22px repeat-y,
+    radial-gradient(circle, var(--hole) 0 5px, transparent 6px) right 4px top 0 / 14px 22px repeat-y,
+    repeating-linear-gradient(to bottom, var(--bars) 0 66px, transparent 66px 132px) 24px 0 / calc(100% - 48px) 100%
+    no-repeat,
+    var(--ground);
+}
+
+.terminal.desk > .ground {
+  width: 100%;
+  height: 100%;
+  display: block;
+  visibility: hidden;
+}
+
+:root[data-saver] .terminal.desk > .ground {
+  visibility: visible;
+}

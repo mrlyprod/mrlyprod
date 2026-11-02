@@ -30,18 +30,26 @@
 
 ## REDUCER
 
-- A reducer app's `engine.ts` is pure over one JSON state: `boot(config)`, `moves(state)`, `step(state, act)`, `read(state, path?)`; today snake, race, chaos, life, matrix, sleep, mend, canon and decide.
+- A reducer app's `engine.ts` is pure over one JSON state: `boot(config)`, `moves(state)`, `step(state, act)`, `read(state, path?)`; today snake, race, chaos, life, matrix, sleep, mend, canon, fold, frost, beam, swirl, decide, give, settle, craft, roots, school, coins, thanks and fence.
 - State holds integers, strings and nulls only, the generator's state included (`seed`, a `../net/sdk/rand.ts` xorshift); no clock, no `Math.random`, no DOM, and `step` never mutates its input.
 - Each also exports `deal(value, table)`: the opening for a value, the table `{ seed, rand, units }` plus the stage `{ w, h, dpr, lock }` where the app needs one; the scene deals through it or the pieces it joins, and `bun run play` calls it, so the terminal deals what the page deals.
 - The scene calls `step`; a player or policy (`policy.ts`, its names in a `SPEC` row beside `me`) picks from `moves` and stays outside the state.
 - `bun run play` drives every reducer app from the terminal over JSON lines; `../net/hosts/web/scripts/README.md` has it.
-- Snake, mend and canon have a `policy.ts`; mend turns blocks back to the goal against a `par`, canon has two players claim cells by `turn`.
+- Snake, mend, canon, fold, frost, beam and swirl have a `policy.ts`; mend turns blocks back to the goal against a `par`, canon has two players claim cells by `turn`, fold folds a sheet and punches its stacks toward a lace against a `par`, frost drops stones to keep a growing frost off its flowers, beam tilts mirrors until one beam lights every star against a `par`, swirl turns the rings of a whorl, each dragging the next, until every arm runs whole against a `par`.
 - Race boots from its two boards as strings of `0` and `1`; its trail and reach log only paint, so its series keeps them outside the state.
 - Chaos boots from its source's moves and letters; a hex point's floats ride as exact number strings, and its meter and move log stay in the scene.
 - Life boots from its board and mask as strings of `0` and `1`; `step` calls the life unit's `next_grid`, a pure function of the state, and the age and row history only paint; Island and Wallpaper play `shared/life/run.ts` instead, picked by `reducer(value)`.
 - Matrix and sleep fit a stage: their `deal` takes `w`, `h`, `dpr` and `lock` from the table.
 - Decide boots from its knobs and runs a week, 168 ticks; with no `deal`, `bun run play` boots it itself.
-- Every reducer app is also a saver, playing itself under `view.lock`: `snake/solo`, `snake/feast`, `race/footprints`, `race/embers`, `chaos/cloud`, `chaos/hex`, `life/soup`, `life/crystal`, `life/tapestry`, `matrix/rain`, `matrix/heavy`, `sleep/crowd`, `sleep/giants`, `mend/mending`, `mend/deep`, `canon/duet`, `canon/fugue`, `decide/village`, `decide/town`.
+- Give boots from its knobs and runs a week too; each tick's handovers ride in the state as `flows`, so the scene paints them without diffing.
+- Settle boots an island from its seed and runs a hundred days; each day's new tiles ride in the state as `fresh` and its arrivals as `landed`, and its roads only paint, from the towns.
+- Craft boots a town of bots from its seed and runs sixty days; each day's place, team and meal ride in the state for every bot, and each idea shipped rides in `ships`, so the scene walks the bots and pops the ships without diffing.
+- Roots boots a row of families from its seed and runs two hundred years; each year's births ride in the state as `faded`, and its river of wealth only paints, from each year's state.
+- School boots a class of pupils and a small tree of puzzles from its seed and runs a hundred and twenty days; each day's lessons, questions, solves and new puzzles ride in the state as `lessons`, `asks`, `solves` and `posed`, and the tree's layout only paints, from each day's state.
+- Coins boots sixteen towns from its seed, splits them into one to five coin regions with a money changer for every pair, and runs a hundred and twenty days; each day's changes, sales and give-ups ride in the state as `changed`, `sold` and `gave`, and its map only paints, from the towns.
+- Thanks boots a town of bots from its seed and runs a hundred and twenty days; bots make goods by hand or build robots, the bot with the most thanks buys each new robot, and the `credit` knob sends a robot's thanks to its runner, its maker or every bot in turn; each day's thanks ride in the state as `flows`, new robots as `fresh` and worn ones as `broke`, and the town's grid only paints.
+- Fence boots a village of bots around a fenced garden from its seed and runs two hundred and forty hours; each hour's breaks, mends, removals and meals ride in the state as `broken`, `mended`, `sent` and `ate`, and its meadow only paints.
+- Every reducer app is also a saver, playing itself under `view.lock`: `snake/solo`, `snake/feast`, `race/footprints`, `race/embers`, `chaos/cloud`, `chaos/hex`, `life/soup`, `life/crystal`, `life/tapestry`, `matrix/rain`, `matrix/heavy`, `sleep/crowd`, `sleep/giants`, `mend/mending`, `mend/deep`, `canon/duet`, `canon/fugue`, `fold/lace`, `fold/doily`, `frost/garden`, `frost/winter`, `beam/lantern`, `beam/hall`, `swirl/shell`, `swirl/galaxy`, `decide/village`, `decide/town`, `give/village`, `give/town`, `settle/island`, `settle/villages`, `craft/street`, `craft/race`, `roots/river`, `roots/delta`, `school/yard`, `school/tree`, `coins/market`, `coins/borders`, `thanks/workshop`, `thanks/sparks`, `fence/village`, `fence/lean`.
 
 ## WIDGET
 

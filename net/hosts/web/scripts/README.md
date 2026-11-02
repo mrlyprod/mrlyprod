@@ -25,6 +25,7 @@
 - `--count N --every S` shoots N frames S apart (`2s`, `0.5`, `500ms`): a page with a running scene is seeked through `window.world.seek(t)`, t = 0, S, 2S, after it is still, and its frames are marked `world`; any other page, or `SITE_URL`, waits S real seconds and marks them `wall`; N > 1 adds a `-sheet` contact sheet.
 - `--screen WxH[@dpr]` overrides the screen; `--run <name>` writes to `shots/<name>/`; `--baseline` writes to `baseline/`, which every later run is compared against.
 - `--print` emulates print media; `--nojs` shoots with JavaScript off; `--motion` lets canvases show, hidden on still shots otherwise.
+- Every shot waits, up to 15 s, until no `aria-busy` element shows in the viewport (library thumbs and saver previews still painting).
 - `--first` holds every script, shoots the first paint (`-first`), lets them run and shoots again (`-after`); `JUMP` marks a scroll that moved.
 - `--keys <steps>` types after the act: steps split on commas, a named key is pressed (`Tab`, `Enter`, `Escape`, the arrows and the like), anything else is typed.
 - `--walk` reads the routes as hops in one document: it clicks the page's own link to each next route, `back`, `forward` and `reload` move through history, and the run ends on the count of page loads.

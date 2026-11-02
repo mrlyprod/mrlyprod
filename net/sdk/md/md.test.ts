@@ -12,6 +12,11 @@ describe("md", () => {
     expect(html).toContain(`<h2 id="${slug("base π and em")}-1">`);
   });
 
+  test("a list whose every item opens on a link is marked as links", () => {
+    expect(render("- [a](/a/): one\n- [b](/b/)")).toStartWith('<ul class="links">');
+    expect(render("- [a](/a/)\n- see [b](/b/)")).toStartWith("<ul>");
+  });
+
   test("a lone image naming a figure is a figure host with its caption", () => {
     expect(render("![the *walk*](walks-fig)", { link })).toBe(
       '<figure data-figure="walks-fig"><canvas role="img" aria-label="the walk"></canvas><figcaption>the <em>walk</em></figcaption></figure>',

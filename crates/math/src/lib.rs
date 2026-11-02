@@ -18,6 +18,7 @@
 //! - `moire` layers one design at many scales into an interference field.
 //! - `press` weighs the integers a design's digit rule keeps.
 //! - `arcs` lays two quarter arcs in every cell and follows the loops they join into.
+//! - `coprime` counts the gasket's coprime points.
 //!
 //! # Line and Dirichlet designs
 //!
@@ -57,6 +58,8 @@ pub mod automaton;
 pub mod bang;
 /// The dimension-generic cell and the pipeline the fixed dimensions share.
 pub mod cell;
+/// The coprime points of a design: the Sierpinski gasket's pairs with no common divisor, counted row by row.
+pub mod coprime;
 /// The closed-form counts: fills, surfaces, hex slices and the carry ladder, without rendering.
 pub mod counts;
 /// The digit designs on the integer line: their elements, their Mobius meter, its density echo and the ordinates its spectrum carries.

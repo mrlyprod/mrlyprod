@@ -1,6 +1,6 @@
 use super::records::record_by_id;
 use super::{
-    keys, sequence, Axis, Key, Measure, Record, Sequence, Tier, BUDGET, RECORDS, SPACES, TERMS,
+    keys, sequence, Axis, Key, Measure, Record, Row, Tier, BUDGET, RECORDS, SPACES, TERMS,
 };
 use mrly_core::name::Named;
 use mrly_math::name::Sequence as SequenceName;
@@ -31,10 +31,15 @@ fn link(id: &str) -> String {
     format!("[{id}](https://oeis.org/{id})")
 }
 
-fn spelled(row: &Sequence) -> String {
-    let terms: Vec<String> = row.terms.iter().map(|term| term.to_string()).collect();
+fn spelled(row: &Row) -> String {
+    let terms: Vec<String> = row
+        .sequence
+        .terms
+        .iter()
+        .map(|term| term.to_string())
+        .collect();
     let mut text = format!("`{}`", terms.join(", "));
-    if row.capped {
+    if row.sequence.capped {
         text.push_str(" to the cell budget");
     }
     text
@@ -62,6 +67,7 @@ fn table(axis: Axis) -> String {
         let (matched, shift) = row.record.expect("every keyed record matches");
         assert_eq!(matched.id, record.id, "the row reads its own record");
         let closed = row
+            .sequence
             .closed
             .as_ref()
             .map_or_else(|| "none".to_string(), |form| format!("`{}`", form.text()));
@@ -157,6 +163,7 @@ fn cited() -> String {
         );
         let row = sequence(&key, TERMS, BUDGET).expect("every cited sequence reads");
         let closed = row
+            .sequence
             .closed
             .as_ref()
             .map_or_else(|| "none".to_string(), |form| format!("`{}`", form.text()));

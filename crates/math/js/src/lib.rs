@@ -1631,6 +1631,13 @@ pub fn math_cell_serializer_types_field(data: JsValue) -> Result<JsValue, JsValu
     hand::to_js(value)
 }
 
+/// Counts the coprime points of the Sierpinski gasket at a level: the pairs `0 <= i, j < 2^level` with `i AND j = 0` and `gcd(i, j) = 1`, the sequence [A396934](https://oeis.org/A396934).
+#[wasm_bindgen]
+pub fn math_coprime_gasket(level: u32) -> Result<u64, JsValue> {
+    let value = mrly_math::coprime::gasket(level).map_err(hand::throw)?;
+    Ok(value)
+}
+
 /// Returns the centered hexagonal number at the index, the lattice points of a hexagon of side m-1.
 #[wasm_bindgen]
 pub fn math_counts_centered_hexagonal(m: usize) -> Result<JsValue, JsValue> {
@@ -1734,6 +1741,14 @@ pub fn math_counts_fill_from_corners(
     let filled = hand::from_js::<Vec<Vec<u8>>>(&filled)?;
     let value = mrly_math::counts::fill_from_corners(&filled, number, _dimension, level, base);
     Ok(JsValue::from_str(&value.to_string()))
+}
+
+/// Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`.
+#[wasm_bindgen]
+pub fn math_counts_fill_polynomial(corners: JsValue, dimension: usize) -> Result<JsValue, JsValue> {
+    let corners = hand::from_js::<Vec<Vec<u8>>>(&corners)?;
+    let value = mrly_math::counts::fill_polynomial(&corners, dimension);
+    hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
 }
 
 /// Returns the total cells of the grid, number to the dimension, to the level.
@@ -1860,6 +1875,13 @@ pub fn math_counts_limit(
         JsValue::from_str(&value.0.to_string()),
         JsValue::from_str(&value.1.to_string()),
     ]))
+}
+
+/// Expands the whole grid at side `2k - 1`, `(2k - 1)^dimension`, into coefficients by rising power of `k`.
+#[wasm_bindgen]
+pub fn math_counts_odd_power(dimension: usize) -> Result<JsValue, JsValue> {
+    let value = mrly_math::counts::odd_power(dimension);
+    hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
 }
 
 /// Counts, per axis, the adjacent filled pairs and the cross positions whose two end cells are both filled.
@@ -5175,6 +5197,13 @@ pub fn math_bang_catalog_CLASSICS_3D() -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
+/// The highest level `gasket` counts.
+#[wasm_bindgen]
+pub fn math_coprime_GASKET_LEVELS() -> Result<u32, JsValue> {
+    let value = mrly_math::coprime::GASKET_LEVELS;
+    Ok(value)
+}
+
 /// The widest side a profile spans.
 #[wasm_bindgen]
 pub fn math_counts_diagonal_WIDEST() -> Result<usize, JsValue> {
@@ -5689,6 +5718,33 @@ impl math_bang_Universe {
     pub fn new(dimension: usize) -> Result<math_bang_Universe, JsValue> {
         let value = mrly_math::bang::Universe::new(dimension).map_err(hand::throw)?;
         Ok(math_bang_Universe { inner: value })
+    }
+}
+
+/// A closed form of a design sequence.
+#[wasm_bindgen]
+pub struct math_counts_Closed {
+    inner: mrly_math::counts::Closed,
+}
+
+#[wasm_bindgen]
+impl math_counts_Closed {
+    /// Reads the Closed from its plain data.
+    #[wasm_bindgen(js_name = "from")]
+    pub fn from_plain(data: JsValue) -> Result<math_counts_Closed, JsValue> {
+        Ok(math_counts_Closed {
+            inner: hand::from_js(&data)?,
+        })
+    }
+    /// Writes the Closed as plain data.
+    #[wasm_bindgen(js_name = "toJSON")]
+    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
+        hand::to_js(&self.inner)
+    }
+    /// Spells the closed form.
+    pub fn text(&self) -> Result<String, JsValue> {
+        let value = self.inner.text();
+        Ok(value)
     }
 }
 

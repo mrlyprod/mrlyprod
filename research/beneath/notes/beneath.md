@@ -17,7 +17,7 @@ Accept and place do not interfere, and the split is exact: the number of accepte
 
 One sentence explains why the counts close. Today's accept slot tests each digit alone, so the accepted words of length `level` are the words over `F` and there are `card F^level` of them, a product of `level` equal factors. (**Proved**, from the definition of the full shift.) That product is the property the two dials below are measured against. The memory dial breaks it in a controlled way and prices the break with a number; the radix dial leaves it untouched and moves only the picture.
 
-Throughout, a digit vector `d` in `{0,1}^dim` is read as the corner integer `c(d) = sum_i d_i 2^i`, axis `i` on bit `i`, so at `dim 2` bit `0` is the column `x` and bit `1` the row `y`. That is the crate's reading too: `mrly::math::bang::universe::corners(dim)` emits the corner vector row first and `corner_index` folds it most significant first, so a crate design's corner integer at `dim 2` is `c = x + 2y`. (**Verified**, `lab/py/memory-census`, pinned cell for cell by the memory demo's host test on codes `11` and `13`, which the axis swap exchanges and which are drawn differently.)
+Throughout, a digit vector `d` in `{0,1}^dim` is read as the corner integer `c(d) = sum_i d_i 2^i`, axis `i` on bit `i`, so at `dim 2` bit `0` is the column `x` and bit `1` the row `y`. That is the crate's reading too: `mrly_math::bang::universe::corners(dim)` emits the corner vector row first and `corner_index` folds it most significant first, so a crate design's corner integer at `dim 2` is `c = x + 2y`. (**Verified**, `lab/py/memory-census`, pinned cell for cell by the memory demo's host test on codes `11` and `13`, which the axis swap exchanges and which are drawn differently.)
 
 ## Chapters
 

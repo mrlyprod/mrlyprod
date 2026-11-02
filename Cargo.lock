@@ -407,6 +407,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mrly-sequences"
+version = "0.2.0"
+dependencies = [
+ "mrly-core",
+ "mrly-math",
+]
+
+[[package]]
 name = "mrly-tile"
 version = "0.2.0"
 dependencies = [

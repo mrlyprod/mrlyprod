@@ -1,5 +1,5 @@
 import type { Paints } from "../../net/sdk/color.ts";
-import { rgb, TINTS, veil } from "../../net/sdk/color.ts";
+import { blend, bright, rgb, TINTS, veil } from "../../net/sdk/color.ts";
 import type { Ready } from "../../net/sdk/hooks.ts";
 import type { Page } from "../../net/sdk/page.tsx";
 import type { Rng } from "../../net/sdk/rand.ts";
@@ -77,9 +77,12 @@ type Sheet = {
   pen: OffscreenCanvasRenderingContext2D;
   image: ImageData;
   hot: Float32Array;
+  halo: OffscreenCanvas;
+  aura: OffscreenCanvasRenderingContext2D;
+  light: ImageData;
 };
 
-type Ink = { fg: string; line: string; deep: string };
+type Ink = { fg: string; line: string; deep: string; bg: string };
 
 const HIDE = () => false;
 
@@ -206,8 +209,16 @@ export const SAVERS = [
 export const units = wasm("math");
 
 const TAU = Math.PI * 2;
-const PAD = 16;
-const GAP = 16;
+const PAD = 28;
+const GAP = 40;
+const TRAY = 10;
+const SPOT = 0.75;
+const LAMP = 0.16;
+const BLOOM = 0.7;
+const FINISH = 1400;
+const SHADE = 0.55;
+const WHITE = "#ffffff";
+const BLACK = "#000000";
 const TOP = 0.55;
 const RING = 0.45;
 const DASH = [4, 6];
@@ -220,6 +231,8 @@ const BOARD: (keyof Knobs)[] = ["a", "b", "base", "number", "level"];
 const glow = (h: number) => TOP * Math.min(1, h / HOT);
 
 const won = (over: Over | null, s: number) => over?.how === "goal" && over.winner === s;
+
+const ease = (k: number) => (k >= 1 ? 1 : k <= 0 ? 0 : 1 - (1 - k) ** 3);
 
 /* SCENE */
 
@@ -246,6 +259,9 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   let ink: Ink | null = null;
   let ground: number[][] = [];
   let told = -Infinity;
+  let floor: OffscreenCanvas | null = null;
+  let floored = "";
+  let ended = -Infinity;
   let said = "";
   let gone = false;
   const paint = () => {
@@ -254,7 +270,12 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const read = (name: string, fallback: string) => css?.getPropertyValue(name).trim() || fallback;
     colours = [accent, turn(accent, TURN)];
     bytes = colours.map(rgb);
-    ink = { fg: read("--fg", light.fg), line: read("--line", light.line), deep: read("--deep", light.deep) };
+    ink = {
+      fg: read("--fg", light.fg),
+      line: read("--line", light.line),
+      deep: read("--deep", light.deep),
+      bg: read("--bg", light.bg),
+    };
     ground = [rgb(ink.deep), rgb(ink.line)];
     dirty = true;
   };
@@ -292,15 +313,26 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     at = 0;
     clock = { t: hands ? view.t : 0, tick: 0 };
     seen = -1;
+    ended = -Infinity;
     dirty = true;
   };
   const replan = () => {
     ({ plan: laid, walk } = planned(math, hands ? value : { ...value, a: opts.a ?? "", b: opts.b ?? "" }, seed));
     if (laid.side !== n) {
       n = laid.side;
-      sheets = laid.sides.map(() => {
+      const halos = laid.sides.map(() => new OffscreenCanvas(n, n));
+      sheets = laid.sides.map((_, s) => {
         const page = new OffscreenCanvas(n, n);
-        return { page, pen: page.getContext("2d")!, image: new ImageData(n, n), hot: new Float32Array(n * n) };
+        const halo = halos[s];
+        return {
+          page,
+          pen: page.getContext("2d")!,
+          image: new ImageData(n, n),
+          hot: new Float32Array(n * n),
+          halo,
+          aura: halo.getContext("2d")!,
+          light: new ImageData(n, n),
+        };
       });
     }
     box = null;
@@ -342,8 +374,9 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     return out;
   };
   const blit = (s: number) => {
-    const { image, pen } = sheets[s];
+    const { image, pen, light: glowing, aura } = sheets[s];
     const data = image.data;
+    const lit = glowing.data;
     const { filled } = laid!.sides[s];
     const [r, g, b] = bytes[s];
     const hot = level(s);
@@ -355,9 +388,17 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
       data[o + 1] = bg + (g - bg) * k;
       data[o + 2] = bb + (b - bb) * k;
       data[o + 3] = 255;
+      lit[o] = r;
+      lit[o + 1] = g;
+      lit[o + 2] = b;
+      lit[o + 3] = 255 * k * BLOOM;
     }
-    for (const i of show!.state.at[s]) data.set([r, g, b, 255], i * 4);
+    for (const i of show!.state.at[s]) {
+      data.set([r, g, b, 255], i * 4);
+      lit[i * 4 + 3] = 255;
+    }
     pen.putImageData(image, 0, 0);
+    aura.putImageData(glowing, 0, 0);
   };
   const rings = (s: number) => {
     const { state } = show!;
@@ -380,6 +421,13 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     ctx.arc(hx, hy, laid!.goal * cell, 0, TAU);
     ctx.stroke();
     ctx.setLineDash([]);
+    if (far > 0) {
+      ctx.strokeStyle = veil(colours[s], 0.16);
+      ctx.lineWidth = (won(state.over, s) ? WIN : LINE) * dpr * 5;
+      ctx.beginPath();
+      ctx.arc(hx, hy, far * cell, 0, TAU);
+      ctx.stroke();
+    }
     ctx.strokeStyle = colours[s];
     if (far > 0) {
       ctx.lineWidth = (won(state.over, s) ? WIN : LINE) * dpr;
@@ -393,6 +441,79 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     ctx.strokeRect(hx - m / 2, hy - m / 2, m, m);
     ctx.restore();
   };
+  const stage = (pen: OffscreenCanvasRenderingContext2D, w: number, h: number, dark: boolean) => {
+    const { cell, edge, boards } = box!;
+    const dpr = view.dpr;
+    pen.setTransform(1, 0, 0, 1, 0, 0);
+    pen.globalAlpha = 1;
+    pen.clearRect(0, 0, w, h);
+    pen.fillStyle = blend(ink!.bg, colours[0], dark ? 0.06 : 0.05);
+    pen.fillRect(0, 0, w, h);
+    const big = Math.max(1, Math.max(w, h) * SPOT);
+    const lamp = pen.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, big);
+    lamp.addColorStop(0, veil(colours[0], dark ? LAMP : LAMP / 2));
+    lamp.addColorStop(1, veil(colours[0], 0));
+    pen.fillStyle = lamp;
+    pen.fillRect(0, 0, w, h);
+    const pad = Math.max(0, Math.min(TRAY * dpr, cell * 3));
+    const base = dark ? blend(blend(ink!.bg, BLACK, 0.4), colours[0], 0.06) : blend(WHITE, colours[0], 0.04);
+    boards.forEach(({ x, y }, s) => {
+      pen.save();
+      pen.shadowColor = `rgba(0, 0, 0, ${dark ? 0.5 : 0.16})`;
+      pen.shadowBlur = Math.max(1, pad * 2);
+      pen.shadowOffsetY = pad * 0.35;
+      pen.beginPath();
+      pen.roundRect(x - pad, y - pad, edge + 2 * pad, edge + 2 * pad, Math.max(0, pad * 0.8));
+      pen.fillStyle = blend(base, colours[s], 0.05);
+      pen.fill();
+      pen.shadowColor = "transparent";
+      pen.strokeStyle = veil(dark ? WHITE : ink!.fg, dark ? 0.07 : 0.08);
+      pen.lineWidth = Math.max(0.5, dpr * 0.75);
+      pen.stroke();
+      pen.restore();
+    });
+  };
+  const finale = (dark: boolean) => {
+    const { over } = show!.state;
+    if (over?.how !== "goal") return;
+    const k = view.still ? 1 : ease((view.t - ended) / FINISH);
+    const { cell, edge, boards } = box!;
+    const dpr = view.dpr;
+    const pad = Math.max(0, Math.min(TRAY * dpr, cell * 3));
+    boards.forEach(({ x, y }, s) => {
+      if (!won(over, s)) {
+        ctx.fillStyle = veil(ink!.bg, SHADE * k);
+        ctx.fillRect(x, y, edge, edge);
+        return;
+      }
+      ctx.strokeStyle = veil(colours[s], dark ? 0.9 : 0.75);
+      ctx.lineWidth = Math.max(1, 2.5 * dpr * k);
+      ctx.beginPath();
+      ctx.roundRect(x - pad / 2, y - pad / 2, edge + pad, edge + pad, Math.max(0, pad * 0.5));
+      ctx.stroke();
+      if (k >= 1) return;
+      const { home } = laid!.sides[s];
+      if (home < 0) return;
+      const hx = x + ((home % n) + 0.5) * cell;
+      const hy = y + (Math.floor(home / n) + 0.5) * cell;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, edge, edge);
+      ctx.clip();
+      ctx.fillStyle = veil(colours[s], 0.22 * (1 - k));
+      ctx.fillRect(x, y, edge, edge);
+      for (const lag of [0, 0.18]) {
+        const q = Math.max(0, Math.min(1, (k - lag) / (1 - lag)));
+        if (q <= 0 || q >= 1) continue;
+        ctx.strokeStyle = veil(blend(colours[s], WHITE, 0.35), 0.9 * (1 - q));
+        ctx.lineWidth = Math.max(1, cell * 1.6 * (1 - q));
+        ctx.beginPath();
+        ctx.arc(hx, hy, Math.max(0, laid!.goal * cell + q * edge * 0.8), 0, TAU);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  };
   const draw = () => {
     if (hands && view.fixed && phase === "ready") play();
     if (view.still && !hands) {
@@ -402,20 +523,44 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
       show!.to(at);
       if (hands && show!.state.over) phase = "done";
     }
-    if (!dirty && seen === show!.version) return;
+    if (!show!.state.over) ended = -Infinity;
+    else if (ended === -Infinity) ended = view.t;
+    const closing = !view.still && view.t - ended < FINISH;
+    if (!dirty && seen === show!.version && !closing) return;
     seen = show!.version;
     dirty = false;
     const dpr = view.dpr;
     box ??= lay(view.w, view.h, n, GAP * dpr, PAD * dpr);
+    const dark = !bright(ink!.bg);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, view.w, view.h);
-    ctx.imageSmoothingEnabled = false;
+    ctx.globalAlpha = 1;
+    const w = Math.max(1, Math.ceil(view.w));
+    const h = Math.max(1, Math.ceil(view.h));
+    if (!floor || floor.width !== w || floor.height !== h) {
+      floor = new OffscreenCanvas(w, h);
+      floored = "";
+    }
+    const key = `${colours.join()}|${ink!.bg}|${ink!.deep}|${box.cell}|${box.boards.map((b) => `${b.x},${b.y}`).join()}`;
+    if (floored !== key) {
+      stage(floor.getContext("2d")!, w, h, dark);
+      floored = key;
+    }
+    ctx.drawImage(floor, 0, 0);
+    const { edge } = box;
     laid!.sides.forEach((_, s) => {
       blit(s);
       const { x, y } = box!.boards[s];
-      ctx.drawImage(sheets[s].page, x, y, box!.edge, box!.edge);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(sheets[s].page, x, y, edge, edge);
+      ctx.imageSmoothingEnabled = true;
+      ctx.globalCompositeOperation = dark ? "lighter" : "source-over";
+      ctx.globalAlpha = dark ? 0.85 : 0.5;
+      ctx.drawImage(sheets[s].halo, x, y, edge, edge);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1;
       rings(s);
     });
+    finale(dark);
     tell(Boolean(show!.state.over) || show!.state.tick === 0);
   };
   const set = (next: Opts) => {

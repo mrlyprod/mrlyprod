@@ -30,7 +30,7 @@
 ## INK
 
 - `ink(palette)` resolves a `Palette`, a `Swatch` for each of the eighteen names, into a frozen `Ink`, and throws when a name is missing or its swatch is no colour.
-- A `Swatch` is a hex string, `#rrggbb` or `#rrggbbaa` with the `#` optional, a byte array of at least three, or serde's `{ r, g, b, a? }`; a missing alpha is 255.
+- A `Swatch` is a hex string, `#rrggbb` or `#rrggbbaa` with the `#` optional or `#rgb` and `#rgba` with it, a byte array of at least three, or serde's `{ r, g, b, a? }`; a missing alpha is 255.
 - The names, each a `Color` on the `Ink`: the surfaces `ground`, `panel`, `line`, `fg` and `dim`, and the hues `red`, `orange`, `yellow`, `green`, `mint`, `teal`, `cyan`, `blue`, `indigo`, `purple`, `pink`, `brown` and `gray`.
 - `inks` is the six inks in their fixed order: `blue`, `orange`, `yellow`, `green`, `pink`, `indigo`.
 - `mix(a, b, t)` blends two colours channel by channel, alpha too, `t` clamped to the unit interval and each channel rounded to a byte; `fade(c, alpha)` replaces the alpha with that fraction of opaque, clamped the same way; both are top-level exports and members of the `Ink`.

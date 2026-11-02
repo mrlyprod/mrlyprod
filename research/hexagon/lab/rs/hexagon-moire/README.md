@@ -9,7 +9,7 @@
 - The ghost star of the rendered carpet stack on a 1200 by 2399 raster, and its log-corrected decay in the ideal and the lattice frame.
 - The cell frame of the ghost star: the arm's rational ink law to n = 2001, the decay ladders at L = 0 mod 4, L = 2 mod 4 and odd L out to L = 6400, and the band half-widths with their held-out predictions.
 - The width family in closed form: the derived tail weight E(K) against its 8-periodic run, the per-layer identity in exact rationals at 14 distinct half-widths broken out by n mod 8, and the summed ladders with the constant, both 1/L^2 branches and the sliding window's own L residue trap.
-- The constants from the `mrly::num` series and the partial character sums at N = 53 and 55.
+- The constants from the `mrly_num` series and the partial character sums at N = 53 and 55.
 - The one-layer law: the six ink-law coefficients of each family, the summed identity against the counted hexagons in exact rationals, and the approach in both classes of the layer count.
 - The flat carpet stack: pair-term, carpet and void ink at generic points of 20 primitive lines against the ray law, the crosshair period sums, the solid diagonals, the gcd sums by their Jordan grouping against the double sum, the odd-harmonic Euler sums, the four exact variance constants at N = 999999 against their limits, and the odd-denominator fraction census.
 - The eternal points of the xor pair: a rational grid of the cut searched at every odd n to 55 and to 2001, with the permutations of (3/4, 3/4, 0) beside.

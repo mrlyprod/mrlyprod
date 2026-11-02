@@ -70,12 +70,14 @@ export function Art({ paint, px = measure.thumb, deps = [], label }: ArtProps) {
     if (!canvas || !paint) return undefined;
     let drop = () => {};
     const draw = () => {
+      canvas.setAttribute("aria-busy", "true");
       drop = queue(() => {
         const dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
         const side = Math.round(px * dpr);
         canvas.width = side;
         canvas.height = side;
         paint(canvas.getContext("2d")!, side, side, dpr);
+        canvas.removeAttribute("aria-busy");
       });
     };
     if (typeof IntersectionObserver !== "function") {

@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { beforeAll, expect, test } from "bun:test";
 import * as math from "@mrlyprod/math";
 import { rng } from "../../net/sdk/rand.ts";
 import type { View } from "../../net/sdk/run.ts";
@@ -8,6 +8,10 @@ import { deal, echoes, ONE, spot, TWO } from "./engine.ts";
 import type { Knobs, Told } from "./scene.ts";
 import { make, SAVERS, SPEC } from "./scene.ts";
 
+beforeAll(() => {
+  Reflect.deleteProperty(globalThis, "OffscreenCanvas");
+});
+
 const FRAME = 16;
 const SIZE = 640;
 const FIT = 0.88;
@@ -16,15 +20,17 @@ const pen = (log: unknown[][]) =>
   new Proxy({} as CanvasRenderingContext2D, {
     get:
       (_, key) =>
-      (...args: unknown[]) =>
-        log.push([key, ...args]),
+      (...args: unknown[]) => {
+        log.push([key, ...args]);
+        return { addColorStop: () => {} };
+      },
     set: (_, key, value) => {
       log.push([key, value]);
       return true;
     },
   });
 
-const open = (seed: number, value: Raw, still = false, lock = false) => {
+const open = (seed: number, value: Raw, still = false, lock = false, w = SIZE, h = SIZE) => {
   const log: unknown[][] = [];
   const told: Told[] = [];
   const view = {
@@ -32,8 +38,8 @@ const open = (seed: number, value: Raw, still = false, lock = false) => {
     look: () => ({ paper: "#000000", accent: "#008cff", ink: "#ffffff" }),
     still,
     lock,
-    w: SIZE,
-    h: SIZE,
+    w,
+    h,
     dpr: 1,
     t: 0,
   } as View;
@@ -189,4 +195,99 @@ test("the lock's exit: hold stops the bots, windDown lands within a second, and 
   let still = false;
   open(5, value, true, true).scene.windDown(() => (still = true));
   expect([live.scene.state().moves, landed - from <= 1000, still]).toEqual([moves, true, true]);
+});
+
+test("every colour handed to the pen is finite, at the start and after world seeks, in light, dark and the lock", () => {
+  const bad: unknown[] = [];
+  const check = (value: unknown) => {
+    if (typeof value === "string" && /NaN|Infinity|undefined/.test(value)) bad.push(value);
+  };
+  const ctx = new Proxy({} as CanvasRenderingContext2D, {
+    get: (_, key) =>
+      String(key).endsWith("Gradient")
+        ? () => ({ addColorStop: (_at: number, color: string) => check(color) })
+        : () => {},
+    set: (_, _key, value) => {
+      check(value);
+      return true;
+    },
+  });
+  for (const paper of ["#000000", "#ffffff"])
+    for (const [value, lock] of [
+      [{}, false],
+      [{ one: "smart", two: "greedy", level: 2 }, false],
+      [SAVERS[0].pick(rng(2)), true],
+      [SAVERS[1].pick(rng(2)), true],
+    ] as [Raw, boolean][]) {
+      const view = {
+        rand: rng(1),
+        look: () => ({ paper, accent: "#6768fa", ink: paper === "#000000" ? "#ffffff" : "#000000" }),
+        still: false,
+        lock,
+        w: 800,
+        h: 600,
+        dpr: 2,
+        t: 0,
+      } as unknown as View;
+      const scene = make(Object.assign({} as HTMLCanvasElement, { getContext: () => ctx }), view, {
+        ...defaults(SPEC),
+        seed: 0,
+        ...value,
+        math,
+      });
+      scene.draw();
+      for (const until of [500, 3000, 12000]) {
+        while (view.t < until) {
+          view.t = Math.min(until, view.t + 1000 / 60);
+          scene.draw();
+        }
+        scene.size();
+      }
+    }
+  expect(bad).toEqual([]);
+});
+
+test("a stage smaller than its margins never hands the pen a negative radius", () => {
+  for (const [w, h] of [
+    [20, 20],
+    [60, 40],
+  ]) {
+    const live = open(3, { one: "smart", two: "smart", level: 2 }, false, false, w, h);
+    live.run(3000);
+    live.scene.size();
+    const bent = live.log.filter(
+      ([key, , , ...r]) =>
+        (key === "arc" && Number(r[0]) < 0) ||
+        (key === "ellipse" && (Number(r[0]) < 0 || Number(r[1]) < 0)) ||
+        (key === "roundRect" && [r[2]].flat().some((v) => Number(v) < 0)),
+    );
+    expect([w, h, bent]).toEqual([w, h, []]);
+  }
+});
+
+test("the still board is drawn once per move, not once per frame", () => {
+  const sheets: unknown[][][] = [];
+  const was = (globalThis as { OffscreenCanvas?: unknown }).OffscreenCanvas;
+  class Sheet {
+    width: number;
+    height: number;
+    log: unknown[][] = [];
+    constructor(w: number, h: number) {
+      this.width = w;
+      this.height = h;
+      sheets.push(this.log);
+    }
+    getContext() {
+      return pen(this.log);
+    }
+  }
+  Object.assign(globalThis, { OffscreenCanvas: Sheet });
+  try {
+    const live = open(5, SAVERS[1].pick(rng(5)), false, true);
+    live.run(6000);
+    const drawn = sheets.flat().filter(([key]) => key === "clearRect").length;
+    expect([sheets.length, drawn > 0, drawn <= live.scene.state().moves + 2]).toEqual([1, true, true]);
+  } finally {
+    Object.assign(globalThis, { OffscreenCanvas: was });
+  }
 });

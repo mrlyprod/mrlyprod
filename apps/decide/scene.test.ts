@@ -13,15 +13,17 @@ const pen = (log: unknown[][]) =>
   new Proxy({} as CanvasRenderingContext2D, {
     get:
       (_, key) =>
-      (...args: unknown[]) =>
-        log.push([key, ...args]),
+      (...args: unknown[]) => {
+        log.push([key, ...args]);
+        return { width: 0, addColorStop: () => {} };
+      },
     set: (_, key, value) => {
       log.push([key, value]);
       return true;
     },
   });
 
-const open = (seed: number, value: Raw = {}, still = false, lock = false) => {
+const open = (seed: number, value: Raw = {}, still = false, lock = false, w = 640, h = 480) => {
   const log: unknown[][] = [];
   const told: Told[] = [];
   const view = {
@@ -29,8 +31,8 @@ const open = (seed: number, value: Raw = {}, still = false, lock = false) => {
     look: () => ({ paper: "#000000", accent: "#008cff", ink: "#ffffff" }),
     still,
     lock,
-    w: 640,
-    h: 480,
+    w,
+    h,
     dpr: 1,
     t: 0,
   } as View;
@@ -163,4 +165,76 @@ test("the lock's exit: hold stops the clock, windDown lands within a second, and
   let still = false;
   open(5, value, true, true).scene.windDown(() => (still = true));
   expect([live.scene.state().tick, landed - from <= 1000, still]).toEqual([tick, true, true]);
+});
+
+test("every colour handed to the pen is finite, at the start and after world seeks, in light, dark and the lock", () => {
+  const bad: unknown[] = [];
+  const check = (value: unknown) => {
+    if (typeof value === "string" && /NaN|Infinity|undefined/.test(value)) bad.push(value);
+    if (typeof value === "number" && !Number.isFinite(value)) bad.push(value);
+  };
+  const ctx = new Proxy({} as CanvasRenderingContext2D, {
+    get:
+      (_, _key) =>
+      (...args: unknown[]) => {
+        args.forEach(check);
+        return { width: 0, addColorStop: (at: number, color: string) => [at, color].forEach(check) };
+      },
+    set: (_, _key, value) => {
+      check(value);
+      return true;
+    },
+  });
+  for (const paper of ["#000000", "#ffffff"])
+    for (const [value, lock] of [
+      [{}, false],
+      [{ decide: "ruler", bots: 3, patience: 1 }, false],
+      [{ decide: "lottery", bots: 12, eager: 100, patience: 24 }, false],
+      [SAVERS[1].pick(rng(2)), true],
+    ] as [Raw, boolean][]) {
+      const view = {
+        rand: rng(1),
+        look: () => ({ paper, accent: "#6768fa", ink: paper === "#000000" ? "#ffffff" : "#000000" }),
+        still: false,
+        lock,
+        w: 800,
+        h: 600,
+        dpr: 2,
+        t: 0,
+        fixed: false,
+        wake: () => {},
+      } as unknown as View;
+      const scene = make(Object.assign({} as HTMLCanvasElement, { getContext: () => ctx }), view, {
+        ...defaults(SPEC),
+        seed: 0,
+        ...value,
+      });
+      scene.draw();
+      for (const until of [500, 3000, 12000, 40000]) {
+        while (view.t < until) {
+          view.t = Math.min(until, view.t + 100);
+          scene.draw();
+        }
+        scene.size();
+      }
+    }
+  expect(bad).toEqual([]);
+});
+
+test("a stage smaller than its margins never hands the pen a negative radius", () => {
+  for (const [w, h] of [
+    [20, 20],
+    [60, 40],
+  ]) {
+    const live = open(3, {}, false, false, w, h);
+    live.run(3000);
+    live.scene.size();
+    const bent = live.log.filter(
+      ([key, , , ...r]) =>
+        (key === "arc" && Number(r[0]) < 0) ||
+        (key === "ellipse" && (Number(r[0]) < 0 || Number(r[1]) < 0)) ||
+        (key === "roundRect" && [r[2]].flat().some((v) => Number(v) < 0)),
+    );
+    expect([w, h, bent]).toEqual([w, h, []]);
+  }
 });

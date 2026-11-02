@@ -20,7 +20,7 @@ export function Group({ name, open, live, onToggle, bind, children }: Props["gro
       {...bind?.()}
     >
       <summary onClick={loose}>
-        <span className="sunken box">
+        <span className="sunken sign">
           <span className="shut">
             <Glyph art="plus" />
           </span>
