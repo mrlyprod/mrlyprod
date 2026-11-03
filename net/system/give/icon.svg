@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs>
-    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b85"/><stop offset=".7" stop-color="#ff325a"/></linearGradient>
-  </defs>
-  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
-  <path d="M512 816C300 660 196 560 196 420C196 316 276 240 372 240C436 240 486 276 512 324C538 276 588 240 652 240C748 240 828 316 828 420C828 560 724 660 512 816Z" fill="#fff"/>
-</svg>

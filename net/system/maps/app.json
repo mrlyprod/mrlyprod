@@ -1,5 +1,0 @@
-{
-  "title": "Maps",
-  "line": "A hex map of the world: a terrain per cell, and the places people pin and name.",
-  "aliases": ["map", "places", "pin", "navigate", "hex", "terrain", "where"]
-}

@@ -1,6 +1,0 @@
-{
-  "title": "Preview",
-  "line": "The markdown renderer: every page, post and README of {title} drawn from its source.",
-  "aliases": ["reader", "render", "view", "markdown", "pdf", "quick look", "open"],
-  "hidden": true
-}

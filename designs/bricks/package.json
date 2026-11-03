@@ -1,9 +1,0 @@
-{
-  "name": "@mrlyprod/bricks",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./index.ts",
-    "./*": "./*"
-  }
-}

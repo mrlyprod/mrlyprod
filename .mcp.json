@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "mrlynet": {
-      "command": "bun",
-      "args": ["net/doors/cli/mrlynet.ts", "mcp"]
-    }
-  }
-}

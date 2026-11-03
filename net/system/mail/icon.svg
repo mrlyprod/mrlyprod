@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs>
-    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#54d6f6"/><stop offset=".7" stop-color="#1ec9f3"/></linearGradient>
-  </defs>
-  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
-  <path d="M262 292H762Q812 292 812 342V682Q812 732 762 732H262Q212 732 212 682V342Q212 292 262 292Z" fill="#fff" data-dark="#1ec9f3"/>
-  <polyline points="262,352 512,540 762,352" fill="none" stroke="#1ec9f3" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" data-dark-stroke="#fff" data-mono="hide"/>
-</svg>

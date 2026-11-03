@@ -1,9 +1,0 @@
-{
-  "name": "@mrlyprod/spec",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./index.ts",
-    "./*": "./*"
-  }
-}

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs>
-    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ed97c"/><stop offset=".7" stop-color="#32cc58"/></linearGradient>
-  </defs>
-  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
-  <rect x="196" y="236" width="520" height="160" rx="56" fill="#fff" fill-opacity=".6" data-mono="dim"/>
-  <rect x="196" y="320" width="632" height="456" rx="72" fill="#fff" data-dark="#32cc58"/>
-  <rect x="604" y="480" width="224" height="136" rx="48" fill="#32cc58" data-dark="#fff" data-mono="hide"/>
-</svg>
