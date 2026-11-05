@@ -45,7 +45,7 @@
     "bucket": "MRLYNET_BUCKET",
     "store": { "bucket": "MRLYDEV_BUCKET", "prefix": "build/net" }
   },
-  "git": { "root": ".", "slug": "mrlyprod/mrlyprod", "branch": "main/sites/net" },
+  "git": { "root": ".", "slug": "mrlyprod/mrlyprod", "branch": "main", "folder": "sites/net" },
   "llms": {
     "about": "MrlyNet is an operating system in a browser tab: a shell, a router and the system apps over one kernel, free and open source, made by MrlyProd, Inc."
   },

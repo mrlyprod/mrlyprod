@@ -3,7 +3,7 @@ import { seti } from "./seti/seti.ts";
 
 export type Twig = { n: string; k: "d" | "f"; i?: string; s?: number; c?: Twig[] };
 
-export type Wood = { base: string; name: string; slug: string; branch: string; c: Twig[] };
+export type Wood = { base: string; name: string; slug: string; branch: string; folder: string; c: Twig[] };
 
 export type Paint = (text: string, lang: string) => Promise<string[] | null> | string[] | null;
 
@@ -146,11 +146,13 @@ export function link(dir: string, url: string, wood?: Wood): string | null {
 
 export const HUB = "https://github.com";
 
-export const github = (wood: Pick<Wood, "slug" | "branch">, path: string, dir: boolean) =>
-  wood.slug ? `${HUB}/${wood.slug}/${dir ? "tree" : "blob"}/${wood.branch}${path ? `/${path}` : ""}` : "";
+export const github = (wood: Pick<Wood, "slug" | "branch" | "folder">, path: string, dir: boolean) =>
+  wood.slug
+    ? `${HUB}/${wood.slug}/${dir ? "tree" : "blob"}/${[wood.branch, wood.folder, path].filter(Boolean).join("/")}`
+    : "";
 
 export function away(
-  wood: Pick<Wood, "slug" | "branch">,
+  wood: Pick<Wood, "slug" | "branch" | "folder">,
   view: Pick<View, "path" | "found">,
 ): { raw: string; hub: string } {
   if (!view.found) return { raw: "", hub: "" };

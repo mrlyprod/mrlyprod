@@ -12,4 +12,4 @@ The round pegs in the square holes. The ones who see things differently. They're
 
 And while some may see them as the crazy ones, we see genius. Because the people who are crazy enough to think they can change the world, are the ones who do.
 
-[Think differently]: https://mrly.net
+[Think differently](https://mrly.net)

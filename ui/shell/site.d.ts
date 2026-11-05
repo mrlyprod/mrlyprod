@@ -27,7 +27,7 @@ declare module "site:routes" {
     socials: { name: string; href: string }[];
     contact: string;
     tree: { name: string; nodes: { name: string; href: string }[] }[];
-    git: { slug: string; branch: string };
+    git: { slug: string; branch: string; folder: string };
     min?: [number, number];
     doors?: undefined;
   };

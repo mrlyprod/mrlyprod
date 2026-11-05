@@ -694,7 +694,7 @@ export function state(): State {
     licences: credits(raw),
     redirects: kept,
     launchpad: launchpad(list),
-    git: { slug: git.slug, branch: git.branch },
+    git: { slug: git.slug, branch: git.branch, folder: git.folder },
   };
   held = {
     world: world(list),

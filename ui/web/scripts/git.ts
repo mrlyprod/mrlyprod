@@ -3,19 +3,23 @@ import { join, resolve } from "node:path";
 import { seti } from "../../kit/git/seti/seti.ts";
 import { home, stem, type Twig, type Wood } from "../../kit/git/view.ts";
 
-export type Git = { root: string; slug: string; branch: string; name: string };
+export type Git = { root: string; slug: string; branch: string; folder: string; name: string };
 
 export const HOME = "/git/";
 
 export const TREE = "git.json";
 
-export function config(at: string, decl?: { root?: string; slug?: string; branch?: string }): Git | null {
+export function config(
+  at: string,
+  decl?: { root?: string; slug?: string; branch?: string; folder?: string },
+): Git | null {
   if (!decl) return null;
   const slug = decl.slug ?? "";
   return {
     root: resolve(at, decl.root ?? "."),
     slug,
     branch: decl.branch ?? "main",
+    folder: decl.folder ?? "",
     name: slug.split("/").pop() || "code",
   };
 }
@@ -86,5 +90,5 @@ export function forest(git: Git, paths: string[], file = (path: string) => join(
   }
   for (const list of kids.values())
     list.sort((a, b) => (a.k !== b.k ? (a.k === "d" ? -1 : 1) : a.n.localeCompare(b.n)));
-  return { base: HOME, name: git.name, slug: git.slug, branch: git.branch, c: kids.get("")! };
+  return { base: HOME, name: git.name, slug: git.slug, branch: git.branch, folder: git.folder, c: kids.get("")! };
 }

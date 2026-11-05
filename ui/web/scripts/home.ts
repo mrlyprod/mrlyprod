@@ -33,7 +33,7 @@ export type Site = {
   contact: string;
   shots: { routes: string[] };
   push?: { prefix: string; guard: string[]; bucket: string; store: { bucket: string; prefix: string } };
-  git: { root?: string; slug?: string; branch?: string };
+  git: { root?: string; slug?: string; branch?: string; folder?: string };
   llms: { about: string; legend?: string };
   fonts: { out?: string; keep?: string; faces: Face[] };
   icons?: { names: string[]; out: string };
