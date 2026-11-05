@@ -2,6 +2,7 @@ import { lock as saver } from "site:apps";
 import { source } from "../kit/feed.ts";
 import type { Click } from "./catalog.ts";
 import type { Lock } from "./lock.ts";
+import { held, seal, sealed } from "./password.ts";
 import { calm, KEY, read, root, screen, write } from "./prefs.ts";
 import type { Wired } from "./route.ts";
 
@@ -20,7 +21,10 @@ export function visit(detail: Wired) {
   ({ route } = detail);
 }
 
+const guard = () => import("./unlock.tsx").then((one) => one.guard()).catch((error) => console.error(error));
+
 export function meet() {
+  if (sealed()) guard();
   const home = route === "/";
   if (!route || home === homed) return;
   homed = home;
@@ -105,6 +109,10 @@ function enter() {
 
 function greet() {
   if (playing || greeting() !== "shut" || !hall()) return;
+  if (held()) {
+    seal();
+    return void guard();
+  }
   const at = scrollY;
   playing = true;
   asked = false;
@@ -200,7 +208,7 @@ async function arrive() {
   owed = false;
   if (!drawn) return void delete root().dataset.welcome;
   if (!rolls()) return;
-  root().dataset.welcome = read(KEY.welcome) || calm() ? "shut" : "open";
+  root().dataset.welcome = held() || read(KEY.welcome) || calm() ? "shut" : "open";
   if (greeting() === "open") {
     clearTimeout(later);
     shown?.stop?.play?.();

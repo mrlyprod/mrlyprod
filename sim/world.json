@@ -1,0 +1,62 @@
+{
+  "name": "mrlysim",
+  "apps": [
+    "people",
+    "messages",
+    "notifications",
+    "mail",
+    "phone",
+    "calendar",
+    "reminders",
+    "notes",
+    "files",
+    "photos",
+    "clock",
+    "calc",
+    {
+      "id": "wallet",
+      "config": {
+        "causes": {
+          "mrlynet": "MrlyNet itself"
+        },
+        "reserves": {
+          "exchange": 100000000
+        }
+      }
+    },
+    "market",
+    "jobs",
+    "body",
+    "dating",
+    "canon",
+    "wish",
+    "vote",
+    "feedback",
+    "health",
+    "ads",
+    "wiki",
+    "archive",
+    "maps",
+    "weather",
+    "news",
+    "stocks",
+    "books",
+    "tv",
+    "music",
+    "podcasts",
+    "docs",
+    "numbers",
+    "slides",
+    "papers",
+    "sites",
+    "code",
+    "search",
+    "help",
+    "identity",
+    "term",
+    "logs",
+    "settings",
+    "dawn",
+    "mind"
+  ]
+}

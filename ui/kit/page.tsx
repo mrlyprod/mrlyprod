@@ -72,7 +72,6 @@ export type Page<L extends Loadable = Ready & Units, S extends Made = Made> = {
   reroll?: Roll<Bag<L>>;
   gestures?: boolean;
   record?: boolean;
-  about?: string[];
   still?: boolean;
   name?: Named<Bag<L>>;
   design?: Slot;
@@ -89,7 +88,6 @@ export type AppProps<U extends Mathy = Units, S extends Made = Made> = {
   reroll?: Roll<U>;
   gestures?: boolean;
   record?: boolean;
-  about?: string[];
   id?: string;
   title?: string;
   calm?: boolean;
@@ -282,7 +280,6 @@ function App<U extends Mathy, S extends Made>({
   reroll: rolls,
   gestures,
   record,
-  about = [],
   id,
   title,
   calm = false,
@@ -374,7 +371,7 @@ function App<U extends Mathy, S extends Made>({
   }, []);
   const all = useMemo(() => (record ? [...keys, RECORD] : keys), [keys, record]);
   const on = live(all, value);
-  const known = about.length > 0 || rows.length > 0;
+  const known = rows.length > 0;
   const map = useMemo(
     () => keymap(on, tail(known), mode),
     [all, on.map((row) => all.indexOf(row)).join(), known, mode],
@@ -610,7 +607,7 @@ function App<U extends Mathy, S extends Made>({
             </Btn>
           </Bar>
           <Keys map={shown} />
-          {known && <Info about={about} rows={rows} />}
+          {known && <Info rows={rows} />}
           <Export
             canvas={() => scene.current?.canvas ?? document.querySelector(".frame canvas")}
             name={file}
@@ -645,7 +642,6 @@ export function page<L extends Loadable, S extends Made>(
     reroll,
     gestures = false,
     record = false,
-    about = [],
     still: calm = false,
     name,
     design,
@@ -671,7 +667,6 @@ export function page<L extends Loadable, S extends Made>(
           reroll={reroll}
           gestures={gestures}
           record={record}
-          about={about}
           id={id}
           title={title}
           calm={calm}

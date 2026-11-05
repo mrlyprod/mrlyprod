@@ -569,9 +569,6 @@ main:has(> div > .settings) {
   font-size: var(--t6);
   line-height: var(--lh1);
 }
-.about-tag {
-  max-width: var(--read);
-}
 .about-units {
   max-width: 60%;
   color: var(--dim);
@@ -662,6 +659,23 @@ main:has(> div > .settings) {
 .priv-pair {
   display: inline-flex;
   gap: var(--s2);
+}
+.priv-form {
+  display: contents;
+}
+.priv-field {
+  width: 14rem;
+  min-height: 1.75rem;
+  padding: 0 var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-inset);
+  background: var(--deep);
+  color: var(--fg);
+  font-size: var(--t3);
+}
+.priv-field:focus-visible {
+  outline: var(--ring);
+  outline-offset: 2px;
 }
 .priv-btn {
   min-height: 1.75rem;

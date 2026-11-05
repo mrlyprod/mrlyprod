@@ -3,7 +3,13 @@ import { join, resolve } from "node:path";
 import type { App } from "../../kernel/index.ts";
 import type { Handlers } from "../bus.ts";
 
-export type Site = { title: string; roots: string[]; cli?: string; seams?: { apps?: string; wishes?: string } };
+export type Site = {
+  title: string;
+  roots: string[];
+  apps?: string[];
+  cli?: string;
+  seams?: { apps?: string; wishes?: string };
+};
 
 export type Found = { id: string; dir: string };
 
@@ -12,6 +18,8 @@ type Seam = { default: (home: string, ids?: readonly string[]) => Promise<App[]>
 export const HOME = resolve(process.env.MRLY_ROOT ?? process.cwd());
 
 export const SYSTEM = "app.ts";
+
+const SHELF = resolve(import.meta.dir, "..", "..", "..", "apps");
 
 export function site(home = HOME): Site {
   const file = join(home, "site.json");
@@ -28,6 +36,10 @@ export async function handlers(home = HOME): Promise<Handlers> {
 
 export function found(home = HOME): Found[] {
   const out = new Map<string, Found>();
+  for (const id of site(home).apps ?? []) {
+    const dir = join(SHELF, id);
+    if (existsSync(join(dir, SYSTEM))) out.set(id, { id, dir });
+  }
   for (const root of site(home).roots) {
     const dir = resolve(home, root);
     if (!existsSync(dir)) continue;

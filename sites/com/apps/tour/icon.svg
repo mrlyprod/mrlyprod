@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd240"/><stop offset=".7" stop-color="#ffc300"/><stop offset="1" stop-color="#ffc300"/></linearGradient>
+    <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024"><rect width="1024" height="1024" fill="#fff"/><path d="M366 218h292a86 86 0 0 1 86 86v432a86 86 0 0 1 -86 86h-292a86 86 0 0 1 -86 -86v-432a86 86 0 0 1 86 -86z" fill="#000"/></mask>
+    <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024"><rect width="1024" height="1024" fill="#fff"/><path d="M366 218h292a86 86 0 0 1 86 86v432a86 86 0 0 1 -86 86h-292a86 86 0 0 1 -86 -86v-432a86 86 0 0 1 86 -86z" fill="#000" transform="rotate(-11 512 880)"/></mask>
+    <mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024"><rect width="1024" height="1024" fill="#fff"/><path d="M380 284h264a34 34 0 0 1 34 34v264a34 34 0 0 1 -34 34h-264a34 34 0 0 1 -34 -34v-264a34 34 0 0 1 34 -34zM365 652h294a19 19 0 0 1 19 19v0a19 19 0 0 1 -19 19h-294a19 19 0 0 1 -19 -19v0a19 19 0 0 1 19 -19zM365 716h154.56a19 19 0 0 1 19 19v0a19 19 0 0 1 -19 19h-154.56a19 19 0 0 1 -19 -19v0a19 19 0 0 1 19 -19z" fill="#000"/></mask>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <g transform="translate(617.49 512) scale(.94) translate(-512 -512)">
+  <g mask="url(#m2)"><path d="M366 240h292a64 64 0 0 1 64 64v432a64 64 0 0 1 -64 64h-292a64 64 0 0 1 -64 -64v-432a64 64 0 0 1 64 -64z" fill="#fff" fill-opacity=".45" transform="rotate(-22 512 880)"/></g>
+  <g mask="url(#m1)"><path d="M366 240h292a64 64 0 0 1 64 64v432a64 64 0 0 1 -64 64h-292a64 64 0 0 1 -64 -64v-432a64 64 0 0 1 64 -64z" fill="#fff" fill-opacity=".72" transform="rotate(-11 512 880)"/></g>
+  <path d="M366 240h292a64 64 0 0 1 64 64v432a64 64 0 0 1 -64 64h-292a64 64 0 0 1 -64 -64v-432a64 64 0 0 1 64 -64z" fill="#fff" mask="url(#cut)"/>
+  <path d="M398 336h65.33v65.33h-65.33zM479.33 336h65.33v65.33h-65.33zM560.67 336h65.33v65.33h-65.33zM398 417.33h65.33v65.33h-65.33zM560.67 417.33h65.33v65.33h-65.33zM398 498.67h65.33v65.33h-65.33zM479.33 498.67h65.33v65.33h-65.33zM560.67 498.67h65.33v65.33h-65.33z" fill="#fff"/>
+  </g>
+</svg>

@@ -114,7 +114,7 @@ export function figures(md: string): string[] {
 export function reader<R = Reader>(): Promise<R> {
   return import("site:apps").then(({ apps }) => {
     const open = (apps as Partial<typeof apps>).preview;
-    if (!open) throw new Error("md: this site has no preview route; a root holding ui/apps/preview draws markdown");
+    if (!open) throw new Error("md: this site leaves out the preview route, which draws markdown");
     return open() as Promise<R>;
   });
 }

@@ -1,0 +1,4 @@
+{
+  "sections": [{ "name": "MrlyProd", "apps": ["projects", "research", "toys", "about", "donate"] }],
+  "dock": [["projects", "research", "toys"], ["about"]]
+}

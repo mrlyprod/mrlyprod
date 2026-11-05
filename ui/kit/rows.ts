@@ -13,6 +13,7 @@ export type Row = {
     id?: string;
     scene?: true;
     deep?: true;
+    frame?: string;
     prose?: "source" | "page" | "post";
     date?: string;
     aliases?: string[];
@@ -28,6 +29,7 @@ export type App = {
   saver?: true;
   hidden?: true;
   deep?: true;
+  frame?: string;
   source?: string;
   route?: string;
   page: string | null;

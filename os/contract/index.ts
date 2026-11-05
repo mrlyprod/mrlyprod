@@ -6,20 +6,39 @@ export type {
   App,
   Boot,
   Called,
+  ChartNode,
   Ctx,
+  DoNode,
+  Field,
+  FileSource,
+  FormNode,
+  GroupNode,
   Json,
   Knob,
   Knobs,
+  Line,
   Obj,
+  PaneNode,
   Peek,
+  PrefNode,
+  Rank,
+  RowsNode,
   Schema,
   Sent,
   Setting,
+  Shown,
+  Source,
+  ValueNode,
   Verb,
+  ViewerNode,
+  ViewNode,
   Who,
   Wish,
+  WorldSource,
 } from "../kernel/index.ts";
 export { app, below, canon, copy, digest, nearest, seedOf, stream, walk } from "../kernel/index.ts";
+
+export { viewFaults } from "./view.ts";
 
 export type Named = Setting & { name: string };
 

@@ -1,0 +1,108 @@
+{
+  "title": "MrlyProd",
+  "wordmark": "MRLYPROD",
+  "root": "https://mrlyprod.com",
+  "since": 2013,
+  "prefix": "com-",
+  "mark": "/favicon.svg",
+  "marks": { "png": "/favicon.png", "touch": "/apple-touch-icon.png", "og": "/og.png" },
+  "tint": "indigo",
+  "menu": "/menu/",
+  "desk": "polygons",
+  "tiles": { "id": "mrly", "title": "Tiles" },
+  "designs": [
+    "../../../designs/modern",
+    "../../../designs/boxy",
+    "../../../designs/bricks",
+    "../../../designs/classic",
+    "../../../designs/terminal"
+  ],
+  "roots": ["pages", "../apps"],
+  "apps": ["settings", "stats", "git", "screensavers", "kit"],
+  "wasm": ["core", "font", "life", "math", "num", "tile"],
+  "seams": { "apps": "../seams/toys.ts" },
+  "research": "../../../research",
+  "widgets": ["clock", "designs", "continue", "research"],
+  "screen": [1440, 900, 2],
+  "min": [1280, 720],
+  "company": "MrlyProd, Inc.",
+  "tree": [
+    {
+      "name": "Root",
+      "nodes": [
+        { "name": "robots.txt", "href": "/robots.txt" },
+        { "name": "sitemap.xml", "href": "/sitemap.xml" },
+        { "name": "llms.txt", "href": "/llms.txt" },
+        { "name": "404.html", "href": "/404.html" }
+      ]
+    }
+  ],
+  "socials": [
+    { "name": "GitHub", "href": "https://github.com/mrlyprod" },
+    { "name": "YouTube", "href": "https://youtube.com/@mrlyprod" },
+    { "name": "X", "href": "https://twitter.com/mrlyprod" },
+    { "name": "Instagram", "href": "https://instagram.com/mrlyprod" },
+    { "name": "TikTok", "href": "https://tiktok.com/@mrlyprod" },
+    { "name": "Reddit", "href": "https://reddit.com/r/mrlyprod" },
+    { "name": "Discord", "href": "https://discord.gg/YEKjjvwhcK" }
+  ],
+  "contact": "help@mrly.net",
+  "shots": {
+    "routes": ["/", "/about/", "/blog/launching-mrlyprod-org/", "/menu/", "/research/", "/git/site.json"]
+  },
+  "push": {
+    "prefix": "",
+    "guard": [],
+    "bucket": "MRLYCOM_BUCKET",
+    "store": { "bucket": "MRLYDEV_BUCKET", "prefix": "build/com" }
+  },
+  "git": { "root": "." },
+  "fonts": {
+    "out": "shared/fonts",
+    "keep": "shared/fonts/keep.css",
+    "faces": [
+      { "family": "Noto Sans", "file": "sans", "axes": "wght@400..700", "weight": "400 700", "licence": "notosans" },
+      { "family": "Noto Serif", "file": "serif", "axes": "wght@400..700", "weight": "400 700", "licence": "notoserif" },
+      {
+        "family": "Noto Sans Mono",
+        "file": "mono",
+        "axes": "wght@400..700",
+        "weight": "400 700",
+        "licence": "notosansmono"
+      },
+      { "family": "Noto Sans Math", "file": "math", "weight": "400", "licence": "notosansmath" },
+      { "family": "Noto Color Emoji", "file": "emoji", "weight": "400", "licence": "notocoloremoji" }
+    ]
+  },
+  "icons": {
+    "names": [
+      "casino",
+      "check",
+      "chevron_right",
+      "close",
+      "download",
+      "expand_more",
+      "fullscreen_exit",
+      "graphic_eq",
+      "grid_view",
+      "info",
+      "ios_share",
+      "keyboard",
+      "keyboard_command_key",
+      "left_panel_close",
+      "left_panel_open",
+      "link",
+      "more_horiz",
+      "music_note",
+      "right_panel_close",
+      "right_panel_open",
+      "search",
+      "shift",
+      "star",
+      "star_fill",
+      "tune",
+      "volume_up"
+    ],
+    "out": "kit/icons.gen.js"
+  }
+}

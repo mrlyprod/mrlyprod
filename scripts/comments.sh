@@ -65,7 +65,7 @@ END { for (f in hits) printf "%5d  %s\n", hits[f], f }
 check() {
   cd "$1" || return
   files=$(git ls-files -- '*.rs' '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.py' '*.sh' |
-    grep -Ev '(^|/)demos?/|\.d\.ts$|\.gen\.')
+    grep -Ev '(^|/)(demos?|examples)/|\.d\.ts$|\.gen\.')
   [ -n "$files" ] || return
   found=$(printf '%s\n' "$files" | while IFS= read -r f; do [ -f "$f" ] && printf '%s\0' "$f"; done |
     xargs -0 awk "$scan" | sort -rn)

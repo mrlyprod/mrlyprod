@@ -62,7 +62,6 @@ export function sections(
 export function llms(
   title: string,
   root: string,
-  words: { about?: string; legend?: string },
   rows: Listed[],
   raw: Set<string>,
   shelves: Shelf[] = [],
@@ -74,8 +73,6 @@ export function llms(
   const blocks = [
     `# ${title}`,
     `> ${root}`,
-    words.about,
-    words.legend,
     ...sections(rows, raw, shelves, topics, folder).map((one) => `## ${one.name}\n\n${list(one.lines)}`),
   ];
   return `${blocks.filter(Boolean).join("\n\n")}\n`;

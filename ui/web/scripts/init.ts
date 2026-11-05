@@ -41,7 +41,6 @@ const site = ({ title, domain, design }: Options) => ({
   screen: [1440, 900, 2],
   min: [1280, 720],
   company: title,
-  tagline: `${title}, a site on MrlyNet.`,
   tree: [
     {
       name: "Root",
@@ -64,10 +63,6 @@ const site = ({ title, domain, design }: Options) => ({
     store: { bucket: "SITE_BUCKET", prefix: "build/site" },
   },
   git: { root: ".", slug: `owner/${domain}`, branch: "main" },
-  llms: {
-    about: `${title} is a site built on MrlyNet: a home, a menu, an about page and a page for missing urls.`,
-    legend: "Links are page sources in markdown: /raw/pages/x/index.md is /x/; a link outside /raw/ is the page.",
-  },
   fonts: { faces: FACES },
 });
 
@@ -85,11 +80,6 @@ const svg = (
   ${glyph}
 </svg>
 `;
-
-const SQUARES =
-  '<g fill="#fff"><rect x="280" y="280" width="144" height="144" rx="29"/><rect x="600" y="280" width="144" height="144" rx="29"/><rect x="280" y="600" width="144" height="144" rx="29"/><rect x="600" y="600" width="144" height="144" rx="29"/></g>';
-
-const DISC = '<circle cx="512" cy="512" r="224" fill="#fff"/>';
 
 const LINES =
   '<g fill="#fff"><rect x="272" y="320" width="480" height="64" rx="32"/><rect x="272" y="480" width="480" height="64" rx="32"/><rect x="272" y="640" width="320" height="64" rx="32"/></g>';
@@ -115,90 +105,21 @@ export default function draw(pen: Pen) {
 }
 `;
 
-const HOME_PAGE = `import type { Site } from "site:routes";
-import type { Row } from "@mrlyprod/ui/kit/rows.ts";
-import { hide, show } from "@mrlyprod/ui/shell/parts.tsx";
-import type { Layout } from "@mrlyprod/ui/shell/router.ts";
-
-export const layout: Layout = { wide: true, bare: true, window: "none" };
-
-export function render(_row: Row, site: Site, host: HTMLElement) {
-  show(host, <h1 className="visually-hidden">{site.title}</h1>);
-}
-
-export const unmount = hide;
-`;
-
-const MENU_PAGE = `import type { Site } from "site:routes";
-import type { Row } from "@mrlyprod/ui/kit/rows.ts";
-import { Launchpad, opened } from "@mrlyprod/ui/shell/launchpad.tsx";
-import { hide, show } from "@mrlyprod/ui/shell/parts.tsx";
-import type { Layout } from "@mrlyprod/ui/shell/router.ts";
-
-export const layout: Layout = { wide: true, bare: true, window: "none" };
-
-export function render(_row: Row, _site: Site, host: HTMLElement) {
-  show(host, <Launchpad />);
-}
-
-export const mount = opened;
-
-export const unmount = hide;
-`;
-
-const MISSING_PAGE = `import type { Site } from "site:routes";
-import type { Row } from "@mrlyprod/ui/kit/rows.ts";
-import { hide, Lost, show } from "@mrlyprod/ui/shell/parts.tsx";
-import type { Context, Layout } from "@mrlyprod/ui/shell/router.ts";
-
-export const layout: Layout = { bare: true };
-
-export function render(row: Row, site: Site, host: HTMLElement, { rows }: Context) {
-  show(host, <Lost row={row} site={site} rows={rows} />);
-}
-
-export const unmount = hide;
-`;
-
-const about = ({ title, domain }: Options) => `---
+const about = ({ domain }: Options) => `---
 opener: true
 ---
 
-# About
-
-${title} runs on MrlyNet, an open platform that draws every page in the browser.
-
-## THIS SITE
-
-- Each folder of \`pages/\` is a route: \`about/\` is \`/about/\`.
-- A route holds an \`app.json\`, a page (\`index.md\` or \`index.tsx\`), an \`icon.ts\` and an \`icon.svg\`.
-- \`site.json\` holds the name, the domain (${domain}), the design and the tint.
-- \`launchpad.json\` places every shown route in a section of the menu.
+- ${domain}
 `;
 
 export function files(options: Options): Record<string, string> {
-  const { title, domain } = options;
+  const { title } = options;
   return {
     "site.json": json(site(options)),
     "launchpad.json": json({ sections: [{ name: "Pages", apps: ["about"] }], dock: [["about"]] }),
     "redirects.json": "{}\n",
     ".gitignore": "dist/\nwasm/\nnode_modules\n",
     "public/mark.svg": MARK,
-    "pages/home/app.json": json({ title: "{title}", line: `The home of ${title}.` }),
-    "pages/home/index.tsx": HOME_PAGE,
-    "pages/home/icon.ts": figure("blue", ["101", "010", "101"]),
-    "pages/home/icon.svg": svg("#5aa0ff", "#2f6fde", DISC),
-    "pages/menu/app.json": json({ title: "Menu", line: `Every page of ${domain}.` }),
-    "pages/menu/index.tsx": MENU_PAGE,
-    "pages/menu/icon.ts": figure("gray", ["101", "000", "101"]),
-    "pages/menu/icon.svg": svg("#a8a8ad", "#5c5c61", SQUARES),
-    "pages/missing/app.json": json({
-      title: "Nothing here",
-      line: "That page does not exist.",
-      hidden: true,
-      route: "/404.html",
-    }),
-    "pages/missing/index.tsx": MISSING_PAGE,
     "pages/about/app.json": json({ title: "About", line: `What ${title} is and how its pages are made.` }),
     "pages/about/index.md": about(options),
     "pages/about/icon.ts": figure("green", ["111", "000", "110"]),

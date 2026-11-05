@@ -1,0 +1,2 @@
+- A research ledger.
+- Lives in `packages/sequences`.

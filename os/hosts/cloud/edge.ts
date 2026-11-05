@@ -3,26 +3,14 @@ import { join } from "node:path";
 
 export type Step = { uri?: string; redirect?: string };
 
-export const MOVED = "/*MOVED*/{}";
+const MOVED = "/*MOVED*/{}";
 
-export const LOCK = "/*LOCK*/";
-
-export const HEAD = "import cf from 'cloudfront';\nconst crypto = require('crypto');\nconst kvs = cf.kvs();\n";
-
-const read = (name: string) => readFileSync(join(import.meta.dir, name), "utf8");
-
-export const plain = (text: string) => text.replace(/^export /gm, "");
-
-export const body = (moved: Record<string, string>, locked: boolean) =>
-  read("edge.js")
-    .replace(MOVED, JSON.stringify(moved))
-    .replace(LOCK, locked ? plain(read("guard.js")) : "");
-
-export const code = (moved: Record<string, string>, locked: boolean) => (locked ? HEAD : "") + body(moved, locked);
+const code = (moved: Record<string, string>) =>
+  readFileSync(join(import.meta.dir, "edge.js"), "utf8").replace(MOVED, JSON.stringify(moved));
 
 export const router = (rows: Record<string, { to: string }>) => {
   const table = Object.fromEntries(Object.entries(rows).map(([from, row]) => [from, row.to]));
-  return new Function(`${body(table, false)}\nreturn { decide, join };`)() as {
+  return new Function(`${code(table)}\nreturn { decide, join };`)() as {
     decide: (uri: string) => Step;
     join: (to: string, tail: string) => string;
   };

@@ -3,6 +3,8 @@ import os
 import subprocess
 import sys
 
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 LANGUAGES = {
     "rs": "Rust",
     "py": "Python",
@@ -33,6 +35,11 @@ def git(root, *args):
     return done.stdout
 
 
+def repo(start):
+    done = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=start, capture_output=True, text=True)
+    return done.stdout.strip() if done.returncode == 0 else REPO
+
+
 def human(size):
     for limit, unit in ((1 << 30, "GB"), (1 << 20, "MB")):
         if size >= limit:
@@ -49,8 +56,8 @@ def count(path):
 
 
 def main():
-    root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else ".")
-    names = [name for name in git(root, "ls-files", "-z").split("\0") if name]
+    root = repo(sys.argv[1] if len(sys.argv) > 1 else ".")
+    names = [name for name in git(root, "ls-files", "-z", "--cached", "--others", "--exclude-standard").split("\0") if name]
     languages = collections.defaultdict(lambda: [0, 0])
     folders = collections.Counter()
     total = 0
@@ -67,18 +74,22 @@ def main():
         if language:
             languages[language][0] += 1
             languages[language][1] += count(path)
-    print(f"{os.path.basename(root).upper()}: {kept} files, {human(total)}")
-    print("\nLANGUAGES")
-    for language, (files, lines) in sorted(languages.items(), key=lambda row: -row[1][1]):
-        print(f"  {language:<12} {files:>6} files {lines:>9} lines")
-    print("\nFOLDERS")
+    lines = [f"{os.path.basename(root).upper()}: {kept} files, {human(total)}", "", "LANGUAGES"]
+    for language, (files, tally) in sorted(languages.items(), key=lambda row: -row[1][1]):
+        lines.append(f"  {language:<12} {files:>6} files {tally:>9} lines")
+    lines += ["", "FOLDERS"]
     for folder, size in folders.most_common():
-        print(f"  {folder:<24} {human(size)}")
-    print("\nACTIVITY")
+        lines.append(f"  {folder:<24} {human(size)}")
+    lines += ["", "ACTIVITY"]
     months = collections.Counter(git(root, "log", "--format=%cd", "--date=format:%Y-%m").split())
-    print(f"  {sum(months.values())} commits, the last on {git(root, 'log', '-1', '--format=%cs').strip()}")
+    lines.append(f"  {sum(months.values())} commits, the last on {git(root, 'log', '-1', '--format=%cs').strip()}")
     for month in sorted(months, reverse=True)[:12]:
-        print(f"  {month}  {months[month]}")
+        lines.append(f"  {month}  {months[month]}")
+    text = "\n".join(lines)
+    print(text)
+    if root == REPO:
+        with open(os.path.join(REPO, "STATS.md"), "w") as handle:
+            handle.write(f"# STATS\n\n```text\n{text}\n```\n")
 
 
 if __name__ == "__main__":

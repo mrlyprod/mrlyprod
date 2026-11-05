@@ -1,5 +1,5 @@
-import type { Ctx, Json, Knob, Knobs, Obj, Schema, Who } from "@mrlyprod/os/contract/index.ts";
-import { app, sliced } from "@mrlyprod/os/contract/index.ts";
+import type { Ctx, Field, Json, Knob, Knobs, Obj, Schema, ViewNode, Who } from "@mrlyprod/os/contract/index.ts";
+import { app, sliced, walk } from "@mrlyprod/os/contract/index.ts";
 import { blockedBy, notice, reach, someone } from "../shared/people.ts";
 
 export type Kind = "grant" | "claim" | "pay" | "gift";
@@ -307,8 +307,86 @@ function whole(state: Wallet, who: Who | null, at: number) {
   };
 }
 
+const CAUSES = { world: "wallet/causes" };
+
+const PEOPLE = { world: "people/@me/directory" };
+
+const seen = sliced(mine, whole);
+
+const funds = (state: Wallet): Json =>
+  Object.entries(state.causes).map(([id, name]) => ({ id, name, raised: state.raised[id] ?? 0 }));
+
+const MOVE: Field[] = [
+  { key: "at", as: "time", title: "time" },
+  { key: "kind", as: "text" },
+  { key: "from", as: "person" },
+  { key: "to", as: "person", names: CAUSES },
+  { key: "amount", as: "number", unit: "coin" },
+  { key: "note", as: "text" },
+];
+
+const BILL: Field[] = [
+  { key: "n", as: "number" },
+  { key: "at", as: "time", title: "time" },
+  { key: "by", as: "person" },
+  { key: "to", as: "person" },
+  { key: "amount", as: "number", unit: "coin" },
+  { key: "note", as: "text" },
+];
+
+const view: ViewNode[] = [
+  {
+    kind: "group",
+    nodes: [
+      { kind: "value", from: { world: "wallet/balance" }, as: "number", unit: "coin", title: "balance", guest: false },
+      {
+        kind: "value",
+        from: { world: "wallet/claim/amount" },
+        as: "number",
+        unit: "coin",
+        title: "claim",
+        guest: false,
+      },
+      {
+        kind: "rows",
+        title: "causes",
+        from: { world: "wallet/funds" },
+        fields: [
+          { key: "name", as: "text", title: "cause" },
+          { key: "raised", as: "number", unit: "coin" },
+        ],
+      },
+      { kind: "rows", title: "owed", from: { world: "wallet/@me/requests/owed" }, fields: BILL, guest: false },
+      { kind: "rows", title: "asked", from: { world: "wallet/@me/requests/asked" }, fields: BILL, guest: false },
+      { kind: "rows", title: "gifts", from: { world: "wallet/gifts" }, fields: MOVE, reverse: true },
+      {
+        kind: "rows",
+        title: "history",
+        from: { world: "wallet/@me/history" },
+        fields: MOVE,
+        reverse: true,
+        guest: false,
+      },
+    ],
+  },
+  {
+    kind: "group",
+    guest: false,
+    nodes: [
+      { kind: "form", verb: "wallet.give", rank: "primary", choices: { to: [CAUSES, PEOPLE] } },
+      { kind: "form", verb: "wallet.send", rank: "secondary", choices: { to: PEOPLE } },
+      { kind: "form", verb: "wallet.request", rank: "secondary", choices: { to: PEOPLE } },
+      { kind: "form", verb: "wallet.claim", rank: "secondary" },
+      { kind: "form", verb: "wallet.pay", rank: "rare" },
+      { kind: "form", verb: "wallet.decline", rank: "rare" },
+      { kind: "form", verb: "wallet.cancel", rank: "rare" },
+    ],
+  },
+];
+
 export default app<Wallet>({
   id: "wallet",
+  view,
   title: "Wallet",
   line: "One wallet each, one currency in whole units: a private balance and history, payments, requests, public gifts and the paid acts of every app.",
   boot: ({ config, actors, knob }) => {
@@ -477,6 +555,7 @@ export default app<Wallet>({
     },
   },
   moves: (state) => ["send", "give", "request", "pay", "decline", "cancel", "move", ...(state.claims ? ["claim"] : [])],
-  read: sliced(mine, whole),
+  read: (state, path, who, at, peek) =>
+    path[0] === "funds" ? walk(funds(state), path.slice(1)) : seen(state, path, who, at, peek),
   knobs: KNOBS,
 });

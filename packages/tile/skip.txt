@@ -1,4 +1,0 @@
-tile::draw::create takes a rotation fn pointer; build::create_2d and create_3d cross
-tile::draw::random_tile takes a rotation fn pointer; build::random_tile_2d and random_tile_3d cross
-tile::recipe::uniform generic over the item type, used on Source and usize
-tile::variation::Variation::paint a core class on a tile class; a wasm unit holds only its own classes, so js leaves the field out and python keeps it

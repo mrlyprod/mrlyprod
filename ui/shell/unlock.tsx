@@ -1,31 +1,21 @@
 import type { ChangeEvent, ComponentType, FormEvent } from "react";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { parts } from "./active.ts";
 import type { Ask, Props } from "./design.ts";
-
-export const DOOR = "/_unlock";
-
-export const HEADER = "x-lock";
-
-export async function knock(password: string, ask: typeof fetch = fetch): Promise<boolean> {
-  const answer = await ask(DOOR, {
-    headers: { [HEADER]: encodeURIComponent(password) },
-    cache: "no-store",
-    credentials: "same-origin",
-  });
-  return answer.status === 204;
-}
+import { admit, matches } from "./password.ts";
+import { WORD } from "./welcome.ts";
 
 export type Asked = {
   Lock: ComponentType<Props["lock"]>;
   word: string;
-  enter?: (password: string) => Promise<boolean>;
-  done?: () => void;
+  enter: (password: string) => Promise<boolean>;
+  done: () => void;
 };
 
 const bare = () => ({});
 
-export function Unlock({ Lock, word, enter = knock, done = () => location.reload() }: Asked) {
+export function Unlock({ Lock, word, enter, done }: Asked) {
   const [value, setValue] = useState("");
   const [wrong, setWrong] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -61,9 +51,21 @@ export function Unlock({ Lock, word, enter = knock, done = () => location.reload
   return <Lock word={word} state="wake" bind={bare} ask={ask} />;
 }
 
-export function open(Lock: Asked["Lock"], word: string, host: Element = document.body) {
-  document.documentElement.classList.add("js");
-  const root = document.createElement("div");
-  host.append(root);
-  createRoot(root).render(<Unlock Lock={Lock} word={word} />);
+let up = false;
+
+export function guard() {
+  if (up) return;
+  if (!parts.lock) return admit();
+  up = true;
+  const host = document.createElement("div");
+  host.className = "sealed";
+  document.body.append(host);
+  const root = createRoot(host);
+  const done = () => {
+    root.unmount();
+    host.remove();
+    up = false;
+    admit();
+  };
+  root.render(<Unlock Lock={parts.lock} word={WORD} enter={matches} done={done} />);
 }

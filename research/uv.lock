@@ -12,72 +12,15 @@ wheels = [
 ]
 
 [[package]]
-name = "mrly-core"
-source = { directory = "../packages/core/py" }
+name = "mrly"
+version = "0.2.0"
+source = { editable = "../packages/py" }
 dependencies = [
     { name = "numpy" },
 ]
 
 [package.metadata]
 requires-dist = [{ name = "numpy", specifier = ">=2" }]
-
-[[package]]
-name = "mrly-font"
-source = { directory = "../packages/font/py" }
-dependencies = [
-    { name = "numpy" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "numpy", specifier = ">=2" }]
-
-[[package]]
-name = "mrly-life"
-source = { directory = "../packages/life/py" }
-dependencies = [
-    { name = "mrly-core" },
-    { name = "mrly-math" },
-    { name = "mrly-num" },
-    { name = "numpy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "mrly-core", directory = "../packages/core/py" },
-    { name = "mrly-math", directory = "../packages/math/py" },
-    { name = "mrly-num", directory = "../packages/num/py" },
-    { name = "numpy", specifier = ">=2" },
-]
-
-[[package]]
-name = "mrly-math"
-source = { directory = "../packages/math/py" }
-dependencies = [
-    { name = "mrly-core" },
-    { name = "mrly-num" },
-    { name = "numpy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "mrly-core", directory = "../packages/core/py" },
-    { name = "mrly-num", directory = "../packages/num/py" },
-    { name = "numpy", specifier = ">=2" },
-]
-
-[[package]]
-name = "mrly-num"
-source = { directory = "../packages/num/py" }
-dependencies = [
-    { name = "mrly-core" },
-    { name = "numpy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "mrly-core", directory = "../packages/core/py" },
-    { name = "numpy", specifier = ">=2" },
-]
 
 [[package]]
 name = "mrly-research"
@@ -93,12 +36,7 @@ dependencies = [
 
 [package.dev-dependencies]
 mrly = [
-    { name = "mrly-core" },
-    { name = "mrly-font" },
-    { name = "mrly-life" },
-    { name = "mrly-math" },
-    { name = "mrly-num" },
-    { name = "mrly-tile" },
+    { name = "mrly" },
 ]
 
 [package.metadata]
@@ -111,32 +49,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-mrly = [
-    { name = "mrly-core", directory = "../packages/core/py" },
-    { name = "mrly-font", directory = "../packages/font/py" },
-    { name = "mrly-life", directory = "../packages/life/py" },
-    { name = "mrly-math", directory = "../packages/math/py" },
-    { name = "mrly-num", directory = "../packages/num/py" },
-    { name = "mrly-tile", directory = "../packages/tile/py" },
-]
-
-[[package]]
-name = "mrly-tile"
-source = { directory = "../packages/tile/py" }
-dependencies = [
-    { name = "mrly-core" },
-    { name = "mrly-math" },
-    { name = "mrly-num" },
-    { name = "numpy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "mrly-core", directory = "../packages/core/py" },
-    { name = "mrly-math", directory = "../packages/math/py" },
-    { name = "mrly-num", directory = "../packages/num/py" },
-    { name = "numpy", specifier = ">=2" },
-]
+mrly = [{ name = "mrly", editable = "../packages/py" }]
 
 [[package]]
 name = "numpy"

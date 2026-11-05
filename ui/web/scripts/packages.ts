@@ -6,7 +6,8 @@ import { REPO, SIBLINGS } from "./home.ts";
 type Manifest = { name: string; exports: Record<string, string> };
 
 const HOMES = [
-  join(SIBLINGS, "packages", "draw"),
+  join(SIBLINGS, "packages", "js", "draw"),
+  join(SIBLINGS, "packages", "js", "loader"),
   REPO,
   join(SIBLINGS, "os"),
   join(SIBLINGS, "apps"),

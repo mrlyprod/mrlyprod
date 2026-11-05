@@ -1,6 +1,12 @@
 html.js .domain {
   display: none;
 }
+html[data-sealed] {
+  overflow: hidden;
+}
+html[data-sealed] body > :not(.sealed, .floor) {
+  visibility: hidden !important;
+}
 .floor {
   position: fixed;
   inset: 0;

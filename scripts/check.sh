@@ -6,9 +6,8 @@ cd "$(dirname "$0")/.."
 
 DATA_DIR="data/scripts/check"
 RUFF="uvx ruff@0.17.2"
-UNITS=(core num math tile life font)
-JS=(os apps ui designs packages/draw sites/net)
-SITES=(sites/net)
+JS=(os apps ui designs packages/js/draw packages/js/loader sim sites/net sites/com sites/org sites/tv sites/store)
+SITES=(sites/net sites/com sites/org sites/tv sites/store)
 
 step() {
   local name="$1"; shift
@@ -38,30 +37,16 @@ sites() {
   done
 }
 
-bridge() {
-  local unit
-  for unit in "${UNITS[@]}"; do bash scripts/bridge.sh "$unit" check || return 1; done
-}
-
-lint_py() {
-  local unit
-  for unit in "${UNITS[@]}"; do
-    $RUFF format --check "packages/$unit/py" && $RUFF check "packages/$unit/py" || return 1
-  done
-}
-
-units_wasm() {
-  local unit
-  for unit in "${UNITS[@]}"; do bash scripts/wasm.sh "$unit" || return 1; done
-}
-
 mkdir -p "$DATA_DIR"
 total=$SECONDS
+step prose uv run scripts/prose.py README.md CONTRIBUTING.md sim/testers/
+step generate bash scripts/build.sh
 step fmt cargo fmt --all --check
-step clippy cargo clippy --workspace --all-targets --all-features -- -D warnings
-step bridge bridge
-step ruff lint_py
-step units units_wasm
+step fmtcli cargo fmt --manifest-path packages/cli/Cargo.toml --check
+step clippy cargo clippy --workspace --all-targets -- -D warnings
+step clipcli cargo clippy --manifest-path data/packages/rs/bridge/Cargo.toml -p mrly-cli -- -D warnings
+step ruff $RUFF check packages/py aws
+step ruffmt $RUFF format --check packages/py aws
 step install bun install --frozen-lockfile
 step rules bun os/scripts/rules.ts
 step lint bun run lint

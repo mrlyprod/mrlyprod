@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33dac9"/><stop offset=".7" stop-color="#00d1bb"/><stop offset="1" stop-color="#00d1bb"/></linearGradient>
+    <clipPath id="disc"><circle cx="512" cy="512" r="190"/></clipPath>
+    <mask id="ring" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024"><rect width="1024" height="1024" fill="#fff"/><path d="M304 512a208 208 0 1 0 416 0a208 208 0 1 0 -416 0z" fill="#000"/></mask>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M270 210V754H814M210 270H754V814" fill="none" stroke="#fff" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" data-dark-stroke="#00d1bb"/>
+  <path d="M337 337h96.67v96.67h-96.67zM463.67 337h96.67v96.67h-96.67zM590.33 337h96.67v96.67h-96.67zM337 463.67h96.67v96.67h-96.67zM590.33 463.67h96.67v96.67h-96.67zM337 590.33h96.67v96.67h-96.67zM463.67 590.33h96.67v96.67h-96.67zM590.33 590.33h96.67v96.67h-96.67z" fill="#fff" fill-opacity=".34" mask="url(#ring)"/>
+  <path d="M337 337h96.67v96.67h-96.67zM463.67 337h96.67v96.67h-96.67zM590.33 337h96.67v96.67h-96.67zM337 463.67h96.67v96.67h-96.67zM590.33 463.67h96.67v96.67h-96.67zM337 590.33h96.67v96.67h-96.67zM463.67 590.33h96.67v96.67h-96.67zM590.33 590.33h96.67v96.67h-96.67z" fill="#fff" clip-path="url(#disc)"/>
+</svg>

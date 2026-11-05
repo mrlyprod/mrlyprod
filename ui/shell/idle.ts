@@ -68,6 +68,7 @@ const poke = () => {
 const free = () =>
   !document.hidden &&
   root().dataset.welcome !== "open" &&
+  !("sealed" in root().dataset) &&
   !("zen" in root().dataset) &&
   !document.querySelector("dialog[open]");
 

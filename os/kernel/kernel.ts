@@ -1,4 +1,4 @@
-import type { Schema } from "../contract/spec/index.ts";
+import type { Schema, ViewNode } from "../contract/spec/index.ts";
 import { SPEC } from "../contract/spec/index.ts";
 import { check } from "./check.ts";
 import type { Json, Obj } from "./json.ts";
@@ -37,6 +37,7 @@ export type Verb<S = Json> = {
   line: string | ((knob: Knob) => string);
   args?: Schema | ((knob: Knob) => Schema);
   inner?: boolean;
+  guest?: boolean;
   run: (state: S, args: Obj, ctx: Ctx) => S;
 };
 
@@ -57,6 +58,8 @@ export type App<S = Json> = {
   knobs?: Knobs;
   wake?: (state: S, at: number) => string | null;
   after?: (done: Called) => Act | null;
+  hear?: (state: S, line: Line) => S;
+  view?: ViewNode[];
 };
 
 export type Entry = { id: string; config?: Obj };
@@ -233,6 +236,14 @@ export function kernel(installed: readonly App[]) {
     table.set(one.id, one);
   }
 
+  const hearing = installed.filter((one) => one.hear);
+
+  const heard = (world: World, line: Line): World => {
+    const apps = { ...world.apps };
+    for (const one of hearing) if (Object.hasOwn(apps, one.id)) apps[one.id] = one.hear!(apps[one.id], copy(line));
+    return { ...world, apps };
+  };
+
   const ids = (world: World) => Object.keys(world.apps);
 
   const app = (world: World, id: string) => {
@@ -400,6 +411,12 @@ export function kernel(installed: readonly App[]) {
     throw new Fault("unknown-verb", `no app owns ${verb}${near ? `; nearest: ${near}` : ""}`);
   }
 
+  const open = (world: World, verb: string) => {
+    const cut = verb.indexOf(".");
+    const id = verb.slice(0, cut);
+    return Object.hasOwn(world.apps, id) && table.get(id)?.verbs[verb.slice(cut + 1)]?.guest === true;
+  };
+
   function who(act: Act): Who {
     const one = act.who ?? NOBODY;
     if (!one || typeof one.id !== "string" || !one.id || typeof one.kind !== "string" || !one.kind)
@@ -414,7 +431,7 @@ export function kernel(installed: readonly App[]) {
     if (!given || typeof given !== "object" || Array.isArray(given))
       throw new Fault("bad-act", "args must be an object");
     const by = who(act);
-    if (world.actors && !world.actors.includes(by.id))
+    if (world.actors && !world.actors.includes(by.id) && !open(world, act.verb))
       throw new Fault("refused", `${by.id} may watch ${world.name}, not act in it`);
     const at = act.at ?? world.at;
     if (!Number.isInteger(at) || at < world.at)
@@ -443,7 +460,7 @@ export function kernel(installed: readonly App[]) {
     const note = check(argsOf(verb, reader(world.rules, id)), args);
     if (note) throw new Fault("bad-act", `${act.verb}: ${note}`);
     const refuse = (why: string): Called => {
-      const next = { ...world, tick: line.tick, at, last: { ok: false, note: why } };
+      const next = heard({ ...world, tick: line.tick, at, last: { ok: false, note: why } }, line);
       return { world: next, envelope: envelope(next, look(next, [id], by, at) ?? null), line };
     };
     if (verb.inner && !act.via) return refuse(`${act.verb} runs only when another app asks for it`);
@@ -512,14 +529,10 @@ export function kernel(installed: readonly App[]) {
       throw thrown;
     }
     if (broken) return refuse(broken);
-    const next: World = {
-      ...world,
-      tick: line.tick,
-      at,
-      rand: rand.state(),
-      apps: live,
-      last: { ok: true, note: null },
-    };
+    const next = heard(
+      { ...world, tick: line.tick, at, rand: rand.state(), apps: live, last: { ok: true, note: null } },
+      line,
+    );
     return { world: next, envelope: envelope(next, look(next, [id], by, at) ?? null, wishes, said), line };
   }
 

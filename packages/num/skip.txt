@@ -1,2 +1,0 @@
-num::fft::fft transforms two mutable slices in place
-num::fft::fft2 transforms two mutable slices in place

@@ -1,0 +1,5 @@
+{
+  "title": "Weather",
+  "line": "The sky over every map cell, live in world time: temperature, wind and a forecast for where you stand and the places you save.",
+  "aliases": ["forecast", "sky", "rain", "temperature", "climate", "wind", "snow"]
+}

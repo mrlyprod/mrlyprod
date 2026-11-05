@@ -1,5 +1,18 @@
 {
   "title": "Wallet",
   "line": "One wallet each: a private balance and history, payments, requests, public gifts and every paid act.",
-  "aliases": ["balance", "money", "cash", "funds", "account", "pay", "bill", "invoice", "request", "claim"]
+  "aliases": [
+    "balance",
+    "money",
+    "cash",
+    "funds",
+    "account",
+    "pay",
+    "bill",
+    "invoice",
+    "request",
+    "claim",
+    "give",
+    "donate"
+  ]
 }

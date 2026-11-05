@@ -10,10 +10,16 @@
     "boot": { "line": "({ seed, start, config, actors, knob }) => state. Runs once, when a world boots." },
     "verbs": {
       "type": "object",
-      "line": "name: { line, args?, inner?, run }. line is a string, or (knob) => string. args is a JSON schema, or (knob) => schema; never from state. inner verbs run only when an app or the host asks. run(state, args, ctx) returns the next state.",
+      "line": "name: { line, args?, inner?, guest?, run }. guest lets a person outside the actors list act. line is a string, or (knob) => string. args is a JSON schema, or (knob) => schema; never from state. inner verbs run only when an app or the host asks. run(state, args, ctx) returns the next state.",
       "additionalProperties": {
         "type": "object",
-        "properties": { "line": {}, "args": {}, "inner": { "type": "boolean" }, "run": {} },
+        "properties": {
+          "line": {},
+          "args": {},
+          "inner": { "type": "boolean" },
+          "guest": { "type": "boolean" },
+          "run": {}
+        },
         "required": ["line", "run"]
       }
     },
@@ -30,6 +36,13 @@
     },
     "after": {
       "line": "({ world, envelope, line }) => act | null. Watch another app's act, and follow it with one of your own; it runs as the same who, via this app."
+    },
+    "hear": {
+      "line": "(state, line) => state. Every journal line as it lands, refused acts too. It draws nothing and acts on nothing, so a replay rebuilds it and the journal never changes."
+    },
+    "view": {
+      "type": "array",
+      "line": "What to show, as plain JSON, in order. value { from, as, title }, rows { from, fields, title?, reverse? }, form { verb, rank, choices? }, chart { from, x, y, shape, title?, xunit?, skip? }, viewer { name }, do { action, title, to?, sure? }, group { nodes, title?, needs? }, pref { key, as, title, options?, on?, off?, art? }, pane { id, title, nodes }. from is { world: path } or { file: url, path? }, where * in a file path walks every key; a field is { key, as, title?, unit?, names? }; a field or value may add unit, a word after the number, and a field may add names, a source that maps ids to names; as is text, number, time or person; rank is primary, secondary or rare; rows take a list; choices map an arg to one source or a list of them, each a map of ids to names or a list. Any node with guest false hides from guests. The kernel and doors ignore it; the browser draws it. Default: the state as a tree and every verb as a form."
     },
     "ctx": {
       "line": "who, at, via; draw() a random 32-bit number; refuse(note) undoes the act; say(value) answers the caller; see(path) reads as who; read(path) reads raw state; call(verb, args) runs another app's verb inside this act, and its refusal undoes the whole act; wish({ kind, data, reply }) asks the outside, and the answer returns as the inner verb reply with args { wish, ok, data }; knob(name) reads a knob, yours by name or anyone's as app.name."

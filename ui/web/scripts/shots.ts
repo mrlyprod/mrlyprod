@@ -60,6 +60,7 @@ const LOCALE = "en-US";
 const ZONE = "Europe/Rome";
 const GL = /GL Driver Message \(OpenGL, Performance,/;
 const SIGNALS = ["SIGINT", "SIGTERM", "SIGHUP"] as const;
+const FIXTURE = resolve(import.meta.dir, "..", "..", "..", "apps", "stats", "fixture.json");
 const CELL = 320;
 const PATIENCE = 15000;
 const REPLY = 30000;
@@ -109,6 +110,8 @@ function serve(dist: string, answer: Answer) {
       if (step.redirect) return Response.redirect(joined(step.redirect, url.search), 301);
       const hit = file(step.uri!);
       if (hit) return hit;
+      if (url.pathname === "/stats/stats.json" && existsSync(FIXTURE))
+        return new Response(readFileSync(FIXTURE), { headers: { "content-type": "application/json" } });
       const lost = file("/404.html");
       return lost
         ? new Response(lost.body, { status: 404, headers: lost.headers })
@@ -284,7 +287,7 @@ const WIDE = `JSON.stringify([...document.querySelectorAll("body *")].filter((el
 const FRAMED = "new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(1))))";
 
 const pinned = (frozen: boolean) =>
-  `(() => { const T = Date.UTC(2026, 0, 1, 8, 41); const t0 = performance.now(); const D = Date; const at = () => ${frozen ? "T" : "T + performance.now() - t0"}; class Pinned extends D { constructor(...a) { super(...(a.length ? a : [at()])); } static now() { return at(); } } globalThis.Date = Pinned; let s = 0x9e3779b9; Math.random = () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return (s >>> 0) / 4294967296; }; })()`;
+  `(() => { const T = Date.UTC(2026, 0, 1, 8, 41); const t0 = performance.now(); const D = Date; const at = () => ${frozen ? "T" : "Math.floor(T + performance.now() - t0)"}; class Pinned extends D { constructor(...a) { super(...(a.length ? a : [at()])); } static now() { return at(); } } globalThis.Date = Pinned; let s = 0x9e3779b9; Math.random = () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return (s >>> 0) / 4294967296; }; })()`;
 
 export function every(text: string): number {
   const m = /^(\d+(?:\.\d+)?)(ms|s)?$/.exec(text.trim());

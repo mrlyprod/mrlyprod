@@ -13,7 +13,9 @@
       "ui/**",
       "designs/**",
       "sites/**",
-      "packages/draw/**",
+      "sim/**",
+      "aws/**",
+      "packages/js/draw/**",
       "package.json",
       "biome.json",
       "!!research",
@@ -23,8 +25,10 @@
       "!**/*.md",
       "!os/hosts/cloud/edge.js",
       "!ui/shared/fonts",
-      "!ui/apps/stats/fixture.json",
-      "!sites/net/launchpad.json"
+      "!apps/stats/fixture.json",
+      "!sites/net/launchpad.json",
+      "!sites/com/site/launchpad.json",
+      "!sites/com/apps/shared/sequences/records.json"
     ]
   },
   "formatter": {
@@ -65,7 +69,7 @@
   },
   "overrides": [
     {
-      "includes": ["ui/apps/stats/index.tsx", "ui/kit/view.tsx", "designs/modern/dock.tsx"],
+      "includes": ["ui/kit/view.tsx", "ui/shell/settings/pane.tsx", "designs/modern/dock.tsx"],
       "linter": {
         "rules": {
           "suspicious": {

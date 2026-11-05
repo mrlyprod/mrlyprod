@@ -51,7 +51,12 @@
     "search",
     "help",
     "identity",
-    "term"
+    "term",
+    "logs",
+    "settings",
+    "stats",
+    "screensavers",
+    "git"
   ],
   "actors": ["test-1", "test-2", "test-3", "test-4", "test-5", "test-6", "test-7", "test-8"],
   "rules": {

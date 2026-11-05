@@ -1,0 +1,60 @@
+[[hand]]
+name = "Tensor"
+rust = ["mrly_core::Tensor"]
+word = "tensor"
+ts = "Tensor"
+ts_data = "TensorData"
+rank = true
+write_back = "ref"
+
+[[hand]]
+name = "Cell"
+rust = ["mrly_core::Cell"]
+word = "cell"
+ts = "Cell"
+ts_data = "CellData"
+write_back = "value"
+
+[[hand]]
+name = "Image"
+rust = ["mrly_core::Image"]
+word = "image"
+ts = "Image"
+ts_data = "{ width: number; height: number; colors: number[][] }"
+
+[[hand]]
+name = "Color"
+rust = ["mrly_core::Color"]
+word = "color"
+ts = "Color"
+ts_data = "ColorData"
+
+[[hand]]
+name = "Rng"
+rust = ["mrly_core::Rng"]
+word = "rng"
+ts = "Rng"
+ts_data = "unknown"
+stream = true
+
+[[hand]]
+name = "CellNd"
+rust = ["mrly_math::two::Cell2d", "mrly_math::three::Cell3d"]
+word = "cell"
+ts = "Cell"
+ts_data = "{ cell: CellData }"
+
+[[hand]]
+name = "Cell6d"
+rust = ["mrly_math::six::Cell6d"]
+word = "cell"
+ts = "Cell6d"
+ts_data = "Cell6dData"
+
+[[hand]]
+name = "Code"
+rust = ["mrly_math::bang::Code"]
+word = "code"
+ts = "string | number | bigint"
+ts_data = "bigint"
+big = true

@@ -1,7 +1,7 @@
 {
   "sections": [
     { "name": "World", "apps": ["people", "messages", "mail", "phone", "notifications", "calendar", "reminders", "notes", "files", "photos", "clock", "calc", "wiki", "archive", "maps", "weather", "news", "market", "dating", "stocks", "books", "tv", "music", "podcasts"] },
-    { "name": "Civic", "apps": ["wallet", "give", "jobs", "wish", "vote", "feedback", "health", "ads"] },
+    { "name": "Civic", "apps": ["wallet", "jobs", "wish", "vote", "feedback", "health", "ads"] },
     { "name": "Making", "apps": ["docs", "numbers", "slides", "papers", "sites", "code"] },
     { "name": "Ground", "apps": ["search", "help", "term", "identity", "logs"] },
     { "name": "System", "apps": ["settings", "screensavers", "stats", "git"] },

@@ -5,8 +5,8 @@
     "paths": {
       "@mrlyprod/os/*": ["../os/*"],
       "@mrlyprod/apps/*": ["./*"],
-      "@mrlyprod/draw": ["../packages/draw/index.ts"],
-      "@mrlyprod/draw/*": ["../packages/draw/*"]
+      "@mrlyprod/draw": ["../packages/js/draw/src/index.ts"],
+      "@mrlyprod/draw/*": ["../packages/js/draw/src/*"]
     }
   },
   "include": ["**/*.ts"],

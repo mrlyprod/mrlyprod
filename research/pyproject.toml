@@ -11,25 +11,13 @@ dependencies = [
 ]
 
 [dependency-groups]
-mrly = [
-    "mrly-core",
-    "mrly-font",
-    "mrly-life",
-    "mrly-math",
-    "mrly-num",
-    "mrly-tile",
-]
+mrly = ["mrly"]
 
 [tool.uv]
 package = false
 
 [tool.uv.sources]
-mrly-core = { path = "../packages/core/py" }
-mrly-font = { path = "../packages/font/py" }
-mrly-life = { path = "../packages/life/py" }
-mrly-math = { path = "../packages/math/py" }
-mrly-num = { path = "../packages/num/py" }
-mrly-tile = { path = "../packages/tile/py" }
+mrly = { path = "../packages/py", editable = true }
 
 [tool.ruff]
 target-version = "py313"

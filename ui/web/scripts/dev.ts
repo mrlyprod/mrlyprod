@@ -1,29 +1,23 @@
-import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { router } from "@mrlyprod/os/hosts/cloud/edge.ts";
-import { HALL, PAGE } from "@mrlyprod/os/hosts/cloud/guard.js";
 import { kind } from "@mrlyprod/os/hosts/cloud/mime.ts";
 import { decode } from "../../kit/git/view.ts";
 import shell from "../../shell/index.html";
 import { globals, ready, typed, withSite } from "./build.ts";
 import { HOME, REPO, SITE } from "./home.ts";
-import { hall, lockOf, type Site } from "./locked.ts";
 
 if (process.cwd() !== REPO)
   throw new Error("dev: run from the repo root (bun run dev), where bunfig.toml hands the plugin to Bun");
 const { decide, join: joined } = router(JSON.parse(readFileSync(join(HOME, "redirects.json"), "utf8")));
 const made = await ready();
-const LOCK = process.env.MRLY_LOCK === "1" ? lockOf(SITE as Site) : null;
-const HOLD = LOCK ? mkdtempSync(join(tmpdir(), "lock-")) : "";
-if (LOCK) await hall(LOCK, HOLD, SITE as Site);
 const files = new Map([...made.assets, ...globals(made)].map((one) => [`/${one.path}`, one]));
 files.set("/boot.js", files.get(made.boot)!);
 const reply = (body: string | Uint8Array, type: string) =>
   new Response(body as BodyInit, { headers: { "content-type": type } });
 const SHELL = "/_shell";
 const STATS = "/stats/stats.json";
-const FIXTURE = join(REPO, "apps", "stats", "fixture.json");
+const FIXTURE = join(REPO, "..", "apps", "stats", "fixture.json");
 const stamp = (at: unknown, gap: number) =>
   typeof at === "number"
     ? at + gap
@@ -51,11 +45,7 @@ const server = Bun.serve({
     const url = new URL(request.url);
     const step = decide(decode(url.pathname));
     if (step.redirect) return Response.redirect(joined(step.redirect, url.search), 301);
-    const path = LOCK && (step.uri === "/index.html" || step.uri === "/404.html") ? PAGE : step.uri!;
-    if (LOCK && path.startsWith(HALL)) {
-      const held = join(HOLD, path);
-      if (existsSync(held)) return reply(readFileSync(held), kind(held));
-    }
+    const path = step.uri!;
     if (path === "/index.html" || path === "/404.html")
       return reply(
         withSite((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${REPO}/`, "/"), made.bar),

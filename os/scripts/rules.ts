@@ -2,20 +2,24 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
 const TOP = resolve(import.meta.dir, "..", "..");
-const INSTANCES = ["net", "com", "org", "sim"];
+const INSTANCES = ["net", "com", "org", "tv", "store", "sim"];
 const HOMES: Record<string, string> = {
   os: join(TOP, "os"),
   apps: join(TOP, "apps"),
   ui: join(TOP, "ui"),
   designs: join(TOP, "designs"),
   net: join(TOP, "sites", "net"),
+  com: join(TOP, "sites", "com"),
+  org: join(TOP, "sites", "org"),
+  tv: join(TOP, "sites", "tv"),
+  store: join(TOP, "sites", "store"),
 };
 for (const arg of process.argv.slice(2)) {
   const [name, dir] = arg.split("=");
   if (name && dir) HOMES[name] = resolve(dir);
 }
 const LAYERS = ["os", "apps", "ui", "designs"];
-const LEAVES = ["draw", "core", "font", "life", "math", "num", "tile"];
+const LEAVES = ["draw", "loader", "core", "font", "life", "math", "num", "tile"];
 const SKIP = new Set(["node_modules", ".git", "dist", "data", "target", "pkg", "wasm", ".venv", "__pycache__"]);
 const CODE = /\.(ts|tsx|js|jsx)$/;
 const WORDS = /\.(ts|tsx|js|jsx|json|css|py|sh)$/;
@@ -67,6 +71,8 @@ const npmAllowed: Record<string, boolean> = { os: false, apps: false, ui: true, 
 
 function reach(repo: string, file: string, spec: string) {
   const clean = spec.split("?")[0]!;
+  if (LAYERS.includes(repo) && /^three(\/|$)/.test(clean))
+    return say(file, `${repo} may not import three; only a site may`);
   if (clean.startsWith("node:") || clean === "bun" || VIRTUAL.test(clean)) return;
   if (clean.startsWith(".")) {
     const to = resolve(dirname(file), clean);

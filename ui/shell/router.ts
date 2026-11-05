@@ -127,7 +127,7 @@ function meta<E extends Element>(selector: string, make?: () => E): E | null {
 
 function head(row: Row, url: URL) {
   document.title = named(row, site);
-  meta('meta[name="description"]')?.setAttribute("content", row.lead || site.tagline);
+  meta('meta[name="description"]')?.setAttribute("content", row.lead || site.title);
   const canonical = meta('link[rel="canonical"]', () =>
     Object.assign(document.createElement("link"), { rel: "canonical" }),
   );

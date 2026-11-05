@@ -38,3 +38,6 @@ __pycache__/
 .DS_Store
 
 /local/
+
+/TREE.md
+/STATS.md

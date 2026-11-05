@@ -1,0 +1,89 @@
+{
+  "title": "MrlyTV",
+  "wordmark": "MRLYTV",
+  "root": "https://mrly.tv",
+  "since": 2026,
+  "prefix": "tv-",
+  "mark": "/mark.svg",
+  "tint": "indigo",
+  "menu": "/menu/",
+  "desk": "tiles",
+  "tiles": {
+    "id": "tiles",
+    "title": "Tiles"
+  },
+  "designs": ["../../designs/modern"],
+  "roots": ["pages"],
+  "apps": ["settings"],
+  "screen": [1440, 900, 2],
+  "min": [1280, 720],
+  "company": "MrlyProd, Inc.",
+  "tree": [
+    {
+      "name": "Root",
+      "nodes": [
+        {
+          "name": "robots.txt",
+          "href": "/robots.txt"
+        },
+        {
+          "name": "sitemap.xml",
+          "href": "/sitemap.xml"
+        },
+        {
+          "name": "llms.txt",
+          "href": "/llms.txt"
+        },
+        {
+          "name": "404.html",
+          "href": "/404.html"
+        }
+      ]
+    }
+  ],
+  "socials": [],
+  "contact": "help@mrly.net",
+  "shots": {
+    "routes": ["/", "/menu/", "/nowhere/"]
+  },
+  "git": {
+    "root": "."
+  },
+  "fonts": {
+    "faces": [
+      {
+        "family": "Noto Sans",
+        "file": "sans",
+        "axes": "wght@400..700",
+        "weight": "400 700",
+        "licence": "notosans"
+      },
+      {
+        "family": "Noto Serif",
+        "file": "serif",
+        "axes": "wght@400..700",
+        "weight": "400 700",
+        "licence": "notoserif"
+      },
+      {
+        "family": "Noto Sans Mono",
+        "file": "mono",
+        "axes": "wght@400..700",
+        "weight": "400 700",
+        "licence": "notosansmono"
+      },
+      {
+        "family": "Noto Sans Math",
+        "file": "math",
+        "weight": "400",
+        "licence": "notosansmath"
+      },
+      {
+        "family": "Noto Color Emoji",
+        "file": "emoji",
+        "weight": "400",
+        "licence": "notocoloremoji"
+      }
+    ]
+  }
+}

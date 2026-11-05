@@ -1,6 +1,24 @@
-export type { Schema } from "../contract/spec/index.ts";
+export type {
+  ChartNode,
+  DoNode,
+  Field,
+  FileSource,
+  FormNode,
+  GroupNode,
+  PaneNode,
+  PrefNode,
+  Rank,
+  RowsNode,
+  Schema,
+  Shown,
+  Source,
+  ValueNode,
+  ViewerNode,
+  ViewNode,
+  WorldSource,
+} from "../contract/spec/index.ts";
 export { check } from "./check.ts";
-export { jsonl, parse, replay } from "./journal.ts";
+export { jsonl, parse, replay, resume } from "./journal.ts";
 export type { Json, Obj } from "./json.ts";
 export { canon, copy, digest, same, walk } from "./json.ts";
 export type {

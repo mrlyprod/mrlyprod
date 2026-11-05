@@ -1,0 +1,21 @@
+{
+  "name": "@mrlyprod/com",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "wasm": "bun scripts/site.ts wasm",
+    "build": "bun scripts/site.ts build",
+    "dev": "bun scripts/site.ts dev",
+    "shots": "bun scripts/site.ts shots",
+    "push": "bun scripts/site.ts push",
+    "library": "bun scripts/library.ts",
+    "types": "tsc -p tsconfig.json",
+    "content": "bun scripts/site.ts content"
+  },
+  "dependencies": {
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0"
+  }
+}

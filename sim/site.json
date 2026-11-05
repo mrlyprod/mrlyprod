@@ -1,0 +1,5 @@
+{
+  "title": "MrlySim",
+  "cli": "mrlysim",
+  "roots": ["../apps", "apps"]
+}

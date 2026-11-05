@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a8bfb"/><stop offset=".7" stop-color="#6768fa"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#ffb81f"/></linearGradient>
+    <clipPath id="disc"><circle cx="512" cy="512" r="312"/></clipPath>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M132 132 L892 132 L892 892 L132 892ZM322 132 L892 322 L702 892 L132 702ZM464.5 179.5 L844.5 464.5 L559.5 844.5 L179.5 559.5ZM559.5 250.8 L773.3 559.5 L464.5 773.3 L250.8 464.5ZM612.9 327.9 L696.1 612.9 L411.1 696.1 L327.9 411.1ZM633.7 399.2 L624.8 633.7 L390.3 624.8 L399.2 390.3ZM631.5 457.8 L566.2 631.5 L392.5 566.2 L457.8 392.5Z" fill="#fff" fill-rule="evenodd" clip-path="url(#disc)"/>
+  <circle cx="512" cy="512" r="380" fill="none" stroke="url(#gold)" stroke-width="44" data-mono="full"/>
+</svg>

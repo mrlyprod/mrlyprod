@@ -19,39 +19,46 @@
     "os": {
       "name": "@mrlyprod/os",
     },
-    "packages/core/js": {
-      "name": "@mrlyprod/core",
-      "version": "0.2.0",
-    },
-    "packages/draw": {
+    "packages/js/draw": {
       "name": "@mrlyprod/draw",
       "version": "0.2.0",
-      "devDependencies": {
-        "@mrlyprod/core": "workspace:*",
+    },
+    "packages/js/loader": {
+      "name": "@mrlyprod/loader",
+      "version": "0.2.0",
+    },
+    "sim": {
+      "name": "@mrlyprod/sim",
+      "bin": {
+        "mrlysim": "cli/mrlysim.ts",
       },
     },
-    "packages/font/js": {
-      "name": "@mrlyprod/font",
-      "version": "0.2.0",
-    },
-    "packages/life/js": {
-      "name": "@mrlyprod/life",
-      "version": "0.2.0",
-    },
-    "packages/math/js": {
-      "name": "@mrlyprod/math",
-      "version": "0.2.0",
-    },
-    "packages/num/js": {
-      "name": "@mrlyprod/num",
-      "version": "0.2.0",
-    },
-    "packages/tile/js": {
-      "name": "@mrlyprod/tile",
-      "version": "0.2.0",
+    "sites/com": {
+      "name": "@mrlyprod/com",
+      "dependencies": {
+        "three": "^0.186.0",
+      },
+      "devDependencies": {
+        "@types/three": "^0.186.0",
+      },
     },
     "sites/net": {
       "name": "@mrlyprod/net",
+    },
+    "sites/org": {
+      "name": "@mrlyprod/org",
+    },
+    "sites/store": {
+      "name": "@mrlyprod/store",
+    },
+    "sites/tv": {
+      "name": "@mrlyprod/tv",
+      "dependencies": {
+        "three": "^0.186.0",
+      },
+      "devDependencies": {
+        "@types/three": "^0.186.0",
+      },
     },
     "ui": {
       "name": "@mrlyprod/ui",
@@ -67,7 +74,6 @@
         "remark-math": "^6.0.0",
         "remark-parse": "^11.0.0",
         "remark-rehype": "^11.1.2",
-        "three": "^0.186.0",
         "unified": "^11.0.5",
         "unist-util-visit": "^5.2.0",
       },
@@ -76,7 +82,6 @@
         "@types/mdast": "^4.0.4",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
-        "@types/three": "^0.186.0",
       },
     },
   },
@@ -107,25 +112,25 @@
 
     "@mrlyprod/apps": ["@mrlyprod/apps@workspace:apps"],
 
-    "@mrlyprod/core": ["@mrlyprod/core@workspace:packages/core/js"],
+    "@mrlyprod/com": ["@mrlyprod/com@workspace:sites/com"],
 
     "@mrlyprod/designs": ["@mrlyprod/designs@workspace:designs"],
 
-    "@mrlyprod/draw": ["@mrlyprod/draw@workspace:packages/draw"],
+    "@mrlyprod/draw": ["@mrlyprod/draw@workspace:packages/js/draw"],
 
-    "@mrlyprod/font": ["@mrlyprod/font@workspace:packages/font/js"],
-
-    "@mrlyprod/life": ["@mrlyprod/life@workspace:packages/life/js"],
-
-    "@mrlyprod/math": ["@mrlyprod/math@workspace:packages/math/js"],
+    "@mrlyprod/loader": ["@mrlyprod/loader@workspace:packages/js/loader"],
 
     "@mrlyprod/net": ["@mrlyprod/net@workspace:sites/net"],
 
-    "@mrlyprod/num": ["@mrlyprod/num@workspace:packages/num/js"],
+    "@mrlyprod/org": ["@mrlyprod/org@workspace:sites/org"],
 
     "@mrlyprod/os": ["@mrlyprod/os@workspace:os"],
 
-    "@mrlyprod/tile": ["@mrlyprod/tile@workspace:packages/tile/js"],
+    "@mrlyprod/sim": ["@mrlyprod/sim@workspace:sim"],
+
+    "@mrlyprod/store": ["@mrlyprod/store@workspace:sites/store"],
+
+    "@mrlyprod/tv": ["@mrlyprod/tv@workspace:sites/tv"],
 
     "@mrlyprod/ui": ["@mrlyprod/ui@workspace:ui"],
 

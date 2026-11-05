@@ -1,0 +1,19 @@
+{
+  "name": "@mrlyprod/tv",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "wasm": "MRLY_ROOT=$PWD bun run --cwd ../../ui wasm --copy",
+    "dev": "MRLY_ROOT=$PWD bun run --cwd ../../ui dev",
+    "build": "MRLY_ROOT=$PWD bun run --cwd ../../ui build",
+    "shots": "MRLY_ROOT=$PWD bun run --cwd ../../ui shots",
+    "types": "tsc -p tsconfig.json",
+    "content": "MRLY_ROOT=$PWD bun run --cwd ../../ui content"
+  },
+  "dependencies": {
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0"
+  }
+}

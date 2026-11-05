@@ -33,7 +33,12 @@ const still: Own = {
   },
 };
 
+const layoutOf = (row: Row): Layout => {
+  if (row.meta.frame === "page") return { bare: true };
+  return row.meta.scene || row.meta.frame === "app" ? APP : PAGE;
+};
+
 export function page(row: Row): Own | Promise<Own> {
   const id = row.meta.id ?? "";
-  return own.has(id) ? (chunk(id) as Promise<Own>) : { ...still, layout: row.meta.scene ? APP : PAGE };
+  return own.has(id) ? (chunk(id) as Promise<Own>) : { ...still, layout: layoutOf(row) };
 }

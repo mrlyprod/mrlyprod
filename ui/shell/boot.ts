@@ -24,8 +24,11 @@
         : "light";
     if (icons && (icons !== "dark" || tone === "dark"))
       d.dataset.icons = icons === "dark" ? "dark" : `${icons}-${tone}`;
+    const password = localStorage.getItem(`${p}password`);
+    if (password && !sessionStorage.getItem(`${p}unlocked`)) d.dataset.sealed = "";
     if (home && CSS.supports("animation-timeline", "scroll()"))
       d.dataset.welcome =
+        password ||
         localStorage.getItem(`${p}welcome`) ||
         d.dataset.motion === "reduce" ||
         matchMedia("(prefers-reduced-motion: reduce)").matches

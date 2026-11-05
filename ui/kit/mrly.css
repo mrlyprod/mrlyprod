@@ -762,6 +762,54 @@ dialog.modal.browse::backdrop {
   margin-inline: 0;
 }
 
+.value {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s3);
+  font: var(--t3) / var(--lh3) var(--mono);
+}
+.value span {
+  color: var(--dim);
+}
+.value strong {
+  font-size: var(--t4);
+  font-weight: 600;
+}
+.plot {
+  display: block;
+  width: 100%;
+  height: 240px;
+  margin-bottom: var(--s3);
+  border-radius: var(--r-inset);
+}
+.arena > .panel:has(.rows) {
+  overflow-x: auto;
+}
+.rows {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--t2) / var(--lh3) var(--mono);
+}
+.rows th {
+  padding: 0 var(--s3) var(--s1) 0;
+  color: var(--dim);
+  font-weight: 400;
+  text-align: left;
+}
+.rows td {
+  padding: var(--s1) var(--s3) var(--s1) 0;
+  border-top: var(--hair);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.rows :is(th, td):last-child {
+  padding-right: 0;
+}
+.rows :is(.number, .money) {
+  text-align: right;
+}
 .tree {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3fa6ff"/><stop offset=".7" stop-color="#0a84ff"/></linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#ffe7a6"/><stop offset="1" stop-color="#ffb84d"/></linearGradient>
+    <clipPath id="front"><rect x="0" y="512" width="1024" height="512"/></clipPath>
+    <clipPath id="disc"><circle cx="512" cy="512" r="210"/></clipPath>
+    <mask id="ringcut" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024"><rect width="1024" height="1024" fill="#fefefe"/><path d="M268 512A244 244 0 0 1 756 512Z" fill="#000" transform="rotate(-16 512 512)"/></mask>
+    <mask id="bodycut" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024"><rect width="1024" height="1024" fill="#fefefe"/><path d="M68 512a444 172 0 1 0 888 0a444 172 0 1 0 -888 0ZM210 512a302 58 0 1 0 604 0a302 58 0 1 0 -604 0Z" fill="#000" fill-rule="evenodd" transform="rotate(-16 512 512)" clip-path="url(#front)"/></mask>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)" data-key="#5cb3ff"/>
+  <circle cx="512" cy="512" r="210" fill="url(#body)" mask="url(#bodycut)" data-mono="full"/>
+  <g mask="url(#bodycut)" data-mono="hide"><g clip-path="url(#disc)"><g transform="rotate(-16 512 512)" fill="#000" fill-opacity="0.06"><rect x="200" y="377.6" width="624" height="42"/><rect x="200" y="449" width="624" height="25.2"/></g><circle cx="423.8" cy="407" r="277.2" fill="none" stroke="#000" stroke-opacity="0.13" stroke-width="189"/></g></g>
+  <path d="M102 512a410 138 0 1 0 820 0a410 138 0 1 0 -820 0ZM176 512a336 92 0 1 0 672 0a336 92 0 1 0 -672 0Z" fill-rule="evenodd" fill="#fff" transform="rotate(-16 512 512)" mask="url(#ringcut)" data-dark="#fff3d6"/>
+  <circle cx="796" cy="232" r="36" fill="#fff" data-dark="#fff3d6"/>
+</svg>

@@ -1,4 +1,4 @@
-import type { Act, Envelope, Json, Manifest, Move, Obj, Who } from "@mrlyprod/os/kernel/index.ts";
+import type { Act, Envelope, Json, Manifest, Move, Obj, ViewNode, Who } from "@mrlyprod/os/kernel/index.ts";
 import { canon } from "@mrlyprod/os/kernel/index.ts";
 import { useCallback, useRef, useSyncExternalStore } from "react";
 
@@ -12,6 +12,7 @@ export type Port = {
   who: () => Who;
   actor: () => boolean;
   at: () => number;
+  view: (app: string) => ViewNode[] | null;
 };
 
 export type Signed = { who: Who; actor: boolean };
@@ -71,6 +72,11 @@ export const useMoves = (app: string): Move[] =>
 
 export const useApp = (app: string): Manifest | null =>
   useSnap(`app:${app}`, (one) => one.list().apps.find((each) => each.id === app) ?? null, null);
+
+export const useView = (app: string): ViewNode[] | null => useSnap(`view:${app}`, (one) => one.view(app), null);
+
+export const useReads = (paths: string[]): (Json | null)[] =>
+  useSnap(`reads:${paths.join("\n")}`, (one) => paths.map((path) => one.read(path).state), []);
 
 export const useWho = (): Signed | null => useSnap("who", (one) => ({ who: one.who(), actor: one.actor() }), null);
 

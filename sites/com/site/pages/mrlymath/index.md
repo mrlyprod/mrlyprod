@@ -1,0 +1,2 @@
+- Lives in `packages/math`.
+- Notes: [research](/research/).

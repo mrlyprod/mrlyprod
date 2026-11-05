@@ -1,0 +1,15 @@
+{
+  "name": "@mrlyprod/org",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "wasm": "bun scripts/site.ts wasm",
+    "build": "bun scripts/site.ts build",
+    "dev": "bun scripts/site.ts dev",
+    "shots": "bun scripts/site.ts shots",
+    "push": "bun scripts/site.ts push",
+    "icons": "bun scripts/icons.ts",
+    "types": "tsc -p tsconfig.json",
+    "content": "bun scripts/site.ts content"
+  }
+}

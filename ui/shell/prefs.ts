@@ -25,6 +25,7 @@ export const KEY = {
   clear: `${PREFIX}clear`,
   contrast: `${PREFIX}contrast`,
   targets: `${PREFIX}targets`,
+  history: `${PREFIX}history`,
 };
 
 export type Name = keyof typeof KEY;
@@ -61,7 +62,15 @@ export const write = (key: string, value: string) => {
     if (value) localStorage.setItem(key, value);
     else localStorage.removeItem(key);
   } catch {}
-  if (read(key) !== was) tell(key);
+  if (read(key) === was) return;
+  tell(key);
+  recorder?.(key, value);
+};
+
+let recorder: ((key: string, value: string) => void) | null = null;
+
+export const record = (fn: typeof recorder) => {
+  recorder = fn;
 };
 
 export function subscribe(fn: Fan) {
@@ -260,11 +269,26 @@ if (typeof window !== "undefined") {
 }
 
 export const SETTINGS =
-  "theme tint text icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad page wide".split(
+  "history theme tint text icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad page wide".split(
     " ",
   ) as Name[];
 
 const KNOBBED = /^knob-[a-z]+$/;
+
+export const keyOf = (name: string) => (KNOBBED.test(name) ? `${PREFIX}${name}` : KEY[name as Name]);
+
+export const nameOf = (key: string) => {
+  const knobbed = key.slice(PREFIX.length);
+  if (KNOBBED.test(knobbed)) return knobbed;
+  return SETTINGS.find((name) => KEY[name] === key) ?? null;
+};
+
+export const adopt = (name: string, value: string) => {
+  const key = keyOf(name);
+  if (read(key) === value) return;
+  write(key, value);
+  replay(key);
+};
 
 export const pack = (): Settings =>
   Object.fromEntries(

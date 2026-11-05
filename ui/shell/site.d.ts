@@ -10,7 +10,6 @@ declare module "site:routes" {
     wordmark?: string;
     root: string;
     mark: string;
-    tagline: string;
     prefix: string;
     tint: string;
     menu: string;
@@ -79,7 +78,7 @@ declare module "site:figures" {
 
 declare module "site:world" {
   export const apps: import("@mrlyprod/os/kernel/index.ts").App[];
-  export const config: import("@mrlyprod/os/kernel/index.ts").Config | null;
+  export const config: import("@mrlyprod/os/kernel/index.ts").Config;
 }
 
 declare module "apps:scenes" {

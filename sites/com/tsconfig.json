@@ -1,0 +1,18 @@
+{
+  "extends": "../../ui/tsconfig.json",
+  "compilerOptions": {
+    "typeRoots": ["../../node_modules/@types"]
+  },
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "seams/**/*.ts",
+    "scripts/*.ts",
+    "site/**/*.ts",
+    "site/**/*.tsx",
+    "../../ui/shell/site.d.ts",
+    "../../ui/kit/drawn.d.ts",
+    "../../ui/kit/units/wasm.d.ts"
+  ],
+  "exclude": ["data", "site/wasm"]
+}

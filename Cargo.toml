@@ -1,33 +1,17 @@
 [workspace]
 resolver = "3"
-exclude = ["research"]
+exclude = ["research", "packages/cli", "data"]
 members = [
-  "packages/bridge",
-  "packages/sequences",
-  "packages/core",
-  "packages/core/js",
-  "packages/core/py",
-  "packages/core/cli",
-  "packages/num",
-  "packages/num/js",
-  "packages/num/py",
-  "packages/num/cli",
-  "packages/math",
-  "packages/math/js",
-  "packages/math/py",
-  "packages/math/cli",
-  "packages/tile",
-  "packages/tile/js",
-  "packages/tile/py",
-  "packages/tile/cli",
-  "packages/life",
-  "packages/life/js",
-  "packages/life/py",
-  "packages/life/cli",
-  "packages/font",
-  "packages/font/js",
-  "packages/font/py",
-  "packages/font/cli",
+  "packages/rs/wire",
+  "packages/rs/bridge",
+  "packages/rs/sequences",
+  "packages/rs/core",
+  "packages/rs/num",
+  "packages/rs/math",
+  "packages/rs/tile",
+  "packages/rs/life",
+  "packages/rs/font",
+  "packages/rs/four",
 ]
 
 [workspace.package]
@@ -54,14 +38,12 @@ opt-level = "s"
 strip = true
 
 [workspace.dependencies]
-mrly-core = { path = "packages/core", version = "0.2.0" }
-mrly-num = { path = "packages/num", version = "0.2.0" }
-mrly-math = { path = "packages/math", version = "0.2.0" }
-mrly-tile = { path = "packages/tile", version = "0.2.0" }
-mrly-life = { path = "packages/life", version = "0.2.0" }
-mrly-font = { path = "packages/font", version = "0.2.0" }
+mrly-wire = { path = "packages/rs/wire", version = "0.2.0" }
+mrly-core = { path = "packages/rs/core", version = "0.2.0" }
+mrly-num = { path = "packages/rs/num", version = "0.2.0" }
+mrly-math = { path = "packages/rs/math", version = "0.2.0" }
+mrly-tile = { path = "packages/rs/tile", version = "0.2.0" }
+mrly-life = { path = "packages/rs/life", version = "0.2.0" }
+mrly-font = { path = "packages/rs/font", version = "0.2.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-wasm-bindgen = "=0.2.125"
-serde-wasm-bindgen = "0.6"
-js-sys = "0.3"

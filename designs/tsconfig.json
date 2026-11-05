@@ -1,8 +1,22 @@
 {
   "extends": "../ui/tsconfig.json",
   "compilerOptions": {
-    "typeRoots": ["../node_modules/@types"]
+    "typeRoots": ["../node_modules/@types"],
+    "paths": {
+      "@mrlyprod/core": ["../data/packages/rs/bridge/js/core/index"],
+      "@mrlyprod/core/*": ["../data/packages/rs/bridge/js/core/*"],
+      "@mrlyprod/font": ["../data/packages/rs/bridge/js/font/index"],
+      "@mrlyprod/font/*": ["../data/packages/rs/bridge/js/font/*"],
+      "@mrlyprod/life": ["../data/packages/rs/bridge/js/life/index"],
+      "@mrlyprod/life/*": ["../data/packages/rs/bridge/js/life/*"],
+      "@mrlyprod/math": ["../data/packages/rs/bridge/js/math/index"],
+      "@mrlyprod/math/*": ["../data/packages/rs/bridge/js/math/*"],
+      "@mrlyprod/num": ["../data/packages/rs/bridge/js/num/index"],
+      "@mrlyprod/num/*": ["../data/packages/rs/bridge/js/num/*"],
+      "@mrlyprod/tile": ["../data/packages/rs/bridge/js/tile/index"],
+      "@mrlyprod/tile/*": ["../data/packages/rs/bridge/js/tile/*"]
+    }
   },
-  "include": ["**/*.ts", "**/*.tsx", "../ui/shell/site.d.ts", "../ui/kit/drawn.d.ts"],
+  "include": ["**/*.ts", "**/*.tsx", "../ui/shell/site.d.ts", "../ui/kit/drawn.d.ts", "../ui/kit/units/wasm.d.ts"],
   "exclude": ["**/node_modules/**", "**/data/**"]
 }

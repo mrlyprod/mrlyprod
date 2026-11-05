@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38dbca"/><stop offset="0.7" stop-color="#00d1bb"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M412 708H512V608M608 512H708V412" fill="none" stroke="#fff" stroke-width="42" stroke-linejoin="round" opacity=".6"/>
+  <path d="M270 612H362A50 50 0 0 1 412 662V754A50 50 0 0 1 362 804H270A50 50 0 0 1 220 754V662A50 50 0 0 1 270 612ZM270 656A6 6 0 0 0 264 662V754A6 6 0 0 0 270 760H362A6 6 0 0 0 368 754V662A6 6 0 0 0 362 656Z" fill="#fff" fill-rule="evenodd"/>
+  <path d="M466 416H558A50 50 0 0 1 608 466V558A50 50 0 0 1 558 608H466A50 50 0 0 1 416 558V466A50 50 0 0 1 466 416ZM466 460A6 6 0 0 0 460 466V558A6 6 0 0 0 466 564H558A6 6 0 0 0 564 558V466A6 6 0 0 0 558 460ZM460 564L564 460V564Z" fill="#fff" fill-rule="evenodd"/>
+  <path d="M662 220H754A50 50 0 0 1 804 270V362A50 50 0 0 1 754 412H662A50 50 0 0 1 612 362V270A50 50 0 0 1 662 220Z" fill="#fff"/>
+</svg>

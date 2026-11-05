@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { Modal } from "./controls.tsx";
 import type { Readout } from "./hooks.ts";
@@ -41,7 +40,7 @@ export type Open = (e: Press) => boolean;
 
 export type KeysProps = { map: readonly Shown[]; title?: string };
 
-export type InfoProps = { about?: readonly string[]; rows?: readonly Readout[]; title?: string };
+export type InfoProps = { rows?: readonly Readout[]; title?: string };
 
 export type HintsProps = { map: readonly Shown[]; count?: number };
 
@@ -132,30 +131,9 @@ export function Keys({ map, title = "Keys" }: KeysProps) {
   );
 }
 
-const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
-
-function linked(text: string): ReactNode[] {
-  const out: ReactNode[] = [];
-  let at = 0;
-  for (const found of text.matchAll(LINK)) {
-    out.push(text.slice(at, found.index));
-    out.push(
-      <a key={found.index} href={found[2]}>
-        {found[1]}
-      </a>,
-    );
-    at = found.index + found[0].length;
-  }
-  out.push(text.slice(at));
-  return out.filter((part) => part !== "");
-}
-
-export function Info({ about = [], rows = [], title = "Info" }: InfoProps) {
+export function Info({ rows = [], title = "Info" }: InfoProps) {
   return (
     <Modal light className="info" title={title}>
-      {about.map((line) => (
-        <p key={line}>{linked(line)}</p>
-      ))}
       {rows.length > 0 && (
         <dl>
           {rows.map(([name, value]: Readout) => (

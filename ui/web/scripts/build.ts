@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { viewFaults } from "@mrlyprod/os/contract/index.ts";
 import { rawKind } from "@mrlyprod/os/hosts/cloud/mime.ts";
 import type { Config, App as Made } from "@mrlyprod/os/kernel/index.ts";
 import { Fault, kernel } from "@mrlyprod/os/kernel/index.ts";
@@ -17,7 +18,7 @@ import { tintCss } from "../../kit/theme/tint.ts";
 import type { Design } from "../../shell/design.ts";
 import { named as designNamed, draw, folder, pulldown, runtime, sheets, source } from "./design.ts";
 import { forest, config as gitConfig, TREE, tree } from "./git.ts";
-import { HOME, REPO, SIBLINGS, SITE, UNITS, unit } from "./home.ts";
+import { HOME, REPO, SITE, UNITS, unit } from "./home.ts";
 import { llms, type Shelf } from "./llms.ts";
 import { packages, where } from "./packages.ts";
 
@@ -47,7 +48,7 @@ export const spells = <N extends Name>(file: string | null, name: N): file is (t
 const repo = REPO;
 const DIST = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(HOME, "dist");
 const root = (process.env.MRLY_SITE ?? SITE.root).replace(/\/$/, "");
-const ROOTS = SITE.roots.map((one) => resolve(HOME, one));
+const ROOTS = [join(repo, "shell", "routes"), ...SITE.roots.map((one) => resolve(HOME, one))];
 const BLOG = ROOTS.map((one) => join(one, "blog")).find((one) => existsSync(one)) ?? join(ROOTS[0], "blog");
 const GIT = gitConfig(HOME, SITE.git)!;
 const HELD = (SITE as { research?: string }).research;
@@ -77,7 +78,7 @@ type Post = { slug: string; route: string; title: string; date: string; lead: st
 
 export type Figure = { name: string; file: string };
 
-export type World = { config: Config | null; files: [string, string][] };
+export type World = { config: Config; files: [string, string][] };
 
 export type State = {
   world: World;
@@ -137,7 +138,7 @@ const version = () => {
   return held ? (JSON.parse(read(held)) as { version: string }).version : null;
 };
 
-const UNIT = /@mrlyprod\/([a-z]+)|mrly_([a-z]+)_js/g;
+const UNIT = /@mrlyprod\/([a-z]+)/g;
 
 const CALL = /\b(?:wasm|useUnit)\(([^)]*)\)/g;
 
@@ -147,11 +148,9 @@ const TABLE = join(LOADERS, "load.ts");
 
 const LEAF = new RegExp(`^@mrlyprod/(${UNITS.join("|") || "(?!)"})$`);
 
-const GLUE = /(?:^|\/)pkg\/mrly_([a-z]+)_js\.js$/;
+const WASM = /(?:^|\/)([a-z]+)\/\1\.wasm$/;
 
-const WASM = /(?:^|\/)pkg\/mrly_([a-z]+)_js_bg\.wasm$/;
-
-const unitWasm = (unit: string) => join(HOME, "wasm", unit, `mrly_${unit}_js_bg.wasm`);
+const unitWasm = (unit: string) => join(HOME, "wasm", unit, `${unit}.wasm`);
 
 const stem = (name: string) => name.slice(0, -3);
 
@@ -164,19 +163,29 @@ const drawn = (dir: string) =>
 
 const SHELF = new Set(["shared", "data", "node_modules"]);
 
+const SHELVES = [join(repo, "..", "apps"), join(repo, "examples")];
+
+const shelved = (id: string) => {
+  const shelf = SHELVES.find((one) => existsSync(join(one, id, "app.json")));
+  if (!shelf) throw new Error(`site: site.json names the system app ${id}, and no such app exists`);
+  return join(shelf, id);
+};
+
 const places = () =>
   [
-    ...new Map(
-      ROOTS.flatMap((root) =>
+    ...new Map([
+      ...folders(ROOTS[0]!).map((id): [string, { id: string; dir: string }] => [id, { id, dir: join(ROOTS[0]!, id) }]),
+      ...(SITE.apps ?? []).map((id): [string, { id: string; dir: string }] => [id, { id, dir: shelved(id) }]),
+      ...ROOTS.slice(1).flatMap((root) =>
         folders(root)
           .filter((id) => !SHELF.has(id))
           .map((id): [string, { id: string; dir: string }] => [id, { id, dir: join(root, id) }]),
       ),
-    ).values(),
+    ]).values(),
   ].sort((a, b) => a.id.localeCompare(b.id));
 
 export const plates = (figures: Figure[]) =>
-  figures.filter((one) => ROOTS.includes(dirname(dirname(one.file)))).map((one) => one.name);
+  figures.filter((one) => [...ROOTS, ...SHELVES].includes(dirname(dirname(one.file)))).map((one) => one.name);
 
 export function roster(): Figure[] {
   const found = [
@@ -278,7 +287,7 @@ export function topics(known: Set<string>, at = RESEARCH): Topic[] {
     .sort((a, b) => a.title.localeCompare(b.title) || a.slug.localeCompare(b.slug));
 }
 
-const FIELDS = new Set(["title", "line", "aliases", "saver", "hidden", "deep", "source", "route"]);
+const FIELDS = new Set(["title", "line", "aliases", "saver", "hidden", "deep", "frame", "source", "route"]);
 
 const ALIASES = { list: 12, each: 24 };
 
@@ -288,13 +297,12 @@ const PAGER = under(join(repo, "kit"), "page");
 
 const WORDS: Record<string, () => string> = {
   title: () => SITE.title,
-  tagline: () => SITE.tagline,
   domain: () => new URL(root).host,
   repo: () => GIT.name,
 };
 
 const words = (text: string) =>
-  text.replace(/\{(title|tagline|domain|repo)\}/g, (_, key: string) => JSON.stringify(WORDS[key]!()).slice(1, -1));
+  text.replace(/\{(title|domain|repo)\}/g, (_, key: string) => JSON.stringify(WORDS[key]!()).slice(1, -1));
 
 export function apps(found = places()): App[] {
   const list = found.map(({ id, dir }): App => {
@@ -355,12 +363,13 @@ export function apps(found = places()): App[] {
 const inWorld = (config: Config) => (config.apps ?? []).map((one) => (typeof one === "string" ? one : one.id));
 
 export function world(list: App[], file = WORLD): World {
-  if (!existsSync(file)) return { config: null, files: [] };
   const say = (text: string) => new Error(`site: ${rel(file)} ${text}`);
   const files = list
     .filter((one) => existsSync(under(one.dir, "world")))
     .map((one): [string, string] => [one.id, under(one.dir, "world")]);
-  const config = JSON.parse(read(file)) as Config;
+  const config: Config = existsSync(file)
+    ? (JSON.parse(read(file)) as Config)
+    : { name: SITE.prefix.replace(/-$/, "") || "site", apps: files.map(([id]) => id) };
   const lost = files.map(([id]) => id).filter((id) => !inWorld(config).includes(id));
   if (lost.length) throw say(`leaves out ${lost.join(", ")}; every route with an ${NAMES.world} lives in the world`);
   const made = files.map(([id, path]) => {
@@ -368,6 +377,8 @@ export function world(list: App[], file = WORLD): World {
     if (!one || one.id !== id) throw new Error(`site: ${rel(path)} exports no default app() whose id is ${id}`);
     return one;
   });
+  const faults = made.flatMap((one) => viewFaults(one, inWorld(config)));
+  if (faults.length) throw say(faults.join("; "));
   try {
     kernel(made).boot(config);
   } catch (error) {
@@ -544,6 +555,7 @@ function rows(list: App[], blog: Post[]): Row[] {
       id: app.id,
       ...(spells(app.page, "scene") ? { scene: true } : {}),
       ...(app.deep ? { deep: true } : {}),
+      ...(app.frame ? { frame: app.frame } : {}),
       ...(source ? { prose: app.source ? "source" : "page" } : {}),
       ...(app.aliases ? { aliases: app.aliases } : {}),
     };
@@ -615,8 +627,10 @@ const dressing = () => [folder(designNamed())];
 
 export const shipped = (figures: Figure[], list: App[] = apps()) =>
   reach([
-    ...[...ROOTS, join(repo, "shell"), ...dressing()].flatMap((dir) => (existsSync(dir) ? walk(dir) : [])),
-    under(join(repo, "apps", "git"), "git"),
+    ...[...ROOTS, ...(SITE.apps ?? []).map(shelved), join(repo, "shell"), ...dressing()].flatMap((dir) =>
+      existsSync(dir) ? walk(dir) : [],
+    ),
+    join(repo, "kit", "git", "page.ts"),
     ...(list.some((one) => spells(one.page, "scene")) ? [PAGER] : []),
     ...figures.map((one) => one.file),
   ]);
@@ -673,7 +687,6 @@ export function state(): State {
         "title",
         "wordmark",
         "company",
-        "tagline",
         "since",
         "prefix",
         "mark",
@@ -802,10 +815,9 @@ export const plugin = (get: () => Ready): BunPlugin => ({
   setup(build) {
     mrly.setup(build);
     build.onResolve({ filter: WASM }, ({ path }) => ({ path: unitWasm(WASM.exec(path)![1]!) }));
-    build.onResolve({ filter: GLUE }, ({ path, importer }) => {
-      const name = GLUE.exec(path)![1]!;
-      const copy = join(HOME, "wasm", name, `mrly_${name}_js.js`);
-      return importer.startsWith(unit(name)) && existsSync(copy) ? { path: copy } : undefined;
+    build.onResolve({ filter: LEAF }, ({ path }) => {
+      const copy = join(HOME, "wasm", path.slice("@mrlyprod/".length), "index.js");
+      return existsSync(copy) ? { path: copy } : undefined;
     });
     build.onResolve({ filter: /^\// }, ({ path }) => (existsSync(path) ? undefined : { path, external: true }));
     build.onLoad({ filter: /\/kit\/units\/load\.ts$/ }, () => ({
@@ -992,7 +1004,6 @@ export function globals(ready: State): Out[] {
       bytes: llms(
         SITE.title,
         root,
-        SITE.llms,
         ready.rows,
         new Set(ready.raw),
         (ready.site.launchpad as Pad).sections,
@@ -1041,7 +1052,6 @@ export function withSite(html: string, bar: Design["bar"]) {
     throw new Error(`site: shell/index.html must hold ${TINT}, which the build fills with the tint rules`);
   const fill = {
     title: SITE.title,
-    tagline: SITE.tagline,
     prefix: SITE.prefix,
     root,
     domain: new URL(root).host,
@@ -1078,7 +1088,7 @@ export async function build(out = DIST): Promise<Built> {
   const entries = [
     join(repo, "shell", "index.html"),
     ...SHELLS,
-    under(join(repo, "apps", "git"), "git"),
+    join(repo, "kit", "git", "page.ts"),
     ...ready.figures.map((one) => one.file),
     ...appFiles(ready.apps).flatMap(([, file]) => (file.startsWith("/") ? [file] : [])),
     LOCK,

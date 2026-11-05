@@ -1,0 +1,7 @@
+{
+  "title": "Settings",
+  "line": "One set of preferences per person.",
+  "aliases": ["preferences", "system", "appearance", "design", "theme", "accessibility", "options"],
+  "deep": true,
+  "frame": "page"
+}

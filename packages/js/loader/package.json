@@ -1,0 +1,13 @@
+{
+  "name": "@mrlyprod/loader",
+  "version": "0.2.0",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "types": "tsc -p tsconfig.json"
+  }
+}

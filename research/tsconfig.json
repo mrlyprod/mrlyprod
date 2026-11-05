@@ -12,14 +12,15 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": false,
     "paths": {
-      "@mrlyprod/draw": ["../packages/draw/index.ts"],
-      "@mrlyprod/draw/*": ["../packages/draw/*"],
-      "@mrlyprod/core": ["../packages/core/js/index"],
-      "@mrlyprod/font": ["../packages/font/js/index"],
-      "@mrlyprod/life": ["../packages/life/js/index"],
-      "@mrlyprod/math": ["../packages/math/js/index"],
-      "@mrlyprod/num": ["../packages/num/js/index"],
-      "@mrlyprod/tile": ["../packages/tile/js/index"]
+      "@mrlyprod/loader": ["../packages/js/loader/src/index.ts"],
+      "@mrlyprod/draw": ["../packages/js/draw/src/index.ts"],
+      "@mrlyprod/draw/*": ["../packages/js/draw/src/*"],
+      "@mrlyprod/core": ["../data/packages/rs/bridge/js/core/index"],
+      "@mrlyprod/font": ["../data/packages/rs/bridge/js/font/index"],
+      "@mrlyprod/life": ["../data/packages/rs/bridge/js/life/index"],
+      "@mrlyprod/math": ["../data/packages/rs/bridge/js/math/index"],
+      "@mrlyprod/num": ["../data/packages/rs/bridge/js/num/index"],
+      "@mrlyprod/tile": ["../data/packages/rs/bridge/js/tile/index"]
     }
   },
   "include": ["*/figures/*.ts", "shared/figures/*.ts"],

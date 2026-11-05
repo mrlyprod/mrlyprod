@@ -1,0 +1,8 @@
+{
+  "extends": "../../ui/tsconfig.json",
+  "include": ["scripts/**/*.ts", "site/glyph.ts"],
+  "exclude": ["data"],
+  "compilerOptions": {
+    "typeRoots": ["../../node_modules/@types"]
+  }
+}

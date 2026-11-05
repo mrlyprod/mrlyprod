@@ -1,0 +1,9 @@
+{
+  "sections": [
+    {
+      "name": "MrlyStore",
+      "apps": ["settings"]
+    }
+  ],
+  "dock": [["settings"]]
+}

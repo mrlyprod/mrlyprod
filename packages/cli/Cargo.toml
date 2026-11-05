@@ -1,0 +1,21 @@
+[package]
+name = "mrly-cli"
+version = "0.2.0"
+edition = "2024"
+license = "MIT"
+publish = false
+workspace = "../../data/packages/rs/bridge"
+
+[[bin]]
+name = "mrly"
+path = "src/main.rs"
+
+[dependencies]
+mrly-wire = { path = "../rs/wire" }
+serde_json = { version = "1", features = ["preserve_order"] }
+mrly-core-doors = { path = "../../data/packages/rs/bridge/units/core", default-features = false }
+mrly-num-doors = { path = "../../data/packages/rs/bridge/units/num", default-features = false }
+mrly-math-doors = { path = "../../data/packages/rs/bridge/units/math", default-features = false }
+mrly-tile-doors = { path = "../../data/packages/rs/bridge/units/tile", default-features = false }
+mrly-life-doors = { path = "../../data/packages/rs/bridge/units/life", default-features = false }
+mrly-font-doors = { path = "../../data/packages/rs/bridge/units/font", default-features = false }

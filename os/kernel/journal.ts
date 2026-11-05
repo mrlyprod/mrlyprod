@@ -1,7 +1,11 @@
 import type { Config, Kernel, Line, World } from "./kernel.ts";
 
 export function replay(k: Kernel, config: Config, lines: readonly Line[], upto = Number.POSITIVE_INFINITY): World {
-  let world = k.boot(config);
+  return resume(k, k.boot(config), lines, upto);
+}
+
+export function resume(k: Kernel, snapshot: World, lines: readonly Line[], upto = Number.POSITIVE_INFINITY): World {
+  let world = snapshot;
   for (const line of lines) {
     if (line.tick > upto) break;
     if (line.tick !== world.tick + 1) throw new Error(`journal: line ${line.tick} follows tick ${world.tick}`);

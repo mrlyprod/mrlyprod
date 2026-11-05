@@ -7,10 +7,10 @@
     "apps",
     "designs",
     "os",
+    "sim",
     "ui",
     "sites/*",
-    "packages/draw",
-    "packages/*/js"
+    "packages/js/*"
   ],
   "scripts": {
     "check": "bash scripts/check.sh",

@@ -1,0 +1,14 @@
+{
+  "name": "@mrlyprod/sim",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "mrlysim": "cli/mrlysim.ts"
+  },
+  "scripts": {
+    "mrlysim": "bun cli/mrlysim.ts",
+    "sweep": "bun sweep/sweep.ts",
+    "testers": "bun testers/testers.ts",
+    "types": "tsc -p tsconfig.json"
+  }
+}

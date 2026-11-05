@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b7ae4"/><stop offset="0.7" stop-color="#5856d6"/></linearGradient>
+    <linearGradient id="trail" x1="226" y1="770" x2="572" y2="436" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#ffffff" stop-opacity="0.95"/></linearGradient>
+    <linearGradient id="limb" x1="0" y1="810" x2="0" y2="866" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c7c5ff"/></linearGradient>
+    <linearGradient id="ground" x1="0" y1="810" x2="0" y2="1024" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)" data-key="#8e8cff"/>
+  <circle cx="512" cy="1510" r="644" fill="url(#ground)" data-mono="hide"/>
+  <path d="M-188 1510a700 700 0 1 0 1400 0a700 700 0 1 0 -1400 0ZM-132 1510a644 644 0 1 0 1288 0a644 644 0 1 0 -1288 0Z" fill="url(#limb)" fill-rule="evenodd" data-dark="#5f5dd6" data-mono="dim"/>
+  <path d="M226 770Q475.3 647.5 631 497.2A85 85 0 0 0 513 374.8Q357.3 525.1 226 770Z" fill="url(#trail)"/>
+  <path d="M572 276L710.6 356L572 436L433.4 356Z" fill="#ffffff" data-dark="#ffffff"/>
+  <path d="M433.4 356L572 436L572 596L433.4 516Z" fill="#bdbbfc" data-dark="#c9c8ff"/>
+  <path d="M572 436L710.6 356L710.6 516L572 596Z" fill="#8f8df3" data-dark="#8e8cff" data-mono="dim"/>
+</svg>

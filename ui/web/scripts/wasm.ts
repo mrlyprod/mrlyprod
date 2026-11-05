@@ -8,20 +8,19 @@ const FONT = join(REPO, "kit", "font", "font.gen.json");
 
 export function copy(units = live(), to = WASM): string[] {
   const lost = units.filter((name) => !existsSync(wasm(name)));
-  if (lost.length)
-    throw new Error(`wasm: no js/pkg in ${lost.join(", ")}; run scripts/wasm.sh <unit> from the repo root`);
+  if (lost.length) throw new Error(`wasm: no build of ${lost.join(", ")}; run scripts/build.sh from the repo root`);
   rmSync(to, { recursive: true, force: true });
   for (const name of units) {
     mkdirSync(join(to, name), { recursive: true });
-    for (const file of [`mrly_${name}_js.js`, `mrly_${name}_js_bg.wasm`])
-      copyFileSync(join(unit(name), "pkg", file), join(to, name, file));
+    copyFileSync(wasm(name), join(to, name, `${name}.wasm`));
+    copyFileSync(join(unit(name), "index.js"), join(to, name, "index.js"));
   }
   return units;
 }
 
 export function font(out = FONT) {
   const done = Bun.spawnSync(["cargo", "run", "-q", "--example", "book"], {
-    cwd: join(SIBLINGS, "packages", "font"),
+    cwd: join(SIBLINGS, "packages", "rs", "font"),
     stderr: "inherit",
   });
   if (done.exitCode !== 0) throw new Error(`wasm: the font book exited ${done.exitCode}`);
