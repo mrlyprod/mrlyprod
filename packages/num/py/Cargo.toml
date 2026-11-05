@@ -1,0 +1,18 @@
+[package]
+name = "mrly-num-py"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The Python bridge of mrly-num: the native half of mrly.num."
+publish = false
+
+[lib]
+name = "_num"
+crate-type = ["cdylib"]
+
+[dependencies]
+mrly-core = { workspace = true, features = ["py"] }
+mrly-num.workspace = true
+pyo3 = { version = "0.29", features = ["extension-module", "abi3-py310"] }
+serde_json.workspace = true

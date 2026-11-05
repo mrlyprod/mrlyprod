@@ -1,0 +1,5 @@
+{
+  "title": "Terminal",
+  "line": "The mrlynet verbs as typed text: list, read, call; reads show only what you may see.",
+  "aliases": ["terminal", "console", "shell", "cli", "command", "list", "call", "read"]
+}

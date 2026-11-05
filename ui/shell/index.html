@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-prefix="{prefix}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<meta name="description" content="{tagline}">
+<meta name="theme-color" content="{barLight}" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="{barDark}" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml">
+<link rel="icon" data-mark="png" type="image/png" sizes="40x40">
+<link rel="apple-touch-icon" data-mark="touch">
+<link rel="canonical" href="{root}/">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{tagline}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{title}">
+<meta property="og:image" content="{root}{og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{root}{og}">
+<script src="/boot.js"></script>
+<link rel="stylesheet" href="./page.css">
+<style id="tint"></style>
+</head>
+<body>
+<p class="domain">{domain}</p>
+<script type="module" src="./chrome.ts"></script>
+<script type="module" src="./router.ts"></script>
+</body>
+</html>

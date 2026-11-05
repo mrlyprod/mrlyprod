@@ -1,0 +1,3429 @@
+:root:has(.classic) {
+  color-scheme: light dark;
+  --t1: 10px;
+  --t2: 11px;
+  --t3: 11px;
+  --t4: 12px;
+  --t5: 14px;
+  --t6: 16px;
+  --t7: 20px;
+  --lh1: 1.2;
+  --lh2: 1.35;
+  --lh3: 1.5;
+  --text: var(--t3);
+  --read-text: var(--t5);
+  --s1: 2px;
+  --s2: 4px;
+  --s3: 8px;
+  --s4: 12px;
+  --s5: 16px;
+  --s6: 24px;
+  --s7: 32px;
+  --s8: 48px;
+  --r-window: 0;
+  --r-panel: 0;
+  --r-control: 0;
+  --r-inset: 0;
+  --round: 0;
+  --hair: 1px solid var(--sh);
+  --ring: 1px dotted var(--fg);
+  --rim: none;
+  --lift: none;
+  --float: none;
+  --deep: color-mix(in srgb, var(--box) 40%, var(--bg));
+  --solid: var(--box);
+  --frost: var(--box);
+  --art: var(--bg);
+  --gap: 8px;
+  --touch: 44px;
+  --title: 18px;
+  --top: 0px;
+  --below: 28px;
+  --read: 640px;
+  --page: 984px;
+  --pace: 0ms;
+  --ease: linear;
+}
+
+:root[data-theme="light"]:has(.classic) {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"]:has(.classic) {
+  color-scheme: dark;
+}
+
+.classic {
+  --raised: inset -1px -1px var(--dk), inset 1px 1px var(--lt), inset -2px -2px var(--sh), inset 2px 2px var(--box);
+  --sunken: inset 1px 1px var(--sh), inset -1px -1px var(--lt), inset 2px 2px var(--dk), inset -2px -2px var(--box);
+  --pressed: inset 1px 1px var(--dk), inset -1px -1px var(--lt), inset 2px 2px var(--sh), inset -2px -2px var(--box);
+  --etch: inset 1px 1px var(--sh), inset -1px -1px var(--lt), inset 2px 2px var(--lt), inset -2px -2px var(--sh);
+  --bar: linear-gradient(to right, var(--title-a), var(--title-b));
+  --bar-off: linear-gradient(to right, var(--title-off-a), var(--title-off-b));
+  --dither: repeating-conic-gradient(var(--box) 0 25%, var(--lt) 0 50%) 0 0 / 2px 2px;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.3;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.classic *,
+.classic *::before,
+.classic *::after {
+  box-sizing: border-box;
+  border-radius: 0;
+  transition: none;
+}
+
+.classic .raised,
+.classic.raised {
+  background: var(--box);
+  box-shadow: var(--raised);
+}
+
+.classic .sunken,
+.classic.sunken {
+  background: var(--bg);
+  box-shadow: var(--sunken);
+}
+
+.classic .pressed,
+.classic.pressed {
+  background: var(--box);
+  box-shadow: var(--pressed);
+  padding-top: 1px;
+  padding-left: 1px;
+}
+
+.classic .pixel {
+  display: block;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.classic [hidden] {
+  display: none !important;
+}
+
+.classic button,
+.classic select,
+.classic input {
+  color: inherit;
+  font-family: var(--sans);
+  font-size: 11px;
+  margin: 0;
+}
+
+.classic button {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: default;
+}
+
+.classic button:focus-visible,
+.classic a:focus-visible,
+.classic summary:focus-visible {
+  outline: 1px dotted var(--fg);
+  outline-offset: -4px;
+}
+
+.classic .raised:active:not([aria-disabled="true"]),
+.classic.raised.button:active {
+  box-shadow: var(--pressed);
+}
+
+.classic .knob {
+  width: 16px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--fg);
+}
+
+.classic .knob .pixel {
+  width: 7px;
+  height: 7px;
+}
+
+.classic input[type="checkbox"]:not(.control *) {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  background: var(--bg);
+  box-shadow: var(--sunken);
+}
+
+.classic input[type="checkbox"]:not(.control *)::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--fg);
+  -webkit-mask:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7' shape-rendering='crispEdges'%3E%3Cpath d='M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h3v1h-3zM0 3h2v1h-2zM3 3h3v1h-3zM0 4h5v1h-5zM1 5h3v1h-3zM2 6h1v1h-1z'/%3E%3C/svg%3E")
+    center / 7px 7px no-repeat;
+  mask:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7' shape-rendering='crispEdges'%3E%3Cpath d='M6 0h1v1h-1zM5 1h2v1h-2zM0 2h1v1h-1zM4 2h3v1h-3zM0 3h2v1h-2zM3 3h3v1h-3zM0 4h5v1h-5zM1 5h3v1h-3zM2 6h1v1h-1z'/%3E%3C/svg%3E")
+    center / 7px 7px no-repeat;
+  visibility: hidden;
+}
+
+.classic input[type="checkbox"]:not(.control *):checked::before {
+  visibility: visible;
+}
+
+.classic input[type="checkbox"]:not(.control *):disabled {
+  background: var(--box);
+}
+
+.classic input[type="checkbox"]:not(.control *):disabled::before {
+  background: var(--sh);
+}
+
+.classic input[type="checkbox"]:not(.control *):focus-visible {
+  outline: 1px dotted var(--fg);
+  outline-offset: 2px;
+}
+
+.classic .title {
+  height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 2px 0 3px;
+  background: var(--bar);
+  color: var(--on-accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.classic .title .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.classic .title .actions {
+  display: flex;
+  gap: 2px;
+}
+
+:root:has(dialog[open]) .classic.window > .title {
+  background: var(--bar-off);
+}
+
+.classic.bar {
+  position: fixed;
+  inset: auto 0 0;
+  height: 28px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px;
+  background: var(--box);
+  box-shadow:
+    inset 0 1px var(--box),
+    inset 0 2px var(--lt);
+}
+
+.classic.bar .start {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 4px;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.classic.bar .start img {
+  image-rendering: pixelated;
+}
+
+.classic.bar .tasks {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 2px;
+}
+
+.classic.bar .task {
+  width: 160px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  font-weight: 700;
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--dither);
+}
+
+.classic.bar .tray {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  background: var(--box);
+  box-shadow:
+    inset 1px 1px var(--sh),
+    inset -1px -1px var(--lt);
+}
+
+.classic.bar .tray a {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.classic.bar .clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.classic.menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+}
+
+.classic.menu[popover] {
+  inset: auto;
+  margin: 0;
+  border: 0;
+  color: var(--fg);
+  position-area: bottom span-right;
+}
+
+.classic.menu[popover]:not(:popover-open) {
+  display: none;
+}
+
+.classic.menu[data-menu] {
+  position-area: none;
+}
+
+.classic.menu.context {
+  left: var(--x);
+  top: var(--y);
+  position-area: none;
+}
+
+.classic.menu .item,
+.classic.launcher .item {
+  height: 18px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px 0 0;
+  color: var(--fg);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.classic.menu .item:hover,
+.classic.menu .item:focus,
+.classic.launcher .item:hover,
+.classic.launcher .item.on,
+.classic.launcher .section:hover > .item {
+  background: var(--pick);
+  color: var(--on-accent);
+  outline: 0;
+}
+
+.classic.menu .gutter {
+  width: 20px;
+  display: grid;
+  place-items: center;
+}
+
+.classic.menu .label {
+  flex: 1;
+}
+
+.classic.menu .chord {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding-left: 24px;
+}
+
+.classic.menu .off,
+.classic.launcher .off {
+  color: var(--off);
+  text-shadow: 1px 1px var(--lt);
+  pointer-events: none;
+}
+
+.classic.menu hr,
+.classic.launcher hr {
+  height: 2px;
+  margin: 3px 1px;
+  border: 0;
+  box-shadow:
+    inset 0 1px var(--sh),
+    inset 0 -1px var(--lt);
+}
+
+.classic.window {
+  position: relative;
+  z-index: 1;
+  width: var(--win, var(--width, 704px));
+  max-width: calc(100% - 16px);
+  max-height: calc(100dvh - 44px);
+  display: flex;
+  flex-direction: column;
+  margin: 8px auto;
+  padding: 3px;
+  gap: 1px;
+}
+
+:root[data-window="wide"] .classic.window {
+  width: var(--wide, 984px);
+}
+
+:root[data-window="app"] .classic.window,
+.classic.window.zoomed {
+  position: fixed;
+  inset: 0 0 28px;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+}
+
+:root[data-window="none"] .classic.window {
+  background: none;
+  box-shadow: none;
+}
+
+:root[data-window="none"] .classic.window > .title,
+:root[data-window="none"] .classic.window > .menubar,
+:root[data-window="none"] .classic.window > .edge {
+  display: none;
+}
+
+:root[data-window="none"] .classic.window .well,
+:root[data-window="none"] .classic.window > .panes > main {
+  background: none;
+  box-shadow: none;
+}
+
+.classic.window > .edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: ew-resize;
+}
+
+.classic.window > .edge.left {
+  left: -2px;
+}
+
+.classic.window > .edge.right {
+  right: -2px;
+}
+
+.classic.window > .edge[data-side="left"] {
+  left: -2px;
+}
+
+.classic.window > .edge[data-side="right"] {
+  right: -2px;
+}
+
+:root[data-window="app"] .classic.window > .edge,
+.classic.window.zoomed > .edge {
+  display: none;
+}
+
+.classic .menubar .menus {
+  height: 18px;
+  display: flex;
+}
+
+.classic.window > .menubar:has(> .menus:empty) {
+  display: none;
+}
+
+.classic .menubar .menus button {
+  height: 18px;
+  padding: 0 6px;
+}
+
+.classic .menubar .menus button[aria-expanded="true"] {
+  box-shadow:
+    inset 1px 1px var(--sh),
+    inset -1px -1px var(--lt);
+}
+
+.classic.window > .panes {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 2px;
+}
+
+.classic.window > .panes > main {
+  background: var(--bg);
+  box-shadow: var(--sunken);
+}
+
+.classic.window > .panes > main > div:has(.classic.app),
+.classic.window > .panes > main > div > div:has(> .classic.app) {
+  height: 100%;
+}
+
+.classic.window .well,
+.classic.window > .panes > main {
+  flex: 1;
+  min-width: 0;
+  padding: 2px;
+  overflow: auto;
+  scrollbar-width: auto;
+  scrollbar-color: var(--box) var(--lt);
+}
+
+.classic.window .pane {
+  width: 200px;
+  flex: none;
+  padding: 3px;
+  overflow: auto;
+}
+
+.classic.window .pane .contents summary {
+  margin: 0 0 4px;
+  padding: 0 0 4px;
+  font-weight: 700;
+  list-style: none;
+  box-shadow:
+    inset 0 -1px var(--lt),
+    inset 0 -2px var(--sh);
+}
+
+.classic.window .pane .contents summary::-webkit-details-marker {
+  display: none;
+}
+
+.classic.window .pane .contents ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.classic.window .pane .contents a {
+  display: block;
+  padding: 2px 4px;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.classic.window .pane .contents li.h3 a {
+  padding-left: 16px;
+}
+
+.classic.window .pane .contents a:hover,
+.classic.window .pane .contents a[aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic.window .scrim {
+  display: none;
+}
+
+.classic ::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+  background: var(--dither);
+}
+
+.classic ::-webkit-scrollbar-thumb,
+.classic ::-webkit-scrollbar-button {
+  width: 16px;
+  height: 16px;
+  background: var(--box);
+  box-shadow: var(--raised);
+}
+
+.classic ::-webkit-scrollbar-corner {
+  background: var(--box);
+}
+
+.classic.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--box);
+}
+
+.classic.app .wells {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.classic.app .column {
+  flex: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.classic.app .column.stage {
+  flex: 1;
+  min-width: 320px;
+}
+
+.classic.app .column.stage > .well {
+  position: relative;
+}
+
+.classic.app .column > .well {
+  flex: 1;
+  min-height: 0;
+  padding: 2px;
+  overflow: auto;
+}
+
+.classic.app .grip {
+  width: 4px;
+  flex: none;
+  margin: 0 1px;
+  cursor: ew-resize;
+}
+
+.classic.app .actions,
+.classic.app .buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.classic.app .actions {
+  padding: 4px 0 2px;
+}
+
+.classic.app .buttons > .design {
+  height: 23px;
+  max-width: 160px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 0;
+  padding: 0 8px 0 4px;
+  border-radius: 0;
+  background: var(--box);
+  box-shadow: var(--raised);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.classic.app .buttons > .design:hover {
+  background: var(--box);
+}
+
+.classic.app .buttons > .design:active {
+  box-shadow: var(--pressed);
+}
+
+.classic.app .buttons > .design canvas {
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  image-rendering: pixelated;
+}
+
+.classic.app .buttons .button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.classic.app .buttons .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.classic.app .chooser {
+  padding: 3px;
+  border-radius: 0;
+  background: var(--box);
+  box-shadow: var(--raised);
+  color: var(--fg);
+}
+
+.classic.app .actions:has(> .buttons:empty:only-child) {
+  display: none;
+}
+
+.classic.app.float .wells {
+  position: relative;
+}
+
+.classic.app.float .column.left,
+.classic.app.float .column.right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 3px;
+}
+
+.classic.app.float .column.left {
+  left: 0;
+}
+
+.classic.app.float .column.right {
+  right: 0;
+}
+
+.classic.app .status {
+  height: 20px;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.classic.app .cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  background: var(--box);
+  box-shadow:
+    inset 1px 1px var(--sh),
+    inset -1px -1px var(--lt);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.classic.app .cell.hints {
+  flex: none;
+  max-width: 50%;
+}
+
+.classic.app .cell:empty {
+  display: none;
+}
+
+.classic.app .cell .button.icon {
+  width: 16px;
+  min-width: 0;
+  height: 16px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.classic.app .cell .button.icon:active {
+  box-shadow: none;
+  translate: 1px 1px;
+}
+
+.classic.app .cell .button.icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.classic.app .cell.hints .button.icon {
+  margin-left: auto;
+}
+
+.classic.app .column.right > .well {
+  padding: 4px 6px 8px;
+  background: var(--box);
+}
+
+.classic.group.fold:not([open]) {
+  padding-bottom: 2px;
+}
+
+.classic.app .controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.classic.app .controls:empty {
+  display: none;
+}
+
+.classic.app .controls.tail {
+  margin-top: 8px;
+}
+
+.classic.app .controls > .classic.group,
+.classic.app .controls > * > .classic.group {
+  margin: 8px 0 0;
+}
+
+.classic.app .hints kbd {
+  margin-right: 3px;
+  font-family: var(--sans);
+  font-weight: 700;
+}
+
+.classic.app .unzen {
+  display: none;
+}
+
+:root[data-zen] .classic.bar,
+:root[data-zen] .classic.window > .title,
+:root[data-zen] .classic.window > .menubar,
+:root[data-zen] .classic.app .column.left,
+:root[data-zen] .classic.app .column.right,
+:root[data-zen] .classic.app .grip,
+:root[data-zen] .classic.app .actions,
+:root[data-zen] .classic.app .status {
+  display: none;
+}
+
+:root[data-zen] .classic.window {
+  inset: 0;
+  padding: 0;
+}
+
+:root[data-zen] .classic.app .unzen {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  min-width: 0;
+  width: 23px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.classic.app .unzen svg {
+  width: 16px;
+  height: 16px;
+}
+
+.classic.app .sizer {
+  width: 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  color: var(--sh);
+  cursor: nwse-resize;
+}
+
+.classic.control {
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.classic.control .label {
+  flex: none;
+  min-width: 48px;
+}
+
+.classic .field {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 3px 4px;
+  border: 0;
+  outline: 0;
+  color: var(--fg);
+  caret-color: var(--fg);
+}
+
+.classic .field::selection,
+.classic.control input::selection {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic.control .num {
+  min-width: 44px;
+  justify-content: flex-end;
+  font-family: var(--mono);
+}
+
+.classic.slider .num {
+  flex: none;
+  width: 60px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.classic.slider .track {
+  position: relative;
+  flex: 1;
+  height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.classic.slider input {
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  appearance: none;
+  background: none;
+}
+
+.classic.slider input::-webkit-slider-runnable-track {
+  height: 4px;
+  box-shadow: var(--sunken);
+  background: var(--box);
+}
+
+.classic.slider input::-moz-range-track {
+  height: 4px;
+  box-shadow: var(--sunken);
+  background: var(--box);
+}
+
+.classic.slider input::-webkit-slider-thumb {
+  appearance: none;
+  width: 11px;
+  height: 21px;
+  margin-top: -9px;
+  background: var(--box);
+  box-shadow: var(--raised);
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+}
+
+.classic.slider input::-moz-range-thumb {
+  width: 11px;
+  height: 21px;
+  border: 0;
+  border-radius: 0;
+  background: var(--box);
+  box-shadow: var(--raised);
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+}
+
+.classic.slider .ticks {
+  position: absolute;
+  inset: auto 5px -2px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.classic.slider .ticks i {
+  width: 1px;
+  height: 3px;
+  background: var(--fg);
+}
+
+.classic.number .spin {
+  width: 72px;
+  padding: 2px 2px 2px 4px;
+}
+
+.classic.number input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font-family: var(--mono);
+}
+
+.classic.number .arrows {
+  width: 16px;
+  height: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.classic.number .arrows button {
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+.classic.number .arrows .pixel {
+  width: 7px;
+  height: 4px;
+}
+
+.classic.toggle .check {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+.classic.toggle input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+}
+
+.classic.toggle .pixel {
+  position: absolute;
+  inset: 3px;
+  width: 7px;
+  height: 7px;
+  visibility: hidden;
+}
+
+.classic.toggle input:checked + .pixel {
+  visibility: visible;
+}
+
+.classic.toggle:focus-within .label {
+  outline: 1px dotted var(--fg);
+}
+
+.classic.pick .drop {
+  position: relative;
+  flex: 1;
+  min-width: 96px;
+  padding: 2px;
+}
+
+.classic.pick select {
+  width: 100%;
+  height: 18px;
+  padding: 0 20px 0 2px;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  background: none;
+}
+
+.classic.pick select:focus-visible {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic.pick .arrow {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  width: 16px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.classic.segment {
+  align-items: flex-start;
+}
+
+.classic.segment .options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.classic.segment.stack .options {
+  flex-direction: column;
+}
+
+.classic.segment label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.classic.segment input {
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  appearance: none;
+  border-radius: 50%;
+}
+
+.classic.segment input:checked::after {
+  content: "";
+  width: 4px;
+  height: 4px;
+  background: var(--fg);
+  border-radius: 50%;
+}
+
+.classic.segment input:focus-visible + span {
+  outline: 1px dotted var(--fg);
+}
+
+.classic.text {
+  flex: 1;
+}
+
+.classic.text .field {
+  flex: 1;
+  min-width: 96px;
+}
+
+.classic.text.wide .field {
+  min-width: 200px;
+}
+
+.classic.button {
+  min-width: 75px;
+  height: 23px;
+  padding: 0 8px;
+  color: var(--fg);
+}
+
+.classic.button.primary {
+  outline: 1px solid var(--dk);
+  outline-offset: 0;
+}
+
+.classic.group {
+  position: relative;
+  margin: 8px 0 4px;
+  padding: 10px 8px 8px;
+  border: 0;
+  box-shadow: var(--etch);
+}
+
+.classic.group > legend {
+  padding: 0 3px;
+  background: var(--box);
+}
+
+.classic.group > summary {
+  position: absolute;
+  top: -7px;
+  left: 6px;
+  right: 6px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  pointer-events: none;
+}
+
+.classic.group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.classic.group > summary > * {
+  padding: 0 3px;
+  background: var(--box);
+  pointer-events: auto;
+}
+
+.classic.group > summary > .sign {
+  margin: 0 1px 0 0;
+  padding: 0;
+  background: var(--bg);
+}
+
+.classic.group .live {
+  margin-left: auto;
+  color: var(--dim);
+}
+
+.classic .sign {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.classic .sign .pixel {
+  width: 7px;
+  height: 7px;
+}
+
+.classic details:not([open]) > summary .sign .open,
+.classic details[open] > summary .sign .shut {
+  display: none;
+}
+
+.classic.group .row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.classic.dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  min-width: 280px;
+  max-width: min(560px, 100% - 16px);
+  height: fit-content;
+  padding: 3px;
+  border: 0;
+  color: var(--fg);
+}
+
+.classic.dialog::backdrop {
+  background: var(--scrim);
+}
+
+.classic.dialog > .title {
+  margin: 0;
+}
+
+.classic.dialog > .body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 10px 10px;
+}
+
+.classic.dialog > .body > :last-child:has(> button) {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.classic.dialog.light {
+  padding: 4px 6px;
+  background: var(--tip);
+  border: 1px solid var(--tip-line);
+  box-shadow: none;
+  color: var(--tip-fg);
+}
+
+.classic.dialog.light > .body {
+  padding: 0;
+}
+
+.classic .settings {
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+.classic .settings.two {
+  background: linear-gradient(var(--sh), var(--sh)) var(--rail) 0 / 1px 100% no-repeat;
+}
+
+.classic .settings .side {
+  background: var(--panel);
+  box-shadow: inset -1px 0 var(--lt);
+}
+
+.classic .settings .find > input {
+  min-height: 22px;
+  border-radius: 0;
+  background: var(--bg);
+  box-shadow: var(--sunken);
+}
+
+.classic .settings .top .icon {
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--fg);
+  box-shadow: var(--raised);
+}
+
+.classic .settings .list a {
+  min-height: 22px;
+  border-radius: 0;
+}
+
+.classic .settings .list a:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+.classic .settings .list a[aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  font-weight: 400;
+}
+
+.classic .settings .list a[aria-current] .name {
+  color: var(--on-accent);
+}
+
+.classic .settings .symbol {
+  border-radius: 0;
+  background: var(--hue);
+  box-shadow: var(--raised);
+}
+
+.classic .settings h1 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.classic .settings .block > h2 {
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.classic .settings .box {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: var(--etch);
+  padding: 2px;
+}
+
+.classic .settings .box > * + *,
+.classic .settings .box > * + fieldset:not(.choices) > :first-child {
+  background-image: linear-gradient(var(--sh), var(--sh)), linear-gradient(var(--lt), var(--lt));
+  background-position:
+    8px 0,
+    8px 1px;
+  background-size:
+    calc(100% - 16px) 1px,
+    calc(100% - 16px) 1px;
+}
+
+.classic .settings .item {
+  min-height: 30px;
+}
+
+.classic .settings :is(.push, .screensaver-peek) {
+  min-height: 23px;
+  padding: 0 12px;
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--fg);
+  font-size: 11px;
+  box-shadow: var(--raised);
+}
+
+.classic .settings :is(.push, .screensaver-peek):active {
+  box-shadow: var(--pressed);
+}
+
+.classic .settings .push.main {
+  background: var(--panel);
+  color: var(--fg);
+  font-weight: 700;
+  box-shadow:
+    0 0 0 1px var(--dk),
+    var(--raised);
+}
+
+.classic .settings .menu > select {
+  appearance: none;
+  min-height: 22px;
+  padding: 0 22px 0 4px;
+  border-radius: 0;
+  background: var(--bg);
+  font-size: 11px;
+  text-align: left;
+  text-align-last: left;
+  box-shadow: var(--sunken);
+}
+
+.classic .settings .menu > select:hover {
+  background: var(--bg);
+}
+
+.classic .settings .seg {
+  gap: 2px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.classic .settings .seg > label {
+  min-height: 22px;
+  padding: 0 10px;
+  border-radius: 0;
+  background: var(--panel);
+  font-size: 11px;
+  box-shadow: var(--raised);
+}
+
+.classic .settings .seg > label:hover {
+  background: var(--panel);
+}
+
+.classic .settings .seg > label:has(:checked) {
+  padding: 1px 9px 0 11px;
+  background: var(--dither);
+  font-weight: 700;
+  box-shadow: var(--pressed);
+}
+
+.classic .settings .choice > .art {
+  border-radius: 0;
+  background: var(--panel);
+  box-shadow: var(--raised);
+}
+
+.classic .settings .choice:hover > .art {
+  box-shadow: var(--raised);
+}
+
+.classic .settings .choice:has(:checked) > .art {
+  box-shadow:
+    var(--sunken),
+    0 0 0 2px var(--pick);
+}
+
+.classic .settings .choice:has(:checked) > .text {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic .settings .dot {
+  box-shadow: var(--sunken);
+}
+
+.classic .settings .banner {
+  border: 1px solid var(--tip-line);
+  border-radius: 0;
+  background: var(--tip);
+  color: var(--tip-fg);
+}
+
+.classic.prose {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 14px 18px 28px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: auto;
+}
+
+.classic.prose.hub {
+  max-width: none;
+  padding-bottom: 16px;
+}
+
+.classic.prose.hub > :not(.icons):not(h1):not(.intro) {
+  max-width: 640px;
+}
+
+.classic.prose.hub ~ p,
+.classic.prose.hub ~ ul,
+.classic.prose.hub ~ ol,
+.classic.prose.hub ~ .scroll {
+  max-width: 640px;
+  margin: 0 18px 12px;
+  color: var(--fg);
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: auto;
+}
+
+.classic.prose.hub ~ :last-child {
+  margin-bottom: 18px;
+}
+
+.classic.prose.hub ~ p a {
+  color: var(--web);
+  text-decoration: underline;
+}
+
+.classic.prose.hub ~ .scroll {
+  overflow-x: auto;
+}
+
+.classic.prose.hub ~ .scroll table {
+  border: 1px solid;
+  border-color: var(--lt) var(--dk) var(--dk) var(--lt);
+  border-spacing: 2px;
+  background: var(--box);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.classic.prose.hub ~ .scroll th {
+  padding: 3px 8px;
+  background: var(--box);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  box-shadow: var(--raised);
+}
+
+.classic.prose.hub ~ .scroll td {
+  padding: 3px 8px;
+  background: var(--bg);
+  box-shadow:
+    inset 1px 1px var(--sh),
+    inset -1px -1px var(--lt);
+}
+
+.classic.prose.hub ~ .scroll td code {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.classic.prose > h1,
+.classic.app .page > .prose:not(.classic) h1 {
+  margin: 0 0 10px;
+  padding: 0 0 8px;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow:
+    inset 0 -1px var(--lt),
+    inset 0 -2px var(--sh);
+}
+
+.classic.prose > h2 {
+  margin: 8px 0 10px;
+  padding: 0 0 6px;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  box-shadow:
+    inset 0 -1px var(--lt),
+    inset 0 -2px var(--sh);
+}
+
+.classic.prose > .by {
+  margin: -2px 0 12px;
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+.classic.prose > .opener {
+  margin: 4px 2px 18px;
+}
+
+.classic.prose > .opener canvas {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  aspect-ratio: 2;
+  margin: 0;
+  border-radius: 0;
+  background: var(--bg);
+  box-shadow:
+    -1px -1px var(--sh),
+    1px 1px var(--lt),
+    -2px -2px var(--dk),
+    2px 2px var(--box);
+}
+
+.classic.prose > .intro {
+  margin: 0 0 18px;
+  padding: 8px 10px;
+  border: 1px solid var(--tip-line);
+  background: var(--tip);
+  color: var(--tip-fg);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.classic.prose > .intro > p {
+  margin: 0 0 6px;
+  max-width: none;
+  color: inherit;
+}
+
+.classic.prose > .intro > :last-child {
+  margin-bottom: 0;
+}
+
+.classic.prose > p:has(> .button) {
+  margin: 18px 0 0;
+}
+
+.classic.prose > p > .button {
+  display: inline-block;
+  min-width: 88px;
+  padding: 5px 16px;
+  background: var(--box);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  text-align: center;
+  text-decoration: none;
+  box-shadow:
+    0 0 0 1px var(--dk),
+    var(--raised);
+}
+
+.classic.prose > p > .button:active {
+  box-shadow:
+    0 0 0 1px var(--dk),
+    var(--pressed);
+}
+
+.classic.prose > .legal {
+  margin: 20px 0 0;
+  padding: 8px 0 0;
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 11px;
+  text-align: center;
+  box-shadow:
+    inset 0 1px var(--sh),
+    inset 0 2px var(--lt);
+}
+
+.classic.prose > .contents {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-family: var(--sans);
+  font-size: 12px;
+}
+
+.classic.prose > .contents .level3 {
+  margin-left: 16px;
+}
+
+.classic.prose > .contents [aria-current] {
+  font-weight: 700;
+}
+
+.classic.prose .alert {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+.classic.prose .alert h1 {
+  margin: 0 0 6px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.classic.prose .alert .lead {
+  margin: 0;
+}
+
+.classic.prose .alert .pixel {
+  width: 32px;
+  height: 32px;
+}
+
+.classic.prose > .intro > .jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.classic.prose > .intro > .jump > a.chip {
+  padding: 3px 8px;
+  background: var(--box);
+  color: var(--fg);
+  font-size: 11px;
+  text-decoration: none;
+  box-shadow: var(--raised);
+}
+
+.classic.prose > .intro > .jump > a.chip:active {
+  box-shadow: var(--pressed);
+}
+
+.classic .kit > section {
+  padding: 0 18px 12px;
+}
+
+.classic .kit > section > h2 {
+  margin: 12px 0 8px;
+  padding: 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow:
+    inset 0 -1px var(--lt),
+    inset 0 -2px var(--sh);
+}
+
+.classic.app .column.stage > .well:has(> .page:not(.source)) {
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.classic.app .column.stage > .well > .page:not(.source) {
+  position: absolute;
+  inset: 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0 24px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.classic.app .page > .prose:not(.classic) {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 14px 18px 4px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) {
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: auto;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > :first-child {
+  margin-top: 0;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) p,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ol,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) blockquote,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) .table,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figure {
+  margin: 0 0 12px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h2 {
+  margin: 24px 0 8px;
+  padding: 0 0 4px;
+  color: var(--pick);
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  box-shadow:
+    inset 0 -1px var(--lt),
+    inset 0 -2px var(--sh);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3 {
+  margin: 18px 0 6px;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h4 {
+  margin: 14px 0 4px;
+  color: var(--fg);
+  font-family: var(--serif);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 700;
+}
+
+:is(.classic.prose, .classic.app .page > .prose:not(.classic)) a:not(.button):not(.icon) {
+  color: var(--web);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: auto;
+}
+
+:is(.classic.prose, .classic.app .page > .prose:not(.classic)) a:not(.button):not(.icon):visited {
+  color: var(--visited);
+}
+
+:is(.classic.prose, .classic.app .page > .prose:not(.classic)) a:not(.button):not(.icon):active {
+  color: var(--active);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ol {
+  padding-left: 26px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul {
+  list-style: square;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul ul {
+  list-style: circle;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links {
+  padding-left: 4px;
+  list-style: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li {
+  position: relative;
+  padding-left: 22px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li::before {
+  content: "";
+  position: absolute;
+  top: 0.35em;
+  left: 2px;
+  width: 11px;
+  height: 13px;
+  background:
+    linear-gradient(var(--sh), var(--sh)) 2px 3px / 5px 1px no-repeat,
+    linear-gradient(var(--sh), var(--sh)) 2px 6px / 5px 1px no-repeat,
+    linear-gradient(var(--sh), var(--sh)) 2px 9px / 5px 1px no-repeat,
+    var(--lt);
+  box-shadow:
+    inset 0 0 0 1px var(--dk),
+    1px 1px 0 var(--sh);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li > a:first-child {
+  font-family: var(--sans);
+  font-weight: 700;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links:has(> li > a:first-child > img:first-child) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 2px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li:has(> a:first-child > img:first-child) {
+  margin: 0;
+  padding: 8px 8px 10px;
+  background: var(--box);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.35;
+  box-shadow: var(--raised);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li:has(> a:first-child > img:first-child)::before {
+  content: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li > a:first-child > img:first-child {
+  display: block;
+  width: calc(100% - 4px);
+  height: auto;
+  margin: 2px 2px 8px;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  background: var(--bg);
+  box-shadow:
+    -1px -1px var(--sh),
+    1px 1px var(--lt),
+    -2px -2px var(--dk),
+    2px 2px var(--box);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li {
+  margin: 3px 0;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li > ul,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li > ol {
+  margin: 3px 0 0;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) strong,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) b {
+  font-weight: 700;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) code {
+  padding: 0 2px;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--box) 35%, var(--bg));
+  color: inherit;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) kbd {
+  padding: 0 4px;
+  background: var(--box);
+  font-family: var(--sans);
+  font-size: 11px;
+  box-shadow: var(--raised);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) pre {
+  margin: 1px 1px 14px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border: 3px solid var(--box);
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre;
+  box-shadow:
+    var(--sunken),
+    -1px -1px var(--lt),
+    1px 1px var(--dk);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) pre code {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) blockquote {
+  padding: 2px 4px 2px 14px;
+  border: 0;
+  color: var(--fg);
+  font-style: italic;
+  box-shadow:
+    inset 1px 0 var(--sh),
+    inset 2px 0 var(--lt);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) hr {
+  height: 2px;
+  margin: 20px 0;
+  border: 0;
+  background: none;
+  box-shadow:
+    inset 0 1px var(--sh),
+    inset 0 -1px var(--lt);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) .table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-bottom: 14px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) table {
+  width: auto;
+  border: 1px solid;
+  border-color: var(--lt) var(--dk) var(--dk) var(--lt);
+  border-collapse: separate;
+  border-spacing: 2px;
+  background: var(--box);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) th,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td {
+  padding: 3px 8px;
+  border: 1px solid;
+  border-color: var(--sh) var(--lt) var(--lt) var(--sh);
+  background: var(--bg);
+  text-align: left;
+  vertical-align: top;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) th {
+  border: 0;
+  background: var(--box);
+  color: var(--fg);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--raised);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figure {
+  margin: 20px 2px;
+  text-align: center;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figure > canvas,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figure > img {
+  display: block;
+  width: 100%;
+  max-width: 448px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 0;
+  background: var(--bg);
+  box-shadow:
+    -1px -1px var(--sh),
+    1px 1px var(--lt),
+    -2px -2px var(--dk),
+    2px 2px var(--box);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figure > canvas {
+  aspect-ratio: 1;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figcaption {
+  margin-top: 8px;
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) mark {
+  padding: 0 1px;
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > figure:first-child {
+  margin: 0 2px 18px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figure > img {
+  max-width: 100%;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) figcaption {
+  font-style: italic;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > pre {
+  margin: 4px -18px 16px;
+  padding: 10px 18px 12px;
+  border: 0;
+  background: var(--console);
+  color: var(--console-fg);
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow:
+    inset 0 2px var(--sh),
+    inset 0 -2px var(--lt);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > pre::selection,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) > pre ::selection {
+  background: var(--console-fg);
+  color: var(--console);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) blockquote {
+  position: relative;
+  margin: 22px 0 16px;
+  padding: 14px 14px 10px;
+  color: var(--fg);
+  font-size: 15px;
+  font-style: normal;
+  line-height: 1.45;
+  box-shadow: var(--etch);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) blockquote::before {
+  content: "Note";
+  position: absolute;
+  top: -8px;
+  left: 8px;
+  padding: 0 4px 0 22px;
+  background:
+    linear-gradient(var(--on-accent), var(--on-accent)) 8px 4px / 2px 2px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 8px 7px / 2px 5px no-repeat,
+    linear-gradient(var(--pick), var(--pick)) 4px 2px / 10px 12px no-repeat,
+    var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3:has(> code:only-child) {
+  margin: 22px 0 8px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3 > code:only-child,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li > code:last-child {
+  display: inline-block;
+  padding: 2px 6px 3px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+  box-shadow: var(--sunken);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3 > code:only-child {
+  min-width: 120px;
+  padding: 4px 8px 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li:has(> code:last-child) {
+  display: flow-root;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.links > li > code:last-child {
+  float: right;
+  margin: 1px 0 2px 10px;
+  font-size: 11px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3:has(> code:only-child) + blockquote {
+  margin-top: 18px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) h3:has(> code:only-child) + blockquote::before {
+  content: "Question";
+  background:
+    linear-gradient(var(--on-accent), var(--on-accent)) 6px 3px / 4px 2px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 5px 4px / 2px 1px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 9px 4px / 2px 3px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 8px 7px / 2px 1px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 7px 8px / 2px 2px no-repeat,
+    linear-gradient(var(--on-accent), var(--on-accent)) 7px 11px / 2px 2px no-repeat,
+    linear-gradient(var(--pick), var(--pick)) 4px 2px / 10px 12px no-repeat,
+    var(--bg);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td:first-child {
+  min-width: calc(6.5em + 16px);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li
+  > a:not(:first-child)[href*="mrly.net/"] {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 8px 2px;
+  background: var(--box);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.3;
+  text-decoration: none;
+  -webkit-font-smoothing: none;
+  box-shadow: var(--raised);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li
+  > a:not(:first-child)[href*="mrly.net/"]::before {
+  content: ">> ";
+  font-weight: 700;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic))
+  ul.links
+  > li
+  > a:not(:first-child)[href*="mrly.net/"]:active {
+  color: var(--fg);
+  box-shadow: var(--pressed);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) ul.contains-task-list {
+  padding-left: 2px;
+  list-style: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li.task-list-item {
+  position: relative;
+  padding-left: 22px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li.task-list-item > input {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  background: var(--bg);
+  box-shadow: var(--sunken);
+  appearance: none;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li.task-list-item > input:disabled {
+  opacity: 1;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) li.task-list-item > input:checked {
+  background:
+    linear-gradient(var(--fg), var(--fg)) 3px 5px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 4px 6px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 5px 7px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 6px 6px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 7px 5px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 8px 4px / 1px 3px no-repeat,
+    linear-gradient(var(--fg), var(--fg)) 9px 3px / 1px 3px no-repeat,
+    var(--bg);
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) th.center,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td.center {
+  text-align: center;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) th.right,
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td.right {
+  text-align: right;
+}
+
+:is(.classic.prose .body, .classic.app .page > .prose:not(.classic)) td a code {
+  background: none;
+}
+
+.classic.prose .icons,
+.classic.window .gallery.grid,
+.classic.app .gallery.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  align-items: start;
+  gap: 10px 4px;
+  max-width: none;
+  margin: 16px 0 0;
+  padding: 12px 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.3;
+  box-shadow: var(--sunken);
+}
+
+.classic.window .gallery.grid,
+.classic.app .gallery.grid {
+  margin: 0 18px 24px;
+}
+
+.classic.app section.gallery.grid {
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 16px 12px;
+  max-width: 604px;
+  margin: 8px auto 24px;
+  padding: 16px 14px;
+}
+
+.classic.prose .icons > .icon,
+.classic.window .gallery.grid > .tile,
+.classic.app .gallery.grid > .tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  text-align: center;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.classic.prose .icons > .icon > .art,
+.classic.window .gallery.grid > .tile > figure,
+.classic.app .gallery.grid > .tile > figure {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+}
+
+.classic.app section.gallery.grid > .tile > figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: auto;
+}
+
+.classic.prose .icons > .icon > .art > figure {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.classic.prose .icons > .icon > .art canvas,
+.classic.window .gallery.grid > .tile > figure > canvas,
+.classic.app .gallery.grid > .tile > figure > canvas {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  aspect-ratio: auto;
+  border-radius: 0;
+  background: var(--bg);
+  image-rendering: pixelated;
+  box-shadow:
+    -1px -1px var(--sh),
+    1px 1px var(--lt),
+    -2px -2px var(--dk),
+    2px 2px var(--box);
+}
+
+.classic.app section.gallery.grid > .tile > figure > canvas {
+  width: calc(100% - 4px);
+  height: auto;
+  aspect-ratio: 1;
+  image-rendering: auto;
+}
+
+.classic.prose .icons > .icon > .art::after,
+.classic.window .gallery.grid > a.tile > figure::after,
+.classic.app .gallery.grid > a.tile > figure::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(var(--pick) 0 25%, transparent 0 50%) 0 0 / 2px 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.classic.prose .icons > .icon:hover > .art::after,
+.classic.prose .icons > .icon:focus-visible > .art::after,
+.classic.window .gallery.grid > a.tile:hover > figure::after,
+.classic.window .gallery.grid > a.tile:focus-visible > figure::after,
+.classic.app .gallery.grid > a.tile:hover > figure::after,
+.classic.app .gallery.grid > a.tile:focus-visible > figure::after {
+  opacity: 1;
+}
+
+.classic.prose .icons > .icon > .art.sheet,
+.classic.window .gallery.grid > .tile.plain::before,
+.classic.app .gallery.grid > .tile.plain::before {
+  content: "";
+  flex: none;
+  width: 34px;
+  height: 42px;
+  margin: 11px 15px;
+  padding: 7px 6px;
+  border: 1px solid var(--fg);
+  background:
+    repeating-linear-gradient(to bottom, var(--sh) 0 1px, transparent 1px 5px) content-box,
+    var(--bg);
+  box-shadow: 2px 2px 0 var(--sh);
+}
+
+.classic.window .gallery.grid > .tile.plain::before,
+.classic.app .gallery.grid > .tile.plain::before {
+  margin: 11px 0;
+}
+
+.classic.prose .icons > .icon > .name,
+.classic.window .gallery.grid > .tile > h2,
+.classic.app .gallery.grid > .tile > h2,
+.classic.app .gallery.grid > .tile figcaption {
+  max-width: 100%;
+  margin: 2px 0 0;
+  padding: 1px 3px;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.classic.app .gallery.grid > .tile figcaption {
+  font-weight: 400;
+}
+
+.classic.prose .icons > .icon:hover > .name,
+.classic.prose .icons > .icon:focus-visible > .name,
+.classic.window .gallery.grid > a.tile:hover > h2,
+.classic.window .gallery.grid > a.tile:focus-visible > h2,
+.classic.app .gallery.grid > a.tile:hover > h2,
+.classic.app .gallery.grid > a.tile:focus-visible > h2 {
+  background: var(--pick);
+  color: var(--on-accent);
+  outline: 1px dotted var(--fg);
+  outline-offset: 0;
+}
+
+.classic.prose .icons > .icon:focus-visible,
+.classic.window .gallery.grid > a.tile:focus-visible,
+.classic.app .gallery.grid > a.tile:focus-visible {
+  outline: 0;
+}
+
+.classic.prose .icons > .icon > .text,
+.classic.window .gallery.grid > .tile > p,
+.classic.app .gallery.grid > .tile > p {
+  max-width: 100%;
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.classic.window .gallery.grid > .tile > p.dates,
+.classic.app .gallery.grid > .tile > p.dates {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 6px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.classic.tile {
+  width: 75px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 2px;
+  color: var(--on-accent);
+  text-align: center;
+  text-decoration: none;
+}
+
+.classic.tile .art {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+}
+
+.classic.tile .art > * {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.classic.tile .name {
+  max-width: 100%;
+  padding: 0 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.classic.tile[aria-current] .name,
+.classic.tile:focus-visible .name {
+  background: var(--pick);
+  outline: 1px dotted var(--on-accent);
+}
+
+.classic.tile:focus-visible {
+  outline: 0;
+}
+
+.classic.tile[aria-disabled="true"] {
+  opacity: 0.5;
+}
+
+.classic .cascade .tile,
+.classic.launcher .results .tile,
+.classic .library .tile {
+  width: auto;
+  height: 22px;
+  flex-direction: row;
+  gap: 6px;
+  padding: 0 20px 0 4px;
+  color: var(--fg);
+  text-align: left;
+}
+
+.classic .cascade .tile .art,
+.classic.launcher .results .tile .art {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+.classic .cascade .tile .name,
+.classic.launcher .results .tile .name {
+  display: block;
+  white-space: nowrap;
+}
+
+.classic .cascade .tile:hover,
+.classic .cascade .tile:focus-visible,
+.classic.launcher .results .tile:hover,
+.classic.launcher .results li.on > .tile,
+.classic.launcher .results li.on > .item {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic .cascade .tile:hover .name,
+.classic .cascade .tile:focus-visible .name,
+.classic .cascade .tile[aria-current] .name,
+.classic.launcher .results .tile .name {
+  background: none;
+  outline: 0;
+}
+
+.classic.launcher {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+}
+
+.classic.launcher .veil {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+}
+
+.classic.launcher .start-menu {
+  position: absolute;
+  left: 2px;
+  bottom: 26px;
+  width: 240px;
+  max-height: calc(100% - 32px);
+  display: flex;
+  padding: 3px;
+}
+
+.classic.launcher .band {
+  width: 24px;
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  background: linear-gradient(to top, var(--title-a), var(--title-b));
+  color: var(--on-accent);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.classic.launcher .band span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.classic.launcher .list {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0 2px 2px;
+}
+
+.classic.launcher .find {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 2px 4px 4px;
+}
+
+.classic.launcher .find .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.classic.launcher .find .more {
+  width: 22px;
+  height: 20px;
+}
+
+.classic.launcher .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 0 2px 4px;
+}
+
+.classic.launcher .chips .names {
+  display: contents;
+}
+
+.classic.launcher .chips button,
+.classic.launcher .chips .field {
+  height: 18px;
+  padding: 0 6px;
+}
+
+.classic.launcher .chips .add {
+  width: 18px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.classic.launcher .body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.classic.launcher .results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.classic.launcher ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.classic.launcher .link {
+  color: var(--web);
+  text-decoration: underline;
+}
+
+.classic.launcher .item {
+  padding-left: 8px;
+}
+
+.classic.launcher .item .label {
+  flex: 1;
+}
+
+.classic.launcher .head {
+  padding: 4px 8px 2px;
+  color: var(--dim);
+  font-weight: 700;
+}
+
+.classic.launcher .empty {
+  margin: 4px 8px;
+  color: var(--dim);
+}
+
+.classic.launcher .section {
+  position: relative;
+}
+
+.classic.launcher .section > .item {
+  width: 100%;
+  padding-right: 4px;
+}
+
+.classic.launcher .section:focus-within > .item {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic.launcher .cascade {
+  position: absolute;
+  left: 100%;
+  top: -3px;
+  min-width: 180px;
+  display: none;
+  flex-direction: column;
+  padding: 3px;
+}
+
+.classic.launcher .section:hover > .cascade,
+.classic.launcher .section:focus-within > .cascade {
+  display: flex;
+}
+
+.classic.launcher .said {
+  position: absolute;
+  right: 8px;
+  bottom: 34px;
+  margin: 0;
+  padding: 4px 8px;
+  background: var(--tip);
+  border: 1px solid var(--tip-line);
+  color: var(--tip-fg);
+}
+
+.classic.launcher .said .link {
+  margin-left: 8px;
+}
+
+.classic .tree,
+.classic .tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.classic .tree {
+  padding: 2px;
+}
+
+.classic .tree ul {
+  margin-left: 6px;
+  padding-left: 10px;
+  border-left: 1px dotted var(--dim);
+}
+
+.classic .tree a,
+.classic .tree summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 18px;
+  padding: 0 2px;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.classic .tree summary {
+  list-style: none;
+  cursor: default;
+}
+
+.classic .tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.classic .tree summary > svg {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  rotate: -90deg;
+}
+
+.classic .tree details[open] > summary > svg {
+  rotate: none;
+}
+
+.classic .tree summary > a {
+  padding: 0;
+}
+
+.classic .tree a:hover {
+  text-decoration: underline;
+}
+
+.classic .tree a[aria-current] {
+  background: var(--pick);
+  color: var(--on-accent);
+  outline: 1px dotted var(--fg);
+  outline-offset: -1px;
+}
+
+.classic.app .column.left > .well:has(> .library) {
+  padding: 6px 8px 8px;
+}
+
+.classic.app .library:not(.classic) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.classic.app .library:not(.classic) > h2 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
+}
+
+.classic.app .browser {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.classic.app .library:not(.classic) .find {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.classic.app .library:not(.classic) .find svg {
+  position: absolute;
+  left: 5px;
+  pointer-events: none;
+  width: 14px;
+  height: 14px;
+  color: var(--fg);
+}
+
+.classic.app .library:not(.classic) .find input {
+  width: 100%;
+  height: 22px;
+  min-height: 22px;
+  padding: 3px 4px 3px 23px;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  appearance: none;
+  background: var(--bg);
+  box-shadow: var(--sunken);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+.classic.app .library:not(.classic) .find input::placeholder {
+  color: var(--dim);
+}
+
+.classic.app .library:not(.classic) .find input::selection {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic.app .browser .list {
+  padding: 0;
+  overflow: visible;
+}
+
+.classic.app .library:not(.classic) .find input::-webkit-search-decoration,
+.classic.app .library:not(.classic) .find input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.classic.app .library:not(.classic) > .chips {
+  position: relative;
+  display: flex;
+  gap: 0;
+  box-shadow: inset 0 -1px var(--dk);
+}
+
+.classic.app .library:not(.classic) > .chips > button {
+  height: 20px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: var(--box);
+  color: var(--fg);
+  box-shadow:
+    inset 1px 1px var(--lt),
+    inset -1px 0 var(--dk),
+    inset -2px 0 var(--sh),
+    inset 0 -1px var(--dk);
+  font-size: 11px;
+}
+
+.classic.app .library:not(.classic) > .chips > button.on {
+  height: 22px;
+  margin-top: -2px;
+  box-shadow:
+    inset 1px 1px var(--lt),
+    inset -1px 0 var(--dk),
+    inset -2px 0 var(--sh);
+  font-weight: 700;
+}
+
+.classic.app .library:not(.classic) > label.chips {
+  box-shadow: none;
+}
+
+.classic.app .library:not(.classic) > label.chips > select {
+  flex: 1;
+  height: 22px;
+  padding: 0 20px 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg);
+  box-shadow: var(--sunken);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  appearance: none;
+}
+
+.classic.app .library:not(.classic) > label.chips > .drop {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  background: var(--box);
+  box-shadow: var(--raised);
+  pointer-events: none;
+}
+
+.classic.app .library:not(.classic) > label.chips > .drop svg {
+  width: 14px;
+  height: 14px;
+}
+
+.classic.app .shelf > .list {
+  display: flex;
+  flex-direction: column;
+}
+
+.classic.app .shelf > .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 64px);
+  justify-content: space-between;
+  gap: 4px 0;
+}
+
+.classic.app .shelf [data-item] {
+  min-width: 0;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 14px;
+  text-align: left;
+  text-decoration: none;
+}
+
+.classic.app .shelf [data-item] > figure,
+.classic.app .shelf [data-item] > canvas {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+}
+
+.classic.app .shelf [data-item] canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background: none;
+  image-rendering: pixelated;
+}
+
+.classic.app .shelf [data-item] > .label {
+  min-width: 0;
+  padding: 0 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classic.app .shelf [data-item] > .sub {
+  flex: none;
+  margin-left: auto;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.classic.app .shelf [data-item].on > .label,
+.classic.app .shelf [data-item][aria-current] > .label {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic.app .shelf [data-item]:focus-visible {
+  outline: 0;
+}
+
+.classic.app .shelf [data-item]:focus-visible > .label {
+  outline: 1px dotted var(--fg);
+}
+
+.classic.app .shelf > .grid > [data-item] {
+  width: 64px;
+  height: 70px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 2px 0 0;
+  text-align: center;
+}
+
+.classic.app .shelf > .grid > [data-item] > figure,
+.classic.app .shelf > .grid > [data-item] > canvas {
+  width: 48px;
+  height: 48px;
+}
+
+.classic.app .shelf > .grid > [data-item] > .sub {
+  display: none;
+}
+
+.classic.app .library:not(.classic) .shelf + .shelf {
+  margin-top: 12px;
+}
+
+.classic.app .library:not(.classic) .shelf > h3,
+.classic.app .browser .shelf h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 0 6px;
+  padding: 0 0 4px;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow:
+    inset 0 -1px var(--lt),
+    inset 0 -2px var(--sh);
+}
+
+.classic.app .library:not(.classic) .shelf > h3 span,
+.classic.app .browser .shelf h3 span {
+  color: var(--dim);
+  font-family: var(--sans);
+  font-weight: 400;
+}
+
+.classic.app .browser .space {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 8px;
+  padding: 0 0 8px;
+  box-shadow:
+    inset 0 -1px var(--lt),
+    inset 0 -2px var(--sh);
+}
+
+.classic.app .browser .segment {
+  min-height: 18px;
+  gap: 4px;
+  color: var(--fg);
+  font-size: 11px;
+}
+
+.classic.app .browser .segment .label {
+  min-width: 32px;
+  line-height: 18px;
+}
+
+.classic.app .browser .segment .options {
+  gap: 0 10px;
+}
+
+.classic.app .browser .segment label {
+  height: 18px;
+}
+
+.classic.app .designs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 64px);
+  grid-auto-rows: 70px;
+  justify-content: space-between;
+  gap: 4px 0;
+}
+
+.classic.app .designs > button {
+  position: relative;
+  width: 64px;
+  height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: 0;
+  padding: 2px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--fg);
+  overflow: hidden;
+}
+
+.classic.app .designs canvas {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  display: block;
+  aspect-ratio: auto;
+  border-radius: 0;
+  background: none;
+  image-rendering: pixelated;
+}
+
+.classic.app .designs > button.on::after,
+.classic.app .designs > button[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  width: 48px;
+  height: 48px;
+  background: repeating-conic-gradient(var(--pick) 0 25%, transparent 0 50%) 0 0 / 2px 2px;
+  pointer-events: none;
+}
+
+.classic.app .designs small {
+  max-width: 100%;
+  padding: 0 2px;
+  overflow: hidden;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classic.app .designs > button.on small,
+.classic.app .designs > button[aria-pressed="true"] small {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic.app .designs > button:focus-visible {
+  outline: 0;
+}
+
+.classic.app .designs > button:focus-visible small {
+  outline: 1px dotted var(--fg);
+}
+
+.classic.app .browser .none {
+  margin: 4px 0;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.classic.dock {
+  position: fixed;
+  top: 8px;
+  left: 4px;
+  bottom: 36px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.classic.dock .group {
+  display: flex;
+  flex-direction: column;
+}
+
+.classic.dock .tile {
+  height: 75px;
+}
+
+.classic .appicon .lift,
+.classic .appicon .glow,
+.classic .appicon .rim,
+.classic .appicon .shade {
+  display: none;
+}
+
+.classic.tile .art > .face {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.classic.widgets {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.classic.widgets .widget,
+.classic.widgets .gallery {
+  padding: 3px;
+}
+
+.classic.widgets .body {
+  padding: 6px 4px 4px;
+}
+
+.classic.widgets .body h2:not(:has(+ .big)) {
+  display: none;
+}
+
+.classic.widgets .body .fill {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.classic.widgets .body .who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.classic.widgets .body .who > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.classic.widgets .body .face {
+  display: block;
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.classic.widgets .list {
+  max-height: 160px;
+  margin: 4px 0;
+  padding: 2px;
+  list-style: none;
+  overflow: auto;
+}
+
+.classic.widgets .list button {
+  width: 100%;
+  height: 18px;
+  padding: 0 4px;
+  text-align: left;
+}
+
+.classic.widgets .list button:hover {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.classic.widgets .buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.classic.widgets .buttons button {
+  min-width: 75px;
+  height: 23px;
+}
+
+.classic.widgets .primary {
+  outline: 1px solid var(--dk);
+}
+
+.classic.lock {
+  position: fixed;
+  inset: 0 0 28px;
+  z-index: 54;
+  display: grid;
+  place-items: center;
+}
+
+.classic.lock .box {
+  width: 400px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.classic.lock .word {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.classic.lock .progress {
+  width: 240px;
+  height: 18px;
+  padding: 3px;
+  background: var(--box);
+}
+
+.classic.lock .fill {
+  height: 100%;
+  display: block;
+  background: repeating-linear-gradient(to right, var(--pick) 0 16px, transparent 16px 18px);
+  animation: classic-fill 2s steps(12) both;
+}
+
+.classic.lock[data-state="rest"] .fill {
+  animation: none;
+}
+
+@keyframes classic-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.classic.lock .box:has(> .ask) {
+  height: auto;
+  padding: 24px;
+}
+
+.classic.lock .ask {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.classic.lock .ask .row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.classic.lock .ask .field {
+  flex: 1;
+  min-width: 0;
+  background: var(--box);
+}
+
+.classic.lock .ask .wrong {
+  margin: 0;
+}
+
+.classic.lock .ask .button {
+  min-width: 75px;
+  height: 23px;
+}
+
+.classic.saver {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--dk);
+}
+
+.classic.saver .stage {
+  position: absolute;
+  inset: 0;
+}
+
+.classic.saver .big {
+  position: absolute;
+  color: var(--lt);
+  font-family: var(--mono);
+  font-size: 48px;
+  transform: translate(-50%, -50%);
+}
+
+.classic.desk {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--ground);
+}
+
+.classic.desk > .ground {
+  width: 100%;
+  height: 100%;
+  display: block;
+  visibility: hidden;
+}
+
+:root[data-saver] .classic.desk > .ground {
+  visibility: visible;
+}
+
+.classic.still {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--ground);
+}
+
+.classic.still .still-win {
+  position: absolute;
+  inset: 12% 14% 26%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px;
+  background: var(--box);
+  box-shadow:
+    inset -1px -1px var(--dk),
+    inset 1px 1px var(--lt),
+    inset -2px -2px var(--sh);
+}
+
+.classic.still .still-title {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1px;
+  height: 9px;
+  padding: 0 2px;
+  background: linear-gradient(90deg, var(--title-a), var(--title-b));
+}
+
+.classic.still .still-title > i {
+  width: 6px;
+  height: 5px;
+  background: var(--box);
+  box-shadow:
+    inset -1px -1px var(--dk),
+    inset 1px 1px var(--lt);
+}
+
+.classic.still .still-body {
+  flex: 1;
+  background: var(--bg);
+  box-shadow:
+    inset 1px 1px var(--sh),
+    inset -1px -1px var(--lt);
+}
+
+.classic.still .still-task {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  height: 12%;
+  padding: 2px;
+  background: var(--box);
+  box-shadow: inset 0 1px var(--lt);
+}
+
+.classic.still .still-task > i {
+  width: 20%;
+  background: var(--box);
+  box-shadow:
+    inset -1px -1px var(--dk),
+    inset 1px 1px var(--lt);
+}

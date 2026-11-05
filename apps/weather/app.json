@@ -1,0 +1,5 @@
+{
+  "title": "Weather",
+  "line": "No weather source yet: nothing to report. You can keep the places you care about.",
+  "aliases": ["forecast", "sky", "rain", "temperature", "climate", "wind", "snow"]
+}

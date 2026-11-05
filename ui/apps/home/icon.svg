@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#f2f2f7"/></linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1"><stop offset="0.00" stop-color="#ffd100"/><stop offset="0.25" stop-color="#ff8f2c"/><stop offset="0.50" stop-color="#ff325a"/><stop offset="0.75" stop-color="#d332e9"/><stop offset="1.00" stop-color="#6768fa"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M272 232H752A40 40 0 0 1 792 272V752A40 40 0 0 1 752 792H272A40 40 0 0 1 232 752V272A40 40 0 0 1 272 232ZM356 344A12 12 0 0 0 344 356V444A12 12 0 0 0 356 456H444A12 12 0 0 0 456 444V356A12 12 0 0 0 444 344ZM580 344A12 12 0 0 0 568 356V444A12 12 0 0 0 580 456H668A12 12 0 0 0 680 444V356A12 12 0 0 0 668 344ZM356 568A12 12 0 0 0 344 580V668A12 12 0 0 0 356 680H444A12 12 0 0 0 456 668V580A12 12 0 0 0 444 568ZM580 568A12 12 0 0 0 568 580V668A12 12 0 0 0 580 680H668A12 12 0 0 0 680 668V580A12 12 0 0 0 668 568Z" fill="url(#ink)" fill-rule="evenodd" data-mono="full"/>
+</svg>

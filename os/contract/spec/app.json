@@ -1,0 +1,39 @@
+{
+  "spec": "0.2",
+  "title": "App",
+  "line": "What app({ ... }) takes. Every function is pure: same input, same output; the world reaches it only through its arguments.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*$", "line": "Names the folder and every verb: id.verb." },
+    "title": { "type": "string" },
+    "line": { "type": "string", "line": "One sentence: what the app is for." },
+    "boot": { "line": "({ seed, start, config, actors, knob }) => state. Runs once, when a world boots." },
+    "verbs": {
+      "type": "object",
+      "line": "name: { line, args?, inner?, run }. line is a string, or (knob) => string. args is a JSON schema, or (knob) => schema; never from state. inner verbs run only when an app or the host asks. run(state, args, ctx) returns the next state.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": { "line": {}, "args": {}, "inner": { "type": "boolean" }, "run": {} },
+        "required": ["line", "run"]
+      }
+    },
+    "read": {
+      "line": "(state, path, who, at, peek) => view. What who sees at path, live at time at. peek(path) is any app's raw state, a copy. Default: the state itself."
+    },
+    "moves": { "line": "(state) => names. Which verbs are legal now. Default: all." },
+    "knobs": {
+      "type": "object",
+      "line": "name: { line, schema, reality }. Everything that shapes a world. A world turns one with the rule id.name; reality fills the rest."
+    },
+    "wake": {
+      "line": "(state, at) => verb | null. The inner verb to run when time alone changed this app. The host asks around each act and journals what runs."
+    },
+    "after": {
+      "line": "({ world, envelope, line }) => act | null. Watch another app's act, and follow it with one of your own; it runs as the same who, via this app."
+    },
+    "ctx": {
+      "line": "who, at, via; draw() a random 32-bit number; refuse(note) undoes the act; say(value) answers the caller; see(path) reads as who; read(path) reads raw state; call(verb, args) runs another app's verb inside this act, and its refusal undoes the whole act; wish({ kind, data, reply }) asks the outside, and the answer returns as the inner verb reply with args { wish, ok, data }; knob(name) reads a knob, yours by name or anyone's as app.name."
+    }
+  },
+  "required": ["id", "title", "line", "boot", "verbs"]
+}

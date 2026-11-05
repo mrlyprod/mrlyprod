@@ -1,0 +1,5 @@
+{
+  "title": "Mail",
+  "line": "Mail between users: threads, reply-all, forward, inbox, sent and archive.",
+  "aliases": ["email", "inbox", "sent", "letter", "compose", "reply all", "forward", "cc"]
+}

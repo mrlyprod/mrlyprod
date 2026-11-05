@@ -1,0 +1,20 @@
+{
+  "spec": "0.2",
+  "title": "Move",
+  "line": "One legal verb now, with the JSON Schema subset its args must pass.",
+  "type": "object",
+  "properties": {
+    "verb": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*$"
+    },
+    "line": {
+      "type": "string"
+    },
+    "args": {
+      "type": "object"
+    }
+  },
+  "required": ["verb", "line", "args"],
+  "additionalProperties": false
+}

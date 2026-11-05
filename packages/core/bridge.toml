@@ -1,0 +1,64 @@
+unit = "core"
+js = "js"
+py = "py"
+cli = "cli"
+
+[[hand]]
+name = "Tensor"
+rust = ["mrly_core::Tensor"]
+js = ["tensor"]
+word = "tensor"
+ts = "Tensor"
+ts_data = "TensorData"
+py = ["PyTensor"]
+py_into = "PyTensor"
+pyi = "NDArray[Any]"
+rank = true
+write_back = "ref"
+
+[[hand]]
+name = "Cell"
+rust = ["mrly_core::Cell"]
+js = ["cell"]
+word = "cell"
+ts = "Cell"
+ts_data = "CellData"
+py = ["PyCell"]
+py_into = "PyCell"
+pyi = "dict[str, Any]"
+write_back = "value"
+
+[[hand]]
+name = "Image"
+rust = ["mrly_core::Image"]
+js = ["image"]
+word = "image"
+ts = "Image"
+ts_data = "{ width: number; height: number; colors: number[][] }"
+py = ["PyImage"]
+py_into = "PyImage"
+pyi = "NDArray[Any]"
+
+[[hand]]
+name = "Color"
+rust = ["mrly_core::Color"]
+js = ["color"]
+word = "color"
+ts = "Color"
+ts_data = "ColorData"
+py = ["PyColor"]
+py_into = "PyColor"
+pyi = "tuple[int, int, int, int]"
+cli = ["color", "tint"]
+
+[[hand]]
+name = "Rng"
+rust = ["mrly_core::Rng"]
+js = []
+word = "rng"
+ts = "Rng"
+ts_data = "unknown"
+py = ["PyRng"]
+py_into = "PyRng"
+pyi = "Rng"
+stream = true

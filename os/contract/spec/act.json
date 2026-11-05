@@ -1,0 +1,20 @@
+{
+  "spec": "0.2",
+  "title": "Act",
+  "line": "One act in: the only way anything changes. via names the app or host that asked for it.",
+  "type": "object",
+  "properties": {
+    "verb": { "type": "string", "pattern": "^[a-z][a-z0-9]*\\.[a-z][a-z0-9]*$" },
+    "args": { "type": "object" },
+    "who": {
+      "type": "object",
+      "properties": { "id": { "type": "string", "minLength": 1 }, "kind": { "type": "string", "minLength": 1 } },
+      "required": ["id", "kind"],
+      "additionalProperties": false
+    },
+    "at": { "type": "integer", "minimum": 0 },
+    "via": { "type": "string" }
+  },
+  "required": ["verb"],
+  "additionalProperties": false
+}

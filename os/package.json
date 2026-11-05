@@ -1,0 +1,13 @@
+{
+  "name": "@mrlyprod/os",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  },
+  "scripts": {
+    "cli": "bun doors/cli/cli.ts",
+    "types": "tsc -p tsconfig.json",
+    "hello": "MRLY_ROOT=demo bun doors/cli/cli.ts tui"
+  }
+}

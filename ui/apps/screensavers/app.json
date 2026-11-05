@@ -1,0 +1,6 @@
+{
+  "title": "Screensavers",
+  "line": "Preview and tune every screen saver the apps declare.",
+  "aliases": ["saver", "idle", "lock", "wallpaper"],
+  "deep": true
+}

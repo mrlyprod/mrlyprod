@@ -1,0 +1,14 @@
+{
+  "extends": "../os/tsconfig.json",
+  "compilerOptions": {
+    "typeRoots": ["../node_modules/@types"],
+    "paths": {
+      "@mrlyprod/os/*": ["../os/*"],
+      "@mrlyprod/apps/*": ["./*"],
+      "@mrlyprod/draw": ["../packages/draw/index.ts"],
+      "@mrlyprod/draw/*": ["../packages/draw/*"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["**/node_modules/**", "**/data/**"]
+}

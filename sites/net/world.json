@@ -1,0 +1,63 @@
+{
+  "name": "mrly",
+  "apps": [
+    "people",
+    "messages",
+    "notifications",
+    "mail",
+    "phone",
+    "calendar",
+    "reminders",
+    "notes",
+    "files",
+    "photos",
+    "clock",
+    "calc",
+    {
+      "id": "wallet",
+      "config": {
+        "causes": {
+          "mrlynet": "MrlyNet itself"
+        },
+        "reserves": {
+          "exchange": 100000000
+        }
+      }
+    },
+    "market",
+    "jobs",
+    "dating",
+    "wish",
+    "vote",
+    "feedback",
+    "health",
+    "ads",
+    "wiki",
+    "archive",
+    "maps",
+    "weather",
+    "news",
+    "stocks",
+    "books",
+    "tv",
+    "music",
+    "podcasts",
+    "docs",
+    "numbers",
+    "slides",
+    "papers",
+    "sites",
+    "code",
+    "search",
+    "help",
+    "identity",
+    "term"
+  ],
+  "actors": ["test-1", "test-2", "test-3", "test-4", "test-5", "test-6", "test-7", "test-8"],
+  "rules": {
+    "wallet.payments": { "pick": ["on", "off"] },
+    "wallet.gifts": { "pick": ["on", "off"] },
+    "people.palette": { "pick": ["human", "agent", "bot", ["human", "agent", "bot"]] },
+    "wallet.grant": { "pick": [100, 1000, 10000, 100000] }
+  }
+}

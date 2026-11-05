@@ -1,0 +1,45 @@
+{
+  "name": "@mrlyprod/ui",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  },
+  "scripts": {
+    "wasm": "bun web/scripts/wasm.ts",
+    "dev": "bun install && bun web/scripts/dev.ts",
+    "init": "bun web/scripts/init.ts",
+    "build": "bun web/scripts/build.ts",
+    "push": "bun web/scripts/push.ts",
+    "content": "bun web/scripts/content.ts",
+    "types": "tsc -p tsconfig.json",
+    "shots": "bun web/scripts/shots.ts",
+    "film": "bun web/scripts/film.ts",
+    "draw": "bun web/scripts/draw.ts",
+    "time": "bun web/scripts/time.ts",
+    "vendor": "bun web/scripts/vendor.ts"
+  },
+  "dependencies": {
+    "@shikijs/core": "^4.5.0",
+    "@shikijs/engine-javascript": "^4.5.0",
+    "@shikijs/langs": "^4.5.0",
+    "katex": "^0.19.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "three": "^0.186.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "@types/hast": "^3.0.5",
+    "@types/mdast": "^4.0.4"
+  }
+}

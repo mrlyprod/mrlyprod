@@ -1,0 +1,5 @@
+{
+  "title": "Logs",
+  "line": "Your own act history, read from the world's journal.",
+  "aliases": ["history", "acts", "activity", "console"]
+}

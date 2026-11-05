@@ -1,0 +1,17 @@
+import type { Pen, Point } from "@mrlyprod/draw";
+import { plate } from "@mrlyprod/draw/plate.ts";
+
+export const units = {};
+
+const SIDE = 1024;
+
+export default function draw(pen: Pen) {
+  const { box, paint } = plate(pen, "indigo", 0.2);
+  const k = box.w / (SIDE * 0.6);
+  const p = (x: number, y: number): Point => [box.x + (x - SIDE * 0.2) * k, box.y + (y - SIDE * 0.2) * k];
+  const r = (x: number, y: number, w: number, h: number, round: number, color = paint.white) =>
+    pen.round_rect(...p(x, y), w * k, h * k, round * k, color);
+  r(212, 272, 280, 160, 50);
+  r(212, 336, 600, 426, 50);
+  pen.segment(p(212, 420), p(812, 420), 36 * k, paint.tone);
+}

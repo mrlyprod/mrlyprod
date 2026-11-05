@@ -1,0 +1,35 @@
+{
+  "spec": "0.2",
+  "title": "Config",
+  "line": "What boots a world: its name, seed, start, apps, actors and rules. pace and front are for doors, never for apps.",
+  "type": "object",
+  "properties": {
+    "spec": { "type": "string" },
+    "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "start": { "type": "integer", "minimum": 0, "line": "World milliseconds at tick 0." },
+    "pace": {
+      "type": "integer",
+      "minimum": 1,
+      "line": "World milliseconds a door adds to each act; none means the wall clock."
+    },
+    "front": {
+      "type": "array",
+      "items": { "type": "string" },
+      "line": "Paths a door shows on the front page, each read as the one who looks."
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "line": "An app id, or { id, config } where config reaches that app's boot."
+      }
+    },
+    "actors": { "type": "array", "items": { "type": "string" }, "line": "Who may act; none means anyone." },
+    "rules": {
+      "type": "object",
+      "line": "Knobs as app.knob: value. Boot checks each against its app's schema and fills the rest from reality. { pick: [...] } draws one by the seed."
+    }
+  },
+  "required": ["name", "apps"],
+  "additionalProperties": false
+}

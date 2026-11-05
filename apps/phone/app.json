@@ -1,0 +1,5 @@
+{
+  "title": "Phone",
+  "line": "Calls between users: ring, answer, talk, hang up, voicemail, and a log.",
+  "aliases": ["calls", "call", "ring", "answer", "hang up", "dial", "talk", "voicemail", "missed call"]
+}

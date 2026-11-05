@@ -1,0 +1,36 @@
+{
+  "spec": "0.2",
+  "title": "Envelope",
+  "line": "One frame for a screen or a wire: the answer to every call and every read.",
+  "type": "object",
+  "properties": {
+    "spec": { "type": "string" },
+    "tick": { "type": "integer", "minimum": 0 },
+    "state": {},
+    "moves": { "type": "array", "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*\\.[a-z][a-z0-9]*$" } },
+    "last": {
+      "type": "object",
+      "properties": { "ok": { "type": "boolean" }, "note": {} },
+      "required": ["ok", "note"],
+      "additionalProperties": false
+    },
+    "wishes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "line": "What the act asks of the outside. id is <tick>.<i>; the answer returns as an act on reply, with args { wish: id, ok, data }.",
+        "properties": {
+          "id": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+          "kind": { "type": "string" },
+          "data": {},
+          "reply": { "type": "string", "pattern": "^[a-z][a-z0-9]*\\.[a-z][a-z0-9]*$" }
+        },
+        "required": ["id", "kind", "data"],
+        "additionalProperties": false
+      }
+    },
+    "said": {}
+  },
+  "required": ["spec", "tick", "state", "moves", "last", "wishes"],
+  "additionalProperties": false
+}

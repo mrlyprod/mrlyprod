@@ -1,0 +1,7243 @@
+{
+  "krate": "mrly-core",
+  "version": "0.2.0",
+  "modules": [
+    {
+      "path": "core",
+      "file": "core/lib.rs",
+      "docs": [],
+      "items": 23
+    },
+    {
+      "path": "core::cell",
+      "file": "core/cell.rs",
+      "docs": [],
+      "items": 27
+    },
+    {
+      "path": "core::colors",
+      "file": "core/colors.rs",
+      "docs": [],
+      "items": 40
+    },
+    {
+      "path": "core::error",
+      "file": "core/error.rs",
+      "docs": [],
+      "items": 4
+    },
+    {
+      "path": "core::image",
+      "file": "core/image.rs",
+      "docs": [],
+      "items": 4
+    },
+    {
+      "path": "core::name",
+      "file": "core/name/mod.rs",
+      "docs": [],
+      "items": 1
+    },
+    {
+      "path": "core::name::sha",
+      "file": "core/name/sha.rs",
+      "docs": [],
+      "items": 3
+    },
+    {
+      "path": "core::paint",
+      "file": "core/paint.rs",
+      "docs": [],
+      "items": 27
+    },
+    {
+      "path": "core::ramp",
+      "file": "core/ramp.rs",
+      "docs": [],
+      "items": 2
+    },
+    {
+      "path": "core::resample",
+      "file": "core/resample.rs",
+      "docs": [],
+      "items": 0
+    },
+    {
+      "path": "core::rng",
+      "file": "core/rng.rs",
+      "docs": [],
+      "items": 9
+    },
+    {
+      "path": "core::tensor",
+      "file": "core/tensor/mod.rs",
+      "docs": [],
+      "items": 41
+    }
+  ],
+  "types": [
+    {
+      "path": "core::Cell",
+      "name": "Cell",
+      "defined_at": "core/cell.rs:21",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Cell"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "types",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Tensor",
+            "dim": null
+          }
+        },
+        {
+          "name": "colors",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "array",
+                "item": {
+                  "t": "scalar",
+                  "name": "u8"
+                },
+                "len": 4
+              }
+            }
+          }
+        },
+        {
+          "name": "tags",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::Color",
+      "name": "Color",
+      "defined_at": "core/colors.rs:7",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Color"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "r",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "g",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "b",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "a",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::Colorizer",
+      "name": "Colorizer",
+      "defined_at": "core/ramp.rs:6",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Bins",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "background",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "hand",
+                "name": "Color",
+                "dim": null
+              }
+            },
+            {
+              "name": "ramp",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "hand",
+                  "name": "Color",
+                  "dim": null
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Dtype",
+      "name": "Dtype",
+      "defined_at": "core/tensor/mod.rs:8",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": false,
+        "words": []
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "U8",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "U16",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "U32",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "I32",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Error",
+      "name": "Error",
+      "defined_at": "core/error.rs:6",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "uncrossable",
+        "reason": "no serde derives and no methods"
+      },
+      "derives": [
+        "Debug"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Value",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "string"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Shape",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "string"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Overflow",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "string"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Json",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "unknown",
+                "text": "serde_json :: Error"
+              }
+            }
+          ]
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Filter",
+      "name": "Filter",
+      "defined_at": "core/resample.rs:5",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": false,
+        "words": []
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Nearest",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Linear",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Box",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Image",
+      "name": "Image",
+      "defined_at": "core/image.rs:7",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Image"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [
+        "try_from = \"Parts\""
+      ],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "width",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "colors",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::Map",
+      "name": "Map",
+      "defined_at": "core/lib.rs:30",
+      "docs": [],
+      "kind": "alias",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [],
+      "alias": {
+        "t": "json"
+      }
+    },
+    {
+      "path": "core::Mode",
+      "name": "Mode",
+      "defined_at": "core/cell.rs:9",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": false,
+        "words": []
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Type",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Tag",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Index",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Enumerate",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Random",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Row",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Column",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Depth",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::Result",
+      "name": "Result",
+      "defined_at": "core/error.rs:33",
+      "docs": [],
+      "kind": "alias",
+      "cross": {
+        "kind": "uncrossable",
+        "reason": "generic alias Result"
+      },
+      "derives": [],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [],
+      "alias": {
+        "t": "unknown",
+        "text": "generic alias Result"
+      }
+    },
+    {
+      "path": "core::Rng",
+      "name": "Rng",
+      "defined_at": "core/rng.rs:5",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Rng"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "s",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "array",
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            },
+            "len": 4
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::Tensor",
+      "name": "Tensor",
+      "defined_at": "core/tensor/mod.rs:110",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "hand",
+        "name": "Tensor"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "data",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "plain",
+            "path": "core::tensor::Buf"
+          }
+        },
+        {
+          "name": "shape",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::colors::Theme",
+      "name": "Theme",
+      "defined_at": "core/colors.rs:47",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "ground",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "bg",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "panel",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "deep",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "line",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "fg",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "dim",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "accent",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "on_accent",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "red",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "orange",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "yellow",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "green",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "mint",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "teal",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "cyan",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "blue",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "indigo",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "purple",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "pink",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "brown",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "gray",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Config",
+      "name": "Config",
+      "defined_at": "core/paint.rs:103",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "Default",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "editions",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "enum",
+                "path": "core::paint::Edition"
+              }
+            }
+          }
+        },
+        {
+          "name": "primaries",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "enum",
+                "path": "core::paint::Ink"
+              }
+            }
+          }
+        },
+        {
+          "name": "target",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "enum",
+              "path": "core::paint::Target"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Edition",
+      "name": "Edition",
+      "defined_at": "core/paint.rs:14",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "Simple",
+          "Index",
+          "Layers",
+          "Neighbors",
+          "Rows",
+          "Columns",
+          "Random"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Simple",
+          "word": "Simple",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Index",
+          "word": "Index",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Layers",
+          "word": "Layers",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Neighbors",
+          "word": "Neighbors",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Rows",
+          "word": "Rows",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Columns",
+          "word": "Columns",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Random",
+          "word": "Random",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Ink",
+      "name": "Ink",
+      "defined_at": "core/paint.rs:27",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "Black",
+          "White",
+          "Red",
+          "Orange",
+          "Yellow",
+          "Green",
+          "Mint",
+          "Teal",
+          "Cyan",
+          "Blue",
+          "Indigo",
+          "Purple",
+          "Pink",
+          "Brown",
+          "Gray"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Black",
+          "word": "Black",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "White",
+          "word": "White",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Red",
+          "word": "Red",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Orange",
+          "word": "Orange",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Yellow",
+          "word": "Yellow",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Green",
+          "word": "Green",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Mint",
+          "word": "Mint",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Teal",
+          "word": "Teal",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Cyan",
+          "word": "Cyan",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Blue",
+          "word": "Blue",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Indigo",
+          "word": "Indigo",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Purple",
+          "word": "Purple",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Pink",
+          "word": "Pink",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Brown",
+          "word": "Brown",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Gray",
+          "word": "Gray",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Paint",
+      "name": "Paint",
+      "defined_at": "core/paint.rs:110",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "edition",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Edition"
+          }
+        },
+        {
+          "name": "scheme",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Scheme"
+          }
+        },
+        {
+          "name": "target",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Target"
+          }
+        },
+        {
+          "name": "primary",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Ink"
+          }
+        },
+        {
+          "name": "secondary",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "enum",
+              "path": "core::paint::Ink"
+            }
+          }
+        },
+        {
+          "name": "shades",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Scheme",
+      "name": "Scheme",
+      "defined_at": "core/paint.rs:48",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "Multicolor",
+          "Multitone"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Multicolor",
+          "word": "Multicolor",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Multitone",
+          "word": "Multitone",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::paint::Target",
+      "name": "Target",
+      "defined_at": "core/paint.rs:56",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "enum",
+        "named": true,
+        "words": [
+          "Fill",
+          "Void"
+        ]
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "Fill",
+          "word": "Fill",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "Void",
+          "word": "Void",
+          "docs": [],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "core::tensor::Buf",
+      "name": "Buf",
+      "defined_at": "core/tensor/mod.rs:27",
+      "docs": [],
+      "kind": "enum",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "U8",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "scalar",
+                  "name": "u8"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "U16",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "scalar",
+                  "name": "u16"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "U32",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "scalar",
+                  "name": "u32"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "I32",
+          "word": null,
+          "docs": [],
+          "serde": [],
+          "fields": [
+            {
+              "name": "0",
+              "public": false,
+              "docs": [],
+              "serde": [],
+              "serde_skip": false,
+              "ty": {
+                "t": "vec",
+                "item": {
+                  "t": "scalar",
+                  "name": "i32"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "alias": null
+    }
+  ],
+  "consts": [
+    {
+      "path": "core::HEX_RATIO",
+      "name": "HEX_RATIO",
+      "defined_at": "core/resample.rs:11",
+      "docs": [],
+      "ty": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::ALPHA",
+      "name": "ALPHA",
+      "defined_at": "core/colors.rs:14",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::BLACK",
+      "name": "BLACK",
+      "defined_at": "core/colors.rs:16",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::BLUE",
+      "name": "BLUE",
+      "defined_at": "core/colors.rs:25",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::BROWN",
+      "name": "BROWN",
+      "defined_at": "core/colors.rs:29",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::CYAN",
+      "name": "CYAN",
+      "defined_at": "core/colors.rs:24",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::DARK",
+      "name": "DARK",
+      "defined_at": "core/colors.rs:127",
+      "docs": [],
+      "ty": {
+        "t": "class",
+        "path": "core::colors::Theme",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::GRAY",
+      "name": "GRAY",
+      "defined_at": "core/colors.rs:30",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::GREEN",
+      "name": "GREEN",
+      "defined_at": "core/colors.rs:21",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::INDIGO",
+      "name": "INDIGO",
+      "defined_at": "core/colors.rs:26",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::LIGHT",
+      "name": "LIGHT",
+      "defined_at": "core/colors.rs:138",
+      "docs": [],
+      "ty": {
+        "t": "class",
+        "path": "core::colors::Theme",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::MINT",
+      "name": "MINT",
+      "defined_at": "core/colors.rs:22",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::NAMES",
+      "name": "NAMES",
+      "defined_at": "core/colors.rs:33",
+      "docs": [],
+      "ty": {
+        "t": "array",
+        "item": {
+          "t": "str"
+        },
+        "len": 15
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::ORANGE",
+      "name": "ORANGE",
+      "defined_at": "core/colors.rs:19",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::PALETTE",
+      "name": "PALETTE",
+      "defined_at": "core/colors.rs:36",
+      "docs": [],
+      "ty": {
+        "t": "array",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        },
+        "len": 15
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::PINK",
+      "name": "PINK",
+      "defined_at": "core/colors.rs:28",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::PURPLE",
+      "name": "PURPLE",
+      "defined_at": "core/colors.rs:27",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::RED",
+      "name": "RED",
+      "defined_at": "core/colors.rs:18",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::TEAL",
+      "name": "TEAL",
+      "defined_at": "core/colors.rs:23",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::WHITE",
+      "name": "WHITE",
+      "defined_at": "core/colors.rs:17",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::YELLOW",
+      "name": "YELLOW",
+      "defined_at": "core/colors.rs:20",
+      "docs": [],
+      "ty": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "cross": {
+        "status": "ok"
+      }
+    }
+  ],
+  "functions": [
+    {
+      "path": "core::Colorizer::default",
+      "name": "default",
+      "module": "core",
+      "defined_at": "core/ramp.rs:65",
+      "docs": [],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Colorizer::diverge",
+      "name": "diverge",
+      "module": "core",
+      "defined_at": "core/ramp.rs:26",
+      "docs": [],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Colorizer::fire",
+      "name": "fire",
+      "module": "core",
+      "defined_at": "core/ramp.rs:18",
+      "docs": [],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Colorizer::gradient_bins",
+      "name": "gradient_bins",
+      "module": "core",
+      "defined_at": "core/ramp.rs:34",
+      "docs": [],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "background",
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "colors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Color",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "shades",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "core::Colorizer"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Colorizer::heat",
+      "name": "heat",
+      "module": "core",
+      "defined_at": "core/ramp.rs:11",
+      "docs": [],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::Dtype::max",
+      "name": "max",
+      "module": "core",
+      "defined_at": "core/tensor/mod.rs:16",
+      "docs": [],
+      "owner": "core::Dtype",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "i64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::block",
+      "name": "block",
+      "module": "core",
+      "defined_at": "core/resample.rs:60",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "src",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "unknown",
+              "text": "generic T"
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "scale",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "unknown",
+            "text": "generic T"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::cell::anti",
+      "name": "anti",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:76",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::binarize",
+      "name": "binarize",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:126",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "threshold",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::binarize_otsu",
+      "name": "binarize_otsu",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:131",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::blur",
+      "name": "blur",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:136",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "wrap",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::color_at",
+      "name": "color_at",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:52",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "flat",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 4
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::combine",
+      "name": "combine",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:146",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "other",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::fractal",
+      "name": "fractal",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:93",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::invert",
+      "name": "invert",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:72",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::layers",
+      "name": "layers",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:112",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::magic",
+      "name": "magic",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:372",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cells",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::mapping",
+      "name": "mapping",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:27",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "map",
+        "key": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "value": {
+          "t": "vec",
+          "item": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::merge",
+      "name": "merge",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:327",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cells",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "reps",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::moore",
+      "name": "moore",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:281",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::mosaic",
+      "name": "mosaic",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:383",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "cells",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::neighbors",
+      "name": "neighbors",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:116",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "target",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "wrap",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::new",
+      "name": "new",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:39",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "types",
+          "ty": {
+            "t": "hand",
+            "name": "Tensor",
+            "dim": null
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::pad",
+      "name": "pad",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:79",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "count",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Cell",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::paint",
+      "name": "paint",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:149",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "mapping",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "map",
+              "key": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "value": {
+                "t": "vec",
+                "item": {
+                  "t": "hand",
+                  "name": "Color",
+                  "dim": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "mode",
+          "ty": {
+            "t": "enum",
+            "path": "core::Mode"
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": true,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Rng",
+                "dim": null
+              }
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::perforate",
+      "name": "perforate",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:141",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::remap",
+      "name": "remap",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:247",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "map",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::rgba",
+      "name": "rgba",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:59",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::rot90_map",
+      "name": "rot90_map",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:291",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "axes",
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::rotate",
+      "name": "rotate",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:85",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "axes",
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::shape",
+      "name": "shape",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:46",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "scalar",
+          "name": "usize"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::size",
+      "name": "size",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:49",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::tile",
+      "name": "tile",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:102",
+      "docs": [],
+      "owner": "core::Cell",
+      "self_kind": "value",
+      "params": [
+        {
+          "name": "reps",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Cell",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::cell::tile_map",
+      "name": "tile_map",
+      "module": "core::cell",
+      "defined_at": "core/cell.rs:222",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "reps",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::Theme::hues",
+      "name": "hues",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:73",
+      "docs": [],
+      "owner": "core::colors::Theme",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        },
+        "len": 13
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::Theme::inks",
+      "name": "inks",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:90",
+      "docs": [],
+      "owner": "core::colors::Theme",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        },
+        "len": 6
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::alpha",
+      "name": "alpha",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:217",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::board",
+      "name": "board",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:156",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "dark",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 4
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::css",
+      "name": "css",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:210",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::from_hex",
+      "name": "from_hex",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:192",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "hex",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::gradient",
+      "name": "gradient",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:266",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "colors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Color",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "steps",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::ink",
+      "name": "ink",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:161",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "dark",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 4
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::invert",
+      "name": "invert",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:220",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::lightness",
+      "name": "lightness",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:223",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::luma_types",
+      "name": "luma_types",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:323",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::mix",
+      "name": "mix",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:253",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "color_1",
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "color_2",
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        },
+        {
+          "name": "ratio",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::named",
+      "name": "named",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:149",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "name",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::random",
+      "name": "random",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:243",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "alpha",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::rgb",
+      "name": "rgb",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:179",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "r",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "g",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "b",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::rgba",
+      "name": "rgba",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:182",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "r",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "g",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "b",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "a",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::shades",
+      "name": "shades",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:38",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "hue",
+          "ty": {
+            "t": "hand",
+            "name": "Color",
+            "dim": null
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "hand",
+          "name": "Color",
+          "dim": null
+        },
+        "len": 3
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::snap",
+      "name": "snap",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:293",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "palette",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "hand",
+              "name": "Color",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "array",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          },
+          "len": 4
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::colors::to_hex",
+      "name": "to_hex",
+      "module": "core::colors",
+      "defined_at": "core/colors.rs:185",
+      "docs": [],
+      "owner": "core::Color",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::error::overflow_error",
+      "name": "overflow_error",
+      "module": "core::error",
+      "defined_at": "core/error.rs:43",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "message",
+          "ty": {
+            "t": "unknown",
+            "text": "impl Trait argument impl Into < String >"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unknown",
+          "text": "generic T"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::error::parse",
+      "name": "parse",
+      "module": "core::error",
+      "defined_at": "core/error.rs:53",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "json"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::error::shape_error",
+      "name": "shape_error",
+      "module": "core::error",
+      "defined_at": "core/error.rs:39",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "message",
+          "ty": {
+            "t": "unknown",
+            "text": "impl Trait argument impl Into < String >"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unknown",
+          "text": "generic T"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::error::value_error",
+      "name": "value_error",
+      "module": "core::error",
+      "defined_at": "core/error.rs:35",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "message",
+          "ty": {
+            "t": "unknown",
+            "text": "impl Trait argument impl Into < String >"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unknown",
+          "text": "generic T"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::hex_fit",
+      "name": "hex_fit",
+      "module": "core",
+      "defined_at": "core/resample.rs:21",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "vertical",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "filter",
+          "ty": {
+            "t": "enum",
+            "path": "core::Filter"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "vec",
+              "item": {
+                "t": "array",
+                "item": {
+                  "t": "scalar",
+                  "name": "u8"
+                },
+                "len": 4
+              }
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::hex_size",
+      "name": "hex_size",
+      "module": "core",
+      "defined_at": "core/resample.rs:13",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "vertical",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "tuple",
+        "items": [
+          {
+            "t": "scalar",
+            "name": "usize"
+          },
+          {
+            "t": "scalar",
+            "name": "usize"
+          }
+        ]
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::blur",
+      "name": "blur",
+      "module": "core::image",
+      "defined_at": "core/image.rs:46",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "radius",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "array",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          },
+          "len": 4
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::new",
+      "name": "new",
+      "module": "core::image",
+      "defined_at": "core/image.rs:14",
+      "docs": [],
+      "owner": "core::Image",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "colors",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::resample",
+      "name": "resample",
+      "module": "core::image",
+      "defined_at": "core/image.rs:35",
+      "docs": [],
+      "owner": "core::Image",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "filter",
+          "ty": {
+            "t": "enum",
+            "path": "core::Filter"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::scale",
+      "name": "scale",
+      "module": "core::image",
+      "defined_at": "core/image.rs:24",
+      "docs": [],
+      "owner": "core::Image",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "scale",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::name::longest",
+      "name": "longest",
+      "module": "core::name",
+      "defined_at": "core/name/text.rs:277",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": "'a",
+            "item": {
+              "t": "str"
+            }
+          }
+        },
+        {
+          "name": "names",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'a",
+              "item": {
+                "t": "str"
+              }
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "lifetime-bearing return"
+      }
+    },
+    {
+      "path": "core::name::sha::hex",
+      "name": "hex",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:73",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::name::sha::sha256",
+      "name": "sha256",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:55",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        },
+        "len": 32
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::name::sha::short",
+      "name": "short",
+      "module": "core::name::sha",
+      "defined_at": "core/name/sha.rs:77",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "bytes",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Config::default",
+      "name": "default",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:103",
+      "docs": [],
+      "owner": "core::paint::Config",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::paint::Config"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Edition::all",
+      "name": "all",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:14",
+      "docs": [],
+      "owner": "core::paint::Edition",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "core::paint::Edition"
+        },
+        "len": 7
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Edition::mode",
+      "name": "mode",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:65",
+      "docs": [],
+      "owner": "core::paint::Edition",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "enum",
+          "path": "core::Mode"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Edition::name",
+      "name": "name",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:14",
+      "docs": [],
+      "owner": "core::paint::Edition",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "core::paint::Ink::all",
+      "name": "all",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:27",
+      "docs": [],
+      "owner": "core::paint::Ink",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "core::paint::Ink"
+        },
+        "len": 15
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Ink::color",
+      "name": "color",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:79",
+      "docs": [],
+      "owner": "core::paint::Ink",
+      "self_kind": "value",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Ink::name",
+      "name": "name",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:27",
+      "docs": [],
+      "owner": "core::paint::Ink",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "core::paint::Paint::is_simple",
+      "name": "is_simple",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:130",
+      "docs": [],
+      "owner": "core::paint::Paint",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Paint::new",
+      "name": "new",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:120",
+      "docs": [],
+      "owner": "core::paint::Paint",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "edition",
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Edition"
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "core::paint::Paint",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Scheme::all",
+      "name": "all",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:48",
+      "docs": [],
+      "owner": "core::paint::Scheme",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "core::paint::Scheme"
+        },
+        "len": 2
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Scheme::name",
+      "name": "name",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:48",
+      "docs": [],
+      "owner": "core::paint::Scheme",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "core::paint::Target::all",
+      "name": "all",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:56",
+      "docs": [],
+      "owner": "core::paint::Target",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "array",
+        "item": {
+          "t": "enum",
+          "path": "core::paint::Target"
+        },
+        "len": 2
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": true,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::Target::name",
+      "name": "name",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:56",
+      "docs": [],
+      "owner": "core::paint::Target",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "named_enum",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "core::paint::apply",
+      "name": "apply",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:341",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "paint",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "class",
+              "path": "core::paint::Paint",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unit"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::coat",
+      "name": "coat",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:378",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "paint",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "class",
+              "path": "core::paint::Paint",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Tensor",
+                "dim": null
+              }
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unit"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::paint",
+      "name": "paint",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:383",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "config",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "core::paint::Config"
+            }
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Tensor",
+                "dim": null
+              }
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "core::paint::Paint",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::prime",
+      "name": "prime",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:302",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "paint",
+          "ty": {
+            "t": "class",
+            "path": "core::paint::Paint",
+            "dim": null
+          }
+        },
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Tensor",
+                "dim": null
+              }
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "core::paint::Paint",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::random_edition",
+      "name": "random_edition",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:139",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "editions",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "slice",
+              "mutable": false,
+              "item": {
+                "t": "enum",
+                "path": "core::paint::Edition"
+              }
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "enum",
+        "path": "core::paint::Edition"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::reroll",
+      "name": "reroll",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:189",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "paint",
+          "ty": {
+            "t": "class",
+            "path": "core::paint::Paint",
+            "dim": null
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "core::paint::Paint",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::setup",
+      "name": "setup",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:211",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "paint",
+          "ty": {
+            "t": "class",
+            "path": "core::paint::Paint",
+            "dim": null
+          }
+        },
+        {
+          "name": "config",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "core::paint::Config"
+            }
+          }
+        },
+        {
+          "name": "rng",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Rng",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "core::paint::Paint",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::paint::tag",
+      "name": "tag",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:275",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": true,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "edition",
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Edition"
+          }
+        },
+        {
+          "name": "target",
+          "ty": {
+            "t": "enum",
+            "path": "core::paint::Target"
+          }
+        },
+        {
+          "name": "mask",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": null,
+              "item": {
+                "t": "hand",
+                "name": "Tensor",
+                "dim": null
+              }
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "usize"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::ramp::color",
+      "name": "color",
+      "module": "core::ramp",
+      "defined_at": "core/ramp.rs:40",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "colorizer",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "core::Colorizer"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "max",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Color",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::ramp::colors",
+      "name": "colors",
+      "module": "core::ramp",
+      "defined_at": "core/ramp.rs:55",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "colorizer",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "core::Colorizer"
+            }
+          }
+        },
+        {
+          "name": "values",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "max",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "array",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          },
+          "len": 4
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::resample",
+      "name": "resample",
+      "module": "core",
+      "defined_at": "core/resample.rs:33",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "pixels",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "out_w",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "out_h",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "filter",
+          "ty": {
+            "t": "enum",
+            "path": "core::Filter"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "array",
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            },
+            "len": 4
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::below",
+      "name": "below",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:58",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "n",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::boolean",
+      "name": "boolean",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:68",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::chance",
+      "name": "chance",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:71",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "p",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::choice",
+      "name": "choice",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:74",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "items",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": "'a",
+            "item": {
+              "t": "slice",
+              "mutable": false,
+              "item": {
+                "t": "unknown",
+                "text": "generic T"
+              }
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "ref",
+          "mutable": false,
+          "lifetime": "'a",
+          "item": {
+            "t": "unknown",
+            "text": "generic T"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::rng::new",
+      "name": "new",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:18",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "seed",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Rng",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::range",
+      "name": "range",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:61",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "lo",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        },
+        {
+          "name": "hi",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "i64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::sample_indices",
+      "name": "sample_indices",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:85",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "length",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "amount",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "usize"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::rng::shuffle",
+      "name": "shuffle",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:80",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "seq",
+          "ty": {
+            "t": "slice",
+            "mutable": true,
+            "item": {
+              "t": "unknown",
+              "text": "generic T"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "unit"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "generic over T"
+      }
+    },
+    {
+      "path": "core::rng::unit",
+      "name": "unit",
+      "module": "core::rng",
+      "defined_at": "core/rng.rs:55",
+      "docs": [],
+      "owner": "core::Rng",
+      "self_kind": "mut",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::at",
+      "name": "at",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:217",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "flat",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "i64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::binarize",
+      "name": "binarize",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:147",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "threshold",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::binarize_otsu",
+      "name": "binarize_otsu",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:194",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::blur",
+      "name": "blur",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:197",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "wrap",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::bytes",
+      "name": "bytes",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:187",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": false,
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::bytes_mut",
+      "name": "bytes_mut",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:193",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "mut",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": true,
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "mutable borrow return"
+      }
+    },
+    {
+      "path": "core::tensor::count",
+      "name": "count",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:278",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::dtype",
+      "name": "dtype",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:181",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "enum",
+        "path": "core::Dtype"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::exposed",
+      "name": "exposed",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:283",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "u128"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::filled",
+      "name": "filled",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:149",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        },
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::flip",
+      "name": "flip",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:54",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "axis",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::fractal",
+      "name": "fractal",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:30",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::full",
+      "name": "full",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:139",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::get",
+      "name": "get",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:258",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "multi",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "u8"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::i32",
+      "name": "i32",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:178",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "i32"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::i32s",
+      "name": "i32s",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:211",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": false,
+          "item": {
+            "t": "scalar",
+            "name": "i32"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::index",
+      "name": "index",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:226",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "multi",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::invert",
+      "name": "invert",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:47",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::kron",
+      "name": "kron",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:5",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "other",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::layers",
+      "name": "layers",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:103",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::neighbors",
+      "name": "neighbors",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:121",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "target",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        },
+        {
+          "name": "wrap",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        },
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::new",
+      "name": "new",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:136",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::of",
+      "name": "of",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:156",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::otsu_threshold",
+      "name": "otsu_threshold",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:155",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u8"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::pad",
+      "name": "pad",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:97",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "count",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::perforate",
+      "name": "perforate",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/filter.rs:253",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "mask",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Tensor",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::put",
+      "name": "put",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:220",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "flat",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "i64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "unit"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::rot90",
+      "name": "rot90",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:86",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "axes",
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::set",
+      "name": "set",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:262",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "mut",
+      "params": [
+        {
+          "name": "multi",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "ty": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "unit"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::size",
+      "name": "size",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:184",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::slice",
+      "name": "slice",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:71",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "axis",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "index",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::sum",
+      "name": "sum",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:223",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::tile",
+      "name": "tile",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:108",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "reps",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::transpose",
+      "name": "transpose",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/shape.rs:62",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "a",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "b",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::typed",
+      "name": "typed",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:142",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "dtype",
+          "ty": {
+            "t": "enum",
+            "path": "core::Dtype"
+          }
+        }
+      ],
+      "ret": {
+        "t": "hand",
+        "name": "Tensor",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u16",
+      "name": "u16",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:172",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u16"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u16s",
+      "name": "u16s",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:199",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": false,
+          "item": {
+            "t": "scalar",
+            "name": "u16"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u32",
+      "name": "u32",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:175",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u32"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u32s",
+      "name": "u32s",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:205",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "slice",
+          "mutable": false,
+          "item": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::tensor::u8",
+      "name": "u8",
+      "module": "core::tensor",
+      "defined_at": "core/tensor/mod.rs:169",
+      "docs": [],
+      "owner": "core::Tensor",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "data",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Tensor",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    }
+  ]
+}

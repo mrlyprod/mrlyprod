@@ -1,0 +1,17 @@
+[package]
+name = "mrly-core-py"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The Python bridge of mrly-core: the native half of mrly.core."
+publish = false
+
+[lib]
+name = "_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+mrly-core = { workspace = true, features = ["py"] }
+pyo3 = { version = "0.29", features = ["extension-module", "abi3-py310"] }
+serde_json.workspace = true

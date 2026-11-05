@@ -1,0 +1,35 @@
+.appicons {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.appicon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.appicon .lift {
+  filter: url(#appicon-lift);
+  opacity: 0.09;
+}
+.appicon :is(.glow, .rim, .shade) {
+  fill: none;
+  pointer-events: none;
+}
+.appicon .glow {
+  stroke: url(#appicon-glow);
+  stroke-width: 64;
+  mix-blend-mode: plus-lighter;
+}
+.appicon .rim {
+  stroke: url(#appicon-rim);
+  stroke-width: 20;
+  mix-blend-mode: plus-lighter;
+}
+.appicon .shade {
+  stroke: url(#appicon-shade);
+  stroke-width: 20;
+  opacity: 0.185;
+}

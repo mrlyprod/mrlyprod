@@ -1,0 +1,14 @@
+{
+  "spec": "0.2",
+  "title": "Manifest",
+  "line": "What an app in a world is: its id, its title, its line and its verbs.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*$" },
+    "title": { "type": "string" },
+    "line": { "type": "string" },
+    "verbs": { "type": "array", "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*\\.[a-z][a-z0-9]*$" } }
+  },
+  "required": ["id", "title", "line", "verbs"],
+  "additionalProperties": false
+}

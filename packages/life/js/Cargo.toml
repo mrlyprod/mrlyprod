@@ -1,0 +1,22 @@
+[package]
+name = "mrly-life-js"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The wasm half of @mrlyprod/life: mrly-life in a browser."
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mrly-core.workspace = true
+mrly-life.workspace = true
+mrly-math = { workspace = true, features = ["js"] }
+mrly-num.workspace = true
+wasm-bindgen.workspace = true
+serde-wasm-bindgen.workspace = true
+js-sys.workspace = true
+serde.workspace = true
+serde_json.workspace = true

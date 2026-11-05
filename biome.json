@@ -1,0 +1,88 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
+  "root": true,
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "os/**",
+      "apps/**",
+      "ui/**",
+      "designs/**",
+      "sites/**",
+      "packages/draw/**",
+      "package.json",
+      "biome.json",
+      "!!research",
+      "!**/*.gen.*",
+      "!**/*.svg",
+      "!**/*.html",
+      "!**/*.md",
+      "!os/hosts/cloud/edge.js",
+      "!ui/shared/fonts",
+      "!ui/apps/stats/fixture.json",
+      "!sites/net/launchpad.json"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "lineWidth": 120,
+    "includes": ["**"]
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "a11y": {
+        "noAriaHiddenOnFocusable": "off",
+        "noStaticElementInteractions": "off",
+        "useSemanticElements": "off"
+      },
+      "complexity": {
+        "noImportantStyles": "off"
+      },
+      "correctness": {
+        "noComponentHookFactories": "off",
+        "useExhaustiveDependencies": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      },
+      "style": {
+        "noDescendingSpecificity": "off",
+        "noNonNullAssertion": "off"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["ui/apps/stats/index.tsx", "ui/kit/view.tsx", "designs/modern/dock.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["designs/pixel/bar.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveElementToInteractiveRole": "off"
+          }
+        }
+      }
+    }
+  ]
+}

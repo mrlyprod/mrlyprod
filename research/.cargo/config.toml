@@ -1,0 +1,10 @@
+[build]
+target-dir = "target"
+
+[patch.crates-io]
+mrly-core = { path = "../packages/core" }
+mrly-life = { path = "../packages/life" }
+mrly-math = { path = "../packages/math" }
+mrly-num = { path = "../packages/num" }
+mrly-sequences = { path = "../packages/sequences" }
+mrly-tile = { path = "../packages/tile" }

@@ -1,0 +1,11 @@
+{
+  "name": "@mrlyprod/apps",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  },
+  "scripts": {
+    "types": "tsc -p tsconfig.json"
+  }
+}

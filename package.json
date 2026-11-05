@@ -1,0 +1,25 @@
+{
+  "name": "mrlyprod",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.4",
+  "workspaces": [
+    "apps",
+    "designs",
+    "os",
+    "ui",
+    "sites/*",
+    "packages/draw",
+    "packages/*/js"
+  ],
+  "scripts": {
+    "check": "bash scripts/check.sh",
+    "lint": "biome ci .",
+    "fix": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/bun": "^1.4.4",
+    "typescript": "^7.0.2"
+  }
+}

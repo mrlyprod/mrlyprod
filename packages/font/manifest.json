@@ -1,0 +1,1274 @@
+{
+  "krate": "mrly-font",
+  "version": "0.2.0",
+  "modules": [
+    {
+      "path": "font",
+      "file": "font/lib.rs",
+      "docs": [],
+      "items": 27
+    },
+    {
+      "path": "font::animate",
+      "file": "font/animate.rs",
+      "docs": [],
+      "items": 0
+    },
+    {
+      "path": "font::bitmaps",
+      "file": "font/bitmaps.rs",
+      "docs": [],
+      "items": 0
+    },
+    {
+      "path": "font::glyph",
+      "file": "font/glyph.rs",
+      "docs": [],
+      "items": 0
+    },
+    {
+      "path": "font::names",
+      "file": "font/names.rs",
+      "docs": [],
+      "items": 0
+    },
+    {
+      "path": "font::paths",
+      "file": "font/paths.rs",
+      "docs": [],
+      "items": 1
+    },
+    {
+      "path": "font::pens",
+      "file": "font/pens.rs",
+      "docs": [],
+      "items": 7
+    },
+    {
+      "path": "font::raster",
+      "file": "font/raster.rs",
+      "docs": [],
+      "items": 0
+    }
+  ],
+  "types": [
+    {
+      "path": "font::Anim",
+      "name": "Anim",
+      "defined_at": "font/animate.rs:11",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "rows",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "cols",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "fps",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "frames",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "usize"
+              }
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "font::Glyph",
+      "name": "Glyph",
+      "defined_at": "font/glyph.rs:5",
+      "docs": [],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "char",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        },
+        {
+          "name": "rows",
+          "public": true,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "font::pens::Pen",
+      "name": "Pen",
+      "defined_at": "font/pens.rs:1",
+      "docs": [],
+      "kind": "alias",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [],
+      "alias": {
+        "t": "tuple",
+        "items": [
+          {
+            "t": "scalar",
+            "name": "char"
+          },
+          {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": "'static",
+            "item": {
+              "t": "slice",
+              "mutable": false,
+              "item": {
+                "t": "ref",
+                "mutable": false,
+                "lifetime": "'static",
+                "item": {
+                  "t": "str"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "consts": [
+    {
+      "path": "font::FPS",
+      "name": "FPS",
+      "defined_at": "font/animate.rs:6",
+      "docs": [],
+      "ty": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::HOLD",
+      "name": "HOLD",
+      "defined_at": "font/animate.rs:8",
+      "docs": [],
+      "ty": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::pens::DIGITS",
+      "name": "DIGITS",
+      "defined_at": "font/pens.rs:270",
+      "docs": [],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    },
+    {
+      "path": "font::pens::EXTRAS",
+      "name": "EXTRAS",
+      "defined_at": "font/pens.rs:309",
+      "docs": [],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    },
+    {
+      "path": "font::pens::LOWERS",
+      "name": "LOWERS",
+      "defined_at": "font/pens.rs:122",
+      "docs": [],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    },
+    {
+      "path": "font::pens::SPECIALS",
+      "name": "SPECIALS",
+      "defined_at": "font/pens.rs:545",
+      "docs": [],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    },
+    {
+      "path": "font::pens::UPPERS",
+      "name": "UPPERS",
+      "defined_at": "font/pens.rs:4",
+      "docs": [],
+      "ty": {
+        "t": "slice",
+        "mutable": false,
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "ref",
+              "mutable": false,
+              "lifetime": "'static",
+              "item": {
+                "t": "slice",
+                "mutable": false,
+                "item": {
+                  "t": "ref",
+                  "mutable": false,
+                  "lifetime": "'static",
+                  "item": {
+                    "t": "str"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "cross": {
+        "status": "skip",
+        "reason": "&'static const"
+      }
+    }
+  ],
+  "functions": [
+    {
+      "path": "font::Glyph::height",
+      "name": "height",
+      "module": "font",
+      "defined_at": "font/glyph.rs:17",
+      "docs": [],
+      "owner": "font::Glyph",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::Glyph::new",
+      "name": "new",
+      "module": "font",
+      "defined_at": "font/glyph.rs:11",
+      "docs": [],
+      "owner": "font::Glyph",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "char",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        },
+        {
+          "name": "rows",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "class",
+        "path": "font::Glyph",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::Glyph::width",
+      "name": "width",
+      "module": "font",
+      "defined_at": "font/glyph.rs:14",
+      "docs": [],
+      "owner": "font::Glyph",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::all",
+      "name": "all",
+      "module": "font",
+      "defined_at": "font/glyph.rs:108",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::animate",
+      "name": "animate",
+      "module": "font",
+      "defined_at": "font/animate.rs:18",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "str"
+          }
+        },
+        {
+          "name": "pad",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "plain",
+        "path": "font::Anim"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::cycle",
+      "name": "cycle",
+      "module": "font",
+      "defined_at": "font/animate.rs:74",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "write",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "plain",
+              "path": "font::Anim"
+            }
+          }
+        },
+        {
+          "name": "merge",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "scalar",
+                "name": "usize"
+              }
+            }
+          }
+        },
+        {
+          "name": "hold",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "plain",
+        "path": "font::Anim"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::digits",
+      "name": "digits",
+      "module": "font",
+      "defined_at": "font/glyph.rs:87",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::draft",
+      "name": "draft",
+      "module": "font",
+      "defined_at": "font/paths.rs:66",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rows",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::extras",
+      "name": "extras",
+      "module": "font",
+      "defined_at": "font/glyph.rs:94",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::floor",
+      "name": "floor",
+      "module": "font",
+      "defined_at": "font/paths.rs:94",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rows",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "usize"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::glyph",
+      "name": "glyph",
+      "module": "font",
+      "defined_at": "font/lib.rs:28",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::lower",
+      "name": "lower",
+      "module": "font",
+      "defined_at": "font/glyph.rs:48",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rows",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "str"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "string"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::lowers",
+      "name": "lowers",
+      "module": "font",
+      "defined_at": "font/glyph.rs:77",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::map",
+      "name": "map",
+      "module": "font",
+      "defined_at": "font/lib.rs:36",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "map",
+        "key": {
+          "t": "scalar",
+          "name": "char"
+        },
+        "value": {
+          "t": "vec",
+          "item": {
+            "t": "string"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::merge",
+      "name": "merge",
+      "module": "font",
+      "defined_at": "font/animate.rs:39",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "str"
+          }
+        },
+        {
+          "name": "pad",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::name_of",
+      "name": "name_of",
+      "module": "font",
+      "defined_at": "font/names.rs:1",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "string"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::path",
+      "name": "path",
+      "module": "font",
+      "defined_at": "font/paths.rs:17",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "usize"
+            },
+            {
+              "t": "scalar",
+              "name": "usize"
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::paths::penned",
+      "name": "penned",
+      "module": "font::paths",
+      "defined_at": "font/paths.rs:6",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "vec",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "usize"
+                },
+                {
+                  "t": "scalar",
+                  "name": "usize"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::pens::all",
+      "name": "all",
+      "module": "font::pens",
+      "defined_at": "font/pens.rs:566",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "char"
+            },
+            {
+              "t": "vec",
+              "item": {
+                "t": "string"
+              }
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::raster",
+      "name": "raster",
+      "module": "font",
+      "defined_at": "font/raster.rs:60",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "text",
+          "ty": {
+            "t": "str"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "u8"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::specials",
+      "name": "specials",
+      "module": "font",
+      "defined_at": "font/glyph.rs:101",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::strokes",
+      "name": "strokes",
+      "module": "font",
+      "defined_at": "font/paths.rs:13",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "c",
+          "ty": {
+            "t": "scalar",
+            "name": "char"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "usize"
+              },
+              {
+                "t": "scalar",
+                "name": "usize"
+              }
+            ]
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::supported",
+      "name": "supported",
+      "module": "font",
+      "defined_at": "font/lib.rs:32",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "char"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::trim",
+      "name": "trim",
+      "module": "font",
+      "defined_at": "font/glyph.rs:30",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "rows",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "string"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "string"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "font::uppers",
+      "name": "uppers",
+      "module": "font",
+      "defined_at": "font/glyph.rs:70",
+      "docs": [],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "class",
+          "path": "font::Glyph",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    }
+  ]
+}

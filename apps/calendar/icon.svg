@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6c6e"/><stop offset=".7" stop-color="#ff3d40"/></linearGradient>
+  </defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M282 252H742Q792 252 792 302V742Q792 792 742 792H282Q232 792 232 742V302Q232 252 282 252Z" fill="#fff" data-dark="#ff3d40"/>
+  <path d="M232 392V302Q232 252 282 252H742Q792 252 792 302V392Z" fill="#ff3d40" data-dark="#fff" data-mono="hide"/>
+  <circle cx="352" cy="504" r="34" fill="#ff3d40" data-dark="#fff" data-mono="hide"/>
+  <circle cx="512" cy="504" r="34" fill="#ff3d40" data-dark="#fff" data-mono="hide"/>
+  <circle cx="672" cy="504" r="34" fill="#ff3d40" data-dark="#fff" data-mono="hide"/>
+  <circle cx="352" cy="654" r="34" fill="#ff3d40" data-dark="#fff" data-mono="hide"/>
+  <circle cx="512" cy="654" r="34" fill="#ff3d40" data-dark="#fff" data-mono="hide"/>
+  <circle cx="672" cy="654" r="34" fill="#ff3d40" data-dark="#fff" data-mono="hide"/>
+</svg>

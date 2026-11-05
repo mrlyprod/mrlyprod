@@ -1,0 +1,6 @@
+{
+  "title": "Git",
+  "line": "The source of {repo}: every tracked file in a tree, its raw bytes under /raw/.",
+  "aliases": ["source", "repo", "repository", "publish", "browse", "history", "clone", "raw", "github"],
+  "deep": true
+}

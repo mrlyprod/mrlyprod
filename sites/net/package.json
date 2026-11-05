@@ -1,0 +1,15 @@
+{
+  "name": "@mrlyprod/net",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "wasm": "MRLY_ROOT=$PWD bun run --cwd ../../ui wasm --copy",
+    "dev": "MRLY_ROOT=$PWD bun run --cwd ../../ui dev",
+    "build": "MRLY_ROOT=$PWD bun run --cwd ../../ui build",
+    "push": "MRLY_ROOT=$PWD bun run --cwd ../../ui push",
+    "shots": "MRLY_ROOT=$PWD bun run --cwd ../../ui shots",
+    "mrlynet": "bun ../../os/doors/cli/cli.ts",
+    "types": "tsc -p tsconfig.json",
+    "content": "MRLY_ROOT=$PWD bun run --cwd ../../ui content"
+  }
+}

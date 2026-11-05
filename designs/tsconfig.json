@@ -1,0 +1,8 @@
+{
+  "extends": "../ui/tsconfig.json",
+  "compilerOptions": {
+    "typeRoots": ["../node_modules/@types"]
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../ui/shell/site.d.ts", "../ui/kit/drawn.d.ts"],
+  "exclude": ["**/node_modules/**", "**/data/**"]
+}

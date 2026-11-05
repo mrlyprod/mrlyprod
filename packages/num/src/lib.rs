@@ -1,0 +1,16 @@
+pub mod apollonian;
+pub mod blend;
+pub mod boolean;
+pub mod chladni;
+pub mod factor;
+pub mod fft;
+pub mod gauss;
+pub mod kummer;
+pub mod lattice;
+pub mod morse;
+pub mod prime;
+pub mod readings;
+pub mod series;
+pub mod sieve;
+pub mod spiral;
+pub mod zeta;

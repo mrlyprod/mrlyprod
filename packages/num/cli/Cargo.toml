@@ -1,0 +1,17 @@
+[package]
+name = "mrly-num-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The mrly-num command: every public function of mrly-num from the shell, JSON in, JSON out."
+publish = false
+
+[[bin]]
+name = "mrly-num"
+path = "src/main.rs"
+
+[dependencies]
+mrly-core = { workspace = true, features = ["cli"] }
+mrly-num.workspace = true
+serde_json.workspace = true

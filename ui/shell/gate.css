@@ -1,0 +1,14 @@
+html.js .domain {
+  display: none;
+}
+.floor {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+}
+html:not([data-floor]) .floor {
+  display: none;
+}
+html[data-floor] body > :not(.floor) {
+  display: none !important;
+}

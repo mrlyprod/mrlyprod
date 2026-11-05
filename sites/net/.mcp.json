@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mrlynet": {
+      "command": "bun",
+      "args": ["../../os/doors/cli/cli.ts", "mcp"]
+    }
+  }
+}
