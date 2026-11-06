@@ -4,21 +4,20 @@ import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { text } from "@mrlyprod/ui/kit/export.ts";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
-import { useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates } from "@mrlyprod/ui/kit/hooks.ts";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
 import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
-import type { Units } from "@mrlyprod/ui/kit/spec.ts";
 import type { MouseEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Entry, Num, Run, Setting } from "./engine.ts";
-import { factors, formula, holds, POLYS, SPIRALS } from "./engine.ts";
+import { factors, formula, holds, LIST, POLYS, SPIRALS } from "./engine.ts";
 import type { Knobs, Spot, Told, Ulam } from "./scene.ts";
 import { make, named, sketch } from "./scene.ts";
 
-type Props = Partial<WidgetProps<Units, Ulam>> &
-  Pick<WidgetProps<Units, Ulam>, "value" | "onChange"> & { value: Knobs & { seed: number }; unit?: Num | null };
+type Props = Partial<WidgetProps<Num, Ulam>> &
+  Pick<WidgetProps<Num, Ulam>, "value" | "onChange"> & { value: Knobs & { seed: number }; unit?: Num | null };
 
 const ART = 112;
 
@@ -71,7 +70,7 @@ export function readouts(f: Told): Readout[] {
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }: Props) {
-  const unit = useUnit("num", given);
+  const unit = useCrates(LIST, given);
   const [facts, setFacts] = useState<Told | null>(null);
   const live = useRef<Handle<Ulam> | null>(null);
   const now = useRef(value);
@@ -81,7 +80,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const tick = useTheme();
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
-      make(canvas, view, { ...opts, num: unit, onFacts: setFacts }),
+      make(canvas, view, { ...opts, mrly: unit, onFacts: setFacts }),
     [unit],
   );
   const ready = (handle: Handle<Ulam> | null) => {

@@ -1,14 +1,16 @@
 import type { Cell } from "@mrlyprod/life";
 import { veil } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Ready } from "@mrlyprod/ui/kit/hooks.ts";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick, rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Board, Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import { board } from "@mrlyprod/ui/kit/run.ts";
-import type { Option, Row, Scalar, Units, Value } from "@mrlyprod/ui/kit/spec.ts";
+import type { Option, Row, Scalar, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
+import type { Units } from "@mrlyprod/ui/kit/units/index.ts";
 import { wasm } from "@mrlyprod/ui/kit/units/index.ts";
 import type { Door, Rule, Shape } from "../shared/life/engine.ts";
 import {
@@ -61,7 +63,7 @@ export type Preset = [string, Value];
 
 export type { Stat };
 
-export type Given = Opts & { life: Door; math: Mrly; onStat?: (stat: Stat) => void };
+export type Given = Opts & { life: Door; mrly: Mrly; onStat?: (stat: Stat) => void };
 
 export type Life = Stage;
 
@@ -252,7 +254,7 @@ const slug = (text: Scalar) =>
 export const worn = (presets: readonly Preset[], value: Value) =>
   presets.find(([, one]) => wears(value, one))?.[0] ?? "";
 
-export const units = wasm("life", "math");
+export const units = wasm(...CRATES, "life");
 
 export const PAGE = {
   spec: SPEC,
@@ -260,8 +262,8 @@ export const PAGE = {
   design: { dim: "dim", base: 2, code: "code", dims: [1, 2] },
   gestures: true,
   record: true,
-  name: (value: Value, units?: Units) => {
-    const recipe = units?.life && units.math ? nameOf(units.life, units.math, value) : "";
+  name: (value: Value, units?: Mrly & Had<"life">) => {
+    const recipe = units?.life ? nameOf(units.life, units, value) : "";
     if (recipe) return `life-${slug(recipe)}`;
     return [
       "life",
@@ -293,7 +295,7 @@ export const PAGE = {
     clear: (scene) => scene.clear(),
   },
   reroll: (value) => (fixed(value) ? { from: "noise" } : {}),
-} satisfies Page<Ready & Units, Life>;
+} satisfies Page<Units<Crate | "life">, Life>;
 
 export const SAVERS = [
   {
@@ -360,9 +362,9 @@ const THUMB = 24;
 const EPS = 1e-6;
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as Given): Stage {
-  const { life, math } = opts;
+  const { life, mrly } = opts;
   const read = (next: Opts): Knobs => {
-    const one = { ...(tidy(SPEC, next, { life, math }) as Knobs), seed: next.seed };
+    const one = { ...(tidy(SPEC, next, { ...mrly, life }) as Knobs), seed: next.seed };
     return view.lock && one.from === START ? { ...one, from: "noise" } : one;
   };
   let value = read(opts);
@@ -395,7 +397,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
   const linear = () => shape!.dim === 1;
   const mould = () => {
     shape = maskOf(life, value);
-    shape.named = maskName(math, shape.code, shape.dim);
+    shape.named = maskName(mrly, shape.code, shape.dim);
     shape.label = `${shape.named || `code ${shape.code}`}, side ${shape.number}, level ${shape.level}`;
   };
   const measure = () => {
@@ -424,7 +426,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
     since = -1;
     shown = -1;
   };
-  const sowed = (rand: Rng = rng(value.seed)) => begin(sown(value, rand, math, { width, height }, law()));
+  const sowed = (rand: Rng = rng(value.seed)) => begin(sown(value, rand, mrly, { width, height }, law()));
   const dress = () => {
     const { accent } = view.look();
     skin = { ink: accent, dim: veil(accent, GROUND) };
@@ -644,7 +646,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
   mould();
   measure();
   judge();
-  begin(deal(value, { seed: value.seed, rand: view.rand, lock: view.lock, units: { life, math } }) as State);
+  begin(deal(value, { seed: value.seed, rand: view.rand, lock: view.lock, units: { ...mrly, life } }) as State);
   if (view.still && view.lock) {
     lay = layout();
     const n = linear() ? lay.rows! - 1 : Math.min(STILL, budget());

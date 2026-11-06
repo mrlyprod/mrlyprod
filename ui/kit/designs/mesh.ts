@@ -1,4 +1,4 @@
-import type { three } from "@mrlyprod/math";
+import type * as three from "@mrlyprod/three";
 
 export const TILT = Math.atan(Math.SQRT1_2);
 export const THETA = 0.62;

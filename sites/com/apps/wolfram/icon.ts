@@ -1,9 +1,9 @@
 import type { Pen } from "@mrlyprod/draw";
 import { Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as life from "@mrlyprod/life";
+import * as wolfram from "@mrlyprod/wolfram";
 
-export const units = { life };
+export const units = { wolfram };
 
 const RULE = 110;
 const STEPS = 15;
@@ -16,7 +16,7 @@ let sheet: Sheet | null = null;
 
 function cone(): Sheet {
   if (sheet) return sheet;
-  const made = life.single_seed(RULE, STEPS);
+  const made = wolfram.single_seed(RULE, STEPS);
   const [rows, cols] = made.shape;
   const side = STEPS + 1;
   const types = new Uint8Array(side * side);

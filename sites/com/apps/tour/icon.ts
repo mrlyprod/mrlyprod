@@ -1,9 +1,9 @@
 import type { Cell, Pen, Point } from "@mrlyprod/draw";
 import { frame, Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { two };
 
 const CODE = "7";
 const LEVEL = 2;
@@ -20,7 +20,7 @@ let carpet: Cell | null = null;
 
 function cells() {
   if (carpet) return carpet;
-  const cell = math.two.create(CODE, 3, LEVEL, 0, 2);
+  const cell = two.create(CODE, 3, LEVEL, 0, 2);
   const fills = [...cell.types].filter(Boolean).length;
   if (cell.shape[0] !== SIDE || fills !== FILLS)
     throw new Error(

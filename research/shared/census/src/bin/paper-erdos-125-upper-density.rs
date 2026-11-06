@@ -1,7 +1,7 @@
 use census::save;
-use mrly_core::error::Result;
-use mrly_core::json;
-use mrly_math::sumset::Pair;
+use mrly_error::Result;
+use mrly_json::json;
+use mrly_sumset::Pair;
 
 const NAME: &str = "paper-erdos-125-upper-density";
 const LEVEL: u32 = 6;

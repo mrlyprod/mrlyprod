@@ -1,6 +1,7 @@
 import { rgb } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Mathy, Page } from "@mrlyprod/ui/kit/page.tsx";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick, rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts, Scene, View } from "@mrlyprod/ui/kit/run.ts";
@@ -42,7 +43,7 @@ export type Facts = Pick<
 >;
 
 export type Given = Opts & {
-  math?: Mrly | null;
+  mrly?: Mrly | null;
   onPace?: (pace: Pace | null) => void;
   onFacts?: (facts: Facts) => void;
 };
@@ -69,9 +70,9 @@ export const SPEC: Spec = [
 
 const SPEED: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: 10, ArrowDown: -10 };
 
-export const name = (value: Value, units?: Mathy) => `spin-${tag(value, units?.math)}-${value.view}`;
+export const name = (value: Value, units?: Mrly) => `spin-${tag(value, units)}-${value.view}`;
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   defaults: defaults(SOURCE),
@@ -107,9 +108,9 @@ export const PAGE = {
   },
   reroll: (value, seed, units) => {
     const rand = rng(seed);
-    return { ...drawn(units!.math, read(value), rand), rpm: Math.floor(rand() * (RPM + 1)) };
+    return { ...drawn(units!, read(value), rand), rpm: Math.floor(rand() * (RPM + 1)) };
   },
-} satisfies Page<Loaded<"math">, Spun>;
+} satisfies Page<Loaded<Crate>, Spun>;
 
 const FILLS: Record<number, [number, number]> = { 2: [2, 3], 3: [4, 8] };
 
@@ -191,8 +192,8 @@ export const facts = (plan: Plan): Facts => ({
 });
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): Scene {
-  const math = opts.math;
-  if (!math) return blank(canvas, view);
+  const mrly = opts.mrly;
+  if (!mrly) return blank(canvas, view);
   const ctx = canvas.getContext("2d")!;
   let given = opts;
   let value = read(given);
@@ -213,11 +214,11 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): S
   let stopped = false;
   const marked = () => key(value);
   const learn = () => {
-    plan = study(math, value);
+    plan = study(mrly, value);
     given.onFacts?.(facts(plan));
   };
   const coat = () => {
-    const bull = rings(math, plan!);
+    const bull = rings(mrly, plan!);
     wheel = sheet(paint(bull.values, bull.top, stops(value.ramp, look), value.levels, value.invert), bull.side);
   };
   const press = () => {

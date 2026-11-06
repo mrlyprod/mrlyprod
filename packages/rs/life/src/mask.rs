@@ -1,9 +1,9 @@
-use mrly_core::error::{Result, overflow_error, value_error};
-use mrly_core::tensor::Tensor;
-use mrly_math::bang::Code;
-use mrly_math::bang::factory;
-use mrly_math::two;
+use mrly_error::{Result, overflow_error, value_error};
+use mrly_math::code::Code;
+use mrly_math::factory;
 use mrly_num::factor::gcd;
+use mrly_tensor::Tensor;
+use mrly_two as two;
 
 pub fn design_mask(dimension: usize, code: Code, number: usize, level: usize) -> Result<Tensor> {
     if !(1..=2).contains(&dimension) {

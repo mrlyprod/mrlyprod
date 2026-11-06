@@ -596,6 +596,14 @@
   position: relative;
 }
 
+.classic.app .column.stage > .well > canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .classic.app .column > .well {
   flex: 1;
   min-height: 0;

@@ -1,0 +1,16 @@
+measure   cost      2D  3D  axes
+fills     Closed    yes yes level,side
+voids     Closed    yes yes level,side
+surface   Closed    yes yes level,side
+peak      Convolved yes yes level,side
+heights   Convolved yes yes level,side
+vertices  Closed    yes yes level,side
+edges     Closed    yes yes level,side
+faces     Closed    -   yes level,side
+euler     Closed    yes yes level,side
+triangles Grid      -   yes level,side
+holes     Grid      -   yes level,side
+pieces    Grid      -   yes level,side
+gaps      Grid      -   yes level,side
+loops     Grid      yes -   level,side
+windows   Grid      yes -   window

@@ -39,7 +39,7 @@ export type State = {
 
 export type Config = Pick<State, "side" | "boards" | "homes" | "goal" | "seed"> & { walkers: number };
 
-export type Table = { seed?: number; units: { math: Mrly } };
+export type Table = { seed?: number; units: Mrly };
 
 export type Act = { verb: "tick" } | { verb: "aim"; args: { goal: number } };
 
@@ -154,8 +154,8 @@ export function room(filled: ArrayLike<number>, side: number, from: number): Roo
   return { cells: tail, rms: Math.sqrt(sum / tail) };
 }
 
-export function grow(math: Mrly, value: Size, code: string) {
-  const cell = math.two.create(code, value.number, value.level, 0, value.base);
+export function grow(mrly: Mrly, value: Size, code: string) {
+  const cell = mrly.two.create(code, value.number, value.level, 0, value.base);
   const side = cell.shape[0];
   const filled = Uint8Array.from(cell.types, (type) => (type ? 1 : 0));
   const at = home(filled, side);
@@ -164,27 +164,27 @@ export function grow(math: Mrly, value: Size, code: string) {
     side,
     filled,
     home: at,
-    lit: Number(math.counts.fill(code, value.number, DIM, value.level, value.base)),
+    lit: Number(mrly.sequences.counts.fill(code, value.number, DIM, value.level, value.base)),
     ...room(filled, side, at),
   };
 }
 
-export function fills(math: Mrly, value: Pick<Size, "base" | "number">, code: string) {
-  return Number(math.counts.fill(code, value.number, DIM, 1, value.base));
+export function fills(mrly: Mrly, value: Pick<Size, "base" | "number">, code: string) {
+  return Number(mrly.sequences.counts.fill(code, value.number, DIM, 1, value.base));
 }
 
-export function ceiling(math: Mrly, value: Size, code: string) {
+export function ceiling(mrly: Mrly, value: Size, code: string) {
   const key = `${value.base}:${value.number}:${value.level}:${code}`;
-  if (!ceilings.has(key)) ceilings.set(key, grow(math, value, code).rms);
+  if (!ceilings.has(key)) ceilings.set(key, grow(mrly, value, code).rms);
   return ceilings.get(key)!;
 }
 
-export function kin(math: Mrly, value: Pick<Size, "base" | "number">, code: string, count: number) {
+export function kin(mrly: Mrly, value: Pick<Size, "base" | "number">, code: string, count: number) {
   const key = `${value.base}:${value.number}`;
   if (!masses.has(key))
     masses.set(
       key,
-      Array.from({ length: count }, (_, c) => fills(math, value, String(c))),
+      Array.from({ length: count }, (_, c) => fills(mrly, value, String(c))),
     );
   const list = masses.get(key)!;
   return list.flatMap((mass, c) =>
@@ -192,23 +192,23 @@ export function kin(math: Mrly, value: Pick<Size, "base" | "number">, code: stri
   );
 }
 
-export function board(math: Mrly, value: Size, code: string) {
+export function board(mrly: Mrly, value: Size, code: string) {
   const { base, number } = value;
-  const grown = grow(math, value, code);
+  const grown = grow(mrly, value, code);
   return {
     ...grown,
-    name: math.name.of(code, DIM, base) ?? "",
-    title: title(math, DIM, base, code),
-    fills: fills(math, value, code),
+    name: mrly.math.name.of(code, DIM, base) ?? "",
+    title: title(mrly, DIM, base, code),
+    fills: fills(mrly, value, code),
     of: number * number,
-    dimension: math.counts.dimension(code, number, DIM, base),
+    dimension: mrly.sequences.counts.dimension(code, number, DIM, base),
   };
 }
 
-export function pair(math: Mrly, value: Field, rand: Rng, typed: Typed = [null, null]): Pair {
-  const count = total(math, DIM, value.base);
+export function pair(mrly: Mrly, value: Field, rand: Rng, typed: Typed = [null, null]): Pair {
+  const count = total(mrly, DIM, value.base);
   const far = value.finish;
-  const able = (code: string) => ceiling(math, value, code) >= far;
+  const able = (code: string) => ceiling(mrly, value, code) >= far;
   const any = (not?: string) => {
     let code: string | null = null;
     for (let i = 0; i < ROLLS; i++) {
@@ -218,7 +218,7 @@ export function pair(math: Mrly, value: Field, rand: Rng, typed: Typed = [null, 
     return code!;
   };
   const mate = (code: string) => {
-    const list = kin(math, value, code, count);
+    const list = kin(mrly, value, code, count);
     for (let i = 0; i < Math.min(list.length, ROLLS); i++) {
       const j = i + Math.floor(rand() * (list.length - i));
       [list[i], list[j]] = [list[j], list[i]];
@@ -241,10 +241,10 @@ export function pair(math: Mrly, value: Field, rand: Rng, typed: Typed = [null, 
   return both() ?? [any(), any()];
 }
 
-export function plan(math: Mrly, value: Race, rand: Rng) {
-  const count = total(math, DIM, value.base);
-  const codes = pair(math, value, rand, [reads(value.a, count), reads(value.b, count)]);
-  const sides = codes.map((code) => board(math, value, code));
+export function plan(mrly: Mrly, value: Race, rand: Rng) {
+  const count = total(mrly, DIM, value.base);
+  const codes = pair(mrly, value, rand, [reads(value.a, count), reads(value.b, count)]);
+  const sides = codes.map((code) => board(mrly, value, code));
   return {
     sides,
     side: sides[0].side,
@@ -375,16 +375,16 @@ export function read(state: State, path = ""): unknown {
   return at;
 }
 
-export function planned(math: Mrly, value: Race, seed: number | undefined) {
+export function planned(mrly: Mrly, value: Race, seed: number | undefined) {
   const { code, walk } = roots(rng(seed));
-  return { plan: plan(math, value, code), walk };
+  return { plan: plan(mrly, value, code), walk };
 }
 
 export const opening = (plan: Plan, walk: number, k = 0): State =>
   boot({ ...configOf(plan, walk), goal: plan.goal, seed: (walk + k) >>> 0 });
 
 export function deal(value: Race, { seed, units }: Table): State {
-  const { plan, walk } = planned(units.math, value, seed);
+  const { plan, walk } = planned(units, value, seed);
   return opening(plan, walk);
 }
 

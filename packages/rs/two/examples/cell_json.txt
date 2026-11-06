@@ -1,0 +1,2 @@
+{"v":1,"width":3,"height":3,"types":[[1,1,1],[1,0,1],[1,1,1]]}
+round trip equal: true

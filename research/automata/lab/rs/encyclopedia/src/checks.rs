@@ -4,8 +4,8 @@ use crate::mask::{Factor, Kernel};
 use crate::readings::readings;
 use crate::recipe::{Mode, Recipe};
 use crate::{run_named, Grammar, Shape};
-use mrly_core::Rng;
 use mrly_life::{next_grid, Boundary};
+use mrly_rand::Rng;
 
 fn moore() -> Kernel {
     Kernel::from_grid(&Grid::from_rows(&["111", "101", "111"])).unwrap()

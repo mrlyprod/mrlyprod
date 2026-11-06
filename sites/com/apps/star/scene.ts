@@ -29,7 +29,7 @@ export type Reading = Law & { size: number; low: number; high: number };
 
 export type Facts = Fault | Reading;
 
-export type Given = Opts & { math?: Mrly | null; onFacts?: (facts: Facts) => void };
+export type Given = Opts & { mrly?: Mrly | null; onFacts?: (facts: Facts) => void };
 
 export const SPEC: Spec = [
   { key: "layers", label: "Layers L", kind: "slider", def: 28, min: LEAST, max: MOST, step: 2, group: "Stack" },
@@ -53,11 +53,11 @@ export const drawn = (rand: Rng) => ({ layers: LEAST + 2 * Math.floor(rand() * (
 const read = (opts: Given) => ({ ...tidy(SPEC, opts), seed: Number(opts.seed) >>> 0 }) as Star;
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): Scene {
-  const math = opts.math;
-  if (!math) return { draw: () => {}, stop: () => {} };
+  const mrly = opts.mrly;
+  if (!mrly) return { draw: () => {}, stop: () => {} };
   const pad = shell(canvas, view);
-  const star = new math.six.star.Star(CARPET);
-  const cuts = cutter(math);
+  const star = new mrly.star.Star(CARPET);
+  const cuts = cutter(mrly);
   let value = read(opts);
   let held: Stack | null = null;
   let reading: Law | null = null;
@@ -86,19 +86,19 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): S
       if (done.field !== fieldKey()) {
         held?.field.free();
         held = null;
-        held = field(math, cuts, value.layers, value.size);
+        held = field(mrly, cuts, value.layers, value.size);
         done.field = fieldKey();
       }
       if (done.paint !== paintKey()) {
         pad.put(
-          paint(math, held!, colorizer(value.ramp, value.levels, view.look()), value.levels, value.invert),
+          paint(mrly, held!, colorizer(value.ramp, value.levels, view.look()), value.levels, value.invert),
           held!.size,
         );
         done.paint = paintKey();
         dirty = true;
       }
       if (done.law !== lawKey()) {
-        reading = law(math, star, value.layers, value.half);
+        reading = law(mrly, star, value.layers, value.half);
         done.law = lawKey();
       }
       error = "";

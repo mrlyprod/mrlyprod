@@ -1,8 +1,8 @@
+import * as moire from "@mrlyprod/moire";
 import type { Ink, Pen } from "@mrlyprod/draw";
 import { field, frame } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { moire };
 
 const SCALES = 31;
 const CELL = 28;
@@ -15,7 +15,7 @@ function values() {
   for (let m = 3; m <= 63; m += 2) odds.push(m);
   if (odds.length !== SCALES)
     throw new Error(`paper-moire-correlation-laws: ${odds.length} odd scales, want ${SCALES}`);
-  const correlation = math.moire.pairs.correlation;
+  const correlation = moire.pairs.correlation;
   if (correlation(3, 5) !== 0)
     throw new Error(`paper-moire-correlation-laws: correlation(3, 5) is ${correlation(3, 5)}, want 0`);
   if (!(Math.abs(correlation(9, 9) - 1) < 1e-12))

@@ -1,8 +1,8 @@
-import * as core from "@mrlyprod/core";
+import * as rand from "@mrlyprod/rand";
+import * as two from "@mrlyprod/two";
 import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { core, math };
+export const units = { rand, two };
 
 const SIDE = 64;
 const CELLS = 729;
@@ -10,14 +10,14 @@ const SEED = 20260902;
 
 function scatter() {
   const mask = new Array<boolean>(SIDE * SIDE).fill(false);
-  for (const slot of new core.Rng(SEED).sample_indices(SIDE * SIDE, CELLS)) mask[slot] = true;
+  for (const slot of new rand.Rng(SEED).sample_indices(SIDE * SIDE, CELLS)) mask[slot] = true;
   const on = mask.filter(Boolean).length;
   if (on !== CELLS) throw new Error(`research-connectivity: scatter holds ${on} cells, want ${CELLS}`);
   return mask;
 }
 
 function gasket() {
-  const cells = math.two.create(7, 2, 6, 0, 2);
+  const cells = two.create(7, 2, 6, 0, 2);
   if (cells.shape[1] !== SIDE) throw new Error(`research-connectivity: gasket ${cells.shape[1]} wide, want ${SIDE}`);
   const mask = Array.from(cells.types, (kind) => kind !== 0);
   const on = mask.filter(Boolean).length;

@@ -2,9 +2,9 @@ import type { Palette } from "@mrlyprod/draw";
 import { ink as inks } from "@mrlyprod/draw";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb, TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Code, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { DESIGN, roll } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Had, Readout } from "@mrlyprod/ui/kit/hooks.ts";
+import type { Code, Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, DESIGN, roll } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts } from "@mrlyprod/ui/kit/run.ts";
@@ -102,7 +102,7 @@ export type Solid = Knobs & { seed?: number; base?: Scalar; code?: Code | null }
 export type Told = { rows: Readout[]; error: string };
 
 export type Given = Opts & {
-  math?: Mrly | null;
+  mrly?: Mrly | null;
   three?: Three | null | false;
   tell?: (told: Told) => void;
   base?: Scalar;
@@ -140,7 +140,7 @@ const counting = (value: Value) => grows(value) && Number(value.circle) === 1;
 
 export const CROPS: [Crop | "", string][] = [["", "None"], ...SHAPES.map((one): [Crop, string] => [one, word(one)])];
 
-export const SPEC: Spec<Had<"math">> = [
+export const SPEC: Spec<Mrly> = [
   {
     key: "source",
     label: "Solid",
@@ -168,7 +168,7 @@ export const SPEC: Spec<Had<"math">> = [
     kind: "slider",
     def: 3,
     min: 1,
-    max: (value, units) => units && cap(units.math, value.number as number, value.crop as Crop | ""),
+    max: (value, units) => units && cap(units, value.number as number, value.crop as Crop | ""),
     step: 1,
     group: "Solid",
     when: grows,
@@ -260,12 +260,12 @@ export const SPEC: Spec<Had<"math">> = [
     kind: "slider",
     def: LAYERS,
     min: 0,
-    max: (value, units) => (units && fills(value) ? most(units.math, value as Coded & Stacking) : LAYERS),
+    max: (value, units) => (units && fills(value) ? most(units, value as Coded & Stacking) : LAYERS),
     step: 1,
     group: "Field",
     when: (value) => fills(value) && Number(value.shell) === 1,
   },
-  ...PLANES.flatMap(([key, label]): Row<Had<"math">>[] => [
+  ...PLANES.flatMap(([key, label]): Row<Mrly>[] => [
     { key: `c${key}`, label, kind: "toggle", def: key === "d" ? 1 : 0, group: "Planes", when: fills },
     {
       key: `p${key}`,
@@ -301,7 +301,7 @@ export const SPEC: Spec<Had<"math">> = [
     kind: "slider",
     def: 4,
     min: 1,
-    max: (value, units) => units && counted(units.math, value.number as number),
+    max: (value, units) => units && counted(units, value.number as number),
     step: 1,
     group: "Circle",
     when: counting,
@@ -313,7 +313,7 @@ export const SPEC: Spec<Had<"math">> = [
     def: 27,
     min: 1,
     max: (value, units) =>
-      units && Math.max(1, top(units.math, value.number as number, value.count as number, value.centre as Centre)),
+      units && Math.max(1, top(units, value.number as number, value.count as number, value.centre as Centre)),
     step: 1,
     group: "Circle",
     when: counting,
@@ -321,20 +321,20 @@ export const SPEC: Spec<Had<"math">> = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const name = (value: Value) =>
   `three-${String(value.code ?? "").trim() || CARPET}-${value.source === "field" ? "field" : `l${value.level}`}${value.crop ? `-${value.crop}` : ""}`;
 
 const COMBINE = ["sum", "xor"];
 
-export function rerolled(value: Value, seed: number, math: Mrly): Patch {
+export function rerolled(value: Value, seed: number, mrly: Mrly): Patch {
   const rand = rng(seed);
-  const code = roll(math, DIM, Number(tidy(DESIGN, value).base), rand);
+  const code = roll(mrly, DIM, Number(tidy(DESIGN, value).base), rand);
   return value.source === "field" ? { code, combine: COMBINE[Math.floor(rand() * COMBINE.length)] } : { code };
 }
 
-export const PAGE: Page<Units<"math">, Held> = {
+export const PAGE: Page<Units<Crate>, Held> = {
   defaults: { base: 2, code: "23" },
   design: { dim: 3, base: "base", code: "code" },
   spec: SPEC,
@@ -353,7 +353,7 @@ export const PAGE: Page<Units<"math">, Held> = {
     level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
     radius: (value, key) => ({ radius: Number(value.radius) + (key === "ArrowLeft" ? -1 : 1) }),
   },
-  reroll: (value, seed, units) => rerolled(value, seed, units!.math),
+  reroll: (value, seed, units) => rerolled(value, seed, units!),
   actions: {
     corner: (scene) => scene.look?.("corner"),
     edge: (scene) => scene.look?.("edge"),
@@ -363,32 +363,32 @@ export const PAGE: Page<Units<"math">, Held> = {
 
 const ORANGE = rgb(palette.orange);
 
-const title = (made: Made, math: Mrly) => tag(named(math, made.code, made.base), made.code, made.base);
+const title = (made: Made, mrly: Mrly) => tag(named(mrly, made.code, made.base), made.code, made.base);
 
-function solid(math: Mrly, value: Solid): Omit<Study, "planes"> {
-  const made = design(math, value);
-  const level = Math.min(value.level, cap(math, value.number, value.crop));
+function solid(mrly: Mrly, value: Solid): Omit<Study, "planes"> {
+  const made = design(mrly, value);
+  const level = Math.min(value.level, cap(mrly, value.number, value.crop));
   const { code, base } = made;
   const { number } = value;
-  const cell = grown(math, code, base, number, level);
-  const cut = value.crop ? cropped(math, cell, value) : null;
+  const cell = grown(mrly, code, base, number, level);
+  const cut = value.crop ? cropped(mrly, cell, value) : null;
   const exact = Boolean(cut) && Number(value.edge) === 1 && value.crop !== "ball" && Number(value.anti) !== 1;
   const shown = cut && !exact ? cut.cell : cell;
   const cubes = value.draw === "cubes";
-  const heavy = load(math, shown, cubes);
+  const heavy = load(mrly, shown, cubes);
   const error =
     heavy > (cubes ? CUBES : FACES)
       ? `${heavy} ${cubes ? "cubes" : "faces"} is more than this page draws; lower the level.`
       : "";
-  const census = tally(math, cell);
+  const census = tally(mrly, cell);
   const rows: Readout[] = [
-    ["Name", title(made, math)],
+    ["Name", title(made, mrly)],
     ["Side", cell.shape[0]],
-    ["Filled", String(math.counts.fill(code, number, 3, level, base))],
-    ["Empty", String(math.counts.void_(code, number, 3, level, base))],
-    ["Exposed", String(math.counts.surface(code, number, level, base))],
-    ["Fill ratio", fixed(math.counts.ratio(code, number, 3, level, base), 4)],
-    ["Dimension", fixed(math.counts.dimension(code, number, 3, base), 4)],
+    ["Filled", String(mrly.sequences.counts.fill(code, number, 3, level, base))],
+    ["Empty", String(mrly.sequences.counts.void_(code, number, 3, level, base))],
+    ["Exposed", String(mrly.sequences.counts.surface(code, number, level, base))],
+    ["Fill ratio", fixed(mrly.sequences.counts.ratio(code, number, 3, level, base), 4)],
+    ["Dimension", fixed(mrly.sequences.counts.dimension(code, number, 3, base), 4)],
     ...(census
       ? ([
           ["Vertices", census.vertices],
@@ -407,7 +407,7 @@ function solid(math: Mrly, value: Solid): Omit<Study, "planes"> {
       : []),
   ];
   if (Number(value.circle) === 1) {
-    const count = circle(math, made, value);
+    const count = circle(mrly, made, value);
     const read = reading(count, value.r);
     rows.unshift(["N(r)", read.seen], ["Inside(r)", read.inside], ["C(r)", read.cut], ["Count side", count.side]);
     rows.push(["r", read.at], ["d", fixed(count.d, 7)], ["Fill of one tile", count.mass]);
@@ -418,27 +418,27 @@ function solid(math: Mrly, value: Solid): Omit<Study, "planes"> {
         key: `${code} ${base} ${number} ${level} ${value.draw} ${exact ? "whole" : value.crop} ${value.radius} ${value.anti} ${value.policy}`,
         cell: shown,
         cubes,
-        quads: cubes ? null : faces(math, shown),
+        quads: cubes ? null : faces(mrly, shown),
       };
-  const clip = exact ? walls(region(math, value.crop, value.radius, false)) : null;
-  return { body, clip, rows: error ? [["Error", error], ...rows] : rows, error, obj: () => math.three.to_obj(shown) };
+  const clip = exact ? walls(region(mrly, value.crop, value.radius, false)) : null;
+  return { body, clip, rows: error ? [["Error", error], ...rows] : rows, error, obj: () => mrly.three.to_obj(shown) };
 }
 
-function volume(math: Mrly, value: Solid, paint: Paint): Study {
-  const made = design(math, value);
-  const held = field(math, made, value);
+function volume(mrly: Mrly, value: Solid, paint: Paint): Study {
+  const made = design(mrly, value);
+  const held = field(mrly, made, value);
   const threshold = Math.min(value.threshold, held.max);
   const on = Number(value.shell) === 1;
-  const kept = on ? shell(math, held, { ...value, threshold }) : null;
+  const kept = on ? shell(mrly, held, { ...value, threshold }) : null;
   const error =
     kept && kept.faces > FACES
       ? `${kept.faces} faces is more than this page draws; raise the threshold or lower the size.`
       : "";
   const cuts = PLANES.filter(([key]) => Number(value[`c${key}`]) === 1).map(([key]) =>
-    plane(math, held, key, value[`p${key}`], paint),
+    plane(mrly, held, key, value[`p${key}`], paint),
   );
   const rows: Readout[] = [
-    ["Name", title(made, math)],
+    ["Name", title(made, mrly)],
     ["Layers", held.layers],
     ["Voxels", held.voxels],
     ["At or above", held.volume.count(threshold)],
@@ -452,19 +452,19 @@ function volume(math: Mrly, value: Solid, paint: Paint): Study {
             key: `field ${made.code} ${made.base} ${value.limit} ${value.combine} ${value.depth} ${value.size} ${threshold} ${value.crop} ${value.radius} ${value.anti} ${value.policy}`,
             cell: kept.cell,
             cubes: false,
-            quads: faces(math, kept.cell),
+            quads: faces(mrly, kept.cell),
           }
         : null,
     clip: null,
     planes: cuts,
     rows: error ? [["Error", error], ...rows] : rows,
     error,
-    obj: () => (kept ? math.three.to_obj(kept.cell) : ""),
+    obj: () => (kept ? mrly.three.to_obj(kept.cell) : ""),
   };
 }
 
-export function study(math: Mrly, value: Solid, paint: Paint): Study {
-  return value.source === "field" ? volume(math, value, paint) : { ...solid(math, value), planes: [] };
+export function study(mrly: Mrly, value: Solid, paint: Paint): Study {
+  return value.source === "field" ? volume(mrly, value, paint) : { ...solid(mrly, value), planes: [] };
 }
 
 function night(): boolean {
@@ -483,8 +483,8 @@ export function painter(view: Pick<Viewer, "look">, value: Solid): Paint {
   };
 }
 
-const settle = (opts: Given & { math: Mrly }): Solid => ({
-  ...(tidy(SPEC, opts, { math: opts.math }) as Knobs),
+const settle = (opts: Given & { mrly: Mrly }): Solid => ({
+  ...(tidy(SPEC, opts, opts.mrly) as Knobs),
   seed: opts.seed,
   base: opts.base,
   code: opts.code,
@@ -493,9 +493,9 @@ const settle = (opts: Given & { math: Mrly }): Solid => ({
 const same = (a: Plane[] = [], b: Plane[] = []) => a.length === b.length && a.every((one, i) => one === b[i]);
 
 export function make(canvas: HTMLCanvasElement, view: Viewer, opts: Given = {}) {
-  const { math, three, tell } = opts;
-  if (!math) throw new Error("three: the scene wants @mrlyprod/math as opts.math");
-  let value = settle({ ...opts, math });
+  const { mrly, three, tell } = opts;
+  if (!mrly) throw new Error("three: the scene wants the design crates as opts.mrly");
+  let value = settle({ ...opts, mrly });
   let plan: Study | null = null;
   let stage: Stage | null = null;
   if (three) {
@@ -508,7 +508,7 @@ export function make(canvas: HTMLCanvasElement, view: Viewer, opts: Given = {}) 
   const tone = (next: Solid) => (next.draw === "cubes" && next.source === "design" ? ORANGE : rgb(view.look().accent));
   const apply = (next: Solid, old: Solid | null) => {
     const was = plan;
-    plan = study(math, next, painter(view, next));
+    plan = study(mrly, next, painter(view, next));
     tell?.({ rows: plan.rows, error: plan.error });
     if (!stage) return;
     if (!was || plan.body?.key !== was.body?.key) stage.show(plan.body);
@@ -539,7 +539,7 @@ export function make(canvas: HTMLCanvasElement, view: Viewer, opts: Given = {}) 
     },
     set: (next: Given) => {
       const old = pending?.[1] ?? value;
-      value = settle({ ...next, math });
+      value = settle({ ...next, mrly });
       pending = [value, old];
       return true;
     },

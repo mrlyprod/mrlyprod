@@ -1,4 +1,6 @@
-import type { Cell, moire, three } from "@mrlyprod/math";
+import type { Cell } from "@mrlyprod/math";
+import type * as moire from "@mrlyprod/moire";
+import type * as three from "@mrlyprod/three";
 import type { View } from "@mrlyprod/ui/kit/run.ts";
 import type { Group, Object3D, OrthographicCamera, PerspectiveCamera } from "three";
 import type { Plane, Wall } from "../shared/three/engine.ts";

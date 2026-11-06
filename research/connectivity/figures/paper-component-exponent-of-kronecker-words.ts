@@ -1,7 +1,8 @@
-import { Grid, type Ink, type Pen } from "@mrlyprod/draw";
+import * as bang from "@mrlyprod/bang";
 import * as math from "@mrlyprod/math";
+import { Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
-export const units = { math };
+export const units = { bang, math };
 
 const CODES = 15;
 const LENGTH = 32;
@@ -13,15 +14,15 @@ let memo: Verdict[] | undefined;
 
 function alternating(a: number, b: number) {
   return Array.from({ length: LENGTH }, (_, place) =>
-    math.bang.MagicLayer.new(new math.name.Bang(place % 2 === 0 ? a : b, 2, 2), 2),
+    math.factory.MagicLayer.new(new math.name.Bang(place % 2 === 0 ? a : b, 2, 2), 2),
   );
 }
 
 function verdict(a: number, b: number): [boolean, boolean] {
   const letters = alternating(a, b);
-  const rates = math.bang.word.rates(letters);
+  const rates = bang.word.rates(letters);
   const [component, fill] = rates[rates.length - 1];
-  const constant = math.bang.word.constant_functional(letters);
+  const constant = bang.word.constant_functional(letters);
   return [Math.abs(component - fill) < SLACK, Math.abs(component - constant) < SLACK];
 }
 

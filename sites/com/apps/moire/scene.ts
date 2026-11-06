@@ -1,5 +1,6 @@
 import { TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Box, Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Scalar, Spec, Value } from "@mrlyprod/ui/kit/spec.ts";
@@ -80,7 +81,7 @@ export type Field = {
 export type Facts = Fault | Matrix | Field;
 
 export type Given = Opts & {
-  math?: Mrly | null;
+  mrly?: Mrly | null;
   base?: Scalar;
   code?: Scalar;
   onFacts?: (facts: Facts) => void;
@@ -173,7 +174,7 @@ export const DESIGN = { base: 2, code: "9" };
 const named = (value: Value) =>
   value.view === "matrix" ? `moire-matrix-${value.limit}` : `moire-${value.code}-${value.limit}`;
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   defaults: DESIGN,
@@ -193,8 +194,8 @@ export const PAGE = {
     },
   ],
   actions: { play: (scene) => scene.toggle?.() },
-  reroll: (_value, seed, units) => drawn(units!.math, seed),
-} satisfies Page<Loaded<"math">, Player>;
+  reroll: (_value, seed, units) => drawn(units!, seed),
+} satisfies Page<Loaded<Crate>, Player>;
 
 const read = (opts: Given) =>
   ({ ...tidy(SPEC, opts), base: opts.base, code: opts.code, seed: Number(opts.seed) >>> 0 }) as Moire;
@@ -250,8 +251,8 @@ function board(ctx: CanvasRenderingContext2D, view: View, look: Look, table: Tab
 }
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): Player {
-  const math = opts.math;
-  if (!math) return { draw: () => {}, stop: () => {} };
+  const mrly = opts.mrly;
+  if (!mrly) return { draw: () => {}, stop: () => {} };
   const pad = shell(canvas, view);
   let value = read(opts);
   let plan: Plan | null = null;
@@ -308,18 +309,18 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): P
   };
   const stack = () => {
     if (done.plan !== planKey()) {
-      plan = study(math, value);
+      plan = study(mrly, value);
       done.plan = planKey();
     }
     if (done.field !== fieldKey()) {
       held?.field.free();
       held = null;
-      held = field(math, plan!, value.size, crop(math, value.crop, value.radius, value.anti, value.size));
+      held = field(mrly, plan!, value.size, crop(mrly, value.crop, value.radius, value.anti, value.size));
       done.field = fieldKey();
     }
     if (done.paint !== paintKey()) {
       pad.put(
-        paint(math, held!, colorizer(value.ramp, value.levels, view.look()), value.levels, value.invert),
+        paint(mrly, held!, colorizer(value.ramp, value.levels, view.look()), value.levels, value.invert),
         held!.size,
       );
       done.paint = paintKey();
@@ -328,7 +329,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): P
   };
   const weigh = () => {
     if (done.law !== lawKey()) {
-      trial = law(math, value.limit, value.scale, value.mate);
+      trial = law(mrly, value.limit, value.scale, value.mate);
       done.law = lawKey();
       dirty = true;
     }
@@ -351,7 +352,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): P
   const frame = () => {
     pad.clear();
     grid = null;
-    if (!error && reads(value)) grid = board(pad.ctx, view, view.look(), matrix(math, value.limit), trial!);
+    if (!error && reads(value)) grid = board(pad.ctx, view, view.look(), matrix(mrly, value.limit), trial!);
     else if (!error && held) pad.blit(held.size, fit(view.w, view.h), false);
     dirty = false;
   };
@@ -392,7 +393,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): P
     }
     const at = grid && cellAt(grid, u * view.w, v * view.h);
     if (!at) return null;
-    const { scales } = matrix(math, value.limit);
+    const { scales } = matrix(mrly, value.limit);
     const [i, j] = at;
     return i === j ? { scale: scales[i] } : { scale: scales[Math.max(i, j)], mate: scales[Math.min(i, j)] };
   };

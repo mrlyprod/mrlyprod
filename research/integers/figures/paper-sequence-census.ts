@@ -1,7 +1,7 @@
+import * as two from "@mrlyprod/two";
 import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { two };
 
 const SIDE = 5;
 const GAP = 0.14;
@@ -23,7 +23,7 @@ function outline(pen: Pen, frame: Frame, thick: number, ink: Ink) {
 }
 
 function panel(pen: Pen, frame: Frame, code: number, tone: Color, ink: Ink) {
-  const design = math.two.create(code, SIDE, 1, 0, 2);
+  const design = two.create(code, SIDE, 1, 0, 2);
   if (design.shape.join() !== `${SIDE},${SIDE}`)
     throw new Error(`paper-sequence-census: design ${design.shape}, want ${SIDE} square`);
   const grid = new Grid(frame, SIDE, SIDE, GAP);

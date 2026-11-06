@@ -1,0 +1,4 @@
+depth 1: side   3 fill     8 dimension 1.8928
+depth 2: side   9 fill    64 dimension 1.8928
+depth 3: side  27 fill   512 dimension 1.8928
+depth 4: side  81 fill  4096 dimension 1.8928

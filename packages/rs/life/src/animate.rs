@@ -1,8 +1,8 @@
 use super::Fate;
 use super::models::{Config, Life};
 use super::step::next_grid;
-use mrly_core::error::Result;
-use mrly_math::two::Cell2d;
+use mrly_error::Result;
+use mrly_two::Cell2d;
 use std::collections::HashMap;
 
 fn prepare(seed: &Cell2d, config: &Config) -> Result<Cell2d> {

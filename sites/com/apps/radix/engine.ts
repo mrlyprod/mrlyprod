@@ -1,5 +1,5 @@
-import type { radix } from "@mrlyprod/math";
-import type { gauss } from "@mrlyprod/num";
+import type * as gaussian from "@mrlyprod/gaussian";
+import type * as radix from "@mrlyprod/radix";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { classes, facts } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
@@ -7,9 +7,9 @@ import type { Run } from "@mrlyprod/ui/kit/svg.ts";
 import { num as fix, lines, path, sheet } from "@mrlyprod/ui/kit/svg.ts";
 import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
 
-export type Num = Unit<"num">;
+export type Num = Unit<"gaussian">;
 
-export type Word = Lowercase<gauss.Ring>;
+export type Word = Lowercase<gaussian.Ring>;
 
 export type Pair = [number, number];
 
@@ -130,11 +130,11 @@ export function glance(fill: number, level = MOST) {
 
 const plain = (z: [bigint, bigint]) => z.map(Number) as Pair;
 
-export function dial(num: Num, math: Mrly, value: Design) {
-  const ring = num.gauss.Ring.named(value.ring) ?? "Gaussian";
-  const base = new math.radix.Base(ring, pair(value.base) as Pair);
+export function dial(num: Num, mrly: Mrly, value: Design) {
+  const ring = num.Ring.named(value.ring) ?? "Gaussian";
+  const base = new mrly.radix.Base(ring, pair(value.base) as Pair);
   const residues = base.residues().map(plain);
-  const units = num.gauss.Ring.associates(ring, 1, 0).map(plain);
+  const units = num.Ring.associates(ring, 1, 0).map(plain);
   const held: Held[] = [];
   let error = "";
   for (const one of parse(value, units.length)) {
@@ -163,15 +163,15 @@ export const every = (dialed: Dialed) => write(dialed.residues.map((z) => ({ z, 
 
 export const flat = (dialed: Dialed) => write(dialed.held.map((one) => ({ ...one, u: 0 })));
 
-export function rebase(num: Num, math: Mrly, ring: Word, base: string) {
+export function rebase(num: Num, mrly: Mrly, ring: Word, base: string) {
   const key = (BASES[ring] ?? []).includes(base) ? base : BASES[ring][0];
-  return { ring, base: key, ...every(dial(num, math, { ring, base: key, d: "", t: "" })) };
+  return { ring, base: key, ...every(dial(num, mrly, { ring, base: key, d: "", t: "" })) };
 }
 
-export function coded(dialed: Dialed, math: Mrly, text: unknown) {
+export function coded(dialed: Dialed, mrly: Mrly, text: unknown) {
   const n = Number(String(text).trim());
   if (!Number.isInteger(n) || n < 1 || n >= 2 ** dialed.residues.length) return null;
-  const one = math.radix.Radix.from_code(dialed.base, n);
+  const one = mrly.radix.Radix.from_code(dialed.base, n);
   const patch = write(one.digits().map((z) => ({ z: plain(z), u: 0 })));
   one.free();
   return patch;
@@ -188,7 +188,7 @@ export function rolled(dialed: Dialed, rand: Rng) {
 
 export function spelled(num: Num, radix: radix.Radix): Design {
   const ring = radix.ring();
-  const units = num.gauss.Ring.associates(ring, 1, 0).map((u) => plain(u).join(":"));
+  const units = num.Ring.associates(ring, 1, 0).map((u) => plain(u).join(":"));
   const [a, c] = plain(radix.base().value());
   return {
     ring: ring.toLowerCase() as Word,
@@ -201,10 +201,10 @@ export function spelled(num: Num, radix: radix.Radix): Design {
   };
 }
 
-export function preset(num: Num, math: Mrly, name: Preset): Shaped | null {
+export function preset(num: Num, mrly: Mrly, name: Preset): Shaped | null {
   const row = PRESETS.find(([one]) => one === name);
   if (!row) return null;
-  const radix = name === "carpet" ? math.radix.tile(BOX, CARPET) : math.radix[name]();
+  const radix = name === "carpet" ? mrly.radix.tile(BOX, CARPET) : mrly.radix[name]();
   const patch = { ...spelled(num, radix), level: row[2], line: row[3] };
   radix.free();
   return patch;
@@ -226,17 +226,17 @@ export function boxOf(dialed: Dialed) {
   return String(code);
 }
 
-export function boxes(math: Mrly): Boxes {
-  const named = math.name.words(DIM, BOX).map(([code, word]): [string, string] => [String(code), word]);
-  const seen = new Set(named.map(([code]) => String(facts(math, DIM, BOX, code).rep)));
-  const rest = (classes(math, DIM, BOX) ?? [])
+export function boxes(mrly: Mrly): Boxes {
+  const named = mrly.math.name.words(DIM, BOX).map(([code, word]): [string, string] => [String(code), word]);
+  const seen = new Set(named.map(([code]) => String(facts(mrly, DIM, BOX, code).rep)));
+  const rest = (classes(mrly, DIM, BOX) ?? [])
     .map(({ code }): [string, string] => [String(code), ""])
     .filter(([code]) => !seen.has(code));
   return { named, rest };
 }
 
-export function boxed(num: Num, math: Mrly, code: string) {
-  const radix = math.radix.tile(BOX, code);
+export function boxed(num: Num, mrly: Mrly, code: string) {
+  const radix = mrly.radix.tile(BOX, code);
   const patch = spelled(num, radix);
   radix.free();
   return patch;
@@ -289,9 +289,9 @@ export function span(pts: ArrayLike<number>) {
   return [x0, y0, x1, y1];
 }
 
-export function study(num: Num, math: Mrly, value: Design, most = MOST) {
-  const { ring, letter, base, held, units, error } = dial(num, math, value);
-  const bare = new math.radix.Radix(
+export function study(num: Num, mrly: Mrly, value: Design, most = MOST) {
+  const { ring, letter, base, held, units, error } = dial(num, mrly, value);
+  const bare = new mrly.radix.Radix(
     base,
     held.map(({ z }) => z),
     held.map(() => [1, 0]),
@@ -299,7 +299,7 @@ export function study(num: Num, math: Mrly, value: Design, most = MOST) {
   const radix = bare.with_twists(Uint32Array.from(held.map(({ u }) => u)));
   bare.free();
   const [ba, bc] = plain(base.value());
-  const [bx, by] = num.gauss.Ring.place(ring, ba, bc);
+  const [bx, by] = num.Ring.place(ring, ba, bc);
   const angle = Math.atan2(by, bx);
   const norm = Number(base.norm());
   const sides = units.length;

@@ -65,7 +65,7 @@ export function cube(
 
 export function thumb(
   ctx: CanvasRenderingContext2D,
-  math: Mrly,
+  mrly: Mrly,
   dim: number,
   base: number,
   code: Code,
@@ -73,7 +73,7 @@ export function thumb(
   { accent, paper }: Pick<Paints, "accent" | "paper">,
   level = LEVEL,
 ) {
-  const cell = grow(math, dim, base, code, level);
+  const cell = grow(mrly, dim, base, code, level);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, side, side);
   if (dim === 1) return flat(ctx, cell, 0, side / 3, side, accent, side / 3);
@@ -83,7 +83,7 @@ export function thumb(
   const cam = camera(THETA, PHI, (FIT * side) / Math.max(w, h));
   return cube(
     ctx,
-    solid(math.three.quads(cell), n),
+    solid(mrly.three.quads(cell), n),
     cam,
     side / 2,
     side / 2,
@@ -91,7 +91,7 @@ export function thumb(
   );
 }
 
-export function iso(math: Mrly, cell: Cell, theta: number, phi: number, paper: string, accent: string): string {
+export function iso(mrly: Mrly, cell: Cell, theta: number, phi: number, paper: string, accent: string): string {
   const n = cell.shape[0];
   const up = Math.max(LOW, phi);
   const [w, h] = extent(n, up);
@@ -104,7 +104,7 @@ export function iso(math: Mrly, cell: Cell, theta: number, phi: number, paper: s
     if (d) parts.push(`<path fill="${tones[kind]}" d="${d}"/>`);
     d = "";
   };
-  walk(solid(math.three.quads(cell), n), cam, ISO / 2, ISO / 2, (face, ...points) => {
+  walk(solid(mrly.three.quads(cell), n), cam, ISO / 2, ISO / 2, (face, ...points) => {
     if (face !== kind) {
       flush();
       kind = face;

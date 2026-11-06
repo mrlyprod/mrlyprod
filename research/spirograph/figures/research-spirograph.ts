@@ -1,8 +1,9 @@
+import * as roulette from "@mrlyprod/roulette";
+import * as two from "@mrlyprod/two";
 import { field, type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 import census from "./research-spirograph.json" with { type: "json" };
 
-type Wheel = { bounds: math.spirograph.Disc; shape: math.spirograph.Cover; points: Float32Array };
+type Wheel = { bounds: roulette.Disc; shape: roulette.Cover; points: Float32Array };
 
 const CODE = 495;
 const SIDE = 3;
@@ -22,31 +23,31 @@ const THIN = 1.4;
 const HAIR = 1.1;
 const DOT = 2.6;
 
-export const units = { math };
+export const units = { roulette, two };
 
 let memo: Wheel | undefined;
 
 function wheel(): Wheel {
   if (memo) return memo;
-  const tile = math.two.create(CODE, SIDE, LEVEL, 0, BASE);
-  const path = math.spirograph.track("in", RING, WHEEL, 4, 1);
-  const pens = math.spirograph.pencils(tile.types, tile.shape[1], tile.shape[0], "fill", REACH, 0, 1);
-  const curves = math.spirograph.distinct(path, pens, true);
+  const tile = two.create(CODE, SIDE, LEVEL, 0, BASE);
+  const path = roulette.track("in", RING, WHEEL, 4, 1);
+  const pens = roulette.pencils(tile.types, tile.shape[1], tile.shape[0], "fill", REACH, 0, 1);
+  const curves = roulette.distinct(path, pens, true);
   if (curves !== CURVES) throw new Error(`research-spirograph: ${curves} curves, want ${CURVES}`);
-  const law = math.spirograph.nodes(path, pens, true);
+  const law = roulette.nodes(path, pens, true);
   if (law !== BigInt(CROSSINGS))
     throw new Error(`research-spirograph: the law counts ${law} crossings, want ${CROSSINGS}`);
-  const points = math.spirograph.trace(path, pens, SAMPLES);
+  const points = roulette.trace(path, pens, SAMPLES);
   if (points.length !== 2 * CURVES * SAMPLES)
     throw new Error(`research-spirograph: trace of ${points.length} numbers, want ${2 * CURVES * SAMPLES}`);
-  const shape = math.spirograph.cover(path, pens, true, 2, RASTER);
+  const shape = roulette.cover(path, pens, true, 2, RASTER);
   if (shape.side !== RASTER || shape.mask.length !== RASTER * RASTER)
     throw new Error(`research-spirograph: cover of side ${shape.side} and ${shape.mask.length} cells, want ${RASTER}`);
-  memo = { bounds: math.spirograph.disc(path, pens), shape, points };
+  memo = { bounds: roulette.disc(path, pens), shape, points };
   return memo;
 }
 
-function wash(pen: Pen, ink: Ink, shape: math.spirograph.Cover, corner: Point, span: number) {
+function wash(pen: Pen, ink: Ink, shape: roulette.Cover, corner: Point, span: number) {
   const n = shape.side;
   const cell = span / n;
   const x0 = Math.floor(Math.max(corner[0], 0));

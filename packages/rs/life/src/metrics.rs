@@ -1,5 +1,5 @@
-use mrly_core::tensor::Tensor;
-use mrly_math::two::Cell2d;
+use mrly_tensor::Tensor;
+use mrly_two::Cell2d;
 use std::f64::consts::LN_2;
 
 pub fn churn(grids: &[Cell2d]) -> f64 {

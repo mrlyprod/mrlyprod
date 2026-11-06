@@ -1,8 +1,8 @@
-use mrly_math::bang::baseq::{fill_from_corners, group, orbit, representatives};
-use mrly_math::bang::code_to_corners;
-use mrly_math::bang::factory::residue_corners;
-use mrly_math::bang::universe::permutations;
-use mrly_math::bang::Code;
+use mrly_bang::baseq::{fill_from_corners, group, orbit, representatives};
+use mrly_bang::universe::permutations;
+use mrly_math::code::Code;
+use mrly_math::factory::code_to_corners;
+use mrly_math::factory::residue_corners;
 use std::collections::HashSet;
 use std::thread;
 

@@ -95,7 +95,8 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const names = useMemo(() => (units ? sources(units.life) : []), [units]);
   const options = useMemo(() => [HAND, ...names.map((one): Option => [one, one.replaceAll("_", " ")])], [names]);
   const made = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units!, onStat: setStat }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
+      make(canvas, view, { ...opts, life: units!.life, mrly: units!, onStat: setStat }),
     [units],
   );
   useEffect(() => {
@@ -202,14 +203,14 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
     },
   ];
   const start = startOf(value);
-  const soup = (id: string) => sow({ ...value, from: id }, rng(1), units!.math, THUMB, THUMB);
+  const soup = (id: string) => sow({ ...value, from: id }, rng(1), units!, THUMB, THUMB);
   const shapes = (list: readonly Start[]) => list.filter(([, name]) => has(name, find));
   const seeds = shapes(SEEDS.filter(([id]) => dim === 2 || id !== "design"));
   const patterns = dim === 2 ? shapes(Object.entries(PATTERNS).map(([id, { name }]): Start => [id, name])) : [];
   const worlds = PRESETS.filter(([label, one]) => has(label, find) && (board || Number(one.dim) !== 1));
   const rules = RULES.filter(([label]) => has(label, find));
-  const current = units ? nameOf(units.life, units.math, value) : "";
-  const pickRow = (key: string) => onChange(knobsOf(units!.life, units!.math, units!.life.recipe.parse(key)));
+  const current = units ? nameOf(units.life, units, value) : "";
+  const pickRow = (key: string) => onChange(knobsOf(units!.life, units!, units!.life.recipe.parse(key)));
   return (
     <>
       {units && <Scene make={made} value={value} onReady={ready} {...paint} />}

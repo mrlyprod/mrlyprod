@@ -1,7 +1,7 @@
-use mrly_math::bang::factory::create;
-use mrly_math::bang::Code;
-use mrly_num::gauss::Ring;
-use mrly_math::radix::{flowsnake, gasket, koch, terdragon, tile, twindragon, Base, Radix};
+use mrly_gaussian::Ring;
+use mrly_math::code::Code;
+use mrly_math::factory::create;
+use mrly_radix::{flowsnake, gasket, koch, terdragon, tile, twindragon, Base, Radix};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 

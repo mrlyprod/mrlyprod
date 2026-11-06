@@ -1,7 +1,7 @@
 use crate::recipe::{Design, Group, Source, Tile as Recipe};
-use mrly_core::error::{Error, Result, value_error};
-use mrly_core::kind;
-use mrly_core::name::Named;
+use mrly_error::{Error, Result, value_error};
+use mrly_name::Named;
+use mrly_name::kind;
 use serde::{Deserialize, Serialize};
 
 kind!("tile");

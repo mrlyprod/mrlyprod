@@ -1,8 +1,8 @@
 import type { Pen } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as radix from "@mrlyprod/radix";
 
-export const units = { math };
+export const units = { radix };
 
 const LEVEL = 10;
 const DRAW = 12;
@@ -19,7 +19,7 @@ let memo: Built | null = null;
 
 function build(): Built {
   if (memo) return memo;
-  const design = math.radix.twindragon();
+  const design = radix.twindragon();
   const got = {
     fill: Number(design.fill(LEVEL)),
     distinct: design.distinct(LEVEL),

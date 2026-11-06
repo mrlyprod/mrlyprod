@@ -1,62 +1,24 @@
-use mrly_font::glyph::{digits, extras, lowers, specials, uppers};
-use mrly_font::{Glyph, draft, floor, glyph, strokes, trim};
-
-fn key(c: char) -> String {
-    if c.is_ascii() {
-        format!("{c:?}")
-    } else {
-        format!("'\\u{{{:04x}}}'", c as u32)
-    }
-}
-
-fn tokens(stroke: &[(usize, usize)]) -> String {
-    let cells: Vec<String> = stroke.iter().map(|(r, c)| format!("{r}{c}")).collect();
-    cells.join(" ")
-}
-
-fn entry(c: char, strokes: &[Vec<(usize, usize)>]) -> String {
-    if strokes.is_empty() {
-        return format!("    ({}, &[]),\n", key(c));
-    }
-    let mut out = format!("    ({}, &[\n", key(c));
-    for stroke in strokes {
-        out.push_str(&format!("        \"{}\",\n", tokens(stroke)));
-    }
-    out.push_str("    ]),\n");
-    out
-}
-
-fn table(name: &str, doc: &str, glyphs: &[Glyph]) -> String {
-    let mut out =
-        format!("/// The pens of the {doc}.\n#[rustfmt::skip]\npub const {name}: &[Pen] = &[\n");
-    for g in glyphs {
-        out.push_str(&entry(g.char, &strokes(g.char)));
-    }
-    out.push_str("];\n");
-    out
-}
+// Every glyph has a pen: the order in which a hand would draw it, as strokes of cells.
+// Each lit cell shows its step, counting from 0 and using 0-9 then a-z; a new stroke lifts the pen.
+// cargo run -p mrly-font --example pen
+use mrly_font::strokes;
 
 fn main() {
-    match std::env::args().nth(1).and_then(|a| a.chars().next()) {
-        Some(c) => {
-            let Some(g) = glyph(c) else {
-                eprintln!("{c} is not in the font");
-                std::process::exit(1);
-            };
-            let rows = trim(&g.rows);
-            print!("{}", entry(c, &draft(&rows)));
-            println!("floor {}", floor(&rows));
+    for c in ['A', 'S'] {
+        let strokes = strokes(c);
+        let cells: usize = strokes.iter().map(Vec::len).sum();
+        println!("{c}: {} strokes, {cells} cells", strokes.len());
+        let mut grid = vec![vec!['.'; 5]; 5];
+        let mut step = 0;
+        for stroke in &strokes {
+            for &(r, col) in stroke {
+                grid[r][col] = std::char::from_digit(step, 36).unwrap();
+                step += 1;
+            }
         }
-        None => {
-            let tables = [
-                ("UPPERS", "twenty-six uppers", uppers()),
-                ("LOWERS", "twenty-six lowers", lowers()),
-                ("DIGITS", "ten digits", digits()),
-                ("EXTRAS", "punctuation, symbol and arrow glyphs", extras()),
-                ("SPECIALS", "four seven-row specials", specials()),
-            ];
-            let out: Vec<String> = tables.iter().map(|(n, d, g)| table(n, d, g)).collect();
-            print!("{}", out.join("\n"));
+        for row in grid {
+            println!("  {}", row.into_iter().collect::<String>());
         }
+        println!();
     }
 }

@@ -1,8 +1,8 @@
-import type { Color, Ink, Pen, Point } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
+import * as automaton from "@mrlyprod/automaton";
 import * as num from "@mrlyprod/num";
+import type { Color, Ink, Pen, Point } from "@mrlyprod/draw";
 
-export const units = { math, num };
+export const units = { automaton, num };
 
 const QUARTIC = [1, -7833, 7916949, -850684437, 13054946580];
 const PRINTED = {
@@ -28,7 +28,7 @@ function fail(what: string): never {
 function rule(width: number, allowed: (bits: number) => boolean) {
   let code = 0;
   for (let bits = 0; bits < 2 ** width; bits++) if (allowed(bits)) code += 2 ** bits;
-  return new math.memory.Rule(1, width, code);
+  return new automaton.memory.Rule(1, width, code);
 }
 
 function distance(k: number) {
@@ -57,22 +57,22 @@ function truncated(x: number, want: number, what: string) {
 function numbers() {
   if (memo) return memo;
   const log3 = (x: number) => Math.log(x) / Math.log(3);
-  const phi = math.memory.perron(distance(1));
+  const phi = automaton.memory.perron(distance(1));
   if (Math.abs(phi - (1 + Math.sqrt(5)) / 2) > 1e-12) fail(`distance-one rule grows ${phi}, want phi`);
   const ladder = num.series.fibonacci(100000);
   const fib = (n: number) => BigInt(ladder[n - 1]);
   if (fib(2) !== 1n || fib(3) !== 2n || fib(14) !== 377n || fib(20) !== 6765n)
     fail(`fibonacci ladder ${ladder.slice(0, 21)}`);
   for (const [k, want] of WORDS) {
-    const growth = math.memory.perron(distance(k));
+    const growth = automaton.memory.perron(distance(k));
     if (Math.abs(growth - phi) > 1e-12) fail(`distance-${k} rule grows ${growth}, want phi`);
-    const count = math.memory.counts(distance(k), 36)[35];
+    const count = automaton.memory.counts(distance(k), 36)[35];
     const chains = Array.from({ length: k }, (_, r) => Math.floor((36 - (r + 1)) / k) + 1);
     const product = chains.reduce((acc, m) => acc * fib(m + 2), 1n);
     if (count !== want || product !== want)
       fail(`D_${k}(36) counts ${count}, Fibonacci product ${product}, want ${want}`);
   }
-  const supergolden = math.memory.perron(rule(3, (bits) => [0, 1, 2, 4].includes(bits)));
+  const supergolden = automaton.memory.perron(rule(3, (bits) => [0, 1, 2, 4].includes(bits)));
   if (Math.abs(supergolden ** 3 - supergolden ** 2 - 1) > 1e-12) fail(`supergolden rule grows ${supergolden}`);
   const edge = 1 / (2 - log3(phi));
   const cstar = (1 - log3(phi)) / (2 - log3(phi));

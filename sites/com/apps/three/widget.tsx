@@ -1,9 +1,9 @@
 import { paints } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { text } from "@mrlyprod/ui/kit/export.ts";
-import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
-import { useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates } from "@mrlyprod/ui/kit/hooks.ts";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
 import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
@@ -19,8 +19,8 @@ import { BLOCK, block, glance, POSES } from "../shared/three/thumbs.ts";
 import type { Hands, Held, Sponge, Told } from "./scene.ts";
 import { CROPS, make, name } from "./scene.ts";
 
-export type Props = Pick<WidgetProps<Had<"math">, Held>, "onChange"> & { value: Seeded } & Partial<
-    Pick<WidgetProps<Had<"math">, Held>, "onReady" | "onExport" | "onStatus">
+export type Props = Pick<WidgetProps<Mrly, Held>, "onChange"> & { value: Seeded } & Partial<
+    Pick<WidgetProps<Mrly, Held>, "onReady" | "onExport" | "onStatus">
   > & {
     unit?: Mrly | null;
     three?: Three | null;
@@ -54,7 +54,7 @@ export const hands = (at: () => Value, onChange: (patch: Patch) => void): Hands 
 });
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit, three: given }: Props) {
-  const math = useUnit("math", unit);
+  const mrly = useCrates(CRATES, unit);
   const three = useThree(true, given);
   const live = useRef<Handle<Sponge> | null>(null);
   const now = useRef(value);
@@ -135,15 +135,15 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   };
   const keep = (body: string | undefined, kind: string) => body && text(body, name(now.current), kind);
   const obj = () => keep(live.current?.obj?.(), "obj");
-  useEffect(() => onExport?.(math ? [["OBJ", obj]] : []), [Boolean(math)]);
+  useEffect(() => onExport?.(mrly ? [["OBJ", obj]] : []), [Boolean(mrly)]);
   const scene = useCallback<Make<Sponge>>(
-    (canvas, view, opts) => make(canvas, view, { ...opts, math, three, tell }),
-    [math, three],
+    (canvas, view, opts) => make(canvas, view, { ...opts, mrly, three, tell }),
+    [mrly, three],
   );
   const tone = (canvas: HTMLCanvasElement) => paints(canvas, value.tint as string);
   return (
     <>
-      {math && three && (
+      {mrly && three && (
         <Scene
           make={scene}
           value={value}
@@ -155,7 +155,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
         />
       )}
       {info?.error && <p style={warn}>{info.error}</p>}
-      {math && (
+      {mrly && (
         <Library>
           <Shelf name="Look from" grid>
             {LOOKS.map(([key, label, hint]) => (
@@ -183,7 +183,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
                 art={
                   <Art
                     deps={[tick, value.tint, key]}
-                    paint={(ctx, side) => glance(ctx, block(math, key), POSES.corner, side, tone(ctx.canvas))}
+                    paint={(ctx, side) => glance(ctx, block(mrly, key), POSES.corner, side, tone(ctx.canvas))}
                   />
                 }
               />

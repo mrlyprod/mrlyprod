@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import type { App } from "@mrlyprod/os/kernel/index.ts";
 import type { Played } from "./scene.ts";
 
-type Site = { title: string; roots: string[]; wasm?: string[] };
+type Site = { title: string; roots: string[]; wasm?: Record<string, string[]> };
 
 type Toy = { id: string; dir: string };
 
@@ -25,7 +25,7 @@ const isScene = (dir: string) =>
 
 let ready: Promise<Record<string, unknown>> | null = null;
 
-const prepare = (home: string, one: Site) =>
+const prepare = (one: Site) =>
   (ready ??= (async () => {
     Bun.plugin({
       name: "toys",
@@ -41,13 +41,7 @@ const prepare = (home: string, one: Site) =>
       },
     });
     const doors: Record<string, unknown> = {};
-    for (const unit of one.wasm ?? []) {
-      const wasm = join(home, "wasm", unit, `${unit}.wasm`);
-      if (!existsSync(wasm)) continue;
-      const door = (await import(`@mrlyprod/${unit}`)) as { initSync: (o: { module: Buffer }) => unknown };
-      door.initSync({ module: readFileSync(wasm) });
-      doors[unit] = door;
-    }
+    for (const unit of Object.values(one.wasm ?? {}).flat()) doors[unit] = await import(`@mrlyprod/${unit}`);
     return doors;
   })());
 
@@ -91,6 +85,6 @@ export default async function toys(home: string, ids?: readonly string[]): Promi
     );
   const want = ids ? all.filter((toy) => ids.includes(toy.id)) : all;
   if (!want.length) return [];
-  const doors = await prepare(home, one);
+  const doors = await prepare(one);
   return Promise.all(want.map((toy) => lift(toy, owner(one), doors)));
 }

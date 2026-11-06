@@ -1,11 +1,10 @@
 import type { Color } from "@mrlyprod/math";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb, TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { canon, DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, canon, DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Design } from "@mrlyprod/ui/kit/designs/store.ts";
-import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
-import type { Mathy, Page } from "@mrlyprod/ui/kit/page.tsx";
+import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, Scene, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Spec, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
@@ -31,7 +30,7 @@ import {
   wrap,
 } from "./engine.ts";
 
-export type Given = Opts & { math?: Mrly | null; onFacts?: (facts: Facts) => void };
+export type Given = Opts & { mrly?: Mrly | null; onFacts?: (facts: Facts) => void };
 
 export type Tones = Record<Shade, Color> & Partial<Record<string, Color>>;
 
@@ -45,7 +44,7 @@ export type Sheet = ReturnType<typeof make>;
 
 const rect = (value: Value) => value.sheet !== "disc";
 
-export const SPEC: Spec<Had<"math">> = [
+export const SPEC: Spec<Mrly> = [
   { key: "view", label: "View", kind: "segment", def: "cut", options: VIEWS },
   { key: "sheet", label: "Shape", kind: "segment", def: "rect", options: SHEETS, group: "Sheet" },
   { key: "x", label: "Across", kind: "slider", def: 5, min: 1, max: REPEATS, step: 1, group: "Sheet", when: rect },
@@ -69,7 +68,7 @@ export const SPEC: Spec<Had<"math">> = [
     kind: "slider",
     def: 2,
     min: 1,
-    max: (value, units) => units && cap(units.math, value.number as number, copies(units.math, value as Knobs)),
+    max: (value, units) => units && cap(units, value.number as number, copies(units, value as Knobs)),
     step: 1,
     group: "Tile",
     keep: true,
@@ -79,11 +78,11 @@ export const SPEC: Spec<Had<"math">> = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
-export function name(value: Value, units?: Mathy) {
+export function name(value: Value, units?: Mrly) {
   const { base, code } = tidy(DESIGN, { ...value, dim: DIM }) as Design;
-  return `six-${units?.math ? canon(units.math, DIM, base, code) : code}-${value.view}`;
+  return `six-${units ? canon(units, DIM, base, code) : code}-${value.view}`;
 }
 
 export const PAGE = {
@@ -119,8 +118,8 @@ export const PAGE = {
     up: (value) => ({ level: Number(value.level) + 1 }),
     down: (value) => ({ level: Number(value.level) - 1 }),
   },
-  reroll: (value, seed, units) => ({ code: reroll(units!.math, Number(tidy(DESIGN, value).base), seed) }),
-} satisfies Page<Loaded<"math">, Scene>;
+  reroll: (value, seed, units) => ({ code: reroll(units!, Number(tidy(DESIGN, value).base), seed) }),
+} satisfies Page<Loaded<Crate>, Scene>;
 
 const PAD = 24;
 const EDGE = 0.06;
@@ -170,19 +169,19 @@ export const sketch = (
 ) => fill(ctx, built, tones(look), w, h, w * EDGE);
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
-  const math = opts.math;
-  if (!math) throw new Error("six: the scene wants @mrlyprod/math as opts.math");
+  const mrly = opts.mrly;
+  if (!mrly) throw new Error("six: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
   const tell = opts.onFacts;
-  const study = studio(math);
-  const codes = kinds(math);
+  const study = studio(mrly);
+  const codes = kinds(mrly);
   let now: Study | null = null;
   let built: Built | null = null;
   let made = "";
   let turn = false;
   const take = (next: Opts) => {
     const value = {
-      ...(tidy(SPEC, next, { math }) as Knobs),
+      ...(tidy(SPEC, next, mrly) as Knobs),
       ...(tidy(DESIGN, { ...next, dim: DIM }) as Design),
       seed: next.seed,
     };
@@ -190,7 +189,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     turn = value.turn === 1;
     const key = `${now.key}${turn}`;
     if (key !== made) {
-      built = mesh(math, now.drawn, turn);
+      built = mesh(mrly, now.drawn, turn);
       made = key;
     }
     tell?.(now.facts);
@@ -209,11 +208,11 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   };
   const svg = () =>
     wrap(
-      math.six.svg(math.six.paint(now!.drawn, custom()), SCALE, undefined, 0, undefined),
+      mrly.six.svg(mrly.six.paint(now!.drawn, custom()), SCALE, undefined, 0, undefined),
       now!.drawn.orientation === "Horizontal",
       turn,
     );
   const tile = () =>
-    wrap(math.six.rect_svg(math.six.paint(now!.one, custom()), SCALE), now!.one.orientation === "Horizontal", turn);
+    wrap(mrly.six.rect_svg(mrly.six.paint(now!.one, custom()), SCALE), now!.one.orientation === "Horizontal", turn);
   return { draw: paint, still: true, set: take, svg, tile };
 }

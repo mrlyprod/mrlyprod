@@ -1,6 +1,6 @@
 use crate::factor::{gcd, mobius_sieve};
 use crate::prime::primes;
-use mrly_core::error::{Result, overflow_error, value_error};
+use mrly_error::{Result, overflow_error, value_error};
 use std::f64::consts::PI;
 
 pub const BASEL: f64 = PI * PI / 6.0;

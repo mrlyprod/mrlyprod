@@ -1,21 +1,21 @@
+import * as twoUnit from "@mrlyprod/two";
 import { frame as boxed, type Color, Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { two: twoUnit };
 
 const M = 5;
 const K = 7;
 const PX = 6;
 const SIDE = 2 ** K;
 
-type Cells = ReturnType<typeof math.two.create>;
+type Cells = ReturnType<typeof twoUnit.create>;
 
 let memo: { two: Cells; three: Cells } | undefined;
 
 function gaskets() {
   if (memo) return memo;
-  const two = math.two.create(7, 2, K, 0, 2);
-  const three = math.two.create(11, 3, M, 0, 3);
+  const two = twoUnit.create(7, 2, K, 0, 2);
+  const three = twoUnit.create(11, 3, M, 0, 3);
   if (two.shape[0] !== SIDE || two.shape[1] !== SIDE)
     throw new Error(`research-cobham: the base 2 gasket is ${two.shape}, want ${SIDE},${SIDE}`);
   if (three.shape[0] < SIDE || three.shape[1] < SIDE)

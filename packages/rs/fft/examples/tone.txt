@@ -1,0 +1,18 @@
+bin  0   0.00
+bin  1   0.00
+bin  2   0.00
+bin  3   8.00 ########
+bin  4   0.00
+bin  5   0.00
+bin  6   0.00
+bin  7   0.00
+bin  8   0.00
+bin  9   0.00
+bin 10   0.00
+bin 11   0.00
+bin 12   0.00
+bin 13   8.00 ########
+bin 14   0.00
+bin 15   0.00
+round trip error below 1e-12: true
+the length 6 is not a power of two.

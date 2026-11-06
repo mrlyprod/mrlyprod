@@ -8,11 +8,11 @@ Real numbers fall out of the fractal work beside the integer sequences: sieve li
 
 | name | value | digits | generator | topic note | OEIS |
 | --- | --- | --- | --- | --- | --- |
-| [wallis-sieve-cube](#wallis-sieve-cube) | `0.948815485719679` | 15 | `mrly_num::sieve::solid_limit` | [pi](../pi/notes/pi.md) | none |
-| [wallis-sieve-cube-even](#wallis-sieve-cube-even) | `1.052420668` | 10 | `mrly_num::sieve::parity_product(3, false)`, `magic/lab/py/staircase-constants` section parity | [pi](../pi/notes/pi.md) | none |
-| [wallis-sieve-plane](#wallis-sieve-plane) | `0.785398163` | 9 | `mrly_num::sieve::PLANE_LIMIT`, `magic/lab/py/staircase-constants` section parity | [pi](../pi/notes/pi.md) | [A003881](https://oeis.org/A003881) |
-| [wallis-sieve-dim4](#wallis-sieve-dim4) | `0.985352084` | 9 | `mrly_num::sieve::parity_product(4, true)`, `magic/lab/py/staircase-constants` section parity | [pi](../pi/notes/pi.md) | [A371219](https://oeis.org/A371219) |
-| [wallis-sieve-dim6](#wallis-sieve-dim6) | `0.998553027` | 9 | `mrly_num::sieve::parity_product(6, true)`, `magic/lab/py/staircase-constants` section parity | [pi](../pi/notes/pi.md) | [A371465](https://oeis.org/A371465) |
+| [wallis-sieve-cube](#wallis-sieve-cube) | `0.948815485719679` | 15 | `mrly_zeta::sieve::solid_limit` | [pi](../pi/notes/pi.md) | none |
+| [wallis-sieve-cube-even](#wallis-sieve-cube-even) | `1.052420668` | 10 | `mrly_zeta::sieve::parity_product(3, false)`, `magic/lab/py/staircase-constants` section parity | [pi](../pi/notes/pi.md) | none |
+| [wallis-sieve-plane](#wallis-sieve-plane) | `0.785398163` | 9 | `mrly_zeta::sieve::PLANE_LIMIT`, `magic/lab/py/staircase-constants` section parity | [pi](../pi/notes/pi.md) | [A003881](https://oeis.org/A003881) |
+| [wallis-sieve-dim4](#wallis-sieve-dim4) | `0.985352084` | 9 | `mrly_zeta::sieve::parity_product(4, true)`, `magic/lab/py/staircase-constants` section parity | [pi](../pi/notes/pi.md) | [A371219](https://oeis.org/A371219) |
+| [wallis-sieve-dim6](#wallis-sieve-dim6) | `0.998553027` | 9 | `mrly_zeta::sieve::parity_product(6, true)`, `magic/lab/py/staircase-constants` section parity | [pi](../pi/notes/pi.md) | [A371465](https://oeis.org/A371465) |
 | [dim-e2](#dim-e2) | `0.53128050627720514162446864736847178549305910` | 44 | `beneath/lab/py/periodic-determinant` verb control | [beneath](../beneath/notes/beneath.md) | [A279903](https://oeis.org/A279903) |
 | [log2-phi](#log2-phi) | `0.694241913630` | 12 | `beneath/lab/py/question-mark` verb table, code 126 | [beneath](../beneath/notes/beneath.md) | [A242208](https://oeis.org/A242208) |
 | [orphan-11892](#orphan-11892) | `0.41681776443307102575640207215` | 29 | `beneath/lab/py/periodic-determinant` verb orphans | [beneath](../beneath/notes/beneath.md) | none |
@@ -36,7 +36,7 @@ Real numbers fall out of the fractal work beside the integer sequences: sieve li
 ### wallis-sieve-plane
 
 - The plane Wallis sieve keeps the area `pi/4`, Wallis's product; the odd parity design of `dim 2`, code `6`.
-- The lab's Gamma form meets `pi/4` and the zeta log series below `1e-50`; `mrly_num::sieve::ratio` on the odd word of two million letters reads `0.785398262`, the truncated product.
+- The lab's Gamma form meets `pi/4` and the zeta log series below `1e-50`; `mrly_zeta::sieve::ratio` on the odd word of two million letters reads `0.785398262`, the truncated product.
 - Claims: [wallis-sieve](../pi/claims/wallis-sieve.md), [staircase-law](../magic/claims/staircase-law.md).
 
 ### wallis-sieve-dim4

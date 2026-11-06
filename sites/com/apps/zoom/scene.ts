@@ -1,4 +1,5 @@
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick } from "@mrlyprod/ui/kit/rand.ts";
@@ -36,7 +37,7 @@ export type Knobs = {
   hyper: number;
 };
 
-export type Given = Opts & { math?: Mrly | null };
+export type Given = Opts & { mrly?: Mrly | null };
 
 export type Owned = { drop: () => void };
 
@@ -131,7 +132,7 @@ export const SPEC: Spec = [
   { key: "hyper", label: "Hyper", kind: "toggle", def: 0, group: "Look" },
 ];
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   spec: SPEC,
@@ -142,14 +143,14 @@ export const PAGE = {
     { key: "ArrowLeft", label: "Previous shape", act: "prev", menu: "View" },
   ],
   acts: {
-    next: (value, _key, units) => stepped(value, 1, units!.math),
-    prev: (value, _key, units) => stepped(value, -1, units!.math),
+    next: (value, _key, units) => stepped(value, 1, units!),
+    prev: (value, _key, units) => stepped(value, -1, units!),
   },
   reroll: (value, seed, units) => ({
-    code: pickCode(units!.math, { ...(value as unknown as Choice), code: -1 }, seed),
+    code: pickCode(units!, { ...(value as unknown as Choice), code: -1 }, seed),
   }),
   record: true,
-} satisfies Page<Loaded<"math">, Zoomed>;
+} satisfies Page<Loaded<Crate>, Zoomed>;
 
 const flight = (look: string) => (rand: Rng) => ({
   code: pick(rand, FAMILY),
@@ -168,8 +169,8 @@ export const SAVERS = [
   { id: "haze", title: "Haze", pick: flight("haze") },
 ];
 
-function stepped(value: Value, by: number, math: Mrly) {
-  return { code: step(codes(math, Number(value.n), String(value.pick)), Number(value.code), by) };
+function stepped(value: Value, by: number, mrly: Mrly) {
+  return { code: step(codes(mrly, Number(value.n), String(value.pick)), Number(value.code), by) };
 }
 
 export function step(pool: readonly number[], code: number, by: number) {
@@ -187,16 +188,16 @@ const SPAN = 8;
 const DROP = 0.2;
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
-  const { math } = opts;
-  if (!math) throw new Error("zoom: the scene wants @mrlyprod/math as opts.math");
+  const { mrly } = opts;
+  if (!mrly) throw new Error("zoom: the scene wants the design crates as opts.mrly");
   const gl = context(canvas);
   if (!gl) return blank(canvas);
   const value = tidy(SPEC, opts) as Knobs;
   const seed = Number.isFinite(Number(opts.seed)) ? Number(opts.seed) >>> 0 : 0;
   const { n, code } = value;
   const design = { code, n };
-  const info = teach(math, code, n);
-  const path = info.kept ? route(math, design, seed, { pilot: value.pilot }) : null;
+  const info = teach(mrly, code, n);
+  const path = info.kept ? route(mrly, design, seed, { pilot: value.pilot }) : null;
   const made: Owned[] = [];
   let film: Post | null = null;
   let trip: Hyper | null = null;
@@ -207,7 +208,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     face = hud(gl, view);
     made.push(face);
     if (path) {
-      world = march(gl, view, design, { math, look: value.look, quality: value.quality, toFrame: path.toFrame });
+      world = march(gl, view, design, { mrly, look: value.look, quality: value.quality, toFrame: path.toFrame });
       made.push(world);
       if (value.path) {
         lines = trails(gl, view);
@@ -234,7 +235,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     trip.hold();
   }
   const grade = GRADES[value.look];
-  const title = `${NAMES.some(([one]) => canon(math, one) === canon(math, code)) ? name(math, code) : "bang"} ${code}`;
+  const title = `${NAMES.some(([one]) => canon(mrly, one) === canon(mrly, code)) ? name(mrly, code) : "bang"} ${code}`;
   let tint: string | null = null;
   let paints: Tone | null = null;
   let rail: Required<Rail>[] = [];

@@ -1,4 +1,4 @@
-use mrly_math::counts::ladder::{
+use mrly_sequences::counts::ladder::{
     characteristic, determinant, digit_polynomial, even_block, ladder,
 };
 

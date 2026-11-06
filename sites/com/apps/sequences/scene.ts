@@ -1,3 +1,5 @@
+import type { Crate } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts } from "@mrlyprod/ui/kit/run.ts";
@@ -40,7 +42,7 @@ export type Line = Plan & Grown & Series;
 
 export type Feed = { rows: Line[]; version: number };
 
-export type Fed = Opts & Partial<Feed> & { math?: Mrly | null; live?: RefObject<Feed> };
+export type Fed = Opts & Partial<Feed> & { mrly?: Mrly | null; live?: RefObject<Feed> };
 
 export type Hits = { legend: Spot[]; slots: Slots | null };
 
@@ -118,11 +120,11 @@ export const SPEC: Spec = [
 export const named = (value: Value) =>
   ["sequences", picks(value.pick as string)[0] ?? value.seed, value.chart].join("-");
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const roll = (seed: number, n: number) => Math.floor(rng(seed >>> 0)() * n);
 
-export const PAGE: Page<Loaded<"math">, Held> = {
+export const PAGE: Page<Loaded<Crate>, Held> = {
   defaults: { q: "", pick: CANON },
   spec: SPEC,
   units,
@@ -144,7 +146,7 @@ export const PAGE: Page<Loaded<"math">, Held> = {
     cycle: (value) => ({ chart: KINDS[(KINDS.findIndex(([slug]) => slug === value.chart) + 1) % KINDS.length][0] }),
   },
   reroll: (value, seed, units) => {
-    const book = booked(units!.math);
+    const book = booked(units!);
     const space = filter(book.keys(value.dim, value.base), String(value.measure), String(value.axis));
     if (!space.length) return {};
     const held = picks(String(value.pick))[0] ?? lead(book, space, roll(Number(value.seed), space.length))?.key;
@@ -159,7 +161,7 @@ const within = (box: Spot, x: number, y: number) => x >= box.x0 && x <= box.x1 &
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Fed = {}) {
   const ctx = canvas.getContext("2d")!;
-  const math = opts.math;
+  const mrly = opts.mrly;
   const live = opts.live;
   let { chart: kind, digits: base } = tidy(SPEC, opts) as Knobs;
   const feed = () => live?.current ?? opts;
@@ -173,12 +175,12 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Fed = {}) {
   let moving = false;
   let hits: Hits = { legend: [], slots: null };
   const sheet = (row: Line, index: number) => {
-    if (!math || !row) return null;
+    if (!mrly || !row) return null;
     const id = `${row.key}:${index}`;
     if (!pictures.has(id)) {
       let made: Picture | null = null;
       try {
-        made = picture(math, row, index);
+        made = picture(mrly, row, index);
       } catch {
         made = null;
       }

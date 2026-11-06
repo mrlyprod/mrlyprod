@@ -1,14 +1,15 @@
 import { paints, veil } from "@mrlyprod/ui/kit/color.ts";
+import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { text } from "@mrlyprod/ui/kit/export.ts";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
-import { useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Chip } from "@mrlyprod/ui/kit/library.tsx";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
 import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Make } from "@mrlyprod/ui/kit/run.ts";
-import type { Units } from "@mrlyprod/ui/kit/spec.ts";
 import type { CSSProperties, MouseEvent, PointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KINDS } from "../shared/sequences/chart.ts";
@@ -39,7 +40,7 @@ import { make, roll } from "./scene.ts";
 
 export type Asked = Knobs & { seed: number; q: string; pick: string };
 
-type Contract = WidgetProps<Units, Held>;
+type Contract = WidgetProps<Mrly, Held>;
 
 export type Props = Pick<Contract, "value" | "onChange"> & Partial<Pick<Contract, "onReady" | "onExport" | "onStatus">>;
 
@@ -96,7 +97,7 @@ const PAGER: CSSProperties = {
 const NOTE: CSSProperties = { padding: "0 var(--s2)", fontSize: "var(--t2)", lineHeight: 1.5 };
 
 export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) {
-  const math = useUnit("math");
+  const mrly = useCrates(CRATES);
   const [tick, setTick] = useState(0);
   const [page, setPage] = useState(0);
   const [many, setMany] = useState(false);
@@ -109,7 +110,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
   const chosen = useRef<Row[]>([]);
   now.current = value;
   tell.current = onChange;
-  const book = useMemo(() => math && booked(math), [math]);
+  const book = useMemo(() => mrly && booked(mrly), [mrly]);
   const { dim, base, measure, axis, chart, digits, terms, seed, q, pick } = value as Asked;
   const space = useMemo(
     () => (book ? filter(book.keys(dim, base), measure, axis) : []),
@@ -210,7 +211,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus }: Props) 
     stage.current = handle;
     onReady?.(handle && { ...handle, browse, find, plot });
   };
-  const scene = useCallback<Make<Stage>>((canvas, view, opts) => make(canvas, view, { ...opts, live, math }), [math]);
+  const scene = useCallback<Make<Stage>>((canvas, view, opts) => make(canvas, view, { ...opts, live, mrly }), [mrly]);
   const tap = (e: PointerEvent<HTMLCanvasElement>) => {
     const handle = stage.current;
     if (!handle?.tap) return;

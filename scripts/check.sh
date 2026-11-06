@@ -40,11 +40,13 @@ sites() {
 mkdir -p "$DATA_DIR"
 total=$SECONDS
 step prose uv run scripts/prose.py README.md CONTRIBUTING.md sim/testers/
+step stamp uv run --no-project scripts/stamp.py --check
 step generate bash scripts/build.sh
 step fmt cargo fmt --all --check
 step fmtcli cargo fmt --manifest-path packages/cli/Cargo.toml --check
 step clippy cargo clippy --workspace --all-targets -- -D warnings
-step clipcli cargo clippy --manifest-path data/packages/rs/bridge/Cargo.toml -p mrly-cli -- -D warnings
+step clipcli cargo clippy --manifest-path data/packages/rs/bindgen/Cargo.toml -p mrly-cli -- -D warnings
+step examples uv run --no-project scripts/examples.py --check
 step ruff $RUFF check packages/py aws
 step ruffmt $RUFF format --check packages/py aws
 step install bun install --frozen-lockfile

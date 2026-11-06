@@ -1,0 +1,28 @@
+  n  prime  side (primes grow)  side (every grows)
+  1  false                   1                   1
+  2   true                   2                   2
+  3   true                   2                   2
+  4  false                   1                   4
+  5   true                   4                   4
+  6  false                   1                   4
+  7   true                   4                   4
+  8  false                   1                   8
+  9  false                   1                   8
+ 10  false                   1                   8
+ 11   true                   8                   8
+ 12  false                   1                   8
+ 13   true                   8                   8
+ 14  false                   1                   8
+ 15  false                   1                   8
+ 16  false                   1                  16
+ 17   true                  16                  16
+ 18  false                   1                  16
+ 19   true                  16                  16
+ 20  false                   1                  16
+ 21  false                   1                  16
+ 22  false                   1                  16
+ 23   true                  16                  16
+ 24  false                   1                  16
+
+tiles per level, primes grow: [15, 2, 2, 2, 3]
+tiles per level, every grows: [1, 2, 4, 8, 9]

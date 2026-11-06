@@ -1,0 +1,4 @@
+level fills voids perimeter vertices edges euler
+    1     8     1        16       16    24     0
+    2    64    17        80       96   168    -8
+    3   512   217       496      688  1272   -72

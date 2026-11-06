@@ -65,7 +65,7 @@ const shelves = (units: Doors): [string, Entry[]][] => [
   ...SHELVES,
   [
     "Rules",
-    games(units.math)
+    games(units)
       .filter((one) => one.key !== "typed")
       .map((one) => [one.name, { view: "rule", game: one.key }, `width ${one.width}`]),
   ],
@@ -117,7 +117,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
     onExport?.([["CSV", sheet]]);
   }, []);
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units, onFacts: setFacts }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
+      make(canvas, view, { ...opts, mrly: units, onFacts: setFacts }),
     [units],
   );
   const ready = (handle: Handle<Stage> | null) => {

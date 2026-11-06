@@ -1,4 +1,5 @@
-import type { Image, tourbillon } from "@mrlyprod/math";
+import type { Image } from "@mrlyprod/math";
+import type * as tourbillon from "@mrlyprod/tourbillon";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Scalar } from "@mrlyprod/ui/kit/spec.ts";
 import type { Held, Look, Ramp } from "../shared/moire/engine.ts";
@@ -106,8 +107,8 @@ export function shown(eyes: readonly tourbillon.Eye[], kind: Scalar, find: strin
     .filter(([eye]) => (kind === "unit" ? eye.numer <= 90 : label(eye).includes(want)));
 }
 
-export function spin(math: Mrly, value: Stack, at: number, size: number): Spun {
-  const data = math.tourbillon.field(
+export function spin(mrly: Mrly, value: Stack, at: number, size: number): Spun {
+  const data = mrly.tourbillon.field(
     value.limit,
     size,
     value.sched,
@@ -118,11 +119,11 @@ export function spin(math: Mrly, value: Stack, at: number, size: number): Spun {
     value.blend,
     value.seed,
   );
-  return { field: math.moire.Field.from_data(data, size), data, size, at };
+  return { field: mrly.moire.Field.from_data(data, size), data, size, at };
 }
 
-export const reading = (math: Mrly, value: Stack, held: Spun) =>
-  math.tourbillon.stats(
+export const reading = (mrly: Mrly, value: Stack, held: Spun) =>
+  mrly.tourbillon.stats(
     held.data,
     held.size,
     value.limit,
@@ -140,10 +141,10 @@ export function shade(value: Tones, stats: tourbillon.Stats | null): Shade {
   return { ramp, levels: Math.max(2, Number(value.levels) || (stats?.layers ?? 1) + 1), signed };
 }
 
-export function swatch(math: Mrly, value: Swatched, at: number, size: number, look: Look): Image {
-  const held = spin(math, value, at, size);
-  const how = shade(value, reading(math, value, held));
-  const out = paint(math, held, colorizer(how.ramp, how.levels, look), how.levels, value.invert, how.signed);
+export function swatch(mrly: Mrly, value: Swatched, at: number, size: number, look: Look): Image {
+  const held = spin(mrly, value, at, size);
+  const how = shade(value, reading(mrly, value, held));
+  const out = paint(mrly, held, colorizer(how.ramp, how.levels, look), how.levels, value.invert, how.signed);
   held.field.free();
   return out;
 }

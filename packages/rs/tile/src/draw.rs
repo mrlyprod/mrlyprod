@@ -1,8 +1,8 @@
 use crate::recipe::{
     Catalog, Design, Group, Parity, Source, Tile, generals, nestings, powers, products, uniform,
 };
-use mrly_core::error::{Result, value_error};
-use mrly_core::rng::Rng;
+use mrly_error::{Result, value_error};
+use mrly_rand::Rng;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -30,7 +30,7 @@ impl<const N: usize> Default for ConfigNd<N> {
 
 impl<const N: usize> ConfigNd<N> {
     fn sources(&self) -> Vec<Source> {
-        mrly_math::bang::sources(&self.catalog, N).unwrap_or_default()
+        mrly_bang::sources(&self.catalog, N).unwrap_or_default()
     }
     fn source(&self, rng: &mut Rng) -> Result<Source> {
         Ok(*rng.choice(&self.sources())?)

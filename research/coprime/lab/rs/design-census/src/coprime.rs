@@ -1,5 +1,5 @@
-use mrly_math::bang::factory::{code_to_corners, corners_to_code, residue_corners};
-use mrly_math::bang::Code;
+use mrly_math::code::Code;
+use mrly_math::factory::{code_to_corners, corners_to_code, residue_corners};
 use mrly_num::factor::{divisors, factorize, gcd, mobius, radical};
 use mrly_num::series::zeta;
 use std::collections::BTreeSet;

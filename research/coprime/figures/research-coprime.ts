@@ -1,12 +1,12 @@
-import { Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 import * as num from "@mrlyprod/num";
+import * as two from "@mrlyprod/two";
+import { Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
-export const units = { math, num };
+export const units = { num, two };
 
 export default function draw(pen: Pen, ink: Ink) {
   const area = pen.frame(0.08);
-  const cells = math.two.create(495, 3, 4, 0, 3);
+  const cells = two.create(495, 3, 4, 0, 3);
   const side = cells.shape[1];
   if (side !== 81 || cells.shape[0] !== side) throw new Error(`research-coprime: shape ${cells.shape}, want 81 square`);
   let sum = 0;

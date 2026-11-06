@@ -41,7 +41,7 @@ export type Knobs = { root: string; cap: number; ink: Ink; look: Look; labels: n
 
 export type Told = Facts & { circle?: Read | null };
 
-export type Given = Opts & { num?: Num | null; onTell?: (facts: Told) => void };
+export type Given = Opts & { apollonian?: Num | null; onTell?: (facts: Told) => void };
 
 export type Seen = Pick<View, "w" | "h" | "dpr" | "t" | "still"> &
   Partial<Pick<View, "lock">> & { look: () => Pick<Paints, "paper" | "accent"> };
@@ -73,7 +73,7 @@ export const SPEC: Spec = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
-export const units = wasm("num");
+export const units = wasm("apollonian");
 
 export const file = (value: Value) =>
   `apollonian-${value.root === "strip" ? "strip" : `bounded-${String(value.root).replace("-", "").split(",").join("-")}`}-${value.cap}`;
@@ -85,7 +85,7 @@ export const PAGE = {
   keys: [{ key: ["ArrowUp", "ArrowDown"], label: "Cap T", act: "cap", menu: "View" }],
   acts: { cap: (value, key) => ({ cap: step(Number(value.cap), key === "ArrowDown" ? -1 : 1) }) },
   reroll: (_value, seed) => roll(rng(seed)),
-} satisfies Page<Loaded<"num">, Apollonian>;
+} satisfies Page<Loaded<"apollonian">, Apollonian>;
 
 export const SAVERS = [
   {
@@ -151,10 +151,9 @@ export function portrait(
   dpr: number,
   look: Pick<Paints, "paper">,
 ) {
-  const a = num.apollonian;
-  const packing = a.grow(root, GLANCE);
-  const data = a.flat(root, GLANCE);
-  const frame = Array.from(a.frame(packing));
+  const packing = num.grow(root, GLANCE);
+  const data = num.flat(root, GLANCE);
+  const frame = Array.from(num.frame(packing));
   const roots = packing.root.filter((c) => c.k > 0).length;
   const hull = packing.root.find((c) => c.k < 0);
   const box = layout(frame, w, h, SOFT * dpr);
@@ -199,8 +198,8 @@ export function portrait(
 }
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const num = opts.num;
-  if (!num) throw new Error("apollonian: the scene wants @mrlyprod/num as opts.num");
+  const num = opts.apollonian;
+  if (!num) throw new Error("apollonian: the scene wants @mrlyprod/apollonian as opts.apollonian");
   const ctx = canvas.getContext("2d")!;
   const whole = !view.lock;
   const tell = opts.onTell;
@@ -372,9 +371,9 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const k = ints[i * 3];
     const x = ints[i * 3 + 1];
     const y = ints[i * 3 + 2];
-    const c = num.apollonian.Circle.from({ k, x, y });
-    const line = strip && num.apollonian.on_line(c);
-    const ford = line && num.apollonian.is_ford(c);
+    const c = num.Circle.from({ k, x, y });
+    const line = strip && num.on_line(c);
+    const ford = line && num.is_ford(c);
     c.free();
     const cx = data[i * STRIDE];
     const touch = ford ? (at.get(cx) ?? (Number.isInteger(cx) ? { num: cx, den: 1 } : null)) : null;

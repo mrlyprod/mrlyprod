@@ -5,7 +5,6 @@ import { canon } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { download, text } from "@mrlyprod/ui/kit/export.ts";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import { Knob } from "@mrlyprod/ui/kit/knobs.tsx";
-import type { Mathy } from "@mrlyprod/ui/kit/page.tsx";
 import type { Patch, Row, Spec, Value } from "@mrlyprod/ui/kit/spec.ts";
 import type { ReactNode, RefObject } from "react";
 import { useEffect } from "react";
@@ -82,7 +81,7 @@ export function design(
   value: Value,
   onChange: (patch: Patch) => void,
   unit: Mrly | null | undefined,
-  spec: readonly Titled<Mathy>[],
+  spec: readonly Titled<Mrly>[],
 ): Pane {
   const { base, code } = read(value);
   const shown = unit ? canon(unit, DIM, base, code) : code;
@@ -91,6 +90,6 @@ export function design(
   return {
     name: "Design",
     live: [name || shown, `${word} ${value.number}`, `level ${value.level}`].join(" · "),
-    body: knobs(["number", "level"], value, onChange, spec, unit ? { math: unit } : undefined),
+    body: knobs(["number", "level"], value, onChange, spec, unit ?? undefined),
   };
 }

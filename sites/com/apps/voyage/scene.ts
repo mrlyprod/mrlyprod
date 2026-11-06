@@ -1,3 +1,5 @@
+import type { Crate } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick, rng } from "@mrlyprod/ui/kit/rand.ts";
@@ -78,7 +80,7 @@ export type Entrance = {
 
 export type Path = { way: Route; door: Entrance; drop?: undefined };
 
-export type Given = Opts & { math?: Door | null; audio?: Pick<Bus, "at" | "cue"> | null };
+export type Given = Opts & { mrly?: Door | null; audio?: Pick<Bus, "at" | "cue"> | null };
 
 export type Voyage = ReturnType<typeof make>;
 
@@ -154,7 +156,7 @@ export const SPEC: Spec = [
   { key: "music", label: "Music", kind: "toggle", def: 1, group: "Sound" },
 ];
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   spec: SPEC,
@@ -173,7 +175,7 @@ export const PAGE = {
   ],
   actions: { again: (scene) => scene.again?.(), mute: (scene) => scene.mute?.() },
   record: true,
-} satisfies Page<Loaded<"math">, Held>;
+} satisfies Page<Loaded<Crate>, Held>;
 
 export const SAVERS = [
   {
@@ -349,11 +351,11 @@ export function stand(pick: string, seed: number) {
 const place = (pick: string, seed: number, rand: Rng, skip: string) =>
   stand(pick, seed) ?? world("exo", Math.floor(rand() * 4294967296), { type: weigh(rand, skip) });
 
-export function roll(math: Door, value: Trip, seed: number, loop: number): Rolled {
+export function roll(mrly: Door, value: Trip, seed: number, loop: number): Rolled {
   const rand = rng(((seed >>> 0) ^ SALT ^ Math.imul(loop + 1, GOLD)) >>> 0);
   const a = place(value.from, seed >>> 0, rand, "");
   const b = place(value.to, ((seed >>> 0) ^ OTHER) >>> 0, rand, a.kind);
-  const pool = codes(math, N);
+  const pool = codes(mrly, N);
   const hand = Number.parseInt(value.ship, 10);
   const code = hand > 0 && hand < 256 ? hand : pool[Math.floor(rand() * pool.length)];
   const up = unit(rand);
@@ -616,8 +618,8 @@ const outer = (door: Entrance) => ({
 const unlit = (canvas: HTMLCanvasElement) => ({ ...blank(canvas), again: () => {} });
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
-  const { math } = opts;
-  if (!math) throw new Error("voyage: the scene wants @mrlyprod/math as opts.math");
+  const { mrly } = opts;
+  if (!mrly) throw new Error("voyage: the scene wants the design crates as opts.mrly");
   const gl = context(canvas);
   if (!gl) return unlit(canvas);
   const value = tidy(SPEC, opts) as Knobs;
@@ -669,7 +671,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const begin = (loop: number, start: number, held = false) => {
     const r: Bare = {
       loop,
-      rolled: roll(math, value, seed, loop),
+      rolled: roll(mrly, value, seed, loop),
       sent: new Set(),
       fired: false,
       exited: false,
@@ -727,7 +729,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const there = (r: Run, staged: boolean) => build(r, "b", () => planet(gl, view, r.rolled.b, { staged }));
   const path = (r: Run) =>
     build(r, "route", () => {
-      const way = route(math, { code: r.rolled.code, n: N }, seed);
+      const way = route(mrly, { code: r.rolled.code, n: N }, seed);
       return { way, door: entry(way) };
     });
   const inner = (r: Run) =>
@@ -737,7 +739,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
         view,
         { code: r.rolled.code, n: N },
         {
-          math,
+          mrly,
           look: value.look,
           quality: view.lock && tier(view) !== "phone" ? "low" : "",
           toFrame: path(r)?.way.toFrame,

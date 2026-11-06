@@ -1,8 +1,8 @@
+import * as chladni from "@mrlyprod/chladni";
 import type { Pen } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as num from "@mrlyprod/num";
 
-export const units = { num };
+export const units = { chladni };
 
 const N = 2;
 const M = 5;
@@ -19,14 +19,14 @@ let sand: Uint8ClampedArray<ArrayBuffer> | null = null;
 
 function settle(): Uint8ClampedArray<ArrayBuffer> {
   if (sand) return sand;
-  const field = num.chladni.plate(N, M, SIGN, SIDE);
+  const field = chladni.plate(N, M, SIGN, SIDE);
   let grains: Float32Array = new Float32Array(2 * ROWS * ROWS);
   for (let i = 0; i < ROWS * ROWS; i++) {
     grains[2 * i] = ((i % ROWS) + 0.5) / ROWS;
     grains[2 * i + 1] = (Math.floor(i / ROWS) + 0.5) / ROWS;
   }
   for (let k = 0; k < STEPS; k += CHUNK)
-    grains = num.chladni.shake(field, SIDE, grains, k, Math.min(CHUNK, STEPS - k), SEED);
+    grains = chladni.shake(field, SIDE, grains, k, Math.min(CHUNK, STEPS - k), SEED);
   const counts = new Uint16Array(DOTS * DOTS);
   for (let i = 0; i < grains.length; i += 2) {
     if (Number.isNaN(grains[i])) continue;

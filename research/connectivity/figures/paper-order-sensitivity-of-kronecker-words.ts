@@ -1,10 +1,11 @@
-import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
+import * as bang from "@mrlyprod/bang";
 import * as math from "@mrlyprod/math";
+import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
-export const units = { math };
+export const units = { bang, math };
 
 function letter(code: number) {
-  return math.bang.MagicLayer.new(new math.name.Bang(code, 2, 2), 2);
+  return math.factory.MagicLayer.new(new math.name.Bang(code, 2, 2), 2);
 }
 
 function lattice(pen: Pen, frame: Frame, side: number, thick: number, ink: Ink) {
@@ -17,7 +18,7 @@ function lattice(pen: Pen, frame: Frame, side: number, thick: number, ink: Ink) 
 }
 
 function panel(pen: Pen, frame: Frame, order: [number, number], tone: Color, ink: Ink) {
-  const picture = math.bang.magic([letter(order[0]), letter(order[1])]);
+  const picture = math.factory.magic([letter(order[0]), letter(order[1])]);
   if (picture.shape.join() !== "4,4")
     throw new Error(`paper-order-sensitivity-of-kronecker-words: picture ${picture.shape}, want 4 square`);
   lattice(pen, frame, 4, 2.5, ink);
@@ -43,8 +44,8 @@ export default function draw(pen: Pen, ink: Ink) {
   const second = panel(pen, low, [6, 3], ink.orange, ink);
   if (first !== 4 || second !== 4)
     throw new Error(`paper-order-sensitivity-of-kronecker-words: panels fill ${first} and ${second}, want 4 and 4`);
-  const forward = math.bang.word.components([letter(3), letter(6)]);
-  const backward = math.bang.word.components([letter(6), letter(3)]);
+  const forward = bang.word.components([letter(3), letter(6)]);
+  const backward = bang.word.components([letter(6), letter(3)]);
   if (forward !== "4" || backward !== "2")
     throw new Error(`paper-order-sensitivity-of-kronecker-words: components ${forward} and ${backward}, want 4 and 2`);
 }

@@ -1,6 +1,7 @@
 import type { Tensor } from "@mrlyprod/life";
 import { paints, veil } from "@mrlyprod/ui/kit/color.ts";
 import { Fold } from "@mrlyprod/ui/kit/controls.tsx";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import { useUnits } from "@mrlyprod/ui/kit/hooks.ts";
@@ -25,7 +26,7 @@ export type PaneProps<U = Units> = {
 
 export type MaskViewProps = { mask?: Tensor | null; dot?: number; label?: string };
 
-const LIFE = wasm("life", "math");
+const LIFE = wasm(...CRATES, "life");
 
 const SPOT = 160;
 

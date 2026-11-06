@@ -4,7 +4,7 @@ import { read, useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { text } from "@mrlyprod/ui/kit/export.ts";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Patch, Seeded, Value } from "@mrlyprod/ui/kit/spec.ts";
@@ -14,9 +14,9 @@ import { copies, holds, PRESETS, sample, titled } from "./engine.ts";
 import type { Sheet } from "./scene.ts";
 import { make, name, sketch, turn } from "./scene.ts";
 
-type Props = Partial<WidgetProps<Mathy, Sheet>> & Pick<WidgetProps<Mathy, Sheet>, "onChange"> & { value: Seeded };
+type Props = Partial<WidgetProps<Mrly, Sheet>> & Pick<WidgetProps<Mrly, Sheet>, "onChange"> & { value: Seeded };
 
-type SheetsProps = { math: Mrly; value: Value; tick: number; onChange: (patch: Patch) => void };
+type SheetsProps = { mrly: Mrly; value: Value; tick: number; onChange: (patch: Patch) => void };
 
 const by = ([w, h]: readonly number[]) => `${w} x ${h}`;
 
@@ -47,13 +47,13 @@ export function rows(f: Facts | null): Readout[] {
 export const label = (f: Pick<Facts, "name" | "title"> | null) =>
   `${f ? f.name || f.title : "a cube design"} repeated into a sheet`;
 
-export function Sheets({ math, value, tick, onChange }: SheetsProps) {
+export function Sheets({ mrly, value, tick, onChange }: SheetsProps) {
   const paint = (one: Preset) => (ctx: CanvasRenderingContext2D, w: number, h: number) =>
     sketch(
       ctx,
       w,
       h,
-      sample(math, { ...(value as Knobs), ...read(value), ...one }),
+      sample(mrly, { ...(value as Knobs), ...read(value), ...one }),
       paints(ctx.canvas, value.tint as string),
     );
   return (
@@ -62,7 +62,7 @@ export function Sheets({ math, value, tick, onChange }: SheetsProps) {
         <Item
           key={titled(one)}
           label={titled(one)}
-          sub={`${copies(math, { ...(value as Knobs), ...one })} copies`}
+          sub={`${copies(mrly, { ...(value as Knobs), ...one })} copies`}
           on={holds(value, one)}
           onPick={() => onChange(one)}
           art={
@@ -88,7 +88,7 @@ export function Sheets({ math, value, tick, onChange }: SheetsProps) {
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units }: Props) {
-  const unit = units?.math;
+  const unit = units;
   const tick = useTheme();
   const [facts, setFacts] = useState<Facts | null>(null);
   const live = useRef<Handle<Sheet> | null>(null);
@@ -99,7 +99,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   useEffect(() => onStatus?.(rows(facts)), [facts]);
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
-      make(canvas, view, { ...opts, math: unit, onFacts: setFacts }),
+      make(canvas, view, { ...opts, mrly: unit, onFacts: setFacts }),
     [unit],
   );
   const ready = (handle: Handle<Sheet> | null) => {
@@ -137,7 +137,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
       )}
       {unit && (
         <Library name="Sheets">
-          <Sheets math={unit} value={value} tick={tick} onChange={onChange} />
+          <Sheets mrly={unit} value={value} tick={tick} onChange={onChange} />
         </Library>
       )}
     </>

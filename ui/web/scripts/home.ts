@@ -16,7 +16,7 @@ export type Site = {
   menu: string;
   desk: string;
   tiles?: { id: string; title: string };
-  wasm?: string[];
+  wasm?: Record<string, string[]>;
   designs?: string[];
   seams?: { apps?: string };
   research?: string;
@@ -48,6 +48,19 @@ if (!named) throw new Error("site: MRLY_ROOT names no instance; run bun run buil
 
 export const HOME = resolve(named);
 export const SITE = JSON.parse(readFileSync(join(HOME, "site.json"), "utf8")) as Site;
-export const UNITS = SITE.wasm ?? [];
-export const unit = (name: string) => join(SIBLINGS, "data", "packages", "rs", "bridge", "js", name);
-export const wasm = (name: string) => join(unit(name), `${name}.wasm`);
+const JS = join(SIBLINGS, "data", "packages", "rs", "bindgen", "js");
+const TABLE = join(JS, "blobs", "index.json");
+type Crate = { home: string };
+const CRATES: Record<string, Crate> =
+  SITE.wasm && existsSync(TABLE)
+    ? (JSON.parse(readFileSync(TABLE, "utf8")) as { crates: Record<string, Crate> }).crates
+    : {};
+export const UNITS = Object.keys(CRATES);
+export const unit = (name: string) => join(JS, name);
+export const blobs = join(JS, "blobs");
+export const wasm = (_name: string) => join(blobs, "all.wasm");
+export const home = (name: string) => CRATES[name]?.home ?? "all";
+export const closed = (names: string[]): string[] => {
+  const held = new Set(names.map(home));
+  return UNITS.filter((name) => held.has(home(name)));
+};

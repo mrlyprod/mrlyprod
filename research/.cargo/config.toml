@@ -2,9 +2,46 @@
 target-dir = "target"
 
 [patch.crates-io]
-mrly-core = { path = "../packages/rs/core" }
+mrly-apollonian = { path = "../packages/rs/apollonian" }
+mrly-arcs = { path = "../packages/rs/arcs" }
+mrly-automaton = { path = "../packages/rs/automaton" }
+mrly-bang = { path = "../packages/rs/bang" }
+mrly-chaos = { path = "../packages/rs/chaos" }
+mrly-chladni = { path = "../packages/rs/chladni" }
+mrly-coarray = { path = "../packages/rs/coarray" }
+mrly-color = { path = "../packages/rs/color" }
+mrly-crop = { path = "../packages/rs/crop" }
+mrly-error = { path = "../packages/rs/error" }
+mrly-fft = { path = "../packages/rs/fft" }
+mrly-font = { path = "../packages/rs/font" }
+mrly-four = { path = "../packages/rs/four" }
+mrly-gaussian = { path = "../packages/rs/gaussian" }
+mrly-graph = { path = "../packages/rs/graph" }
+mrly-image = { path = "../packages/rs/image" }
+mrly-json = { path = "../packages/rs/json" }
+mrly-kummer = { path = "../packages/rs/kummer" }
+mrly-ladder = { path = "../packages/rs/ladder" }
 mrly-life = { path = "../packages/rs/life" }
+mrly-linalg = { path = "../packages/rs/linalg" }
 mrly-math = { path = "../packages/rs/math" }
+mrly-moire = { path = "../packages/rs/moire" }
+mrly-name = { path = "../packages/rs/name" }
 mrly-num = { path = "../packages/rs/num" }
+mrly-radix = { path = "../packages/rs/radix" }
+mrly-rand = { path = "../packages/rs/rand" }
+mrly-readings = { path = "../packages/rs/readings" }
+mrly-roulette = { path = "../packages/rs/roulette" }
 mrly-sequences = { path = "../packages/rs/sequences" }
+mrly-six = { path = "../packages/rs/six" }
+mrly-spin = { path = "../packages/rs/spin" }
+mrly-star = { path = "../packages/rs/star" }
+mrly-sumset = { path = "../packages/rs/sumset" }
+mrly-tensor = { path = "../packages/rs/tensor" }
+mrly-three = { path = "../packages/rs/three" }
+mrly-thue = { path = "../packages/rs/thue" }
 mrly-tile = { path = "../packages/rs/tile" }
+mrly-tourbillon = { path = "../packages/rs/tourbillon" }
+mrly-two = { path = "../packages/rs/two" }
+mrly-ulam = { path = "../packages/rs/ulam" }
+mrly-wolfram = { path = "../packages/rs/wolfram" }
+mrly-zeta = { path = "../packages/rs/zeta" }

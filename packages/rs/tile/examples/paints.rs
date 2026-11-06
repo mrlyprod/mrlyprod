@@ -1,55 +1,57 @@
-use mrly_core::paint::{self, Config as PaintConfig, Edition, Paint};
-use mrly_core::{Image, Json, Rng, json};
-use mrly_tile::build::{Config2d, build_2d, create_2d};
-use mrly_tile::recipe::Tile;
+// One tile painted seven ways, one per edition: the same 0s and 1s, different rules for choosing colours.
+// Simple colours by type, Index and Rows and Columns by position, Layers and Neighbors by tag, Random by chance.
+// cargo run -p mrly-tile --example paints
+use mrly_rand::Rng;
+use mrly_tile::build::build_2d;
+use mrly_tile::paint::{self, Config, Edition};
+use mrly_tile::recipe::{Design, Group, Source, Tile};
+use std::collections::BTreeMap;
 
 const SEED: u64 = 7;
 
-fn tiles() -> Config2d {
-    Config2d {
-        min_size: 3,
-        max_size: 9,
-        ..Config2d::default()
-    }
-}
-
-fn row(edition: Edition, tile: &Tile, paint: &Paint, image: &Image) -> Json {
-    json!({
-        "edition": edition.name(),
-        "scheme": paint.scheme.name(),
-        "target": paint.target.name(),
-        "primary": paint.primary.name(),
-        "secondary": paint.secondary.iter().map(|ink| ink.name()).collect::<Vec<_>>(),
-        "shades": paint.shades.clone(),
-        "size": format!("{}x{}", tile.width, tile.height),
-        "group": tile.group.name(),
-        "image": image,
-    })
-}
-
 fn main() {
-    let config = tiles();
-    let mut rows = Vec::new();
-    for (i, edition) in Edition::all().into_iter().enumerate() {
+    let mut recipe = Tile::new(Group::Fractal);
+    recipe.sources = vec![Source::Classic(Design::Carpet)];
+    recipe.numbers = vec![3];
+    recipe.levels = vec![2];
+    recipe.rotations = vec![0];
+    recipe.resize();
+    let tile = build_2d(&recipe).unwrap();
+    let (side, gap) = (recipe.width, 2);
+    let editions = Edition::all();
+    let wide = editions.len() * (side + gap) - gap;
+    println!("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 {wide} {side}\">");
+    for (i, edition) in editions.into_iter().enumerate() {
+        let mut painted = tile.clone();
         let mut rng = Rng::new(SEED + i as u64);
-        let tile = create_2d(&config, &mut rng).expect("no tile fits the size constraints");
-        let mut cell = build_2d(&tile).expect("the tile would not build");
-        let recipe = PaintConfig {
+        let config = Config {
             editions: Some(vec![edition]),
-            ..PaintConfig::default()
+            ..Config::default()
         };
-        let paint = paint::paint(&mut cell.cell, &recipe, None, &mut rng)
-            .expect("the paint would not apply");
-        let colors = cell.cell.colors.clone().expect("the paint left no colors");
-        let image =
-            Image::new(cell.width(), cell.height(), colors).expect("the paint colored every site");
-        rows.push(row(edition, &tile, &paint, &image));
+        paint::paint(&mut painted.cell, &config, None, &mut rng).unwrap();
+        let colors = painted.cell.colors.as_ref().unwrap();
+        let left = i * (side + gap);
+        let mut bars: BTreeMap<[u8; 3], String> = BTreeMap::new();
+        for y in 0..side {
+            let mut x = 0;
+            while x < side {
+                let c = colors[y * side + x];
+                let start = x;
+                while x < side && colors[y * side + x] == c {
+                    x += 1;
+                }
+                let w = x - start;
+                bars.entry([c[0], c[1], c[2]])
+                    .or_default()
+                    .push_str(&format!("M{} {y}h{w}v1h-{w}z", left + start));
+            }
+        }
+        for (c, d) in bars {
+            println!(
+                "<path fill=\"#{:02x}{:02x}{:02x}\" d=\"{d}\"/>",
+                c[0], c[1], c[2]
+            );
+        }
     }
-    println!(
-        "{}",
-        json!({
-            "seed": SEED,
-            "paints": rows,
-        })
-    );
+    println!("</svg>");
 }

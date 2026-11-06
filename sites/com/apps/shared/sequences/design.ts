@@ -49,30 +49,30 @@ export const view = (row: Pick<Plan, "dim" | "measure">): Kind =>
 
 const budget = (row: Pick<Plan, "dim" | "measure">) => (view(row) === "cut" ? BUDGET.cut : BUDGET[row.dim]);
 
-export function fits(math: Mrly, row: Plan, index: number): number {
+export function fits(mrly: Mrly, row: Plan, index: number): number {
   let at = Math.max(0, index);
   while (at > 0) {
     const { number, level } = spot(row, at);
-    if (math.bang.level_cap(number, row.dim, budget(row)) >= level) break;
+    if (mrly.math.factory.level_cap(number, row.dim, budget(row)) >= level) break;
     at--;
   }
   return at;
 }
 
-export function sheet(math: Mrly, row: Plan, number: number, level: number): Sheet {
+export function sheet(mrly: Mrly, row: Plan, number: number, level: number): Sheet {
   const kind = view(row);
   if (kind === "grid") {
-    const cell = math.two.create(String(row.code), number, level, 0, row.base);
+    const cell = mrly.two.create(String(row.code), number, level, 0, row.base);
     return { kind, number, level, shape: cell.shape, types: cell.types };
   }
-  const made = math.six[`${kind}_design` as const](String(row.code), number, level, row.base);
+  const made = mrly.six[`${kind}_design` as const](String(row.code), number, level, row.base);
   return { kind, number, level, cell: made.cell, start: made.start };
 }
 
-export function picture(math: Mrly, row: Plan, index: number): Picture {
-  const at = fits(math, row, index);
+export function picture(mrly: Mrly, row: Plan, index: number): Picture {
+  const at = fits(mrly, row, index);
   const { number, level } = spot(row, at);
-  return { at, ...sheet(math, row, number, level) };
+  return { at, ...sheet(mrly, row, number, level) };
 }
 
 export const named = (one: Sheet) =>

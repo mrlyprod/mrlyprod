@@ -3,7 +3,7 @@ name = "memory-meter"
 edition = "2021"
 
 [dependencies]
-mrly-math = "0.2.0"
+mrly-automaton = "0.2.0"
 mrly-num = "0.2.0"
 
 [workspace]

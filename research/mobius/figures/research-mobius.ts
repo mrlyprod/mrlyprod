@@ -1,9 +1,9 @@
+import * as ladder from "@mrlyprod/ladder";
+import * as num from "@mrlyprod/num";
 import type { Ink, Pen, Point } from "@mrlyprod/draw";
 import { plot } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
-import * as num from "@mrlyprod/num";
 
-export const units = { num, math };
+export const units = { ladder, num };
 
 const LENGTH = 16;
 const STEPS = 2 ** LENGTH;
@@ -13,11 +13,11 @@ const REACH = Math.sqrt(STEPS);
 let memo: { low: Float64Array; high: Float64Array } | undefined;
 
 function walk(digits: number[]) {
-  const values = math.design.elements(4, digits, LENGTH);
+  const values = num.digits.elements(4, digits, LENGTH);
   if (values.length !== STEPS - 1)
     throw new Error(`research-mobius: ${values.length} elements of ${digits}, want ${STEPS - 1}`);
   const mu = [num.factor.mobius(0), ...Array.from(values, (v) => num.factor.mobius(Number(v)))];
-  return Float64Array.from([0, ...Array.from(math.design.meter(mu), Number)]);
+  return Float64Array.from([0, ...Array.from(ladder.design.meter(mu), Number)]);
 }
 
 function walks() {

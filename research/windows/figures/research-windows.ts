@@ -1,5 +1,5 @@
-import type { Color, Ink, Pen } from "@mrlyprod/draw";
 import * as math from "@mrlyprod/math";
+import type { Color, Ink, Pen } from "@mrlyprod/draw";
 import census from "./research-windows.json" with { type: "json" };
 
 export const units = { math };
@@ -23,7 +23,7 @@ let memo: ArrayLike<number> | undefined;
 
 function carpet() {
   if (memo) return memo;
-  const design = math.bang.factory.create("495", 3, 2, 3, LEVEL);
+  const design = math.factory.create("495", 3, 2, 3, LEVEL);
   if (design.shape.length !== 2 || design.shape[0] !== SIDE || design.shape[1] !== SIDE)
     throw new Error(`research-windows: the carpet is ${design.shape}, want ${SIDE} by ${SIDE}`);
   let filled = 0;

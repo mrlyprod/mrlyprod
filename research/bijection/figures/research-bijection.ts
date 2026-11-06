@@ -1,7 +1,7 @@
+import * as bang from "@mrlyprod/bang";
 import type { Ink, Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { bang };
 
 const CENSUS = 16;
 const STAMP_COLS = 4;
@@ -9,13 +9,13 @@ const STAMP_ROWS = 2;
 
 export default function draw(pen: Pen, ink: Ink) {
   const area = pen.frame(0.08);
-  const universe = math.bang.bang(3);
+  const universe = bang.bang(3);
   if (universe.total !== 256) throw new Error(`research-bijection: ${universe.total} codes, want 256`);
   if (universe.distinct() !== 22) throw new Error(`research-bijection: ${universe.distinct()} orbits, want 22`);
-  if (math.bang.baseq.distinct_designs(2, 3) !== "22")
-    throw new Error(`research-bijection: ${math.bang.baseq.distinct_designs(2, 3)} distinct designs, want 22`);
-  if (math.bang.corners(3).length !== 8)
-    throw new Error(`research-bijection: ${math.bang.corners(3).length} corners, want 8`);
+  if (bang.baseq.distinct_designs(2, 3) !== "22")
+    throw new Error(`research-bijection: ${bang.baseq.distinct_designs(2, 3)} distinct designs, want 22`);
+  if (bang.corners(3).length !== 8)
+    throw new Error(`research-bijection: ${bang.corners(3).length} corners, want 8`);
 
   const pitch = area.w / CENSUS;
   const bit = (pitch * 0.84) / STAMP_COLS;

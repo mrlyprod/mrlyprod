@@ -1,0 +1,8 @@
+json   {"kind":"circle","radius":5,"filled":true,"color":"blue","center":[2,3]}
+id     1fa0c0b3
+url    /circle?radius=5&filled=true&color=blue&center=2,3
+file   circle_radius=5_filled=true_color=blue_center=[2,3]
+prose  circle radius 5, filled, blue, center [2 3]
+same   true
+check  a circle wants a radius above zero.
+kind   url "/square?radius=3" is not a circle.

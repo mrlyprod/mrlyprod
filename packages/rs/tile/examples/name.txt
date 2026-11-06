@@ -1,0 +1,10 @@
+{"kind":"tile","code":7,"side":5}
+  back as General 5x5
+{"kind":"tile","code":14,"side":3,"level":2}
+  back as Fractal 9x9
+{"kind":"tile","magic":[7,6],"side":[3,3]}
+  back as Magic 9x9
+{"kind":"tile","special":7,"factor":3,"side":3}
+  back as Special 9x9
+{"kind":"tile","mosaic":[7,6,9],"factor":3,"side":3}
+  back as Mosaic 9x9

@@ -1,5 +1,5 @@
 use super::Axis;
-use mrly_core::error::{Result, value_error};
+use mrly_error::{Result, value_error};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Cost {

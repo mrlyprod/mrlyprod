@@ -1,0 +1,6 @@
+value 0.585786  exact 0.585786  vector [0.5000, 0.7071, 0.5000]
+  A v = value v within 1e-12: true
+value 2.000000  exact 2.000000  vector [0.7071, 0.0000, -0.7071]
+  A v = value v within 1e-12: true
+value 3.414214  exact 3.414214  vector [0.5000, -0.7071, 0.5000]
+  A v = value v within 1e-12: true

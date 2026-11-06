@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { basename, join, relative, resolve } from "node:path";
 import { palette } from "../../kit/theme/palette.gen.js";
 import { SIZE, sheet } from "./film/page.ts";
 import { HOME, SIBLINGS, SITE } from "./home.ts";
@@ -71,7 +71,9 @@ async function pack(scene: string, out: string) {
   );
   const built = await Bun.build({ entrypoints: [entry], target: "browser", minify: true });
   if (!built.success) throw new Error(`film: the page failed to bundle\n${built.logs.join("\n")}`);
-  await Bun.write(join(out, "film.js"), built.outputs[0]!);
+  const [page, ...assets] = built.outputs;
+  await Bun.write(join(out, "film.js"), page!);
+  for (const one of assets) await Bun.write(join(out, basename(one.path)), one);
 }
 
 if (import.meta.main) {

@@ -1,7 +1,8 @@
 import { paints } from "@mrlyprod/ui/kit/color.ts";
+import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { flat } from "@mrlyprod/ui/kit/designs/thumb.ts";
-import type { Had, Readout } from "@mrlyprod/ui/kit/hooks.ts";
+import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Chip } from "@mrlyprod/ui/kit/library.tsx";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
 import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
@@ -14,11 +15,9 @@ import { carpets, cell, hits, inks, ladder, rungOf, swatch } from "./engine.ts";
 import type { Chladni, Knobs, Stat, Step } from "./scene.ts";
 import { make } from "./scene.ts";
 
-export type Held = Had<"num" | "math">;
+export type ShelvesProps = { value: Knobs; onChange: (patch: Patch) => void; units?: Mrly | null };
 
-export type ShelvesProps = { value: Knobs; onChange: (patch: Patch) => void; units?: Held | null };
-
-type Props = WidgetProps<Held, Chladni> & { value: Knobs };
+type Props = WidgetProps<Mrly, Chladni> & { value: Knobs };
 
 const SIGNS: Record<number, string> = { 1: "+", "-1": "-" };
 const KINDS: Chip[] = [
@@ -49,9 +48,9 @@ export function Shelves({ value, onChange, units }: ShelvesProps) {
   const [find, setFind] = useState("");
   const tick = useTheme();
   useEffect(() => setKind(value.view), [value.view]);
-  const rungs = useMemo(() => (units?.num ? ladder(units.num) : []), [units]);
-  const designs = useMemo(() => (units?.math ? carpets(units.math) : []), [units]);
-  const at = value.view === "plate" && units?.num ? rungOf(units.num, value) : -1;
+  const rungs = useMemo(() => (units ? ladder(units) : []), [units]);
+  const designs = useMemo(() => (units ? carpets(units) : []), [units]);
+  const at = value.view === "plate" && units ? rungOf(units, value) : -1;
   const dye = (ctx: CanvasRenderingContext2D) => inks(paints(ctx.canvas, value.tint));
   return (
     <Library chips={KINDS} chip={kind} onChip={setKind} find={find} onFind={kind === "plate" ? setFind : undefined}>
@@ -69,9 +68,7 @@ export function Shelves({ value, onChange, units }: ShelvesProps) {
                   art={
                     <Art
                       px={64}
-                      paint={(ctx, w) =>
-                        ctx.putImageData(new ImageData(swatch(units!.num, one, dye(ctx), w), w, w), 0, 0)
-                      }
+                      paint={(ctx, w) => ctx.putImageData(new ImageData(swatch(units!, one, dye(ctx), w), w, w), 0, 0)}
                       deps={[i, value.tint, tick]}
                     />
                   }
@@ -92,7 +89,7 @@ export function Shelves({ value, onChange, units }: ShelvesProps) {
               art={
                 <Art
                   px={64}
-                  paint={(ctx, w) => flat(ctx, cell(units!.math, one), 0, 0, w, paints(ctx.canvas, value.tint).accent)}
+                  paint={(ctx, w) => flat(ctx, cell(units!, one), 0, 0, w, paints(ctx.canvas, value.tint).accent)}
                   deps={[one.number, one.code, value.tint, tick]}
                 />
               }
@@ -114,7 +111,7 @@ export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
   const push = useCallback((patch: Step) => change.current?.(patch), []);
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
-      make(canvas, view, { ...opts, ...units, onTell: tell, onWalk: push }),
+      make(canvas, view, { ...opts, mrly: units, onTell: tell, onWalk: push }),
     [units, tell, push],
   );
   const ready = (handle: Handle<Chladni> | null) => {
@@ -123,7 +120,7 @@ export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
     onReady?.(handle);
   };
   const touch = useTouch(live, change);
-  if (!units?.num) return null;
+  if (!units) return null;
   return (
     <>
       <Scene

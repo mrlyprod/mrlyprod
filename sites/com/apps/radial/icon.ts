@@ -1,8 +1,9 @@
 import type { Pen } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as spin from "@mrlyprod/spin";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { spin, two };
 
 type Plan = { stack: Float32Array; top: number };
 
@@ -19,17 +20,17 @@ let plan: Plan | null = null;
 
 function study(): Plan {
   if (plan) return plan;
-  const cell = math.two.create(CODE, NUMBER, LEVEL, 0, BASE);
+  const cell = two.create(CODE, NUMBER, LEVEL, 0, BASE);
   const side = cell.shape[0];
   const data = Float32Array.from(cell.types);
-  const fills = math.two.fills(cell);
-  const order = math.spin.turns(math.spin.harmonics(data, side, 64, 16));
-  const petals = math.spin.petals(COPIES, order);
+  const fills = two.fills(cell);
+  const order = spin.turns(spin.harmonics(data, side, 64, 16));
+  const petals = spin.petals(COPIES, order);
   if (fills !== WANT.fills || order !== WANT.order || petals !== WANT.petals)
     throw new Error(
       `radial: the carpet of ${NUMBER} at level ${LEVEL} reads ${fills} fills, order ${order} and ${petals} petals over ${COPIES} copies, want ${WANT.fills}, ${WANT.order} and ${WANT.petals}`,
     );
-  const stack = math.spin.radial(data, side, OUT, COPIES, 1 / COPIES, math.spin.Blend.named("mean")!, SAMPLES);
+  const stack = spin.radial(data, side, OUT, COPIES, 1 / COPIES, spin.Blend.named("mean")!, SAMPLES);
   let top = 0;
   for (const v of stack) top = Math.max(top, v);
   plan = { stack, top };

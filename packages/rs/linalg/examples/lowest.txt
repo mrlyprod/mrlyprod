@@ -1,0 +1,5 @@
+k=1 value 0.00006138  exact 0.00006138
+k=2 value 0.00024551  exact 0.00024551
+k=3 value 0.00055237  exact 0.00055237
+k=4 value 0.00098196  exact 0.00098196
+vectors 4 of length 400

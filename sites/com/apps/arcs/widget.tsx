@@ -2,7 +2,7 @@ import { paints } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { text } from "@mrlyprod/ui/kit/export.ts";
-import type { Had, Readout } from "@mrlyprod/ui/kit/hooks.ts";
+import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Paint } from "@mrlyprod/ui/kit/library.tsx";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
 import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
@@ -17,9 +17,9 @@ import { file, make, shades, sketch } from "./scene.ts";
 
 type Seeded = Knobs & { seed: number };
 
-export type LawsProps = { math: Mrly; value: Knobs; tick: number; onChange: (patch: Patch) => void };
+export type LawsProps = { mrly: Mrly; value: Knobs; tick: number; onChange: (patch: Patch) => void };
 
-type Props = WidgetProps<Had<"math">, Arcs> & { value: Seeded };
+type Props = WidgetProps<Mrly, Arcs> & { value: Seeded };
 
 type Hooks = Partial<Pick<Props, "onChange" | "onStatus">>;
 
@@ -45,8 +45,8 @@ export function rows(f: Told | null): Readout[] {
   ];
 }
 
-export function Laws({ math, value, tick, onChange }: LawsProps) {
-  const code = resolve(math, value.base, value.code);
+export function Laws({ mrly, value, tick, onChange }: LawsProps) {
+  const code = resolve(mrly, value.base, value.code);
   const paint =
     (one: Lawful): Paint =>
     (ctx, w, h, dpr) =>
@@ -55,21 +55,21 @@ export function Laws({ math, value, tick, onChange }: LawsProps) {
         w,
         h,
         dpr,
-        curves(math, one.code, one.base, SMALL[one.base] ?? 1),
+        curves(mrly, one.code, one.base, SMALL[one.base] ?? 1),
         value,
         shades(ctx.canvas, paints(ctx.canvas, value.tint), value.strand),
       );
   return BASES.map(([base]) => {
-    const list = laws(math).filter((one) => one.base === base);
+    const list = laws(mrly).filter((one) => one.base === base);
     if (!list.length) return null;
-    const level = Math.min(value.level, cap(math, base));
+    const level = Math.min(value.level, cap(mrly, base));
     return (
       <Shelf key={base} name={`Base ${base}`}>
         {list.map((one) => (
           <Item
             key={one.code}
             label={one.name ? `${one.name} ${one.code}` : `code ${one.code}`}
-            sub={`${Number(math.arcs.law(one.code, base, level)!.loops)} loops`}
+            sub={`${Number(mrly.arcs.law(one.code, base, level)!.loops)} loops`}
             title={`L(n) = ${one.formula}`}
             on={Number(value.base) === base && code === one.code}
             onPick={() => onChange({ base, code: one.code })}
@@ -84,7 +84,7 @@ export function Laws({ math, value, tick, onChange }: LawsProps) {
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units }: Props) {
-  const unit = units?.math;
+  const unit = units;
   const tick = useTheme();
   const live = useRef<Handle<Arcs> | null>(null);
   const now = useRef(value);
@@ -97,7 +97,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
     hooks.current.onStatus?.(rows(f));
   }, []);
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math: unit, onTell: tell }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly: unit, onTell: tell }),
     [unit, tell],
   );
   const ready = (handle: Handle<Arcs> | null) => {
@@ -126,7 +126,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
       )}
       {unit && (
         <Library name="Laws">
-          <Laws math={unit} value={value} tick={tick} onChange={onChange} />
+          <Laws mrly={unit} value={value} tick={tick} onChange={onChange} />
         </Library>
       )}
     </>

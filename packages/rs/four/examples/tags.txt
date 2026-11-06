@@ -1,0 +1,17 @@
+hex nesw  grid   class      orbit  turn1 bang word
+0   0000  00/00  void       1      0     0 -
+1   0001  00/10  wedge      4      2     4 -
+2   0010  00/01  wedge      4      4     8 point
+3   0011  00/11  half       4      6     12 hline
+4   0100  01/00  wedge      4      8     2 -
+5   0101  01/10  hourglass  2      a     6 star
+6   0110  01/01  half       4      c     10 vline
+7   0111  01/11  notch      4      e     14 net
+8   1000  10/00  wedge      4      1     1 dust
+9   1001  10/10  half       4      3     5 vtree
+a   1010  10/01  hourglass  2      5     9 void
+b   1011  10/11  notch      4      7     13 -
+c   1100  11/00  half       4      9     3 htree
+d   1101  11/10  notch      4      b     7 carpet
+e   1110  11/01  notch      4      d     11 -
+f   1111  11/11  fill       1      f     15 -

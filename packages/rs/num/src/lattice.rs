@@ -1,6 +1,6 @@
 use crate::factor::totients;
 use crate::series;
-use mrly_core::error::{Result, value_error};
+use mrly_error::{Result, value_error};
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 

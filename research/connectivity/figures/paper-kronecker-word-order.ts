@@ -1,7 +1,8 @@
-import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
+import * as bang from "@mrlyprod/bang";
 import * as math from "@mrlyprod/math";
+import { frame as box, type Color, type Frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
-export const units = { math };
+export const units = { bang, math };
 
 const LENGTH = 6;
 const SIDE = 64;
@@ -17,7 +18,7 @@ function thueMorse(index: number) {
 }
 
 function letter(code: number) {
-  return math.bang.MagicLayer.new(new math.name.Bang(code, 2, 2), 2);
+  return math.factory.MagicLayer.new(new math.name.Bang(code, 2, 2), 2);
 }
 
 function reading(gasketAt: number) {
@@ -59,12 +60,12 @@ function pieces(cells: ArrayLike<number>) {
 }
 
 function panel(pen: Pen, frame: Frame, letters: ReturnType<typeof letter>[], inks: Color[], rule: number, ink: Ink) {
-  const picture = math.bang.magic(letters);
+  const picture = math.factory.magic(letters);
   if (picture.shape.join() !== `${SIDE},${SIDE}`)
     throw new Error(`paper-kronecker-word-order: picture ${picture.shape}, want ${SIDE} square`);
   const { label, count, filled } = pieces(picture.data);
   if (filled !== CELLS) throw new Error(`paper-kronecker-word-order: ${filled} cells, want ${CELLS}`);
-  const claimed = String(math.bang.word.components(letters));
+  const claimed = String(bang.word.components(letters));
   if (claimed !== String(count))
     throw new Error(`paper-kronecker-word-order: crate counts ${claimed} pieces, the drawing ${count}`);
   const edge = frame.inset(-rule * 2);

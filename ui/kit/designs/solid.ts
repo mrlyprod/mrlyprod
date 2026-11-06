@@ -1,4 +1,4 @@
-import type { three } from "@mrlyprod/math";
+import type * as three from "@mrlyprod/three";
 
 export type Shape = { n: number; cells: Int32Array; masks: Uint8Array };
 

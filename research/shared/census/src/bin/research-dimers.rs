@@ -1,8 +1,9 @@
 use census::save;
-use mrly_core::error::Result;
-use mrly_core::{json, Rng};
-use mrly_math::bang::factory;
-use mrly_math::bang::Code;
+use mrly_error::Result;
+use mrly_json::json;
+use mrly_math::code::Code;
+use mrly_math::factory;
+use mrly_rand::Rng;
 
 const NAME: &str = "research-dimers";
 const LEVEL: usize = 3;

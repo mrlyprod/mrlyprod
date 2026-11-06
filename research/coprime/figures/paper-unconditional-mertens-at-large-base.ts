@@ -1,8 +1,8 @@
-import type { Color, Ink, Pen, Point } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
+import * as ladder from "@mrlyprod/ladder";
 import * as num from "@mrlyprod/num";
+import type { Color, Ink, Pen, Point } from "@mrlyprod/draw";
 
-export const units = { num, math };
+export const units = { ladder, num };
 
 const BASE = 10;
 const LEVEL = 3;
@@ -15,12 +15,12 @@ let memo: number[] | undefined;
 function regions() {
   if (memo) return memo;
   const y = BASE ** LEVEL;
-  const found = math.dissection.regions(BASE, LEVEL, Z).map((name) => NAMES.indexOf(name));
+  const found = ladder.dissection.regions(BASE, LEVEL, Z).map((name) => NAMES.indexOf(name));
   if (found.length !== y || found.includes(-1))
     throw new Error(`paper-unconditional-mertens-at-large-base: ${found.length} regions, want ${y} named ${NAMES}`);
-  const cap = math.dissection.cap(y);
+  const cap = ladder.dissection.cap(y);
   for (let a = 0; a < y; a++) {
-    const [l, d] = math.dissection.fraction(a, y, cap);
+    const [l, d] = ladder.dissection.fraction(a, y, cap);
     const h = BigInt(a) * d - l * BigInt(y);
     if (d > cap || (h < 0n ? -h : h) * cap > BigInt(y) || num.factor.gcd(l, d) !== "1")
       throw new Error(

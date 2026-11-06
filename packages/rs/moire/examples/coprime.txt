@@ -1,0 +1,19 @@
+  n  max corr     at m  prime
+  3    0.0000        0   true
+  5    0.0000        0   true
+  7    0.0000        0   true
+  9    0.2193        3  false
+ 11    0.0000        0   true
+ 13    0.0000        0   true
+ 15    0.2397        5  false
+ 17    0.0000        0   true
+ 19    0.0000        0   true
+ 21    0.2466        7  false
+ 23    0.0000        0   true
+ 25    0.1343        5  false
+ 27    0.2500        9  false
+ 29    0.0000        0   true
+ 31    0.0000        0   true
+ 33    0.2520       11  false
+pair (3, 9): exact 0.219265, sampled 0.219265
+pair (3, 5): exact 0.000000, sampled 0.000000

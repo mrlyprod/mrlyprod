@@ -1,0 +1,10 @@
+ring 0    0.00
+ring 1    0.00
+ring 2    0.00
+ring 3    0.00
+ring 4   32.00
+ring 5    0.00
+ring 6    0.00
+ring 7    0.00
+peak ring 4
+wavelength 8

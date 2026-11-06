@@ -1,4 +1,4 @@
-use mrly_core::colors::{BLUE, LIGHT, ORANGE, WHITE};
+use mrly_color::{BLUE, LIGHT, ORANGE, WHITE};
 use png::{AdaptiveFilterType, BitDepth, ColorType, Compression, Encoder, FilterType};
 use std::path::Path;
 

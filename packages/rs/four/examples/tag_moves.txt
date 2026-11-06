@@ -1,0 +1,9 @@
+Turn(0): 16/16 tags match the drawn triangles
+Turn(1): 16/16 tags match the drawn triangles
+Turn(2): 16/16 tags match the drawn triangles
+Turn(3): 16/16 tags match the drawn triangles
+FlipX: 16/16 tags match the drawn triangles
+FlipY: 16/16 tags match the drawn triangles
+FlipMain: 16/16 tags match the drawn triangles
+FlipAnti: 16/16 tags match the drawn triangles
+a quarter turn is a left rotate of the 4 NESW bits: true

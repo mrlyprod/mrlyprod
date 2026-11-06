@@ -1,11 +1,11 @@
 use crate::source::{Source, counts};
-use mrly_core::cell::Cell;
-use mrly_core::error::{Result, value_error};
-use mrly_core::named_enum;
-use mrly_core::tensor::Tensor;
-use mrly_math::bang::Code;
-use mrly_math::bang::catalog::Design;
-use mrly_math::two;
+use mrly_error::{Result, value_error};
+use mrly_math::catalog::Design;
+use mrly_math::cell::base::Cell;
+use mrly_math::code::Code;
+use mrly_name::named_enum;
+use mrly_tensor::Tensor;
+use mrly_two as two;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

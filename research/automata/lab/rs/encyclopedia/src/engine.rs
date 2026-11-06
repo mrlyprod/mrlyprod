@@ -1,7 +1,7 @@
 use crate::grid::Grid;
 use crate::mask::{Kernel, MaskSpec};
 use crate::recipe::{Mode, Recipe};
-use mrly_core::Result;
+use mrly_error::Result;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]

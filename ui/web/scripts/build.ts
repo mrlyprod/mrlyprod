@@ -18,7 +18,7 @@ import { tintCss } from "../../kit/theme/tint.ts";
 import type { Design } from "../../shell/design.ts";
 import { named as designNamed, draw, folder, pulldown, runtime, sheets, source } from "./design.ts";
 import { forest, config as gitConfig, TREE, tree } from "./git.ts";
-import { HOME, REPO, SITE, UNITS, unit } from "./home.ts";
+import { closed, HOME, home, REPO, SITE, UNITS, unit } from "./home.ts";
 import { llms, type Shelf } from "./llms.ts";
 import { packages, where } from "./packages.ts";
 
@@ -142,15 +142,13 @@ const UNIT = /@mrlyprod\/([a-z]+)/g;
 
 const CALL = /\b(?:wasm|useUnit)\(([^)]*)\)/g;
 
-const LOADERS = join(repo, "kit", "units");
+const LOADERS = join(HOME, "wasm");
 
-const TABLE = join(LOADERS, "load.ts");
+const TABLE = join(repo, "kit", "units", "load.ts");
 
 const LEAF = new RegExp(`^@mrlyprod/(${UNITS.join("|") || "(?!)"})$`);
 
-const WASM = /(?:^|\/)([a-z]+)\/\1\.wasm$/;
-
-const unitWasm = (unit: string) => join(HOME, "wasm", unit, `${unit}.wasm`);
+const unitWasm = (unit: string) => join(HOME, "wasm", "blobs", `${home(unit)}.wasm`);
 
 const stem = (name: string) => name.slice(0, -3);
 
@@ -642,7 +640,7 @@ const names = (text: string) => [
 
 export function live(figures: Figure[] = roster(), list: App[] = apps()): string[] {
   const used = new Set(shipped(figures, list).flatMap((file) => names(read(file))));
-  return UNITS.filter((unit) => used.has(unit));
+  return closed(UNITS.filter((unit) => used.has(unit)));
 }
 
 let held: State | null = null;
@@ -674,7 +672,7 @@ export function state(): State {
   for (const unit of units)
     if (!existsSync(unitWasm(unit)))
       throw new Error(
-        `site: a live figure or app imports @mrlyprod/${unit}, and the site wasm/${unit}/ does not hold it; bun run wasm copies the live units there`,
+        `site: a live figure or app imports @mrlyprod/${unit}, and the site wasm/blobs/ does not hold ${home(unit)}; bun run wasm copies the live blobs there`,
       );
   const moves = JSON.parse(read(join(HOME, "redirects.json"))) as Record<string, { to: string; since: string }>;
   const kept = Object.fromEntries(Object.entries(moves).filter(([, row]) => seen.has(row.to.split("?")[0]!)));
@@ -730,7 +728,9 @@ const thunks = (list: [string, string][]) =>
 
 export const table = (units: string[]) =>
   `export const LOAD = ${thunks(
-    units.filter((unit) => existsSync(join(LOADERS, `${unit}.ts`))).map((unit) => [unit, join(LOADERS, `${unit}.ts`)]),
+    units
+      .map((unit): [string, string] => [unit, join(LOADERS, "blobs", `${home(unit)}.load.ts`)])
+      .filter(([, file]) => existsSync(file)),
   )};`;
 
 const appFiles = (list: App[]): [string, string][] =>
@@ -813,12 +813,11 @@ export function modules(ready: Ready): Record<string, string> {
 export const plugin = (get: () => Ready): BunPlugin => ({
   name: "site",
   setup(build) {
-    mrly.setup(build);
-    build.onResolve({ filter: WASM }, ({ path }) => ({ path: unitWasm(WASM.exec(path)![1]!) }));
     build.onResolve({ filter: LEAF }, ({ path }) => {
       const copy = join(HOME, "wasm", path.slice("@mrlyprod/".length), "index.js");
       return existsSync(copy) ? { path: copy } : undefined;
     });
+    mrly.setup(build);
     build.onResolve({ filter: /^\// }, ({ path }) => (existsSync(path) ? undefined : { path, external: true }));
     build.onLoad({ filter: /\/kit\/units\/load\.ts$/ }, () => ({
       contents: table(get().units),

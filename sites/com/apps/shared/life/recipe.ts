@@ -39,12 +39,12 @@ export function modeOf(life: Door, value: Value): Mode | null {
 
 export const island = (life: Door, value: Value) => modeOf(life, value) === "Island";
 
-export function tokens(life: Door, math: Mrly): Tokens {
+export function tokens(life: Door, mrly: Mrly): Tokens {
   let made = TOKENS.get(life);
   if (made) return made;
   const named = new Map<string, number>();
   for (const code of codesOf(2).map(Number)) {
-    const name = math.name.of(code, 2, 2);
+    const name = mrly.math.name.of(code, 2, 2);
     if (name) named.set(name, code);
   }
   const of = new Map<number, string>();
@@ -73,7 +73,7 @@ function side(life: Door, text: Scalar, label: string): string {
   return counts.join(",");
 }
 
-export function recipeOf(life: Door, math: Mrly, value: Value): Recipe {
+export function recipeOf(life: Door, mrly: Mrly, value: Value): Recipe {
   const mode = modeOf(life, value);
   if (!mode) throw new Error(`${value.mode} is no recipe mode`);
   const alone = mode === "Island";
@@ -86,7 +86,7 @@ export function recipeOf(life: Door, math: Mrly, value: Value): Recipe {
     mode,
     mask: grammar(life).copies.includes(mask)
       ? mask
-      : `${tokenOf(tokens(life, math), codeOf(value.code))}.${Number(value.number)}.${Number(value.level)}`,
+      : `${tokenOf(tokens(life, mrly), codeOf(value.code))}.${Number(value.number)}.${Number(value.level)}`,
     birth: side(life, value.born, "born"),
     survive: side(life, value.stay, "stay"),
     x: Number(value.x),
@@ -94,7 +94,7 @@ export function recipeOf(life: Door, math: Mrly, value: Value): Recipe {
   };
 }
 
-export function knobsOf(life: Door, math: Mrly, recipe: Recipe): Patch {
+export function knobsOf(life: Door, mrly: Mrly, recipe: Recipe): Patch {
   const made = grammar(life);
   const alone = recipe.mode === "Island";
   const design = made.copies.includes(recipe.mask) ? null : recipe.mask.split(".");
@@ -110,7 +110,7 @@ export function knobsOf(life: Door, math: Mrly, recipe: Recipe): Patch {
     mask: design ? DESIGN : recipe.mask,
     ...(design
       ? {
-          code: String(codeOfToken(tokens(life, math), design[0])),
+          code: String(codeOfToken(tokens(life, mrly), design[0])),
           number: Number(design[1]),
           level: Number(design[2]),
         }
@@ -120,9 +120,9 @@ export function knobsOf(life: Door, math: Mrly, recipe: Recipe): Patch {
   };
 }
 
-export function nameOf(life: Door, math: Mrly, value: Value): string {
+export function nameOf(life: Door, mrly: Mrly, value: Value): string {
   try {
-    return fixed(value) ? "" : life.recipe.name(recipeOf(life, math, value));
+    return fixed(value) ? "" : life.recipe.name(recipeOf(life, mrly, value));
   } catch {
     return "";
   }

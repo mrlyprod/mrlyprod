@@ -1,12 +1,12 @@
 import { paints } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { total } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, total } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { flat } from "@mrlyprod/ui/kit/designs/thumb.ts";
 import { text } from "@mrlyprod/ui/kit/export.ts";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
-import { useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates } from "@mrlyprod/ui/kit/hooks.ts";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
 import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
@@ -78,7 +78,7 @@ export function rows(stat: Stat | null): Readout[] {
 
 function sketch(
   ctx: CanvasRenderingContext2D,
-  math: Mrly,
+  mrly: Mrly,
   value: Pick<Size, "base" | "number">,
   sides: [string, number][],
   w: number,
@@ -87,11 +87,11 @@ function sketch(
   const hues = [accent, turn(accent, TURN)];
   const edge = w / sides.length;
   for (const [i, [code, hue]] of sides.entries())
-    flat(ctx, math.two.create(code, value.number, LEVEL, 0, value.base), i * edge, (w - edge) / 2, edge, hues[hue]);
+    flat(ctx, mrly.two.create(code, value.number, LEVEL, 0, value.base), i * edge, (w - edge) / 2, edge, hues[hue]);
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }: Props) {
-  const unit = useUnit("math", given);
+  const unit = useCrates(CRATES, given);
   const live = useRef<Handle<Race> | null>(null);
   const now = useRef(value);
   now.current = value;
@@ -105,7 +105,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
     hooks.current.onStatus?.(rows(next));
   }, []);
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math: unit, onTell: tell }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly: unit, onTell: tell }),
     [unit, tell],
   );
   const go = () => {
@@ -152,7 +152,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
     () => (unit && mine !== null ? kin(unit, value, mine, count) : []),
     [unit, mine, value.base, value.number],
   );
-  const word = (code: string, base = value.base) => unit?.name.of(code, DIM, base) ?? "";
+  const word = (code: string, base = value.base) => unit?.math.name.of(code, DIM, base) ?? "";
   const want = find.trim().toLowerCase();
   const match = (code: string, name: string) => !want || code.startsWith(want) || name.toLowerCase().includes(want);
   const fair = MATCHUPS.map(([a, b]) => [a, b, word(a, FAIR.base), word(b, FAIR.base)]).filter(

@@ -1,11 +1,11 @@
 {
   "sections": [
-    {"name": "Designs", "apps": ["arcs", "chaos", "chladni", "crop", "cuts", "designs", "graphs", "moire", "morse", "polygons", "radial", "six", "sleep", "slices", "spin", "spirograph", "star", "three", "tourbillon", "two", "wolfram"]},
+    {"name": "Designs", "apps": ["arcs", "chaos", "chladni", "crop", "cuts", "designs", "graphs", "moire", "polygons", "radial", "roulette", "six", "sleep", "slices", "spin", "star", "three", "thue", "tourbillon", "two", "wolfram"]},
     {"name": "Numbers", "apps": ["apollonian", "gaussian", "plot", "radix", "readings", "sequences", "tour", "ulam", "zeta"]},
     {"name": "Fractals", "apps": ["fractals", "zoom"]},
     {"name": "Space", "apps": ["planets", "lightspeed", "voyage"]},
     {"name": "Sound", "apps": ["techno", "sfx"]},
-    {"name": "Games", "apps": ["snake"]},
+    {"name": "Games", "apps": ["snake", "chess", "mahjong", "mines", "tennis", "escape", "merge", "memory", "crush", "ttt", "captcha", "quiz"]},
     {"name": "Simulations", "apps": ["life", "race"]},
     {"name": "Type", "apps": ["font", "matrix"]},
     {"name": "Read", "apps": ["about", "blog", "method", "mrlymath", "research"]},

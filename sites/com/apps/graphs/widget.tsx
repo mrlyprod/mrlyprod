@@ -6,7 +6,7 @@ import { text } from "@mrlyprod/ui/kit/export.ts";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Scene as Made, Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Patch, Value } from "@mrlyprod/ui/kit/spec.ts";
@@ -44,7 +44,7 @@ export type Seen = { facts: Facts; relax: Relaxed | null };
 
 export type Glance = { value: Seed; graph: Graph };
 
-export type ShelvesProps = { value: Graphs; onChange: (patch: Patch) => void; math?: Mrly | null };
+export type ShelvesProps = { value: Graphs; onChange: (patch: Patch) => void; mrly?: Mrly | null };
 
 export type PaneProps = {
   value: Value;
@@ -54,8 +54,8 @@ export type PaneProps = {
   onPose: (pose: string) => void;
 };
 
-export type Props = Pick<WidgetProps<Mathy, Made>, "onChange"> &
-  Partial<Pick<WidgetProps<Mathy, Made>, "onReady" | "onExport" | "onStatus" | "units">> & {
+export type Props = Pick<WidgetProps<Mrly, Made>, "onChange"> &
+  Partial<Pick<WidgetProps<Mrly, Made>, "onReady" | "onExport" | "onStatus" | "units">> & {
     value: Graphs;
     three?: Three | null;
   };
@@ -131,12 +131,12 @@ export function etch(ctx: CanvasRenderingContext2D, seen: Flat, w: number, h: nu
 export const lit = (value: Value, patch: Patch) =>
   Object.entries(patch).every(([key, v]) => String(value[key]) === String(v));
 
-export function Shelves({ value, onChange, math }: ShelvesProps) {
+export function Shelves({ value, onChange, mrly }: ShelvesProps) {
   const tick = useTheme();
   const glance = (look: Glance) => (
     <Art
-      paint={(ctx, w, h, dpr) => etch(ctx, glimpse(math!, look.value, look.graph), w, h, dpr)}
-      deps={[math, spaceOf(look.value), look.value.dim, look.value.base, look.value.code, look.graph, tick]}
+      paint={(ctx, w, h, dpr) => etch(ctx, glimpse(mrly!, look.value, look.graph), w, h, dpr)}
+      deps={[mrly, spaceOf(look.value), look.value.dim, look.value.base, look.value.code, look.graph, tick]}
     />
   );
   return (
@@ -151,7 +151,7 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
               sub={tail}
               on={kindOf(value) === graph}
               onPick={() => onChange({ graph })}
-              art={math ? glance({ value, graph }) : undefined}
+              art={mrly ? glance({ value, graph }) : undefined}
             />
           );
         })}
@@ -163,7 +163,7 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
             label={text}
             on={lit(value, patch)}
             onPick={() => onChange(patch)}
-            art={math ? glance({ value: patch, graph: patch.graph }) : undefined}
+            art={mrly ? glance({ value: patch, graph: patch.graph }) : undefined}
           />
         ))}
       </Shelf>
@@ -199,7 +199,7 @@ export function Pane({ value, relax, onRelax, onReset, onPose }: PaneProps) {
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units, three: given }: Props) {
-  const math = units?.math;
+  const mrly = units;
   const cube = isSolid(value);
   const three = useThree(cube, given);
   const live = useRef<Handle<Net> | null>(null);
@@ -269,8 +269,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
     [have],
   );
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math, three }),
-    [math, three],
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly, three }),
+    [mrly, three],
   );
   const down = (e: PointerEvent<HTMLCanvasElement>) => {
     const { points } = touch.current;
@@ -319,7 +319,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
   const hush = (e: MouseEvent<HTMLCanvasElement>) => cube && e.preventDefault();
   return (
     <>
-      {math && (!cube || three) && (
+      {mrly && (!cube || three) && (
         <Scene
           make={scene}
           value={value}
@@ -332,7 +332,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units, th
         />
       )}
       <Library>
-        <Shelves value={value} onChange={onChange} math={math} />
+        <Shelves value={value} onChange={onChange} mrly={mrly} />
       </Library>
       <Bar side="right">
         <Pane

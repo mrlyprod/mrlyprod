@@ -47,6 +47,14 @@ export function useUnits<U extends Ready>(units: Thunk<U> | null | undefined, gi
   return given ?? held;
 }
 
+const MANY = new Map<string, unknown>();
+
+export function useCrates<N extends Name>(names: readonly N[], given?: Had<N> | null): Had<N> | null {
+  const key = names.join();
+  if (!MANY.has(key)) MANY.set(key, wasm(...names));
+  return useUnits(given ? null : (MANY.get(key) as Thunk<Loaded<N>>), given);
+}
+
 export function useUnit<N extends Name>(name: N, given?: Unit<N> | null): Unit<N> | null {
   (ONE as Partial<Record<N, Thunk<Loaded<N>>>>)[name] ??= wasm(name);
   const held = useUnits(given ? null : ONE[name]);

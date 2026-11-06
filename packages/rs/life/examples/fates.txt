@@ -1,0 +1,5 @@
+one cell               dead   frames  2  period 0
+block                  alive  frames  1  period 0
+blinker                loop   frames  2  period 2
+glider on a torus      loop   frames 32  period 32
+glider against a wall  alive  frames 16  period 0

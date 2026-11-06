@@ -1,8 +1,8 @@
 import type { Pen, Point } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as three from "@mrlyprod/three";
 
-export const units = { math };
+export const units = { three };
 
 const CODE = "126";
 const LEVEL = 4;
@@ -14,13 +14,13 @@ let cloud: Point[][] | null = null;
 
 function facts() {
   if (cloud) return cloud;
-  const counts = math.three.profile(CODE, 2, LEVEL, 2).map(Number);
-  const [low, high] = math.three.support(counts)!;
+  const counts = three.profile(CODE, 2, LEVEL, 2).map(Number);
+  const [low, high] = three.support(counts)!;
   const mid = Math.floor((low + high) / 2);
   cloud = [mid, mid + 1].map((height) => {
-    const cells = math.three.diagonal_slice(CODE, 2, LEVEL, 2, height);
+    const cells = three.diagonal_slice(CODE, 2, LEVEL, 2, height);
     if (cells.length !== EACH) throw new Error(`cuts: height ${height} meets ${cells.length} cells, want ${EACH}`);
-    return cells.map((cell) => math.three.project(cell));
+    return cells.map((cell) => three.project(cell));
   });
   return cloud;
 }

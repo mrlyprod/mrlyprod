@@ -1,12 +1,12 @@
 import type { Box, Pen, Point } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as num from "@mrlyprod/num";
+import * as zeta from "@mrlyprod/zeta";
 
 type Pair = [number, number];
 
 type Plan = { xs: Float64Array; ys: Float64Array; frame: Box; walk: Pair; loop: Pair };
 
-export const units = { num };
+export const units = { zeta };
 
 const SPAN = 60;
 const PER = 40;
@@ -22,7 +22,7 @@ let plan: Plan | null = null;
 
 function study(): Plan {
   if (plan) return plan;
-  const line = new num.zeta.Line();
+  const line = new zeta.Line();
   const n = SPAN * PER + 1;
   const xs = new Float64Array(n);
   const ys = new Float64Array(n);

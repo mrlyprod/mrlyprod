@@ -1,10 +1,11 @@
 use crate::build::{Config2d, build_2d, create_2d};
+use crate::paint as engine;
+use crate::paint::{Config as PaintConfig, Edition, Ink, Paint};
 use crate::recipe::Tile;
-use mrly_core::error::{Error, Result, value_error};
-use mrly_core::image::Image;
-use mrly_core::paint::{self as engine, Config as PaintConfig, Edition, Ink, Paint};
-use mrly_core::rng::Rng;
-use mrly_math::two;
+use mrly_error::{Error, Result, value_error};
+use mrly_image::Image;
+use mrly_rand::Rng;
+use mrly_two as two;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

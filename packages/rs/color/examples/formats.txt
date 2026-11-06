@@ -1,0 +1,9 @@
+hex      #008cff
+css      rgb(0,140,255)
+alpha    #ff3d4080 rgba(255,61,64,128)
+parse    Color { r: 0, g: 140, b: 255, a: 255 }
+parse    Color { r: 255, g: 61, b: 64, a: 128 }
+named    #6768fa
+invert   #ff7300
+bad hex  Hex code must be in format #RRGGBB or #RRGGBBAA
+bad name unknown color name "teal-ish".

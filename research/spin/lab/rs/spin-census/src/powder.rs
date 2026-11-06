@@ -1,5 +1,5 @@
-use mrly_core::Tensor;
-use mrly_num::fft::fft2;
+use mrly_fft::fft2;
+use mrly_tensor::Tensor;
 
 pub struct Powder {
     pub slope: f64,

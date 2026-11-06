@@ -1,0 +1,8 @@
+level 1: 72
+level 2: 1056
+level 3: 18048
+level 4: 336384
+level 5: 6531072
+level 6: 129048576
+level 7: 2568388608
+level 8: 51267108864

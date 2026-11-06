@@ -1,0 +1,22 @@
+[package]
+name = "mrly-moire"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-color.workspace = true
+mrly-error.workspace = true
+mrly-image.workspace = true
+mrly-math.workspace = true
+mrly-num.workspace = true
+mrly-tensor.workspace = true
+serde.workspace = true

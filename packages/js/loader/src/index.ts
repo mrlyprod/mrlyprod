@@ -2,6 +2,7 @@ type Value = unknown;
 type Read = () => Value;
 type Shape = (read: Read) => Value;
 type Fn = (...args: never[]) => Value;
+type Fns = ((...args: number[]) => number)[];
 type Direct = { at: number; bool: boolean; int: boolean; fail: boolean; self: boolean; n: number };
 type ClassInfo = { fields: [string, boolean][]; methods: string[]; statics: string[]; from: boolean; json: boolean };
 type Api = { unit: string; doors: string[]; direct: Record<string, Direct>; classes: Record<string, ClassInfo>; consts: string[] };
@@ -50,17 +51,16 @@ const UBIG64 = 0x15;
 const INLINE = 0x16;
 const SMALL = 0x80;
 
-export function unit(api: Api, built: Shape[]) {
-  const name = api.unit;
+export function blob(name: string, built: Shape[], offsets: Record<string, number>, rng: string[]) {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
-  const names = api.doors;
-  const index = new Map(names.map((one, at) => [one, at]));
+  const names: string[] = [];
+  const index = new Map<string, number>();
   const classes = new Map<string, new (...args: never[]) => Thing>();
   const syms: string[] = [];
   const shapes: Shape[] = built.slice();
-  const fns: ((...args: number[]) => number)[] = [];
-  const directs = Object.entries(api.direct);
+  const binders: (() => void)[] = [];
+  let pending: Promise<Exports> | null = null;
   let module: WebAssembly.Module | null = null;
   let x = null as unknown as Exports;
   let memory = null as unknown as WebAssembly.Memory;
@@ -94,7 +94,7 @@ export function unit(api: Api, built: Shape[]) {
     dv = new DataView(memory.buffer);
     syms.length = 0;
     shapes.length = built.length;
-    for (const [, info] of directs) fns[info.at] = x[`mrly_d${info.at}`];
+    for (const bind of binders) bind();
   };
 
   const grow = (need: number) => {
@@ -492,7 +492,13 @@ export function unit(api: Api, built: Shape[]) {
     } catch (error) {
       throw rescue(error, names[door]);
     } finally {
-      if (swaps) for (const [was, local] of swaps) was.__restore?.((local as Thing).__state?.());
+      if (swaps) {
+        for (const [was, local] of swaps) {
+          try {
+            was.__restore?.((local as Thing).__state?.());
+          } catch {}
+        }
+      }
     }
   };
 
@@ -503,7 +509,7 @@ export function unit(api: Api, built: Shape[]) {
     return value;
   };
 
-  const bound = (door: string, info: Direct) => {
+  const bound = (door: string, info: Direct, fns: Fns) => {
     const k = info.at;
     if (info.self) {
       const made = (h: number, a: number, b: number, c: number, d: number) => {
@@ -533,27 +539,7 @@ export function unit(api: Api, built: Shape[]) {
     return made;
   };
 
-  const door = (at: number): Fn => {
-    const full = names[at];
-    const info = api.direct[full];
-    if (info && !info.self) return bound(full, info) as unknown as Fn;
-    return ((...args: Value[]) => invoke(at, args)) as unknown as Fn;
-  };
-
-  const constant = (at: number): Fn => {
-    let held: Value;
-    let done = false;
-    const run = door(at);
-    return (() => {
-      if (!done) {
-        held = (run as () => Value)();
-        done = typeof held !== "object" || held === null;
-      }
-      return held;
-    }) as Fn;
-  };
-
-  const make = (full: string, info: ClassInfo) => {
+  const make = (full: string, info: ClassInfo, door: (at: number) => Fn, direct: Record<string, Direct>, fns: Fns) => {
     const at = (leaf: string) => index.get(`${full}.${leaf}`) as number;
     const fresh_door = index.get(`${full}.new`);
     const Made = class {
@@ -590,9 +576,9 @@ export function unit(api: Api, built: Shape[]) {
     }
     for (const method of info.methods) {
       const one = at(method);
-      const fast = api.direct[`${full}.${method}`];
+      const fast = direct[`${full}.${method}`];
       proto[method] = fast
-        ? bound(`${full}.${method}`, fast)
+        ? bound(`${full}.${method}`, fast, fns)
         : function (this: Thing, ...args: Value[]) {
             return invoke(one, [this, ...args]);
           };
@@ -610,10 +596,6 @@ export function unit(api: Api, built: Shape[]) {
     return Made;
   };
 
-  for (const [full, info] of Object.entries(api.classes)) {
-    classes.set(full, make(full, info) as unknown as new (...args: never[]) => Thing);
-  }
-
   const rngInfo: ClassInfo = {
     fields: [],
     methods: ["range", "boolean", "chance", "sample_indices", "order", "__state", "__restore"],
@@ -621,7 +603,13 @@ export function unit(api: Api, built: Shape[]) {
     from: false,
     json: false,
   };
-  const Rng = make("Rng", rngInfo) as unknown as (new (seed: Value) => Thing) & { from_state(state: Value): Thing };
+  const rngAt = offsets.Rng as number;
+  rng.forEach((one, at) => {
+    names[rngAt + at] = one;
+    index.set(one, rngAt + at);
+  });
+  const rngDoor = (at: number): Fn => ((...args: Value[]) => invoke(at, args)) as unknown as Fn;
+  const Rng = make("Rng", rngInfo, rngDoor, {}, []) as unknown as (new (seed: Value) => Thing) & { from_state(state: Value): Thing };
   classes.set("Rng", Rng as unknown as new (...args: never[]) => Thing);
   const proto = Rng.prototype as unknown as Record<string, unknown>;
   proto.unit = function (this: Thing) {
@@ -652,13 +640,14 @@ export function unit(api: Api, built: Shape[]) {
   };
 
   const initSync = (given: { module: BufferSource | WebAssembly.Module } | BufferSource | WebAssembly.Module) => {
+    if (module) return x;
     const source = (given as { module?: BufferSource | WebAssembly.Module }).module ?? (given as BufferSource | WebAssembly.Module);
     module = source instanceof WebAssembly.Module ? source : new WebAssembly.Module(source);
     start();
     return x;
   };
 
-  const init = async (given: Source) => {
+  const compile = async (given: Source) => {
     const source = (typeof given === "object" && "module_or_path" in given ? given.module_or_path : given) as unknown;
     if (source instanceof WebAssembly.Module) {
       module = source;
@@ -672,6 +661,15 @@ export function unit(api: Api, built: Shape[]) {
     return x;
   };
 
+  const init = (given: Source) => {
+    if (module) return Promise.resolve(x);
+    pending ??= compile(given).catch((error) => {
+      pending = null;
+      throw error;
+    });
+    return pending;
+  };
+
   const $view = (full: string, args: Value[]) => {
     viewing = [];
     try {
@@ -683,7 +681,55 @@ export function unit(api: Api, built: Shape[]) {
     }
   };
 
-  const klass = (full: string) => classes.get(full);
+  const attach = (api: Api) => {
+    const base = offsets[api.unit] ?? -1;
+    if (base < 0 && api.doors.length) throw new Error(`${name}: the blob holds no crate ${api.unit}`);
+    api.doors.forEach((one, at) => {
+      names[base + at] = one;
+      index.set(one, base + at);
+    });
+    const fns: Fns = [];
+    const directs = Object.values(api.direct);
+    const bind = () => {
+      for (const info of directs) fns[info.at] = x[`mrly_${api.unit}_d${info.at}`];
+    };
+    binders.push(bind);
+    if (x !== null) bind();
 
-  return { door, constant, klass, init, initSync, Rng, $view };
+    const door = (at: number): Fn => {
+      const full = api.doors[at] as string;
+      const info = api.direct[full];
+      if (info && !info.self) return bound(full, info, fns) as unknown as Fn;
+      const absolute = base + at;
+      return ((...args: Value[]) => invoke(absolute, args)) as unknown as Fn;
+    };
+
+    const constant = (at: number): Fn => {
+      let held: Value;
+      let done = false;
+      const run = door(at);
+      return (() => {
+        if (!done) {
+          held = (run as () => Value)();
+          done = typeof held !== "object" || held === null;
+        }
+        return held;
+      }) as Fn;
+    };
+
+    for (const [full, info] of Object.entries(api.classes)) {
+      const absolute = (at: number) => door(at - base);
+      classes.set(full, make(full, info, absolute, api.direct, fns) as unknown as new (...args: never[]) => Thing);
+    }
+
+    const klass = (full: string) => classes.get(full);
+
+    return { door, constant, klass, init, initSync, Rng, $view };
+  };
+
+  return { attach, init, initSync, Rng, klass: (full: string) => classes.get(full) };
+}
+
+export function unit(home: ReturnType<typeof blob>, api: Api) {
+  return home.attach(api);
 }

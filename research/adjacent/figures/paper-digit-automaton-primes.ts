@@ -1,7 +1,7 @@
+import * as kummer from "@mrlyprod/kummer";
 import { type Color, Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as num from "@mrlyprod/num";
 
-export const units = { num };
+export const units = { kummer };
 
 const P = 7;
 const LEVEL = 6;
@@ -16,7 +16,7 @@ let memo: Cell[] | undefined;
 
 function board() {
   if (memo) return memo;
-  const carry = num.kummer.carry(P, 3, 1);
+  const carry = kummer.carry(P, 3, 1);
   const { moves, closes } = carry;
   const fill = (P + 1) / 2;
   for (let s = 0; s < 2; s++) {
@@ -27,7 +27,7 @@ function board() {
     for (let d = 0; d <= LOW; d++)
       if (s === 0 && moves[s][d] !== 0) throw new Error(`${NAME}: digit ${d} leaves state 0`);
   }
-  const witness = num.kummer.witness(P, 3, 1);
+  const witness = kummer.witness(P, 3, 1);
   if (witness?.[0] !== 4n || witness[1] !== 14n) throw new Error(`${NAME}: witness ${witness}, want 4 and 14`);
   const cells: Cell[] = [];
   let inK = 0;
@@ -45,7 +45,7 @@ function board() {
       }
       const k = digits.reduce((sum, d, i) => sum + d * P ** i, 0);
       const accepted = state !== undefined && closes[state];
-      if (accepted !== num.kummer.member(k, P, 3, 1))
+      if (accepted !== kummer.member(k, P, 3, 1))
         throw new Error(`${NAME}: ${k} read ${accepted} against the crate`);
       if (!accepted) continue;
       inK++;
@@ -55,7 +55,7 @@ function board() {
       cells.push({ x, y, kind: low ? 0 : state === 1 ? 1 : 2 });
     }
   }
-  const total = BigInt(num.kummer.count(P, 3, 1, LEVEL));
+  const total = BigInt(kummer.count(P, 3, 1, LEVEL));
   if (BigInt(inK) !== total || inK !== fill ** LEVEL)
     throw new Error(`${NAME}: ${inK} in K, want ${fill ** LEVEL} and the crate's ${total}`);
   if (design !== (LOW + 1) ** LEVEL) throw new Error(`${NAME}: ${design} in the design, want ${(LOW + 1) ** LEVEL}`);

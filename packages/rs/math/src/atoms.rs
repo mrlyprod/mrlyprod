@@ -1,5 +1,5 @@
-use mrly_core::rng::Rng;
-use mrly_core::tensor::Tensor;
+use mrly_rand::Rng;
+use mrly_tensor::Tensor;
 
 fn build(n: usize, rank: usize, mut rule: impl FnMut(&[usize]) -> bool) -> Tensor {
     let mut out = Tensor::new(vec![n; rank]);

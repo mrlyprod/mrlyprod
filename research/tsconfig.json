@@ -12,15 +12,10 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": false,
     "paths": {
+      "@mrlyprod/*": ["../data/packages/rs/bindgen/js/*/index", "../data/packages/rs/bindgen/js/*"],
       "@mrlyprod/loader": ["../packages/js/loader/src/index.ts"],
       "@mrlyprod/draw": ["../packages/js/draw/src/index.ts"],
-      "@mrlyprod/draw/*": ["../packages/js/draw/src/*"],
-      "@mrlyprod/core": ["../data/packages/rs/bridge/js/core/index"],
-      "@mrlyprod/font": ["../data/packages/rs/bridge/js/font/index"],
-      "@mrlyprod/life": ["../data/packages/rs/bridge/js/life/index"],
-      "@mrlyprod/math": ["../data/packages/rs/bridge/js/math/index"],
-      "@mrlyprod/num": ["../data/packages/rs/bridge/js/num/index"],
-      "@mrlyprod/tile": ["../data/packages/rs/bridge/js/tile/index"]
+      "@mrlyprod/draw/*": ["../packages/js/draw/src/*"]
     }
   },
   "include": ["*/figures/*.ts", "shared/figures/*.ts"],

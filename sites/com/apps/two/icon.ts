@@ -2,12 +2,12 @@ import type { Pen, Point } from "@mrlyprod/draw";
 import { Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import type { Cell } from "@mrlyprod/math";
-import * as math from "@mrlyprod/math";
+import * as two from "@mrlyprod/two";
 import type { Seam } from "../shared/two/engine.ts";
 
 type Sheet = { shape: number[]; types: Cell["types"]; lines: Seam[] };
 
-export const units = { math };
+export const units = { two };
 
 const CODE = 7;
 const BASE = 2;
@@ -30,13 +30,13 @@ function joins(side: number, rows: number, cols: number): Seam[] {
 
 function facts() {
   if (sheet) return sheet;
-  const tile = math.two.create(CODE, NUMBER, LEVEL, 0, BASE);
-  const block = math.two.merge(
+  const tile = two.create(CODE, NUMBER, LEVEL, 0, BASE);
+  const block = two.merge(
     Array.from({ length: COPIES * COPIES }, () => tile),
     COPIES,
     COPIES,
   );
-  const fills = math.two.fills(block);
+  const fills = two.fills(block);
   const [rows, cols] = block.shape;
   if (cols !== WANT.side || fills !== WANT.fills)
     throw new Error(`two: a sheet of ${cols} fills ${fills}, want ${WANT.side} and ${WANT.fills}`);

@@ -1,10 +1,15 @@
 use super::{Axis, Key, Measure};
-use mrly_core::error::{value_error, Result};
-use mrly_core::tensor::Tensor;
-use mrly_math::bang::{code_to_corners, factory, Code};
-use mrly_math::counts::{fill_polynomial, odd_power, Closed, Placements};
-use mrly_math::{arcs, counts};
-use mrly_math::{six, three, two};
+use mrly_arcs as arcs;
+use mrly_error::{value_error, Result};
+use mrly_math::code::Code;
+use mrly_math::factory;
+use mrly_math::factory::code_to_corners;
+use mrly_sequences::counts;
+use mrly_sequences::counts::{fill_polynomial, odd_power, Closed, Placements};
+use mrly_six as six;
+use mrly_tensor::Tensor;
+use mrly_three as three;
+use mrly_two as two;
 
 fn grid(number: usize, dimension: usize, level: u32) -> Option<u128> {
     (number as u128).checked_pow((dimension as u32).checked_mul(level)?)

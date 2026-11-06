@@ -1,13 +1,15 @@
-import type { tourbillon } from "@mrlyprod/math";
+import type * as tourbillon from "@mrlyprod/tourbillon";
 import { TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Loadable, Page } from "@mrlyprod/ui/kit/page.tsx";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Spec, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
 import type { Touched } from "@mrlyprod/ui/kit/touch.ts";
+import type { Units as Loaded } from "@mrlyprod/ui/kit/units/index.ts";
 import { wasm } from "@mrlyprod/ui/kit/units/index.ts";
 import { colorizer, paint, RAMPS } from "../shared/moire/engine.ts";
 import { fit, shell } from "../shared/moire/sheet.ts";
@@ -52,7 +54,7 @@ export type Facts = Fault | Reading;
 export type Turn = { increment: number } | { sched: string };
 
 export type Given = Opts & {
-  math?: Mrly | null;
+  mrly?: Mrly | null;
   onFacts?: (facts: Facts | null) => void;
   onTurn?: (patch: Turn) => void;
 };
@@ -100,7 +102,7 @@ export const SPEC: Spec = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   spec: SPEC,
@@ -120,7 +122,7 @@ export const PAGE = {
   ],
   actions: { play: (scene) => scene.toggle?.(), nudge: (scene, e) => scene.nudge?.(e.key === "ArrowLeft" ? -1 : 1) },
   reroll: () => ({ sched: "random" }),
-} satisfies Page<Loadable, Player>;
+} satisfies Page<Loaded<Crate>, Player>;
 
 const dial = (rand: Rng) => Math.round(rand() * 36000) / 100;
 
@@ -152,8 +154,8 @@ export const SAVERS = [
 const read = (opts: Given) => ({ ...tidy(SPEC, opts), seed: Number(opts.seed) >>> 0 }) as Tourbillon;
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): Player {
-  const math = opts.math;
-  if (!math) return { draw: () => {}, stop: () => {} };
+  const mrly = opts.mrly;
+  if (!mrly) return { draw: () => {}, stop: () => {} };
   const pad = shell(canvas, view);
   let value = read(opts);
   let playing = Boolean(view.lock);
@@ -218,8 +220,8 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): P
   const compute = (at: number, size: number) => {
     held?.field.free();
     held = null;
-    held = { ...spin(math, value, at, size), key: planKey() };
-    stats = reading(math, value, held);
+    held = { ...spin(mrly, value, at, size), key: planKey() };
+    stats = reading(mrly, value, held);
     made += 1;
   };
   const sync = () => {
@@ -236,7 +238,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): P
       const key = [made, how.ramp, how.levels, how.signed, value.invert, value.tint, tone].join(" ");
       if (key !== painted) {
         pad.put(
-          paint(math, held!, colorizer(how.ramp, how.levels, view.look()), how.levels, value.invert, how.signed),
+          paint(mrly, held!, colorizer(how.ramp, how.levels, view.look()), how.levels, value.invert, how.signed),
           held!.size,
         );
         painted = key;

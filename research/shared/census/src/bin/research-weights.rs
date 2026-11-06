@@ -1,6 +1,6 @@
 use census::save;
-use mrly_core::error::Result;
-use mrly_core::{Json, Map};
+use mrly_error::Result;
+use mrly_json::{Json, Map};
 
 const NAME: &str = "research-weights";
 const LEVEL: u32 = 8;

@@ -33,7 +33,7 @@ export type Stat = {
 
 export type Read = (next: Opts) => Value;
 
-export type Given = Opts & { life: Door; math: Mrly; read: Read; onStat?: (stat: Stat) => void };
+export type Given = Opts & { life: Door; mrly: Mrly; read: Read; onStat?: (stat: Stat) => void };
 
 export type Stage = {
   draw: () => void;
@@ -97,7 +97,7 @@ const message = (thrown: unknown) => String((thrown as { message?: unknown } | n
 
 export function plane(canvas: HTMLCanvasElement, view: View, opts: Given): Stage {
   const ctx = canvas.getContext("2d")!;
-  const { life, math, read } = opts;
+  const { life, mrly, read } = opts;
   let value = read(opts);
   let state: State | null = null;
   let recipe: Recipe | null = null;
@@ -124,7 +124,7 @@ export function plane(canvas: HTMLCanvasElement, view: View, opts: Given): Stage
     name = "";
     error = "";
     try {
-      recipe = recipeOf(life, math, value);
+      recipe = recipeOf(life, mrly, value);
       name = life.recipe.name(recipe);
       state = boot(recipe);
       made = {

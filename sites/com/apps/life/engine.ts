@@ -1,8 +1,9 @@
 import * as life from "@mrlyprod/life";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Value } from "@mrlyprod/ui/kit/spec.ts";
-import type { Door, Rule, Shape } from "../shared/life/engine.ts";
+import type { Rule, Shape } from "../shared/life/engine.ts";
 import {
   BOARD,
   bits,
@@ -40,7 +41,7 @@ export type Law = Pick<State, "wrap" | "birth" | "survive" | "span" | "mask">;
 
 export type Size = Pick<State, "width" | "height">;
 
-export type Table = { seed?: number; rand: Rng; lock?: boolean | number; units: { life: Door; math: Mrly } };
+export type Table = { seed?: number; rand: Rng; lock?: boolean | number; units: Mrly & Had<"life"> };
 
 export type Act =
   | { verb: "tick" }
@@ -119,17 +120,18 @@ export const lawOf = (value: Value, rule: Rule, mask: Shape["mask"]): Law => ({
   mask: bits(mask.data),
 });
 
-export const sown = (value: Value, rand: Rng, math: Mrly, size: Size, law: Law): State =>
-  boot({ ...size, ...law, cells: bits(sow(value, rand, math, size.width, size.height)) });
+export const sown = (value: Value, rand: Rng, mrly: Mrly, size: Size, law: Law): State =>
+  boot({ ...size, ...law, cells: bits(sow(value, rand, mrly, size.width, size.height)) });
 
-export function deal(value: Value, { seed, rand, lock, units: { life, math } }: Table): State | run.State {
+export function deal(value: Value, { seed, rand, lock, units: mrly }: Table): State | run.State {
+  const { life } = mrly;
   const knobs = { ...value, seed } as Value;
-  if (!fixed(knobs)) return run.boot(recipeOf(life, math, knobs));
+  if (!fixed(knobs)) return run.boot(recipeOf(life, mrly, knobs));
   const shape = maskOf(life, knobs);
   return sown(
     knobs,
     rand,
-    math,
+    mrly,
     sized(shape.dim, knobs, lock),
     lawOf(knobs, ruleOf(life, knobs, shape.cells), shape.mask),
   );

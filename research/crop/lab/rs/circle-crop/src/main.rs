@@ -1,10 +1,10 @@
 mod derive;
 mod transfer;
 
-use mrly_core::Tensor;
-use mrly_math::bang::factory::create;
-use mrly_math::bang::Code;
-use mrly_math::shape::{census, named, Frac, Shape};
+use mrly_crop::{census, named, Frac, Shape};
+use mrly_math::code::Code;
+use mrly_math::factory::create;
+use mrly_tensor::Tensor;
 
 fn ceil_sqrt(value: u64) -> u64 {
     if value == 0 {

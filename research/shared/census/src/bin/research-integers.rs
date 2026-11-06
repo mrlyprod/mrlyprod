@@ -1,6 +1,6 @@
 use census::{integers, save};
-use mrly_core::error::Result;
-use mrly_core::json;
+use mrly_error::Result;
+use mrly_json::json;
 
 const NAME: &str = "research-integers";
 const CEILING: i128 = 100_000;

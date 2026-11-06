@@ -1,0 +1,3 @@
+xor of 3 bits  walsh=[0, 0, 0, 0, 0, 0, 0, 8] nonlinearity=0 balanced=true sac=1.000
+majority       walsh=[0, 4, 4, 0, 4, 0, 0, -4] nonlinearity=2 balanced=true sac=0.500
+and of 3 bits  walsh=[6, 2, 2, -2, 2, -2, -2, 2] nonlinearity=1 balanced=false sac=0.250

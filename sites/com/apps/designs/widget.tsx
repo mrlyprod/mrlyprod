@@ -2,12 +2,13 @@ import type { Action } from "@mrlyprod/ui/kit/controls.tsx";
 import { Group } from "@mrlyprod/ui/kit/controls.tsx";
 import { Browser } from "@mrlyprod/ui/kit/designs/browse.tsx";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Design } from "@mrlyprod/ui/kit/designs/store.ts";
 import { choose, place, read } from "@mrlyprod/ui/kit/designs/store.ts";
 import { text } from "@mrlyprod/ui/kit/export.ts";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
-import { useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates } from "@mrlyprod/ui/kit/hooks.ts";
 import { Library } from "@mrlyprod/ui/kit/library.tsx";
 import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
@@ -52,7 +53,7 @@ export function rows(info: Info) {
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit, three: given }: Props) {
-  const math = useUnit("math", unit);
+  const mrly = useCrates(CRATES, unit);
   const { dim, base, code } = read(SLOT, value);
   const three = useThree(dim === 3, given);
   const live = useRef<Handle<Designs> | null>(null);
@@ -65,10 +66,10 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   const now = useRef(value);
   now.current = { ...value, code: here?.code ?? code };
   useEffect(() => onStatus?.(here ? rows(here) : []), [here]);
-  const staged = Boolean(math && (dim !== 3 || three));
+  const staged = Boolean(mrly && (dim !== 3 || three));
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math: math!, three, tell }),
-    [math, three, tell],
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly: mrly!, three, tell }),
+    [mrly, three, tell],
   );
   const ready = (handle: Handle<Designs> | null) => {
     live.current = handle;
@@ -91,7 +92,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
   const up = (e: PointerEvent<HTMLCanvasElement>) => {
     const from = press.current;
     press.current = null;
-    if (math && from && e.type === "pointerup" && from.far < TAP) change.current(step(math, now.current, 1));
+    if (mrly && from && e.type === "pointerup" && from.far < TAP) change.current(step(mrly, now.current, 1));
   };
   const keep = (body: string | undefined, kind: string) => body && text(body, named(now.current), kind);
   useEffect(
@@ -120,7 +121,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit, thr
         />
       )}
       <Library name="Gallery">
-        <Browser compact slot={SLOT} value={value} math={math} onPick={pick} />
+        <Browser compact slot={SLOT} value={value} mrly={mrly} onPick={pick} />
       </Library>
       {dim === 3 && here && (
         <Bar side="right">

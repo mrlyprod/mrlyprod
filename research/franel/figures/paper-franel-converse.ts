@@ -1,13 +1,12 @@
-import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 import * as num from "@mrlyprod/num";
+import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
 import census from "./paper-franel-converse.json" with { type: "json" };
 
 const BASE = 3;
 const DIGITS = [0, 1];
 const ORDER = 81;
 
-export const units = { num, math };
+export const units = { num };
 
 type Node = [number, number];
 
@@ -15,7 +14,7 @@ let memo: { thin: Node[]; full: Node[] } | undefined;
 
 function nodes() {
   if (memo) return memo;
-  const design = Array.from(math.design.elements(BASE, DIGITS, 5), Number).filter((n) => n <= ORDER);
+  const design = Array.from(num.digits.elements(BASE, DIGITS, 5), Number).filter((n) => n <= ORDER);
   if (design.length !== 16) throw new Error(`paper-franel-converse: ${design.length} design elements, want 16`);
   if (design.slice(0, 5).join() !== "1,3,4,9,10")
     throw new Error(`paper-franel-converse: design starts ${design.slice(0, 5)}, want 1,3,4,9,10`);

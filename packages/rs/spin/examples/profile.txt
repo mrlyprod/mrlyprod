@@ -1,0 +1,11 @@
+average at radius    0: 1.000
+average at radius    5: 1.000
+average at radius   10: 1.000
+average at radius   15: 1.000
+average at radius 19.5: 0.962
+average at radius 20.5: 0.051
+average at radius   25: 0.000
+average at radius   40: 0.000
+pixel total          1264
+mass of the profile  1264.0
+mass within radius 20 1245.8

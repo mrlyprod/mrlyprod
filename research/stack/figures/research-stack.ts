@@ -1,19 +1,19 @@
+import * as gaussian from "@mrlyprod/gaussian";
 import type { Ink, Pen } from "@mrlyprod/draw";
-import * as num from "@mrlyprod/num";
 import census from "./research-stack.json" with { type: "json" };
 
 const RING = "Gaussian";
 const TOP = 46;
 const WRAPPED = 917;
 
-export const units = { num };
+export const units = { gaussian };
 
 type Node = [number, number, number];
 
 let memo: { top: number; lit: Map<number, number> } | undefined;
 
 function classes(bound: number) {
-  return num.gauss.classes(RING, bound).length;
+  return gaussian.classes(RING, bound).length;
 }
 
 function lights(bound: number, nodes: Node[]) {

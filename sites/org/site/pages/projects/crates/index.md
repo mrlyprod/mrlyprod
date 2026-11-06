@@ -1,2 +1,2 @@
 - Built and unpublished.
-- Live in `packages/`.
+- Live in `packages/rs`.

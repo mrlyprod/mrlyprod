@@ -1,3 +1,4 @@
+import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { text } from "@mrlyprod/ui/kit/export.ts";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Had, Readout } from "@mrlyprod/ui/kit/hooks.ts";
@@ -22,7 +23,7 @@ export type Asked = Knobs & { seed: number; dim: number; base: number; code: str
 
 export type Asking = Pick<Asked, "dim" | "base" | "code" | "measure" | "axis">;
 
-type Contract = WidgetProps<Had<"math" | "num">, Stage>;
+type Contract = WidgetProps<Mrly & Had<"num">, Stage>;
 
 export type Props = Pick<Contract, "value" | "onChange"> &
   Partial<Pick<Contract, "onReady" | "onExport" | "onStatus" | "units">>;
@@ -76,8 +77,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: un
   const tell = useRef(onChange);
   now.current = value as Asked;
   tell.current = onChange;
-  const math = unit?.math;
-  const book = useMemo(() => math && booked(math), [math]);
+  const mrly = unit;
+  const book = useMemo(() => mrly && booked(mrly), [mrly]);
   const { dim, base, code, measure, axis, terms, chart, digits, scode, smeasure, op, arg } = value as Asked;
   const mixed = Number(value.mix) === 1;
   const paired = mixed && PAIRED.includes(op);
@@ -206,7 +207,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: un
       {unit && (
         <Scene make={scene} value={{ chart, digits }} onReady={ready} onPointerUp={tap} role="img" aria-label={label} />
       )}
-      {math && (
+      {mrly && (
         <Library name="Sequences">
           {AXES.map(([slug, name]) => (
             <Shelf key={slug} name={name}>

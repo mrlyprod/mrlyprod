@@ -5,9 +5,15 @@ license = "MIT"
 publish = false
 
 [dependencies]
-mrly-core = "0.2.0"
+mrly-arcs = "0.2.0"
+mrly-bang = "0.2.0"
+mrly-error = "0.2.0"
 mrly-life = "0.2.0"
 mrly-math = "0.2.0"
+mrly-sequences = "0.2.0"
+mrly-six = "0.2.0"
+mrly-three = "0.2.0"
+mrly-two = "0.2.0"
 
 [profile.test]
 opt-level = 3

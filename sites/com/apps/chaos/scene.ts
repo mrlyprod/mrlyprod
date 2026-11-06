@@ -1,6 +1,6 @@
 import { veil } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Design } from "@mrlyprod/ui/kit/designs/store.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
@@ -10,7 +10,7 @@ import type { Patch, Raw, Spec, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
 import type { Units as Loaded } from "@mrlyprod/ui/kit/units/index.ts";
 import { wasm } from "@mrlyprod/ui/kit/units/index.ts";
-import type { Chaos, Doors, Fit, Law, Meter, Mode, Num, Pair, Source, State } from "./engine.ts";
+import type { Chaos, Doors, Fit, Law, Meter, Mode, Pair, Source, State } from "./engine.ts";
 import {
   boot,
   boxOf,
@@ -77,7 +77,7 @@ export type Facts = {
   lost: boolean;
 };
 
-export type Given = Opts & { math?: Mrly | null; num?: Num | null; onFacts?: (facts: Facts) => void };
+export type Given = Opts & { mrly?: Doors | null; onFacts?: (facts: Facts) => void };
 
 export type Stage = ReturnType<typeof make>;
 
@@ -104,7 +104,7 @@ const design = (value: Value) => value.view === "design";
 
 const typed = (value: Value) => value.view === "word" && value.word === "typed";
 
-export const SPEC: Spec = [
+export const SPEC: Spec<Doors> = [
   { key: "view", label: "Source", kind: "segment", def: "design", options: VIEWS, group: "Source" },
   {
     key: "side",
@@ -149,7 +149,7 @@ export const SPEC: Spec = [
     label: "Rule",
     kind: "pick",
     def: "repeat",
-    options: (_value, units) => games(units?.math).map((one) => [one.key, one.name]),
+    options: (_value, units) => games(units).map((one) => [one.key, one.name]),
     group: "Source",
     when: restricted,
   },
@@ -186,8 +186,7 @@ export const SPEC: Spec = [
     kind: "slider",
     def: 2,
     min: 1,
-    max: (value, units) =>
-      units?.math && units?.num ? study(units as Doors, { ...value, ...tidy(DESIGN, value) } as Chaos).cap : LEVELS,
+    max: (value, units) => (units ? study(units, { ...value, ...tidy(DESIGN, value) } as Chaos).cap : LEVELS),
     step: 1,
     keep: true,
     group: "Meter",
@@ -198,7 +197,7 @@ export const SPEC: Spec = [
 export const tidied = (value: Raw, units?: Doors): Chaos =>
   ({ ...value, ...(tidy(DESIGN, value) as Design), ...tidy(SPEC, value, units) }) as unknown as Chaos;
 
-export const units = wasm("math", "num");
+export const units = wasm(...CRATES, "gaussian");
 
 export function file(value: Value) {
   const view = String(value.view);
@@ -255,7 +254,7 @@ export const PAGE = {
     speed: (value, key) => faster(value, key === "ArrowLeft" ? -1 : 1),
     grid: (value) => flipped(value),
   },
-} satisfies Page<Loaded<"math" | "num">, Stage>;
+} satisfies Page<Loaded<Crate | "gaussian">, Stage>;
 
 const R = 1024;
 const DOT = 2;
@@ -377,15 +376,13 @@ export function sketch(ctx: CanvasRenderingContext2D, w: number, h: number, dpr:
 }
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const { math, num, onFacts } = opts;
-  if (!math || !num)
-    throw new Error("chaos: the scene wants @mrlyprod/math and @mrlyprod/num as opts.math and opts.num");
-  const units = { math, num };
+  const { mrly, onFacts } = opts;
+  if (!mrly) throw new Error("chaos: the scene wants the design crates and @mrlyprod/gaussian as opts.mrly");
   const ctx = canvas.getContext("2d")!;
-  const read = (next: Opts) => tidied(next, units);
+  const read = (next: Opts) => tidied(next, mrly);
   let value = read(opts);
   let seed = opts.seed;
-  let source = study(units, value);
+  let source = study(mrly, value);
   let k = Math.min(value.level, source.cap);
   let mode: Mode = modeOf(value);
   let heavy = weighted(value);
@@ -469,7 +466,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     return p;
   };
   const restart = (from?: Pair) => {
-    const hand = opening(math, source, value, walked ? walked.seed : Math.floor(view.rand() * WIDE), from);
+    const hand = opening(mrly, source, value, walked ? walked.seed : Math.floor(view.rand() * WIDE), from);
     ({ k, heavy, sched, start } = hand);
     mode = modeOf(value);
     lawed = law(source, k, heavy);
@@ -494,7 +491,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const was = walked!;
     if (was.n > MOST) return restart();
     k = Math.min(value.level, source.cap);
-    sched = mode === "bruijn" ? schedule(math, source, k) : null;
+    sched = mode === "bruijn" ? schedule(mrly, source, k) : null;
     lawed = law(source, k, heavy);
     met = meter(lawed, sched?.length ?? 0);
     lit = new Uint8Array(lawed.cells);
@@ -534,7 +531,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
       }
       if (!source.hex && checked < CHECKS) {
         checked++;
-        if (Number(math.game.cell([x, y], source.base, k)) === at) agree++;
+        if (Number(mrly.chaos.cell([x, y], source.base, k)) === at) agree++;
       }
     }
     dirty = true;
@@ -609,7 +606,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   const set = (next: Opts) => {
     const was = value;
     value = read(next);
-    const fresh = study(units, value);
+    const fresh = study(mrly, value);
     const reseeded = next.seed !== seed;
     seed = next.seed;
     if (reseeded) walked = null;

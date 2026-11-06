@@ -1,15 +1,15 @@
+import * as ladder from "@mrlyprod/ladder";
 import type { Ink, Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 import census from "./paper-sparse-mertens-under-grh.json" with { type: "json" };
 
-export const units = { math };
+export const units = { ladder };
 
 const BASE = 7;
 const DROP = 3;
 const LEVEL = 3;
 
 function masses(kept: number[], span: number, half: number) {
-  const weights = math.dissection.weights(BASE, kept, LEVEL);
+  const weights = ladder.dissection.weights(BASE, kept, LEVEL);
   if (weights.length !== span)
     throw new Error(`paper-sparse-mertens-under-grh: ${weights.length} weights, want ${span}`);
   return Array.from({ length: span }, (_, i) => weights[(((i - half) % span) + span) % span]);

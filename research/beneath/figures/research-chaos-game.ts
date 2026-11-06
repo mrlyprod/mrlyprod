@@ -1,7 +1,8 @@
-import type { Ink, Pen, Point } from "@mrlyprod/draw";
 import * as math from "@mrlyprod/math";
+import * as radix from "@mrlyprod/radix";
+import type { Ink, Pen, Point } from "@mrlyprod/draw";
 
-export const units = { math };
+export const units = { math, radix };
 
 const BASE = 2;
 const CODE = 7;
@@ -47,7 +48,7 @@ function play(digits: Point[], draws: number[], start: Point): Point[] {
 const cellOf = ([x, y]: Point) => `${Math.floor(x * BASE ** LEVEL)},${Math.floor(y * BASE ** LEVEL)}`;
 
 export default function draw(pen: Pen, ink: Ink) {
-  const design = math.radix.tile(BASE, CODE);
+  const design = radix.tile(BASE, CODE);
   if (design.size() !== DIGITS) throw new Error(`research-chaos-game: ${design.size()} digits, want ${DIGITS}`);
   if (design.fill(LEVEL) !== String(CELLS))
     throw new Error(`research-chaos-game: fill ${design.fill(LEVEL)}, want ${CELLS}`);

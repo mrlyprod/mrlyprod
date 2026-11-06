@@ -13,7 +13,7 @@ import { quadruple, ROOTS, said } from "./engine.ts";
 import type { Apollonian, Knobs, Told } from "./scene.ts";
 import { file, make, portrait } from "./scene.ts";
 
-type Props = WidgetProps<Had<"num">, Apollonian> & { value: Knobs & { seed: number } };
+type Props = WidgetProps<Had<"apollonian">, Apollonian> & { value: Knobs & { seed: number } };
 
 type Hooks = Partial<Pick<Props, "onChange" | "onStatus">>;
 
@@ -61,7 +61,7 @@ export function rows(f: Told | null): Readout[] {
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units }: Props) {
-  const unit = units?.num;
+  const unit = units?.apollonian;
   const live = useRef<Handle<Apollonian> | null>(null);
   const now = useRef(value);
   now.current = value;
@@ -70,7 +70,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   const tick = useTheme();
   const tell = useCallback((facts: Told) => hooks.current.onStatus?.(rows(facts)), []);
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, num: unit, onTell: tell }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
+      make(canvas, view, { ...opts, apollonian: unit, onTell: tell }),
     [unit, tell],
   );
   const ready = (handle: Handle<Apollonian> | null) => {

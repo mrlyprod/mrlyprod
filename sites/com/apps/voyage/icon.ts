@@ -1,11 +1,11 @@
 import type { Color, Frame, Pen, Pixels } from "@mrlyprod/draw";
 import { frame, iso } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as three from "@mrlyprod/three";
 
 type Arc = { x0: number; y0: number; w: number; h: number; top: number; image: Pixels };
 
-export const units = { math };
+export const units = { three };
 
 const CODE = 23;
 const NUMBER = 3;
@@ -15,15 +15,15 @@ const WANT = { fills: 400 };
 const SHIP = { top: 0.05, side: 0.58 };
 const WORLD = { top: 0.71, radius: 0.72, span: 0.68, rim: 0.045, glow: 0.28, haze: 1, taper: 0.75 };
 
-let quads: math.three.Quad[] | null = null;
+let quads: three.Quad[] | null = null;
 const worlds = new Map<string, Arc>();
 
-function ship(): math.three.Quad[] {
+function ship(): three.Quad[] {
   if (quads) return quads;
-  const cube = math.three.create(CODE, NUMBER, LEVEL, BASE);
-  const fills = math.three.fills(cube);
+  const cube = three.create(CODE, NUMBER, LEVEL, BASE);
+  const fills = three.fills(cube);
   if (fills !== WANT.fills) throw new Error(`voyage: the ship fills ${fills}, want ${WANT.fills}`);
-  quads = math.three.quads(cube);
+  quads = three.quads(cube);
   return quads;
 }
 

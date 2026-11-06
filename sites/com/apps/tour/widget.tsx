@@ -1,3 +1,4 @@
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import { useUnits } from "@mrlyprod/ui/kit/hooks.ts";
 import { Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
@@ -20,7 +21,7 @@ type Contract = WidgetProps<Units, Tour>;
 
 type Props = Pick<Contract, "value" | "onChange" | "onReady"> & Partial<Pick<Contract, "onStatus">> & { value: Asked };
 
-const UNITS = wasm("math", "num");
+const UNITS = wasm(...CRATES, "num");
 
 const STILL = {};
 
@@ -32,9 +33,12 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
   const tell = useRef(onChange);
   now.current = value;
   tell.current = onChange;
-  const book = useMemo(() => units && ledger(units.math), [units]);
+  const book = useMemo(() => units && ledger(units), [units]);
   const { card, step } = value;
-  const made = useMemo(() => (units && book ? build({ ...units, book }, card, step) : null), [units, book, card, step]);
+  const made = useMemo(
+    () => (units && book ? build({ mrly: units, num: units.num, book }, card, step) : null),
+    [units, book, card, step],
+  );
   const said = shown(card, step);
   useEffect(() => {
     live.current = {

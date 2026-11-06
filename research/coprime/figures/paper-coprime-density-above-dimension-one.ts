@@ -1,8 +1,8 @@
-import { Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 import * as num from "@mrlyprod/num";
+import * as two from "@mrlyprod/two";
+import { Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
-export const units = { math, num };
+export const units = { num, two };
 
 const SIDE = 32;
 const STRONG = "286747428434478734107892712789";
@@ -297,7 +297,7 @@ function numbers() {
 
 export default function draw(pen: Pen, ink: Ink) {
   numbers();
-  const gasket = math.two.from_corners(
+  const gasket = two.from_corners(
     [
       [0, 0],
       [1, 0],

@@ -1,6 +1,6 @@
 use crate::rules::{output, RULES};
-use mrly_math::bang::code_to_corners;
-use mrly_math::bang::Code;
+use mrly_math::code::Code;
+use mrly_math::factory::code_to_corners;
 
 pub fn report() {
     println!("IDENTITY");

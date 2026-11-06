@@ -1,0 +1,5 @@
+read:  Point { x: 1.5, y: -2.0, label: "start" }
+write: {"x":1.5,"y":-2.0,"label":"start"}
+take:  Point { x: 1.5, y: -2.0, label: "start" }
+wrong: json: invalid type: string "one", expected f64 at line 1 column 11
+broken: json: EOF while parsing a value at line 1 column 6

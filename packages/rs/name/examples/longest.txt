@@ -1,0 +1,5 @@
+"abcd" matches "abc", rest "d"
+"abx" matches "ab", rest "x"
+"bb" matches "b", rest "b"
+"xyz" matches nothing
+"" matches nothing

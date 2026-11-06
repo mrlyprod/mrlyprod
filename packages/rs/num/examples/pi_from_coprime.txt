@@ -1,0 +1,5 @@
+n=10    coprime pairs=63        pi~3.08607
+n=100   coprime pairs=6087      pi~3.13960
+n=1000  coprime pairs=608383    pi~3.14042
+n=5000  coprime pairs=15200915  pi~3.14131
+pi    3.14159

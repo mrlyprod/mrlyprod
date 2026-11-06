@@ -1,7 +1,7 @@
 use super::Bang;
-use mrly_core::error::{Result, value_error};
-use mrly_core::kind;
-use mrly_core::name::Named;
+use mrly_error::{Result, value_error};
+use mrly_name::Named;
+use mrly_name::kind;
 use serde::{Deserialize, Serialize};
 
 kind!("word");

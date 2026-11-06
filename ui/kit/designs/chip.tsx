@@ -1,17 +1,18 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Btn, Icon, Modal } from "../controls.tsx";
-import { useUnit } from "../hooks.ts";
+import { useCrates } from "../hooks.ts";
 import type { Value } from "../spec.ts";
 import { Browser, called, here, named, valid } from "./browse.tsx";
 import type { Mrly } from "./engine.ts";
+import { CRATES } from "./engine.ts";
 import { Thumb, useTheme } from "./pick.tsx";
 import type { Design, Slot } from "./store.ts";
 import { choose, place, read, star, starred, useDesigns } from "./store.ts";
 
 export type Rect = Pick<DOMRect, "left" | "top" | "width" | "bottom">;
 
-export type ChipProps = { slot: Slot; value: Value; onChange: (patch: Value) => void; math?: Mrly | null };
+export type ChipProps = { slot: Slot; value: Value; onChange: (patch: Value) => void; mrly?: Mrly | null };
 
 const PX = 22;
 
@@ -30,8 +31,8 @@ function aim(pop: HTMLElement, chip: HTMLElement | null) {
   pop.toggleAttribute("data-up", up);
 }
 
-export function Chip({ slot, value, onChange, math: given }: ChipProps) {
-  const math = useUnit("math", given);
+export function Chip({ slot, value, onChange, mrly: given }: ChipProps) {
+  const mrly = useCrates(CRATES, given);
   const id = `designs${useId().replace(/[^\w-]/g, "")}`;
   const chip = useRef<HTMLButtonElement>(null);
   const pop = useRef<HTMLDivElement>(null);
@@ -40,11 +41,11 @@ export function Chip({ slot, value, onChange, math: given }: ChipProps) {
   const [browsing, setBrowsing] = useState(false);
   const tick = useTheme();
   useDesigns();
-  const now = here(slot, value, math);
+  const now = here(slot, value, mrly);
   const blank = Boolean(slot.blank) && !read(slot, value).code;
-  const ok = !blank && valid(math, now);
+  const ok = !blank && valid(mrly, now);
   const on = ok && starred(now);
-  const name = called(math, now);
+  const name = called(mrly, now);
   useEffect(() => {
     const el = pop.current;
     if (!el) return undefined;
@@ -76,8 +77,8 @@ export function Chip({ slot, value, onChange, math: given }: ChipProps) {
   return (
     <>
       <button type="button" ref={chip} className="design" popoverTarget={id} title="Designs">
-        {ok && <Thumb math={math} dim={now.dim} base={now.base} code={now.code} px={PX} tick={tick} />}
-        <span>{blank ? slot.blank : named(math, now) || "Design"}</span>
+        {ok && <Thumb mrly={mrly} dim={now.dim} base={now.base} code={now.code} px={PX} tick={tick} />}
+        <span>{blank ? slot.blank : named(mrly, now) || "Design"}</span>
       </button>
       <div id={id} ref={pop} popover="auto" role="dialog" className="chooser" data-lens="menu" aria-label="Designs">
         {open && (
@@ -98,7 +99,7 @@ export function Chip({ slot, value, onChange, math: given }: ChipProps) {
                 <Icon name={on ? "star_fill" : "star"} />
               </button>
             </header>
-            <Browser compact slot={slot} value={value} math={math} onPick={pick} />
+            <Browser compact slot={slot} value={value} mrly={mrly} onPick={pick} />
             <Btn className="all" onClick={browse}>
               <Icon name="grid_view" />
               Browse all
@@ -107,7 +108,7 @@ export function Chip({ slot, value, onChange, math: given }: ChipProps) {
         )}
       </div>
       <Modal ref={box} className="browse" title="Designs" onClose={() => setBrowsing(false)}>
-        {browsing && <Browser slot={slot} value={value} math={math} onPick={pick} />}
+        {browsing && <Browser slot={slot} value={value} mrly={mrly} onPick={pick} />}
       </Modal>
     </>
   );

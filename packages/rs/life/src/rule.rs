@@ -1,8 +1,8 @@
 use crate::{Boundary, Config, Counts};
-use mrly_core::error::Result;
-use mrly_core::kind;
-use mrly_core::name::Named;
-use mrly_math::two::Cell2d;
+use mrly_error::Result;
+use mrly_name::Named;
+use mrly_name::kind;
+use mrly_two::Cell2d;
 use serde::{Deserialize, Serialize};
 
 kind!("rule");

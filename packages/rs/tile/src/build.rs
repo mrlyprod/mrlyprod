@@ -25,11 +25,11 @@ mod two {
     use super::Config2d as Config;
     use crate::draw as spec;
     use crate::recipe::{Group, Source, Tile};
-    use mrly_core::error::{Result, value_error};
-    use mrly_core::rng::Rng;
-    use mrly_core::tensor::Tensor;
-    use mrly_math::bang::Code;
-    use mrly_math::two::{Cell2d, designs, geometry};
+    use mrly_error::{Result, value_error};
+    use mrly_math::code::Code;
+    use mrly_rand::Rng;
+    use mrly_tensor::Tensor;
+    use mrly_two::{Cell2d, designs, geometry};
 
     fn rotation(source: Source, rng: &mut Rng) -> usize {
         match source {
@@ -130,11 +130,11 @@ mod three {
     use super::Config3d as Config;
     use crate::draw as spec;
     use crate::recipe::{Design, Group, Source, Tile};
-    use mrly_core::error::{Result, value_error};
-    use mrly_core::rng::Rng;
-    use mrly_core::tensor::Tensor;
-    use mrly_math::bang::Code;
-    use mrly_math::three::{Cell3d, designs, geometry};
+    use mrly_error::{Result, value_error};
+    use mrly_math::code::Code;
+    use mrly_rand::Rng;
+    use mrly_tensor::Tensor;
+    use mrly_three::{Cell3d, designs, geometry};
 
     fn rotation(_: Source, rng: &mut Rng) -> usize {
         rng.below(24)
@@ -267,10 +267,10 @@ mod six {
     use super::Config3d as Config;
     use super::three;
     use crate::recipe::Tile;
-    use mrly_core::error::Result;
-    use mrly_core::rng::Rng;
-    use mrly_math::six::geometry::{cut, iso, pro};
-    use mrly_math::six::{Cell6d, Projection};
+    use mrly_error::Result;
+    use mrly_rand::Rng;
+    use mrly_six::geometry::{cut, iso, pro};
+    use mrly_six::{Cell6d, Projection};
 
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     pub struct HexTile {

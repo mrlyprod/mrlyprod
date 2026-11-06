@@ -1,12 +1,13 @@
 import { paints } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
-import { useLatest, useStatus, useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates, useLatest, useStatus } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Paint } from "@mrlyprod/ui/kit/library.tsx";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Patch } from "@mrlyprod/ui/kit/spec.ts";
@@ -18,9 +19,9 @@ import { stamp } from "../shared/moire/sheet.ts";
 import type { Facts, Moire, Player } from "./scene.ts";
 import { make } from "./scene.ts";
 
-export type ShelvesProps = { value: Moire; onChange: (patch: Patch) => void; math?: Mrly | null };
+export type ShelvesProps = { value: Moire; onChange: (patch: Patch) => void; mrly?: Mrly | null };
 
-type Props = WidgetProps<Mathy, Player> & { value: Moire; unit?: Mrly | null };
+type Props = WidgetProps<Mrly, Player> & { value: Moire; unit?: Mrly | null };
 
 const exact = (r: number) => (r === 0 ? "0" : r.toFixed(9));
 
@@ -54,20 +55,20 @@ export function split(n: number) {
   return "prime";
 }
 
-export function Shelves({ value, onChange, math }: ShelvesProps) {
+export function Shelves({ value, onChange, mrly }: ShelvesProps) {
   const tick = useTheme();
-  const list = math ? presets(math) : [];
+  const list = mrly ? presets(mrly) : [];
   const preset = presetOf(list, value);
   const look = [value.limit, value.ramp, value.levels, value.invert, value.tint, tick];
   const thumb =
     (one: Omit<Preset, "name">): Paint =>
     (ctx, w) =>
-      stamp(ctx, swatch(math!, { ...value, ...one }, w, paints(ctx.canvas, value.tint)), w);
+      stamp(ctx, swatch(mrly!, { ...value, ...one }, w, paints(ctx.canvas, value.tint)), w);
   return (
     <Library>
-      {math && value.view === "matrix" && (
+      {mrly && value.view === "matrix" && (
         <Shelf name="Scales">
-          {matrix(math, value.limit).scales.map((m) => (
+          {matrix(mrly, value.limit).scales.map((m) => (
             <Item
               key={m}
               label={`m ${m}`}
@@ -78,7 +79,7 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
           ))}
         </Shelf>
       )}
-      {math && value.view !== "matrix" && (
+      {mrly && value.view !== "matrix" && (
         <Shelf name="Presets" grid>
           {list.map(({ name, ...one }) => (
             <Item
@@ -96,14 +97,14 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
 }
 
 export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
-  const math = useUnit("math", unit);
+  const mrly = useCrates(CRATES, unit);
   const [facts, setFacts] = useState<Facts | null>(null);
   const handle = useRef<Handle<Player> | null>(null);
   const change = useLatest(onChange);
   const made = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
-      make(canvas, view, { ...opts, math, onFacts: setFacts, onLimit: (limit) => change.current({ limit }) }),
-    [math],
+      make(canvas, view, { ...opts, mrly, onFacts: setFacts, onLimit: (limit) => change.current({ limit }) }),
+    [mrly],
   );
   const ready = (scene: Handle<Player> | null) => {
     handle.current = scene;
@@ -113,9 +114,9 @@ export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
   useStatus(onStatus, rows(facts));
   return (
     <>
-      {math && <Scene make={made} value={value} onReady={ready} {...touch} />}
-      <Bar side="status">{!math && <span>loading</span>}</Bar>
-      <Shelves value={value} onChange={onChange} math={math} />
+      {mrly && <Scene make={made} value={value} onReady={ready} {...touch} />}
+      <Bar side="status">{!mrly && <span>loading</span>}</Bar>
+      <Shelves value={value} onChange={onChange} mrly={mrly} />
     </>
   );
 }

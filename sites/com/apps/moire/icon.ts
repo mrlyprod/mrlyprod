@@ -1,9 +1,9 @@
 import type { Color, Pen, Point } from "@mrlyprod/draw";
 import { iso } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as moire from "@mrlyprod/moire";
 
-export const units = { math };
+export const units = { moire };
 
 type Open = { top: number; from: number; to: number };
 
@@ -43,10 +43,10 @@ function runs(mask: boolean[], side: number): Run[] {
 
 function layers(): Layer[] {
   if (held) return held;
-  const spec = math.moire.Spec.new(CODE, BASE, DIM);
+  const spec = moire.Spec.new(CODE, BASE, DIM);
   held = SCALES.map((number, i) => {
     const side = number * BASE ** (LEVEL - 1);
-    const mask = math.moire.layer({ spec, number, level: LEVEL, lattice: "Square", size: side, slices: [] });
+    const mask = moire.layer({ spec, number, level: LEVEL, lattice: "Square", size: side, slices: [] });
     const fills = mask.reduce((n, on) => n + (on ? 1 : 0), 0);
     if (mask.length !== side * side || fills !== WANT[i])
       throw new Error(

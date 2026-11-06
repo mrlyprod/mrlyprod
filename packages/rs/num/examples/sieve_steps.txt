@@ -1,0 +1,5 @@
+prime  2 strikes 24 new numbers
+prime  3 strikes 7 new numbers
+prime  5 strikes 2 new numbers
+prime  7 strikes 1 new numbers
+primes up to 50: 15

@@ -3,9 +3,9 @@ import { frame as box, hex, canvas as pen, svg as sheet } from "@mrlyprod/draw";
 import type { Cell6d } from "@mrlyprod/math";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb, TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Code, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { DESIGN, roll } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Had, Readout } from "@mrlyprod/ui/kit/hooks.ts";
+import type { Code, Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, DESIGN, roll } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
@@ -46,7 +46,7 @@ export type Drawn = { ctx: CanvasRenderingContext2D; img: HTMLImageElement };
 
 export type Seen = Pick<View, "w" | "h" | "dpr"> & { look: () => Pick<Paints, "accent"> };
 
-export type Given = Opts & { math?: Mrly | null; tell?: (info: Info) => void };
+export type Given = Opts & { mrly?: Mrly | null; tell?: (info: Info) => void };
 
 export type Cuts = ReturnType<typeof make>;
 
@@ -64,9 +64,9 @@ const FIT = 0.9;
 const TAU = Math.PI * 2;
 const ROOT6 = Math.sqrt(6);
 
-export const lid = (math: Mrly, view: Scalar) => math.bang.level_cap(NUMBER, 1, REACH[view] ?? REACH.points);
+export const lid = (mrly: Mrly, view: Scalar) => mrly.math.factory.level_cap(NUMBER, 1, REACH[view] ?? REACH.points);
 
-export const SPEC: Spec<Had<"math">> = [
+export const SPEC: Spec<Mrly> = [
   {
     key: "view",
     label: "View",
@@ -84,7 +84,7 @@ export const SPEC: Spec<Had<"math">> = [
     kind: "slider",
     def: 5,
     min: 1,
-    max: (value, units) => units && lid(units.math, value.view),
+    max: (value, units) => units && lid(units, value.view),
     step: 1,
     group: "Cut",
   },
@@ -100,7 +100,7 @@ export const SPEC: Spec<Had<"math">> = [
   },
 ];
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const name = (value: Value) => `cuts-${String(value.code ?? "").trim() || GASKET}-l${value.level}-${value.view}`;
 
@@ -122,19 +122,19 @@ export const PAGE = {
     level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
   },
   reroll: (value, seed, units) => ({
-    code: roll(units!.math, DIM, Number(tidy(DESIGN, value).base), rng(seed)),
+    code: roll(units!, DIM, Number(tidy(DESIGN, value).base), rng(seed)),
     height: "",
   }),
-} satisfies Page<Loaded<"math">, Cuts>;
+} satisfies Page<Loaded<Crate>, Cuts>;
 
 const profiles = memo(6);
 const drawings = memo(4);
 
-export function profile(math: Mrly, code: Code, base: number, level: number): Cut {
+export function profile(mrly: Mrly, code: Code, base: number, level: number): Cut {
   return profiles(`${code} ${base} ${level}`, (): Cut => {
-    const counts = math.three.profile(code, NUMBER, level, base).map(Number);
-    const side = Number(math.counts.grid(NUMBER, 1, level));
-    const support = math.three.support(counts);
+    const counts = mrly.three.profile(code, NUMBER, level, base).map(Number);
+    const side = Number(mrly.sequences.counts.grid(NUMBER, 1, level));
+    const support = mrly.three.support(counts);
     if (!support) return { counts, side, empty: true };
     const [low, high] = support;
     const span = counts.slice(low, high + 1);
@@ -165,9 +165,9 @@ export function heights(cut: Cut, value: Raw): number[] {
   return [Math.min(cut.high, Math.max(cut.low, at))];
 }
 
-export function points(math: Mrly, code: Code, base: number, level: number, list: number[]) {
+export function points(mrly: Mrly, code: Code, base: number, level: number, list: number[]) {
   return drawings(`${code} ${base} ${level} ${list}`, () =>
-    math.three.diagonal_svg(
+    mrly.three.diagonal_svg(
       code,
       NUMBER,
       level,
@@ -178,40 +178,40 @@ export function points(math: Mrly, code: Code, base: number, level: number, list
   );
 }
 
-export function section(math: Mrly, code: Code, base: number, level: number) {
-  return drawings(`section ${code} ${base} ${level}`, () => math.six.cut_design(code, NUMBER, level, base));
+export function section(mrly: Mrly, code: Code, base: number, level: number) {
+  return drawings(`section ${code} ${base} ${level}`, () => mrly.six.cut_design(code, NUMBER, level, base));
 }
 
-export function plane(math: Mrly, value: Raw) {
-  const { base, code } = design(math, {
+export function plane(mrly: Mrly, value: Raw) {
+  const { base, code } = design(mrly, {
     ...value,
     base: Number(value.base),
     code: String(value.code ?? "").trim() || GASKET,
   });
-  const level = Math.min(Number(value.level), lid(math, String(value.view)));
-  const cut = profile(math, code, base, level);
+  const level = Math.min(Number(value.level), lid(mrly, String(value.view)));
+  const cut = profile(mrly, code, base, level);
   return { base, code, level, cut, list: heights(cut, value) };
 }
 
-function slide(by: number): Nudge<Had<"math">> {
+function slide(by: number): Nudge<Mrly> {
   return (value, _key, units) => {
-    const { cut, list } = plane(units!.math, value);
+    const { cut, list } = plane(units!, value);
     return cut.empty ? {} : { height: Math.min(cut.high, Math.max(cut.low, list[0] + by)), both: 0 };
   };
 }
 
-export function study(math: Mrly, value: Raw) {
-  const { base, code, level, cut, list } = plane(math, value);
+export function study(mrly: Mrly, value: Raw) {
+  const { base, code, level, cut, list } = plane(mrly, value);
   const counts = list.map((h) => cut.counts[h] ?? 0);
   const drawn = value.view === "section" ? "-" : String(counts.reduce((a, b) => a + b, 0));
   const facts: Readout[] = cut.empty
     ? [
-        ["name", title(named(math, code, base), code, base)],
+        ["name", title(named(mrly, code, base), code, base)],
         ["side", cut.side],
         ["support", "none"],
       ]
     : [
-        ["name", title(named(math, code, base), code, base)],
+        ["name", title(named(mrly, code, base), code, base)],
         ["height", list.join(" and ")],
         ["this slice", counts.join(" and ")],
         ["offset in binary", list.map((h) => (h - cut.low).toString(2)).join(" and ")],
@@ -225,8 +225,8 @@ export function study(math: Mrly, value: Raw) {
   const art: Art = cut.empty
     ? null
     : value.view === "section"
-      ? { mesh: section(math, code, base, level) }
-      : { svg: points(math, code, base, level, list) };
+      ? { mesh: section(mrly, code, base, level) }
+      : { svg: points(mrly, code, base, level, list) };
   return { code, base, level, cut, heights: list, rows: facts, art, view: value.view };
 }
 
@@ -241,8 +241,8 @@ export function near(list: number[], at: number) {
   return list.reduce((best, one) => (Math.abs(one - at) < Math.abs(best - at) ? one : best), list[0]);
 }
 
-export function plot(math: Mrly, code: Code, base: number, level: number, height: number) {
-  return math.three
+export function plot(mrly: Mrly, code: Code, base: number, level: number, height: number) {
+  return mrly.three
     .diagonal_slice(code, NUMBER, level, base, height)
     .map(([x, y, z]): Point => [(x - y) / Math.SQRT2, (x + y - 2 * z) / ROOT6]);
 }
@@ -289,8 +289,8 @@ export function picture(page: Pen, frame: Frame, plan: Pick<Study, "art">, paint
   }
 }
 
-const settle = (opts: Given & { math: Mrly }) => ({
-  ...tidy(SPEC, opts, { math: opts.math }),
+const settle = (opts: Given & { mrly: Mrly }) => ({
+  ...tidy(SPEC, opts, opts.mrly),
   seed: opts.seed,
   base: opts.base,
   code: opts.code,
@@ -301,12 +301,12 @@ const drawable = () =>
   typeof Image === "function" && typeof Blob === "function" && typeof URL?.createObjectURL === "function";
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const { math, tell } = opts;
-  if (!math) throw new Error("cuts: the scene wants @mrlyprod/math as opts.math");
+  const { mrly, tell } = opts;
+  if (!mrly) throw new Error("cuts: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
-  const codes = { fill: math.six.FILL(), void: math.six.VOID() };
-  let value = settle({ ...opts, math });
-  let plan = study(math, value);
+  const codes = { fill: mrly.six.FILL(), void: mrly.six.VOID() };
+  let value = settle({ ...opts, mrly });
+  let plan = study(mrly, value);
   let dirty = true;
   let img: HTMLImageElement | null = null;
   let wanted = "";
@@ -352,8 +352,8 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     size: touch,
     theme: touch,
     set: (next: Raw) => {
-      value = settle({ ...next, math });
-      plan = study(math, value);
+      value = settle({ ...next, mrly });
+      plan = study(mrly, value);
       report();
       fetch();
       touch();

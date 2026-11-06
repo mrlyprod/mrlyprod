@@ -1,12 +1,13 @@
-import { type Color, type Frame, frame, Grid, type Ink, type Pen, type Tensor } from "@mrlyprod/draw";
+import * as bang from "@mrlyprod/bang";
 import * as math from "@mrlyprod/math";
+import { type Color, type Frame, frame, Grid, type Ink, type Pen, type Tensor } from "@mrlyprod/draw";
 
-export const units = { math };
+export const units = { bang, math };
 
 const SIDE = 15;
 
 function letters(first: [number, number], second: [number, number]) {
-  return [first, second].map(([code, number]) => math.bang.MagicLayer.new(new math.name.Bang(code, 2, 2), number));
+  return [first, second].map(([code, number]) => math.factory.MagicLayer.new(new math.name.Bang(code, 2, 2), number));
 }
 
 function panel(pen: Pen, box: Frame, cells: Tensor, color: Color) {
@@ -21,15 +22,15 @@ export default function draw(pen: Pen, ink: Ink) {
 
   const forward = letters([7, 3], [14, 5]);
   const reverse = letters([14, 5], [7, 3]);
-  if (math.bang.word.side(forward) !== String(SIDE))
-    throw new Error(`research-magic: forward side ${math.bang.word.side(forward)}, want ${SIDE}`);
-  if (math.bang.word.side(reverse) !== String(SIDE))
-    throw new Error(`research-magic: reverse side ${math.bang.word.side(reverse)}, want ${SIDE}`);
-  if (math.bang.word.fill(forward) !== math.bang.word.fill(reverse))
+  if (bang.word.side(forward) !== String(SIDE))
+    throw new Error(`research-magic: forward side ${bang.word.side(forward)}, want ${SIDE}`);
+  if (bang.word.side(reverse) !== String(SIDE))
+    throw new Error(`research-magic: reverse side ${bang.word.side(reverse)}, want ${SIDE}`);
+  if (bang.word.fill(forward) !== bang.word.fill(reverse))
     throw new Error("research-magic: the two orders fill differently");
 
-  const left = math.bang.magic(forward);
-  const right = math.bang.magic(reverse);
+  const left = math.factory.magic(forward);
+  const right = math.factory.magic(reverse);
   for (const tensor of [left, right]) {
     if (
       tensor.shape.length !== 2 ||

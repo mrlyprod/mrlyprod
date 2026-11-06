@@ -1,9 +1,9 @@
 import { paints } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { classes, dimension } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, classes, dimension } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { thumb } from "@mrlyprod/ui/kit/designs/thumb.ts";
-import { useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Desk } from "@mrlyprod/ui/kit/rows.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -27,19 +27,19 @@ export function daily(day: string, n: number) {
   return n > 0 ? h % n : 0;
 }
 
-export function chosen(math: Mrly, day: string): Daily | null {
+export function chosen(mrly: Mrly, day: string): Daily | null {
   const pool = SPACES.flatMap(([dim, base]) =>
-    (classes(math, dim, base) ?? [])
+    (classes(mrly, dim, base) ?? [])
       .map((one) => String(one.code))
       .filter((code) => {
-        const d = dimension(math, dim, base, code);
+        const d = dimension(mrly, dim, base, code);
         return d > dim / 2 && d < dim;
       })
       .map((code) => ({ dim, base, code })),
   );
   const one = pool[daily(day, pool.length)];
   if (!one) return null;
-  const name = math.name.of(one.code, one.dim, one.base) ?? "code";
+  const name = mrly.math.name.of(one.code, one.dim, one.base) ?? "code";
   return {
     ...one,
     label: `${name} ${one.code} · ${one.dim}D${one.base === 3 ? ", base 3" : ""}`,
@@ -62,10 +62,10 @@ function useDay() {
 }
 
 function Day() {
-  const math = useUnit("math");
+  const mrly = useCrates(CRATES);
   const tick = useTheme();
   const day = useDay();
-  const pick = useMemo(() => (math ? chosen(math, day) : null), [math, day]);
+  const pick = useMemo(() => (mrly ? chosen(mrly, day) : null), [mrly, day]);
   const art = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = art.current;
@@ -73,7 +73,7 @@ function Day() {
     const side = Math.round((canvas.getBoundingClientRect().width || 96) * Math.min(devicePixelRatio || 1, 2));
     canvas.width = side;
     canvas.height = side;
-    thumb(canvas.getContext("2d")!, math!, pick.dim, pick.base, pick.code, side, paints(canvas));
+    thumb(canvas.getContext("2d")!, mrly!, pick.dim, pick.base, pick.code, side, paints(canvas));
   }, [pick, tick]);
   return (
     <a className="fill" href={pick?.href ?? "/designs/"}>

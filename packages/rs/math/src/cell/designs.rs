@@ -1,6 +1,6 @@
 use super::models::CellNd;
-use mrly_core::error::Result;
-use mrly_core::tensor::Tensor;
+use mrly_error::Result;
+use mrly_tensor::Tensor;
 
 pub fn grow<const N: usize>(pattern: Tensor, level: usize) -> Result<CellNd<N>> {
     let mut cell = CellNd::<N>::new(pattern)?;

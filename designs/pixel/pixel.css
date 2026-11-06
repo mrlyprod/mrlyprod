@@ -693,6 +693,14 @@
   overflow: auto;
 }
 
+.pixel.app .column.stage > .screen > .well > canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .pixel.app .column > .well {
   flex: 1;
   min-height: 0;

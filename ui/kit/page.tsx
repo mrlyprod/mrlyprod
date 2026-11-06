@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Action } from "./controls.tsx";
 import { Accordion, Btn, Export, Fold, Icon, pair } from "./controls.tsx";
 import { Chip } from "./designs/chip.tsx";
+import type { Mrly } from "./designs/engine.ts";
 import type { Design, Slot } from "./designs/store.ts";
 import { choose, current, fits, keys as owned, place, read } from "./designs/store.ts";
 import { useDoor } from "./door.ts";
@@ -33,7 +34,7 @@ export type Handle<S extends Made = Made> = S & {
   fix: Stop["fix"];
 };
 
-export type Mathy = Pick<Units, "math">;
+export type Mathy = Units;
 
 export type Loadable = Ready & Mathy;
 
@@ -576,7 +577,7 @@ function App<U extends Mathy, S extends Made>({
           </Bar>
           <Bar side="actions">
             {design && (!design.when || design.when(value)) && (
-              <Chip slot={design} value={url} onChange={onChange} math={units?.math} />
+              <Chip slot={design} value={url} onChange={onChange} mrly={units as unknown as Mrly | undefined} />
             )}
             {view && (
               <div className="views">

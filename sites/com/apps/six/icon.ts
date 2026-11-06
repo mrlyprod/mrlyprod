@@ -2,9 +2,9 @@ import type { Color, Pen } from "@mrlyprod/draw";
 import { hex } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import type { Cell6d } from "@mrlyprod/math";
-import * as math from "@mrlyprod/math";
+import * as six from "@mrlyprod/six";
 
-export const units = { math };
+export const units = { six };
 
 const CODE = "23";
 const NUMBER = 3;
@@ -20,8 +20,8 @@ let slice: Cell6d | null = null;
 
 function facts() {
   if (slice) return slice;
-  const cut = math.six.cut_design(CODE, NUMBER, LEVEL, BASE);
-  const tally = math.six.census(cut, false);
+  const cut = six.cut_design(CODE, NUMBER, LEVEL, BASE);
+  const tally = six.census(cut, false);
   if (tally.triangles !== hex.count(SIDE))
     throw new Error(`six: the cut holds ${tally.triangles} triangles, want ${hex.count(SIDE)}`);
   if (tally.fills !== WANT.fills || tally.voids !== WANT.voids)
@@ -36,8 +36,8 @@ export default function draw(pen: Pen) {
   const { box, paint } = plate(pen, "teal", INSET);
   const [r, g, b] = paint.white;
   const tones: Partial<Record<number, Color>> = {
-    [math.six.FILL()]: paint.white,
-    [math.six.VOID()]: [r, g, b, GHOST],
+    [six.FILL()]: paint.white,
+    [six.VOID()]: [r, g, b, GHOST],
   };
   hex.draw(pen, box, facts(), GAP, (type) => tones[type] ?? null);
 }

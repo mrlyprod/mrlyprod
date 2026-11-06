@@ -1,0 +1,2 @@
+capacity: 60 bytes
+read back: hello carpet

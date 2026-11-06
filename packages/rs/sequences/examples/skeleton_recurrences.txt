@@ -1,0 +1,4 @@
+vertices a(level) = 32 a(level-1) - 275 a(level-2) + 724 a(level-3) - 480 a(level-4)
+edges    a(level) = 31 a(level-1) - 244 a(level-2) + 480 a(level-3)
+faces    a(level) = 28 a(level-1) - 160 a(level-2)
+cubes    a(level) = 20 a(level-1)

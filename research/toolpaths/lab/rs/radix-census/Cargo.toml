@@ -3,7 +3,7 @@ name = "radix-census"
 edition = "2021"
 
 [dependencies]
-mrly-math = "0.2.0"
-mrly-num = "0.2.0"
+mrly-gaussian = "0.2.0"
+mrly-radix = "0.2.0"
 
 [workspace]

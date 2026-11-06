@@ -1,7 +1,8 @@
-import { Grid, type Ink, type Pen, type Point } from "@mrlyprod/draw";
+import * as arcsUnit from "@mrlyprod/arcs";
 import * as math from "@mrlyprod/math";
+import { Grid, type Ink, type Pen, type Point } from "@mrlyprod/draw";
 
-export const units = { math };
+export const units = { arcs: arcsUnit, math };
 
 const LEVEL = 3;
 const SIDE = 27;
@@ -13,17 +14,17 @@ let memo: number[] | undefined;
 
 function arcs() {
   if (memo) return memo;
-  const design = math.bang.factory.create(495, 3, 2, 3, LEVEL);
+  const design = math.factory.create(495, 3, 2, 3, LEVEL);
   if (design.shape.length !== 2 || design.shape[0] !== SIDE || design.shape[1] !== SIDE)
     throw new Error(`research-arcs: the design is ${design.shape}, want ${SIDE},${SIDE}`);
   let sum = 0;
   for (const kind of design.data) sum += kind;
   if (sum !== 8 ** LEVEL) throw new Error(`research-arcs: the design fills ${sum} cells, want ${8 ** LEVEL}`);
-  const parity = math.bang.factory.create(7, 3, 2, 2, LEVEL);
+  const parity = math.factory.create(7, 3, 2, 2, LEVEL);
   if (parity.data.length !== design.data.length || parity.data.some((kind, i) => kind !== design.data[i]))
     throw new Error("research-arcs: code 7 at base 2 differs from the carpet");
 
-  const drawn = math.arcs.draw(495, 3, LEVEL);
+  const drawn = arcsUnit.draw(495, 3, LEVEL);
   if (drawn.side !== SIDE) throw new Error(`research-arcs: the arcs are ${drawn.side} wide, want ${SIDE}`);
   if (drawn.cells.length !== SIDE * SIDE)
     throw new Error(`research-arcs: ${drawn.cells.length} arc cells, want ${SIDE * SIDE}`);
@@ -33,7 +34,7 @@ function arcs() {
   }
   if (drawn.strands !== STRANDS) throw new Error(`research-arcs: ${drawn.strands} strands, want ${STRANDS}`);
   if (drawn.loops !== LOOPS) throw new Error(`research-arcs: ${drawn.loops} loops, want ${LOOPS}`);
-  const law = math.arcs.law(495, 3, LEVEL);
+  const law = arcsUnit.law(495, 3, LEVEL);
   if (law?.loops !== LOOPS) throw new Error(`research-arcs: the loop law gives ${law?.loops}, want ${LOOPS}`);
   memo = drawn.cells;
   return memo;

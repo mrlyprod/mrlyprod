@@ -36,11 +36,11 @@ export const LOOK: Spec = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
-export function tag(value: Raw, math?: Mrly | null): string {
+export function tag(value: Raw, mrly?: Mrly | null): string {
   const src = tidy(SOURCE, value) as Src;
   if (src.source === "moire") return `moire-${src.preset}`;
   const dim = cube(src) ? 3 : 2;
-  const code = math ? canon(math, dim, src.base, src.code) : src.code || "carpet";
+  const code = mrly ? canon(mrly, dim, src.base, src.code) : src.code || "carpet";
   return `${dim === 3 ? "slice" : "flat"}-${code}`;
 }
 

@@ -1,0 +1,6 @@
+cells with the tags of their four triangles:
+  cell 0: [1, 1, 1, 1]
+  cell 1: [0, 1, 1, 0]
+  cell 2: [0, 0, 1, 1]
+  cell 3: [0, 1, 1, 2]
+as hex, one digit per cell: f637

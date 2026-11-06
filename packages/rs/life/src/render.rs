@@ -1,10 +1,11 @@
-use mrly_core::cell::Mode;
-use mrly_core::colors::{BLACK, Color, WHITE};
-use mrly_core::error::{Result, shape_error, value_error};
-use mrly_core::image::Image;
-use mrly_core::ramp::Colorizer;
-use mrly_core::tensor::Tensor;
-use mrly_math::two::{self, Cell2d};
+use mrly_color::ramp::Colorizer;
+use mrly_color::{BLACK, Color, WHITE};
+use mrly_error::{Result, shape_error, value_error};
+use mrly_image::Image;
+use mrly_math::cell::base::Mode;
+use mrly_tensor::Tensor;
+use mrly_two as two;
+use mrly_two::Cell2d;
 use std::collections::HashMap;
 
 fn default_palette() -> HashMap<u8, Vec<Color>> {
@@ -58,7 +59,7 @@ fn heatmap_range(
         for (i, slot) in cumulative.iter_mut().enumerate() {
             *slot += grid.types().at(i) as usize;
         }
-        let colors = mrly_core::ramp::colors(colorizer, &cumulative, max);
+        let colors = mrly_color::ramp::colors(colorizer, &cumulative, max);
         let mut cell = Cell2d::new(Tensor::new(shape.clone()))?;
         cell.cell.colors = Some(colors);
         out.push(two::image(&cell, scale, None, 1, two::Shape::Square)?);

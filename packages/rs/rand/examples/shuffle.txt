@@ -1,0 +1,5 @@
+choice  red
+shuffle [4, 1, 7, 8, 5, 3, 6, 2]
+sample  [9, 1, 2]
+all     [0, 3, 2, 1]
+empty   a choice wants at least one item.

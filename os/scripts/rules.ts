@@ -19,7 +19,7 @@ for (const arg of process.argv.slice(2)) {
   if (name && dir) HOMES[name] = resolve(dir);
 }
 const LAYERS = ["os", "apps", "ui", "designs"];
-const LEAVES = ["draw", "loader", "core", "font", "life", "math", "num", "tile"];
+const LEAVES = ["draw", "loader", "units", ...readdirSync(join(import.meta.dir, "..", "..", "packages", "rs"))];
 const SKIP = new Set(["node_modules", ".git", "dist", "data", "target", "pkg", "wasm", ".venv", "__pycache__"]);
 const CODE = /\.(ts|tsx|js|jsx)$/;
 const WORDS = /\.(ts|tsx|js|jsx|json|css|py|sh)$/;

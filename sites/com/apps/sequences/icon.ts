@@ -1,8 +1,8 @@
 import type { Pen } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as sequences from "@mrlyprod/sequences";
 
-export const units = { math };
+export const units = { sequences };
 
 const CODE = "7";
 const PINS = 8;
@@ -14,7 +14,7 @@ let heights: number[] | null = null;
 
 function terms(): number[] {
   if (heights) return heights;
-  const read = Array.from({ length: PINS }, (_, k) => Number(math.counts.fill(CODE, 2 * (k + 2) - 1, 2, 1, 2)));
+  const read = Array.from({ length: PINS }, (_, k) => Number(sequences.counts.fill(CODE, 2 * (k + 2) - 1, 2, 1, 2)));
   if (read.join() !== OCTAGONAL.join())
     throw new Error(
       `sequences: the carpet fills by odd side read ${read.join(", ")}, want the octagonal numbers ${OCTAGONAL.join(", ")}`,

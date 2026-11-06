@@ -1,0 +1,68 @@
+json = "mrly_json::Json"
+
+[[hand]]
+name = "Tensor"
+rust = ["mrly_tensor::Tensor"]
+word = "tensor"
+ts = "Tensor"
+ts_data = "TensorData"
+decl = "export interface Tensor {\n    shape: number[];\n    data: Uint8Array | Uint16Array | Uint32Array | Int32Array;\n}\nexport interface TensorData {\n    shape: number[];\n    data: { U8: number[] } | { U16: number[] } | { U32: number[] } | { I32: number[] };\n}"
+rank = true
+write_back = "ref"
+
+[[hand]]
+name = "Cell"
+rust = ["mrly_math::Cell"]
+word = "cell"
+ts = "Cell"
+ts_data = "CellData"
+decl = "export interface Cell {\n    shape: number[];\n    types: Uint8Array | Uint16Array | Uint32Array | Int32Array;\n    colors?: Uint8Array;\n    tags?: Uint8Array | Uint16Array | Uint32Array | Int32Array;\n}\nexport interface CellData {\n    types: TensorData;\n    colors?: number[][];\n    tags?: TensorData;\n}"
+write_back = "value"
+
+[[hand]]
+name = "Image"
+rust = ["mrly_image::Image"]
+word = "image"
+ts = "Image"
+ts_data = "{ width: number; height: number; colors: number[][] }"
+decl = "export interface Image {\n    shape: [number, number];\n    colors: Uint8Array<ArrayBuffer>;\n}"
+
+[[hand]]
+name = "Color"
+rust = ["mrly_color::Color"]
+word = "color"
+ts = "Color"
+ts_data = "ColorData"
+decl = "export type Color = [number, number, number, number];\nexport type ColorData = string;"
+
+[[hand]]
+name = "Rng"
+rust = ["mrly_rand::Rng"]
+word = "rng"
+ts = "Rng"
+ts_data = "unknown"
+decl = "export class Rng {\n    constructor(seed: number | bigint | string);\n    free(): void;\n    unit(): number;\n    below(n: number): number;\n    range(lo: number, hi: number): number;\n    boolean(): boolean;\n    chance(p: number): boolean;\n    sample_indices(length: number, amount: number): Uint32Array;\n    choice<T>(items: ArrayLike<T>): T;\n    shuffle<T>(items: T[]): void;\n}"
+stream = true
+
+[[hand]]
+name = "CellNd"
+rust = ["mrly_math::cell::models::Cell2d", "mrly_math::cell::models::Cell3d"]
+word = "cell"
+ts = "Cell"
+ts_data = "{ cell: CellData }"
+
+[[hand]]
+name = "Cell6d"
+rust = ["mrly_six::Cell6d"]
+word = "cell"
+ts = "Cell6d"
+ts_data = "Cell6dData"
+decl = "export interface Cell6d {\n    cell: Cell;\n    projection: \"Iso\" | \"Pro\" | \"Cut\";\n    orientation: \"Horizontal\" | \"Vertical\";\n    start: number;\n}\nexport interface Cell6dData {\n    cell: { cell: CellData };\n    projection: \"Iso\" | \"Pro\" | \"Cut\";\n    orientation: \"Horizontal\" | \"Vertical\";\n    start: number;\n}"
+
+[[hand]]
+name = "Code"
+rust = ["mrly_math::code::Code"]
+word = "code"
+ts = "string | number | bigint"
+ts_data = "bigint"
+big = true

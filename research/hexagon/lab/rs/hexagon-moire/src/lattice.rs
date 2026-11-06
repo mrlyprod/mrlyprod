@@ -1,4 +1,4 @@
-use mrly_math::three::Cell3d;
+use mrly_three::Cell3d;
 use mrly_tile::recipe::Design;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -31,7 +31,7 @@ impl Family {
     }
 
     pub fn cube(self, number: usize) -> Cell3d {
-        mrly_math::three::named(self.design(), number, 1).expect("a named cube")
+        mrly_three::named(self.design(), number, 1).expect("a named cube")
     }
 }
 

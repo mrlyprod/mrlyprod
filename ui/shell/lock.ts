@@ -113,7 +113,12 @@ export async function lock(canvas: HTMLCanvasElement, pick = "", { pool }: Pool 
   const held: Partial<Ready> & Record<string, unknown> = scene.units ? await scene.units() : {};
   await held.ready;
   const { ready, ...units } = held;
-  const stop = run(canvas, scene.make, { ...value, ...units }, { lock: true, still: calm() || scene.PAGE?.still });
+  const stop = run(
+    canvas,
+    scene.make,
+    { ...value, ...units, mrly: units },
+    { lock: true, still: calm() || scene.PAGE?.still },
+  );
   const { leave, end } = exits(stop.scene);
   const close = () => {
     end();

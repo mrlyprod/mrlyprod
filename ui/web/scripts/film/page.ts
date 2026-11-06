@@ -147,7 +147,7 @@ export async function film(make: Make, units?: () => Promise<Doors>) {
   const held: Doors = units ? await units() : {};
   await held.ready;
   const { ready, ...doors } = held;
-  const config = { ...read, opts: { ...read.opts, ...doors } };
+  const config = { ...read, opts: { ...read.opts, ...doors, mrly: doors } };
   const canvas = document.createElement("canvas");
   document.body.setAttribute("aria-busy", "true");
   try {

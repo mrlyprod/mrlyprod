@@ -1,9 +1,10 @@
 import type { Color, Pen, Point } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import type { Cell } from "@mrlyprod/math";
-import * as math from "@mrlyprod/math";
+import * as spin from "@mrlyprod/spin";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { spin, two };
 
 type Plan = { side: number; types: Cell["types"]; wheel: Float32Array };
 
@@ -25,18 +26,18 @@ let plan: Plan | null = null;
 
 function study(): Plan {
   if (plan) return plan;
-  const cell = math.two.create(CODE, NUMBER, LEVEL, 0, BASE);
+  const cell = two.create(CODE, NUMBER, LEVEL, 0, BASE);
   const side = cell.shape[0];
-  const fills = math.two.fills(cell);
+  const fills = two.fills(cell);
   if (side !== NUMBER ** LEVEL || fills !== WANT.fills)
     throw new Error(
       `spin: the carpet of ${NUMBER} at level ${LEVEL} is ${side} a side with ${fills} fills, want ${NUMBER ** LEVEL} and ${WANT.fills}`,
     );
-  const profile = math.spin.profile(Float32Array.from(cell.types), side, STEPS);
-  const mass = math.spin.mass(profile, side);
+  const profile = spin.profile(Float32Array.from(cell.types), side, STEPS);
+  const mass = spin.mass(profile, side);
   if (Math.abs(mass - fills) > 0.5)
     throw new Error(`spin: the rings carry a mass of ${mass.toFixed(2)}, the design ${fills} fills`);
-  plan = { side, types: cell.types, wheel: math.spin.wheel(profile, WHEEL) };
+  plan = { side, types: cell.types, wheel: spin.wheel(profile, WHEEL) };
   return plan;
 }
 

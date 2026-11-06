@@ -1,4 +1,4 @@
-use mrly_math::radix::tile;
+use mrly_radix::tile;
 
 const BOX_CODE: u128 = 0b1_1110_1111;
 

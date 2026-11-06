@@ -1,0 +1,2 @@
+wang, 8 even tiles: 0 seams of 1480
+random Truchet, same size: 709 seams of 1480

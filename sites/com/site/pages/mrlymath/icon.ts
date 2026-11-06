@@ -3,8 +3,9 @@ import { frame, Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import type { Cell } from "@mrlyprod/math";
 import * as math from "@mrlyprod/math";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { math, two };
 
 const CODE = 7;
 const BITS = 8;
@@ -16,11 +17,11 @@ let memo: Cell | null = null;
 
 function facts() {
   if (memo) return memo;
-  const corners = math.bang.code_to_corners(CODE, 2, 2).length;
+  const corners = math.factory.code_to_corners(CODE, 2, 2).length;
   let lit = 0;
   for (let bit = 0; bit < BITS; bit++) lit += (CODE >> bit) & 1;
   if (lit !== corners) throw new Error(`mrlymath: ${lit} lit bits, want ${corners}`);
-  const carpet = math.two.create(CODE, 3, 3, 0, 2);
+  const carpet = two.create(CODE, 3, 3, 0, 2);
   if (carpet.shape[0] !== SIDE || carpet.shape[1] !== SIDE)
     throw new Error(`mrlymath: carpet shape ${carpet.shape}, want ${SIDE} square`);
   let filled = 0;

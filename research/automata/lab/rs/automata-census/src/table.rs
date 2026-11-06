@@ -1,7 +1,7 @@
 use crate::groups::{group, orbit, Elem};
 use crate::rules::RULES;
-use mrly_math::bang::universe::degree;
-use mrly_math::bang::Code;
+use mrly_bang::universe::degree;
+use mrly_math::code::Code;
 use mrly_num::boolean::walsh_spectrum;
 use std::collections::BTreeSet;
 

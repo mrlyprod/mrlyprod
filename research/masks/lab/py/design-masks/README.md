@@ -1,7 +1,7 @@
 # design-masks
 
 - Attention masks drawn from MrlyMath designs against dense, local-window and random masks at equal density, on two synthetic sequence tasks; then Toeplitz masks whose offsets form a one-dimensional digit design, against strided, random-offset and window masks, by exact 2-hop coverage and on character-level tiny Shakespeare.
-- Masks come from the `mrly-tile` and `mrly-math` binaries, built with `cargo build -p mrly-tile-cli -p mrly-math-cli --release`: `tile.build.create_2d` draws a recipe at side `81` from one group of the Universe catalog (Fractal, Magic, Special, Mosaic, General) at seeds `1, 2, 3` and `tile.build.build_2d` builds it; `tile.build.random_tile_6d` and `tile.build.build_6d` give a hex cell at seeds `1, 2, 3`, on where a triangle is a fill or a cube face, tiled periodically where shorter than `81` and center-cropped to `81 x 81`; `math.two.create` gives the base-3 codes `127` and `239` at level `4`.
+- Masks come from the `mrly` binary (`mrly-cli`), built by `scripts/build.sh`: `tile.build.create_2d` draws a recipe at side `81` from one group of the Universe catalog (Fractal, Magic, Special, Mosaic, General) at seeds `1, 2, 3` and `tile.build.build_2d` builds it; `tile.build.random_tile_6d` and `tile.build.build_6d` give a hex cell at seeds `1, 2, 3`, on where a triangle is a fill or a cube face, tiled periodically where shorter than `81` and center-cropped to `81 x 81`; `two.create` gives the base-3 codes `127` and `239` at level `4`.
 - A draw with density outside `[0.03, 0.97]` is skipped. Built masks are cached as `masks.json` under `data/`, so the binary runs once; the cache is disposable and rebuilds on the next call.
 - The attention allowed set is `causal AND (M OR diagonal)`, rows queries, columns keys; effective density is its share of the `3321` causal pairs.
 - Each design mask gets a random twin, a uniform random subset of the strict lower triangle of the same size plus the diagonal, drawn fresh per seed, and a local window, the narrowest causal band `t - w..t` with at least as many pairs, so at or above the design's density; dense is the full causal set.
@@ -31,7 +31,7 @@
 - The steps are half the planned `600`: at `45` ms per condition step the `600`-step sweep would take about `48` minutes; `--steps 600` runs it.
 - Training on `mps` is not bit-reproducible: a gap at the third decimal, such as `3.207` against `3.211`, is inside the seed spread and would not survive a rerun.
 - The MPS allocator is capped at half the device memory; one process trains at a time.
-- Reads `target/release/mrly` and `tinyshakespeare.txt`; writes `masks.json`, `results.json`, `offsets.json`, `basis.json`, `shakespeare.json` and the `shakespeare-<steps>-<seeds>.json` caches under `data/research/masks/lab/py/design-masks/` and the figure JSON.
+- Reads `target/release/mrly` at the repository root and `tinyshakespeare.txt`; writes `masks.json`, `results.json`, `offsets.json`, `basis.json`, `shakespeare.json` and the `shakespeare-<steps>-<seeds>.json` caches under `data/research/masks/lab/py/design-masks/` and the figure JSON.
 
 ## WITNESSES
 

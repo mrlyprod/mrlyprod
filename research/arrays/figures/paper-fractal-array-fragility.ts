@@ -1,7 +1,7 @@
+import * as coarray from "@mrlyprod/coarray";
 import type { Color, Ink, Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { coarray };
 
 const GENERATOR = [0, 1, 2, 4];
 const BASE = 9;
@@ -14,15 +14,15 @@ const CORNER = 0.16;
 type Cell = { x: number; w: number; essential: boolean; digits: number[] };
 
 function flags(order: number): Map<number, boolean> {
-  const sensors = Array.from(math.arrays.fractal(GENERATOR, BASE, order), Number);
-  const essential = math.arrays.essential(sensors);
+  const sensors = Array.from(coarray.fractal(GENERATOR, BASE, order), Number);
+  const essential = coarray.essential(sensors);
   if (sensors.length !== GENERATOR.length ** order)
     throw new Error(`paper-fractal-array-fragility: ${sensors.length} sensors at order ${order}`);
   return new Map(sensors.map((s, i) => [s, essential[i]]));
 }
 
 function rows(width: number): Cell[][] {
-  const paired = Array.from(math.arrays.paired(GENERATOR), Number);
+  const paired = Array.from(coarray.paired(GENERATOR), Number);
   if (paired.join() !== "0,1,4") throw new Error(`paper-fractal-array-fragility: U(G) = ${paired}, want 0,1,4`);
   const out: Cell[][] = [];
   let parents: { x: number; w: number; digits: number[] }[] = [{ x: 0, w: width, digits: [] }];

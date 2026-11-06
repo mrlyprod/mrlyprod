@@ -1,14 +1,16 @@
-import type { gauss } from "@mrlyprod/num";
+import type * as gaussian from "@mrlyprod/gaussian";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb, veil } from "@mrlyprod/ui/kit/color.ts";
+import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick } from "@mrlyprod/ui/kit/rand.ts";
 import type { Value } from "@mrlyprod/ui/kit/spec.ts";
 import { num as fix, runs, sheet } from "@mrlyprod/ui/kit/svg.ts";
 import { palette } from "@mrlyprod/ui/kit/theme/palette.gen.js";
-import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
 
-export type Num = Unit<"num">;
+export const LIST = ["gaussian", "num"] as const;
+
+export type Num = Had<"gaussian" | "num">;
 
 export type Word = "gaussian" | "eisenstein";
 
@@ -56,7 +58,7 @@ export const GROW = 8000;
 export const PAD = 16;
 export const UNIT = 10;
 export const INSET = 0.1;
-const CLASSES: Record<gauss.Class, number> = { Composite: 0, Split: 1, Inert: 2, Ramified: 3, Unit: 4, Zero: 5 };
+const CLASSES: Record<gaussian.Class, number> = { Composite: 0, Split: 1, Inert: 2, Ramified: 3, Unit: 4, Zero: 5 };
 const DIM = 0.6;
 const FAINT = 0.16;
 
@@ -171,7 +173,7 @@ function whole(num: Num, word: Word, r: number) {
 }
 
 function survey(num: Num, word: Word, R: number) {
-  const g = num.gauss;
+  const g = num.gaussian;
   const ring = g.Ring.named(word)!;
   const side = 2 * R + 1;
   const top = Number(g.Ring.top(ring, R));
@@ -214,7 +216,7 @@ function survey(num: Num, word: Word, R: number) {
 }
 
 function cut(num: Num, full: Survey, r: number) {
-  const g = num.gauss;
+  const g = num.gaussian;
   const { word, ring, R, side, shells } = full;
   const window = new g.Window(ring, r);
   const census = window.census();
@@ -291,9 +293,9 @@ export function hit(num: Num, plan: Plan, x: number, y: number) {
   if (x < -R || x > R || y < -R || y > R) return null;
   const index = inside[(y + R) * side + (x + R)] - 1;
   if (index < 0) return null;
-  const G = num.gauss.Ring;
+  const G = num.gaussian.Ring;
   const norm = plan.norm[index];
-  const factors = num.factor.factorize_wide(norm).map(([p, e]): Pair => [Number(p), e]);
+  const factors = num.num.factor.factorize_wide(norm).map(([p, e]): Pair => [Number(p), e]);
   const associates = G.associates(ring, x, y).map(([u, v]): Pair => [Number(u), Number(v)]);
   const conjugate = G.conjugate(ring, x, y).map(Number);
   return { a: x, b: y, index, norm, fate: plan.fate[index], factors, associates, conjugate, shell: plan.shells[norm] };

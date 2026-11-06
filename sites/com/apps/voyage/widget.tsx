@@ -1,9 +1,10 @@
 import { paints, veil } from "@mrlyprod/ui/kit/color.ts";
 import { Btn, Icon } from "@mrlyprod/ui/kit/controls.tsx";
+import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -15,7 +16,7 @@ import { make, PLACES, quiet, stand } from "./scene.ts";
 import type { Ears } from "./score.ts";
 import { levels, mixer } from "./score.ts";
 
-type Props = WidgetProps<Mathy, Held> & { value: Knobs & { seed: number } };
+type Props = WidgetProps<Mrly, Held> & { value: Knobs & { seed: number } };
 
 const ENDS: ["from" | "to", string][] = [
   ["from", "Leave from"],
@@ -55,7 +56,7 @@ export function Widget({ value, onChange, onReady, units }: Props) {
   );
   const [broken, setBroken] = useState(false);
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units, audio: line }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly: units, audio: line }),
     [units, line],
   );
   const wake = () => {
@@ -115,7 +116,7 @@ export function Widget({ value, onChange, onReady, units }: Props) {
       },
     );
   };
-  if (!units?.math) return null;
+  if (!units) return null;
   return (
     <>
       <Scene make={scene} value={quiet(value)} onReady={ready} onPointerDown={hear} />

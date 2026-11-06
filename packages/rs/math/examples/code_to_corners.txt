@@ -1,0 +1,6 @@
+code 11 in binary 1011
+filled corners: [[0, 0], [0, 1], [1, 1]]
+back to code: 11
+codes in 2D base 2: 16
+codes in 2D base 3: 512
+codes in 3D base 2: 256

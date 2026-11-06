@@ -1,12 +1,12 @@
+import * as arcsUnit from "@mrlyprod/arcs";
 import type { Color, Pen } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
 
 type Corner = [number, number, number];
 
 type Plan = { span: number; cells: [number, number][]; arcs: Corner[] };
 
-export const units = { math };
+export const units = { arcs: arcsUnit };
 
 const CODE = 495;
 const BASE = 3;
@@ -21,8 +21,8 @@ let plan: Plan | null = null;
 
 function study(): Plan {
   if (plan) return plan;
-  const drawn = math.arcs.draw(CODE, BASE, LEVEL);
-  const law = math.arcs.law(CODE, BASE, LEVEL);
+  const drawn = arcsUnit.draw(CODE, BASE, LEVEL);
+  const law = arcsUnit.law(CODE, BASE, LEVEL);
   if (
     drawn.side !== WANT.side ||
     drawn.loops !== WANT.loops ||
@@ -33,7 +33,7 @@ function study(): Plan {
       `arcs: side ${drawn.side}, ${drawn.loops} loops, ${drawn.strands} strands, the law gives ${law?.loops}, want ${WANT.side}, ${WANT.loops}, ${WANT.strands}`,
     );
   const side = drawn.side;
-  const loop = math.arcs
+  const loop = arcsUnit
     .curves(CODE, BASE, LEVEL)
     .filter((curve) => curve.closed)
     .sort((a, b) => b.arcs.length - a.arcs.length)[0];

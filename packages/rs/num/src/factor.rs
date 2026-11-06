@@ -1,4 +1,4 @@
-use mrly_core::error::{Result, overflow_error};
+use mrly_error::{Result, overflow_error};
 
 pub fn gcd(a: u128, b: u128) -> u128 {
     let (mut a, mut b) = (a, b);

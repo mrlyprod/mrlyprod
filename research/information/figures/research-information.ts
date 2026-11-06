@@ -1,14 +1,14 @@
+import * as two from "@mrlyprod/two";
 import { frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 import census from "./research-information.json" with { type: "json" };
 
-export const units = { math };
+export const units = { two };
 
 const SPLIT = 9;
 const SIDE = SPLIT * SPLIT;
 
 function whole() {
-  const cells = math.two.create(495, 3, 4, 0, 3);
+  const cells = two.create(495, 3, 4, 0, 3);
   if (cells.shape[0] !== SIDE || cells.shape[1] !== SIDE)
     throw new Error(`research-information: level 4 is ${cells.shape}, want ${SIDE} square`);
   const mask: boolean[][] = [];

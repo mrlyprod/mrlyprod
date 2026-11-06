@@ -12,9 +12,9 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": false,
     "paths": {
+      "@mrlyprod/*": ["../../../data/packages/rs/bindgen/js/*/index", "../../../data/packages/rs/bindgen/js/*"],
       "@mrlyprod/draw": ["./src/index.ts"],
       "@mrlyprod/draw/*": ["./src/*"],
-      "@mrlyprod/core": ["../../../data/packages/rs/bridge/js/core/index"],
       "@mrlyprod/loader": ["../loader/src/index.ts"]
     }
   },

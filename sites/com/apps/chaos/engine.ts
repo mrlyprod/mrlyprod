@@ -1,4 +1,5 @@
-import type { bang, memory } from "@mrlyprod/math";
+import type * as automaton from "@mrlyprod/automaton";
+import type * as math from "@mrlyprod/math";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { canon, DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Design } from "@mrlyprod/ui/kit/designs/store.ts";
@@ -9,9 +10,9 @@ import type { Raw, Scalar, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
 import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
 
-export type Num = Unit<"num">;
+export type Num = Unit<"gaussian">;
 
-export type Doors = Had<"math" | "num">;
+export type Doors = Mrly & Had<"gaussian">;
 
 export type Kind = "design" | "word" | "mosaic" | "hex" | "slice" | "rule";
 
@@ -132,7 +133,7 @@ export type Mosaic = { key: string; name: string; base: number; masks: [number, 
 
 export type Game = { key: string; name: string; width: number; code: string };
 
-type Kept = { math: Mrly; num: Num; source: Source };
+type Kept = { mrly: Doors; source: Source };
 
 export const DIM = 2;
 export const LEVELS = 6;
@@ -258,10 +259,10 @@ export const MOSAICS: Mosaic[] = [
 const GAME_KEYS = ["repeat", "anticlockwise", "opposite", "neighbour", "far", "shift", "cycle", "pair"];
 const TYPED: Game = { key: "typed", name: "Typed code", width: 2, code: "" };
 let listed: Game[] | null = null;
-export function games(math?: Mrly | null): Game[] {
-  if (!math) return listed ?? [...GAME_KEYS.map((key) => ({ key, name: key, width: 2, code: "" })), TYPED];
+export function games(mrly?: Mrly | null): Game[] {
+  if (!mrly) return listed ?? [...GAME_KEYS.map((key) => ({ key, name: key, width: 2, code: "" })), TYPED];
   listed ??= [
-    ...math.game.named_games().map((one, i) => ({
+    ...mrly.chaos.named_games().map((one, i) => ({
       key: GAME_KEYS[i] ?? one.name,
       name: one.name.charAt(0).toUpperCase() + one.name.slice(1),
       width: one.width,
@@ -296,7 +297,7 @@ export const sideOf = (value: Value) =>
 
 export const mosaicOf = (value: Value) => MOSAICS.find((one) => one.key === value.mosaic) ?? MOSAICS[0];
 
-export const gameOf = (math: Mrly, value: Value) => games(math).find((one) => one.key === value.game) ?? games(math)[0];
+export const gameOf = (mrly: Mrly, value: Value) => games(mrly).find((one) => one.key === value.game) ?? games(mrly)[0];
 
 export function binary(value: Value): boolean {
   const view = value.view as Kind;
@@ -342,21 +343,21 @@ export function spelt(text: unknown): number[] {
   return codes.length ? codes : PAIR.map(Number);
 }
 
-export function ruleCode(math: Mrly, value: Value): { width: number; code: bigint } {
-  const game = gameOf(math, value);
+export function ruleCode(mrly: Mrly, value: Value): { width: number; code: bigint } {
+  const game = gameOf(mrly, value);
   if (game.key !== "typed") return { width: game.width, code: BigInt(game.code) };
   const text = String(value.rule ?? "").trim();
-  if (!/^\d{1,20}$/.test(text)) return { width: 2, code: BigInt(games(math)[0].code) };
+  if (!/^\d{1,20}$/.test(text)) return { width: 2, code: BigInt(games(mrly)[0].code) };
   const code = BigInt(text);
   if (code < 2n ** 16n) return { width: 2, code };
   if (code < 2n ** 64n) return { width: 3, code };
-  return { width: 2, code: BigInt(games(math)[0].code) };
+  return { width: 2, code: BigInt(games(mrly)[0].code) };
 }
 
 export const corner = (base: number, c: number): Letter => ({ x: c % base, y: Math.floor(c / base), c });
 
-export function digits(math: Mrly, code: string | number, side: number, base: number): Letter[] {
-  const { types } = math.two.create(code, side, 1, 0, base);
+export function digits(mrly: Mrly, code: string | number, side: number, base: number): Letter[] {
+  const { types } = mrly.two.create(code, side, 1, 0, base);
   const out: Letter[] = [];
   for (let y = 0; y < side; y++)
     for (let x = 0; x < side; x++) if (types[y * side + x]) out.push({ x, y, c: x + side * y });
@@ -401,7 +402,7 @@ export function graph(
   };
 }
 
-export function restrict(math: Mrly, auto: Auto, letters: Letter[], rule: memory.Rule): Auto {
+export function restrict(mrly: Mrly, auto: Auto, letters: Letter[], rule: automaton.memory.Rule): Auto {
   const memory = rule.width - 1;
   const tail = (h: number[]) => (memory ? h.slice(-memory) : []);
   const seen = new Map<string, number>();
@@ -419,7 +420,7 @@ export function restrict(math: Mrly, auto: Auto, letters: Letter[], rule: memory
   const tag: number[] = [];
   for (let i = 0; i < list.length; i++) {
     const [s, h] = list[i];
-    const allowed = new Set(math.game.successors(rule, h));
+    const allowed = new Set(mrly.chaos.successors(rule, h));
     tag[i] = auto.tag[s];
     moves[i] = auto.moves[s]
       .filter((move) => allowed.has(letters[move.letter].c))
@@ -429,24 +430,23 @@ export function restrict(math: Mrly, auto: Auto, letters: Letter[], rule: memory
 }
 
 const place = (num: Num, ring: string, [a, c]: [bigint, bigint]): Pair => {
-  const [x, y] = num.gauss.Ring.place(ring as "Gaussian" | "Eisenstein", a, c);
+  const [x, y] = num.Ring.place(ring as "Gaussian" | "Eisenstein", a, c);
   return [x, y];
 };
 
 export const fixed = (x: number, places = 6) => Number(x.toFixed(places));
 
-function named(math: Mrly, code: string, base: number) {
-  const name = math.name.of(code, DIM, base);
+function named(mrly: Mrly, code: string, base: number) {
+  const name = mrly.math.name.of(code, DIM, base);
   return name ? `${name} ${code}` : `code ${code}`;
 }
 
-function design(units: Doors, value: Chaos): Source {
-  const { math } = units;
+function design(mrly: Doors, value: Chaos): Source {
   const base = value.base;
-  const code = canon(math, DIM, base, value.code);
+  const code = canon(mrly, DIM, base, value.code);
   const side = sideOf(value);
-  const letters = digits(math, code, side, base);
-  const dimension = letters.length ? math.counts.dimension(code, side, DIM, base) : 0;
+  const letters = digits(mrly, code, side, base);
+  const dimension = letters.length ? mrly.sequences.counts.dimension(code, side, DIM, base) : 0;
   return {
     kind: "design",
     base: side,
@@ -456,9 +456,9 @@ function design(units: Doors, value: Chaos): Source {
     cap: 0,
     rho: letters.length,
     dimension,
-    title: `${named(math, code, base)}, side ${side}`,
+    title: `${named(mrly, code, base)}, side ${side}`,
     facts: [
-      ["design", named(math, code, base)],
+      ["design", named(mrly, code, base)],
       ["digits", `${letters.length} of ${side * side} at side ${side}`],
       ["dimension", `${fixed(dimension)}, log ${letters.length} over log ${side}`],
     ],
@@ -467,11 +467,11 @@ function design(units: Doors, value: Chaos): Source {
   };
 }
 
-export function layers(math: Mrly, value: Value): { layers: bang.MagicLayer[]; codes: number[] } {
+export function layers(mrly: Mrly, value: Value): { layers: math.factory.MagicLayer[]; codes: number[] } {
   const side = sideOf(value);
   const layer = (code: number) => {
-    const one = new math.name.Bang(code, DIM, 2);
-    const made = math.bang.MagicLayer.new(one, side);
+    const one = new mrly.math.name.Bang(code, DIM, 2);
+    const made = mrly.math.factory.MagicLayer.new(one, side);
     one.free();
     return made;
   };
@@ -480,19 +480,18 @@ export function layers(math: Mrly, value: Value): { layers: bang.MagicLayer[]; c
     const codes = spelt(value.letters);
     return { layers: codes.map(layer), codes };
   }
-  const pair = PAIR.map((code) => layer(Number(code))) as [bang.MagicLayer, bang.MagicLayer];
+  const pair = PAIR.map((code) => layer(Number(code))) as [math.factory.MagicLayer, math.factory.MagicLayer];
   const spelled =
-    kind === "periodic" ? math.bang.word.spell("Periodic", pair, 2) : math.bang.word.spell("ThueMorse", pair, SPELL);
+    kind === "periodic" ? mrly.bang.word.spell("Periodic", pair, 2) : mrly.bang.word.spell("ThueMorse", pair, SPELL);
   return { layers: spelled, codes: spelled.map((one) => Number(one.design.code)) };
 }
 
-function word(units: Doors, value: Chaos): Source {
-  const { math } = units;
+function word(mrly: Doors, value: Chaos): Source {
   const side = sideOf(value);
-  const { layers: made, codes } = layers(math, value);
-  const period = math.bang.word.period(made);
+  const { layers: made, codes } = layers(mrly, value);
+  const period = mrly.bang.word.period(made);
   const sets = new Map<number, Letter[]>();
-  for (const code of new Set(codes)) sets.set(code, digits(math, code, side, 2));
+  for (const code of new Set(codes)) sets.set(code, digits(mrly, code, side, 2));
   const letters: Letter[] = [];
   const at = new Map<number, number>();
   for (const list of sets.values())
@@ -507,7 +506,7 @@ function word(units: Doors, value: Chaos): Source {
     sets.get(codes[r])!.map((one): Move => ({ letter: at.get(one.c)!, next: (r + 1) % period })),
   );
   const sizes = codes.slice(0, period).map((code) => sets.get(code)!.length);
-  const dimension = math.bang.word.dimension(made);
+  const dimension = mrly.bang.word.dimension(made);
   const empty = sizes.some((size) => size === 0);
   return {
     kind: "word",
@@ -530,15 +529,14 @@ function word(units: Doors, value: Chaos): Source {
   };
 }
 
-function mosaic(units: Doors, value: Chaos): Source {
-  const { math } = units;
+function mosaic(mrly: Doors, value: Chaos): Source {
   const preset = mosaicOf(value);
-  const made = math.game.mosaic_game({ base: preset.base, dimension: DIM, masks: preset.masks });
+  const made = mrly.chaos.mosaic_game({ base: preset.base, dimension: DIM, masks: preset.masks });
   const letters = [...new Set(preset.masks.flat().map(([c]) => c))]
     .sort((a, b) => a - b)
     .map((c) => corner(preset.base, c));
   const { auto, dead } = graph(made.edges, preset.masks.length, letters, 0);
-  const counts = preset.masks.map((_, slot) => Array.from(math.game.counts(made.matrix, slot, LEVELS), Number));
+  const counts = preset.masks.map((_, slot) => Array.from(mrly.chaos.counts(made.matrix, slot, LEVELS), Number));
   return {
     kind: "mosaic",
     base: preset.base,
@@ -567,19 +565,18 @@ function mosaic(units: Doors, value: Chaos): Source {
   };
 }
 
-function slice(units: Doors, value: Chaos): Source {
-  const { math } = units;
+function slice(mrly: Doors, value: Chaos): Source {
   const base = value.base;
-  const code = canon(math, DIM, base, value.code);
-  const corners = math.bang.code_to_corners(code, DIM, base).map(([y, x]) => x + base * y);
+  const code = canon(mrly, DIM, base, value.code);
+  const corners = mrly.math.factory.code_to_corners(code, DIM, base).map(([y, x]) => x + base * y);
   const [p, q] = cut(value.cut);
-  const made = math.game.slice_game(base, corners, p, q);
+  const made = mrly.chaos.slice_game(base, corners, p, q);
   const letters = corners.map((c) => corner(base, c));
   const { auto, dead } = made.states.length
     ? graph(made.edges, made.states.length, letters, made.start)
     : { auto: single(0), dead: [] };
   const heights = made.states.map(([a, b]) => (b === 1 ? String(a) : `${a}/${b}`));
-  const counts = made.states.length ? Array.from(math.game.counts(made.matrix, made.start, LEVELS), Number) : [];
+  const counts = made.states.length ? Array.from(mrly.chaos.counts(made.matrix, made.start, LEVELS), Number) : [];
   const dimension = Number.isFinite(made.dimension) ? made.dimension : 0;
   return {
     kind: "slice",
@@ -590,9 +587,9 @@ function slice(units: Doors, value: Chaos): Source {
     cap: 0,
     rho: made.rho,
     dimension,
-    title: `${named(math, code, base)} cut at ${p}/${q}`,
+    title: `${named(mrly, code, base)} cut at ${p}/${q}`,
     facts: [
-      ["design", named(math, code, base)],
+      ["design", named(mrly, code, base)],
       ["cut", `x + y = ${p}/${q}`],
       ["heights", heights.join(", ") || "none"],
       ["matrix", made.matrix.map((row) => `[${row.join(", ")}]`).join(" ") || "empty"],
@@ -612,15 +609,15 @@ function slice(units: Doors, value: Chaos): Source {
   };
 }
 
-function hexagonal(units: Doors, value: Chaos): Source {
-  const { math, num } = units;
+function hexagonal(mrly: Doors, value: Chaos): Source {
+  const num = mrly.gaussian;
   const key = (HEXES.find(([one]) => one === value.hex) ?? HEXES[0])[0] as
     | "gasket"
     | "koch"
     | "terdragon"
     | "flowsnake"
     | "twindragon";
-  const made = math.radix[key]();
+  const made = mrly.radix[key]();
   const ring = made.ring();
   const base = made.base();
   const value_ = base.value();
@@ -682,22 +679,21 @@ function hexagonal(units: Doors, value: Chaos): Source {
   };
 }
 
-function ruled(units: Doors, value: Chaos): Source {
-  const { math } = units;
-  const { width, code } = ruleCode(math, value);
-  const rule = new math.memory.Rule(DIM, width, code);
+function ruled(mrly: Doors, value: Chaos): Source {
+  const { width, code } = ruleCode(mrly, value);
+  const rule = new mrly.automaton.memory.Rule(DIM, width, code);
   const letters = Array.from({ length: 2 ** DIM }, (_, c) => corner(2, c));
-  const auto = restrict(math, single(letters.length), letters, rule);
-  const rho = math.memory.perron(rule);
-  const exponent = math.memory.exponent(rule);
+  const auto = restrict(mrly, single(letters.length), letters, rule);
+  const rho = mrly.automaton.memory.perron(rule);
+  const exponent = mrly.automaton.memory.exponent(rule);
   const dimension = Number.isFinite(exponent) ? exponent : 0;
-  const kappa = math.memory.kappa(rule);
-  const windows = math.memory.allowed_windows(rule);
-  const back = math.game.reverse(rule);
-  const dial = Array.from({ length: LEVELS }, (_, i) => math.memory.cells(back, i + 1).length);
+  const kappa = mrly.automaton.memory.kappa(rule);
+  const windows = mrly.automaton.memory.allowed_windows(rule);
+  const back = mrly.chaos.reverse(rule);
+  const dial = Array.from({ length: LEVELS }, (_, i) => mrly.automaton.memory.cells(back, i + 1).length);
   back.free();
   rule.free();
-  const game = gameOf(math, value);
+  const game = gameOf(mrly, value);
   return {
     kind: "rule",
     base: 2,
@@ -756,15 +752,15 @@ export function build(units: Doors, value: Chaos): Source {
   const kind = VIEWS.some(([one]) => one === value.view) ? value.view : "design";
   let source = BUILD[kind](units, value);
   if (kind !== "rule" && restricted(value)) {
-    const { width, code } = ruleCode(units.math, value);
-    const rule = new units.math.memory.Rule(DIM, width, code);
-    const auto = restrict(units.math, source.auto, source.letters, rule);
+    const { width, code } = ruleCode(units, value);
+    const rule = new units.automaton.memory.Rule(DIM, width, code);
+    const auto = restrict(units, source.auto, source.letters, rule);
     rule.free();
     const matrix = Array.from({ length: auto.states }, (_, s) =>
       Array.from({ length: auto.states }, (_, t) => auto.moves[s].filter((move) => move.next === t).length),
     );
-    const rho = auto.states ? units.math.game.perron(matrix) : 0;
-    const game = gameOf(units.math, value);
+    const rho = auto.states ? units.chaos.perron(matrix) : 0;
+    const game = gameOf(units, value);
     source = {
       ...source,
       auto,
@@ -790,13 +786,13 @@ const KEEP = 16;
 export function study(units: Doors, value: Chaos): Source {
   const key = JSON.stringify([value.view, keyed(value)]);
   const had = kept.get(key);
-  if (had && had.math === units.math && had.num === units.num) {
+  if (had && had.mrly === units) {
     kept.delete(key);
     kept.set(key, had);
     return had.source;
   }
   const source = build(units, value);
-  kept.set(key, { math: units.math, num: units.num, source });
+  kept.set(key, { mrly: units, source });
   while (kept.size > KEEP) kept.delete(kept.keys().next().value!);
   return source;
 }
@@ -892,9 +888,9 @@ export function law(source: Source, k: number, weighted: boolean): Law {
   return { k, cells, tags: T, probs: out, support: Int32Array.from(found), total: found.length, lost: mass < 0.5 };
 }
 
-export function schedule(math: Mrly, source: Source, k: number): Uint8Array | null {
+export function schedule(mrly: Mrly, source: Source, k: number): Uint8Array | null {
   if (source.auto.states !== 1 || !source.letters.length) return null;
-  return math.game.de_bruijn(source.letters.length, k);
+  return mrly.chaos.de_bruijn(source.letters.length, k);
 }
 
 export function configOf(
@@ -1059,17 +1055,17 @@ export const cell = (state: State) => (state.hex ? state.cx : state.cx + state.c
 
 export const pair = (law: Law, cell: number, tag: number) => cell * law.tags + tag;
 
-export function opening(math: Mrly, source: Source, value: Chaos, seed: number, from?: Pair) {
+export function opening(mrly: Mrly, source: Source, value: Chaos, seed: number, from?: Pair) {
   const k = Math.min(value.level, source.cap);
   const heavy = weighted(value);
-  const sched = modeOf(value) === "bruijn" ? schedule(math, source, k) : null;
+  const sched = modeOf(value) === "bruijn" ? schedule(mrly, source, k) : null;
   const tape = feed(seed);
   const start = from ?? origin(source, tape.rand);
   return { k, heavy, sched, start, state: boot(configOf(source, k, heavy, sched, start, tape.seed)) };
 }
 
 export const deal = (value: Chaos, { rand, units }: Table): State =>
-  opening(units.math, study(units, value), value, Math.floor(rand() * WIDE)).state;
+  opening(units, study(units, value), value, Math.floor(rand() * WIDE)).state;
 
 export function meter(law: Law, lap: number): Meter {
   return {

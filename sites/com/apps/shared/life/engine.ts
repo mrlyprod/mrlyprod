@@ -232,8 +232,8 @@ export function maskOf(life: Door, value: Value): Shape {
   return { dim, code, number, level, span: mask.shape[1], mask, cells, lattice: life.lattice_index(made) };
 }
 
-export function maskName(math: Mrly, code: number, dim = 2): string {
-  return math.name.of(code, dim, 2) ?? "";
+export function maskName(mrly: Mrly, code: number, dim = 2): string {
+  return mrly.math.name.of(code, dim, 2) ?? "";
 }
 
 export function lattice(index: number): string {
@@ -250,7 +250,7 @@ export const startOf = (value: Value) =>
 
 export const sideOf = (value: Value) => PATTERNS[startOf(value)]?.board ?? BOARD;
 
-export function sow(value: Value, rand: Rng, math: Mrly, width: number, height = 1): Uint8Array {
+export function sow(value: Value, rand: Rng, mrly: Mrly, width: number, height = 1): Uint8Array {
   const types = new Uint8Array(width * height);
   const from = height === 1 && PATTERNS[value.from] ? "noise" : value.from;
   const pattern = PATTERNS[from];
@@ -263,7 +263,7 @@ export function sow(value: Value, rand: Rng, math: Mrly, width: number, height =
     const number = Number(value.number) || 3;
     const level = fitLevel(number, Math.min(width, height > 1 ? height : width));
     const side = number ** level;
-    const design = math.two.create(codeOf(value.code), number, level, 0, 2).types;
+    const design = mrly.two.create(codeOf(value.code), number, level, 0, 2).types;
     const left = (width - side) >> 1;
     if (height > 1) place(types, width, design, side, (height - side) >> 1, left);
     else types.set(design.subarray((side >> 1) * side, (side >> 1) * side + side), left);

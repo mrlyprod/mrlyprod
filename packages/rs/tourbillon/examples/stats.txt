@@ -1,0 +1,24 @@
+unspun
+  layers 13  cells inside 1804
+  mean 0.209  rms 0.104  centre 0.462
+  low 0.000  high 0.615
+  turn classes 1  pairs sharing a turn 78
+  peak at (0.34, 0.34) value 0.615
+  peak at (0.66, 0.34) value 0.615
+  peak at (0.34, 0.66) value 0.615
+golden
+  layers 13  cells inside 1804
+  mean 0.216  rms 0.113  centre 0.462
+  low 0.000  high 0.538
+  turn classes 13  pairs sharing a turn 0
+  peak at (0.53, 0.36) value 0.538
+  peak at (0.36, 0.47) value 0.538
+  peak at (0.64, 0.53) value 0.538
+random
+  layers 13  cells inside 1804
+  mean 0.214  rms 0.111  centre 0.462
+  low 0.000  high 0.538
+  turn classes 13  pairs sharing a turn 0
+  peak at (0.68, 0.11) value 0.538
+  peak at (0.11, 0.32) value 0.538
+  peak at (0.53, 0.39) value 0.538

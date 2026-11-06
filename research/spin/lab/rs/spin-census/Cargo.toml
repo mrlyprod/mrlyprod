@@ -3,8 +3,10 @@ name = "spin-census"
 edition = "2021"
 
 [dependencies]
-mrly-core = "0.2.0"
+mrly-fft = "0.2.0"
 mrly-math = "0.2.0"
-mrly-num = "0.2.0"
+mrly-spin = "0.2.0"
+mrly-tensor = "0.2.0"
+mrly-two = "0.2.0"
 
 [workspace]

@@ -1,5 +1,5 @@
-use mrly_math::bang::factory::create;
-use mrly_math::bang::Code;
+use mrly_math::code::Code;
+use mrly_math::factory::create;
 
 #[derive(Clone)]
 pub struct Design {

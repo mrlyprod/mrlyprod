@@ -1,9 +1,9 @@
-import type { apollonian } from "@mrlyprod/num";
+import type * as apollonian from "@mrlyprod/apollonian";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick } from "@mrlyprod/ui/kit/rand.ts";
 import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
 
-export type Num = Unit<"num">;
+export type Num = Unit<"apollonian">;
 
 export type Ink = "size" | "shade" | "ford" | "one";
 
@@ -128,14 +128,13 @@ export function study(num: Num, name: string, cap: number): Plan {
 }
 
 function grown(num: Num, name: string, cap: number): Plan {
-  const a = num.apollonian;
-  const packing = a.grow(name, cap);
+  const packing = num.grow(name, cap);
   const quad = packing.root.map((c): Triple => [c.k, c.x, c.y]);
   const inner = packing.root.filter((c) => c.k > 0);
   const hull = packing.root.find((c) => c.k < 0);
   const rows = [...inner, ...packing.circles];
   const total = rows.length;
-  const data = a.flat(name, cap);
+  const data = num.flat(name, cap);
   const ints = Int32Array.from(rows.flatMap((c) => [c.k, c.x, c.y]));
   const k0 = packing.circles[0]?.k ?? inner.at(-1)?.k ?? cap;
   const octaves = Math.max(1, Math.ceil(Math.log2(cap / k0)) + 1);
@@ -143,14 +142,14 @@ function grown(num: Num, name: string, cap: number): Plan {
     Math.min(octaves - 1, Math.max(0, Math.floor(Math.log2(data[i * STRIDE + 3] / k0)))),
   );
   const hues = Uint8Array.from({ length: total }, (_, i) => Math.floor(Math.log2(data[i * STRIDE + 3])) % SIX.length);
-  const touches = packing.strip ? a.touches(packing) : [];
+  const touches = packing.strip ? num.touches(packing) : [];
   const at = new Map(touches.map((t): [number, apollonian.Touch] => [t.num / t.den, t]));
   const fords = new Uint8Array(total);
   if (packing.strip) {
     rows.forEach((c, i) => {
       if (i >= inner.length && at.get(data[i * STRIDE])?.k !== c.k) return;
-      const circle = a.Circle.from(c);
-      fords[i] = a.on_line(circle) && a.is_ford(circle) ? 1 : 0;
+      const circle = num.Circle.from(c);
+      fords[i] = num.on_line(circle) && num.is_ford(circle) ? 1 : 0;
       circle.free();
     });
   }
@@ -172,7 +171,7 @@ function grown(num: Num, name: string, cap: number): Plan {
     name,
     strip: packing.strip,
     cap,
-    frame: Array.from(a.frame(packing)),
+    frame: Array.from(num.frame(packing)),
     quad,
     k0,
     octaves,
@@ -192,7 +191,7 @@ function grown(num: Num, name: string, cap: number): Plan {
 
 export function shadow(num: Num, packing: apollonian.Packing, data: Float64Array, roots: number, order: number): Stack {
   const lit = count(data, roots, roots + packing.circles.length, 2 * order * order) - roots;
-  const read = num.apollonian.shadow({ ...packing, circles: packing.circles.slice(0, lit) }, order);
+  const read = num.shadow({ ...packing, circles: packing.circles.slice(0, lit) }, order);
   return {
     order,
     reach: read.reach,

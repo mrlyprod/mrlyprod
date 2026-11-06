@@ -1,7 +1,7 @@
 use crate::coprime::{bracket, foreign, index};
-use mrly_math::bang::baseq::{group_order, representatives};
-use mrly_math::bang::factory::{code_to_corners, residue_corners};
-use mrly_math::bang::Code;
+use mrly_bang::baseq::{group_order, representatives};
+use mrly_math::code::Code;
+use mrly_math::factory::{code_to_corners, residue_corners};
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};

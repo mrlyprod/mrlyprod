@@ -1,0 +1,9 @@
+scale 32: largest stroke = isqrt(2*32^2) - 32 = 13
+stroke  tested  gaps  overlap
+     1    2080     0        0
+     4    2080     0        0
+     6    2080     0        0
+    12    2080     0        0
+    13    2080     0        0
+    14    2080     0       30
+svg at stroke 14: stroke 14 is outside 1..=13 at scale 32.

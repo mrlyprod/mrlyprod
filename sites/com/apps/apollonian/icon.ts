@@ -1,10 +1,10 @@
+import * as apollonian from "@mrlyprod/apollonian";
 import type { Color, Pen } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as num from "@mrlyprod/num";
 
 type Plan = { data: Float64Array; bands: Uint8Array; octaves: number; count: number };
 
-export const units = { num };
+export const units = { apollonian };
 
 const ROOT = "-1,2,2,3";
 const CAP = 256;
@@ -21,7 +21,7 @@ let plan: Plan | null = null;
 
 function study(): Plan {
   if (plan) return plan;
-  const data = num.apollonian.flat(ROOT, CAP);
+  const data = apollonian.flat(ROOT, CAP);
   const count = data.length / STRIDE;
   const outside = Array.from({ length: count }, (_, i) => i * STRIDE).filter(
     (at) =>

@@ -1,7 +1,7 @@
+import * as three from "@mrlyprod/three";
 import { type Frame, field, frame, Grid, type Ink, type Pen, plot } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { three };
 
 const LEVEL = 4;
 const SIDE = 81;
@@ -17,7 +17,7 @@ const TUBES = [
   [1 / 8, 0.234186414, 0.234701259],
 ];
 
-const sponge = math.three.sponge;
+const sponge = three.sponge;
 const point = new Float64Array([0, 0, 0.5]);
 
 function dist(x: number, y: number) {
@@ -30,11 +30,11 @@ let memo: { cells: ArrayLike<number>; covers: Float64Array } | undefined;
 
 function facts() {
   if (memo) return memo;
-  const cube = math.three.carpet(3, LEVEL);
+  const cube = three.carpet(3, LEVEL);
   let filled = 0;
   for (const kind of cube.types) filled += kind;
   if (filled !== 160000) throw new Error(`paper-sponge-measurability: carpet sums to ${filled}, want 160000`);
-  const dust = math.three.slice(cube, 2, (SIDE - 1) / 2);
+  const dust = three.slice(cube, 2, (SIDE - 1) / 2);
   const cells = dust.types;
   if (cells.length !== SIDE * SIDE)
     throw new Error(`paper-sponge-measurability: slice of ${cells.length} cells, want ${SIDE * SIDE}`);

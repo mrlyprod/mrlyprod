@@ -1,5 +1,5 @@
+use mrly_automaton::memory::{allowed_windows, kappa, perron, Rule};
 use mrly_num::factor::mobius_sieve;
-use mrly_math::memory::{allowed_windows, kappa, perron, Rule};
 use std::env;
 use std::time::Instant;
 

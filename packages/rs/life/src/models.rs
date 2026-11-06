@@ -1,7 +1,7 @@
 use super::source::Counts;
 use super::{Boundary, Fate};
-use mrly_core::error::Result;
-use mrly_math::two::Cell2d;
+use mrly_error::Result;
+use mrly_two::Cell2d;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

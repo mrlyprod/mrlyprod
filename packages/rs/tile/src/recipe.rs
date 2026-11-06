@@ -1,8 +1,9 @@
-use mrly_core::error::{Result, value_error};
-use mrly_core::named_enum;
+use mrly_error::{Result, value_error};
+use mrly_name::named_enum;
 use serde::{Deserialize, Serialize};
 
-pub use mrly_math::bang::catalog::{CLASSICS_2D, CLASSICS_3D, Catalog, Design, Source, classics};
+pub use mrly_bang::catalog::{Catalog, Source};
+pub use mrly_math::catalog::{CLASSICS_2D, CLASSICS_3D, Design, classics};
 
 pub const MIN_SIDE: usize = 2;
 

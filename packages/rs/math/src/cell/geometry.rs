@@ -1,7 +1,7 @@
 use super::models::CellNd;
-use mrly_core::cell;
-use mrly_core::error::Result;
-use mrly_core::tensor::Tensor;
+use crate::cell::base as cell;
+use mrly_error::Result;
+use mrly_tensor::Tensor;
 
 pub fn merge_reps<const N: usize>(cells: &[CellNd<N>], reps: &[usize]) -> Result<CellNd<N>> {
     let inner: Vec<cell::Cell> = cells.iter().map(|c| c.cell.clone()).collect();

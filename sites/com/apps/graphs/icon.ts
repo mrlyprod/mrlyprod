@@ -1,8 +1,9 @@
 import type { Pen, Point } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as graph from "@mrlyprod/graph";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { graph, two };
 
 type Drawn = { side: number; positions: Float64Array; pairs: Uint32Array };
 
@@ -18,9 +19,9 @@ let plan: Drawn | null = null;
 
 function study(): Drawn {
   if (plan) return plan;
-  const cell = math.two.create(CODE, NUMBER, LEVEL, 0, BASE);
-  const net = math.graph.core_graph({ shape: cell.shape, data: cell.types });
-  const census = math.graph.census(net);
+  const cell = two.create(CODE, NUMBER, LEVEL, 0, BASE);
+  const net = graph.core_graph({ shape: cell.shape, data: cell.types });
+  const census = graph.census(net);
   const read = {
     nodes: census.nodes,
     branches: census.branches,

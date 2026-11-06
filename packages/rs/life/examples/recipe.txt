@@ -1,0 +1,11 @@
+carpet.3.1 x1 island mask:code15.3.1 birth:3 survive:2,3 x:50 cap:40
+start: population 8
+stopped: loop at generation 7, period 2, population 12
+
+..###..
+.......
+#.....#
+#.....#
+#.....#
+.......
+..###..

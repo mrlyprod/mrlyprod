@@ -1,4 +1,5 @@
-import type * as mrly from "@mrlyprod/math";
+import type * as crop from "@mrlyprod/crop";
+import type * as math from "@mrlyprod/math";
 import type { Code, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Run } from "@mrlyprod/ui/kit/svg.ts";
 import { runs } from "@mrlyprod/ui/kit/svg.ts";
@@ -6,9 +7,9 @@ import { cell, DIM, tensor } from "../shared/two/engine.ts";
 
 export type Point = [number, number];
 
-type Round = Extract<mrly.shape.Shape, { Ball: unknown }>;
+type Round = Extract<crop.Shape, { Ball: unknown }>;
 
-type Walled = Extract<mrly.shape.Shape, { Polytope: unknown }>;
+type Walled = Extract<crop.Shape, { Polytope: unknown }>;
 
 export type Plane = (Round & { Polytope?: undefined }) | (Walled & { Ball?: undefined });
 
@@ -20,7 +21,7 @@ export type Outline =
 
 export type Census = { cells: number[]; filled: number[]; after: number };
 
-export type Kept = { grid: mrly.Tensor; extra: number; over: boolean };
+export type Kept = { grid: math.Tensor; extra: number; over: boolean };
 
 export type Look = { faint: Run[]; lit: Run[]; cut: Run[]; coarse: number; side: number };
 
@@ -51,21 +52,21 @@ export const POLICIES: [string, string][] = [
 ];
 const EXTRA: Partial<Record<string, number>> = { refined1: 1, refined2: 2 };
 
-export const top = (math: Mrly, number: number) => math.bang.level_cap(number, 1, SIDE);
+export const top = (mrly: Mrly, number: number) => mrly.math.factory.level_cap(number, 1, SIDE);
 
-export const counted = (math: Mrly, number: number) => math.bang.level_cap(number, DIM, CELLS);
+export const counted = (mrly: Mrly, number: number) => mrly.math.factory.level_cap(number, DIM, CELLS);
 
-export function core(math: Mrly, name: string, num: number, den = RDEN): Plane {
-  const r = new math.shape.Frac(num, den);
-  const made = math.shape.named(name, DIM, r) as Plane;
+export function core(mrly: Mrly, name: string, num: number, den = RDEN): Plane {
+  const r = new mrly.crop.Frac(num, den);
+  const made = mrly.crop.named(name, DIM, r) as Plane;
   r.free();
   return made;
 }
 
-export const shape = (math: Mrly, name: string, num: number, anti: boolean, den = RDEN): Masked =>
-  anti ? { Anti: core(math, name, num, den) } : core(math, name, num, den);
+export const shape = (mrly: Mrly, name: string, num: number, anti: boolean, den = RDEN): Masked =>
+  anti ? { Anti: core(mrly, name, num, den) } : core(mrly, name, num, den);
 
-const real = ({ num, den }: mrly.shape.FracData) => Number(num) / Number(den);
+const real = ({ num, den }: crop.FracData) => Number(num) / Number(den);
 
 export function outline(made: Plane): Outline {
   if (made.Ball) {
@@ -83,25 +84,25 @@ export function outline(made: Plane): Outline {
   return { points };
 }
 
-export const grid = (math: Mrly, code: Code, number: number, level: number, base: number) =>
-  tensor(math.two.create(code, number, level, 0, base));
+export const grid = (mrly: Mrly, code: Code, number: number, level: number, base: number) =>
+  tensor(mrly.two.create(code, number, level, 0, base));
 
-export const exposed = (math: Mrly, types: mrly.Tensor) => Number(math.two.perimeter(cell(types)));
+export const exposed = (mrly: Mrly, types: math.Tensor) => Number(mrly.two.perimeter(cell(types)));
 
-export function census(math: Mrly, types: mrly.Tensor, made: mrly.shape.Shape): Census {
-  const { cells, filled } = math.shape.census(made, types);
-  return { cells, filled, after: exposed(math, math.shape.crop(types, made, true)) };
+export function census(mrly: Mrly, types: math.Tensor, made: crop.Shape): Census {
+  const { cells, filled } = mrly.crop.census(made, types);
+  return { cells, filled, after: exposed(mrly, mrly.crop.crop(types, made, true)) };
 }
 
-export function keep(math: Mrly, types: mrly.Tensor, made: mrly.shape.Shape, policy: string, number: number): Kept {
+export function keep(mrly: Mrly, types: math.Tensor, made: crop.Shape, policy: string, number: number): Kept {
   const extra = EXTRA[policy] ?? 0;
-  if (!extra) return { grid: math.shape.crop(types, made, policy === "touching"), extra: 0, over: false };
+  if (!extra) return { grid: mrly.crop.crop(types, made, policy === "touching"), extra: 0, over: false };
   const side = types.shape[0] * number ** extra;
-  if (side * side > REFINE) return { grid: math.shape.crop(types, made, true), extra: 0, over: true };
-  return { grid: math.shape.refine(types, made, number, extra, false), extra, over: false };
+  if (side * side > REFINE) return { grid: mrly.crop.crop(types, made, true), extra: 0, over: true };
+  return { grid: mrly.crop.refine(types, made, number, extra, false), extra, over: false };
 }
 
-export function layers(types: mrly.Tensor, regions: mrly.Tensor["data"], kept: Kept, edge: boolean): Look {
+export function layers(types: math.Tensor, regions: math.Tensor["data"], kept: Kept, edge: boolean): Look {
   const fill = types.data;
   const own = kept.grid.data;
   const fine = kept.extra > 0;
@@ -119,24 +120,24 @@ export function layers(types: mrly.Tensor, regions: mrly.Tensor["data"], kept: K
   };
 }
 
-export function room(math: Mrly, number: number, count: number, centre: string): Room {
-  const deep = Math.min(count, counted(math, number));
-  const side = Number(math.counts.grid(number, 1, deep));
+export function room(mrly: Mrly, number: number, count: number, centre: string): Room {
+  const deep = Math.min(count, counted(mrly, number));
+  const side = Number(mrly.sequences.counts.grid(number, 1, deep));
   return { deep, side, most: centre === "centre" ? Math.floor((side - 1) / 2) : side - 1 };
 }
 
-export function circle(math: Mrly, code: Code, number: number, count: number, base: number, centre: string): Circle {
-  const types = grid(math, code, number, count, base);
+export function circle(mrly: Mrly, code: Code, number: number, count: number, base: number, centre: string): Circle {
+  const types = grid(mrly, code, number, count, base);
   const side = types.shape[0];
   const [origin, most]: [number[], number] =
     centre === "centre" ? [[side, side], Math.floor((side - 1) / 2)] : [[0, 0], side - 1];
-  const table = math.shape.radial_census(types, origin, most);
+  const table = mrly.crop.radial_census(types, origin, most);
   return {
     seen: table.map((row) => row.seen),
     inside: table.map((row) => row.inside),
     cut: table.map((row) => row.cut),
     side,
-    mass: Number(math.counts.fill(code, number, DIM, 1, base)),
-    d: math.counts.dimension(code, number, DIM, base),
+    mass: Number(mrly.sequences.counts.fill(code, number, DIM, 1, base)),
+    d: mrly.sequences.counts.dimension(code, number, DIM, base),
   };
 }

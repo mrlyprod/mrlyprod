@@ -70,7 +70,7 @@ export type Seen = Pick<View, "w" | "h" | "dpr" | "t" | "still" | "lock" | "fixe
   look: () => Pick<Paints, "accent"> & Partial<Pick<Paints, "ink">>;
 };
 
-export type Given = Opts & { num?: Num | null; onTell?: (said: Told) => void };
+export type Given = Opts & { zeta?: Num | null; onTell?: (said: Told) => void };
 
 export type Zeta = ReturnType<typeof make>;
 
@@ -122,7 +122,7 @@ export const SPEC: Spec = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
-export const units = wasm("num");
+export const units = wasm("zeta");
 
 export const PAGE = {
   spec: SPEC,
@@ -142,7 +142,7 @@ export const PAGE = {
   ],
   actions: { go: (scene) => scene.go?.(), hop: (scene, e) => scene.hop?.(e.key === "ArrowLeft" ? -1 : 1) },
   reroll: (_value, seed) => roll(seed),
-} satisfies Page<Loaded<"num">, Zeta>;
+} satisfies Page<Loaded<"zeta">, Zeta>;
 
 const between = (rand: Rng, lo: number, hi: number) => lo + Math.floor(rand() * (hi - lo + 1));
 
@@ -266,8 +266,8 @@ export function sketch(
 }
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const num = opts.num;
-  if (!num) throw new Error("zeta: the scene wants @mrlyprod/num as opts.num");
+  const num = opts.zeta;
+  if (!num) throw new Error("zeta: the scene wants @mrlyprod/zeta as opts.zeta");
   const ctx = canvas.getContext("2d")!;
   const plan = study(num);
   let value = tidy(SPEC, opts) as Knobs;

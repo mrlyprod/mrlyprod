@@ -1,7 +1,7 @@
 use census::save;
-use mrly_core::error::Result;
-use mrly_core::json;
-use mrly_math::two::{carpet, Cell2d};
+use mrly_error::Result;
+use mrly_json::json;
+use mrly_two::{carpet, Cell2d};
 
 const NAME: &str = "moire-local-limit";
 const LOW: usize = 21;

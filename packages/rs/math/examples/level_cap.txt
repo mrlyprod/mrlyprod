@@ -1,0 +1,6 @@
+side  2: level 9
+side  3: level 6
+side  4: level 4
+side  5: level 4
+side  7: level 3
+side 10: level 3

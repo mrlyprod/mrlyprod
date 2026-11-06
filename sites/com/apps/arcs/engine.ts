@@ -102,49 +102,49 @@ export const TRIES = 64;
 export const KEEP = 8;
 const HALF = Math.PI / 2;
 
-export const cap = (math: Mrly, base: Scalar) => math.bang.level_cap(Number(base), DIM, BUDGET);
+export const cap = (mrly: Mrly, base: Scalar) => mrly.math.factory.level_cap(Number(base), DIM, BUDGET);
 
-export const names = (math: Mrly, base: number) => math.name.words(DIM, base);
+export const names = (mrly: Mrly, base: number) => mrly.math.name.words(DIM, base);
 
-export function resolve(math: Mrly, base: number, text: Scalar | null | undefined): string {
+export function resolve(mrly: Mrly, base: number, text: Scalar | null | undefined): string {
   const raw = String(text ?? "").trim();
-  const words = names(math, base);
+  const words = names(mrly, base);
   if (raw === "") return (words.find(([, word]) => word === CANON) ?? words[0])[0];
   return words.find(([, word]) => word === raw.toLowerCase())?.[0] ?? raw;
 }
 
-const loops = (math: Mrly, code: Code, base: number, level: number) =>
-  math.arcs.draw(String(code), base, level).loops > 0;
+const loops = (mrly: Mrly, code: Code, base: number, level: number) =>
+  mrly.arcs.draw(String(code), base, level).loops > 0;
 
-export function looping(math: Mrly, base: number, level: number, rand: Rng): string {
-  const count = total(math, DIM, base);
+export function looping(mrly: Mrly, base: number, level: number, rand: Rng): string {
+  const count = total(mrly, DIM, base);
   let code = 1;
   for (let i = 0; i < TRIES; i++) {
     code = 1 + Math.floor(rand() * (count - 1));
-    if (loops(math, code, base, level)) return String(code);
+    if (loops(mrly, code, base, level)) return String(code);
   }
   for (let k = 1; k < count - 1; k++) {
     const one = ((code - 1 + k) % (count - 1)) + 1;
-    if (loops(math, one, base, level)) return String(one);
+    if (loops(mrly, one, base, level)) return String(one);
   }
   return String(code);
 }
 
 const lawful = new Map<Mrly, Lawful[]>();
 
-export function laws(math: Mrly): Lawful[] {
-  if (!lawful.has(math)) {
+export function laws(mrly: Mrly): Lawful[] {
+  if (!lawful.has(mrly)) {
     const found = BASES.flatMap(([base]) =>
-      (codes(math, DIM, base) ?? names(math, base).map(([code]) => code)).flatMap((code) => {
-        const law = math.arcs.law(code, base, 1);
+      (codes(mrly, DIM, base) ?? names(mrly, base).map(([code]) => code)).flatMap((code) => {
+        const law = mrly.arcs.law(code, base, 1);
         return law && law.formula !== "0"
-          ? [{ base, code, name: math.name.of(code, DIM, base) ?? "", formula: law.formula }]
+          ? [{ base, code, name: mrly.math.name.of(code, DIM, base) ?? "", formula: law.formula }]
           : [];
       }),
     );
-    lawful.set(math, found);
+    lawful.set(mrly, found);
   }
-  return lawful.get(math)!;
+  return lawful.get(mrly)!;
 }
 
 export function corner(filled: number, which: number, x: number, y: number): [number, number] {
@@ -163,9 +163,9 @@ export function arc(plan: Pick<Curves, "side" | "cells">, a: number): Arc {
   return { x, y, cx, cy, av: down ? -HALF : HALF, ah: right ? Math.PI : 0, sweep: right !== down ? HALF : -HALF };
 }
 
-export function curves(math: Mrly, code: Code, base: number, level: number): Curves {
-  const drawn = math.arcs.draw(code, base, level);
-  const list = math.arcs.curves(code, base, level);
+export function curves(mrly: Mrly, code: Code, base: number, level: number): Curves {
+  const drawn = mrly.arcs.draw(code, base, level);
+  const list = mrly.arcs.curves(code, base, level);
   const order = new Int32Array(list.reduce((sum, one) => sum + one.arcs.length, 0));
   const dir = new Int8Array(order.length);
   const bounds = new Int32Array(list.length + 1);
@@ -190,11 +190,11 @@ export function curves(math: Mrly, code: Code, base: number, level: number): Cur
   };
 }
 
-const kept = new Map<string, { math: Mrly; plan: Plan }>();
+const kept = new Map<string, { mrly: Mrly; plan: Plan }>();
 
-function plan(math: Mrly, code: string, base: number, level: number): Plan {
-  const drawn = curves(math, code, base, level);
-  const law = math.arcs.law(code, base, level);
+function plan(mrly: Mrly, code: string, base: number, level: number): Plan {
+  const drawn = curves(mrly, code, base, level);
+  const law = mrly.arcs.law(code, base, level);
   const lit: number[] = [];
   for (let k = 0; k < drawn.closed.length; k++) if (drawn.closed[k]) lit.push(k);
   const clock = schedule(lit.map((k) => drawn.bounds[k + 1] - drawn.bounds[k]));
@@ -202,7 +202,7 @@ function plan(math: Mrly, code: string, base: number, level: number): Plan {
   for (const on of drawn.filled) filled += on;
   const facts: Facts = {
     code,
-    name: math.name.of(code, DIM, base) ?? "",
+    name: mrly.math.name.of(code, DIM, base) ?? "",
     base,
     level,
     side: drawn.side,
@@ -215,20 +215,20 @@ function plan(math: Mrly, code: string, base: number, level: number): Plan {
   return { ...drawn, code, lit: Int32Array.from(lit), clock, facts };
 }
 
-export function study(math: Mrly, value: Asked): Studied {
+export function study(mrly: Mrly, value: Asked): Studied {
   const base = Number(value.base);
-  const level = Math.max(1, Math.min(value.level, cap(math, base)));
-  const code = resolve(math, base, value.code);
+  const level = Math.max(1, Math.min(value.level, cap(mrly, base)));
+  const code = resolve(mrly, base, value.code);
   const key = `${base}:${code}:${level}`;
   const hit = kept.get(key);
-  if (hit && hit.math === math) {
+  if (hit && hit.mrly === mrly) {
     kept.delete(key);
     kept.set(key, hit);
     return hit.plan;
   }
   let made: Plan;
   try {
-    made = plan(math, code, base, level);
+    made = plan(mrly, code, base, level);
   } catch (error) {
     return {
       code,
@@ -240,7 +240,7 @@ export function study(math: Mrly, value: Asked): Studied {
       },
     };
   }
-  kept.set(key, { math, plan: made });
+  kept.set(key, { mrly, plan: made });
   while (kept.size > KEEP) kept.delete(kept.keys().next().value!);
   return made;
 }

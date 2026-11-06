@@ -1,0 +1,8 @@
+gcd(+11+3i, +1+8i)
+norms 130 and 65
++11+3i = +1-1i * +1+8i + +2-4i   norm of remainder 20
++1+8i = -1+1i * +2-4i + -1+2i   norm of remainder 5
++2-4i = -2+0i * -1+2i + +0+0i   norm of remainder 0
+last non-zero remainder -1+2i
+gcd, rotated to the first quadrant: +2+1i
+same from gaussian_gcd: +2+1i

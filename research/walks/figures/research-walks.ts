@@ -1,15 +1,15 @@
+import * as two from "@mrlyprod/two";
 import { type Color, type Frame, frame, type Ink, type Pen, plot } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 import census from "./research-walks.json" with { type: "json" };
 
 const LEVEL = 4;
 const SIDE = 3 ** LEVEL;
 const SITES = 7 ** LEVEL;
 
-export const units = { math };
+export const units = { two };
 
 function panel(pen: Pen, ink: Ink, area: Frame, code: number, trail: number[], color: Color) {
-  const cell = math.two.create(code, 3, LEVEL, 0, 3);
+  const cell = two.create(code, 3, LEVEL, 0, 3);
   if (cell.shape.length !== 2 || cell.shape[0] !== SIDE || cell.shape[1] !== SIDE)
     throw new Error(`research-walks: code ${code} is ${cell.shape}, want ${SIDE} by ${SIDE}`);
   const mask = Array.from(cell.types, (kind) => kind !== 0);

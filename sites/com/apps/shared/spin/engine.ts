@@ -136,8 +136,8 @@ export function key(value: Src): string {
     : ["flat", value.base, value.code, value.number, value.level].join(":");
 }
 
-export function field(math: Mrly, name: string, limit: number, side: number): Float32Array {
-  const preset = math.moire.named(name, limit);
+export function field(mrly: Mrly, name: string, limit: number, side: number): Float32Array {
+  const preset = mrly.moire.named(name, limit);
   const out = preset.field(side);
   const data = Float32Array.from(out.data);
   out.free();
@@ -145,47 +145,47 @@ export function field(math: Mrly, name: string, limit: number, side: number): Fl
   return data;
 }
 
-export function source(math: Mrly, value: Src): Made {
+export function source(mrly: Mrly, value: Src): Made {
   if (value.source === "moire")
     return {
       kind: "moire",
       code: value.preset,
       name: value.preset,
       side: FIELD,
-      data: field(math, value.preset, value.limit, FIELD),
+      data: field(mrly, value.preset, value.limit, FIELD),
       fills: null,
       binary: false,
     };
   if (cube(value)) {
-    const code = canon(math, 3, value.base, value.code);
-    const cut = math.six.cut_design(code, value.tile, Math.min(value.slevel, cap(value.tile, CUT)), value.base);
+    const code = canon(mrly, 3, value.base, value.code);
+    const cut = mrly.six.cut_design(code, value.tile, Math.min(value.slevel, cap(value.tile, CUT)), value.base);
     return {
       kind: "slice",
       code,
-      name: math.name.of(code, 3, value.base) ?? "",
+      name: mrly.math.name.of(code, 3, value.base) ?? "",
       side: HEX,
-      data: math.six.raster(cut, HEX),
-      fills: math.six.fills(cut),
+      data: mrly.six.raster(cut, HEX),
+      fills: mrly.six.fills(cut),
       binary: true,
     };
   }
-  const code = canon(math, 2, value.base, value.code);
-  const cell = math.two.create(code, value.number, Math.min(value.level, cap(value.number)), ROTATION, value.base);
+  const code = canon(mrly, 2, value.base, value.code);
+  const cell = mrly.two.create(code, value.number, Math.min(value.level, cap(value.number)), ROTATION, value.base);
   return {
     kind: "flat",
     code,
-    name: math.name.of(code, 2, value.base) ?? "",
+    name: mrly.math.name.of(code, 2, value.base) ?? "",
     side: cell.shape[0],
     data: Float32Array.from(cell.types),
-    fills: math.two.fills(cell),
+    fills: mrly.two.fills(cell),
     binary: true,
   };
 }
 
-export function drawn(math: Mrly, value: Src, rand: Rng): Drawn {
+export function drawn(mrly: Mrly, value: Src, rand: Rng): Drawn {
   if (value.source === "moire")
     return { preset: pick(rand, PRESETS), limit: 2 * Math.floor(rand() * ((LIMIT + 1) / 2)) + 1 };
-  return { code: roll(math, cube(value) ? 3 : 2, value.base, rand) };
+  return { code: roll(mrly, cube(value) ? 3 : 2, value.base, rand) };
 }
 
 export function shares(power: ArrayLike<number> & Iterable<number>): number[] {
@@ -214,22 +214,22 @@ export function disc(profile: Float32Array, reach: number): number {
   return lit < 0 ? reach : (lit / (profile.length - 1)) * reach;
 }
 
-export function study(math: Mrly, value: Src): Plan {
+export function study(mrly: Mrly, value: Src): Plan {
   const at = key(value);
   if (kept?.at === at) return kept.plan;
-  const made = source(math, value);
+  const made = source(mrly, value);
   const { data, side } = made;
-  const profile = math.spin.profile(data, side, STEPS);
-  const power = math.spin.harmonics(data, side, RINGS, ORDERS);
-  const reach = math.spin.reach(side);
+  const profile = mrly.spin.profile(data, side, STEPS);
+  const power = mrly.spin.harmonics(data, side, RINGS, ORDERS);
+  const reach = mrly.spin.reach(side);
   const plan = {
     ...made,
     profile,
     power,
     reach,
     top: peak(data) || 1,
-    order: math.spin.turns(power),
-    mass: math.spin.mass(profile, side),
+    order: mrly.spin.turns(power),
+    mass: mrly.spin.mass(profile, side),
     disc: disc(profile, reach),
     peak: peak(profile),
     share: shares(power),
@@ -241,9 +241,9 @@ export function study(math: Mrly, value: Src): Plan {
 
 export const title = ({ name, code, kind }: Titled) => (kind === "moire" || !name ? code : `${name} ${code}`);
 
-export function rings(math: Mrly, plan: Plan): Rings {
+export function rings(mrly: Mrly, plan: Plan): Rings {
   if (bull?.plan !== plan)
-    bull = { plan, values: math.spin.wheel(plan.profile, WHEEL), top: plan.peak || 1, side: WHEEL };
+    bull = { plan, values: mrly.spin.wheel(plan.profile, WHEEL), top: plan.peak || 1, side: WHEEL };
   return bull;
 }
 
@@ -252,27 +252,27 @@ export const turn = (value: Pick<Stack, "full" | "copies" | "step">) =>
 
 export const degrees = (value: Pick<Stack, "full" | "copies" | "step">) => +(turn(value) * 360).toFixed(3);
 
-export function petals(math: Mrly, plan: Pick<Plan, "order">, value: Pick<Stack, "full" | "copies">): number | string {
+export function petals(mrly: Mrly, plan: Pick<Plan, "order">, value: Pick<Stack, "full" | "copies">): number | string {
   if (Number(value.full) !== 1) return "partial orbit";
-  return plan.order ? math.spin.petals(value.copies, plan.order) : "none";
+  return plan.order ? mrly.spin.petals(value.copies, plan.order) : "none";
 }
 
-export function sketch(math: Mrly, plan: Pick<Plan, "data" | "side">, value: Stack, side: number): Raster {
-  const values = math.spin.radial(
+export function sketch(mrly: Mrly, plan: Pick<Plan, "data" | "side">, value: Stack, side: number): Raster {
+  const values = mrly.spin.radial(
     plan.data,
     plan.side,
     side,
     value.copies,
     turn(value),
-    math.spin.Blend.named(value.blend)!,
+    mrly.spin.Blend.named(value.blend)!,
     value.samples,
   );
   return { values, top: peak(values) || 1, side };
 }
 
-export function rosette(math: Mrly, plan: Plan, value: Stack): Rose {
+export function rosette(mrly: Mrly, plan: Plan, value: Stack): Rose {
   const at = [value.copies, turn(value), value.blend, value.samples].join(":");
-  if (rose?.plan !== plan || rose.at !== at) rose = { plan, at, ...sketch(math, plan, value, OUT) };
+  if (rose?.plan !== plan || rose.at !== at) rose = { plan, at, ...sketch(mrly, plan, value, OUT) };
   return rose;
 }
 

@@ -1,5 +1,5 @@
-use mrly_core::error::{Result, value_error};
-use mrly_core::tensor::Tensor;
+use mrly_error::{Result, value_error};
+use mrly_tensor::Tensor;
 use std::collections::HashSet;
 
 pub const BASE: usize = 2;

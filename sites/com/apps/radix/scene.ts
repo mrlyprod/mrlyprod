@@ -1,6 +1,7 @@
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
@@ -46,24 +47,25 @@ export type Knobs = Design & { level: number; line: number; cell: number; tint: 
 
 export type Sketch = Design & { level?: number; line?: number };
 
-export type Given = Opts & { math?: Mrly | null; num?: Num | null; onFacts?: (facts: Facts) => void };
+export type Given = Opts & { mrly?: Doors | null; onFacts?: (facts: Facts) => void };
 
 export type Seen = Pick<View, "w" | "h" | "dpr"> & { look: () => Pick<Paints, "paper" | "accent"> };
 
 export type Moves = { flat: () => void; every: () => void };
 
-export type Doors = Had<"math" | "num">;
+export type Doors = Mrly & Had<"gaussian">;
 
 export type Listed = [Preset, Shaped | null];
 
 export type Radix = ReturnType<typeof make>;
 
-export const units = wasm("math", "num");
+export const units = wasm(...CRATES, "gaussian");
 
 let shelved: { num: Num; list: Listed[] } | null = null;
 
-export function presets({ num, math }: Doors): Listed[] {
-  if (shelved?.num !== num) shelved = { num, list: PRESETS.map(([name]): Listed => [name, preset(num, math, name)]) };
+export function presets(mrly: Doors): Listed[] {
+  const num = mrly.gaussian;
+  if (shelved?.num !== num) shelved = { num, list: PRESETS.map(([name]): Listed => [name, preset(num, mrly, name)]) };
   return shelved.list;
 }
 
@@ -73,7 +75,7 @@ export function next(name: string, by: number) {
   return PRESETS[(at + by + PRESETS.length) % PRESETS.length][0];
 }
 
-const dialed = (value: Value, units?: Doors) => dial(units!.num, units!.math, value as unknown as Design);
+const dialed = (value: Value, units?: Doors) => dial(units!.gaussian, units!, value as unknown as Design);
 
 export type Pen = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -143,12 +145,12 @@ export const PAGE = {
     level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
     preset: (value, key, units) => {
       const was = presets(units!).find(([, one]) => wears(value as unknown as Design, one))?.[0] ?? "";
-      return preset(units!.num, units!.math, next(was, key === "ArrowLeft" ? -1 : 1)) ?? {};
+      return preset(units!.gaussian, units!, next(was, key === "ArrowLeft" ? -1 : 1)) ?? {};
     },
     every: (value, _key, units) => every(dialed(value, units)),
   },
   reroll: (value, seed, units) => rolled(dialed(value, units), rng(seed)),
-} satisfies Page<Loaded<"math" | "num">, Radix>;
+} satisfies Page<Loaded<Crate | "gaussian">, Radix>;
 
 const CHUNK = 8192;
 const DESIGN: (keyof Knobs)[] = ["ring", "base", "d", "t"];
@@ -212,15 +214,14 @@ const EDGE = 0.08;
 
 export function sketch(
   pen: CanvasRenderingContext2D,
-  units: Had<"num" | "math">,
+  units: Doors,
   patch: Sketch,
   side: number,
   dpr: number,
   accent: string,
 ) {
-  const { num, math } = units;
   const line = Boolean(patch.line);
-  const plan = study(num, math, patch, glance(count(patch.d), patch.level));
+  const plan = study(units.gaussian, units, patch, glance(count(patch.d), patch.level));
   const box = lay(line ? plan.bounds : plan.stage, side, side, side * EDGE);
   pen.setTransform(1, 0, 0, 1, 0, 0);
   pen.clearRect(0, 0, side, side);
@@ -229,12 +230,12 @@ export function sketch(
 }
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const { math, num, onFacts } = opts;
-  if (!math || !num)
-    throw new Error("radix: the scene wants @mrlyprod/math and @mrlyprod/num as opts.math and opts.num");
+  const { mrly, onFacts } = opts;
+  if (!mrly) throw new Error("radix: the scene wants the design crates and @mrlyprod/gaussian as opts.mrly");
+  const num = mrly.gaussian;
   const ctx = canvas.getContext("2d")!;
   let value = tidy(SPEC, opts) as Knobs;
-  let plan = study(num, math, value);
+  let plan = study(num, mrly, value);
   const held = new Map<number, OffscreenCanvas>();
   const spare: OffscreenCanvas[] = [];
   let box: Box | null = null;
@@ -297,7 +298,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     if (!remade && LOOK.every((key) => value[key] === was[key])) return;
     if (remade) {
       plan.radix.free();
-      plan = study(num, math, value);
+      plan = study(num, mrly, value);
     }
     if (value.tint !== was.tint) paint();
     const scaled =

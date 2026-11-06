@@ -1,14 +1,15 @@
+import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Raw } from "@mrlyprod/ui/kit/spec.ts";
 import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
 import type { Sheet } from "../shared/sequences/design.ts";
 import { sheet } from "../shared/sequences/design.ts";
-import type { Key, Ledger, Match, Mrly, Row, Slug } from "../shared/sequences/engine.ts";
+import type { Key, Ledger, Match, Row, Slug } from "../shared/sequences/engine.ts";
 import { closed, DEEP, identify, ledgered } from "../shared/sequences/engine.ts";
 import { RECORDS } from "../shared/sequences/facts.ts";
 
 export type Num = Unit<"num">;
 
-export type Kit = { math: Mrly; num: Num; book: Ledger };
+export type Kit = { mrly: Mrly; num: Num; book: Ledger };
 
 export type Strip = { name: string; sheets: Sheet[] };
 
@@ -95,10 +96,10 @@ function row(book: Ledger, dim: number, code: string, measure: Slug, axis: strin
 
 const item = (read: ReturnType<typeof row>, label: string): Line => ({ label, ...read, axis: read.row.axis });
 
-const census = (math: Mrly, side: number) => math.six.census(math.six.cut_design(SPONGE, side, 1, 2), false);
+const census = (mrly: Mrly, side: number) => mrly.six.census(mrly.six.cut_design(SPONGE, side, 1, 2), false);
 
-function profile(math: Mrly, level: number) {
-  const counts = math.three.profile(GASKET, 2, level, 2).map(BigInt);
+function profile(mrly: Mrly, level: number) {
+  const counts = mrly.three.profile(GASKET, 2, level, 2).map(BigInt);
   const lit = counts.map((v, i): [bigint, number] => [v, i]).filter(([v]) => v > 0n);
   let max = 0n;
   for (const [v] of lit) if (v > max) max = v;
@@ -116,14 +117,14 @@ export const CARDS: Card[] = [
     max: 8,
     first: 4,
     show: (k) => `side ${2 * k - 1}`,
-    build: ({ math, book }, k) => {
+    build: ({ mrly, book }, k) => {
       const sides = odds(k).slice(1);
       return {
         art: {
           kind: "rows",
           rows: FLAT.map(([name, code]) => ({
             name,
-            sheets: sides.map((n) => sheet(math, design(2, code, "fills", "side"), n, 1)),
+            sheets: sides.map((n) => sheet(mrly, design(2, code, "fills", "side"), n, 1)),
           })),
         },
         lines: FLAT.map(([name, code]) => item(row(book, 2, code, "fills", "side", k - 1), `${name}, code ${code}`)),
@@ -137,8 +138,8 @@ export const CARDS: Card[] = [
     min: 1,
     max: CAPS.flat,
     first: 3,
-    build: ({ math, book }, level) => ({
-      art: { kind: "sheet", sheet: sheet(math, design(2, "7", "fills", "level"), 3, level), ink: "fills" },
+    build: ({ mrly, book }, level) => ({
+      art: { kind: "sheet", sheet: sheet(mrly, design(2, "7", "fills", "level"), 3, level), ink: "fills" },
       lines: [item(row(book, 2, "7", "fills", "level", least(level)), "filled cells")],
     }),
   },
@@ -149,8 +150,8 @@ export const CARDS: Card[] = [
     min: 1,
     max: CAPS.flat,
     first: 3,
-    build: ({ math, book }, level) => ({
-      art: { kind: "sheet", sheet: sheet(math, design(2, "7", "voids", "level"), 3, level), ink: "voids" },
+    build: ({ mrly, book }, level) => ({
+      art: { kind: "sheet", sheet: sheet(mrly, design(2, "7", "voids", "level"), 3, level), ink: "voids" },
       lines: [item(row(book, 2, "7", "voids", "level", least(level)), "empty cells")],
     }),
   },
@@ -161,8 +162,8 @@ export const CARDS: Card[] = [
     min: 1,
     max: CAPS.flat,
     first: 3,
-    build: ({ math, book }, level) => ({
-      art: { kind: "sheet", sheet: sheet(math, design(2, "7", "surface", "level"), 3, level), ink: "edges" },
+    build: ({ mrly, book }, level) => ({
+      art: { kind: "sheet", sheet: sheet(mrly, design(2, "7", "surface", "level"), 3, level), ink: "edges" },
       lines: [item(row(book, 2, "7", "surface", "level", least(level)), "exposed edges")],
     }),
   },
@@ -173,8 +174,8 @@ export const CARDS: Card[] = [
     min: 1,
     max: CAPS.cube,
     first: 2,
-    build: ({ math, book }, level) => ({
-      art: { kind: "sheet", sheet: sheet(math, design(3, SPONGE, "fills", "level"), 3, level), ink: "fills" },
+    build: ({ mrly, book }, level) => ({
+      art: { kind: "sheet", sheet: sheet(mrly, design(3, SPONGE, "fills", "level"), 3, level), ink: "fills" },
       lines: [item(row(book, 3, SPONGE, "fills", "level", least(level)), "filled cells")],
     }),
   },
@@ -185,8 +186,8 @@ export const CARDS: Card[] = [
     min: 1,
     max: CAPS.cube,
     first: 2,
-    build: ({ math, book }, level) => ({
-      art: { kind: "sheet", sheet: sheet(math, design(3, SPONGE, "profills", "level"), 3, level), ink: "fills" },
+    build: ({ mrly, book }, level) => ({
+      art: { kind: "sheet", sheet: sheet(mrly, design(3, SPONGE, "profills", "level"), 3, level), ink: "fills" },
       lines: [item(row(book, 3, SPONGE, "surface", "level", least(level)), "exposed faces")],
     }),
   },
@@ -198,8 +199,8 @@ export const CARDS: Card[] = [
     max: 8,
     first: 3,
     show: (k) => `side ${2 * k - 1}`,
-    build: ({ math, book }, k) => ({
-      art: { kind: "sheet", sheet: sheet(math, design(3, SPONGE, "fills", "side"), 2 * k - 1, 1), ink: "fills" },
+    build: ({ mrly, book }, k) => ({
+      art: { kind: "sheet", sheet: sheet(mrly, design(3, SPONGE, "fills", "side"), 2 * k - 1, 1), ink: "fills" },
       lines: [
         item(row(book, 3, SPONGE, "fills", "side", least(k - 1)), "filled cells"),
         item(row(book, 3, SPONGE, "voids", "side", least(k - 1)), "empty cells"),
@@ -213,13 +214,13 @@ export const CARDS: Card[] = [
     min: NAMED + 1,
     max: 6,
     first: 4,
-    build: ({ math }, top) => {
-      const lines: Line[] = [{ label: "base 2, by dimension", terms: math.bang.baseq.sequence(2, 4), closed: "" }];
+    build: ({ mrly }, top) => {
+      const lines: Line[] = [{ label: "base 2, by dimension", terms: mrly.bang.baseq.sequence(2, 4), closed: "" }];
       ["a line", "a square", "a cube"].forEach((name, i) => {
         const terms: string[] = [];
         for (let q = 2; q <= top; q++) {
           try {
-            terms.push(math.bang.baseq.sequence(q, i + 1)[i]);
+            terms.push(mrly.bang.baseq.sequence(q, i + 1)[i]);
           } catch {
             break;
           }
@@ -229,7 +230,7 @@ export const CARDS: Card[] = [
       return {
         art: {
           kind: "gallery",
-          sheets: math.bang.universe_codes(2).map((code) => sheet(math, design(2, code, "fills", "level"), 3, 2)),
+          sheets: mrly.bang.universe_codes(2).map((code) => sheet(mrly, design(2, code, "fills", "level"), 3, 2)),
         },
         lines,
       };
@@ -242,8 +243,8 @@ export const CARDS: Card[] = [
     min: NAMED,
     max: 8,
     first: 4,
-    build: ({ math }, dims) => {
-      const terms = math.bang.baseq.class_sequence(dims);
+    build: ({ mrly }, dims) => {
+      const terms = mrly.bang.baseq.class_sequence(dims);
       return {
         art: { kind: "pins", terms, say: "by dimension" },
         lines: [{ label: "fill classes, by dimension", terms, closed: "" }],
@@ -257,15 +258,15 @@ export const CARDS: Card[] = [
     min: 1,
     max: CAPS.cube,
     first: 2,
-    build: ({ math, book }, level) => {
+    build: ({ mrly, book }, level) => {
       const read = row(book, 3, SPONGE, "triangles", "level", least(level - 1) + 1);
       return {
-        art: { kind: "sheet", sheet: sheet(math, design(3, SPONGE, "triangles", "level"), 3, level), ink: "fills" },
+        art: { kind: "sheet", sheet: sheet(mrly, design(3, SPONGE, "triangles", "level"), 3, level), ink: "fills" },
         lines: [
           {
             ...read,
             label: "filled triangles, from the unit hexagon",
-            terms: [String(census(math, 1).fills), ...read.terms],
+            terms: [String(census(mrly, 1).fills), ...read.terms],
             closed: "",
           },
         ],
@@ -280,10 +281,10 @@ export const CARDS: Card[] = [
     max: 8,
     first: 4,
     show: (k) => `side ${2 * k - 1}`,
-    build: ({ math, num, book }, k) => {
-      const terms = odds(least(k)).map((n) => String(census(math, n).vertices));
+    build: ({ mrly, num, book }, k) => {
+      const terms = odds(least(k)).map((n) => String(census(mrly, n).vertices));
       return {
-        art: { kind: "sheet", sheet: sheet(math, design(3, SPONGE, "triangles", "side"), 2 * k - 1, 1), ink: "fills" },
+        art: { kind: "sheet", sheet: sheet(mrly, design(3, SPONGE, "triangles", "side"), 2 * k - 1, 1), ink: "fills" },
         lines: [
           { label: "vertices, by odd side", terms, marks: terms.map((t) => num.prime.is_prime(Number(t))), closed: "" },
           item(row(book, 2, "11", "fills", "side", least(k - 1)), "the corner-and-centre fills, by odd side"),
@@ -298,13 +299,13 @@ export const CARDS: Card[] = [
     min: 1,
     max: CAPS.cut,
     first: 4,
-    build: ({ math }, level) => {
-      const profiles = upto(least(level)).map((j) => profile(math, j));
+    build: ({ mrly }, level) => {
+      const profiles = upto(least(level)).map((j) => profile(mrly, j));
       const last = profiles[level - 1];
       return {
         art: {
           kind: "dots",
-          points: [...math.three.diagonal_slice(GASKET, 2, level, 2, last.central)].map((p) => [...p]),
+          points: [...mrly.three.diagonal_slice(GASKET, 2, level, 2, last.central)].map((p) => [...p]),
         },
         sub: `${last.heights} heights, ${last.constant ? "all alike" : "not all alike"}`,
         lines: [{ label: "points on a diagonal plane, by level", terms: profiles.map((p) => p.max), closed: "" }],

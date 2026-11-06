@@ -1,4 +1,5 @@
-import { next, roll } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, next, roll } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts } from "@mrlyprod/ui/kit/run.ts";
@@ -140,9 +141,9 @@ export const filed = (value: Value) => {
   return ["plot", row, ...(mixed(value) ? [value.op] : []), value.chart].join("-");
 };
 
-export const units = wasm("math", "num");
+export const units = wasm(...CRATES, "num");
 
-export const PAGE: Page<Units<"math" | "num">, Stage> = {
+export const PAGE: Page<Units<Crate | "num">, Stage> = {
   defaults: { dim: 2, base: 2, code: "7" },
   design: {
     dim: "dim",
@@ -167,7 +168,7 @@ export const PAGE: Page<Units<"math" | "num">, Stage> = {
     mix: (value) => ({ mix: Number(value.mix) === 1 ? 0 : 1 }),
     design: (value, key, units) => {
       const { dim, base } = spaced(value);
-      const list = booked(units!.math)
+      const list = booked(units!)
         .designs(dim, base)
         .map((one) => one.code);
       return { code: next(list, value.code, key === "ArrowLeft" ? -1 : 1) };
@@ -179,7 +180,7 @@ export const PAGE: Page<Units<"math" | "num">, Stage> = {
   },
   reroll: (value, seed, units) => {
     const { dim, base } = spaced(value);
-    return { code: roll(units!.math, dim, base, rng(seed)) };
+    return { code: roll(units!, dim, base, rng(seed)) };
   },
 };
 

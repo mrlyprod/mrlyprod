@@ -1,0 +1,23 @@
+evens         A005843  2 4 6 8
+odds          A005408  3 5 7
+random_0               2 3
+primes        A000040  2 3 5 7
+binary        A000079  2 4 8
+fibonacci     A000045  2 3 5 8
+grid_squares  A016754  
+carpet_fills  A000567  8
+carpet_voids  A000290  4
+net_fills     A045944  5
+net_voids     A000290  4
+tree_fills    A000384  6
+tree_voids    A014105  3
+void_fills    A001844  5
+void_voids    A046092  4
+point_fills   A000290  4
+point_voids   A000567  8
+dust_fills    A000290  4
+dust_voids    A045944  5
+line_fills    A014105  3
+line_voids    A000384  6
+star_fills    A046092  4
+star_voids    A001844  5

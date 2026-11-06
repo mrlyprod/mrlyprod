@@ -1,0 +1,13 @@
+75 bytes packed
+5 arguments
+
+0  aa                             number Some(42.0)
+1  05 00 00 00 00 00 00 04 40     number Some(2.5)
+2  07 02 00 00 00 68 69           text   Some("hi")
+3  08 03 00 00 00 81 82 83        items  [1.0, 2.0, 3.0]
+4  map of 2 fields, 29 bytes
+     x = Some(7.0) None
+     name = None Some("ada")
+
+text of a number: None
+a missing argument is null: true

@@ -1,0 +1,4 @@
+Leibniz  4(1 - 1/3 + 1/5 ...)   3.140593
+Wallis   2 * product             3.140808
+Basel    sqrt(6 * sum 1/k^2)     3.140638
+pi                               3.141593

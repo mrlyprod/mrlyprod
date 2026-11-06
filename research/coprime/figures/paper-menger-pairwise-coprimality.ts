@@ -1,10 +1,10 @@
+import * as three from "@mrlyprod/three";
 import { frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { three };
 
 export default function draw(pen: Pen, ink: Ink) {
-  const sponge = math.three.carpet(3, 1);
+  const sponge = three.carpet(3, 1);
   if (sponge.shape.join() !== "3,3,3")
     throw new Error(`paper-menger-pairwise-coprimality: sponge ${sponge.shape}, want 3,3,3`);
   const types = sponge.types;

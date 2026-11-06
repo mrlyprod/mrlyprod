@@ -1,5 +1,5 @@
-import type { Ink, Pen } from "@mrlyprod/draw";
 import * as num from "@mrlyprod/num";
+import type { Ink, Pen } from "@mrlyprod/draw";
 
 export const units = { num };
 

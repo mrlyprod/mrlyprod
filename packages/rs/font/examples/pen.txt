@@ -1,0 +1,14 @@
+A: 2 strokes, 16 cells
+  45678
+  3...9
+  2defa
+  1...b
+  0...c
+
+S: 3 strokes, 19 cells
+  cdefg
+  b.i..
+  a9876
+  ..h.5
+  01234
+

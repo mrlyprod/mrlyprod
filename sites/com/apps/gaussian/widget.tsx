@@ -2,20 +2,20 @@ import { paints } from "@mrlyprod/ui/kit/color.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { text } from "@mrlyprod/ui/kit/export.ts";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
-import { useLatest, useStatus, useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates, useLatest, useStatus } from "@mrlyprod/ui/kit/hooks.ts";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
 import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
-import type { Scalar, Seeded, Units } from "@mrlyprod/ui/kit/spec.ts";
+import type { Scalar, Seeded } from "@mrlyprod/ui/kit/spec.ts";
 import type { PointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Facts, Num, Pair, Point, Word } from "./engine.ts";
-import { clicked, coords, FATES, hit, name, parse, product, shelves, study, verdict } from "./engine.ts";
+import { clicked, coords, FATES, hit, LIST, name, parse, product, shelves, study, verdict } from "./engine.ts";
 import type { Gaussian } from "./scene.ts";
 import { make, named, sketch } from "./scene.ts";
 
-type Props = WidgetProps<Units, Gaussian> & { value: Seeded; unit?: Num | null };
+type Props = WidgetProps<Num, Gaussian> & { value: Seeded; unit?: Num | null };
 
 const TAP = 8;
 
@@ -63,7 +63,7 @@ export function rows(facts: Facts | undefined, point: Point | null, missed: bool
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }: Props) {
-  const unit = useUnit("num", given);
+  const unit = useCrates(LIST, given);
   const live = useRef<Handle<Gaussian> | null>(null);
   const from = useRef<Pair | null>(null);
   const now = useLatest(value);
@@ -82,7 +82,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
   const tick = useTheme();
   useStatus(onStatus, rows(plan?.facts, point, missed, value.look));
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, num: unit }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly: unit }),
     [unit],
   );
   const pin = (click: string | null) => {

@@ -1,0 +1,9 @@
+game                           width   growth  first counts
+no repeat                          2   3.0000  [4, 12, 36, 108, 324]
+not one place anticlockwise        2   3.0000  [4, 12, 36, 108, 324]
+not the opposite corner            2   3.0000  [4, 12, 36, 108, 324]
+only a neighbour                   2   2.0000  [4, 8, 16, 32, 64]
+not a neighbour                    2   2.0000  [4, 8, 16, 32, 64]
+the shift rule                     2   2.0000  [4, 8, 16, 32, 64]
+only anticlockwise                 2   1.0000  [4, 4, 4, 4, 4]
+no neighbour after a repeat        3   3.4142  [4, 16, 56, 192, 656]

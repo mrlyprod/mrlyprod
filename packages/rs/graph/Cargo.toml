@@ -1,0 +1,20 @@
+[package]
+name = "mrly-graph"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-error.workspace = true
+mrly-linalg.workspace = true
+mrly-rand.workspace = true
+mrly-tensor.workspace = true
+serde.workspace = true

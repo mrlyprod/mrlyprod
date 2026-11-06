@@ -1,2 +1,2 @@
 - Built.
-- Lives in `packages/math`.
+- Lives in `packages/rs/math`.

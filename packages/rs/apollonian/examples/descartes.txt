@@ -1,0 +1,11 @@
+root quad, sound: true
+  k=-1 x= 0 y= 0
+  k= 2 x= 1 y= 0
+  k= 2 x=-1 y= 0
+  k= 3 x= 0 y= 2
+
+swap one circle for its twin:
+  k=-1 -> k=15, new quad sound: true
+  k= 2 -> k= 6, new quad sound: true
+  k= 2 -> k= 6, new quad sound: true
+  k= 3 -> k= 3, new quad sound: true

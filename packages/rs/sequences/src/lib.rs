@@ -1,11 +1,12 @@
+pub mod counts;
 pub mod measure;
 
 pub use measure::{Cost, Measure};
 
-use mrly_core::error::{Result, value_error};
-use mrly_core::name::Named;
-use mrly_math::counts::Closed;
+use crate::counts::Closed;
+use mrly_error::{Result, value_error};
 use mrly_math::name::{Bang, Sequence as SequenceName};
+use mrly_name::Named;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Axis {

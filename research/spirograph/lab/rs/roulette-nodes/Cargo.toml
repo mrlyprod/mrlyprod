@@ -3,7 +3,7 @@ name = "roulette-nodes"
 edition = "2021"
 
 [dependencies]
-mrly-math = "0.2.0"
 mrly-num = "0.2.0"
+mrly-roulette = "0.2.0"
 
 [workspace]

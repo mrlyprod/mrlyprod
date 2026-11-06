@@ -3,8 +3,9 @@ name = "automata-census"
 edition = "2021"
 
 [dependencies]
-mrly-core = "0.2.0"
+mrly-bang = "0.2.0"
 mrly-math = "0.2.0"
 mrly-num = "0.2.0"
+mrly-tensor = "0.2.0"
 
 [workspace]

@@ -1,9 +1,10 @@
+import * as cropUnit from "@mrlyprod/crop";
 import type { Color, Pen, Tensor } from "@mrlyprod/draw";
 import { Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { crop: cropUnit, two };
 
 const CODE = 7;
 const BASE = 2;
@@ -16,12 +17,12 @@ let held: Tensor | null = null;
 
 function crop() {
   if (held) return held;
-  const tile = math.two.create(CODE, NUMBER, LEVEL, 0, BASE);
-  const r = new math.shape.Frac(RADIUS[0], RADIUS[1]);
-  const ball = math.shape.named("ball", 2, r);
+  const tile = two.create(CODE, NUMBER, LEVEL, 0, BASE);
+  const r = new cropUnit.Frac(RADIUS[0], RADIUS[1]);
+  const ball = cropUnit.named("ball", 2, r);
   r.free();
-  const map = math.shape.regions(ball, tile.shape).data;
-  const { filled } = math.shape.census(ball, { shape: tile.shape, data: tile.types });
+  const map = cropUnit.regions(ball, tile.shape).data;
+  const { filled } = cropUnit.census(ball, { shape: tile.shape, data: tile.types });
   if (tile.shape[0] !== WANT.side || filled[2] !== WANT.in || filled[1] !== WANT.cut)
     throw new Error(
       `crop: a side of ${tile.shape[0]} keeps ${filled[2]} in and ${filled[1]} cut, want ${WANT.side}, ${WANT.in} and ${WANT.cut}`,

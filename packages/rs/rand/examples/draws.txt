@@ -1,0 +1,7 @@
+unit     0.811612
+below 10 7
+range    -4
+boolean  true
+chance   true
+next     590 590
+seed 2   0.765235

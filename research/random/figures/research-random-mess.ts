@@ -1,7 +1,7 @@
+import * as two from "@mrlyprod/two";
 import { frame as box, Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { two };
 
 const LEVEL = 6;
 const SIDE = 1 << LEVEL;
@@ -20,7 +20,7 @@ function primes() {
 }
 
 function lucas() {
-  const cells = math.two.create(LUCAS, 2, LEVEL, 0, 2);
+  const cells = two.create(LUCAS, 2, LEVEL, 0, 2);
   if (cells.shape[0] !== SIDE || cells.shape[1] !== SIDE)
     throw new Error(`research-random-mess: level ${LEVEL} is ${cells.shape}, want ${SIDE} square`);
   const mask: boolean[][] = [];

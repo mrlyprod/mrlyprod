@@ -1,8 +1,9 @@
+import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Vec, Vec3 } from "../gl/vec.ts";
 import { add, cross, dot, len, mix, mul, norm, rot, smooth, sub } from "../gl/vec.ts";
 
-export type Door = Pick<typeof import("@mrlyprod/math"), "bang">;
+export type Door = Had<"bang" | "math">;
 
 export type Design = { code: number; n: number };
 
@@ -208,10 +209,10 @@ const pilots: Partial<Record<string, Pilot>> = PILOTS;
 
 const grids = new Map<string, Uint8Array>();
 
-export function cells(math: Door, code: number, n: number): Uint8Array {
+export function cells(mrly: Door, code: number, n: number): Uint8Array {
   const key = `${code}:${n}`;
   if (grids.has(key)) return grids.get(key)!;
-  const { data } = math.bang.factory.create(code, n, 3, 2, 1);
+  const { data } = mrly.math.factory.create(code, n, 3, 2, 1);
   const out = new Uint8Array(n * n * n);
   for (let z = 0; z < n; z++)
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) out[(z * n + y) * n + x] = data[(x * n + y) * n + z];
@@ -289,8 +290,8 @@ function whole(all: Uint8Array, n: number, full: number) {
   return seen.size === full;
 }
 
-export function gate(math: Door, code: number, n: number): boolean {
-  const all = cells(math, code, n);
+export function gate(mrly: Door, code: number, n: number): boolean {
+  const all = cells(mrly, code, n);
   let full = 0;
   let empty = 0;
   let walls = 0;
@@ -310,36 +311,36 @@ export function gate(math: Door, code: number, n: number): boolean {
 
 const tables = new WeakMap<Door, Table>();
 
-const table = (math: Door): Table => {
-  if (!tables.has(math)) {
-    const all = math.bang.bang(3).all();
-    tables.set(math, {
+const table = (mrly: Door): Table => {
+  if (!tables.has(mrly)) {
+    const all = mrly.bang.bang(3).all();
+    tables.set(mrly, {
       canon: all.map((one) => Number(one.class_rep)),
-      classes: math.bang.universe_codes(3).map(Number).filter(Boolean),
+      classes: mrly.bang.universe_codes(3).map(Number).filter(Boolean),
     });
     for (const one of all) one.free();
   }
-  return tables.get(math)!;
+  return tables.get(mrly)!;
 };
 
-export const canon = (math: Door, code: number): number => table(math).canon[code];
+export const canon = (mrly: Door, code: number): number => table(mrly).canon[code];
 
-export const classes = (math: Door): number[] => table(math).classes;
+export const classes = (mrly: Door): number[] => table(mrly).classes;
 
-export function name(math: Door, code: number): string {
-  const { canon: of } = table(math);
+export function name(mrly: Door, code: number): string {
+  const { canon: of } = table(mrly);
   const hit = NAMES.find(([one]) => one === code) ?? NAMES.find(([one]) => of[one] === of[code]);
   return hit ? hit[1] : `class ${of[code]}`;
 }
 
-export function teach(math: Door, code: number, n: number): Lesson {
-  const count = cells(math, code, n).reduce((a, b) => a + b, 0);
+export function teach(mrly: Door, code: number, n: number): Lesson {
+  const count = cells(mrly, code, n).reduce((a, b) => a + b, 0);
   return {
     bits: code.toString(2).padStart(8, "0"),
     kept: count,
     fill: count / n ** 3,
     dimension: count ? Math.log(count) / Math.log(n) : 0,
-    class: canon(math, code),
+    class: canon(mrly, code),
   };
 }
 
@@ -349,29 +350,29 @@ const gated = new Map<number, number[]>();
 
 const flyable = new Map<number, number[]>();
 
-export function codes(math: Door, n: number, pick?: string): number[] {
+export function codes(mrly: Door, n: number, pick?: string): number[] {
   if (pick === "all") return ALL;
-  if (pick === "named") return classes(math);
+  if (pick === "named") return classes(mrly);
   if (pick === "family") return NAMES.map(([code]) => code);
   if (pick === "flyable") {
     if (!flyable.has(n))
       flyable.set(
         n,
-        ALL.filter((code) => net(math, code, n).doors.some((list) => list.length)),
+        ALL.filter((code) => net(mrly, code, n).doors.some((list) => list.length)),
       );
     return flyable.get(n)!;
   }
   if (!gated.has(n))
     gated.set(
       n,
-      Array.from({ length: 256 }, (_, code) => code).filter((code) => gate(math, code, n)),
+      Array.from({ length: 256 }, (_, code) => code).filter((code) => gate(mrly, code, n)),
     );
   return gated.get(n)!;
 }
 
-export function pickCode(math: Door, value: Choice, seed: number): number {
+export function pickCode(mrly: Door, value: Choice, seed: number): number {
   if (value.code >= 0) return value.code;
-  const pool = codes(math, value.n, value.pick);
+  const pool = codes(mrly, value.n, value.pick);
   return pool.length ? pool[Math.floor(rng((seed ^ CHOICE) >>> 0)() * pool.length)] : 23;
 }
 
@@ -396,10 +397,10 @@ function face(n: number, g: number): number[][] {
 const lateral = (all: Uint8Array, n: number, c: readonly number[], d: number) =>
   DIRS.reduce((sum, e, g) => sum + (axis(g) !== axis(d) && read(all, n, add(c, e)) === 1 ? 1 : 0), 0);
 
-function net(math: Door, code: number, n: number): Web {
+function net(mrly: Door, code: number, n: number): Web {
   const key = `${code}:${n}`;
   if (nets.has(key)) return nets.get(key)!;
-  const all = cells(math, code, n);
+  const all = cells(mrly, code, n);
   const comp = new Int32Array(all.length).fill(-1);
   const leave: number[][] = [];
   for (let k = 0; k < all.length; k++) {
@@ -547,11 +548,11 @@ const weigh = (w: number[], list: Vec[]): number[] =>
 
 const total = (w: number[], list: number[]) => list.reduce((acc, v, i) => acc + v * w[i], 0);
 
-export function route(math: Door, design: Design, seed = 0, { pilot: style = "steady" }: RouteOptions = {}): Route {
+export function route(mrly: Door, design: Design, seed = 0, { pilot: style = "steady" }: RouteOptions = {}): Route {
   const { n } = design;
   const pilot = pilots[style] ?? PILOTS.steady;
   const behind = pilot.window + 2 * pilot.gap - pilot.lead;
-  const web = net(math, design.code, n);
+  const web = net(mrly, design.code, n);
   const { all } = web;
   if (!all.some(Boolean)) throw new Error(`bang: code ${design.code} is empty`);
   const dive = !web.doors.some((list) => list.length);

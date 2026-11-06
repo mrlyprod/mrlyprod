@@ -47,11 +47,19 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 name = "ledger"
 version = "0.0.0"
 dependencies = [
- "mrly-core",
+ "mrly-arcs",
+ "mrly-bang",
+ "mrly-error",
+ "mrly-gaussian",
  "mrly-life",
  "mrly-math",
+ "mrly-name",
  "mrly-num",
  "mrly-sequences",
+ "mrly-six",
+ "mrly-tensor",
+ "mrly-three",
+ "mrly-two",
 ]
 
 [[package]]
@@ -61,10 +69,73 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
-name = "mrly-core"
+name = "mrly-arcs"
 version = "0.2.0"
 dependencies = [
+ "mrly-error",
+ "mrly-math",
+ "serde",
+]
+
+[[package]]
+name = "mrly-bang"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-math",
+ "mrly-name",
+ "mrly-num",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-color"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-rand",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-error"
+version = "0.2.0"
+
+[[package]]
+name = "mrly-gaussian"
+version = "0.2.0"
+dependencies = [
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-graph"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-linalg",
+ "mrly-rand",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-image"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
  "mrly-wire",
+ "serde",
+]
+
+[[package]]
+name = "mrly-json"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
  "serde",
  "serde_json",
 ]
@@ -73,19 +144,47 @@ dependencies = [
 name = "mrly-life"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
+ "mrly-color",
+ "mrly-error",
+ "mrly-image",
  "mrly-math",
+ "mrly-name",
  "mrly-num",
+ "mrly-rand",
+ "mrly-sequences",
+ "mrly-tensor",
+ "mrly-two",
  "serde",
+]
+
+[[package]]
+name = "mrly-linalg"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-rand",
 ]
 
 [[package]]
 name = "mrly-math"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
- "mrly-num",
+ "mrly-color",
+ "mrly-error",
+ "mrly-json",
+ "mrly-name",
+ "mrly-rand",
+ "mrly-tensor",
  "mrly-wire",
+ "serde",
+]
+
+[[package]]
+name = "mrly-name"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-json",
  "serde",
 ]
 
@@ -93,7 +192,15 @@ dependencies = [
 name = "mrly-num"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
+ "mrly-error",
+ "serde",
+]
+
+[[package]]
+name = "mrly-rand"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
  "serde",
 ]
 
@@ -101,8 +208,70 @@ dependencies = [
 name = "mrly-sequences"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
+ "mrly-error",
+ "mrly-graph",
  "mrly-math",
+ "mrly-name",
+ "mrly-num",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-six"
+version = "0.2.0"
+dependencies = [
+ "mrly-color",
+ "mrly-error",
+ "mrly-graph",
+ "mrly-image",
+ "mrly-json",
+ "mrly-math",
+ "mrly-rand",
+ "mrly-tensor",
+ "mrly-three",
+ "mrly-two",
+ "serde",
+]
+
+[[package]]
+name = "mrly-tensor"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-wire",
+ "serde",
+]
+
+[[package]]
+name = "mrly-three"
+version = "0.2.0"
+dependencies = [
+ "mrly-color",
+ "mrly-error",
+ "mrly-graph",
+ "mrly-json",
+ "mrly-math",
+ "mrly-rand",
+ "mrly-sequences",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-two"
+version = "0.2.0"
+dependencies = [
+ "mrly-color",
+ "mrly-error",
+ "mrly-graph",
+ "mrly-image",
+ "mrly-json",
+ "mrly-math",
+ "mrly-rand",
+ "mrly-tensor",
+ "mrly-three",
+ "serde",
 ]
 
 [[package]]
@@ -199,5 +368,97 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
 
 [[patch.unused]]
+name = "mrly-apollonian"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-automaton"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-chaos"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-chladni"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-coarray"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-crop"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-fft"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-font"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-four"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-kummer"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-ladder"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-moire"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-radix"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-readings"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-roulette"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-spin"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-star"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-sumset"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-thue"
+version = "0.2.0"
+
+[[patch.unused]]
 name = "mrly-tile"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-tourbillon"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-ulam"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-wolfram"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-zeta"
 version = "0.2.0"

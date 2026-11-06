@@ -1,5 +1,6 @@
-import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
 import * as num from "@mrlyprod/num";
+import * as zeta from "@mrlyprod/zeta";
+import { type Color, type Frame, frame, type Ink, type Pen, type Point, plot } from "@mrlyprod/draw";
 import census from "./paper-novelty-meter.json" with { type: "json" };
 
 const LOW = 8;
@@ -8,7 +9,7 @@ const PER_OCTAVE = 16;
 const ZEROS = 29;
 const CURVE = 2400;
 
-export const units = { num };
+export const units = { num, zeta };
 
 let memo: number[] | undefined;
 
@@ -18,18 +19,18 @@ function wave() {
   const samples = Math.round((HIGH - LOW) * PER_OCTAVE) + 1;
   if (smooth.length !== samples || rough.length !== samples)
     throw new Error(`paper-novelty-meter: ${smooth.length} smooth and ${rough.length} rough samples, want ${samples}`);
-  const line = new num.zeta.Line();
+  const line = new zeta.Line();
   const gammas = line.zeros(ZEROS);
   if (!(Math.abs(gammas[0] - 14.134725) < 1e-6))
     throw new Error(`paper-novelty-meter: first zero ${gammas[0]}, want 14.134725`);
   if (!(Math.abs(gammas[ZEROS - 1] - 98.831194) < 1e-5))
     throw new Error(`paper-novelty-meter: last zero ${gammas[ZEROS - 1]}, want 98.831194`);
   const coef = line.novelty_coefficients(gammas);
-  if (!(Math.abs(num.zeta.Complex.abs(coef[0]) - 0.1879) < 5e-4))
-    throw new Error(`paper-novelty-meter: first coefficient ${num.zeta.Complex.abs(coef[0])}, want 0.1879`);
-  if (!(Math.abs(num.zeta.Complex.abs(coef[9]) - 4.286e-3) < 5e-6))
-    throw new Error(`paper-novelty-meter: tenth coefficient ${num.zeta.Complex.abs(coef[9])}, want 0.004286`);
-  const at = (j: number) => num.zeta.novelty_wave(gammas, coef, -j * Math.LN2);
+  if (!(Math.abs(num.complex.Complex.abs(coef[0]) - 0.1879) < 5e-4))
+    throw new Error(`paper-novelty-meter: first coefficient ${num.complex.Complex.abs(coef[0])}, want 0.1879`);
+  if (!(Math.abs(num.complex.Complex.abs(coef[9]) - 4.286e-3) < 5e-6))
+    throw new Error(`paper-novelty-meter: tenth coefficient ${num.complex.Complex.abs(coef[9])}, want 0.004286`);
+  const at = (j: number) => zeta.novelty_wave(gammas, coef, -j * Math.LN2);
   const peak = smooth.reduce((a, v) => Math.max(a, Math.abs(v)), 0);
   const miss = smooth.reduce((m, v, k) => Math.max(m, Math.abs(v - at(LOW + k / PER_OCTAVE))), 0);
   if (!(miss / peak < 1e-2)) throw new Error(`paper-novelty-meter: the zeros miss ${miss / peak}, want under 0.01`);

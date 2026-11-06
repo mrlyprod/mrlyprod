@@ -1,6 +1,6 @@
-use mrly_core::tensor::Tensor;
-use mrly_math::two::Cell2d;
-use mrly_core::Result;
+use mrly_error::Result;
+use mrly_tensor::Tensor;
+use mrly_two::Cell2d;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Grid {

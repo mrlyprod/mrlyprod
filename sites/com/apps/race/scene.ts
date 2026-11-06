@@ -1,6 +1,7 @@
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb, TINTS, veil } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Ready } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
@@ -59,7 +60,7 @@ export type Stat = {
   sides: Told[];
 };
 
-export type Given = Opts & { math?: Mrly | null; onTell?: (stat: Stat) => void };
+export type Given = Opts & { mrly?: Mrly | null; onTell?: (stat: Stat) => void };
 
 export type Seen = Pick<View, "w" | "h" | "dpr" | "t"> &
   Partial<Pick<View, "rand" | "still" | "lock" | "fixed" | "wake">> & { look: () => Pick<Paints, "accent"> };
@@ -147,7 +148,7 @@ export const MATCHUPS: [string, string][] = [
   ["494", "254"],
 ];
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   spec: SPEC,
@@ -212,8 +213,8 @@ const glow = (h: number) => TOP * Math.min(1, h / HOT);
 const won = (over: Over | null, s: number) => over?.how === "goal" && over.winner === s;
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const math = opts.math;
-  if (!math) throw new Error("race: the scene wants @mrlyprod/math as opts.math");
+  const mrly = opts.mrly;
+  if (!mrly) throw new Error("race: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
   const hands = !view.lock;
   let value = tidy(SPEC, opts) as Knobs;
@@ -283,7 +284,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     dirty = true;
   };
   const replan = () => {
-    ({ plan: laid, walk } = planned(math, hands ? value : { ...value, a: opts.a ?? "", b: opts.b ?? "" }, seed));
+    ({ plan: laid, walk } = planned(mrly, hands ? value : { ...value, a: opts.a ?? "", b: opts.b ?? "" }, seed));
     if (laid.side !== n) {
       n = laid.side;
       sheets = laid.sides.map(() => {

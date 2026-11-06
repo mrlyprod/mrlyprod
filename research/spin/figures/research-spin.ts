@@ -1,6 +1,8 @@
-import * as core from "@mrlyprod/core";
-import { field, type Ink, type Pen } from "@mrlyprod/draw";
 import * as math from "@mrlyprod/math";
+import * as spin from "@mrlyprod/spin";
+import * as tensor from "@mrlyprod/tensor";
+import * as two from "@mrlyprod/two";
+import { field, type Ink, type Pen } from "@mrlyprod/draw";
 
 type Profile = { rings: Float64Array; lo: number; hi: number };
 
@@ -8,16 +10,16 @@ const LEVEL = 5;
 const SIDE = 243;
 const RINGS = 1600;
 
-export const units = { core, math };
+export const units = { math, spin, tensor, two };
 
 function mirror() {
-  const carpet = math.two.create(495, 3, LEVEL, 0, 3);
+  const carpet = two.create(495, 3, LEVEL, 0, 3);
   if (carpet.shape[0] !== SIDE || carpet.shape[1] !== SIDE)
     throw new Error(`research-spin: carpet ${carpet.shape}, want ${SIDE} square`);
   const flat = { shape: carpet.shape, data: carpet.types };
-  const down = core.tensor.flip(flat, 0);
-  const quarters = [core.tensor.flip(down, 1), down, core.tensor.flip(flat, 1), flat];
-  const whole = core.cell.merge(
+  const down = tensor.flip(flat, 0);
+  const quarters = [tensor.flip(down, 1), down, tensor.flip(flat, 1), flat];
+  const whole = math.cell.base.merge(
     quarters.map((q) => ({ shape: q.shape, types: q.data })),
     new Uint32Array([2, 2]),
   );
@@ -30,7 +32,7 @@ function profile(): Profile {
   if (memo) return memo;
   const field = mirror();
   const rings = new Float64Array(RINGS + 1);
-  for (let k = 0; k <= RINGS; k++) rings[k] = math.spin.ring(field, 2 * SIDE, (SIDE * k) / RINGS);
+  for (let k = 0; k <= RINGS; k++) rings[k] = spin.ring(field, 2 * SIDE, (SIDE * k) / RINGS);
   let lo = Number.MAX_VALUE;
   let hi = -Number.MAX_VALUE;
   for (const v of rings) {

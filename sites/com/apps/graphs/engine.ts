@@ -1,4 +1,4 @@
-import type { graph } from "@mrlyprod/math";
+import type * as graph from "@mrlyprod/graph";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { canon, roll, title } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
@@ -162,7 +162,7 @@ export function turn(value: Raw, by: number): Graph {
 }
 
 export function bound(
-  math: Mrly,
+  mrly: Mrly,
   space: Space,
   base: number,
   code: string,
@@ -173,23 +173,23 @@ export function bound(
   if (space === "hex")
     return Number(
       graph === "edge"
-        ? math.counts.six.solid_slice_vertices(number ** level)
-        : math.counts.six.grid_triangles(number, level),
+        ? mrly.sequences.counts.six.solid_slice_vertices(number ** level)
+        : mrly.sequences.counts.six.grid_triangles(number, level),
     );
   const dim = space === "cube" ? 3 : 2;
-  if (graph === "tunnel") return Number(math.counts.void_(code, number, dim, level, base));
-  return Number(math.counts.fill(code, number, dim, level, base)) * (graph === "edge" ? 2 ** dim : 1);
+  if (graph === "tunnel") return Number(mrly.sequences.counts.void_(code, number, dim, level, base));
+  return Number(mrly.sequences.counts.fill(code, number, dim, level, base)) * (graph === "edge" ? 2 ** dim : 1);
 }
 
-export function top(math: Mrly, value: Knobs, room?: number): number {
+export function top(mrly: Mrly, value: Knobs, room?: number): number {
   const space = spaceOf(value);
   const { dim, base, code } = design(value);
-  const settled = canon(math, dim, base, code);
+  const settled = canon(mrly, dim, base, code);
   const budget = room ?? BUDGET[value.layout] ?? BUDGET.force;
   const fits = (level: number) => {
     if (value.number ** (level * dim) > GRID) return false;
     try {
-      return bound(math, space, base, settled, value.number, level, kindOf(value)) <= budget;
+      return bound(mrly, space, base, settled, value.number, level, kindOf(value)) <= budget;
     } catch {
       return false;
     }
@@ -199,37 +199,37 @@ export function top(math: Mrly, value: Knobs, room?: number): number {
   return level;
 }
 
-function aspect(math: Mrly, net: graph.Network): graph.Network {
+function aspect(mrly: Mrly, net: graph.Network): graph.Network {
   const data = net.toJSON();
   net.free();
-  return math.graph.Network.from({
+  return mrly.graph.Network.from({
     ...data,
     nodes: data.nodes.map((node) => ({ ...node, position: node.position.map((p, a) => p * ASPECT[a]) })),
   });
 }
 
-export function build(math: Mrly, site: Site, base: number, code: string, number: number, level: number): Built {
+export function build(mrly: Mrly, site: Site, base: number, code: string, number: number, level: number): Built {
   if (site.space === "flat") {
-    const cell = math.two.create(code, number, level, 0, base);
+    const cell = mrly.two.create(code, number, level, 0, base);
     return {
       side: cell.shape[0],
-      net: math.graph[`${site.graph}_graph`]({ shape: cell.shape, data: cell.types }),
-      euler: count(math.two.census(cell).euler),
+      net: mrly.graph[`${site.graph}_graph`]({ shape: cell.shape, data: cell.types }),
+      euler: count(mrly.two.census(cell).euler),
     };
   }
-  const cell = math.three.create(code, number, level, base);
+  const cell = mrly.three.create(code, number, level, base);
   if (site.space === "cube")
     return {
       side: cell.shape[0],
-      net: math.graph[`${site.graph}_graph`]({ shape: cell.shape, data: cell.types }),
-      euler: count(math.three.census(cell).euler),
+      net: mrly.graph[`${site.graph}_graph`]({ shape: cell.shape, data: cell.types }),
+      euler: count(mrly.three.census(cell).euler),
     };
-  const cut = math.six.cut(cell);
+  const cut = mrly.six.cut(cell);
   const net =
     site.graph === "edge"
-      ? math.six.slice_edge_graph(cut, math.six.FILL())
-      : math.six[`slice_${site.graph}_graph`](cut);
-  return { side: cell.shape[0], net: aspect(math, net), euler: count(math.six.fills_only(cut).euler) };
+      ? mrly.six.slice_edge_graph(cut, mrly.six.FILL())
+      : mrly.six[`slice_${site.graph}_graph`](cut);
+  return { side: cell.shape[0], net: aspect(mrly, net), euler: count(mrly.six.fills_only(cut).euler) };
 }
 
 export function flatten(net: graph.Network): Flat {
@@ -250,13 +250,13 @@ export function flatten(net: graph.Network): Flat {
 
 const sights = new Map<string, Flat>();
 
-export function glimpse(math: Mrly, value: Seed, graph: Graph): Flat {
+export function glimpse(mrly: Mrly, value: Seed, graph: Graph): Flat {
   const site = siteOf({ ...value, graph });
   const { dim, base, code } = design(value);
   const at = [site.space, base, code, site.graph].join(":");
   if (!sights.has(at)) {
     if (sights.size >= KEPT) sights.clear();
-    const { net } = build(math, site, base, canon(math, dim, base, code), SEEN, DEPTH);
+    const { net } = build(mrly, site, base, canon(mrly, dim, base, code), SEEN, DEPTH);
     sights.set(at, flatten(net));
     net.free();
   }
@@ -273,8 +273,8 @@ export function plane({ dim, count, positions }: Flat): Float64Array {
   return out;
 }
 
-export function roles(math: Mrly, net: graph.Network): Uint8Array {
-  return Uint8Array.from(math.graph.roles(net), (role) => Math.max(0, SAID.indexOf(role)));
+export function roles(mrly: Mrly, net: graph.Network): Uint8Array {
+  return Uint8Array.from(mrly.graph.roles(net), (role) => Math.max(0, SAID.indexOf(role)));
 }
 
 export function body(role: Uint8Array): number {
@@ -288,8 +288,8 @@ export const joined = (big: number, count: number) => big * 10 >= count * 9;
 export const worthy = (role: Uint8Array, big: number) =>
   body(role) >= LEAST && body(role) * 2 > role.length && joined(big, role.length);
 
-export function giant(math: Mrly, net: graph.Network): number {
-  const part = math.graph.largest_component(net);
+export function giant(mrly: Mrly, net: graph.Network): number {
+  const part = mrly.graph.largest_component(net);
   const size = part.nodes.length;
   part.free();
   return size;
@@ -299,7 +299,7 @@ const dealt = (space: Space, rand: Rng): Site =>
   space === "hex" ? { space, graph: pick(rand, KINDS.hex) } : { space, graph: pick(rand, KINDS[space]) };
 
 export function deal(
-  math: Mrly,
+  mrly: Mrly,
   value: Knobs,
   rand: Rng,
   ask: Ask = { code: true, graph: true, level: true, layout: true },
@@ -309,24 +309,24 @@ export function deal(
   const { dim, base, code: kept } = design(value);
   let best: Best | null = null;
   for (let go = 0; go < ROLLS; go++) {
-    const code = ask.code ? roll(math, dim, base, rand) : canon(math, dim, base, kept);
+    const code = ask.code ? roll(mrly, dim, base, rand) : canon(mrly, dim, base, kept);
     const site = ask.graph ? dealt(space, rand) : siteOf(value);
     const graph = site.graph;
     const layout = ask.layout ? pick(rand, ["lattice", "force"]) : value.layout;
     const asked = { ...value, code, graph, layout };
-    const most = top(math, asked, room);
+    const most = top(mrly, asked, room);
     const low = Math.min(LOW, most);
     const level = ask.level ? low + Math.floor(rand() * (most - low + 1)) : Math.min(value.level, most);
     const { net } = build(
-      math,
+      mrly,
       site,
       base,
       code,
       value.number,
-      Math.min(level, top(math, { ...asked, layout: "force" })),
+      Math.min(level, top(mrly, { ...asked, layout: "force" })),
     );
-    const role = roles(math, net);
-    const big = giant(math, net);
+    const role = roles(mrly, net);
+    const big = giant(mrly, net);
     net.free();
     const fine = worthy(role, big);
     if (fine || !best || big > best.big) best = { code, graph, layout, level, big, whole: joined(big, role.length) };
@@ -336,17 +336,17 @@ export function deal(
   return { code, graph, level, layout: ask.layout && !whole ? "lattice" : layout };
 }
 
-export function study(math: Mrly, value: Knobs): Plan {
+export function study(mrly: Mrly, value: Knobs): Plan {
   const site = siteOf(value);
   const { space, graph } = site;
   const { dim, base, code: asked } = design(value);
-  const code = canon(math, dim, base, asked);
-  const most = top(math, { ...value, code });
+  const code = canon(mrly, dim, base, asked);
+  const most = top(mrly, { ...value, code });
   const level = Math.max(1, Math.min(value.level, most));
-  const { side, net, euler } = build(math, site, base, code, value.number, level);
-  const census = math.graph.census(net);
+  const { side, net, euler } = build(mrly, site, base, code, value.number, level);
+  const census = mrly.graph.census(net);
   const { dim: drawn, count: nodes, positions, pairs } = flatten(net);
-  const role = roles(math, net);
+  const role = roles(mrly, net);
   const links = pairs.length / 2;
   const shade = {
     nodes: role,
@@ -354,8 +354,8 @@ export function study(math: Mrly, value: Knobs): Plan {
   };
   const facts: Facts = {
     code,
-    name: math.name.of(code, dim, base) ?? "",
-    title: title(math, dim, base, code),
+    name: mrly.math.name.of(code, dim, base) ?? "",
+    title: title(mrly, dim, base, code),
     space,
     dim,
     base,

@@ -1,8 +1,9 @@
+import * as graph from "@mrlyprod/graph";
+import * as two from "@mrlyprod/two";
 import type { Ink, Pen, Point } from "@mrlyprod/draw";
 import { plot } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { graph, two };
 
 const LEVEL = 6;
 
@@ -10,10 +11,10 @@ let memo: { values: Float64Array; ones: number } | undefined;
 
 function spectrum() {
   if (memo) return memo;
-  const cell = math.two.create(7, 2, LEVEL, 0, 2);
-  const network = math.graph.core_graph({ shape: cell.shape, data: cell.types });
-  const values = math.spectrum.laplacian_spectrum(network, true);
-  const ones = math.spectrum.multiplicity(values, 1, 1e-9);
+  const cell = two.create(7, 2, LEVEL, 0, 2);
+  const network = graph.core_graph({ shape: cell.shape, data: cell.types });
+  const values = graph.spectrum.laplacian_spectrum(network, true);
+  const ones = graph.spectrum.multiplicity(values, 1, 1e-9);
   if (values.length !== 729) throw new Error(`research-complexity: ${values.length} eigenvalues, want 729`);
   if (ones !== 243) throw new Error(`research-complexity: ${ones} ones, want 243`);
   memo = { values, ones };

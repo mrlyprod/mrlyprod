@@ -1,10 +1,11 @@
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
-import { useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates } from "@mrlyprod/ui/kit/hooks.ts";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Patch, Seeded, Value } from "@mrlyprod/ui/kit/spec.ts";
@@ -19,7 +20,7 @@ import { name as called, make, SPEC, sketch, WINDOWS } from "./scene.ts";
 
 export type CropsProps = { value: Value; onChange: (patch: Patch) => void; unit: Mrly };
 
-type Props = WidgetProps<Mathy, Crop> & { value: Seeded };
+type Props = WidgetProps<Mrly, Crop> & { value: Seeded };
 
 export function rows(f: Facts): Readout[] {
   const crop: Readout[] = [
@@ -100,7 +101,7 @@ export function Crops({ value, onChange, unit }: CropsProps) {
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, units }: Props) {
-  const unit = useUnit("math", units?.math);
+  const unit = useCrates(CRATES, units);
   const live = useRef<Handle<Crop> | null>(null);
   const now = useRef(value);
   now.current = value;
@@ -109,7 +110,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units }: 
   useStatus(live, `${have}:${JSON.stringify(value)}`, onStatus, rows);
   useShots(onExport, live, have, () => called(now.current));
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math: unit }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly: unit }),
     [unit],
   );
   const ready = (handle: Handle<Crop> | null) => {

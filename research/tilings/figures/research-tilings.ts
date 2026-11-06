@@ -1,17 +1,17 @@
-import * as core from "@mrlyprod/core";
+import * as color from "@mrlyprod/color";
 import { frame as box, Grid, type Ink, type Pen } from "@mrlyprod/draw";
 import census from "./research-tilings.json" with { type: "json" };
 
 const LEVELS = 3;
 
-export const units = { core };
+export const units = { color };
 
 export default function draw(pen: Pen, ink: Ink) {
   const owners: number[][] = census.owners;
   if (owners.length !== LEVELS) throw new Error(`research-tilings: ${owners.length} levels, want ${LEVELS}`);
   const frame = pen.frame(0.08);
   const unit = frame.w / 30;
-  const [tint, blue, shadow] = core.colors.shades(core.colors.BLUE());
+  const [tint, blue, shadow] = color.shades(color.BLUE());
   const tones = [ink.yellow, tint, blue, shadow];
   let corner = 0;
   owners.forEach((owner, n) => {

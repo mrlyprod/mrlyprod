@@ -1,0 +1,18 @@
+[package]
+name = "mrly-radix"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-error.workspace = true
+mrly-gaussian.workspace = true
+serde.workspace = true

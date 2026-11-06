@@ -1,0 +1,7 @@
+name         norm digits    dim   k^level  distinct
+twindragon      2      2  2.000        16        16
+gasket          4      3  1.585        81        81
+koch            9      4  1.262       256       256
+terdragon       3      3  2.000        81        43
+flowsnake       7      7  2.000      2401      2401
+level 4

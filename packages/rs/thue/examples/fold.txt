@@ -1,0 +1,6 @@
+parity lift, side 8, tile side 2
+  tile [0, 1, 1, 0]
+  level 3, folds true, faults 0
+
+same grid with cell 27 flipped
+  folds false, faults 1, first fault at Some((3, 3))

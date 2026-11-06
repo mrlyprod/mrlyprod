@@ -1,7 +1,7 @@
 use crate::design::Shape;
 use crate::grid::Grid;
-use mrly_core::error::value_error;
-use mrly_core::Result;
+use mrly_error::value_error;
+use mrly_error::Result;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum MaskSpec {
@@ -280,9 +280,9 @@ fn shift_add(out: &mut [i32], src: &[i32], h: usize, w: usize, dr: i64, dc: i64)
 mod tests {
     use super::*;
     use crate::design::standard_shapes;
-    use mrly_core::Rng;
     use mrly_life::{design_mask, moore, next_grid, Boundary};
-    use mrly_math::bang::Code;
+    use mrly_math::code::Code;
+    use mrly_rand::Rng;
 
     fn noise(h: usize, w: usize, seed: u64) -> Grid {
         let mut rng = Rng::new(seed);

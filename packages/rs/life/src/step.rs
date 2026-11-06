@@ -1,8 +1,8 @@
 use super::Boundary;
-use mrly_core::error::Result;
-use mrly_core::tensor::Tensor;
+use mrly_error::Result;
 use mrly_math::cell::models::counting_dtype;
-use mrly_math::two::Cell2d;
+use mrly_tensor::Tensor;
+use mrly_two::Cell2d;
 
 pub fn next_grid(
     cell: &Cell2d,

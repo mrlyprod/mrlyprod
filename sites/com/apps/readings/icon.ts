@@ -1,9 +1,9 @@
 import type { Color, Pen } from "@mrlyprod/draw";
 import { Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as num from "@mrlyprod/num";
+import * as readings from "@mrlyprod/readings";
 
-export const units = { num };
+export const units = { readings };
 
 const SIDE = 8;
 const GAP = 0.1;
@@ -15,9 +15,9 @@ let cells: Int8Array | null = null;
 
 function signs() {
   if (cells) return cells;
-  const thue = num.readings.Design.thue();
-  const order = num.readings.stream(thue, "N", SIDE * SIDE);
-  const squares = num.readings.stream(thue, "Square", SIDE * SIDE);
+  const thue = readings.Design.thue();
+  const order = readings.stream(thue, "N", SIDE * SIDE);
+  const squares = readings.stream(thue, "Square", SIDE * SIDE);
   const got = [Array.from(order.slice(0, 8)).join(), Array.from(squares.slice(0, 8)).join()];
   if (got[0] !== WANT.order || got[1] !== WANT.squares)
     throw new Error(`readings: Thue-Morse reads ${got.join(" and ")}, want ${WANT.order} and ${WANT.squares}`);

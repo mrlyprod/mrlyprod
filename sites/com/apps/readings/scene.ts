@@ -29,7 +29,11 @@ import {
 
 export type Seen = Pick<View, "w" | "h" | "dpr"> & { look: () => { paper: string; accent: string; ink: string } };
 
-export type Given = Opts & { num?: Num | null; onFacts?: (facts: Facts) => void; later?: (job: () => void) => void };
+export type Given = Opts & {
+  readings?: Num | null;
+  onFacts?: (facts: Facts) => void;
+  later?: (job: () => void) => void;
+};
 
 export type Hands = {
   toggle: () => void;
@@ -85,13 +89,13 @@ export const SPEC: Spec = [
 
 export const tidied = (value: Raw) => tidy(SPEC, value) as Knobs;
 
-export const units = wasm("num");
+export const units = wasm("readings");
 
-export function file(value: Raw, given?: { num?: Num }) {
+export function file(value: Raw, given?: { readings?: Num }) {
   const one = tidied(value);
   const design = designOf(one);
-  const name = given?.num
-    ? slug(given.num, design)
+  const name = given?.readings
+    ? slug(given.readings, design)
     : design.rudin
       ? "rudin-shapiro"
       : `${design.base}-${digitsOf(design.base)
@@ -125,13 +129,13 @@ export const PAGE = {
     view: (value, key) => turned(value, key === "ArrowLeft" ? -1 : 1),
   },
   reroll: (value) => stepped(value, 1),
-} satisfies Page<Loaded<"num">, Handled>;
+} satisfies Page<Loaded<"readings">, Handled>;
 
 const soon = (job: () => void) => setTimeout(job, 0);
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const { num } = opts;
-  if (!num) throw new Error("readings: the scene wants @mrlyprod/num as opts.num");
+  const { readings: num } = opts;
+  if (!num) throw new Error("readings: the scene wants @mrlyprod/readings as opts.readings");
   const later = opts.later ?? soon;
   const ctx = canvas.getContext("2d")!;
   let value = tidied(opts);

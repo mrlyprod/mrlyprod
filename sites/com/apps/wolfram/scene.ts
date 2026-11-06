@@ -1,4 +1,3 @@
-import type { Tensor } from "@mrlyprod/life";
 import { veil } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Ready } from "@mrlyprod/ui/kit/hooks.ts";
@@ -7,7 +6,9 @@ import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Option, Spec, Units, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
-import type { Door, Start } from "../shared/life/engine.ts";
+import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
+import type { Tensor } from "@mrlyprod/wolfram";
+import type { Start } from "../shared/life/engine.ts";
 import { population, sow } from "../shared/life/engine.ts";
 import { PANE, reach, runs, SOUP } from "../shared/life/scene.ts";
 
@@ -15,7 +16,9 @@ export type Knobs = { rule: number; from: string; density: number; wrap: number;
 
 export type Stat = { rows: number; cols: number; live: number; how: string };
 
-export type Given = Opts & { life: Door; math: Mrly; onStat?: (stat: Stat) => void };
+export type Door = Unit<"wolfram">;
+
+export type Given = Opts & { wolfram: Door; mrly: Mrly; onStat?: (stat: Stat) => void };
 
 export type Card = ReturnType<typeof card>;
 
@@ -101,30 +104,30 @@ const GROUND = 0.07;
 const THUMB = 24;
 const MARGIN = 6;
 
-export function card(life: Door, rule: number) {
-  const mates = Array.from(life.cube_orbit(rule), (one) => ({ rule: one, onto: life.surjective(one) }));
-  const told = life.outer_totalistic(rule);
+export function card(wolfram: Door, rule: number) {
+  const mates = Array.from(wolfram.cube_orbit(rule), (one) => ({ rule: one, onto: wolfram.surjective(one) }));
+  const told = wolfram.outer_totalistic(rule);
   return {
-    name: life.rule_name(rule),
-    corners: Uint8Array.from(life.corner_bits(rule)),
-    popcount: life.popcount(rule),
-    lambda: life.lambda(rule),
-    degree: life.rule_degree(rule),
-    genus: life.genus(rule),
-    affine: life.affine(rule),
-    onto: life.surjective(rule),
-    reversible: life.reversible(rule),
+    name: wolfram.rule_name(rule),
+    corners: Uint8Array.from(wolfram.corner_bits(rule)),
+    popcount: wolfram.popcount(rule),
+    lambda: wolfram.lambda(rule),
+    degree: wolfram.rule_degree(rule),
+    genus: wolfram.genus(rule),
+    affine: wolfram.affine(rule),
+    onto: wolfram.surjective(rule),
+    reversible: wolfram.reversible(rule),
     bs: told ? `B${Array.from(told[0]).join("")}/S${Array.from(told[1]).join("")}` : "",
     mates,
-    klass: Array.from(life.wolfram_class(rule)),
-    npn: life.npn_class(rule)[0],
-    gasket: life.gasket(rule) ?? "",
+    klass: Array.from(wolfram.wolfram_class(rule)),
+    npn: wolfram.npn_class(rule)[0],
+    gasket: wolfram.gasket(rule) ?? "",
   };
 }
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as Given) {
   const ctx = canvas.getContext("2d")!;
-  const { life, math } = opts;
+  const { wolfram, mrly } = opts;
   let value: Knobs = { ...(tidy(SPEC, opts) as Knobs), seed: opts.seed };
   let edited: Uint8Array | null = null;
   let grid: Sheet | null = null;
@@ -142,13 +145,13 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {} as 
     const ring = wrap ? ` on a ring of ${width}` : "";
     let made: Tensor;
     if (edited) {
-      made = life.history(edited, rule, steps, wrap);
+      made = wolfram.history(edited, rule, steps, wrap);
       how = `a seed row edited by hand${ring}`;
     } else if (from === "one" && !wrap) {
-      made = life.single_seed(rule, steps);
+      made = wolfram.single_seed(rule, steps);
       how = `one live cell, padded by ${steps} and cropped to ${width}`;
     } else {
-      made = life.history(sow({ ...value, code: "7", number: 3 }, rng(value.seed), math, width), rule, steps, wrap);
+      made = wolfram.history(sow({ ...value, code: "7", number: 3 }, rng(value.seed), mrly, width), rule, steps, wrap);
       how = `${from === "noise" ? `a soup of ${width} cells at density ${value.density}` : from === "design" ? "the middle row of the carpet" : "one live cell"}${ring}`;
     }
     grid = { rows: made.shape[0], cols: made.shape[1], data: made.data };

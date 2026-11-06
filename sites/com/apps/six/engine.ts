@@ -81,18 +81,18 @@ export const RINGS = 4;
 export const RATIO = Math.sqrt(3) / 2;
 export const SCALE = 8;
 
-export const copies = (math: Mrly, value: Pick<Knobs, "sheet" | "x" | "y" | "radius">) =>
-  value.sheet === "disc" ? math.six.copies(value.radius) : value.x * value.y;
+export const copies = (mrly: Mrly, value: Pick<Knobs, "sheet" | "x" | "y" | "radius">) =>
+  value.sheet === "disc" ? mrly.six.copies(value.radius) : value.x * value.y;
 
-export const cap = (math: Mrly, number: number, n: number) =>
-  math.bang.level_cap(number, 2, Math.floor(BUDGET / (6 * n)));
+export const cap = (mrly: Mrly, number: number, n: number) =>
+  mrly.math.factory.level_cap(number, 2, Math.floor(BUDGET / (6 * n)));
 
 export const croppable = (value: Value) =>
   value.sheet !== "disc" && (value.x as number) >= 2 && (value.y as number) >= 2;
 
 export const cropped = (value: Value) => croppable(value) && Number(value.overhang) !== 1;
 
-export const reroll = (math: Mrly, base: number, seed: number) => roll(math, DIM, base, rng(seed));
+export const reroll = (mrly: Mrly, base: number, seed: number) => roll(mrly, DIM, base, rng(seed));
 
 export const titled = (one: Preset) => (one.sheet === "disc" ? `disc(${one.radius})` : `tile(${one.x},${one.y})`);
 
@@ -101,25 +101,25 @@ export const holds = (value: Value, one: Preset) => Object.entries(one).every(([
 const keyed = (...parts: unknown[]) => JSON.stringify(parts);
 
 const solid = (
-  math: Mrly,
+  mrly: Mrly,
   code: Code,
   value: Pick<Knobs, "number" | "invert"> & Pick<Design, "base">,
   level: number,
 ) => {
-  const made = math.three.create(code, value.number, level, value.base);
-  return value.invert ? math.cell.models.anti(made) : made;
+  const made = mrly.three.create(code, value.number, level, value.base);
+  return value.invert ? mrly.math.cell.models.anti(made) : made;
 };
 
-const laid = (math: Mrly, one: Cell6d, value: Knobs) =>
-  value.sheet === "disc" ? math.six.disc(one, value.radius) : math.six.tile_cell(one, value.x, value.y, cropped(value));
+const laid = (mrly: Mrly, one: Cell6d, value: Knobs) =>
+  value.sheet === "disc" ? mrly.six.disc(one, value.radius) : mrly.six.tile_cell(one, value.x, value.y, cropped(value));
 
-export function sample(math: Mrly, value: Six) {
-  const one = math.six[value.view](solid(math, canon(math, DIM, value.base, value.code), value, 1));
-  return mesh(math, math.six.framed(laid(math, one, value)), value.turn === 1);
+export function sample(mrly: Mrly, value: Six) {
+  const one = mrly.six[value.view](solid(mrly, canon(mrly, DIM, value.base, value.code), value, 1));
+  return mesh(mrly, mrly.six.framed(laid(mrly, one, value)), value.turn === 1);
 }
 
-export function studio(math: Mrly) {
-  const six = math.six;
+export function studio(mrly: Mrly) {
+  const six = mrly.six;
   const held = new Map<string, { key: string; out: unknown }>();
   const layer = <T>(name: string, key: string, build: () => T): T => {
     const was = held.get(name);
@@ -129,24 +129,24 @@ export function studio(math: Mrly) {
     return out;
   };
   return (value: Six): Study => {
-    const n = copies(math, value);
-    const top = cap(math, value.number, n);
+    const n = copies(mrly, value);
+    const top = cap(mrly, value.number, n);
     const level = Math.min(value.level, top);
-    const code = layer("code", keyed(value.base, value.code), () => canon(math, DIM, value.base, value.code));
+    const code = layer("code", keyed(value.base, value.code), () => canon(mrly, DIM, value.base, value.code));
     const grown = keyed(code, value.number, level, value.base, value.invert);
-    const cube = layer("cube", grown, () => solid(math, code, value, level));
+    const cube = layer("cube", grown, () => solid(mrly, code, value, level));
     const seen = keyed(grown, value.view);
     const one = layer("one", seen, () => six[value.view](cube));
     const key = keyed(seen, value.sheet === "disc" ? ["disc", value.radius] : [value.x, value.y, cropped(value)]);
-    const sheet = layer("sheet", key, () => laid(math, one, value));
+    const sheet = layer("sheet", key, () => laid(mrly, one, value));
     const drawn = layer("drawn", key, () => six.framed(sheet));
     const facts = layer("facts", keyed(key, top), (): Facts => {
       const skin = six.skin(sheet);
       const tally = six.census(skin, false);
       return {
         code,
-        name: math.name.of(code, DIM, value.base) ?? "",
-        title: title(math, DIM, value.base, code),
+        name: mrly.math.name.of(code, DIM, value.base) ?? "",
+        title: title(mrly, DIM, value.base, code),
         level,
         top,
         side: value.number ** level,
@@ -169,8 +169,8 @@ export function studio(math: Mrly) {
   };
 }
 
-export function kinds(math: Mrly) {
-  const six = math.six;
+export function kinds(mrly: Mrly) {
+  const six = mrly.six;
   return { VOID: six.VOID(), FILL: six.FILL(), GRID: six.GRID(), UP: six.UP(), LEFT: six.LEFT(), RIGHT: six.RIGHT() };
 }
 
@@ -187,8 +187,8 @@ export function bounds(groups: readonly Group[]): Box {
   return Number.isFinite(x0) ? [x0, y0, x1, y1] : [0, 0, 1, 1];
 }
 
-export function mesh(math: Mrly, sheet: Cell6d, turn: boolean): Built {
-  const codes = kinds(math);
+export function mesh(mrly: Mrly, sheet: Cell6d, turn: boolean): Built {
+  const codes = kinds(mrly);
   const names = Object.fromEntries(Object.entries(codes).map(([name, type]) => [type, name]));
   const custom = Object.fromEntries(
     Object.entries(codes).map(([name, type]): [string, Color[]] => [
@@ -198,7 +198,7 @@ export function mesh(math: Mrly, sheet: Cell6d, turn: boolean): Built {
   );
   const across = sheet.orientation === "Horizontal";
   const runs = new Map<string, number[]>();
-  for (const [corners, rgba] of math.six.triangles(math.six.paint(sheet, custom))) {
+  for (const [corners, rgba] of mrly.six.triangles(mrly.six.paint(sheet, custom))) {
     const name = names[rgba[0]];
     if (!runs.has(name)) runs.set(name, []);
     const pts = runs.get(name)!;

@@ -1,0 +1,5 @@
+primes up to 10     1.59505208
+primes up to 100    1.64194520
+primes up to 1000   1.64472519
+primes up to 10000  1.64491792
+pi^2/6             1.64493407

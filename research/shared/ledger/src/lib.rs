@@ -4,13 +4,13 @@ pub mod terms;
 pub mod windows;
 
 pub use markdown::markdown;
-pub use mrly_math::counts::{fill_polynomial, Closed};
+pub use mrly_sequences::counts::{fill_polynomial, Closed};
 pub use mrly_sequences::{Axis, Cost, Key, Measure, Sequence, Tag};
 pub use records::{identify, Record, RECORDS};
 pub use terms::{closed, terms};
 
-use mrly_core::error::{value_error, Result};
-use mrly_math::bang::baseq;
+use mrly_bang::baseq;
+use mrly_error::{value_error, Result};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 

@@ -1,10 +1,11 @@
-use mrly_core::error::{Result, value_error};
-use mrly_core::rng::Rng;
-use mrly_math::bang::Code;
-use mrly_math::counts;
-use mrly_math::two::{self, census};
+use mrly_error::{Result, value_error};
+use mrly_math::code::Code;
 use mrly_num::prime;
 use mrly_num::series;
+use mrly_rand::Rng;
+use mrly_sequences::counts;
+use mrly_two as two;
+use mrly_two::census;
 use serde::{Deserialize, Serialize};
 
 const DIM: usize = 2;
@@ -131,7 +132,7 @@ impl Source {
             .filter(|seq| !seq.is_random())
             .collect();
         let names: Vec<String> = fixed.iter().map(|seq| seq.name()).collect();
-        let (i, rest) = mrly_core::name::longest(text, &names)?;
+        let (i, rest) = mrly_name::longest(text, &names)?;
         Some((fixed[i], rest))
     }
     pub fn all() -> [Source; 23] {

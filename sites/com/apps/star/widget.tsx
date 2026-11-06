@@ -1,12 +1,13 @@
 import { paints } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
-import { useLatest, useStatus, useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates, useLatest, useStatus } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Paint } from "@mrlyprod/ui/kit/library.tsx";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Scene as Made, Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Patch } from "@mrlyprod/ui/kit/spec.ts";
@@ -18,9 +19,9 @@ import { cutter, DEEP, STACKS, swatch, TILE } from "./engine.ts";
 import type { Facts, Star } from "./scene.ts";
 import { make } from "./scene.ts";
 
-export type ShelvesProps = { value: Star; onChange: (patch: Patch) => void; math?: Mrly | null };
+export type ShelvesProps = { value: Star; onChange: (patch: Patch) => void; mrly?: Mrly | null };
 
-type Props = WidgetProps<Mathy, Made> & { value: Star; unit?: Mrly | null };
+type Props = WidgetProps<Mrly, Made> & { value: Star; unit?: Mrly | null };
 
 const sign = (n: number) => (n > 0 ? `+${n}` : String(n));
 
@@ -51,19 +52,19 @@ export function rows(f: Facts | null): Readout[] {
   ];
 }
 
-export function Shelves({ value, onChange, math }: ShelvesProps) {
+export function Shelves({ value, onChange, mrly }: ShelvesProps) {
   const tick = useTheme();
-  const cuts = useMemo(() => (math ? cutter(math) : null), [math]);
+  const cuts = useMemo(() => (mrly ? cutter(mrly) : null), [mrly]);
   const look = [value.ramp, value.levels, value.invert, value.tint, tick];
   const thumb =
     (layers: number): Paint =>
     (ctx, w) => {
       const size = Math.min(w, TILE);
-      stamp(ctx, swatch(math!, cuts!, value, layers, size, paints(ctx.canvas, value.tint)), size);
+      stamp(ctx, swatch(mrly!, cuts!, value, layers, size, paints(ctx.canvas, value.tint)), size);
     };
   return (
     <Library>
-      {math &&
+      {mrly &&
         STACKS.map(([name, list]) => (
           <Shelf key={name} name={name} grid>
             {list.map((layers) => (
@@ -78,7 +79,7 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
             ))}
           </Shelf>
         ))}
-      {math && (
+      {mrly && (
         <Shelf name="Deep">
           {DEEP.map((layers) => (
             <Item
@@ -96,13 +97,13 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
 }
 
 export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
-  const math = useUnit("math", unit);
+  const mrly = useCrates(CRATES, unit);
   const [facts, setFacts] = useState<Facts | null>(null);
   const handle = useRef<Handle | null>(null);
   const change = useLatest(onChange);
   const made = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math, onFacts: setFacts }),
-    [math],
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly, onFacts: setFacts }),
+    [mrly],
   );
   const ready = (scene: Handle | null) => {
     handle.current = scene;
@@ -112,9 +113,9 @@ export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
   useStatus(onStatus, rows(facts));
   return (
     <>
-      {math && <Scene make={made} value={value} onReady={ready} {...touch} />}
-      <Bar side="status">{!math && <span>loading</span>}</Bar>
-      <Shelves value={value} onChange={onChange} math={math} />
+      {mrly && <Scene make={made} value={value} onReady={ready} {...touch} />}
+      <Bar side="status">{!mrly && <span>loading</span>}</Bar>
+      <Shelves value={value} onChange={onChange} mrly={mrly} />
     </>
   );
 }

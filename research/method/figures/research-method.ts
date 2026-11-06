@@ -1,29 +1,30 @@
+import * as bang from "@mrlyprod/bang";
+import * as three from "@mrlyprod/three";
 import type { Ink, Pen } from "@mrlyprod/draw";
 import { iso } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { bang, three };
 
 const ROWS = 9;
 const WIDEST = 6.5;
 const COUNTS = [1, 1, 3, 3, 6, 3, 3, 1, 1];
 
-type Quad = ReturnType<typeof math.three.quads>[number];
+type Quad = ReturnType<typeof three.quads>[number];
 
 let memo: Quad[][][] | undefined;
 
 function rows() {
   if (memo) return memo;
   const codes: string[][] = Array.from({ length: ROWS }, () => []);
-  for (const design of math.bang.bang(3).canonical()) codes[design.rule().length].push(design.i);
+  for (const design of bang.bang(3).canonical()) codes[design.rule().length].push(design.i);
   if (codes.some((row, r) => row.length !== COUNTS[r]))
     throw new Error(`research-method: rows of ${codes.map((row) => row.length)}, want ${COUNTS}`);
   memo = codes.map((row, r) =>
     row.map((code) => {
-      const cube = math.three.create(code, 2, 1, 2);
-      if (math.three.fills(cube) !== r)
-        throw new Error(`research-method: design ${code} fills ${math.three.fills(cube)}, want ${r}`);
-      return math.three.quads(cube);
+      const cube = three.create(code, 2, 1, 2);
+      if (three.fills(cube) !== r)
+        throw new Error(`research-method: design ${code} fills ${three.fills(cube)}, want ${r}`);
+      return three.quads(cube);
     }),
   );
   return memo;

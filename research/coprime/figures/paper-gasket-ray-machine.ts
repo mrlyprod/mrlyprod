@@ -1,8 +1,8 @@
-import type { Ink, Pen, Point } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 import * as num from "@mrlyprod/num";
+import * as two from "@mrlyprod/two";
+import type { Ink, Pen, Point } from "@mrlyprod/draw";
 
-export const units = { math, num };
+export const units = { num, two };
 
 const LEVEL = 5;
 
@@ -12,7 +12,7 @@ let memo: Gasket | undefined;
 
 function gasket() {
   if (memo) return memo;
-  const cell = math.two.from_corners(
+  const cell = two.from_corners(
     [
       [0, 0],
       [1, 0],

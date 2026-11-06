@@ -1,5 +1,6 @@
 import { TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Box, Opts, View } from "@mrlyprod/ui/kit/run.ts";
@@ -7,7 +8,7 @@ import type { Spec, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
 import type { Units as Loaded } from "@mrlyprod/ui/kit/units/index.ts";
 import { wasm } from "@mrlyprod/ui/kit/units/index.ts";
-import type { Absent, Asked, Fault, Figure, Inks, Num, Raster, Shape, Units } from "./engine.ts";
+import type { Absent, Asked, Fault, Figure, Inks, Raster, Shape } from "./engine.ts";
 import {
   base,
   CHUNK,
@@ -59,8 +60,7 @@ export type Stat =
 export type Step = Figure | { k: number };
 
 export type Given = Opts & {
-  num?: Num | null;
-  math?: Mrly | null;
+  mrly?: Mrly | null;
   onTell?: (stat: Stat) => void;
   onWalk?: (patch: Step) => void;
 };
@@ -105,7 +105,7 @@ const plate = (value: Value) => value.view !== "carpet";
 const carpet = (value: Value) => value.view === "carpet";
 const sanded = (value: Value) => value.look === "sand";
 
-export const SPEC: Spec<Units> = [
+export const SPEC: Spec<Mrly> = [
   { key: "view", label: "View", kind: "segment", def: "plate", options: VIEWS, group: "Figure" },
   { key: "n", label: "n", kind: "slider", def: 3, min: 0, max: TOP, step: 1, when: plate, group: "Figure" },
   { key: "m", label: "m", kind: "slider", def: 5, min: 0, max: TOP, step: 1, when: plate, group: "Figure" },
@@ -166,7 +166,7 @@ export const named = (value: Value) =>
     ? `chladni-${value.code}-${value.number}-${value.level}-k${value.k}-${value.seed}`
     : `chladni-${value.n}-${value.m}${signed(value)}-${value.seed}`;
 
-export const units = wasm("num", "math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   design: { dim: 2, base: 2, code: "code", when: carpet },
@@ -185,7 +185,7 @@ export const PAGE = {
     },
   ],
   actions: { walk: (scene) => scene.walk?.() },
-} satisfies Page<Loaded<"num" | "math">, Chladni>;
+} satisfies Page<Loaded<Crate>, Chladni>;
 
 const FIT = 0.94;
 const LINE = 1.5;
@@ -203,11 +203,10 @@ export function fit(view: Box, side?: number): Fit {
 }
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
-  const { num, math } = opts;
-  if (!num) throw new Error("chladni: the scene wants @mrlyprod/num as opts.num");
-  const units = { num, math };
+  const { mrly } = opts;
+  if (!mrly) throw new Error("chladni: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
-  const read = (next: Opts) => ({ ...tidy(SPEC, next, units), seed: Number(next.seed) >>> 0 }) as Knobs;
+  const read = (next: Opts) => ({ ...tidy(SPEC, next, mrly), seed: Number(next.seed) >>> 0 }) as Knobs;
   let value = read(opts);
   let shape: Raster | null = null;
   let grains: Float32Array = new Float32Array(0);
@@ -253,7 +252,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   };
   const sync = () => {
     if (shape?.key === keyOf(value)) return;
-    const want = raster(units, value);
+    const want = raster(mrly, value);
     if (shape?.mask !== want.mask) face = null;
     shape = want;
     field = null;
@@ -264,7 +263,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     if (shape!.error) return;
     while (done < to) {
       const n = Math.min(CHUNK, to - done);
-      grains = num.chladni.shake(shape!.data!, shape!.side!, grains, done, n, value.seed);
+      grains = mrly.chladni.shake(shape!.data!, shape!.side!, grains, done, n, value.seed);
       done += n;
       dirty = true;
     }
@@ -293,8 +292,8 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
   const order = (): Step[] =>
     carpet(value)
       ? Array.from({ length: Math.max(0, (shape!.made?.values.length ?? 0) - 1) }, (_, i) => ({ k: i + 2 }))
-      : ladder(num).map(({ n, m, sign }) => ({ n, m, sign }));
-  const place = () => (carpet(value) ? (shape!.k ?? 2) - 2 : rungOf(num, value));
+      : ladder(mrly).map(({ n, m, sign }) => ({ n, m, sign }));
+  const place = () => (carpet(value) ? (shape!.k ?? 2) - 2 : rungOf(mrly, value));
   const top = () => {
     const want = value.grains - live(grains);
     if (shape!.error || want <= 0) return;
@@ -342,7 +341,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
         grains: left,
       };
     }
-    const rung = ladder(num)[rungOf(num, value)];
+    const rung = ladder(mrly)[rungOf(mrly, value)];
     return {
       view: "plate",
       n: value.n,
@@ -380,7 +379,7 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     ctx.drawImage(one.canvas, box.x, box.y, box.side, box.side);
   };
   const lines = (box: Fit) => {
-    trace ??= num.chladni.lines(shape!.data!, shape!.side!);
+    trace ??= mrly.chladni.lines(shape!.data!, shape!.side!);
     ctx.strokeStyle = ink!.ink;
     ctx.lineWidth = LINE * view.dpr;
     ctx.lineCap = "round";

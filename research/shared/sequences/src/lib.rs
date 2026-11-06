@@ -6,8 +6,8 @@ pub mod page;
 pub mod row;
 pub mod write;
 
-use mrly_core::error::Result;
-use mrly_math::bang::baseq;
+use mrly_bang::baseq;
+use mrly_error::Result;
 use row::Row;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -20,7 +20,7 @@ pub fn root() -> PathBuf {
 }
 
 pub fn io<T>(result: std::io::Result<T>) -> Result<T> {
-    result.or_else(|e| mrly_core::error::value_error(e.to_string()))
+    result.or_else(|e| mrly_error::value_error(e.to_string()))
 }
 
 pub fn design_rows() -> Result<Vec<Row>> {

@@ -1,22 +1,22 @@
 import type { Pen, Point } from "@mrlyprod/draw";
 import { mix } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as num from "@mrlyprod/num";
+import * as gaussian from "@mrlyprod/gaussian";
 
-export const units = { num };
+export const units = { gaussian };
 
 const REACH = 7;
 const SIDE = 2 * REACH + 1;
 const DOT = 0.54;
 const LINK = 0.58;
 const WANT = { points: 225, split: 64, inert: 8, ramified: 4, units: 4 };
-const CLASSES: Record<num.gauss.Class, number> = { Composite: 0, Split: 1, Inert: 2, Ramified: 3, Unit: 4, Zero: 5 };
+const CLASSES: Record<gaussian.Class, number> = { Composite: 0, Split: 1, Inert: 2, Ramified: 3, Unit: 4, Zero: 5 };
 
 let fates: Uint8Array | null = null;
 
 function facts() {
   if (fates) return fates;
-  const window = new num.gauss.Window("Gaussian", REACH);
+  const window = new gaussian.Window("Gaussian", REACH);
   const census = window.census();
   const grid = new Uint8Array(SIDE * SIDE);
   const seen = [0, 0, 0, 0, 0, 0];

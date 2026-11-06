@@ -36,7 +36,7 @@ export type Frame = {
 
 export type ToFrame = (q: Spot, frame: number) => number[];
 
-export type MarchOptions = { math: Door; look?: string; quality?: string; toFrame?: ToFrame | null };
+export type MarchOptions = { mrly: Door; look?: string; quality?: string; toFrame?: ToFrame | null };
 
 export type March = {
   draw: (cam: Cam, frame: Frame, tint: Tone) => void;
@@ -503,10 +503,10 @@ export function march(
   gl: WebGL2RenderingContext,
   view: Scene,
   design: Design,
-  { math, look = "studio", quality = "", toFrame = null }: Partial<MarchOptions> = {},
+  { mrly, look = "studio", quality = "", toFrame = null }: Partial<MarchOptions> = {},
 ): March {
   const { n } = design;
-  const made = boxes(cells(math!, design.code, n), n);
+  const made = boxes(cells(mrly!, design.code, n), n);
   const plan = budget(view, quality);
   const taa = hdr(gl);
   const lo = texture(gl, { w: n, h: n, d: n, data: made.lo, filter: "nearest" });

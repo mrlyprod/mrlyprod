@@ -1,0 +1,3 @@
+core    nodes  8 branches  8
+tunnel  nodes  1 branches  0
+edge    nodes 16 branches 24

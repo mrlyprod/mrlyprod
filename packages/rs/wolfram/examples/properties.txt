@@ -1,0 +1,8 @@
+rule  degree  affine  surjective  reversible
+   0      -1    true       false       false
+  30       2   false        true       false
+  51       1    true        true        true
+  90       1    true        true       false
+ 110       3   false       false       false
+ 170       1    true        true        true
+ 204       1    true        true        true

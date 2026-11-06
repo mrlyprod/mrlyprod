@@ -1,0 +1,5 @@
+a(level) = 28 a(level-1) - 160 a(level-2)
+level 3: rule 18048, counted 18048
+level 4: rule 336384, counted 336384
+level 5: rule 6531072, counted 6531072
+level 6: rule 129048576, counted 129048576

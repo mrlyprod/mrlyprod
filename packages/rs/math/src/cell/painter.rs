@@ -1,9 +1,9 @@
 use super::models::CellNd;
-use mrly_core::cell::Mode;
-use mrly_core::cell::mapping;
-use mrly_core::colors::Color;
-use mrly_core::error::Result;
-use mrly_core::rng::Rng;
+use crate::cell::base::Mode;
+use crate::cell::base::mapping;
+use mrly_color::Color;
+use mrly_error::Result;
+use mrly_rand::Rng;
 use std::collections::HashMap;
 
 pub fn paint<const N: usize>(

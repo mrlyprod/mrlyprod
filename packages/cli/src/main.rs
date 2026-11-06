@@ -1,18 +1,9 @@
+use mrly_json::{Json as Value, Map, Number};
 use mrly_wire::*;
-use serde_json::{Map, Number, Value};
 use std::io::{self, IsTerminal, Read, Write};
 use std::process::ExitCode;
 
-type Table = (&'static [Function], &'static [&'static [&'static str]]);
-
-const UNITS: [(&str, Table); 6] = [
-    ("core", (mrly_core_doors::DOORS, mrly_core_doors::SHAPES)),
-    ("font", (mrly_font_doors::DOORS, mrly_font_doors::SHAPES)),
-    ("life", (mrly_life_doors::DOORS, mrly_life_doors::SHAPES)),
-    ("math", (mrly_math_doors::DOORS, mrly_math_doors::SHAPES)),
-    ("num", (mrly_num_doors::DOORS, mrly_num_doors::SHAPES)),
-    ("tile", (mrly_tile_doors::DOORS, mrly_tile_doors::SHAPES)),
-];
+use mrly_blob_all::{DOORS, SHAPES};
 
 const HELP: &str = "usage:
   mrly list [prefix]
@@ -104,14 +95,12 @@ fn shown(function: &Function) -> bool {
 fn catalog(prefix: &str) -> Result<(), Stop> {
     let mut out = io::BufWriter::new(io::stdout().lock());
     let mut any = false;
-    for (_, (doors, _)) in UNITS {
-        for function in doors
-            .iter()
-            .filter(|f| shown(f) && f.name.starts_with(prefix))
-        {
-            writeln!(out, "{}", line(function))?;
-            any = true;
-        }
+    for function in DOORS
+        .iter()
+        .filter(|f| shown(f) && f.name.starts_with(prefix))
+    {
+        writeln!(out, "{}", line(function))?;
+        any = true;
     }
     out.flush()?;
     if any {
@@ -122,12 +111,10 @@ fn catalog(prefix: &str) -> Result<(), Stop> {
 }
 
 fn find(name: &str) -> Option<(&'static Function, &'static [&'static [&'static str]])> {
-    let unit = name.split('.').next().unwrap_or("");
-    let (_, (doors, shapes)) = UNITS.iter().find(|(one, _)| *one == unit)?;
-    let at = doors
+    let at = DOORS
         .binary_search_by_key(&name, |function| function.name)
         .ok()?;
-    Some((&doors[at], shapes))
+    Some((&DOORS[at], SHAPES))
 }
 
 fn describe(name: &str) -> Result<(), Stop> {
@@ -156,13 +143,11 @@ fn answer(name: &str, text: Option<&str>, raw: bool) -> Result<(), Stop> {
     };
     let args = match text.trim() {
         "" => Vec::new(),
-        text => match serde_json::from_str::<Value>(text) {
+        text => match mrly_json::parse(text) {
             Ok(Value::Array(args)) => args,
             Ok(one) => vec![one],
             Err(error) => {
-                return Err(Stop::Usage(format!(
-                    "the arguments to {name} are not JSON: {error}"
-                )));
+                return Err(Stop::Usage(format!("the arguments to {name}: {error}")));
             }
         },
     };
@@ -202,7 +187,7 @@ fn answer(name: &str, text: Option<&str>, raw: bool) -> Result<(), Stop> {
 }
 
 fn json(word: &str) -> bool {
-    serde_json::from_str::<Value>(word).is_ok()
+    mrly_json::parse(word).is_ok()
 }
 
 fn print(text: &str) -> Result<(), Stop> {

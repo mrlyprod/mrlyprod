@@ -1,7 +1,7 @@
+import * as wolfram from "@mrlyprod/wolfram";
 import type { Color, Ink, Pen } from "@mrlyprod/draw";
-import * as life from "@mrlyprod/life";
 
-export const units = { life };
+export const units = { wolfram };
 
 const CENSUS = 16;
 const STEPS = 31;
@@ -17,10 +17,10 @@ function rules() {
   if (memo) return memo;
   const found: Rule[] = [];
   for (let rule = 0; rule < 256; rule++) {
-    const diagram = life.single_seed(rule, STEPS);
+    const diagram = wolfram.single_seed(rule, STEPS);
     if (diagram.shape.length !== 2 || diagram.shape[0] !== STEPS + 1 || diagram.shape[1] !== WINDOW)
       throw new Error(`research-automata: rule ${rule} diagram ${diagram.shape}, want ${STEPS + 1},${WINDOW}`);
-    found.push({ degree: life.rule_degree(rule), surjective: life.surjective(rule), diagram: diagram.data });
+    found.push({ degree: wolfram.rule_degree(rule), surjective: wolfram.surjective(rule), diagram: diagram.data });
   }
   const affine = found.filter((r) => r.degree === 1).length;
   const surjective = found.filter((r) => r.surjective).length;

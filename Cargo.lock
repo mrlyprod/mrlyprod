@@ -43,23 +43,115 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
-name = "mrly-bridge"
+name = "mrly-apollonian"
 version = "0.2.0"
 dependencies = [
+ "mrly-error",
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-arcs"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-math",
+ "serde",
+]
+
+[[package]]
+name = "mrly-automaton"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-bang"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-math",
+ "mrly-name",
+ "mrly-num",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-bindgen"
+version = "0.2.0"
+dependencies = [
+ "mrly-json",
  "proc-macro2",
  "quote",
  "serde",
- "serde_json",
  "syn 2.0.119",
 ]
 
 [[package]]
-name = "mrly-core"
+name = "mrly-chaos"
 version = "0.2.0"
 dependencies = [
- "mrly-wire",
+ "mrly-automaton",
+ "mrly-error",
  "serde",
- "serde_json",
+]
+
+[[package]]
+name = "mrly-chladni"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-graph",
+ "mrly-linalg",
+ "mrly-math",
+ "mrly-sequences",
+ "mrly-two",
+ "serde",
+]
+
+[[package]]
+name = "mrly-coarray"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
+]
+
+[[package]]
+name = "mrly-color"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-rand",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-crop"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
+ "mrly-tensor",
+ "mrly-two",
+ "serde",
+]
+
+[[package]]
+name = "mrly-error"
+version = "0.2.0"
+
+[[package]]
+name = "mrly-fft"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
 ]
 
 [[package]]
@@ -67,7 +159,6 @@ name = "mrly-font"
 version = "0.2.0"
 dependencies = [
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -75,25 +166,123 @@ name = "mrly-four"
 version = "0.2.0"
 dependencies = [
  "mrly-math",
+ "mrly-two",
+]
+
+[[package]]
+name = "mrly-gaussian"
+version = "0.2.0"
+dependencies = [
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-graph"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-linalg",
+ "mrly-rand",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-image"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-wire",
+ "serde",
+]
+
+[[package]]
+name = "mrly-json"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrly-kummer"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-ladder"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-fft",
+ "mrly-num",
+ "serde",
 ]
 
 [[package]]
 name = "mrly-life"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
+ "mrly-color",
+ "mrly-error",
+ "mrly-image",
  "mrly-math",
+ "mrly-name",
  "mrly-num",
+ "mrly-rand",
+ "mrly-sequences",
+ "mrly-tensor",
+ "mrly-two",
  "serde",
+]
+
+[[package]]
+name = "mrly-linalg"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-rand",
 ]
 
 [[package]]
 name = "mrly-math"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
- "mrly-num",
+ "mrly-color",
+ "mrly-error",
+ "mrly-json",
+ "mrly-name",
+ "mrly-rand",
+ "mrly-tensor",
  "mrly-wire",
+ "serde",
+]
+
+[[package]]
+name = "mrly-moire"
+version = "0.2.0"
+dependencies = [
+ "mrly-color",
+ "mrly-error",
+ "mrly-image",
+ "mrly-math",
+ "mrly-num",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-name"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-json",
  "serde",
 ]
 
@@ -101,7 +290,43 @@ dependencies = [
 name = "mrly-num"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
+ "mrly-error",
+ "serde",
+]
+
+[[package]]
+name = "mrly-radix"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-gaussian",
+ "serde",
+]
+
+[[package]]
+name = "mrly-rand"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "serde",
+]
+
+[[package]]
+name = "mrly-readings"
+version = "0.2.0"
+dependencies = [
+ "mrly-name",
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-roulette"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
+ "mrly-rand",
  "serde",
 ]
 
@@ -109,16 +334,144 @@ dependencies = [
 name = "mrly-sequences"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
+ "mrly-error",
+ "mrly-graph",
  "mrly-math",
+ "mrly-name",
+ "mrly-num",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-six"
+version = "0.2.0"
+dependencies = [
+ "mrly-color",
+ "mrly-error",
+ "mrly-graph",
+ "mrly-image",
+ "mrly-json",
+ "mrly-math",
+ "mrly-rand",
+ "mrly-tensor",
+ "mrly-three",
+ "mrly-two",
+ "serde",
+]
+
+[[package]]
+name = "mrly-spin"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-star"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-math",
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-sumset"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
+ "serde",
+]
+
+[[package]]
+name = "mrly-tensor"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-wire",
+ "serde",
+]
+
+[[package]]
+name = "mrly-three"
+version = "0.2.0"
+dependencies = [
+ "mrly-color",
+ "mrly-error",
+ "mrly-graph",
+ "mrly-json",
+ "mrly-math",
+ "mrly-rand",
+ "mrly-sequences",
+ "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-thue"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-name",
+ "serde",
 ]
 
 [[package]]
 name = "mrly-tile"
 version = "0.2.0"
 dependencies = [
- "mrly-core",
+ "mrly-bang",
+ "mrly-color",
+ "mrly-error",
+ "mrly-image",
  "mrly-math",
+ "mrly-name",
+ "mrly-rand",
+ "mrly-six",
+ "mrly-tensor",
+ "mrly-three",
+ "mrly-two",
+ "serde",
+]
+
+[[package]]
+name = "mrly-tourbillon"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
+ "mrly-rand",
+ "mrly-spin",
+ "serde",
+]
+
+[[package]]
+name = "mrly-two"
+version = "0.2.0"
+dependencies = [
+ "mrly-color",
+ "mrly-error",
+ "mrly-graph",
+ "mrly-image",
+ "mrly-json",
+ "mrly-math",
+ "mrly-rand",
+ "mrly-tensor",
+ "mrly-three",
+ "serde",
+]
+
+[[package]]
+name = "mrly-ulam"
+version = "0.2.0"
+dependencies = [
+ "mrly-name",
+ "mrly-num",
  "serde",
 ]
 
@@ -126,6 +479,26 @@ dependencies = [
 name = "mrly-wire"
 version = "0.2.0"
 dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "mrly-wolfram"
+version = "0.2.0"
+dependencies = [
+ "mrly-bang",
+ "mrly-error",
+ "mrly-math",
+ "mrly-name",
+ "mrly-tensor",
+]
+
+[[package]]
+name = "mrly-zeta"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-num",
  "serde",
 ]
 

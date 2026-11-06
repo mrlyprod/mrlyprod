@@ -1,11 +1,10 @@
 use super::models::dtype_for;
-use mrly_core::Json;
-use mrly_core::error::{Error, Result, value_error};
-use mrly_core::tensor::Tensor;
-use serde::Deserialize;
+use mrly_error::{Error, Result, value_error};
+use mrly_json::Json;
+use mrly_tensor::Tensor;
 
 pub fn parse(text: &str) -> Result<Json> {
-    mrly_core::error::parse(text)
+    mrly_json::parse(text)
 }
 
 pub fn types_field(data: &Json) -> Result<&Json> {
@@ -14,20 +13,20 @@ pub fn types_field(data: &Json) -> Result<&Json> {
 }
 
 pub fn byte_grid(value: &Json) -> Result<Vec<Vec<u8>>> {
-    Ok(Vec::deserialize(value)?)
+    mrly_json::take(value)
 }
 
 pub fn byte_cube(value: &Json) -> Result<Vec<Vec<Vec<u8>>>> {
-    Ok(Vec::deserialize(value)?)
+    mrly_json::take(value)
 }
 
 pub fn count_grid(value: &Json) -> Result<Vec<i64>> {
-    let rows: Vec<Vec<u32>> = Vec::deserialize(value)?;
+    let rows: Vec<Vec<u32>> = mrly_json::take(value)?;
     Ok(rows.concat().into_iter().map(i64::from).collect())
 }
 
 pub fn count_cube(value: &Json) -> Result<Vec<i64>> {
-    let planes: Vec<Vec<Vec<u32>>> = Vec::deserialize(value)?;
+    let planes: Vec<Vec<Vec<u32>>> = mrly_json::take(value)?;
     Ok(planes
         .concat()
         .concat()
@@ -49,5 +48,5 @@ pub fn tag_layer(counts: &[i64], shape: Vec<usize>) -> Result<Tensor> {
 }
 
 pub fn color_grid(value: &Json) -> Result<Vec<Vec<[u8; 4]>>> {
-    Ok(Vec::deserialize(value)?)
+    mrly_json::take(value)
 }

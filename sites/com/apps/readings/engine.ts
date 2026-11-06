@@ -1,4 +1,4 @@
-import type { readings } from "@mrlyprod/num";
+import type * as readings from "@mrlyprod/readings";
 import type { Rgb } from "@mrlyprod/ui/kit/color.ts";
 import { blend, rgb, veil } from "@mrlyprod/ui/kit/color.ts";
 import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
@@ -6,9 +6,9 @@ import type { Patch, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { palette } from "@mrlyprod/ui/kit/theme/palette.gen.js";
 import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
 
-export type Num = Unit<"num">;
+export type Num = Unit<"readings">;
 
-export type Doors = Had<"num">;
+export type Doors = Had<"readings">;
 
 export type Design = readings.Design;
 
@@ -166,15 +166,15 @@ export const holds = (value: Value, pick: Picked) =>
   Number(value.rudin) === 1 ? pick.rudin === 1 : pick.rudin === 0 && keyOf(designOf(value)) === keyOf(designOf(pick));
 
 export function title(num: Num, design: Design): string {
-  const name = num.readings.name(design);
+  const name = num.name(design);
   const nick = NICKNAMES[name];
   if (name === "rudin-shapiro") return nick!;
   return nick ? `${name}, ${nick}` : name;
 }
 
-export const slug = (num: Num, design: Design) => num.readings.name(design).replace(":", "-");
+export const slug = (num: Num, design: Design) => num.name(design).replace(":", "-");
 
-export const formula = (num: Num, reading: Reading) => num.readings.Reading.formula(reading);
+export const formula = (num: Num, reading: Reading) => num.Reading.formula(reading);
 
 export const cap = (base: number, count: number) => Math.max(1, Math.floor(Math.log(count) / Math.log(base) + 1e-9));
 
@@ -194,7 +194,7 @@ export function signs(num: Num, design: Design, reading: Reading, count: number)
   const key = `${keyOf(design)}|${reading}`;
   const had = streams.get(key);
   if (had && had.num === num && had.made.length >= count) return had.made.subarray(0, count);
-  const made = num.readings.stream(design, reading, count);
+  const made = num.stream(design, reading, count);
   streams.delete(key);
   streams.set(key, { num, made });
   while (streams.size > KEEP) streams.delete(streams.keys().next().value!);
@@ -215,7 +215,7 @@ export function verdict(num: Num, design: Design, reading: Reading, count: numbe
   const key = `${keyOf(design)}|${reading}|${count}`;
   const had = batteries.get(key);
   if (had && had.num === num) return had.made;
-  const made = num.readings.battery(signs(num, design, reading, FOLD * count));
+  const made = num.battery(signs(num, design, reading, FOLD * count));
   batteries.delete(key);
   batteries.set(key, { num, made });
   while (batteries.size > BATTERIES) batteries.delete(batteries.keys().next().value!);
@@ -300,8 +300,8 @@ export function modelled(num: Num, design: Design): Model | null {
 export function warm(num: Num, design: Design): Model {
   const had = modelled(num, design);
   if (had) return had;
-  const arcs = num.readings.arcs(design, CUT);
-  const model = arcs.length ? Array.from(num.readings.model(design, CUT, EXPONENTS)) : EXPONENTS.map(() => 1);
+  const arcs = num.arcs(design, CUT);
+  const model = arcs.length ? Array.from(num.model(design, CUT, EXPONENTS)) : EXPONENTS.map(() => 1);
   const made = { arcs, model };
   models.set(keyOf(design), { num, made });
   return made;
@@ -312,14 +312,14 @@ let kept: { num: Num; key: string; plan: Plan } | null = null;
 const told = (num: Num, value: Knobs, design: Design, stream: Int8Array, count: number): Told => ({
   view: value.view,
   title: title(num, design),
-  name: num.readings.name(design),
+  name: num.name(design),
   reading: value.reading,
   formula: formula(num, value.reading),
   power: value.power,
   count,
   bias: sum(stream, count),
   z: 0,
-  heads: num.readings.near_heads(design, value.reading),
+  heads: num.near_heads(design, value.reading),
 });
 
 const signed = (one: Told) => ({ ...one, z: one.bias / Math.sqrt(one.count) });
@@ -378,7 +378,7 @@ export function survey(num: Num, value: Knobs): Plan {
   const stream = signs(num, design, value.reading, count);
   const base = signed(told(num, value, design, stream, count));
   const exponents = EXPONENTS.filter((e) => e <= value.power);
-  const observed = Array.from(num.readings.bias(stream, exponents), Number);
+  const observed = Array.from(num.bias(stream, exponents), Number);
   const squares = value.reading === "Square";
   const made = squares ? modelled(num, design) : null;
   const model = made ? made.model.slice(0, exponents.length) : null;
@@ -430,11 +430,11 @@ const cell = (v: unknown) => String(v);
 export function batteryCsv(num: Num, value: Knobs): string {
   const design = designOf(value);
   const count = 2 ** value.power;
-  const list = bars(verdict(num, design, value.reading, count), num.readings.near_heads(design, value.reading));
+  const list = bars(verdict(num, design, value.reading, count), num.near_heads(design, value.reading));
   const head = ["design", "reading", "N", "test", "pair", "r", "z", "near-head", "exact"];
   const rows = list.map((one) =>
     [
-      num.readings.name(design),
+      num.name(design),
       formula(num, value.reading),
       count,
       one.test,
@@ -452,14 +452,14 @@ export function biasCsv(num: Num, value: Knobs): string {
   const design = designOf(value);
   const stream = signs(num, design, value.reading, 2 ** value.power);
   const exponents = EXPONENTS.filter((e) => e <= value.power);
-  const observed = Array.from(num.readings.bias(stream, exponents), Number);
+  const observed = Array.from(num.bias(stream, exponents), Number);
   const made = value.reading === "Square" ? warm(num, design) : null;
   const head = ["design", "reading", "e", "N", "S", "z", "model", "z_model", "residual"];
   const rows = exponents.map((e, i) => {
     const n = 2 ** e;
     const model = made ? made.model[i] : null;
     return [
-      num.readings.name(design),
+      num.name(design),
       formula(num, value.reading),
       e,
       n,
@@ -769,7 +769,7 @@ export function thumb(
   const base = design.rudin ? 2 : design.base;
   const width = base ** Math.max(1, Math.round(Math.log(THUMB) / Math.log(base)));
   const count = width * width;
-  const stream = num.readings.stream(design, reading, count);
+  const stream = num.stream(design, reading, count);
   const source = stamp(stream, width, width, rgb(ink.plus), rgb(ink.minus));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, w, h);

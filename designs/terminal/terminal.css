@@ -715,6 +715,14 @@
   background: var(--art);
 }
 
+.terminal.app .column.stage > .well > canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .terminal.app .column > .well {
   flex: 1;
   min-height: 0;

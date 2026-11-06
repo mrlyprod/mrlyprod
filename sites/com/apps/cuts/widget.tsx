@@ -1,12 +1,13 @@
 import { paints } from "@mrlyprod/ui/kit/color.ts";
 import { Group, Slider } from "@mrlyprod/ui/kit/controls.tsx";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { text } from "@mrlyprod/ui/kit/export.ts";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
-import { useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates } from "@mrlyprod/ui/kit/hooks.ts";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Seeded } from "@mrlyprod/ui/kit/spec.ts";
@@ -15,12 +16,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Cuts, Info } from "./scene.ts";
 import { make, name, near, plot, shelf, thumb } from "./scene.ts";
 
-type Props = WidgetProps<Mathy, Cuts> & { value: Seeded; unit?: Mrly | null };
+type Props = WidgetProps<Mrly, Cuts> & { value: Seeded; unit?: Mrly | null };
 
 type Live = { seek?: (x: number, y: number) => number | null; svg?: () => Promise<string> };
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: Props) {
-  const math = useUnit("math", unit);
+  const mrly = useCrates(CRATES, unit);
   const live = useRef<Live | null>(null);
   const now = useRef(value);
   const held = useRef(false);
@@ -65,16 +66,16 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: P
     held.current = false;
   };
   const svg = () => live.current?.svg?.().then((body) => text(body, name(now.current), "svg"));
-  useEffect(() => onExport?.(math ? [["SVG", svg]] : []), [Boolean(math)]);
+  useEffect(() => onExport?.(mrly ? [["SVG", svg]] : []), [Boolean(mrly)]);
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, math, tell }),
-    [math],
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, mrly, tell }),
+    [mrly],
   );
   const both = Number(value.both) === 1;
   const list = info && cut ? shelf(cut) : [];
   return (
     <>
-      {math && (
+      {mrly && (
         <Scene
           make={scene}
           value={value}
@@ -85,7 +86,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: P
           onPointerCancel={up}
         />
       )}
-      {math && list.length > 0 && (
+      {mrly && list.length > 0 && (
         <Library>
           <Shelf name="Heights" grid>
             {list.map((h) => (
@@ -102,7 +103,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit }: P
                       thumb(
                         ctx,
                         side,
-                        plot(math, info!.code, info!.base, info!.level, h),
+                        plot(mrly, info!.code, info!.base, info!.level, h),
                         cut!.side,
                         paints(ctx.canvas).accent,
                       )

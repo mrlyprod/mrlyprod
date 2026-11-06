@@ -1,10 +1,10 @@
-import type { zeta } from "@mrlyprod/num";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Value } from "@mrlyprod/ui/kit/spec.ts";
 import { num as fix, path, sheet } from "@mrlyprod/ui/kit/svg.ts";
 import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
+import type * as zeta from "@mrlyprod/zeta";
 
-export type Num = Unit<"num">;
+export type Num = Unit<"zeta">;
 
 export type Span = [number, number];
 
@@ -116,7 +116,7 @@ const walks = new WeakMap<Num, Plan>();
 const folds = new WeakMap<Num, Map<number, Steps>>();
 
 const lineOf = (num: Num) => {
-  if (!lines.has(num)) lines.set(num, new num.zeta.Line());
+  if (!lines.has(num)) lines.set(num, new num.Line());
   return lines.get(num)!;
 };
 
@@ -236,7 +236,7 @@ export function plane(rect: Rect, reach: number, pad: number) {
 
 function climb(num: Num, x: number) {
   const gammas = study(num).zeros;
-  const stair = num.zeta.psi_stair(x);
+  const stair = num.psi_stair(x);
   const grid = Float64Array.from({ length: SAMPLES }, (_, i) => START + ((x - START) * i) / (SAMPLES - 1));
   const ladder = { xs: new Float64Array(2 * x - 1), ys: new Float64Array(2 * x - 1) };
   for (let n = 1, j = 0; n <= x; n++) {
@@ -255,13 +255,13 @@ function climb(num: Num, x: number) {
     };
   };
   const psi = stair[x - 1];
-  const curve = kept((k) => num.zeta.psi_curve(gammas.subarray(0, k), grid));
+  const curve = kept((k) => num.psi_curve(gammas.subarray(0, k), grid));
   const facts = kept((k) => ({
     x,
     zeros: k,
     psi,
-    formula: num.zeta.psi_formula(x, gammas.subarray(0, k)),
-    gap: num.zeta.psi_gap(x, gammas.subarray(0, k)),
+    formula: num.psi_formula(x, gammas.subarray(0, k)),
+    gap: num.psi_gap(x, gammas.subarray(0, k)),
   }));
   const top = kept((k) => Math.max(psi, ...curve(0), ...curve(k)) * ROOM);
   return { x, gammas, stair, grid, ladder, curve, facts, top };

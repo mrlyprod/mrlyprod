@@ -1,0 +1,20 @@
+code 7
+  ###
+  #.#
+  ###
+  neighbours 8, lattice index 1
+code 6
+  .#.
+  #.#
+  .#.
+  neighbours 4, lattice index 1
+code 3
+  ###
+  ...
+  ###
+  neighbours 6, lattice index 1
+code 1
+  #.#
+  ...
+  #.#
+  neighbours 4, lattice index 2

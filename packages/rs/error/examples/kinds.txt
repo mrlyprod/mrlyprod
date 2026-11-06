@@ -1,0 +1,8 @@
+value     display: ratio must be between 0 and 1.
+          debug:   Value("ratio must be between 0 and 1.")
+shape     display: data holds 5 elements, shape wants 6.
+          debug:   Shape("data holds 5 elements, shape wants 6.")
+overflow  display: output size overflows usize.
+          debug:   Overflow("output size overflows usize.")
+json      display: json: expected value at line 1
+          debug:   Json("expected value at line 1")

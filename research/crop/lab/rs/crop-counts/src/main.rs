@@ -1,7 +1,7 @@
-use mrly_core::tensor::Tensor;
-use mrly_math::bang::factory::create;
-use mrly_math::bang::Code;
-use mrly_math::shape::{census, crop, named, Frac, Shape};
+use mrly_crop::{census, crop, named, Frac, Shape};
+use mrly_math::code::Code;
+use mrly_math::factory::create;
+use mrly_tensor::Tensor;
 
 fn design(dimension: usize, level: usize) -> Tensor {
     if level == 0 {

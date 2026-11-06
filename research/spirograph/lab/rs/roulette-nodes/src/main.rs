@@ -1,6 +1,6 @@
-use mrly_math::roulette::{nodes, spread, Nodes};
-use mrly_math::spirograph::{pencils, trace, track, Pencil, Track};
 use mrly_num::factor::gcd;
+use mrly_roulette::crossings::{nodes, spread, Nodes};
+use mrly_roulette::{pencils, trace, track, Pencil, Track};
 use std::f64::consts::TAU;
 
 const TOL: f64 = 4e-4;

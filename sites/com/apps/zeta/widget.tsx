@@ -17,7 +17,7 @@ import { inked, make, PAGE, sketch } from "./scene.ts";
 
 type Grab = { x: number; w: number; view: Setting["view"]; t: number; zeros: number; moved: boolean };
 
-type Props = WidgetProps<Had<"num">, Zeta> & { value: Knobs & { seed: number }; unit?: Num | null };
+type Props = WidgetProps<Had<"zeta">, Zeta> & { value: Knobs & { seed: number }; unit?: Num | null };
 
 type Hooks = Partial<Pick<Props, "onChange" | "onStatus">>;
 
@@ -60,7 +60,7 @@ export function scrub(grab: Pick<Grab, "w" | "view" | "t" | "zeros">, dx: number
 }
 
 export function Widget({ value, onChange, onReady, onExport, onStatus, unit: given }: Props) {
-  const unit = useUnit("num", given);
+  const unit = useUnit("zeta", given);
   const live = useRef<Handle<Zeta> | null>(null);
   const now = useRef(value);
   now.current = value;
@@ -73,7 +73,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, unit: giv
     hooks.current.onStatus?.(rows(now.current.view, said));
   }, []);
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, num: unit, onTell: tell }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, zeta: unit, onTell: tell }),
     [unit, tell],
   );
   const ready = (handle: Handle<Zeta> | null) => {

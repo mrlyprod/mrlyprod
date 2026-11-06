@@ -26,7 +26,7 @@ from scipy.stats import t as tdist
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", ".."))
 DATA_DIR = os.path.join(REPO, "data", os.path.relpath(HERE, REPO))
-BIN = os.path.join(REPO, "research", "target", "release")
+BIN = os.path.join(REPO, "target", "release")
 FIGURE = os.path.join(REPO, "research", "masks", "figures", "research-masks.json")
 S = 81
 FAMILIES = ["Fractal", "Magic", "Special", "Mosaic", "General"]
@@ -40,7 +40,7 @@ PAIRS_KV, QUERY = 20, 40
 
 def mrly(fn, *args):
     out = subprocess.run(
-        [os.path.join(BIN, "mrly-" + fn.split(".")[0]), fn, json.dumps(list(args))],
+        [os.path.join(BIN, "mrly"), fn, json.dumps(list(args))],
         capture_output=True,
         text=True,
         check=True,
@@ -101,7 +101,7 @@ def draw():
                 "family": "Digit",
                 "recipe": recipe,
                 "shape": [S, S],
-                "mask": grid(mrly("math.two.create", code, 3, 4, 0, 3)["cell"]),
+                "mask": grid(mrly("two.create", code, 3, 4, 0, 3)["cell"]),
             }
         )
     for d in out:

@@ -1,11 +1,12 @@
-use crate::bang::Code;
-use crate::bang::catalog::{antis, classics};
-use crate::bang::factory::{corners_to_code, residue_corners, total_codes};
-use crate::{three, two};
-use mrly_core::Tensor;
-use mrly_core::error::{Result, value_error};
-use mrly_core::kind;
-use mrly_core::name::Named;
+use crate::atoms;
+use crate::catalog::Design;
+use crate::catalog::{antis, classics};
+use crate::code::Code;
+use crate::factory::{corners_to_code, residue_corners, total_codes};
+use mrly_error::{Result, value_error};
+use mrly_name::Named;
+use mrly_name::kind;
+use mrly_tensor::Tensor;
 use serde::{Deserialize, Serialize};
 
 kind!("bang");
@@ -119,6 +120,40 @@ impl Named for Bang {
     }
 }
 
+fn flat(design: Design, number: usize) -> Option<Tensor> {
+    Some(match design {
+        Design::Carpet => atoms::carpet_2d(number),
+        Design::Net => atoms::net_2d(number),
+        Design::Htree => atoms::htree_2d(number),
+        Design::Vtree => atoms::vtree_2d(number),
+        Design::Void => atoms::void_2d(number),
+        Design::Point => atoms::point_2d(number),
+        Design::Dust => atoms::dust_2d(number),
+        Design::Hline => atoms::hline_2d(number),
+        Design::Vline => atoms::vline_2d(number),
+        Design::Star => atoms::star_2d(number),
+        _ => return None,
+    })
+}
+
+fn solid(design: Design, number: usize) -> Option<Tensor> {
+    Some(match design {
+        Design::Carpet => atoms::carpet_3d(number),
+        Design::Net => atoms::net_3d(number),
+        Design::Xtree => atoms::xtree_3d(number),
+        Design::Ytree => atoms::ytree_3d(number),
+        Design::Ztree => atoms::ztree_3d(number),
+        Design::Void => atoms::void_3d(number),
+        Design::Point => atoms::point_3d(number),
+        Design::Dust => atoms::dust_3d(number),
+        Design::Xline => atoms::xline_3d(number),
+        Design::Yline => atoms::yline_3d(number),
+        Design::Zline => atoms::zline_3d(number),
+        Design::Star => atoms::star_3d(number),
+        _ => return None,
+    })
+}
+
 pub fn words(dim: usize, base: usize) -> Vec<(String, String)> {
     if total_codes(dim, base).is_err() {
         return Vec::new();
@@ -137,8 +172,8 @@ pub fn words(dim: usize, base: usize) -> Vec<(String, String)> {
         .chain(antis(dim))
         .filter_map(|design| {
             let code = match dim {
-                2 => drawn(two::named(design, base, 1, 0).ok()?.types()),
-                3 => drawn(three::named(design, base, 1).ok()?.types()),
+                2 => drawn(&flat(design, base)?),
+                3 => drawn(&solid(design, base)?),
                 _ => return None,
             };
             Some((code, design.name().to_lowercase()))

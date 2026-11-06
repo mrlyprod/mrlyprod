@@ -1,0 +1,10 @@
+Dust    code  1  #.# ... #.#
+Htree   code  3  ### ... ###
+Vtree   code  5  #.# #.# #.#
+Star    code  6  .#. #.# .#.
+Carpet  code  7  ### #.# ###
+Point   code  8  ... .#. ...
+Void    code  9  #.# .#. #.#
+Vline   code 10  .#. .#. .#.
+Hline   code 12  ... ### ...
+Net     code 14  .#. ### .#.

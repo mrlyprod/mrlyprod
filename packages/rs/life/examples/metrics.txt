@@ -1,0 +1,4 @@
+         entropy  churn
+block        503  0.0000
+blinker      422  0.1143
+glider       396  0.0625

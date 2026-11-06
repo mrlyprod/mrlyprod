@@ -1,7 +1,8 @@
-import type { Ink, Pen } from "@mrlyprod/draw";
+import * as gaussian from "@mrlyprod/gaussian";
 import * as num from "@mrlyprod/num";
+import type { Ink, Pen } from "@mrlyprod/draw";
 
-export const units = { num };
+export const units = { gaussian, num };
 
 const RADIUS = 30;
 const VISIBLE = 1668;
@@ -15,9 +16,9 @@ export default function draw(pen: Pen, ink: Ink) {
   let visible = 0;
   for (let a = -RADIUS; a <= RADIUS; a++) {
     for (let b = -RADIUS; b <= RADIUS; b++) {
-      if (num.gauss.Ring.reach(ring, a, b) > BigInt(RADIUS)) continue;
+      if (gaussian.Ring.reach(ring, a, b) > BigInt(RADIUS)) continue;
       total++;
-      const [u, v] = num.gauss.Ring.place(ring, a, b);
+      const [u, v] = gaussian.Ring.place(ring, a, b);
       const [x, y] = [cx + u * unit, cy - v * unit];
       if (a === 0 && b === 0) {
         pen.disc(x, y, unit * 0.2, ink.fade(ink.dim, 0.9));
@@ -29,7 +30,7 @@ export default function draw(pen: Pen, ink: Ink) {
       }
     }
   }
-  if (total !== num.gauss.Ring.count(ring, RADIUS))
-    throw new Error(`research-bases: ${total} points, want ${num.gauss.Ring.count(ring, RADIUS)}`);
+  if (total !== gaussian.Ring.count(ring, RADIUS))
+    throw new Error(`research-bases: ${total} points, want ${gaussian.Ring.count(ring, RADIUS)}`);
   if (visible !== VISIBLE) throw new Error(`research-bases: ${visible} visible, want ${VISIBLE}`);
 }

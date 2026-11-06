@@ -1,7 +1,7 @@
 use crate::cache::{chunks_dir, index_of, key_of};
 use crate::recipe::Recipe;
-use mrly_core::Json;
-use mrly_core::Result;
+use mrly_error::Result;
+use mrly_json::Json;
 use std::fs;
 use std::io::{BufRead, BufReader};
 
@@ -109,7 +109,7 @@ impl Row {
 
 pub fn each_line(mut f: impl FnMut(&str)) -> Result<usize> {
     let mut files: Vec<_> = fs::read_dir(chunks_dir())
-        .map_err(|e| mrly_core::Error::Value(format!("no chunks: {e}")))?
+        .map_err(|e| mrly_error::Error::Value(format!("no chunks: {e}")))?
         .flatten()
         .map(|e| e.path())
         .filter(|p| p.extension().is_some_and(|e| e == "jsonl"))
@@ -117,7 +117,7 @@ pub fn each_line(mut f: impl FnMut(&str)) -> Result<usize> {
     files.sort();
     let mut n = 0;
     for path in files {
-        let file = fs::File::open(&path).map_err(|e| mrly_core::Error::Value(e.to_string()))?;
+        let file = fs::File::open(&path).map_err(|e| mrly_error::Error::Value(e.to_string()))?;
         for line in BufReader::new(file)
             .lines()
             .map_while(std::result::Result::ok)

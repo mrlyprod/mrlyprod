@@ -1,2 +1,2 @@
 - Built and unpublished.
-- Lives in `packages/draw`.
+- Lives in `packages/js/draw`.

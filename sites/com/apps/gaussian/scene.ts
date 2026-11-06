@@ -14,6 +14,7 @@ import {
   GROW,
   hit,
   inks,
+  LIST,
   LOOKS,
   lay,
   PAD,
@@ -47,7 +48,7 @@ export type Seen = Pick<View, "w" | "h" | "dpr" | "t" | "still" | "wake"> & {
   look: () => Pick<Paints, "paper" | "accent">;
 };
 
-export type Given = Opts & { num?: Num | null };
+export type Given = Opts & { mrly?: Num | null };
 
 export type Gaussian = ReturnType<typeof make>;
 
@@ -59,7 +60,7 @@ const plain = (value: Value) => value.look === "plain";
 
 export const picked = (value: Value) => parse(value.click) !== null;
 
-export const units = wasm("num");
+export const units = wasm(...LIST);
 
 function stepped(value: Value, num: Num, dir: number, turning: boolean): Patch {
   const knobs = tidy(SPEC, value) as Knobs;
@@ -110,6 +111,7 @@ export const SPEC: Spec = [
 
 export const PAGE = {
   spec: SPEC,
+  units,
   name: named,
   gestures: true,
   record: true,
@@ -122,11 +124,11 @@ export const PAGE = {
     grow: (scene) => scene.grow?.(),
   },
   acts: {
-    walk: (value, key, units) => stepped(value, units!.num, key === "ArrowLeft" ? -1 : 1, false),
-    turn: (value, key, units) => stepped(value, units!.num, key === "ArrowDown" ? -1 : 1, true),
+    walk: (value, key, units) => stepped(value, units!, key === "ArrowLeft" ? -1 : 1, false),
+    turn: (value, key, units) => stepped(value, units!, key === "ArrowDown" ? -1 : 1, true),
   },
   reroll: (_value, seed) => ({ ...shuffle(rng(seed)), click: "" }),
-} satisfies Page<Loaded<"num">, Gaussian>;
+} satisfies Page<Loaded<"gaussian" | "num">, Gaussian>;
 
 const TAU = Math.PI * 2;
 const CHUNK = 4096;
@@ -197,8 +199,8 @@ const chosen = (num: Num, plan: Plan, value: Knobs) => {
 };
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const num = opts.num;
-  if (!num) throw new Error("gaussian: the scene wants @mrlyprod/num as opts.num");
+  const num = opts.mrly;
+  if (!num) throw new Error("gaussian: the scene wants @mrlyprod/gaussian and @mrlyprod/num as opts.mrly");
   const ctx = canvas.getContext("2d")!;
   let value = tidy(SPEC, opts) as Knobs;
   let plan = study(num, value.ring, value.limit);
@@ -340,7 +342,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     const { ox, oy, k } = box ?? fit();
     const x = (u * view.w - ox) / k;
     const y = (oy - v * view.h) / k;
-    const [p, q] = num.gauss.Ring.nearest(plan.ring, x, y);
+    const [p, q] = num.gaussian.Ring.nearest(plan.ring, x, y);
     return hit(num, plan, Number(p), Number(q));
   };
   const along = (dir: number) => {

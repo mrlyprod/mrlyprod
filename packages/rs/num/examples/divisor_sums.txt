@@ -1,0 +1,30 @@
+ 1 divisors=[1] aliquot=0
+ 2 divisors=[1, 2] aliquot=1
+ 3 divisors=[1, 3] aliquot=1
+ 4 divisors=[1, 2, 4] aliquot=3
+ 5 divisors=[1, 5] aliquot=1
+ 6 divisors=[1, 2, 3, 6] aliquot=6 *
+ 7 divisors=[1, 7] aliquot=1
+ 8 divisors=[1, 2, 4, 8] aliquot=7
+ 9 divisors=[1, 3, 9] aliquot=4
+10 divisors=[1, 2, 5, 10] aliquot=8
+11 divisors=[1, 11] aliquot=1
+12 divisors=[1, 2, 3, 4, 6, 12] aliquot=16
+13 divisors=[1, 13] aliquot=1
+14 divisors=[1, 2, 7, 14] aliquot=10
+15 divisors=[1, 3, 5, 15] aliquot=9
+16 divisors=[1, 2, 4, 8, 16] aliquot=15
+17 divisors=[1, 17] aliquot=1
+18 divisors=[1, 2, 3, 6, 9, 18] aliquot=21
+19 divisors=[1, 19] aliquot=1
+20 divisors=[1, 2, 4, 5, 10, 20] aliquot=22
+21 divisors=[1, 3, 7, 21] aliquot=11
+22 divisors=[1, 2, 11, 22] aliquot=14
+23 divisors=[1, 23] aliquot=1
+24 divisors=[1, 2, 3, 4, 6, 8, 12, 24] aliquot=36
+25 divisors=[1, 5, 25] aliquot=6
+26 divisors=[1, 2, 13, 26] aliquot=16
+27 divisors=[1, 3, 9, 27] aliquot=13
+28 divisors=[1, 2, 4, 7, 14, 28] aliquot=28 *
+29 divisors=[1, 29] aliquot=1
+30 divisors=[1, 2, 3, 5, 6, 10, 15, 30] aliquot=42

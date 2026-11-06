@@ -13,7 +13,14 @@ categories.workspace = true
 workspace = true
 
 [dependencies]
-serde.workspace = true
-mrly-core.workspace = true
-mrly-num.workspace = true
+mrly-color.workspace = true
+mrly-error.workspace = true
+mrly-image.workspace = true
 mrly-math.workspace = true
+mrly-name.workspace = true
+mrly-num.workspace = true
+mrly-rand.workspace = true
+mrly-sequences.workspace = true
+mrly-tensor.workspace = true
+mrly-two.workspace = true
+serde.workspace = true

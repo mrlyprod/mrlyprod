@@ -1,11 +1,12 @@
-use mrly_core::cell::Cell;
-use mrly_core::cell::Mode;
-use mrly_core::colors::Color;
-use mrly_core::error::{Result, shape_error, value_error};
-use mrly_core::rng::Rng;
-use mrly_core::tensor::{Dtype, Tensor};
+use crate::cell::base::Cell;
+use crate::cell::base::Mode;
+use mrly_color::Color;
+use mrly_error::{Result, shape_error, value_error};
+use mrly_rand::Rng;
+use mrly_tensor::{Dtype, Tensor};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 pub type Cell2d = CellNd<2>;
 pub type Cell3d = CellNd<3>;
@@ -178,7 +179,7 @@ impl CellNd<3> {
         })
     }
     pub fn orient(self, index: usize) -> Result<Cell3d> {
-        let table = crate::three::orientations();
+        let table = orientations();
         match table.get(index) {
             Some(&(a, b, c)) => self.rotate(a, (1, 2))?.rotate(b, (0, 2))?.rotate(c, (0, 1)),
             None => value_error(format!("orientation index {index} out of range (0..23).")),
@@ -189,4 +190,36 @@ impl CellNd<3> {
             cell: self.cell.tile(&[depth, height, width])?,
         })
     }
+}
+
+pub fn orientations() -> Vec<(usize, usize, usize)> {
+    static TABLE: OnceLock<Vec<(usize, usize, usize)>> = OnceLock::new();
+    TABLE
+        .get_or_init(|| {
+            let mut probe = Tensor::new(vec![3, 3, 3]);
+            for flat in 0..probe.size() {
+                probe.put(flat, flat as i64);
+            }
+            let mut seen: Vec<Vec<u8>> = Vec::new();
+            let mut table = Vec::new();
+            for a in 0..4 {
+                for b in 0..4 {
+                    for c in 0..4 {
+                        let turned = probe
+                            .rot90(a, (1, 2))
+                            .and_then(|t| t.rot90(b, (0, 2)))
+                            .and_then(|t| t.rot90(c, (0, 1)));
+                        let Ok(image) = turned.and_then(|t| t.bytes().map(<[u8]>::to_vec)) else {
+                            continue;
+                        };
+                        if !seen.contains(&image) {
+                            seen.push(image);
+                            table.push((a, b, c));
+                        }
+                    }
+                }
+            }
+            table
+        })
+        .clone()
 }

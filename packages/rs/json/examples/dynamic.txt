@@ -1,0 +1,7 @@
+built:   {"name":"ada","tags":["a","b"],"age":36}
+equal:   true
+edited:  {"name":"ada","age":37}
+{
+  "name": "ada",
+  "age": 37
+}

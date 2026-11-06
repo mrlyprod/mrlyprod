@@ -3,9 +3,9 @@ import { frame as box, hex, canvas as pen, svg as sheet } from "@mrlyprod/draw";
 import type { Cell6d } from "@mrlyprod/math";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb, TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Code, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { DESIGN, roll } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Had, Readout } from "@mrlyprod/ui/kit/hooks.ts";
+import type { Code, Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, DESIGN, roll } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
@@ -25,7 +25,7 @@ export type Told = { rows: Readout[] };
 
 export type Seen = Pick<View, "w" | "h" | "dpr"> & { look: () => Pick<Paints, "accent"> };
 
-export type Given = Opts & { math?: Mrly | null; tell?: (info: Told) => void };
+export type Given = Opts & { mrly?: Mrly | null; tell?: (info: Told) => void };
 
 const side = (value: Value, by: number): Patch => ({
   k: Math.min(TOP, Math.max(1, Number(value.tile) ? Number(value.k) : Number(value.k) + by)),
@@ -46,13 +46,13 @@ const CARPET = "23";
 const PAD = 0.04;
 const FAINT = 18;
 
-export const codesOf = (math: Mrly): Codes => ({ fill: math.six.FILL(), void: math.six.VOID() });
+export const codesOf = (mrly: Mrly): Codes => ({ fill: mrly.six.FILL(), void: mrly.six.VOID() });
 
-export const lid = (math: Mrly, tile: number) => (tile ? math.bang.level_cap(tile, 1, REACH) : 1);
+export const lid = (mrly: Mrly, tile: number) => (tile ? mrly.math.factory.level_cap(tile, 1, REACH) : 1);
 
 const tiled = (value: Value) => Number(value.tile) !== 0;
 
-export const SPEC: Spec<Had<"math">> = [
+export const SPEC: Spec<Mrly> = [
   {
     key: "k",
     label: "Side k",
@@ -71,7 +71,7 @@ export const SPEC: Spec<Had<"math">> = [
     kind: "slider",
     def: 1,
     min: 1,
-    max: (value, units) => units && lid(units.math, Number(value.tile)),
+    max: (value, units) => units && lid(units, Number(value.tile)),
     step: 1,
     group: "Section",
     when: tiled,
@@ -79,7 +79,7 @@ export const SPEC: Spec<Had<"math">> = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: TINTS, group: "Look" },
 ];
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const name = (value: Value) =>
   `slices-${String(value.code ?? "").trim() || CARPET}-${tiled(value) ? `t${value.tile}-l${value.level}` : `k${value.k}`}`;
@@ -101,32 +101,32 @@ export const PAGE = {
     larger: (value) => side(value, 1),
     level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
   },
-  reroll: (value, seed, units) => ({ code: roll(units!.math, DIM, Number(tidy(DESIGN, value).base), rng(seed)) }),
-} satisfies Page<Loaded<"math">, Slices>;
+  reroll: (value, seed, units) => ({ code: roll(units!, DIM, Number(tidy(DESIGN, value).base), rng(seed)) }),
+} satisfies Page<Loaded<Crate>, Slices>;
 
 const cuts = memo(6);
 const splits = memo(8);
 const glances = memo(20);
 
-function cut(math: Mrly, code: Code, base: number, number: number, level: number) {
+function cut(mrly: Mrly, code: Code, base: number, number: number, level: number) {
   return cuts(`${code} ${base} ${number} ${level}`, () => {
-    const cell = math.three.create(code, number, level, base);
-    const mesh = math.six.cut(cell);
+    const cell = mrly.three.create(code, number, level, base);
+    const mesh = mrly.six.cut(cell);
     return {
       mesh,
       side: cell.shape[0],
-      tally: math.six.census(mesh, false),
-      pieces: math.six.components(mesh),
-      holes: math.six.holes(mesh),
-      giant: math.six.giant(mesh),
+      tally: mrly.six.census(mesh, false),
+      pieces: mrly.six.components(mesh),
+      holes: mrly.six.holes(mesh),
+      giant: mrly.six.giant(mesh),
     };
   });
 }
 
-export function partition(math: Mrly, number: number) {
+export function partition(mrly: Mrly, number: number) {
   return splits(number, () => {
-    const carpet = cut(math, CARPET, 2, number, 1).tally;
-    const net = cut(math, NET, 2, number, 1).tally;
+    const carpet = cut(mrly, CARPET, 2, number, 1).tally;
+    const net = cut(mrly, NET, 2, number, 1).tally;
     return {
       carpet: carpet.fills,
       net: net.fills,
@@ -137,19 +137,19 @@ export function partition(math: Mrly, number: number) {
   });
 }
 
-export function study(math: Mrly, value: Raw) {
-  const { base, code } = design(math, { ...value, base: Number(value.base) });
+export function study(mrly: Mrly, value: Raw) {
+  const { base, code } = design(mrly, { ...value, base: Number(value.base) });
   const tile = Number(value.tile);
   const k = Math.min(TOP, Math.max(1, Math.round(Number(value.k))));
   const number = tile || 2 * k - 1;
-  const level = tile ? Math.min(Number(value.level), lid(math, tile)) : 1;
-  const one = cut(math, code, base, number, level);
+  const level = tile ? Math.min(Number(value.level), lid(mrly, tile)) : 1;
+  const one = cut(mrly, code, base, number, level);
   const { tally } = one;
   const facts: Readout[] = [
-    ["name", title(named(math, code, base), code, base)],
+    ["name", title(named(mrly, code, base), code, base)],
     ["side", one.side],
     ["triangles", tally.triangles],
-    ["closed form", String(math.counts.six.solid_slice_triangles(one.side))],
+    ["closed form", String(mrly.sequences.counts.six.solid_slice_triangles(one.side))],
     ["filled", tally.fills],
     ["empty", tally.voids],
     ["pieces", one.pieces],
@@ -162,7 +162,7 @@ export function study(math: Mrly, value: Raw) {
     ["euler", String(tally.euler)],
   ];
   if (level === 1) {
-    const split = partition(math, number);
+    const split = partition(mrly, number);
     facts.push(
       ["carpet", split.carpet],
       ["net", split.net],
@@ -174,9 +174,9 @@ export function study(math: Mrly, value: Raw) {
   return { mesh: one.mesh, side: one.side, rows: facts };
 }
 
-export function glance(math: Mrly, value: Raw, k: number) {
-  const { base, code } = design(math, { ...value, base: Number(value.base) });
-  return glances(`${code} ${base} ${k}`, () => math.six.cut(math.three.create(code, 2 * k - 1, 1, base)));
+export function glance(mrly: Mrly, value: Raw, k: number) {
+  const { base, code } = design(mrly, { ...value, base: Number(value.base) });
+  return glances(`${code} ${base} ${k}`, () => mrly.six.cut(mrly.three.create(code, 2 * k - 1, 1, base)));
 }
 
 export const layout = (w: number, h: number) => box(0, 0, w, h).inset(Math.min(w, h) * PAD);
@@ -197,20 +197,20 @@ export function thumb(ctx: CanvasRenderingContext2D, side: number, mesh: Cell6d,
   picture(pen(ctx, side, side), layout(side, side), { mesh }, { ...codes, accent: [...rgb(accent), 255] });
 }
 
-const settle = (opts: Given & { math: Mrly }) => ({
-  ...tidy(SPEC, opts, { math: opts.math }),
+const settle = (opts: Given & { mrly: Mrly }) => ({
+  ...tidy(SPEC, opts, opts.mrly),
   seed: opts.seed,
   base: opts.base,
   code: opts.code,
 });
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const { math, tell } = opts;
-  if (!math) throw new Error("slices: the scene wants @mrlyprod/math as opts.math");
+  const { mrly, tell } = opts;
+  if (!mrly) throw new Error("slices: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
-  const codes = codesOf(math);
-  let value = settle({ ...opts, math });
-  let plan = study(math, value);
+  const codes = codesOf(mrly);
+  let value = settle({ ...opts, mrly });
+  let plan = study(mrly, value);
   let dirty = true;
   const paint = (): Paint => ({ ...codes, accent: [...rgb(view.look().accent), 255] });
   const draw = () => {
@@ -230,8 +230,8 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     size: touch,
     theme: touch,
     set: (next: Raw) => {
-      value = settle({ ...next, math });
-      plan = study(math, value);
+      value = settle({ ...next, mrly });
+      plan = study(mrly, value);
       tell?.({ rows: plan.rows });
       touch();
       return true;

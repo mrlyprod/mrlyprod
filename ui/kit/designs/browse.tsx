@@ -13,13 +13,13 @@ export type Space = { dim: number; base: number };
 export type BrowserProps = {
   slot: Slot;
   value: Value;
-  math: Mrly | null;
+  mrly: Mrly | null;
   onPick: (design: Design) => void;
   compact?: boolean;
 };
 
 type CellProps = {
-  math: Mrly;
+  mrly: Mrly;
   design: Design;
   at?: number;
   on: boolean;
@@ -36,7 +36,7 @@ type WindowProps = GridProps & { lead: RefObject<(() => boolean) | null> };
 type ShelfProps = { name: string; count?: number; children: ReactNode };
 
 type PreviewProps = {
-  math: Mrly;
+  mrly: Mrly;
   now: Design;
   hold: RefObject<((one: Design) => void) | null>;
   tick: number;
@@ -77,64 +77,64 @@ const kept = <T,>(cache: Map<string, T>, { dim, base, code }: Loose, fn: () => T
   return one;
 };
 
-const size = (math: Mrly, dim: number, base: number) =>
-  kept(totals, { dim, base, code: "" }, () => total(math, dim, base));
+const size = (mrly: Mrly, dim: number, base: number) =>
+  kept(totals, { dim, base, code: "" }, () => total(mrly, dim, base));
 
-export const valid = (math: Mrly | null, design: Loose) =>
-  Boolean(math && design) &&
+export const valid = (mrly: Mrly | null, design: Loose) =>
+  Boolean(mrly && design) &&
   /^\d+$/.test(String(design.code)) &&
-  Number(design.code) < size(math!, Number(design.dim), Number(design.base));
+  Number(design.code) < size(mrly!, Number(design.dim), Number(design.base));
 
-export const called = (math: Mrly | null, design: Loose) =>
-  valid(math, design)
-    ? kept(names, design, () => math!.name.of(String(design.code), Number(design.dim), Number(design.base)) ?? "")
+export const called = (mrly: Mrly | null, design: Loose) =>
+  valid(mrly, design)
+    ? kept(names, design, () => mrly!.math.name.of(String(design.code), Number(design.dim), Number(design.base)) ?? "")
     : "";
 
-const form = (math: Mrly, design: Loose) =>
-  Number(design.base) === 2 && valid(math, design)
-    ? kept(forms, design, () => facts(math, Number(design.dim), 2, String(design.code)).anf)
+const form = (mrly: Mrly, design: Loose) =>
+  Number(design.base) === 2 && valid(mrly, design)
+    ? kept(forms, design, () => facts(mrly, Number(design.dim), 2, String(design.code)).anf)
     : "";
 
-export function named(math: Mrly | null, design: Loose): string {
+export function named(mrly: Mrly | null, design: Loose): string {
   const code = String(design.code);
-  if (!math) return code;
-  const name = called(math, design);
+  if (!mrly) return code;
+  const name = called(mrly, design);
   return name ? `${name} ${code}` : `code ${code}`;
 }
 
-export function here(slot: Slot, value: Raw, math: Mrly | null): Design {
+export function here(slot: Slot, value: Raw, mrly: Mrly | null): Design {
   const one = read(slot, value);
-  return one.code || !math ? one : { ...one, code: home(math, one.dim, one.base) };
+  return one.code || !mrly ? one : { ...one, code: home(mrly, one.dim, one.base) };
 }
 
-export function about(math: Mrly, design: Loose) {
+export function about(mrly: Mrly, design: Loose) {
   const rows = [
     ["Code", String(design.code)],
     ["Space", `${design.dim}D, base ${design.base}`],
   ];
-  if (!valid(math, design)) return rows;
-  const { rep, orbit, anf } = facts(math, Number(design.dim), Number(design.base), String(design.code));
+  if (!valid(mrly, design)) return rows;
+  const { rep, orbit, anf } = facts(mrly, Number(design.dim), Number(design.base), String(design.code));
   return [...rows, ["Class", String(rep)], ["Orbit", String(orbit)], ...(anf ? [["Normal form", anf]] : [])];
 }
 
-export const shows = (math: Mrly, dim: number, base: number) =>
-  SHOWS.filter(([one]) => one === "named" || gallery(math, dim, base, one) !== null);
+export const shows = (mrly: Mrly, dim: number, base: number) =>
+  SHOWS.filter(([one]) => one === "named" || gallery(mrly, dim, base, one) !== null);
 
-export function matches(math: Mrly, design: Loose, query: string): boolean {
+export function matches(mrly: Mrly, design: Loose, query: string): boolean {
   const want = query.trim().toLowerCase();
   return (
     !want ||
     String(design.code).startsWith(want) ||
-    called(math, design).toLowerCase().includes(want) ||
-    form(math, design).toLowerCase().includes(want)
+    called(mrly, design).toLowerCase().includes(want) ||
+    form(mrly, design).toLowerCase().includes(want)
   );
 }
 
-export function search(math: Mrly, space: Space, list: Design[], query: string): Design[] {
-  const hits = list.filter((one) => matches(math, one, query));
+export function search(mrly: Mrly, space: Space, list: Design[], query: string): Design[] {
+  const hits = list.filter((one) => matches(mrly, one, query));
   const want = query.trim();
   const exact = /^\d+$/.test(want) ? { dim: space.dim, base: space.base, code: String(Number(want)) } : null;
-  return exact && valid(math, exact) ? [exact, ...hits.filter((one) => !same(one, exact))] : hits;
+  return exact && valid(mrly, exact) ? [exact, ...hits.filter((one) => !same(one, exact))] : hits;
 }
 
 export function step(at: number, key: string, cols: number, count: number): number {
@@ -178,8 +178,8 @@ export const reach = (row: number, pitch: number, gap: number, top: number, heig
 
 const UNSEEN = { cols: 0, pitch: 0, gap: 0, first: 0, last: 0 };
 
-function Cell({ math, design, at, on, px, tick, onPick, onLook }: CellProps) {
-  const label = named(math, design);
+function Cell({ mrly, design, at, on, px, tick, onPick, onLook }: CellProps) {
+  const label = named(mrly, design);
   const look = onLook && (() => onLook(design));
   return (
     <button
@@ -194,8 +194,8 @@ function Cell({ math, design, at, on, px, tick, onPick, onLook }: CellProps) {
       onFocus={look}
       onPointerEnter={look}
     >
-      <Thumb math={math} dim={design.dim} base={design.base} code={design.code} px={px} tick={tick} />
-      <small>{called(math, design) || design.code}</small>
+      <Thumb mrly={mrly} dim={design.dim} base={design.base} code={design.code} px={px} tick={tick} />
+      <small>{called(mrly, design) || design.code}</small>
     </button>
   );
 }
@@ -347,27 +347,27 @@ function Shelf({ name, count, children }: ShelfProps) {
   );
 }
 
-function Preview({ math, now, hold, tick, onPick }: PreviewProps) {
+function Preview({ mrly, now, hold, tick, onPick }: PreviewProps) {
   const [look, setLook] = useState<Design | null>(null);
   hold.current = setLook;
   const one = look ?? now;
-  const ok = valid(math, one);
+  const ok = valid(mrly, one);
   return (
     <aside className="view" aria-label="Preview">
       {ok && (
         <Thumb
-          math={math}
+          mrly={mrly}
           dim={one.dim}
           base={one.base}
           code={one.code}
           px={BIG}
-          level={Math.min(cap(math, one.dim), DEEP)}
+          level={Math.min(cap(mrly, one.dim), DEEP)}
           tick={tick}
         />
       )}
-      <h3>{called(math, one) || `code ${one.code}`}</h3>
+      <h3>{called(mrly, one) || `code ${one.code}`}</h3>
       <dl>
-        {about(math, one).map(([name, text]) => (
+        {about(mrly, one).map(([name, text]) => (
           <div key={name}>
             <dt>{name}</dt>
             <dd>{text}</dd>
@@ -381,10 +381,10 @@ function Preview({ math, now, hold, tick, onPick }: PreviewProps) {
   );
 }
 
-export function Browser({ slot, value, math, onPick, compact }: BrowserProps) {
+export function Browser({ slot, value, mrly, onPick, compact }: BrowserProps) {
   const tick = useTheme();
   const { recent, saved } = useDesigns();
-  const now = here(slot, value, math);
+  const now = here(slot, value, mrly);
   const where = `${now.dim}:${now.base}`;
   const [space, setSpace] = useState({ where, dim: now.dim, base: now.base, show: "" });
   if (space.where !== where) setSpace({ ...space, where, dim: now.dim, base: now.base });
@@ -393,27 +393,27 @@ export function Browser({ slot, value, math, onPick, compact }: BrowserProps) {
   const list = useRef<HTMLDivElement>(null);
   const lead = useRef<(() => boolean) | null>(null);
   const { dim, base } = space;
-  const options = useMemo(() => (math ? shows(math, dim, base) : []), [math, dim, base]);
+  const options = useMemo(() => (mrly ? shows(mrly, dim, base) : []), [mrly, dim, base]);
   const show = options.some(([one]) => one === space.show) ? space.show : options[0]?.[0];
   const holds = (one: Design) => !slot.holds || slot.holds(one, value);
   const every = useMemo(
-    () => (math ? (gallery(math, dim, base, show) ?? []).map((code) => ({ dim, base, code })).filter(holds) : []),
-    [math, dim, base, show, slot.holds ? JSON.stringify(value) : ""],
+    () => (mrly ? (gallery(mrly, dim, base, show) ?? []).map((code) => ({ dim, base, code })).filter(holds) : []),
+    [mrly, dim, base, show, slot.holds ? JSON.stringify(value) : ""],
   );
-  const found = useMemo(() => (math ? search(math, { dim, base }, every, query) : []), [math, dim, base, every, query]);
+  const found = useMemo(() => (mrly ? search(mrly, { dim, base }, every, query) : []), [mrly, dim, base, every, query]);
   const look = useCallback((one: Design) => hold.current?.(one), []);
-  if (!math)
+  if (!mrly)
     return (
       <div className="browser">
         <p className="none">Loading designs</p>
       </div>
     );
   const shelf = (designs: Design[]) =>
-    designs.filter((one) => fits(slot, one) && holds(one) && valid(math, one) && matches(math, one, query));
+    designs.filter((one) => fits(slot, one) && holds(one) && valid(mrly, one) && matches(mrly, one, query));
   const starred = shelf(saved);
   const lately = shelf(recent);
   const first = [...starred, ...lately, ...found][0];
-  const cell = { math, now, px: compact ? SMALL : LARGE, tick, onPick, onLook: compact ? undefined : look };
+  const cell = { mrly, now, px: compact ? SMALL : LARGE, tick, onPick, onLook: compact ? undefined : look };
   const move = (patch: Partial<Shown>) =>
     setSpace((was) => {
       const next = { ...was, ...patch };
@@ -500,7 +500,7 @@ export function Browser({ slot, value, math, onPick, compact }: BrowserProps) {
           )}
         </Shelf>
       </div>
-      {!compact && <Preview math={math} now={now} hold={hold} tick={tick} onPick={onPick} />}
+      {!compact && <Preview mrly={mrly} now={now} hold={hold} tick={tick} onPick={onPick} />}
     </div>
   );
 }

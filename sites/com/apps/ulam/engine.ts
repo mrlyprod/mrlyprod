@@ -1,13 +1,15 @@
-import type { spiral as spirals } from "@mrlyprod/num";
 import { blend, rgb } from "@mrlyprod/ui/kit/color.ts";
+import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick } from "@mrlyprod/ui/kit/rand.ts";
 import type { Value } from "@mrlyprod/ui/kit/spec.ts";
 import { num as fmt, grid, runs, sheet } from "@mrlyprod/ui/kit/svg.ts";
 import { palette as hues } from "@mrlyprod/ui/kit/theme/palette.gen.js";
-import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
+import type * as ulam from "@mrlyprod/ulam";
 
-export type Num = Unit<"num">;
+export const LIST = ["gaussian", "num", "ulam"] as const;
+
+export type Num = Had<"gaussian" | "num" | "ulam">;
 
 export type Lattice = "square" | "hex";
 
@@ -31,7 +33,7 @@ export type Wound = { xs: Int32Array; ys: Int32Array };
 
 export type Sheet = Wound & {
   lattice: Lattice;
-  name: spirals.Lattice;
+  name: ulam.Lattice;
   side: number;
   rings: number;
   top: number;
@@ -40,7 +42,7 @@ export type Sheet = Wound & {
 
 export type Toned = { tone: Uint8Array; lit: number };
 
-export type Lined = { line: spirals.Diagonal | null };
+export type Lined = { line: ulam.Diagonal | null };
 
 export type Plan = Sheet & Toned & Lined & { geo: Geo };
 
@@ -147,7 +149,7 @@ export function lay(num: Num, lattice: Lattice, px: number, w: number, h: number
       cy,
       at: (q, r) => [cx + s * ROOT3 * (q + r / 2), cy + 1.5 * s * r],
       cell: (x, y) => {
-        const [q, r] = num.gauss.Ring.nearest("Eisenstein", (x - cx) / px, (cy - y) / px);
+        const [q, r] = num.gaussian.Ring.nearest("Eisenstein", (x - cx) / px, (cy - y) / px);
         return [Number(q) + 0, -Number(r) + 0];
       },
     };
@@ -171,9 +173,9 @@ export function fitted(lattice: Lattice, rings: number, w: number, h: number, pa
   return Math.min(wide, high) / side;
 }
 
-const wound = new Map<spirals.Lattice, Wound>();
+const wound = new Map<ulam.Lattice, Wound>();
 
-export function wind(num: Num, name: spirals.Lattice, top: number): Wound {
+export function wind(num: Num, name: ulam.Lattice, top: number): Wound {
   let held = wound.get(name);
   if (!held || held.xs.length <= top) {
     const xs = new Int32Array(top + 1);
@@ -184,7 +186,7 @@ export function wind(num: Num, name: spirals.Lattice, top: number): Wound {
       ys.set(held.ys);
       from = held.xs.length;
     }
-    const L = num.spiral.Lattice;
+    const L = num.ulam.Lattice;
     for (let n = from; n <= top; n++) {
       const [x, y] = L.xy(name, n);
       xs[n] = Number(x);
@@ -196,10 +198,10 @@ export function wind(num: Num, name: spirals.Lattice, top: number): Wound {
   return { xs: held.xs.subarray(0, top + 1), ys: held.ys.subarray(0, top + 1) };
 }
 
-export function landed(num: Num, name: spirals.Lattice, rings: number, share: number): number {
+export function landed(num: Num, name: ulam.Lattice, rings: number, share: number): number {
   const reach = Math.max(0, Math.min(1, share)) * rings;
   const k = Math.floor(reach);
-  const count = (r: number) => num.spiral.Lattice.count(name, 2 * r + 1);
+  const count = (r: number) => num.ulam.Lattice.count(name, 2 * r + 1);
   const from = count(k);
   return k >= rings ? from : Math.floor(from + (reach - k) * (count(k + 1) - from));
 }
@@ -255,15 +257,15 @@ export function shuffle(num: Num, rand: Rng): Quadratic {
   const side = SIDES[0] + 2 * Math.floor(rand() * ((SIDES[1] - SIDES[0]) / 2 + 1));
   const a = rand() < FAVOUR ? JOINED[lattice] : 1 + Math.floor(rand() * LEAD);
   const b = (a % 2) + 2 * (Math.floor(rand() * (2 * SWAY + 1)) - SWAY);
-  return { lattice, side, a, b, c: num.prime.prime_from(3 + Math.floor(rand() * ROLL)) };
+  return { lattice, side, a, b, c: num.num.prime.prime_from(3 + Math.floor(rand() * ROLL)) };
 }
 
 export function step(num: Num, c: number, by: number, max: number): number {
   if (by > 0) {
-    const next = num.prime.prime_from(Math.max(0, c + 1));
+    const next = num.num.prime.prime_from(Math.max(0, c + 1));
     return next <= max ? next : c;
   }
-  const below = num.prime.primes(Math.max(0, c - 1));
+  const below = num.num.prime.primes(Math.max(0, c - 1));
   return below.length ? below[below.length - 1] : c;
 }
 
@@ -278,20 +280,20 @@ export function factors(list: readonly (readonly [number, number])[]): string {
 
 export function spiral(num: Num, lattice: Lattice, side: number): Sheet {
   const name = title(lattice);
-  const top = num.spiral.Lattice.count(name, side);
+  const top = num.ulam.Lattice.count(name, side);
   return {
     lattice,
     name,
     side,
     rings: (side - 1) / 2,
     top,
-    primes: num.prime.prime_count(top),
+    primes: num.num.prime.prime_count(top),
     ...wind(num, name, top),
   };
 }
 
 export function toned(num: Num, value: Marking, top: number): Toned {
-  const marked = num.spiral.marks(title(value.mark), top);
+  const marked = num.ulam.marks(title(value.mark), top);
   const tone = new Uint8Array(top + 1);
   let lit = 0;
   for (let n = 1; n <= top; n++) {
@@ -306,7 +308,7 @@ export function toned(num: Num, value: Marking, top: number): Toned {
 
 export function quadratic(num: Num, value: Quadratic): Lined {
   return {
-    line: value.a > 0 ? num.spiral.diagonal(title(value.lattice), value.side, value.a, value.b, value.c) : null,
+    line: value.a > 0 ? num.ulam.diagonal(title(value.lattice), value.side, value.a, value.b, value.c) : null,
   };
 }
 
@@ -342,7 +344,7 @@ export function read(num: Num, plan: Plan, value: Pick<Quadratic & Marking, "mar
       streak: line.streak,
       values: line.values.slice(0, SHOWN),
       more: line.values.length > SHOWN,
-      next: next === null ? null : { n: next, factors: num.prime.pile(next).factors },
+      next: next === null ? null : { n: next, factors: num.num.prime.pile(next).factors },
     },
   };
 }
@@ -400,6 +402,6 @@ export function picture(plan: Plan, tones: Tones): string {
   return sheet(width, height, body);
 }
 
-export function table(line: Pick<spirals.Diagonal, "values" | "hit">): string {
+export function table(line: Pick<ulam.Diagonal, "values" | "hit">): string {
   return ["k,n,prime", ...line.values.map((n, k) => `${k},${n},${line.hit[k] ? 1 : 0}`)].join("\n");
 }

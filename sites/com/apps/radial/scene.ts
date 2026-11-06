@@ -1,5 +1,6 @@
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Mathy, Page } from "@mrlyprod/ui/kit/page.tsx";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts, Scene, View } from "@mrlyprod/ui/kit/run.ts";
@@ -37,7 +38,7 @@ export type Facts = Pick<Plan, "kind" | "code" | "name" | "side" | "order" | "le
   share: number;
 };
 
-export type Given = Opts & { math?: Mrly | null; onFacts?: (facts: Facts) => void };
+export type Given = Opts & { mrly?: Mrly | null; onFacts?: (facts: Facts) => void };
 
 export type Rolled = Partial<Src> & Pick<Stack, "copies" | "blend"> & { full: number };
 
@@ -89,18 +90,18 @@ const BLEND = BLENDS.map(([one]) => one).filter((one) => one !== "meet");
 
 export const wrap = (copies: number, by: number) => ((copies - 1 + by + COPIES) % COPIES) + 1;
 
-export function rolled(math: Mrly, value: Raw, rand: Rng): Rolled {
+export function rolled(mrly: Mrly, value: Raw, rand: Rng): Rolled {
   return {
-    ...drawn(math, read(value), rand),
+    ...drawn(mrly, read(value), rand),
     copies: 1 + Math.floor(rand() * COPIES),
     blend: BLEND[Math.floor(rand() * BLEND.length)],
     full: 1,
   };
 }
 
-export const name = (value: Value, units?: Mathy) => `radial-${tag(value, units?.math)}-${value.copies}`;
+export const name = (value: Value, units?: Mrly) => `radial-${tag(value, units)}-${value.copies}`;
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   defaults: defaults(SOURCE),
@@ -133,14 +134,14 @@ export const PAGE = {
       ),
     }),
   },
-  reroll: (value, seed, units) => rolled(units!.math, value, rng(seed)),
-} satisfies Page<Loaded<"math">, Scene>;
+  reroll: (value, seed, units) => rolled(units!, value, rng(seed)),
+} satisfies Page<Loaded<Crate>, Scene>;
 
 const LOOKS: (keyof Radial)[] = ["ramp", "levels", "invert", "tint", "copies", "full", "step", "blend", "samples"];
 
 export const read = (value: Raw) => ({ ...tidy(SOURCE, value), ...tidy(SPEC, value) }) as Radial;
 
-export const facts = (math: Mrly, plan: Plan, value: Radial): Facts => ({
+export const facts = (mrly: Mrly, plan: Plan, value: Radial): Facts => ({
   kind: plan.kind,
   code: plan.code,
   name: plan.name,
@@ -148,15 +149,15 @@ export const facts = (math: Mrly, plan: Plan, value: Radial): Facts => ({
   copies: value.copies,
   step: degrees(value),
   order: plan.order,
-  petals: petals(math, plan, value),
+  petals: petals(mrly, plan, value),
   share: plan.share[0],
   leading: plan.leading,
 });
 
 export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): Scene {
-  const math = opts.math;
+  const mrly = opts.mrly;
   const ctx = canvas.getContext("2d")!;
-  if (!math) return { draw: () => ctx.clearRect(0, 0, view.w, view.h) };
+  if (!mrly) return { draw: () => ctx.clearRect(0, 0, view.w, view.h) };
   let given = opts;
   let value = read(given);
   let plan: Plan | null = null;
@@ -166,13 +167,13 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}): S
   let fresh = true;
   const marked = () => key(value);
   const learn = () => {
-    plan = study(math, value);
+    plan = study(mrly, value);
   };
-  const tell = () => given.onFacts?.(facts(math, plan!, value));
+  const tell = () => given.onFacts?.(facts(mrly, plan!, value));
   const coat = () => {
     const look = view.look();
     line = edge(look);
-    const rose = rosette(math, plan!, value);
+    const rose = rosette(mrly, plan!, value);
     layer = sheet(paint(rose.values, rose.top, stops(value.ramp, look), value.levels, value.invert), OUT);
   };
   const draw = () => {

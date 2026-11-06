@@ -2,9 +2,9 @@ import type { Pen, Point } from "@mrlyprod/draw";
 import { frame, Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import type { Cell } from "@mrlyprod/math";
-import * as math from "@mrlyprod/math";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { two };
 
 const CODE = 495;
 const BASE = 3;
@@ -19,9 +19,9 @@ let memo: Cell | null = null;
 
 function figure() {
   if (memo) return memo;
-  const cells = math.two.create(CODE, BASE, LEVEL, 0, BASE);
+  const cells = two.create(CODE, BASE, LEVEL, 0, BASE);
   const side = cells.shape[1];
-  const fills = math.two.fills(cells);
+  const fills = two.fills(cells);
   if (side !== WANT.side || fills !== WANT.fills)
     throw new Error(
       `research: the carpet at level ${LEVEL} is ${side} a side with ${fills} fills, want ${WANT.side} and ${WANT.fills}`,

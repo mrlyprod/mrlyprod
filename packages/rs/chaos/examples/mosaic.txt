@@ -1,0 +1,10 @@
+gasket
+  matrix [[3]]
+  rho 3.000000  dimension 1.584963
+carpet
+  matrix [[8]]
+  rho 8.000000  dimension 1.892789
+two masks
+  matrix [[1, 2], [1, 1]]
+  rho 2.414214  dimension 1.271553
+check: log2 3 = 1.584963, log3 8 = 1.892789, 1 + sqrt 2 = 2.414214

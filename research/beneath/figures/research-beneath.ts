@@ -1,7 +1,7 @@
+import * as radix from "@mrlyprod/radix";
 import type { Frame, Ink, Pen, Point } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { radix };
 
 const LEVEL = 6;
 const POINTS = 4096;
@@ -32,7 +32,7 @@ function fit(pts: Point[], frame: Frame): Point[] {
 }
 
 export default function draw(pen: Pen, ink: Ink) {
-  const design = math.radix.koch();
+  const design = radix.koch();
   if (design.size() !== DIGITS) throw new Error(`research-beneath: ${design.size()} digits, want ${DIGITS}`);
   if (design.base().norm() !== NORM)
     throw new Error(`research-beneath: base norm ${design.base().norm()}, want ${NORM}`);

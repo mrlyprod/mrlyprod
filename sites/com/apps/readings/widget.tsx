@@ -105,7 +105,7 @@ export function Designs({ units, value, tick, onChange }: DesignsProps) {
             art={
               <Art
                 px={ART}
-                paint={(ctx, w, h) => thumb(units.num, one.pick, reading, ctx, w, h, inks(paints(ctx.canvas)))}
+                paint={(ctx, w, h) => thumb(units.readings, one.pick, reading, ctx, w, h, inks(paints(ctx.canvas)))}
                 deps={[tick, reading, units]}
               />
             }

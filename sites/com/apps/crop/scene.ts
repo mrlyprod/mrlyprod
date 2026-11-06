@@ -1,10 +1,10 @@
-import type * as mrly from "@mrlyprod/math";
+import type * as math from "@mrlyprod/math";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { paints, TINTS, veil } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Design } from "@mrlyprod/ui/kit/designs/store.ts";
-import type { Mathy, Page } from "@mrlyprod/ui/kit/page.tsx";
+import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Raw, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
@@ -58,12 +58,12 @@ export type Stage = { x: number; y: number; w: number; h: number };
 
 type Staged = {
   code: string;
-  types: mrly.Tensor;
+  types: math.Tensor;
   before: number;
   shape: Masked;
   outline: Outline;
   census: Census;
-  regions: mrly.Tensor["data"];
+  regions: math.Tensor["data"];
   kept: Kept;
   look: Look;
   circle: Circle;
@@ -81,7 +81,7 @@ export type Ink = ReturnType<typeof inks>;
 
 export type Seen = Pick<View, "w" | "h" | "dpr"> & Looks;
 
-export type Given = Opts & { math?: Mrly | null };
+export type Given = Opts & { mrly?: Mrly | null };
 
 export type Crop = ReturnType<typeof make>;
 
@@ -89,10 +89,10 @@ const never = () => false;
 
 const counting = (value: Value) => Number(value.circle) === 1;
 
-const most = (value: Value, units: Mathy) =>
-  room(units.math!, Number(value.number), Number(value.count), String(value.centre)).most;
+const most = (value: Value, units: Mrly) =>
+  room(units!, Number(value.number), Number(value.count), String(value.centre)).most;
 
-export const SPEC: Titled<Mathy>[] = [
+export const SPEC: Titled<Mrly>[] = [
   { key: "number", label: "Number", kind: "slider", def: 3, min: 2, max: 7, step: 1, group: "Design", when: never },
   {
     key: "level",
@@ -100,7 +100,7 @@ export const SPEC: Titled<Mathy>[] = [
     kind: "slider",
     def: 3,
     min: 1,
-    max: (value, units) => units && top(units.math!, Number(value.number)),
+    max: (value, units) => units && top(units!, Number(value.number)),
     step: 1,
     keep: true,
     group: "Design",
@@ -151,7 +151,7 @@ export const SPEC: Titled<Mathy>[] = [
     kind: "slider",
     def: 6,
     min: 1,
-    max: (value, units) => units && counted(units.math!, Number(value.number)),
+    max: (value, units) => units && counted(units!, Number(value.number)),
     step: 1,
     keep: true,
     group: "Circle",
@@ -175,7 +175,7 @@ export const SPEC: Titled<Mathy>[] = [
 export const name = (value: Value) =>
   `crop-${String(value.code ?? "").trim() || value.seed}-${value.shape}-${value.radius}${value.mode === "anti" ? "-anti" : ""}`;
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 const framed = (shape: string, radius: number, mode = "crop", policy = "touching", edge = 0): Framed => ({
   shape,
@@ -219,12 +219,12 @@ export const PAGE = {
     level: (value, key, units) => ({
       level: Math.max(
         1,
-        Math.min(top(units!.math, Number(value.number)), Number(value.level) + (key === "ArrowDown" ? -1 : 1)),
+        Math.min(top(units!, Number(value.number)), Number(value.level) + (key === "ArrowDown" ? -1 : 1)),
       ),
     }),
   },
   reroll,
-} satisfies Page<Loaded<"math">, Crop>;
+} satisfies Page<Loaded<Crate>, Crop>;
 
 const BOX = 0.06;
 const FAINT = 0.2;
@@ -232,36 +232,36 @@ const RULE = 1.5;
 const FIT = 0.9;
 const UNIT = 10;
 
-export function plan(math: Mrly, next: Raw, stages: Stages = {}) {
+export function plan(mrly: Mrly, next: Raw, stages: Stages = {}) {
   const at = <K extends keyof Staged>(name: K): Memo<Staged[K]> => {
     const held: { [P in K]?: Memo<Staged[P]> } = stages;
     held[name] ??= memo();
     return held[name];
   };
-  const value = { ...(tidy(DESIGN, next) as Design), ...(tidy(SPEC, next, { math }) as Knobs) };
+  const value = { ...(tidy(DESIGN, next) as Design), ...(tidy(SPEC, next, mrly) as Knobs) };
   const { base, number, level, radius, policy, centre, count: deep, r } = value;
   const anti = value.mode === "anti";
   const edge = Boolean(value.edge);
-  const code = at("code")(`${base}:${value.code}:${next.seed}`, () => design(math, base, value.code));
+  const code = at("code")(`${base}:${value.code}:${next.seed}`, () => design(mrly, base, value.code));
   const one = [code, base, number, level].join();
-  const types = at("types")(one, () => grid(math, code, number, level, base));
-  const before = at("before")(one, () => exposed(math, types));
+  const types = at("types")(one, () => grid(mrly, code, number, level, base));
+  const before = at("before")(one, () => exposed(mrly, types));
   const form = [value.shape, radius, anti].join();
-  const made = at("shape")(form, () => shape(math, value.shape, radius, anti));
+  const made = at("shape")(form, () => shape(mrly, value.shape, radius, anti));
   const edges = at("outline")(form, () => outline("Anti" in made ? made.Anti : made));
   const both = `${one}|${form}`;
-  const tally = at("census")(both, () => census(math, types, made));
-  const regions = at("regions")(both, () => math.shape.regions(made, types.shape).data);
+  const tally = at("census")(both, () => census(mrly, types, made));
+  const regions = at("regions")(both, () => mrly.crop.regions(made, types.shape).data);
   const rule = edge ? "touching" : policy;
-  const kept = at("kept")(`${both}|${rule}`, () => keep(math, types, made, rule, number));
+  const kept = at("kept")(`${both}|${rule}`, () => keep(mrly, types, made, rule, number));
   const look = at("look")(`${both}|${rule}|${edge}`, () => layers(types, regions, kept, edge));
   const table = counting(value)
-    ? at("circle")([code, base, number, deep, centre].join(), () => circle(math, code, number, deep, base, centre))
+    ? at("circle")([code, base, number, deep, centre].join(), () => circle(mrly, code, number, deep, base, centre))
     : null;
   const read = { ...value, code, anti, edge, rule };
   const facts = () => ({
     code,
-    name: named(math, code, base),
+    name: named(mrly, code, base),
     side: types.shape[0],
     level,
     note: edge ? "exact edge" : kept.over ? `${policy} over budget, touching` : policy,
@@ -348,7 +348,7 @@ const GLANCE = 64;
 
 export function sketch(
   pen: CanvasRenderingContext2D,
-  math: Mrly,
+  mrly: Mrly,
   next: Value,
   side: number,
   dpr: number,
@@ -356,18 +356,18 @@ export function sketch(
 ) {
   let level = 1;
   while (Number(next.number) ** (level + 1) <= GLANCE) level++;
-  const now = plan(math, { ...next, level, circle: 0, policy: next.policy === "inside" ? "inside" : "touching" });
+  const now = plan(mrly, { ...next, level, circle: 0, policy: next.policy === "inside" ? "inside" : "touching" });
   pen.setTransform(1, 0, 0, 1, 0, 0);
   pen.clearRect(0, 0, side, side);
   crop(pen, now, stage(side, side), inks(pen.canvas, { look: () => look }, String(next.tint)), dpr);
 }
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const math = opts.math;
-  if (!math) throw new Error("crop: the scene wants @mrlyprod/math as opts.math");
+  const mrly = opts.mrly;
+  if (!mrly) throw new Error("crop: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
   const stages: Stages = {};
-  let now = plan(math, opts, stages);
+  let now = plan(mrly, opts, stages);
   let dirty = true;
   const draw = () => {
     if (!dirty) return;
@@ -383,7 +383,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     draw();
   };
   const set = (next: Raw) => {
-    now = plan(math, next, stages);
+    now = plan(mrly, next, stages);
     touch();
   };
   const drag = (px: number, py: number) => {

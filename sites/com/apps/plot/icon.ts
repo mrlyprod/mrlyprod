@@ -1,8 +1,8 @@
 import type { Pen, Point } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as sequences from "@mrlyprod/sequences";
 
-export const units = { math };
+export const units = { sequences };
 
 const CODE = "7";
 const LEVELS = 6;
@@ -16,7 +16,7 @@ let heights: number[] | null = null;
 
 function terms(): number[] {
   if (heights) return heights;
-  const read = Array.from({ length: LEVELS }, (_, k) => Number(math.counts.exposure(CODE, 3, 2, k + 1, 2)));
+  const read = Array.from({ length: LEVELS }, (_, k) => Number(sequences.counts.exposure(CODE, 3, 2, k + 1, 2)));
   if (read.join() !== PERIMETER.join())
     throw new Error(`plot: the carpet perimeter reads ${read.join(", ")}, want ${PERIMETER.join(", ")}`);
   const top = Math.log10(read[LEVELS - 1]);

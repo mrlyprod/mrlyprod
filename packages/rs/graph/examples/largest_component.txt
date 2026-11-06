@@ -1,0 +1,2 @@
+before: 6 nodes in 2 pieces
+after:  4 nodes in 1 piece

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs><linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6f8a"/><stop offset=".7" stop-color="#ff325a"/></linearGradient></defs>
+  <rect class="back" width="1024" height="1024" fill="url(#back)"/>
+  <path d="M367 193h58v58h-58zM425 193h58v58h-58zM483 193h58v58h-58zM541 193h58v58h-58zM599 193h58v58h-58zM309 251h58v58h-58zM367 251h58v58h-58zM599 251h58v58h-58zM657 251h58v58h-58zM309 309h58v58h-58zM367 309h58v58h-58zM599 309h58v58h-58zM657 309h58v58h-58zM599 367h58v58h-58zM657 367h58v58h-58zM541 425h58v58h-58zM599 425h58v58h-58zM483 483h58v58h-58zM541 483h58v58h-58zM425 541h58v58h-58zM483 541h58v58h-58zM425 599h58v58h-58zM483 599h58v58h-58zM425 715h58v58h-58zM483 715h58v58h-58zM425 773h58v58h-58zM483 773h58v58h-58z" fill="#fff"/>
+</svg>

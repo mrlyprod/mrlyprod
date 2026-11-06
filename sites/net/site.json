@@ -14,6 +14,7 @@
   "designs": [
     "../../designs/modern",
     "../../designs/boxy",
+    "../../designs/pixel",
     "../../designs/bricks",
     "../../designs/classic",
     "../../designs/terminal"

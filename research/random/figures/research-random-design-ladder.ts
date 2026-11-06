@@ -1,7 +1,8 @@
-import { frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
 import * as life from "@mrlyprod/life";
+import * as wolfram from "@mrlyprod/wolfram";
+import { frame, Grid, type Ink, type Pen } from "@mrlyprod/draw";
 
-export const units = { life };
+export const units = { life, wolfram };
 
 const STEPS = 63;
 const WIDTH = 2 * STEPS + 1;
@@ -33,13 +34,13 @@ function mask(cells: life.Tensor, width: number) {
 function seeded(rule: number) {
   const width = 3 * STEPS + 1;
   const row = Array.from({ length: width }, (_, i) => (i >= STEPS ? parity(i - STEPS) : 0));
-  return mask(life.history(row, rule, STEPS, false), width);
+  return mask(wolfram.history(row, rule, STEPS, false), width);
 }
 
 function diagrams() {
   if (memo) return memo;
-  const cell = mask(life.single_seed(18, STEPS), WIDTH);
-  const gasket = mask(life.single_seed(90, STEPS), WIDTH);
+  const cell = mask(wolfram.single_seed(18, STEPS), WIDTH);
+  const gasket = mask(wolfram.single_seed(90, STEPS), WIDTH);
   for (let t = 0; t <= STEPS; t++) {
     for (let col = 0; col < WIDTH; col++) {
       const k = Math.abs(col - STEPS);

@@ -1,10 +1,13 @@
+import * as bang from "@mrlyprod/bang";
 import type { Pen } from "@mrlyprod/draw";
 import { Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import type { Cell } from "@mrlyprod/math";
 import * as math from "@mrlyprod/math";
+import * as sequences from "@mrlyprod/sequences";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { bang, math, sequences, two };
 
 const DIM = 2;
 const BASE = 2;
@@ -23,16 +26,16 @@ let rows: Grown[] | null = null;
 
 function facts() {
   if (rows) return rows;
-  const leaders = new Set(math.bang.universe_codes(DIM));
-  const total = Number(math.bang.factory.total_codes(DIM, BASE));
+  const leaders = new Set(bang.universe_codes(DIM));
+  const total = Number(math.factory.total_codes(DIM, BASE));
   if (total !== COLS * COLS) throw new Error(`designs: ${total} codes do not fill a ${COLS} by ${COLS} board`);
   if (leaders.size !== CLASSES) throw new Error(`designs: ${leaders.size} classes, want ${CLASSES}`);
   if (SHOW.length !== ACROSS * ACROSS || SHOW[Math.floor(SHOW.length / 2)] !== CARPET)
     throw new Error(`designs: the ${ACROSS} by ${ACROSS} board must centre the carpet ${CARPET}`);
   if (!leaders.has(String(CARPET))) throw new Error(`designs: the carpet ${CARPET} does not lead its class`);
-  rows = Array.from({ length: total }, (_, code) => ({ code, cell: math.two.create(code, SIDE, LEVEL, 0, BASE) }));
-  const lit = rows.reduce((sum, row) => sum + math.two.fills(row.cell), 0);
-  const want = rows.reduce((sum, row) => sum + Number(math.counts.fill(row.code, SIDE, DIM, LEVEL, BASE)), 0);
+  rows = Array.from({ length: total }, (_, code) => ({ code, cell: two.create(code, SIDE, LEVEL, 0, BASE) }));
+  const lit = rows.reduce((sum, row) => sum + two.fills(row.cell), 0);
+  const want = rows.reduce((sum, row) => sum + Number(sequences.counts.fill(row.code, SIDE, DIM, LEVEL, BASE)), 0);
   if (lit !== want) throw new Error(`designs: the grown cells light ${lit}, the counts say ${want}`);
   return rows;
 }

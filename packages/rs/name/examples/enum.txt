@@ -1,0 +1,6 @@
+Apple is spelled apple
+Fig is spelled fig
+Plum is spelled plum
+display fig
+parse   Plum
+unknown unknown fruit "kiwi".

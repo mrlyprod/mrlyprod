@@ -2,8 +2,9 @@ import type { Color, Pen } from "@mrlyprod/draw";
 import { Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import * as math from "@mrlyprod/math";
+import * as two from "@mrlyprod/two";
 
-export const units = { math };
+export const units = { math, two };
 
 const NUMBER = 3;
 const BASE = 3;
@@ -28,7 +29,7 @@ type Swarm = { filled: Uint8Array; home: number; at: number[]; seen: Uint8Array;
 let swarms: Swarm[] | null = null;
 
 function walk(code: string, seed: number): Swarm {
-  const cell = math.two.create(code, NUMBER, LEVEL, 0, BASE);
+  const cell = two.create(code, NUMBER, LEVEL, 0, BASE);
   if (cell.shape[0] !== SIDE || cell.shape[1] !== SIDE)
     throw new Error(`race: design ${code} is ${cell.shape}, want ${SIDE} square`);
   const filled = Uint8Array.from(cell.types, (type) => (type ? 1 : 0));

@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { paints } from "../color.ts";
 import { Btn, Icon, Segment, Pick as Select, Slider, Text } from "../controls.tsx";
-import { useUnit } from "../hooks.ts";
+import { useCrates } from "../hooks.ts";
 import type { Patch, Raw, Value } from "../spec.ts";
 import { tidy } from "../spec.ts";
 import { useTheme } from "../theme/watch.ts";
 import type { Mrly } from "./engine.ts";
-import { cap, classes, DESIGN, roll } from "./engine.ts";
+import { CRATES, cap, classes, DESIGN, roll } from "./engine.ts";
 import type { Design } from "./store.ts";
 import { enqueue, thumb } from "./thumb.ts";
 
 export { useTheme };
 
 export type ThumbProps = {
-  math: Mrly | null;
+  mrly: Mrly | null;
   dim: number;
   base: number;
   code: string;
@@ -24,7 +24,7 @@ export type ThumbProps = {
 };
 
 export type ThumbsProps = {
-  math: Mrly;
+  mrly: Mrly;
   dim: number;
   base: number;
   codes: string[];
@@ -36,9 +36,9 @@ export type ThumbsProps = {
   note?: (code: string) => string;
 };
 
-export type PickerProps = { value: Value; onChange: (value: Value) => void; math: Mrly | null; dims?: number[] };
+export type PickerProps = { value: Value; onChange: (value: Value) => void; mrly: Mrly | null; dims?: number[] };
 
-export type PickProps = { value: Value; onChange: (value: Value) => void; math?: Mrly | null; dims?: number[] };
+export type PickProps = { value: Value; onChange: (value: Value) => void; mrly?: Mrly | null; dims?: number[] };
 
 const STRIP = 32;
 const FILL = { width: "100%" };
@@ -69,30 +69,30 @@ export function watch(node: Element | null, fn: () => void): (() => void) | unde
   };
 }
 
-export function Thumb({ math, dim, base, code, px = 56, tick = 0, hue = "", level }: ThumbProps) {
+export function Thumb({ mrly, dim, base, code, px = 56, tick = 0, hue = "", level }: ThumbProps) {
   const at = useRef<HTMLCanvasElement>(null);
   const [seen, setSeen] = useState(() => typeof IntersectionObserver !== "function");
   useEffect(() => (seen ? undefined : watch(at.current, () => setSeen(true))), [seen]);
   useEffect(() => {
     const canvas = at.current;
-    if (!seen || !canvas || !math) return undefined;
+    if (!seen || !canvas || !mrly) return undefined;
     return enqueue(() => {
       const dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
       const side = Math.round(px * dpr);
       canvas.width = side;
       canvas.height = side;
-      thumb(canvas.getContext("2d")!, math, dim, base, code, side, paints(canvas, hue), level);
+      thumb(canvas.getContext("2d")!, mrly, dim, base, code, side, paints(canvas, hue), level);
     });
-  }, [seen, math, dim, base, code, px, tick, hue, level]);
+  }, [seen, mrly, dim, base, code, px, tick, hue, level]);
   return <canvas ref={at} width={px} height={px} aria-hidden="true" />;
 }
 
-export function Thumbs({ math, dim, base, codes, code, onPick, px, className = "designs", tone, note }: ThumbsProps) {
+export function Thumbs({ mrly, dim, base, codes, code, onPick, px, className = "designs", tone, note }: ThumbsProps) {
   const tick = useTheme();
   return (
     <div className={className} style={FILL}>
       {codes.map((one) => {
-        const name = math.name.of(one, dim, base) ?? "";
+        const name = mrly.math.name.of(one, dim, base) ?? "";
         const form = note?.(one) ?? "";
         const label = note ? `${one}${name ? ` ${name}` : ""}` : name || one;
         return (
@@ -105,7 +105,7 @@ export function Thumbs({ math, dim, base, codes, code, onPick, px, className = "
             title={[name, form].filter(Boolean).join(", ") || undefined}
             onClick={() => onPick(one)}
           >
-            <Thumb math={math} dim={dim} base={base} code={one} px={px} tick={tick} hue={tone?.(one) ?? ""} />
+            <Thumb mrly={mrly} dim={dim} base={base} code={one} px={px} tick={tick} hue={tone?.(one) ?? ""} />
             <small>{label}</small>
             {form && <small>{form}</small>}
           </button>
@@ -117,11 +117,11 @@ export function Thumbs({ math, dim, base, codes, code, onPick, px, className = "
 
 export const read = (value: Raw) => tidy(DESIGN, value) as Design;
 
-export function Picker({ value, onChange, math, dims = [2, 3] }: PickerProps) {
+export function Picker({ value, onChange, mrly, dims = [2, 3] }: PickerProps) {
   const { dim, base, code } = read(value);
   const spaces = DESIGN[0].options.filter(([one]) => dims.includes(one));
-  const names = math ? math.name.words(dim, base) : [];
-  const reps = math ? (classes(math, dim, base) ?? []) : [];
+  const names = mrly ? mrly.math.name.words(dim, base) : [];
+  const reps = mrly ? (classes(mrly, dim, base) ?? []) : [];
   const write = (patch: Patch) => onChange(tidy(DESIGN, { dim, base, code, ...patch }));
   return (
     <>
@@ -141,18 +141,18 @@ export function Picker({ value, onChange, math, dims = [2, 3] }: PickerProps) {
           label="Level"
           value={value.level}
           min={1}
-          max={math ? cap(math, dim) : undefined}
+          max={mrly ? cap(mrly, dim) : undefined}
           step={1}
           onChange={(v) => onChange({ level: v })}
         />
       )}
-      <Btn disabled={!math} onClick={() => write({ code: roll(math!, dim, base, Math.random) })}>
+      <Btn disabled={!mrly} onClick={() => write({ code: roll(mrly!, dim, base, Math.random) })}>
         <Icon name="casino" />
         Random
       </Btn>
       {reps.length > 0 && reps.length <= STRIP && (
         <Thumbs
-          math={math!}
+          mrly={mrly!}
           dim={dim}
           base={base}
           codes={reps.map((one) => one.code)}
@@ -165,7 +165,7 @@ export function Picker({ value, onChange, math, dims = [2, 3] }: PickerProps) {
   );
 }
 
-export function Pick({ value, onChange, math: given, dims }: PickProps) {
-  const math = useUnit("math", given);
-  return <Picker value={value} onChange={onChange} math={math} dims={dims} />;
+export function Pick({ value, onChange, mrly: given, dims }: PickProps) {
+  const mrly = useCrates(CRATES, given);
+  return <Picker value={value} onChange={onChange} mrly={mrly} dims={dims} />;
 }

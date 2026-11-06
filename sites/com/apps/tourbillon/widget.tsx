@@ -1,13 +1,14 @@
 import { paints } from "@mrlyprod/ui/kit/color.ts";
 import { Btn, Fold, Slider, Text } from "@mrlyprod/ui/kit/controls.tsx";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { useTheme } from "@mrlyprod/ui/kit/designs/pick.tsx";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
-import { useLatest, useStatus, useUnit } from "@mrlyprod/ui/kit/hooks.ts";
+import { useCrates, useLatest, useStatus } from "@mrlyprod/ui/kit/hooks.ts";
 import type { Paint } from "@mrlyprod/ui/kit/library.tsx";
 import { Art, Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Patch, Scalar } from "@mrlyprod/ui/kit/spec.ts";
@@ -21,9 +22,9 @@ import { make } from "./scene.ts";
 
 export type Told = Partial<Fault & Reading>;
 
-export type ShelvesProps = { value: Tourbillon; onChange: (patch: Patch) => void; math?: Mrly | null };
+export type ShelvesProps = { value: Tourbillon; onChange: (patch: Patch) => void; mrly?: Mrly | null };
 
-export type Props = WidgetProps<Mathy, Player> & { value: Tourbillon; unit?: Mrly | null };
+export type Props = WidgetProps<Mrly, Player> & { value: Tourbillon; unit?: Mrly | null };
 
 export function rows(f: Told | null): Readout[] {
   if (!f) return [];
@@ -51,11 +52,11 @@ export const typed = (text: string) => {
   return String(text).trim() && Number.isFinite(v) && v >= 0 && v <= 360 ? settle(v) : null;
 };
 
-export function Shelves({ value, onChange, math }: ShelvesProps) {
+export function Shelves({ value, onChange, mrly }: ShelvesProps) {
   const [kind, setKind] = useState<Scalar>("unit");
   const [find, setFind] = useState("");
   const tick = useTheme();
-  const eyes = useMemo(() => (math ? math.tourbillon.eyes(EYES) : []), [math]);
+  const eyes = useMemo(() => (mrly ? mrly.tourbillon.eyes(EYES) : []), [mrly]);
   const now = eyeOf(eyes, value.increment);
   const look = [
     value.limit,
@@ -73,10 +74,10 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
   const thumb =
     (over: Partial<Tourbillon>, at: number): Paint =>
     (ctx, w) =>
-      stamp(ctx, swatch(math!, { ...value, ...over }, at, w, paints(ctx.canvas, value.tint)), w);
+      stamp(ctx, swatch(mrly!, { ...value, ...over }, at, w, paints(ctx.canvas, value.tint)), w);
   return (
     <Library chips={KINDS} chip={kind} onChip={setKind} find={find} onFind={kind === "all" ? setFind : undefined}>
-      {math && kind === "sched" && (
+      {mrly && kind === "sched" && (
         <Shelf name="Schedules">
           {SCHEDULES.map(([key, text]) => (
             <Item
@@ -89,7 +90,7 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
           ))}
         </Shelf>
       )}
-      {math && kind !== "sched" && (
+      {mrly && kind !== "sched" && (
         <Shelf name="Quarter turns" grid>
           {shown(eyes, kind, find).map(([eye, at]) => (
             <Item
@@ -109,14 +110,14 @@ export function Shelves({ value, onChange, math }: ShelvesProps) {
 }
 
 export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
-  const math = useUnit("math", unit);
+  const mrly = useCrates(CRATES, unit);
   const [facts, setFacts] = useState<Told | null>(null);
   const handle = useRef<Handle<Player> | null>(null);
   const change = useLatest(onChange);
   const made = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
-      make(canvas, view, { ...opts, math, onFacts: setFacts, onTurn: (patch) => change.current(patch) }),
-    [math],
+      make(canvas, view, { ...opts, mrly, onFacts: setFacts, onTurn: (patch) => change.current(patch) }),
+    [mrly],
   );
   const ready = (scene: Handle<Player> | null) => {
     handle.current = scene;
@@ -133,9 +134,9 @@ export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
   };
   return (
     <>
-      {math && <Scene make={made} value={value} onReady={ready} {...touch} />}
-      <Bar side="status">{!math && <span>loading</span>}</Bar>
-      <Shelves value={value} onChange={onChange} math={math} />
+      {mrly && <Scene make={made} value={value} onReady={ready} {...touch} />}
+      <Bar side="status">{!mrly && <span>loading</span>}</Bar>
+      <Shelves value={value} onChange={onChange} mrly={mrly} />
       <Bar side="right">
         <Fold name="Spin" live={`${place(shownNow, 2)} deg · ${sched}`}>
           <Slider
@@ -148,8 +149,8 @@ export function Widget({ value, onChange, onReady, onStatus, unit }: Props) {
             onChange={(v) => onChange({ increment: settle(v) })}
           />
           <Text label="Degrees" inputMode="decimal" value={trim(shownNow)} commit onChange={write} />
-          <Btn disabled={!math} onClick={() => nudge(-1)}>{`Nudge down ${NUDGE} deg`}</Btn>
-          <Btn disabled={!math} onClick={() => nudge(1)}>{`Nudge up ${NUDGE} deg`}</Btn>
+          <Btn disabled={!mrly} onClick={() => nudge(-1)}>{`Nudge down ${NUDGE} deg`}</Btn>
+          <Btn disabled={!mrly} onClick={() => nudge(1)}>{`Nudge up ${NUDGE} deg`}</Btn>
         </Fold>
       </Bar>
     </>

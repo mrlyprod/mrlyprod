@@ -1,9 +1,8 @@
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { HUES, mix, rgb, TINTS } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { next } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Had } from "@mrlyprod/ui/kit/hooks.ts";
-import type { Mathy, Page } from "@mrlyprod/ui/kit/page.tsx";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, next } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import { rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Raw, Spec, Value } from "@mrlyprod/ui/kit/spec.ts";
@@ -44,7 +43,7 @@ export type Knobs = {
   strand: string;
 };
 
-export type Given = Opts & { math?: Mrly | null; onTell?: (facts: Told) => void };
+export type Given = Opts & { mrly?: Mrly | null; onTell?: (facts: Told) => void };
 
 export type Seen = Pick<View, "w" | "h" | "dpr" | "t" | "still" | "wake"> & {
   look: () => Pick<Paints, "paper" | "accent">;
@@ -58,7 +57,7 @@ type Matrix = [number, number, number, number, number, number];
 
 const HIDE = () => false;
 
-export const SPEC: Spec<Had<"math">> = [
+export const SPEC: Spec<Mrly> = [
   { key: "base", label: "Base", kind: "segment", def: 2, options: BASES, when: HIDE },
   { key: "code", label: "Code", kind: "text", def: "", when: HIDE },
   {
@@ -67,7 +66,7 @@ export const SPEC: Spec<Had<"math">> = [
     kind: "slider",
     def: 5,
     min: 1,
-    max: (value, units) => units && cap(units.math, value.base),
+    max: (value, units) => units && cap(units, value.base),
     step: 1,
     group: "Arcs",
   },
@@ -78,10 +77,10 @@ export const SPEC: Spec<Had<"math">> = [
   { key: "strand", label: "Strands", kind: "pick", def: "blue", options: TINTS, group: "Colour" },
 ];
 
-const units = wasm("math");
+const units = wasm(...CRATES);
 
-export const file = (value: Value, unit?: Mathy) =>
-  `arcs-${unit?.math ? resolve(unit.math, value.base as number, value.code) : String(value.code ?? "").trim() || "carpet"}-base${value.base}-level${value.level}`.replace(
+export const file = (value: Value, unit?: Mrly) =>
+  `arcs-${unit ? resolve(unit, value.base as number, value.code) : String(value.code ?? "").trim() || "carpet"}-base${value.base}-level${value.level}`.replace(
     /[^\w.+-]+/g,
     "-",
   );
@@ -103,16 +102,16 @@ export const PAGE = {
   acts: {
     design: (value, key, units) => {
       const base = Number(value.base);
-      const list = names(units!.math, base).map(([one]) => one);
-      return { code: next(list, resolve(units!.math, base, value.code), key === "ArrowLeft" ? -1 : 1) };
+      const list = names(units!, base).map(([one]) => one);
+      return { code: next(list, resolve(units!, base, value.code), key === "ArrowLeft" ? -1 : 1) };
     },
     up: (value) => ({ level: Number(value.level) + 1 }),
     down: (value) => ({ level: Number(value.level) - 1 }),
   },
   reroll: (value, seed, units) => ({
-    code: looping(units!.math, Number(value.base), Number(value.level), rng(seed)),
+    code: looping(units!, Number(value.base), Number(value.level), rng(seed)),
   }),
-} satisfies Page<Loaded<"math">, Arcs>;
+} satisfies Page<Loaded<Crate>, Arcs>;
 
 const CHUNK = 8192;
 
@@ -200,10 +199,10 @@ export function sketch(
 }
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const { math, onTell } = opts;
-  if (!math) throw new Error("arcs: the scene wants @mrlyprod/math as opts.math");
+  const { mrly, onTell } = opts;
+  if (!mrly) throw new Error("arcs: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
-  const clean = (next: Raw) => tidy(SPEC, next, { math }) as Knobs;
+  const clean = (next: Raw) => tidy(SPEC, next, mrly) as Knobs;
   let value = clean(opts);
   let plan: Studied | null = null;
   let spans: Run[] = [];
@@ -215,7 +214,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   let tracing: { from: number } | null = null;
   let dirty = true;
   const plot = () => {
-    plan = study(math, value);
+    plan = study(mrly, value);
     spans = plan.side ? runs({ shape: [plan.side, plan.side], types: plan.filled }) : [];
     tracing = null;
     onTell?.(plan.facts);

@@ -9,18 +9,18 @@ import { SOURCE } from "./scene.ts";
 
 export type RowsProps = { value: Raw; onChange: (value: Src) => void };
 
-export type SourceProps = RowsProps & { math?: Mrly | null };
+export type SourceProps = RowsProps & { mrly?: Mrly | null };
 
 export const read = (value: Raw) => tidy(SOURCE, value) as Src;
 
 const option = (key: "number" | "tile") => SOURCE.find((row) => row.key === key)!.options as readonly Option[];
 
-export function gist(value: Raw, math?: Mrly | null): string {
+export function gist(value: Raw, mrly?: Mrly | null): string {
   const src = read(value);
   if (src.source === "moire") return `Moire · ${src.preset} · ${src.limit}`;
   const dim = cube(src) ? 3 : 2;
-  const code = math ? canon(math, dim, src.base, src.code) : src.code;
-  const name = title({ name: math?.name.of(code, dim, src.base) ?? "", code, kind: "design" });
+  const code = mrly ? canon(mrly, dim, src.base, src.code) : src.code;
+  const name = title({ name: mrly?.math.name.of(code, dim, src.base) ?? "", code, kind: "design" });
   return dim === 3 ? `Slice · ${name} · ${src.tile} · ${src.slevel}` : `Flat · ${name} · ${src.number} · ${src.level}`;
 }
 
@@ -70,9 +70,9 @@ export function Rows({ value, onChange }: RowsProps) {
   );
 }
 
-export function Source({ value, onChange, math }: SourceProps) {
+export function Source({ value, onChange, mrly }: SourceProps) {
   return (
-    <Fold name="Source" live={gist(value, math)}>
+    <Fold name="Source" live={gist(value, mrly)}>
       <Rows value={value} onChange={onChange} />
     </Fold>
   );

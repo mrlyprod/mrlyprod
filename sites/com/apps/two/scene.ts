@@ -1,10 +1,10 @@
 import type { Cell } from "@mrlyprod/math";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { TINTS, veil } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, DESIGN } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Design } from "@mrlyprod/ui/kit/designs/store.ts";
-import type { Mathy, Page } from "@mrlyprod/ui/kit/page.tsx";
+import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Raw, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
@@ -59,7 +59,7 @@ export type Stages = { [K in keyof Staged]?: Memo<Staged[K]> };
 
 export type Seen = Pick<View, "w" | "h"> & { look: () => Pick<Paints, "paper" | "accent"> };
 
-export type Given = Opts & { math?: Mrly | null };
+export type Given = Opts & { mrly?: Mrly | null };
 
 export type Two = ReturnType<typeof make>;
 
@@ -78,7 +78,7 @@ export const SHEETS: Sheet[] = [
 
 const never = () => false;
 
-export const SPEC: Titled<Mathy>[] = [
+export const SPEC: Titled<Mrly>[] = [
   {
     key: "number",
     label: "Side",
@@ -98,7 +98,7 @@ export const SPEC: Titled<Mathy>[] = [
     kind: "slider",
     def: 2,
     min: 1,
-    max: (value, units) => units && cap(units.math!, Number(value.number), Number(value.x) * Number(value.y)),
+    max: (value, units) => units && cap(units!, Number(value.number), Number(value.x) * Number(value.y)),
     step: 1,
     keep: true,
     group: "Design",
@@ -113,7 +113,7 @@ export const SPEC: Titled<Mathy>[] = [
 
 export const name = (value: Value) => `two-${String(value.code ?? "").trim() || value.seed}-${value.x}x${value.y}`;
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   defaults: { base: 3, code: "495" },
@@ -140,7 +140,7 @@ export const PAGE = {
       level: Math.max(
         1,
         Math.min(
-          cap(units!.math, Number(value.number), Number(value.x) * Number(value.y)),
+          cap(units!, Number(value.number), Number(value.x) * Number(value.y)),
           Number(value.level) + (key === "ArrowDown" ? -1 : 1),
         ),
       ),
@@ -148,7 +148,7 @@ export const PAGE = {
     across: (value, key) => ({ x: Math.max(1, Math.min(12, Number(value.x) + (key === "ArrowLeft" ? -1 : 1))) }),
   },
   reroll,
-} satisfies Page<Loaded<"math">, Two>;
+} satisfies Page<Loaded<Crate>, Two>;
 
 const FIT = 0.9;
 
@@ -158,34 +158,34 @@ const FAINT = 0.16;
 
 const SEAM = 0.3;
 
-export function plan(math: Mrly, next: Raw, stages: Stages = {}): Plan {
+export function plan(mrly: Mrly, next: Raw, stages: Stages = {}): Plan {
   const at = <K extends keyof Staged>(name: K): Memo<Staged[K]> => {
     const held: { [P in K]?: Memo<Staged[P]> } = stages;
     held[name] ??= memo();
     return held[name];
   };
-  const value = { ...(tidy(DESIGN, next) as Design), ...(tidy(SPEC, next, { math }) as Knobs) };
-  const code = at("code")(`${value.base}:${value.code}:${next.seed}`, () => design(math, value.base, value.code));
+  const value = { ...(tidy(DESIGN, next) as Design), ...(tidy(SPEC, next, mrly) as Knobs) };
+  const code = at("code")(`${value.base}:${value.code}:${next.seed}`, () => design(mrly, value.base, value.code));
   const kept = [code, value.base, value.number, value.level].join();
-  const tile = at("tile")(kept, () => math.two.create(code, value.number, value.level, 0, value.base));
+  const tile = at("tile")(kept, () => mrly.two.create(code, value.number, value.level, 0, value.base));
   const whole = `${kept}|${value.x}|${value.y}`;
-  const block = at("block")(whole, () => sheet(math, tile, value.x, value.y));
+  const block = at("block")(whole, () => sheet(mrly, tile, value.x, value.y));
   const lit = `${whole}|${value.invert}`;
-  const look = at("look")(lit, () => layers(math, block, value.invert));
-  const one = at("one")(`${kept}|${value.invert}`, () => (value.invert ? math.cell.models.invert(tile) : tile));
+  const look = at("look")(lit, () => layers(mrly, block, value.invert));
+  const one = at("one")(`${kept}|${value.invert}`, () => (value.invert ? mrly.math.cell.models.invert(tile) : tile));
   const lines = value.seams ? joins(block.shape, tile.shape[0]) : [];
   const read = { ...value, code };
-  const facts = () => at("facts")(lit, () => count(math, read, one, look.drawn));
+  const facts = () => at("facts")(lit, () => count(mrly, read, one, look.drawn));
   return { value: read, tile, block, look, lines, facts };
 }
 
 const GLANCE = 0.92;
 
-export function sketch(pen: Pen, math: Mrly, next: Raw, x: number, y: number, side: number, accent: string) {
-  const value = { ...(tidy(DESIGN, next) as Design), ...(tidy(SPEC, next, { math }) as Knobs) };
-  const tile = math.two.create(design(math, value.base, value.code), value.number, 1, 0, value.base);
-  const block = sheet(math, tile, x, y);
-  const look = layers(math, block, value.invert);
+export function sketch(pen: Pen, mrly: Mrly, next: Raw, x: number, y: number, side: number, accent: string) {
+  const value = { ...(tidy(DESIGN, next) as Design), ...(tidy(SPEC, next, mrly) as Knobs) };
+  const tile = mrly.two.create(design(mrly, value.base, value.code), value.number, 1, 0, value.base);
+  const block = sheet(mrly, tile, x, y);
+  const look = layers(mrly, block, value.invert);
   const [rows, cols] = block.shape;
   const box = lay(cols, rows, side, side, GLANCE);
   pen.setTransform(1, 0, 0, 1, 0, 0);
@@ -195,11 +195,11 @@ export function sketch(pen: Pen, math: Mrly, next: Raw, x: number, y: number, si
 }
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const math = opts.math;
-  if (!math) throw new Error("two: the scene wants @mrlyprod/math as opts.math");
+  const mrly = opts.mrly;
+  if (!mrly) throw new Error("two: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
   const stages: Stages = {};
-  let now = plan(math, opts, stages);
+  let now = plan(mrly, opts, stages);
   let dirty = true;
   const paint: Paint = (pen, box, w, h) => {
     const { paper, accent } = view.look();
@@ -222,7 +222,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     draw();
   };
   const set = (next: Raw) => {
-    now = plan(math, next, stages);
+    now = plan(mrly, next, stages);
     touch();
   };
   const svg = () => rects(now.look.drawn, { fill: view.look().accent, unit: UNIT });

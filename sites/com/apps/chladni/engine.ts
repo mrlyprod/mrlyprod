@@ -1,15 +1,10 @@
-import type { chladni } from "@mrlyprod/num";
+import type * as chladni from "@mrlyprod/chladni";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb } from "@mrlyprod/ui/kit/color.ts";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Scalar, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { turn } from "@mrlyprod/ui/kit/turn.ts";
-import type { Unit } from "@mrlyprod/ui/kit/units/index.ts";
-
-export type Num = Unit<"num">;
-
-export type Units = { num?: Num | null; math?: Mrly | null };
 
 export type Figure = Pick<chladni.Rung, "n" | "m" | "sign">;
 
@@ -63,20 +58,20 @@ const solved = new Map<string, Solved>();
 const names = new Map<Scalar, string>();
 let rungs: chladni.Rung[] | null = null;
 
-export function ladder(num: Num): chladni.Rung[] {
-  rungs ??= num.chladni.ladder(TOP).map(({ n, m, sign, pitch }) => ({ n, m, sign, pitch }));
+export function ladder(mrly: Mrly): chladni.Rung[] {
+  rungs ??= mrly.chladni.ladder(TOP).map(({ n, m, sign, pitch }) => ({ n, m, sign, pitch }));
   return rungs;
 }
 
 const figure = ({ n, m, sign }: Figure): Figure => ({ n: Math.min(n, m), m: Math.max(n, m), sign: n === m ? 1 : sign });
 
-export function rungOf(num: Num, value: Figure): number {
+export function rungOf(mrly: Mrly, value: Figure): number {
   const want = figure(value);
-  return ladder(num).findIndex((one) => one.n === want.n && one.m === want.m && one.sign === want.sign);
+  return ladder(mrly).findIndex((one) => one.n === want.n && one.m === want.m && one.sign === want.sign);
 }
 
-function holds(math: Mrly | null | undefined, code: Scalar, number: Scalar, level: number): boolean {
-  const door = math?.nodal?.holds;
+function holds(mrly: Mrly | null | undefined, code: Scalar, number: Scalar, level: number): boolean {
+  const door = mrly?.chladni.nodal.holds;
   if (!door) return true;
   const key = `${code} ${number} ${level}`;
   if (!held.has(key)) {
@@ -93,8 +88,8 @@ function holds(math: Mrly | null | undefined, code: Scalar, number: Scalar, leve
 
 const design = ({ code, number, level }: Value) => `${code} ${number} ${level}`;
 
-function figures(math: Mrly | null | undefined, value: Design): Solved {
-  const door = math?.nodal?.figures;
+function figures(mrly: Mrly | null | undefined, value: Design): Solved {
+  const door = mrly?.chladni.nodal.figures;
   if (!door) return { error: "the carpet waits for its door" };
   const key = design(value);
   if (!solved.has(key)) {
@@ -121,42 +116,40 @@ export const known = (value: Value) => solved.get(design(value))?.values?.length
 
 const range = (top: number) => Array.from({ length: Math.max(0, top) }, (_, i) => i + 1);
 
-const capOf = (math: Mrly | null | undefined, number: Scalar) =>
-  math ? math.bang.level_cap(Number(number), 2, GRID) : LEVELS;
+const capOf = (mrly: Mrly | null | undefined, number: Scalar) =>
+  mrly ? mrly.math.factory.level_cap(Number(number), 2, GRID) : LEVELS;
 
-const named = (math: Mrly | null | undefined, code: Scalar) => {
-  if (!math) return `code ${code}`;
-  if (!names.has(code)) names.set(code, math.name.of(code, 2, 2) ?? `code ${code}`);
+const named = (mrly: Mrly | null | undefined, code: Scalar) => {
+  if (!mrly) return `code ${code}`;
+  if (!names.has(code)) names.set(code, mrly.math.name.of(code, 2, 2) ?? `code ${code}`);
   return names.get(code)!;
 };
 
-const holding = (math: Mrly | null | undefined, value: Value) =>
-  range(capOf(math, value.number)).filter((level) => holds(math, value.code, value.number, level));
+const holding = (mrly: Mrly | null | undefined, value: Value) =>
+  range(capOf(mrly, value.number)).filter((level) => holds(mrly, value.code, value.number, level));
 
-export function codes(value: Value, units?: Units): [string, string][] {
-  const math = units?.math;
-  const all = CODES.map((code): [string, string] => [code, named(math, code)]);
-  return math ? all.filter(([code]) => holding(math, { ...value, code }).length) : all;
+export function codes(value: Value, mrly?: Mrly): [string, string][] {
+  const all = CODES.map((code): [string, string] => [code, named(mrly, code)]);
+  return mrly ? all.filter(([code]) => holding(mrly, { ...value, code }).length) : all;
 }
 
-export const lowest = (value: Value, units?: Units) => (units?.math ? (holding(units.math, value)[0] ?? 1) : 1);
+export const lowest = (value: Value, mrly?: Mrly) => (mrly ? (holding(mrly, value)[0] ?? 1) : 1);
 
-export const highest = (value: Value, units?: Units) =>
-  units?.math ? (holding(units.math, value).at(-1) ?? 1) : LEVELS;
+export const highest = (value: Value, mrly?: Mrly) => (mrly ? (holding(mrly, value).at(-1) ?? 1) : LEVELS);
 
 const SHOWN = 25;
 
-export function carpets(math: Mrly): Carpet[] {
+export function carpets(mrly: Mrly): Carpet[] {
   return NUMBERS.flatMap((number) =>
     CODES.flatMap((code) => {
-      const levels = holding(math, { code, number });
+      const levels = holding(mrly, { code, number });
       const level = levels.find((one) => number ** one >= SHOWN) ?? levels.at(-1);
-      return level ? [{ number, code, level, name: named(math, code) }] : [];
+      return level ? [{ number, code, level, name: named(mrly, code) }] : [];
     }),
   );
 }
 
-export const cell = (math: Mrly, one: Design) => math.two.create(one.code, one.number, one.level, 0, 2);
+export const cell = (mrly: Mrly, one: Design) => mrly.two.create(one.code, one.number, one.level, 0, 2);
 
 export function hits(one: Figure, query: string): boolean {
   return (query.match(/\d+/g) ?? []).every((word) => Number(word) === one.n || Number(word) === one.m);
@@ -169,9 +162,9 @@ export const keyOf = (value: Asked) =>
     ? `carpet ${design(value)} ${kOf(value)}`
     : `plate ${value.n} ${value.m} ${value.n === value.m ? 1 : value.sign}`;
 
-export function raster(units: { num: Num; math?: Mrly | null }, value: Asked): Raster {
+export function raster(mrly: Mrly, value: Asked): Raster {
   if (value.view === "carpet") {
-    const made = figures(units.math, value);
+    const made = figures(mrly, value);
     const key = keyOf(value);
     if (made.error) return { error: made.error, key };
     const ok = made as Made;
@@ -191,7 +184,7 @@ export function raster(units: { num: Num; math?: Mrly | null }, value: Asked): R
   const { n, m } = value;
   return {
     side: SIDE,
-    data: units.num.chladni.plate(n, m, n === m ? 1 : value.sign, SIDE),
+    data: mrly.chladni.plate(n, m, n === m ? 1 : value.sign, SIDE),
     smooth: true,
     mask: "plate",
     key: keyOf(value),
@@ -305,5 +298,5 @@ export function paint(shape: Plate, inks: Inks) {
   return bytes;
 }
 
-export const swatch = (num: Num, one: Figure, inks: Inks, side: number) =>
-  paint({ side, data: num.chladni.plate(one.n, one.m, one.n === one.m ? 1 : one.sign, side) }, inks);
+export const swatch = (mrly: Mrly, one: Figure, inks: Inks, side: number) =>
+  paint({ side, data: mrly.chladni.plate(one.n, one.m, one.n === one.m ? 1 : one.sign, side) }, inks);

@@ -1,12 +1,13 @@
+import * as sequences from "@mrlyprod/sequences";
+import * as two from "@mrlyprod/two";
 import { frame as boxed, Grid, type Ink, type Pen } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { sequences, two };
 
 const CODES = [1, 3, 7, 9, 11, 15];
 const SIDES = [3, 5, 7, 9];
 
-type Cells = ReturnType<typeof math.two.create>;
+type Cells = ReturnType<typeof two.create>;
 
 let memo: Cells[][] | undefined;
 
@@ -14,12 +15,12 @@ function designs() {
   if (memo) return memo;
   memo = CODES.map((code) =>
     SIDES.map((number) => {
-      const cells = math.two.create(code, number, 1, 0, 2);
+      const cells = two.create(code, number, 1, 0, 2);
       if (cells.shape[1] !== number)
         throw new Error(`research-sequences: code ${code} is ${cells.shape[1]} wide, want ${number}`);
       let sum = 0n;
       for (const kind of cells.types) sum += BigInt(kind);
-      const fill = BigInt(math.counts.fill(code, number, 2, 1, 2));
+      const fill = BigInt(sequences.counts.fill(code, number, 2, 1, 2));
       if (sum !== fill)
         throw new Error(`research-sequences: code ${code} at ${number} holds ${sum} cells, want ${fill}`);
       return cells;

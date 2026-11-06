@@ -1,8 +1,8 @@
+import * as three from "@mrlyprod/three";
 import type { Ink, Pen, Point } from "@mrlyprod/draw";
 import { plot } from "@mrlyprod/draw";
-import * as math from "@mrlyprod/math";
 
-export const units = { math };
+export const units = { three };
 
 const CODE = 126;
 const LEVEL = 7;
@@ -12,7 +12,7 @@ const HALF = 6;
 let memo: Point[][] | undefined;
 
 function place(point: ArrayLike<number>): Point {
-  const [u, v] = math.three.shadow(point);
+  const [u, v] = three.shadow(point);
   return [Number(u) / Math.SQRT2, Number(v) / Math.sqrt(6)];
 }
 
@@ -28,11 +28,11 @@ function pieces(points: Uint32Array[]) {
 
 function cuts() {
   if (memo) return memo;
-  const profile = math.three.profile(CODE, 2, LEVEL, 2);
+  const profile = three.profile(CODE, 2, LEVEL, 2);
   memo = HEIGHTS.map((height) => {
     if (profile[height] !== "2187")
       throw new Error(`research-cuts: profile ${profile[height]} at ${height}, want 2187`);
-    const points = math.three.diagonal_slice(CODE, 2, LEVEL, 2, height);
+    const points = three.diagonal_slice(CODE, 2, LEVEL, 2, height);
     if (points.length !== 2187) throw new Error(`research-cuts: ${points.length} points at ${height}, want 2187`);
     const tally = pieces(points);
     if (tally.join() !== "729,729,729")

@@ -2,8 +2,8 @@ use crate::dynamics::{injective, surjective};
 use crate::groups::{group, orbit};
 use crate::seed::Census;
 use crate::table::{genus, levels};
-use mrly_math::bang::universe::degree;
-use mrly_math::bang::Code;
+use mrly_bang::universe::degree;
+use mrly_math::code::Code;
 use mrly_num::boolean::walsh_spectrum;
 use std::collections::BTreeSet;
 

@@ -1,8 +1,9 @@
+import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { Bar } from "@mrlyprod/ui/kit/frame.tsx";
 import type { Readout } from "@mrlyprod/ui/kit/hooks.ts";
 import { useLatest } from "@mrlyprod/ui/kit/hooks.ts";
 import { Item, Library, Shelf } from "@mrlyprod/ui/kit/library.tsx";
-import type { Handle, Mathy, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
+import type { Handle, WidgetProps } from "@mrlyprod/ui/kit/page.tsx";
 import { Scene } from "@mrlyprod/ui/kit/page.tsx";
 import type { Opts, View } from "@mrlyprod/ui/kit/run.ts";
 import type { Patch } from "@mrlyprod/ui/kit/spec.ts";
@@ -15,7 +16,7 @@ import { make, spinning } from "./scene.ts";
 
 export type NeedlesProps = { rpm: number; onChange: (patch: Patch) => void };
 
-type Props = WidgetProps<Mathy, Spun> & { value: Spin & { seed: number } };
+type Props = WidgetProps<Mrly, Spun> & { value: Spin & { seed: number } };
 
 const deg = (x: number) => `${x.toFixed(1)}°`;
 
@@ -58,7 +59,6 @@ export function Needles({ rpm, onChange }: NeedlesProps) {
 }
 
 export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
-  const unit = units?.math;
   const [facts, setFacts] = useState<Facts | null>(null);
   const [pace, setPace] = useState<Pace | null>(null);
   const live = useRef<Handle | null>(null);
@@ -68,8 +68,8 @@ export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
   useEffect(() => onStatus?.(rows(facts, pace)), [facts, pace]);
   const scene = useCallback(
     (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
-      make(canvas, view, { ...opts, math: unit, onPace: setPace, onFacts: setFacts }),
-    [unit],
+      make(canvas, view, { ...opts, mrly: units, onPace: setPace, onFacts: setFacts }),
+    [units],
   );
   const needle = () => {
     if (live.current?.playing?.() === false) live.current.toggle!();
@@ -82,13 +82,13 @@ export function Widget({ value, onChange, onReady, onStatus, units }: Props) {
   };
   return (
     <>
-      {unit && <Scene make={scene} value={value} onReady={ready} onClick={table ? needle : undefined} />}
+      {units && <Scene make={scene} value={value} onReady={ready} onClick={table ? needle : undefined} />}
       <Library>
         {table && <Needles rpm={value.rpm} onChange={onChange} />}
-        <Moires value={value} onChange={onChange} math={unit} />
+        <Moires value={value} onChange={onChange} mrly={units} />
       </Library>
       <Bar side="right">
-        <Source value={value} onChange={onChange} math={unit} />
+        <Source value={value} onChange={onChange} mrly={units} />
       </Bar>
     </>
   );

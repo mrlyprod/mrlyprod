@@ -17,6 +17,7 @@ import {
   ink,
   LATTICES,
   LEADS,
+  LIST,
   LIT,
   landed,
   lay,
@@ -58,11 +59,11 @@ export type Told = Facts & { pick: Picked | null };
 
 export type Seen = Pick<View, "w" | "h" | "dpr" | "t" | "still"> & { look: () => Pick<Paints, "paper" | "accent"> };
 
-export type Given = Opts & { num?: Num | null; onFacts?: (facts: Told) => void };
+export type Given = Opts & { mrly?: Num | null; onFacts?: (facts: Told) => void };
 
 export type Ulam = ReturnType<typeof make>;
 
-export const units = wasm("num");
+export const units = wasm(...LIST);
 
 const line = (value: Value, by: number, num: Num): Patch => ({
   c: Number(value.a) > 0 ? step(num, Number(value.c), by, REACH) : Number(value.c),
@@ -103,11 +104,11 @@ export const PAGE = {
     { key: ["ArrowLeft", "ArrowRight"], label: "Step c", act: "line", when: lined },
   ],
   acts: {
-    next: (value, _key, units) => line(value, 1, units!.num),
-    line: (value, key, units) => line(value, key === "ArrowLeft" ? -1 : 1, units!.num),
+    next: (value, _key, units) => line(value, 1, units!),
+    line: (value, key, units) => line(value, key === "ArrowLeft" ? -1 : 1, units!),
   },
-  reroll: (_value, seed, units) => shuffle(units!.num, rng(seed)),
-} satisfies Page<Loaded<"num">, Ulam>;
+  reroll: (_value, seed, units) => shuffle(units!, rng(seed)),
+} satisfies Page<Loaded<"gaussian" | "num" | "ulam">, Ulam>;
 
 const GAP = 8;
 const INSET = 0.07;
@@ -177,8 +178,8 @@ export function sketch(
 }
 
 export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
-  const num = opts.num;
-  if (!num) throw new Error("ulam: the scene wants @mrlyprod/num as opts.num");
+  const num = opts.mrly;
+  if (!num) throw new Error("ulam: the scene wants @mrlyprod/gaussian, @mrlyprod/num and @mrlyprod/ulam as opts.mrly");
   const ctx = canvas.getContext("2d")!;
   let value = tidy(SPEC, opts) as Knobs;
   const room = () => EDGE * view.dpr;
@@ -295,12 +296,12 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   const pick = (u: number, v: number) => {
     const { geo, name } = plan;
     const [x, y] = geo.cell(u * view.w, v * view.h);
-    const at = Number(num.spiral.Lattice.ring_of(name, x, y));
+    const at = Number(num.ulam.Lattice.ring_of(name, x, y));
     if (at > plan.rings) picked = { off: true };
     else if (picked && picked.x === x && picked.y === y) picked = null;
     else {
-      const n = Number(num.spiral.Lattice.n(name, x, y));
-      const pile = num.prime.pile(n);
+      const n = Number(num.ulam.Lattice.n(name, x, y));
+      const pile = num.num.prime.pile(n);
       picked = { n, x, y, ring: at, prime: pile.prime, factors: pile.factors };
     }
     whole = true;

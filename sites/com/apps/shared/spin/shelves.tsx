@@ -9,7 +9,7 @@ import type { Look } from "./scene.ts";
 import { place, sheet } from "./scene.ts";
 import { read } from "./source.tsx";
 
-export type MoiresProps = { value: Look & Raw; onChange: (value: Src) => void; math?: Mrly | null };
+export type MoiresProps = { value: Look & Raw; onChange: (value: Src) => void; mrly?: Mrly | null };
 
 const NOTES: Partial<Record<string, string>> = {
   heatmap: "sum of layers",
@@ -26,7 +26,7 @@ export function stamp(ctx: CanvasRenderingContext2D, { values, top, side }: Rast
 
 export const toMoire = (value: Raw, preset: string) => read({ ...read(value), source: "moire", preset });
 
-export function Moires({ value, onChange, math }: MoiresProps) {
+export function Moires({ value, onChange, mrly }: MoiresProps) {
   const src = read(value);
   const tick = useTheme();
   const look = { ramp: value.ramp, levels: value.levels, invert: value.invert, tint: value.tint };
@@ -48,7 +48,7 @@ export function Moires({ value, onChange, math }: MoiresProps) {
           sub={NOTES[name]}
           on={src.source === "moire" && src.preset === name}
           onPick={() => onChange(toMoire(value, name))}
-          art={math ? art(math, name) : undefined}
+          art={mrly ? art(mrly, name) : undefined}
         />
       ))}
     </Shelf>

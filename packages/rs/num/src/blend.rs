@@ -1,5 +1,5 @@
 use crate::factor::gcd;
-use mrly_core::error::{Result, overflow_error, value_error};
+use mrly_error::{Result, overflow_error, value_error};
 
 const PRIMES: [u64; 3] = [2_147_483_647, 2_147_483_629, 2_147_483_587];
 

@@ -1,9 +1,10 @@
 import type { Color, Pen, Point } from "@mrlyprod/draw";
 import { frame, hex } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as six from "@mrlyprod/six";
+import * as three from "@mrlyprod/three";
 
-export const units = { math };
+export const units = { six, three };
 
 const CODE = "23";
 const SIDE = 7;
@@ -31,16 +32,16 @@ let slice: [Point[], Color][] | null = null;
 
 function facts() {
   if (slice) return slice;
-  const cut = math.six.cut(math.three.create(CODE, SIDE, 1, 2));
-  const tally = math.six.census(cut, false);
+  const cut = six.cut(three.create(CODE, SIDE, 1, 2));
+  const tally = six.census(cut, false);
   if (tally.triangles !== hex.count(SIDE))
     throw new Error(`slices: the cut holds ${tally.triangles} triangles, want ${hex.count(SIDE)}`);
-  const read = { fills: tally.fills, pieces: math.six.components(cut), holes: math.six.holes(cut) };
+  const read = { fills: tally.fills, pieces: six.components(cut), holes: six.holes(cut) };
   if (read.fills !== WANT.fills || read.pieces !== WANT.pieces || read.holes !== WANT.holes)
     throw new Error(
       `slices: the carpet's middle hexagon of side ${SIDE} reads ${JSON.stringify(read)}, want ${JSON.stringify(WANT)}`,
     );
-  const tones: Partial<Record<number, Color>> = { [math.six.FILL()]: LIT, [math.six.VOID()]: HOLE };
+  const tones: Partial<Record<number, Color>> = { [six.FILL()]: LIT, [six.VOID()]: HOLE };
   const tris: [Point[], Color][] = [];
   hex.draw<Color>(
     { triangle: (a, b, c, tone) => tris.push([[a, b, c], tone]) },

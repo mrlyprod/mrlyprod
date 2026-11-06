@@ -1,5 +1,8 @@
+import type * as cropUnit from "@mrlyprod/crop";
 import type { Ink } from "@mrlyprod/draw";
-import type { Cell, moire, shape, Tensor, three } from "@mrlyprod/math";
+import type { Cell, Tensor } from "@mrlyprod/math";
+import type * as moire from "@mrlyprod/moire";
+import type * as three from "@mrlyprod/three";
 import { hex } from "@mrlyprod/ui/kit/color.ts";
 import type { Code, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import { canon } from "@mrlyprod/ui/kit/designs/engine.ts";
@@ -149,60 +152,60 @@ function keyOf(one: WeakKey): number {
   return ids.get(one)!;
 }
 
-export const cap = (math: Mrly, number: number, crop?: Crop | "") =>
-  math.bang.level_cap(number, 1, crop ? CROPPED : SIDE);
+export const cap = (mrly: Mrly, number: number, crop?: Crop | "") =>
+  mrly.math.factory.level_cap(number, 1, crop ? CROPPED : SIDE);
 
-export const counted = (math: Mrly, number: number) => math.bang.level_cap(number, DIM, COUNTED);
+export const counted = (mrly: Mrly, number: number) => mrly.math.factory.level_cap(number, DIM, COUNTED);
 
-export const side = (math: Mrly, number: number, level: number) => n(math.counts.grid(number, 1, level));
+export const side = (mrly: Mrly, number: number, level: number) => n(mrly.sequences.counts.grid(number, 1, level));
 
-export function top(math: Mrly, number: number, count: number, centre: Centre): number {
-  const edge = side(math, number, Math.min(count, counted(math, number)));
+export function top(mrly: Mrly, number: number, count: number, centre: Centre): number {
+  const edge = side(mrly, number, Math.min(count, counted(mrly, number)));
   return centre === "centre" ? Math.floor((edge - 1) / 2) : edge - 1;
 }
 
-export function design(math: Mrly, value: Coded): Made {
+export function design(mrly: Mrly, value: Coded): Made {
   const base = Number(value.base) === 3 ? 3 : 2;
   const text = String(value.code ?? "").trim();
-  return { base, code: canon(math, DIM, base, text) };
+  return { base, code: canon(mrly, DIM, base, text) };
 }
 
-export function named(math: Mrly, code: Code, base: number): string {
-  return math.name.of(code, DIM, base) ?? "";
+export function named(mrly: Mrly, code: Code, base: number): string {
+  return mrly.math.name.of(code, DIM, base) ?? "";
 }
 
 export function tag(name: string, code: Code, base: number): string {
   return `${base === 3 ? "b3 " : ""}${name || "code"} ${code}`;
 }
 
-export function grown(math: Mrly, code: Code, base: number, number: number, level: number): Cell {
-  return cells(`${code} ${base} ${number} ${level}`, () => math.three.create(code, number, level, base));
+export function grown(mrly: Mrly, code: Code, base: number, number: number, level: number): Cell {
+  return cells(`${code} ${base} ${number} ${level}`, () => mrly.three.create(code, number, level, base));
 }
 
 export const tensor = (cell: Cell): Tensor => ({ shape: cell.shape, data: cell.types });
 
 export const flat = (kept: Tensor): Cell => ({ shape: kept.shape, types: kept.data });
 
-export function faces(math: Mrly, cell: Cell): three.Quad[] {
-  return meshes(keyOf(cell), () => math.three.quads(cell));
+export function faces(mrly: Mrly, cell: Cell): three.Quad[] {
+  return meshes(keyOf(cell), () => mrly.three.quads(cell));
 }
 
-export function tally(math: Mrly, cell: Cell): three.Census | null {
-  return derived(`tally ${keyOf(cell)}`, () => (cell.types.length <= TALLY ? math.three.census(cell) : null));
+export function tally(mrly: Mrly, cell: Cell): three.Census | null {
+  return derived(`tally ${keyOf(cell)}`, () => (cell.types.length <= TALLY ? mrly.three.census(cell) : null));
 }
 
-export function load(math: Mrly, cell: Cell, cubes: boolean): number {
-  return derived(`load ${keyOf(cell)} ${cubes}`, () => (cubes ? math.three.fills(cell) : n(math.three.surface(cell))));
+export function load(mrly: Mrly, cell: Cell, cubes: boolean): number {
+  return derived(`load ${keyOf(cell)} ${cubes}`, () => (cubes ? mrly.three.fills(cell) : n(mrly.three.surface(cell))));
 }
 
-export function region(math: Mrly, name: string, radius: number, anti: boolean, den = DEN): shape.Shape {
-  const frac = new math.shape.Frac(radius, den);
-  const core = math.shape.named(name, DIM, frac);
+export function region(mrly: Mrly, name: string, radius: number, anti: boolean, den = DEN): cropUnit.Shape {
+  const frac = new mrly.crop.Frac(radius, den);
+  const core = mrly.crop.named(name, DIM, frac);
   frac.free();
   return anti ? { Anti: core } : core;
 }
 
-export function walls(core: shape.Shape | null | undefined): Wall[] | null {
+export function walls(core: cropUnit.Shape | null | undefined): Wall[] | null {
   const list = core && "Polytope" in core ? core.Polytope.walls : null;
   if (!list) return null;
   return list.map(({ normal: [x, y, z], offset }): Wall => {
@@ -213,35 +216,35 @@ export function walls(core: shape.Shape | null | undefined): Wall[] | null {
   });
 }
 
-export function cropped(math: Mrly, cell: Cell, value: Cropping): Cut {
+export function cropped(mrly: Mrly, cell: Cell, value: Cropping): Cut {
   const { crop, radius, anti, policy } = value;
   return derived(`crop ${keyOf(cell)} ${crop} ${radius} ${anti} ${policy}`, () => {
-    const shape = region(math, crop, radius, Number(anti) === 1);
-    const kept = math.shape.crop(tensor(cell), shape, policy !== "inside");
-    const { filled } = math.shape.census(shape, tensor(cell));
+    const shape = region(mrly, crop, radius, Number(anti) === 1);
+    const kept = mrly.crop.crop(tensor(cell), shape, policy !== "inside");
+    const { filled } = mrly.crop.census(shape, tensor(cell));
     const out = flat(kept);
-    return { cell: out, out: n(filled[0]), cut: n(filled[1]), in: n(filled[2]), after: n(math.three.surface(out)) };
+    return { cell: out, out: n(filled[0]), cut: n(filled[1]), in: n(filled[2]), after: n(mrly.three.surface(out)) };
   });
 }
 
-export function circle(math: Mrly, made: Made, value: Counting): Count {
+export function circle(mrly: Mrly, made: Made, value: Counting): Count {
   const { code, base } = made;
   const { number, centre } = value;
-  const level = Math.min(value.count, counted(math, number));
+  const level = Math.min(value.count, counted(mrly, number));
   return derived(`circle ${code} ${base} ${number} ${level} ${centre}`, () => {
-    const cell = grown(math, code, base, number, level);
+    const cell = grown(mrly, code, base, number, level);
     const edge = cell.shape[0];
-    const last = top(math, number, level, centre);
+    const last = top(mrly, number, level, centre);
     const origin = centre === "centre" ? [edge, edge, edge] : [0, 0, 0];
-    const rows = math.shape.radial_census(tensor(cell), origin, last);
+    const rows = mrly.crop.radial_census(tensor(cell), origin, last);
     return {
       side: edge,
       top: last,
       seen: rows.map((row) => n(row.seen)),
       inside: rows.map((row) => n(row.inside)),
       cut: rows.map((row) => n(row.cut)),
-      mass: n(math.counts.fill(code, number, DIM, 1, base)),
-      d: math.counts.dimension(code, number, DIM, base),
+      mass: n(mrly.sequences.counts.fill(code, number, DIM, 1, base)),
+      d: mrly.sequences.counts.dimension(code, number, DIM, base),
     };
   });
 }
@@ -254,13 +257,13 @@ export function reading(count: Count, r: number): Reading {
 export const odd = (limit: number) =>
   Array.from({ length: (Math.max(1, Math.floor(limit)) + 1) >> 1 }, (_, i) => 2 * i + 1);
 
-export function field(math: Mrly, made: Made, value: Stacking): Field {
+export function field(mrly: Mrly, made: Made, value: Stacking): Field {
   const { code, base } = made;
   const { limit, combine, depth, size } = value;
   return fields(`${code} ${base} ${limit} ${combine} ${depth} ${size}`, () => {
-    const spec = math.moire.Spec.new(code, base, DIM);
+    const spec = mrly.moire.Spec.new(code, base, DIM);
     const scales = Uint32Array.from(odd(limit));
-    const volume = math.moire.volume(spec, scales, MERGE[combine] ?? MERGE.sum, depth, size);
+    const volume = mrly.moire.volume(spec, scales, MERGE[combine] ?? MERGE.sum, depth, size);
     return {
       volume,
       layers: scales.length,
@@ -272,8 +275,8 @@ export function field(math: Mrly, made: Made, value: Stacking): Field {
   });
 }
 
-export function most(math: Mrly, value: Coded & Stacking): number {
-  return field(math, design(math, value), value).max;
+export function most(mrly: Mrly, value: Coded & Stacking): number {
+  return field(mrly, design(mrly, value), value).max;
 }
 
 export function colorizer(ink: Ink, ramp: RampName, levels: number): Colorizer {
@@ -284,16 +287,16 @@ export function colorizer(ink: Ink, ramp: RampName, levels: number): Colorizer {
   };
 }
 
-export function plane(math: Mrly, made: Field, key: Axis, offset: number, paint: Paint): Plane {
+export function plane(mrly: Mrly, made: Field, key: Axis, offset: number, paint: Paint): Plane {
   return derived(
     `plane ${keyOf(made)} ${key} ${offset} ${paint.levels} ${paint.invert} ${JSON.stringify(paint.colorizer)}`,
     () => {
       const [, , normal] = PLANES.find(([one]) => one === key)!;
-      const frame = math.moire.frame(normal, offset);
+      const frame = mrly.moire.frame(normal, offset);
       const wide = WIDE[key];
       const [values, mask] = made.volume.plane(frame, wide);
-      const sheet = math.moire.Field.from_data(values, wide);
-      const image = math.moire.render(
+      const sheet = mrly.moire.Field.from_data(values, wide);
+      const image = mrly.moire.render(
         sheet,
         paint.colorizer,
         Math.max(2, Math.floor(paint.levels)),
@@ -309,13 +312,13 @@ export function plane(math: Mrly, made: Field, key: Axis, offset: number, paint:
   );
 }
 
-export function shell(math: Mrly, made: Field, value: Skin): Shell {
+export function shell(mrly: Mrly, made: Field, value: Skin): Shell {
   return derived(
     `shell ${keyOf(made)} ${value.threshold} ${value.crop} ${value.radius} ${value.anti} ${value.policy}`,
     () => {
       const solid = flat(made.volume.solid(value.threshold));
-      const cell = value.crop ? cropped(math, solid, value).cell : solid;
-      return { cell, count: made.volume.count(value.threshold), faces: n(math.three.surface(cell)) };
+      const cell = value.crop ? cropped(mrly, solid, value).cell : solid;
+      return { cell, count: made.volume.count(value.threshold), faces: n(mrly.three.surface(cell)) };
     },
   );
 }

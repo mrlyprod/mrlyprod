@@ -1,6 +1,7 @@
 import type { Color, Ink } from "@mrlyprod/draw";
 import { ink } from "@mrlyprod/draw";
-import type { Image, moire } from "@mrlyprod/math";
+import type { Image } from "@mrlyprod/math";
+import type * as moire from "@mrlyprod/moire";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { hex, rgb } from "@mrlyprod/ui/kit/color.ts";
 import type { Code, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
@@ -131,33 +132,33 @@ export function colorizer(ramp: Ramp, levels: number, look: Look): Colorizer {
 }
 
 export function paint(
-  math: Mrly,
+  mrly: Mrly,
   { field: made, data }: Pick<Held, "field" | "data">,
   colors: Colorizer,
   levels: number,
   invert: Scalar,
   symmetric = false,
 ): Image {
-  const image = math.moire.render(made, colors, Math.max(2, Math.floor(levels)), symmetric, Number(invert) === 1, 1);
+  const image = mrly.moire.render(made, colors, Math.max(2, Math.floor(levels)), symmetric, Number(invert) === 1, 1);
   const out = image.colors;
   for (let i = 0; i < data.length; i++) if (Number.isNaN(data[i])) out[i * 4 + 3] = 0;
   return { shape: image.shape, colors: out };
 }
 
-export function design(math: Mrly, value: Entry): Design {
+export function design(mrly: Mrly, value: Entry): Design {
   const base = Number(value.base) === 2 ? 2 : 3;
-  const code = canon(math, DIM, base, value.code);
+  const code = canon(mrly, DIM, base, value.code);
   const level = Math.min(DEEPEST, Math.max(1, Math.round(Number(value.level) || 1)));
-  return { base, code, level, name: math.name.of(code, DIM, base) ?? "" };
+  return { base, code, level, name: mrly.math.name.of(code, DIM, base) ?? "" };
 }
 
 const tables = new WeakMap<Mrly, Preset[]>();
 
-export function presets(math: Mrly): Preset[] {
-  if (!tables.has(math)) {
+export function presets(mrly: Mrly): Preset[] {
+  if (!tables.has(mrly)) {
     tables.set(
-      math,
-      math.moire.all(1).map((one): Preset => {
+      mrly,
+      mrly.moire.all(1).map((one): Preset => {
         const { name, spec, level, lattice, combine } = one.toJSON();
         one.free();
         return {
@@ -170,7 +171,7 @@ export function presets(math: Mrly): Preset[] {
       }),
     );
   }
-  return tables.get(math)!;
+  return tables.get(mrly)!;
 }
 
 export function presetOf(list: readonly Preset[], value: Pick<Recipe, "base" | "code" | "level" | "combine">): string {
@@ -185,9 +186,9 @@ export function presetOf(list: readonly Preset[], value: Pick<Recipe, "base" | "
   );
 }
 
-export function drawn(math: Mrly, seed: number): Drawn {
+export function drawn(mrly: Mrly, seed: number): Drawn {
   const rand = rng(seed);
-  const list = presets(math);
+  const list = presets(mrly);
   const { name, ...picked } = list[Math.floor(rand() * list.length)];
   return { seed, ...picked, limit: 1 + 2 * Math.floor(rand() * ((TOP + 1) / 2)) };
 }
@@ -207,58 +208,58 @@ const witnesses = memo<number, moire.pairs.Witness>(128);
 
 const matrices = memo<number, Table>(8);
 
-const witness = (math: Mrly, scale: number) => witnesses(scale, () => math.moire.pairs.witness(scale));
+const witness = (mrly: Mrly, scale: number) => witnesses(scale, () => mrly.moire.pairs.witness(scale));
 
-export function matrix(math: Mrly, limit: number): Table {
+export function matrix(mrly: Mrly, limit: number): Table {
   return matrices(limit, () => {
     const scales = odd(limit).filter((n) => n >= 3);
-    return { scales, grid: scales.map((a) => scales.map((b) => math.moire.pairs.correlation(a, b))) };
+    return { scales, grid: scales.map((a) => scales.map((b) => mrly.moire.pairs.correlation(a, b))) };
   });
 }
 
-export function law(math: Mrly, limit: number, scale: number, mate: number): Trial {
-  const { scales } = matrix(math, limit);
+export function law(mrly: Mrly, limit: number, scale: number, mate: number): Trial {
+  const { scales } = matrix(mrly, limit);
   const row = scales.filter((n) => n <= scale).at(-1) ?? scales[0] ?? 0;
-  const seen = row ? witness(math, row) : null;
+  const seen = row ? witness(mrly, row) : null;
   const pair = seen?.scales.includes(mate) ? mate : (seen?.scales.at(-1) ?? 0);
   const r = seen && pair ? seen.row[seen.scales.indexOf(pair)] : null;
   return { row, mate: pair, r, witness: seen, k: scales.length };
 }
 
-export function study(math: Mrly, value: Recipe): Plan {
-  const made = design(math, value);
+export function study(mrly: Mrly, value: Recipe): Plan {
+  const made = design(mrly, value);
   const numbers = odd(value.limit);
   return {
     ...made,
     numbers,
-    spec: math.moire.Spec.new(made.code, made.base, DIM),
+    spec: mrly.moire.Spec.new(made.code, made.base, DIM),
     merge: MERGE[value.combine] ?? "Sum",
     lattice: value.combine === "hive" ? "Hex" : "Square",
   };
 }
 
-export function swatch(math: Mrly, value: Styled, size: number, look: Look) {
-  const made = field(math, study(math, value), size);
-  const out = paint(math, made, colorizer(value.ramp, value.levels, look), value.levels, value.invert);
+export function swatch(mrly: Mrly, value: Styled, size: number, look: Look) {
+  const made = field(mrly, study(mrly, value), size);
+  const out = paint(mrly, made, colorizer(value.ramp, value.levels, look), value.levels, value.invert);
   made.field.free();
   return out;
 }
 
-export function crop(math: Mrly, name: string, radius: number, anti: Scalar, size: number): Uint8Array | null {
+export function crop(mrly: Mrly, name: string, radius: number, anti: Scalar, size: number): Uint8Array | null {
   if (!name) return null;
-  const frac = new math.shape.Frac(radius, GRAIN);
-  const shape = math.shape.named(name, DIM, frac);
+  const frac = new mrly.crop.Frac(radius, GRAIN);
+  const shape = mrly.crop.named(name, DIM, frac);
   frac.free();
-  return Uint8Array.from(math.shape.regions(shape, [size, size]).data, (region) =>
+  return Uint8Array.from(mrly.crop.regions(shape, [size, size]).data, (region) =>
     (Number(anti) === 1 ? region === 0 : region > 0) ? 1 : 0,
   );
 }
 
-export function field(math: Mrly, plan: Plan, size: number, kept: Uint8Array | null = null): Held {
-  const made = math.moire.stack(plan.spec, plan.numbers, plan.merge, plan.level, plan.lattice, size, []);
+export function field(mrly: Mrly, plan: Plan, size: number, kept: Uint8Array | null = null): Held {
+  const made = mrly.moire.stack(plan.spec, plan.numbers, plan.merge, plan.level, plan.lattice, size, []);
   const data = made.data;
   if (!kept) return { field: made, data, size };
   made.free();
   for (let i = 0; i < data.length; i++) if (!kept[i]) data[i] = NaN;
-  return { field: math.moire.Field.from_data(data, size), data, size };
+  return { field: mrly.moire.Field.from_data(data, size), data, size };
 }

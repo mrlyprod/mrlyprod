@@ -2,8 +2,9 @@ import type { Pen, Point } from "@mrlyprod/draw";
 import { Grid } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import * as num from "@mrlyprod/num";
+import * as ulam from "@mrlyprod/ulam";
 
-export const units = { num };
+export const units = { num, ulam };
 
 type Sheet = { xs: Int32Array; ys: Int32Array; marks: Int8Array; line: number[] };
 
@@ -18,14 +19,14 @@ let sheet: Sheet | null = null;
 
 function facts(): Sheet {
   if (sheet) return sheet;
-  const top = num.spiral.Lattice.count("Square", SIDE);
-  const marks = num.spiral.marks("Prime", top);
+  const top = ulam.Lattice.count("Square", SIDE);
+  const marks = ulam.marks("Prime", top);
   const xs = new Int32Array(top + 1);
   const ys = new Int32Array(top + 1);
   const sums = new Map<number, number[]>();
   let lit = 0;
   for (let n = 1; n <= top; n++) {
-    const [x, y] = num.spiral.Lattice.xy("Square", n);
+    const [x, y] = ulam.Lattice.xy("Square", n);
     xs[n] = Number(x);
     ys[n] = Number(y);
     if (n > 1 && Math.abs(xs[n] - xs[n - 1]) + Math.abs(ys[n] - ys[n - 1]) !== 1)

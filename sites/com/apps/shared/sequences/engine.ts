@@ -1,6 +1,7 @@
-import type * as mrly from "@mrlyprod/math";
+import type * as math from "@mrlyprod/math";
+import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 
-export type Mrly = typeof mrly;
+export type { Mrly };
 
 export type Slug =
   | "fills"
@@ -246,17 +247,17 @@ export const keyed = (records: Entry[], needle: string) =>
 
 const strip = (word: string) => (/^[hvxyz](tree|line)$/.test(word) ? word.slice(1) : word);
 
-export function ledger(math: Mrly) {
+export function ledger(mrly: Mrly) {
   const census = new Map<string, Census>();
-  const slices = new Map<string, mrly.Cell6d>();
+  const slices = new Map<string, math.Cell6d>();
   const profiles = new Map<string, bigint[]>();
   const rows = new Map<string, Row>();
   const titles = new Map<number, Names>();
   const books = new Map<string, Design[]>();
   const shelves = new Map<string, Row[]>();
   const swept = new Map<string, number>();
-  const tile = (dim: number, base: number, code: string, side: number, level: number): mrly.Cell =>
-    dim === 2 ? math.two.create(code, side, level, 0, base) : math.three.create(code, side, level, base);
+  const tile = (dim: number, base: number, code: string, side: number, level: number): math.Cell =>
+    dim === 2 ? mrly.two.create(code, side, level, 0, base) : mrly.three.create(code, side, level, base);
   const memo = <K, T>(map: Map<K, T>, id: K, make: () => T): T => {
     const held = map.get(id);
     if (held !== undefined) return held;
@@ -269,8 +270,8 @@ export function ledger(math: Mrly) {
       const total = 1 << (1 << dim);
       const cells = Array.from({ length: total }, (_, code) => tile(dim, 2, String(code), 3, 1).types.join(""));
       const named = [
-        ...math.bang.sources("Classics", dim).flatMap((one) => ("design" in one ? [one.design] : [])),
-        ...math.bang.catalog.antis(dim),
+        ...mrly.bang.sources("Classics", dim).flatMap((one) => ("design" in one ? [one.design] : [])),
+        ...mrly.math.catalog.antis(dim),
       ];
       const exact = new Map([
         [0, "empty"],
@@ -278,9 +279,9 @@ export function ledger(math: Mrly) {
       ]);
       const orbits = new Map(exact);
       for (const name of named) {
-        const drawn = (dim === 2 ? math.two.named(name, 3, 1, 0) : math.three.named(name, 3, 1)).types.join("");
+        const drawn = (dim === 2 ? mrly.two.named(name, 3, 1, 0) : mrly.three.named(name, 3, 1)).types.join("");
         const code = cells.indexOf(drawn);
-        const canon = Math.min(...math.bang.universe.orbit(String(code), dim).map(Number));
+        const canon = Math.min(...mrly.bang.universe.orbit(String(code), dim).map(Number));
         const word = strip(name.toLowerCase());
         exact.set(code, word);
         if (code === canon || !orbits.has(canon)) orbits.set(canon, word);
@@ -291,7 +292,7 @@ export function ledger(math: Mrly) {
     if (base !== 2) return "";
     const { exact, orbits } = names(dim);
     return (
-      exact.get(Number(code)) ?? orbits.get(Math.min(...math.bang.universe.orbit(String(code), dim).map(Number))) ?? ""
+      exact.get(Number(code)) ?? orbits.get(Math.min(...mrly.bang.universe.orbit(String(code), dim).map(Number))) ?? ""
     );
   };
   const design = (dim: number, base: number, code: string): Design => {
@@ -306,13 +307,13 @@ export function ledger(math: Mrly) {
   const designs = (dim: number, base: number) =>
     memo(books, `${dim}-${base}`, (): Design[] => {
       const codes =
-        base === 2 ? math.bang.universe_codes(dim) : math.bang.baseq.representatives(base, dim).map(([code]) => code);
+        base === 2 ? mrly.bang.universe_codes(dim) : mrly.bang.baseq.representatives(base, dim).map(([code]) => code);
       const made = codes.map((code) => design(dim, base, code));
       return [...made.filter((one) => !blank(one)), ...made.filter(blank)];
     });
   const holds = (dim: number, base: number, code: string) => {
     try {
-      math.counts.fill(String(code), 3, dim, 1, base);
+      mrly.sequences.counts.fill(String(code), 3, dim, 1, base);
       return true;
     } catch {
       return false;
@@ -351,7 +352,7 @@ export function ledger(math: Mrly) {
         name,
         label,
         cells,
-        file: new math.name.Sequence(code, dim, base, m, axis).to_file(),
+        file: new mrly.math.name.Sequence(code, dim, base, m, axis).to_file(),
         terms: [],
         stop: 0,
         error: "",
@@ -359,7 +360,7 @@ export function ledger(math: Mrly) {
     });
   const file = (text: string) => {
     try {
-      const named = math.name.Sequence.from_file(String(text).trim()).toJSON();
+      const named = mrly.math.name.Sequence.from_file(String(text).trim()).toJSON();
       const parsed = parse(`${named.dim}-${named.base ?? 2}-${named.code}-${named.measure}-${named.axis}`);
       return parsed ? row(parsed) : null;
     } catch {
@@ -377,24 +378,26 @@ export function ledger(math: Mrly) {
   const tally = (one: Row, side: number, level: number) =>
     memo(census, `${one.dim}-${one.base}-${one.code}-${side}-${level}`, (): Census => {
       const cell = tile(one.dim, one.base, one.code, side, level);
-      return one.dim === 2 ? math.two.census(cell) : math.three.census(cell);
+      return one.dim === 2 ? mrly.two.census(cell) : mrly.three.census(cell);
     });
   const slice = (one: Row, side: number, level: number) =>
-    memo(slices, `${one.code}-${side}-${level}`, () => math.six.cut_design(one.code, side, level, one.base));
+    memo(slices, `${one.code}-${side}-${level}`, () => mrly.six.cut_design(one.code, side, level, one.base));
   const profile = (one: Row, side: number, level: number) =>
     memo(profiles, `${one.dim}-${one.base}-${one.code}-${side}-${level}`, () =>
-      math.counts.profile_of_tile(math.bang.factory.create(one.code, side, one.dim, one.base, 1), level).map(BigInt),
+      mrly.sequences.counts
+        .profile_of_tile(mrly.math.factory.create(one.code, side, one.dim, one.base, 1), level)
+        .map(BigInt),
     );
   const term = (one: Row, index: number): string => {
     const { dim, base, code } = one;
     const { number: side, level } = spot(one, index);
     switch (one.measure) {
       case "fills":
-        return math.counts.fill(code, side, dim, level, base);
+        return mrly.sequences.counts.fill(code, side, dim, level, base);
       case "voids":
-        return math.counts.void_(code, side, dim, level, base);
+        return mrly.sequences.counts.void_(code, side, dim, level, base);
       case "surface":
-        return math.counts.exposure(code, side, dim, level, base);
+        return mrly.sequences.counts.exposure(code, side, dim, level, base);
       case "peak": {
         let top = 0n;
         for (const v of profile(one, side, level)) if (v > top) top = v;
@@ -403,17 +406,17 @@ export function ledger(math: Mrly) {
       case "heights":
         return String(profile(one, side, level).filter((v) => v > 0n).length);
       case "triangles":
-        return math.counts.cut_fills(code, side, level);
+        return mrly.sequences.counts.cut_fills(code, side, level);
       case "cutvoids":
-        return math.counts.cut_voids(code, side, level);
+        return mrly.sequences.counts.cut_voids(code, side, level);
       case "profills":
-        return math.counts.pro_fills(code, side, level);
+        return mrly.sequences.counts.pro_fills(code, side, level);
       case "provoids":
-        return math.counts.pro_voids(code, side, level);
+        return mrly.sequences.counts.pro_voids(code, side, level);
       case "holes":
-        return String(math.six.holes(slice(one, side, level)));
+        return String(mrly.six.holes(slice(one, side, level)));
       case "pieces":
-        return String(math.six.components(slice(one, side, level)));
+        return String(mrly.six.components(slice(one, side, level)));
       default:
         return String(tally(one, side, level)[one.measure]);
     }
@@ -476,10 +479,10 @@ export function ledger(math: Mrly) {
 
 export type Ledger = ReturnType<typeof ledger>;
 
-let kept: { math: Mrly; book: Ledger } | null = null;
+let kept: { mrly: Mrly; book: Ledger } | null = null;
 
-export function booked(math: Mrly): Ledger {
-  if (kept?.math !== math) kept = { math, book: ledger(math) };
+export function booked(mrly: Mrly): Ledger {
+  if (kept?.mrly !== mrly) kept = { mrly, book: ledger(mrly) };
   return kept.book;
 }
 

@@ -1,0 +1,8 @@
+small  U8 max 255
+wide   U16 max 65535
+signed I32 max 2147483647
+wide.u16s   [300, 400, 500]
+signed.i32s [-5, 0, 5]
+signed.at(0) -5
+tensor is U16, not u8.
+tensor data holds 3 elements, shape [2, 2] wants 4.

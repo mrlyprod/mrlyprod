@@ -1,0 +1,6 @@
+code  0 orbit 1 degree -1 anf 0
+code  1 orbit 4 degree  2 anf 1+y+x+xy
+code  3 orbit 4 degree  1 anf 1+x
+code  6 orbit 2 degree  1 anf y+x
+code  7 orbit 4 degree  2 anf 1+xy
+code 15 orbit 1 degree  0 anf 1

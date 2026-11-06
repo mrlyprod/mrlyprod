@@ -1,8 +1,9 @@
 import type { Pen, Pixels } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as math from "@mrlyprod/math";
+import * as moire from "@mrlyprod/moire";
+import * as starUnit from "@mrlyprod/star";
 
-export const units = { math };
+export const units = { moire, star: starUnit };
 
 const CARPET = "23";
 const LAYERS = 3;
@@ -15,22 +16,22 @@ let held: Pixels | null = null;
 
 function stacked(): Pixels {
   if (held) return held;
-  const spec = math.moire.Spec.new(CARPET, 2, 3);
-  const frame = math.moire.frame([1, 1, 1], 0.5);
+  const spec = moire.Spec.new(CARPET, 2, 3);
+  const frame = moire.frame([1, 1, 1], 0.5);
   const sum = new Float32Array(SIZE * SIZE);
   let inside: Uint8Array | null = null;
   for (let n = 1; n < 2 * LAYERS; n += 2) {
-    const volume = math.moire.volume(spec, [n], "Sum", 1, n);
+    const volume = moire.volume(spec, [n], "Sum", 1, n);
     const [cut, mask] = volume.plane(frame, SIZE);
     volume.free();
     inside ??= mask;
     for (let i = 0; i < sum.length; i++) sum[i] += cut[i];
   }
-  const star = new math.six.star.Star(CARPET);
+  const star = new starUnit.Star(CARPET);
   let exact = 0;
   for (let n = 1; n < 2 * LAYERS; n += 2) {
     const arm = star.arm(n, 0).reduced().join("/");
-    const law = math.six.star.arm_law(n).reduced().join("/");
+    const law = starUnit.arm_law(n).reduced().join("/");
     exact += arm === law ? 1 : 0;
   }
   star.free();

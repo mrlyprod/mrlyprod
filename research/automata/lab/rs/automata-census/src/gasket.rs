@@ -1,5 +1,5 @@
 use crate::rules::{output, single_seed, Diagram};
-use mrly_core::tensor::Tensor;
+use mrly_tensor::Tensor;
 
 const CANDIDATES: [usize; 4] = [7, 11, 13, 14];
 const DEPTH: usize = 8;

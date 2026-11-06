@@ -1,0 +1,6 @@
+fills = 3k^2 - 2k
+k=2 side  3: polynomial   8, counted 8
+k=3 side  5: polynomial  21, counted 21
+k=4 side  7: polynomial  40, counted 40
+k=5 side  9: polynomial  65, counted 65
+k=6 side 11: polynomial  96, counted 96

@@ -1,9 +1,34 @@
-import type * as mrly from "@mrlyprod/math";
-import type { bang, Cell } from "@mrlyprod/math";
+import type * as bang from "@mrlyprod/bang";
+import type { Cell } from "@mrlyprod/math";
+import type { Had } from "../hooks.ts";
 import type { Rng } from "../rand.ts";
 import { pick, rng } from "../rand.ts";
 
-export type Mrly = typeof mrly;
+export const CRATES = [
+  "arcs",
+  "automaton",
+  "bang",
+  "chaos",
+  "chladni",
+  "crop",
+  "graph",
+  "math",
+  "moire",
+  "radix",
+  "roulette",
+  "sequences",
+  "six",
+  "spin",
+  "star",
+  "thue",
+  "three",
+  "tourbillon",
+  "two",
+] as const;
+
+export type Crate = (typeof CRATES)[number];
+
+export type Mrly = Had<Crate>;
 
 export type Code = string | number | bigint;
 
@@ -72,47 +97,47 @@ const groups = new Map<string, Uint32Array[]>();
 const reps = new Map<string, Orbit[] | null>();
 const runs = new Map<number, Run>();
 
-export const cap = (math: Mrly, dim: number) => math.bang.level_cap(SIDE, dim, BUDGET);
+export const cap = (mrly: Mrly, dim: number) => mrly.math.factory.level_cap(SIDE, dim, BUDGET);
 
-export function total(math: Mrly, dim: number, base: number): number {
-  return Number(math.bang.factory.total_codes(dim, base));
+export function total(mrly: Mrly, dim: number, base: number): number {
+  return Number(mrly.math.factory.total_codes(dim, base));
 }
 
-export function distinct(math: Mrly, dim: number, base: number): number {
-  return Number(math.bang.baseq.distinct_designs(base, dim));
+export function distinct(mrly: Mrly, dim: number, base: number): number {
+  return Number(mrly.bang.baseq.distinct_designs(base, dim));
 }
 
-export function codes(math: Mrly, dim: number, base: number): string[] | null {
-  const count = total(math, dim, base);
+export function codes(mrly: Mrly, dim: number, base: number): string[] | null {
+  const count = total(mrly, dim, base);
   return count <= LIMIT ? Array.from({ length: count }, (_, code) => String(code)) : null;
 }
 
-export function roll(math: Mrly, dim: number, base: number, rand: Rng): string {
-  return math.bang.random_code(dim, base, new math.Rng(Math.floor(rand() * 2 ** 32)), 1);
+export function roll(mrly: Mrly, dim: number, base: number, rand: Rng): string {
+  return mrly.math.factory.random_code(dim, base, new mrly.math.Rng(Math.floor(rand() * 2 ** 32)), 1);
 }
 
-const wrap = (math: Mrly, dim: number, base: number, text: string) => {
-  const count = total(math, dim, base);
+const wrap = (mrly: Mrly, dim: number, base: number, text: string) => {
+  const count = total(mrly, dim, base);
   return String(((Math.floor(Number(text)) % count) + count) % count);
 };
 
-export function settle(math: Mrly, dim: number, base: number, code: Code | null | undefined, rand: Rng): string {
+export function settle(mrly: Mrly, dim: number, base: number, code: Code | null | undefined, rand: Rng): string {
   const text = String(code ?? "").trim();
-  return text === "" || !Number.isFinite(Number(text)) ? roll(math, dim, base, rand) : wrap(math, dim, base, text);
+  return text === "" || !Number.isFinite(Number(text)) ? roll(mrly, dim, base, rand) : wrap(mrly, dim, base, text);
 }
 
-export function home(math: Mrly, dim: number, base: number): string {
-  const words = math.name.words(dim, base);
+export function home(mrly: Mrly, dim: number, base: number): string {
+  const words = mrly.math.name.words(dim, base);
   return (words.find(([, name]) => name === HOME) ?? words[0])?.[0] ?? "0";
 }
 
-export function canon(math: Mrly, dim: number, base: number, code: Code | null | undefined): string {
+export function canon(mrly: Mrly, dim: number, base: number, code: Code | null | undefined): string {
   const text = String(code ?? "").trim();
-  return text === "" || !Number.isFinite(Number(text)) ? home(math, dim, base) : wrap(math, dim, base, text);
+  return text === "" || !Number.isFinite(Number(text)) ? home(mrly, dim, base) : wrap(mrly, dim, base, text);
 }
 
 export function drawn(
-  math: Mrly,
+  mrly: Mrly,
   dim: number,
   base: number,
   list: readonly string[] | null | undefined,
@@ -121,92 +146,92 @@ export function drawn(
 ): string {
   const rand = rng(seed);
   const others = (list ?? []).filter((one) => one !== String(code));
-  return others.length ? pick(rand, others) : roll(math, dim, base, rand);
+  return others.length ? pick(rand, others) : roll(mrly, dim, base, rand);
 }
 
-export function sequence(math: Mrly, base: Base): Run {
+export function sequence(mrly: Mrly, base: Base): Run {
   if (!runs.has(base))
-    runs.set(base, { upto: UPTO[base], terms: math.bang.baseq.sequence(base, UPTO[base]).map(String) });
+    runs.set(base, { upto: UPTO[base], terms: mrly.bang.baseq.sequence(base, UPTO[base]).map(String) });
   return runs.get(base)!;
 }
 
-function universe(math: Mrly, dim: number): bang.Universe {
-  if (!worlds.has(dim)) worlds.set(dim, math.bang.bang(dim));
+function universe(mrly: Mrly, dim: number): bang.Universe {
+  if (!worlds.has(dim)) worlds.set(dim, mrly.bang.bang(dim));
   return worlds.get(dim)!;
 }
 
-function group(math: Mrly, dim: number, base: number): Uint32Array[] {
+function group(mrly: Mrly, dim: number, base: number): Uint32Array[] {
   const key = `${dim}:${base}`;
-  if (!groups.has(key)) groups.set(key, math.bang.baseq.group(base, dim));
+  if (!groups.has(key)) groups.set(key, mrly.bang.baseq.group(base, dim));
   return groups.get(key)!;
 }
 
-function orbits(math: Mrly, dim: number, base: number): Orbit[] | null {
+function orbits(mrly: Mrly, dim: number, base: number): Orbit[] | null {
   if (base === 2) {
-    return math.bang.universe_codes(dim).map((code) => ({ code, orbit: facts(math, dim, base, code).orbit }));
+    return mrly.bang.universe_codes(dim).map((code) => ({ code, orbit: facts(mrly, dim, base, code).orbit }));
   }
   try {
-    return math.bang.baseq.representatives(base, dim).map(([code, orbit]) => ({ code, orbit }));
+    return mrly.bang.baseq.representatives(base, dim).map(([code, orbit]) => ({ code, orbit }));
   } catch {
     return null;
   }
 }
 
-export function classes(math: Mrly, dim: number, base: number): Orbit[] | null {
+export function classes(mrly: Mrly, dim: number, base: number): Orbit[] | null {
   const key = `${dim}:${base}`;
-  if (!reps.has(key)) reps.set(key, orbits(math, dim, base));
+  if (!reps.has(key)) reps.set(key, orbits(mrly, dim, base));
   return reps.get(key)!;
 }
 
-export function facts(math: Mrly, dim: number, base: number, code: Code): Facts {
+export function facts(mrly: Mrly, dim: number, base: number, code: Code): Facts {
   if (base === 2 && dim > 1) {
-    const design = universe(math, dim).design(code);
+    const design = universe(mrly, dim).design(code);
     const read = { rep: design.class_rep, orbit: design.orbit_size, anf: design.anf(), degree: design.degree() };
     design.free();
     return read;
   }
-  const maps = group(math, dim, base);
+  const maps = group(mrly, dim, base);
   const two = base === 2;
   return {
-    rep: math.bang.baseq.canonical(maps, code),
-    orbit: math.bang.baseq.orbit(maps, code).length,
-    anf: two ? math.bang.universe.anf_string(code, dim) : "",
-    degree: two ? math.bang.universe.degree(code, dim) : -1,
+    rep: mrly.bang.baseq.canonical(maps, code),
+    orbit: mrly.bang.baseq.orbit(maps, code).length,
+    anf: two ? mrly.bang.universe.anf_string(code, dim) : "",
+    degree: two ? mrly.bang.universe.degree(code, dim) : -1,
   };
 }
 
-export function title(math: Mrly, dim: number, base: number, code: Code): string {
-  const bang = new math.name.Bang(code, dim, base);
+export function title(mrly: Mrly, dim: number, base: number, code: Code): string {
+  const bang = new mrly.math.name.Bang(code, dim, base);
   const text = bang.to_prose();
   bang.free();
   return text;
 }
 
-export function grow(math: Mrly, dim: number, base: number, code: Code, level: number): Cell {
+export function grow(mrly: Mrly, dim: number, base: number, code: Code, level: number): Cell {
   if (dim === 1) {
-    const { shape, data } = math.bang.factory.create(code, SIDE, 1, base, level);
+    const { shape, data } = mrly.math.factory.create(code, SIDE, 1, base, level);
     return { shape: [1, shape[0]], types: data };
   }
-  return dim === 2 ? math.two.create(code, SIDE, level, ROTATION, base) : math.three.create(code, SIDE, level, base);
+  return dim === 2 ? mrly.two.create(code, SIDE, level, ROTATION, base) : mrly.three.create(code, SIDE, level, base);
 }
 
-export function census(math: Mrly, dim: number, cell: Cell): Census {
+export function census(mrly: Mrly, dim: number, cell: Cell): Census {
   if (dim === 2) {
-    const { fills, voids, perimeter, vertices, edges, euler } = math.two.census(cell);
+    const { fills, voids, perimeter, vertices, edges, euler } = mrly.two.census(cell);
     return { fills, voids, vertices, edges, euler, perimeter: Number(perimeter) };
   }
-  const { fills, voids, surface, vertices, edges, faces, euler } = math.three.census(cell);
+  const { fills, voids, surface, vertices, edges, faces, euler } = mrly.three.census(cell);
   return { fills, voids, vertices, edges, euler, surface: Number(surface), faces };
 }
 
-export function dimension(math: Mrly, dim: number, base: number, code: Code): number {
-  return math.counts.dimension(code, SIDE, dim, base);
+export function dimension(mrly: Mrly, dim: number, base: number, code: Code): number {
+  return mrly.sequences.counts.dimension(code, SIDE, dim, base);
 }
 
-export function gallery(math: Mrly, dim: number, base: number, filter: string | undefined): string[] | null {
-  if (filter === "named") return math.name.words(dim, base).map(([code]) => code);
-  if (filter === "classes") return classes(math, dim, base)?.map((one) => one.code) ?? null;
-  return codes(math, dim, base);
+export function gallery(mrly: Mrly, dim: number, base: number, filter: string | undefined): string[] | null {
+  if (filter === "named") return mrly.math.name.words(dim, base).map(([code]) => code);
+  if (filter === "classes") return classes(mrly, dim, base)?.map((one) => one.code) ?? null;
+  return codes(mrly, dim, base);
 }
 
 export function next(list: readonly string[] | null | undefined, code: Code, by: number): string {

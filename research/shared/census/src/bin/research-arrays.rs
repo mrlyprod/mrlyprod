@@ -1,6 +1,6 @@
 use census::save;
-use mrly_core::error::Result;
-use mrly_core::json;
+use mrly_error::Result;
+use mrly_json::json;
 use std::collections::HashSet;
 
 const NAME: &str = "research-arrays";

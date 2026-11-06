@@ -1,13 +1,13 @@
-import type { graph } from "@mrlyprod/math";
+import type * as graph from "@mrlyprod/graph";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { HUES, mix, rgb } from "@mrlyprod/ui/kit/color.ts";
-import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
-import { canon } from "@mrlyprod/ui/kit/designs/engine.ts";
-import type { Mathy, Page } from "@mrlyprod/ui/kit/page.tsx";
+import type { Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
+import { CRATES, canon } from "@mrlyprod/ui/kit/designs/engine.ts";
+import type { Page } from "@mrlyprod/ui/kit/page.tsx";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import { pick, rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Scene as Made, Opts, View } from "@mrlyprod/ui/kit/run.ts";
-import type { Spec, Units, Value } from "@mrlyprod/ui/kit/spec.ts";
+import type { Spec, Value } from "@mrlyprod/ui/kit/spec.ts";
 import { tidy } from "@mrlyprod/ui/kit/spec.ts";
 import { tints } from "@mrlyprod/ui/kit/theme/hues.ts";
 import { palette } from "@mrlyprod/ui/kit/theme/palette.gen.js";
@@ -50,7 +50,7 @@ export type Look = Pick<Paints, "paper" | "accent">;
 export type Viewer = Pick<View, "rand" | "w" | "h" | "dpr" | "t" | "still"> &
   Partial<Pick<View, "lock" | "fixed" | "wake" | "drew">> & { look: () => Look };
 
-export type Given = Opts & { math?: Mrly | null; three?: Three | null };
+export type Given = Opts & { mrly?: Mrly | null; three?: Three | null };
 
 export type Asked = Opts & { rand: Rng };
 
@@ -78,9 +78,9 @@ const BASES: [number, string][] = [
   [3, "3"],
 ];
 
-const most = (value: Value, units?: Units) => (units?.math ? top(units.math, value as Knobs) : DEEPEST);
+const most = (value: Value, units?: Mrly) => (units ? top(units, value as Knobs) : DEEPEST);
 
-export const SPEC: Spec = [
+export const SPEC: Spec<Mrly> = [
   { key: "dim", label: "Dim", kind: "segment", def: 2, options: DIMS, when: NEVER },
   {
     key: "view",
@@ -120,12 +120,12 @@ export const SPEC: Spec = [
   { key: "tint", label: "Tint", kind: "pick", def: "", options: tints("Roles"), group: "Look" },
 ];
 
-export const name = (value: Value, loaded?: Mathy) => {
+export const name = (value: Value, loaded?: Mrly) => {
   const { dim, base, code } = design(value as Seed);
-  return `graphs-${loaded?.math ? canon(loaded.math, dim, base, code) : code || "carpet"}-${spaceOf(value)}-${kindOf(value)}`;
+  return `graphs-${loaded ? canon(loaded, dim, base, code) : code || "carpet"}-${spaceOf(value)}-${kindOf(value)}`;
 };
 
-export const units = wasm("math");
+export const units = wasm(...CRATES);
 
 export const PAGE = {
   spec: SPEC,
@@ -152,8 +152,8 @@ export const PAGE = {
     level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
     graph: (value, key) => ({ graph: turn(value, key === "ArrowLeft" ? -1 : 1) }),
   },
-  reroll: (value, seed, units) => deal(units!.math, value as unknown as Knobs, rng(seed)),
-} satisfies Page<Loaded<"math">, Made>;
+  reroll: (value, seed, units) => deal(units!, value as unknown as Knobs, rng(seed)),
+} satisfies Page<Loaded<Crate>, Made>;
 
 const nets = (kinds: Graph[]) => (rand: Rng) => {
   const number = pick(rand, [3, 3, 5]);
@@ -197,19 +197,19 @@ export function tones(canvas: HTMLCanvasElement, view: Pick<Viewer, "lock" | "lo
 const built = (value: Graphs) =>
   JSON.stringify([spaceOf(value), design(value), value.number, value.level, kindOf(value)]);
 
-export function shape(math: Mrly, opts: Asked, lock = false): Graphs {
+export function shape(mrly: Mrly, opts: Asked, lock = false): Graphs {
   const ask: Ask = { code: !("code" in opts), graph: !("graph" in opts), level: !("level" in opts), layout: false };
   const seed = Number(opts.seed) >>> 0;
   const first = {
-    ...tidy(SPEC, { ...opts, layout: opts.layout ?? (lock ? "force" : undefined) }, { math }),
+    ...tidy(SPEC, { ...opts, layout: opts.layout ?? (lock ? "force" : undefined) }, mrly),
     seed,
   } as Graphs;
   if (!lock || !(ask.code || ask.graph || ask.level)) return first;
-  return { ...tidy(SPEC, { ...first, ...deal(math, first, opts.rand, ask, ROOM) }, { math }), seed } as Graphs;
+  return { ...tidy(SPEC, { ...first, ...deal(mrly, first, opts.rand, ask, ROOM) }, mrly), seed } as Graphs;
 }
 
 export function relax(
-  math: Mrly,
+  mrly: Mrly,
   plan: Plan,
   { seed, layout }: Pick<Graphs, "seed" | "layout">,
   view: Pick<Viewer, "lock" | "still" | "rand" | "wake">,
@@ -231,7 +231,7 @@ export function relax(
   };
   const begin = () => {
     bed?.free();
-    bed = math.graph.Layout.from_network(plan.net, jitter);
+    bed = mrly.graph.Layout.from_network(plan.net, jitter);
     heat = bed.temperature();
     cooled = false;
     owed = 0;
@@ -530,11 +530,11 @@ function solid3(canvas: HTMLCanvasElement, view: Viewer, mover: () => Mover, thr
 }
 
 export function make(canvas: HTMLCanvasElement, view: Viewer, opts: Given = {}) {
-  const { math, three } = opts;
-  if (!math) throw new Error("graphs: the scene wants @mrlyprod/math as opts.math");
-  let value = shape(math, { ...opts, rand: view.rand }, view.lock);
-  let plan = study(math, value);
-  let mover = relax(math, plan, value, view);
+  const { mrly, three } = opts;
+  if (!mrly) throw new Error("graphs: the scene wants the design crates as opts.mrly");
+  let value = shape(mrly, { ...opts, rand: view.rand }, view.lock);
+  let plan = study(mrly, value);
+  let mover = relax(mrly, plan, value, view);
   const stage: Stage = solid(value) ? solid3(canvas, view, () => mover, three) : flat(canvas, view, () => mover);
   stage.restyle(value);
   stage.load(plan);
@@ -545,17 +545,17 @@ export function make(canvas: HTMLCanvasElement, view: Viewer, opts: Given = {}) 
   const set = (next: Opts) => {
     if (solid(next) !== solid(value)) return false;
     const was = value;
-    value = shape(math, { ...next, rand: view.rand }, view.lock);
+    value = shape(mrly, { ...next, rand: view.rand }, view.lock);
     if (built(was) !== built(value)) {
       mover.free();
       plan.net.free();
-      plan = study(math, value);
+      plan = study(mrly, value);
       stage.load(plan);
-      mover = relax(math, plan, value, view);
+      mover = relax(mrly, plan, value, view);
     } else if (was.layout !== value.layout || was.seed !== value.seed) {
       mover.free();
-      mover = relax(math, plan, value, view);
-      plan.facts = { ...plan.facts, layout: value.layout, top: top(math, { ...value, code: plan.facts.code }) };
+      mover = relax(mrly, plan, value, view);
+      plan.facts = { ...plan.facts, layout: value.layout, top: top(mrly, { ...value, code: plan.facts.code }) };
     }
     stage.restyle(value);
   };

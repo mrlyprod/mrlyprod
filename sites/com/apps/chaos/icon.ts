@@ -1,8 +1,10 @@
+import * as chaos from "@mrlyprod/chaos";
 import type { Pen, Point } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
 import * as math from "@mrlyprod/math";
+import * as radix from "@mrlyprod/radix";
 
-export const units = { math };
+export const units = { chaos, math, radix };
 
 const BASE = 2;
 const CODE = 7;
@@ -20,11 +22,11 @@ const cellOf = ([x, y]: Point) => Math.floor(x * BASE ** LEVEL) + Math.floor(y *
 
 function build() {
   if (cloud) return cloud;
-  const design = math.radix.tile(BASE, CODE);
+  const design = radix.tile(BASE, CODE);
   if (design.size() !== DIGITS) throw new Error(`chaos: ${design.size()} digits, want ${DIGITS}`);
   const digits = design.digits().map(([x, y]): Point => [Number(x), Number(y)]);
   design.free();
-  const lap = math.game.de_bruijn(DIGITS, LEVEL);
+  const lap = chaos.de_bruijn(DIGITS, LEVEL);
   if (lap.length !== CELLS) throw new Error(`chaos: a de Bruijn lap of ${lap.length}, want ${CELLS}`);
   const rng = new math.Rng(SEED);
   const draws = [...lap, ...lap.slice(0, LEVEL - 1), ...Array.from({ length: TAIL }, () => rng.below(DIGITS))];

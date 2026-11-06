@@ -1,8 +1,8 @@
 pub mod integers;
 
-use mrly_core::error::{value_error, Result};
-use mrly_core::Json;
-use mrly_core::Error;
+use mrly_error::Error;
+use mrly_error::{value_error, Result};
+use mrly_json::Json;
 use std::path::PathBuf;
 
 fn path(name: &str) -> Result<PathBuf> {

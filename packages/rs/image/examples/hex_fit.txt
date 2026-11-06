@@ -1,0 +1,5 @@
+ratio 0.866025
+100x100, rows   -> (100, 86)
+100x100, columns -> (86, 100)
+1x1 never hits zero -> (1, 1)
+4x4 fitted -> 4x3, 12 pixels

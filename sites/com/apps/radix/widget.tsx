@@ -178,7 +178,7 @@ export function Pane({ value, units, dialed, facts, label, onChange, change, mov
         value={facts?.code ?? ""}
         commit
         inputMode="numeric"
-        onChange={(code) => dialed && change(coded(dialed, units!.math, code))}
+        onChange={(code) => dialed && change(coded(dialed, units!, code))}
       />,
     ),
   ];
@@ -191,27 +191,27 @@ const cells = (patch: Design) => ({ ...patch, line: 0 });
 export function Designs({ value, units, dialed, presets, name, change }: DesignsProps) {
   const tick = useTheme();
   const [find, setFind] = useState("");
-  const { num, math } = units;
+  const num = units.gaussian;
   const want = find.trim().toLowerCase();
   const hit = (...words: string[]) => !want || words.some((one) => one.toLowerCase().includes(want));
   const lattices = useMemo(
     () =>
       RINGS.map(([ring, title]): [Word, string, [string, string, string, Sketch][]] => {
-        const known = num.gauss.Ring.named(ring) ?? "Gaussian";
+        const known = num.Ring.named(ring) ?? "Gaussian";
         return [
           ring,
           title,
           BASES[ring].map((base) => [
             base,
             spell(LETTERS[ring], ...(pair(base) as Pair)),
-            `norm ${num.gauss.Ring.norm(known, ...(pair(base) as Pair))}`,
-            cells(rebase(num, math, ring, base)),
+            `norm ${num.Ring.norm(known, ...(pair(base) as Pair))}`,
+            cells(rebase(num, units, ring, base)),
           ]),
         ];
       }),
     [units],
   );
-  const squares = useMemo(() => boxes(math), [units]);
+  const squares = useMemo(() => boxes(units), [units]);
   const box = dialed ? boxOf(dialed) : "";
   const deps = [units, value.tint, tick];
   const draw =
@@ -224,11 +224,11 @@ export function Designs({ value, units, dialed, presets, name, change }: Designs
       label={word || code}
       sub={word ? code : undefined}
       on={box === code}
-      onPick={() => change(cells(boxed(num, math, code)))}
+      onPick={() => change(cells(boxed(num, units, code)))}
       art={
         <Art
           deps={[...deps, code]}
-          paint={(ctx, w) => thumb(ctx, math, DIM, BOX, code, w, paints(ctx.canvas, value.tint))}
+          paint={(ctx, w) => thumb(ctx, units, DIM, BOX, code, w, paints(ctx.canvas, value.tint))}
         />
       }
     />
@@ -289,7 +289,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
   const live = useRef<Handle<Radix> | null>(null);
   const [facts, setFacts] = useState<Facts | null>(null);
   const dialed = useMemo(
-    () => units && dial(units.num, units.math, value),
+    () => units && dial(units.gaussian, units, value),
     [units, value.ring, value.base, value.d, value.t],
   );
   const presets = useMemo(() => (units ? shelf(units) : []), [units]);
@@ -299,7 +299,8 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
   now.current = { value, onChange, dialed, units, name };
   const change = (patch: Patch | null) => patch && now.current!.onChange(patch);
   const scene = useCallback(
-    (canvas: HTMLCanvasElement, view: View, opts: Opts) => make(canvas, view, { ...opts, ...units, onFacts: setFacts }),
+    (canvas: HTMLCanvasElement, view: View, opts: Opts) =>
+      make(canvas, view, { ...opts, mrly: units, onFacts: setFacts }),
     [units],
   );
   const moves: Moves = {

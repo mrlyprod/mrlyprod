@@ -1,7 +1,8 @@
-import { type Color, field, type Ink, type Pen, type Point } from "@mrlyprod/draw";
+import * as apollonian from "@mrlyprod/apollonian";
 import * as num from "@mrlyprod/num";
+import { type Color, field, type Ink, type Pen, type Point } from "@mrlyprod/draw";
 
-export const units = { num };
+export const units = { apollonian, num };
 
 const TOP = 2048;
 const DEEP = 32;
@@ -19,12 +20,12 @@ let memo: Packing | undefined;
 
 function packing() {
   if (memo) return memo;
-  const root = num.apollonian.root("strip");
+  const root = apollonian.root("strip");
   const seed = root.map((c) => ({ k: Number(c.k), x: Number(c.x), y: Number(c.y) }));
-  const fords = root.slice(2).every((c) => num.apollonian.is_ford(c) && c.k === 2n);
+  const fords = root.slice(2).every((c) => apollonian.is_ford(c) && c.k === 2n);
   for (const c of root) c.free();
-  const grown = num.apollonian.grow("strip", TOP);
-  const touches = num.apollonian.touches(grown);
+  const grown = apollonian.grow("strip", TOP);
+  const touches = apollonian.touches(grown);
   const phi = num.factor.totients(DEEP);
   let nodes = -1;
   for (let n = 1; n <= DEEP; n++) nodes += Number(phi[n]);
@@ -50,8 +51,8 @@ function packing() {
   }
   if (deepest !== DEEP) throw new Error(`research-apollonian: deepest ${deepest}, want ${DEEP}`);
   for (const c of resting) {
-    const circle = num.apollonian.Circle.from(c);
-    const ford = num.apollonian.is_ford(circle);
+    const circle = apollonian.Circle.from(c);
+    const ford = apollonian.is_ford(circle);
     circle.free();
     if (!ford) throw new Error(`research-apollonian: ${c.k},${c.x},${c.y} is not a Ford circle`);
     if (!depth.has(c.k)) throw new Error(`research-apollonian: no touch at curvature ${c.k}`);

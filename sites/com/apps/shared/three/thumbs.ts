@@ -26,11 +26,11 @@ export const BLOCK: Shape = { n: 1, cells: Int32Array.of(0), masks: Uint8Array.o
 const whole = memo(1);
 const held = memo(8);
 
-export function block(math: Mrly, crop: Crop | "" = ""): Shape {
+export function block(mrly: Mrly, crop: Crop | "" = ""): Shape {
   return held(crop || "none", () => {
-    const stock = whole("block", () => math.three.create(FULL, NUMBER, LEVEL, 2));
-    const cell = crop ? flat(math.shape.crop(tensor(stock), region(math, crop, RADIUS, false), true)) : stock;
-    return solid(math.three.quads(cell), cell.shape[0]);
+    const stock = whole("block", () => mrly.three.create(FULL, NUMBER, LEVEL, 2));
+    const cell = crop ? flat(mrly.crop.crop(tensor(stock), region(mrly, crop, RADIUS, false), true)) : stock;
+    return solid(mrly.three.quads(cell), cell.shape[0]);
   });
 }
 

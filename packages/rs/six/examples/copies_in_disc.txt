@@ -1,0 +1,7 @@
+rings 0: 1 copies
+rings 1: 7 copies
+rings 2: 19 copies
+rings 3: 37 copies
+rings 4: 61 copies
+rings 5: 91 copies
+rings 6: 127 copies
