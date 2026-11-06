@@ -1,6 +1,6 @@
-import { parts } from "./active.ts";
-import type { Side } from "./design.ts";
-import { measure } from "./measure.ts";
+import type { Design } from "./design.ts";
+
+type FrameProps = { design: Design; title: string; mark: string; word: string; cart?: boolean };
 
 export const BAR = {
   launch: () => ({ href: "/menu/" }),
@@ -11,25 +11,14 @@ export const BAR = {
 };
 
 const WINDOW = {
-  close: () => ({ href: "/", "data-close": "" }),
-  zoom: () => ({ "data-zoom": "" }),
-  tools: () => ({
-    "data-pane": "right",
-    "data-tools": "",
-    "aria-controls": "right",
-    "aria-expanded": "false",
-    "data-few": "3",
-  }),
+  close: () => ({ href: "/" }),
   title: () => ({ "data-title": "" }),
   menus: () => ({ "data-menus": "" }),
-  edge: (side: Side) => () => ({ "data-edge": side }),
-  scroll: () => ({ id: "scroll" }),
   main: () => ({ id: "main", tabIndex: -1 }),
   pane: () => ({ id: "right" }),
-  scrim: () => ({ "data-scrim": "" }),
 };
 
-export function Frame({ title, mark, word, cart }: { title: string; mark: string; word: string; cart?: boolean }) {
+export function Frame({ design: { parts }, title, mark, word, cart }: FrameProps) {
   return (
     <>
       <a className="skip" href="#main">
@@ -46,9 +35,7 @@ export function Frame({ title, mark, word, cart }: { title: string; mark: string
           {"\n"}
         </>
       )}
-      <parts.window kind="page" title="" zoomed={false} tools={false} drawer={false} width={measure.page} bind={WINDOW}>
-        {null}
-      </parts.window>
+      <parts.window bind={WINDOW} />
     </>
   );
 }

@@ -1,10 +1,10 @@
 import type { Color, Pen, Point } from "@mrlyprod/draw";
-import { frame, hex } from "@mrlyprod/draw";
+import { hex as comb, frame } from "@mrlyprod/draw";
 import { plate } from "@mrlyprod/draw/plate.ts";
-import * as six from "@mrlyprod/six";
+import * as hex from "@mrlyprod/hex";
 import * as three from "@mrlyprod/three";
 
-export const units = { six, three };
+export const units = { hex, three };
 
 const CODE = "23";
 const SIDE = 7;
@@ -32,18 +32,18 @@ let slice: [Point[], Color][] | null = null;
 
 function facts() {
   if (slice) return slice;
-  const cut = six.cut(three.create(CODE, SIDE, 1, 2));
-  const tally = six.census(cut, false);
-  if (tally.triangles !== hex.count(SIDE))
-    throw new Error(`slices: the cut holds ${tally.triangles} triangles, want ${hex.count(SIDE)}`);
-  const read = { fills: tally.fills, pieces: six.components(cut), holes: six.holes(cut) };
+  const cut = hex.cut(three.create(CODE, SIDE, 1, 2));
+  const tally = hex.census(cut, false);
+  if (tally.triangles !== comb.count(SIDE))
+    throw new Error(`slices: the cut holds ${tally.triangles} triangles, want ${comb.count(SIDE)}`);
+  const read = { fills: tally.fills, pieces: hex.components(cut), holes: hex.holes(cut) };
   if (read.fills !== WANT.fills || read.pieces !== WANT.pieces || read.holes !== WANT.holes)
     throw new Error(
       `slices: the carpet's middle hexagon of side ${SIDE} reads ${JSON.stringify(read)}, want ${JSON.stringify(WANT)}`,
     );
-  const tones: Partial<Record<number, Color>> = { [six.FILL()]: LIT, [six.VOID()]: HOLE };
+  const tones: Partial<Record<number, Color>> = { [hex.FILL()]: LIT, [hex.VOID()]: HOLE };
   const tris: [Point[], Color][] = [];
-  hex.draw<Color>(
+  comb.draw<Color>(
     { triangle: (a, b, c, tone) => tris.push([[a, b, c], tone]) },
     frame(-FLAT, -FLAT, 2 * FLAT, 2 * FLAT),
     cut,

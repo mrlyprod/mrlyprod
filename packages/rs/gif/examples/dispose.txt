@@ -1,0 +1,18 @@
+Unset
+  |.xxx...|
+  |.xxx.o.|
+  |.xxx...|
+Keep
+  |.xxx...|
+  |.xxx.o.|
+  |.xxx...|
+Background
+  |.   ...|
+  |.   .o.|
+  |.   ...|
+Previous
+  |.......|
+  |.....o.|
+  |.......|
+
+Unset and Keep leave the box, Background clears it, Previous puts back what was under it.

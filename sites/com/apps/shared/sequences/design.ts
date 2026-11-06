@@ -65,7 +65,7 @@ export function sheet(mrly: Mrly, row: Plan, number: number, level: number): She
     const cell = mrly.two.create(String(row.code), number, level, 0, row.base);
     return { kind, number, level, shape: cell.shape, types: cell.types };
   }
-  const made = mrly.six[`${kind}_design` as const](String(row.code), number, level, row.base);
+  const made = mrly.hex[`${kind}_design` as const](String(row.code), number, level, row.base);
   return { kind, number, level, cell: made.cell, start: made.start };
 }
 

@@ -1,14 +1,11 @@
-import { px } from "../kit/px.ts";
-
 export const PREFIX = (typeof document !== "undefined" && document.documentElement.dataset.prefix) || "";
 export const KEY = {
+  design: `${PREFIX}design`,
   theme: `${PREFIX}theme`,
   tint: `${PREFIX}tint`,
   saver: `${PREFIX}saver`,
   cart: `${PREFIX}cart`,
   welcome: `${PREFIX}welcome`,
-  page: `${PREFIX}page`,
-  wide: `${PREFIX}wide`,
   launchpad: `${PREFIX}launchpad`,
   recent: `${PREFIX}recent`,
   dock: `${PREFIX}dock`,
@@ -96,7 +93,6 @@ export function theme(next: string) {
   if (next) root().dataset.theme = next;
   else delete root().dataset.theme;
   write(KEY.theme, next);
-  for (const label of document.querySelectorAll("[data-theme-toggle] b")) label.textContent = next || "auto";
   shade();
   repaint();
 }
@@ -108,14 +104,7 @@ export function tint(next: string) {
   repaint();
 }
 
-export function turn() {
-  const now = root().dataset.theme ?? "";
-  theme(now === "" ? "light" : now === "light" ? "dark" : "");
-}
-
-export const KNOB = `${PREFIX}knob-`;
-
-export const dial = (id: string) => `${KNOB}${id}`;
+export const dial = (id: string) => `${PREFIX}knob-${root().dataset.design ?? ""}-${id}`;
 
 export function knob(id: string, next: string) {
   if (next) root().dataset[id] = next;
@@ -212,17 +201,6 @@ export function cycle(): 12 | 24 | null {
   return mode === "12" ? 12 : mode === "24" ? 24 : null;
 }
 
-function width(name: "page" | "wide", prop: string) {
-  const n = Number(read(KEY[name]));
-  if (n > 0) root().style.setProperty(prop, px(n));
-  else root().style.removeProperty(prop);
-}
-
-export function widths() {
-  width("page", "--win");
-  width("wide", "--wide");
-}
-
 const REPLAY: Partial<Record<Name, () => void>> = {
   theme: () => theme(read(KEY.theme)),
   tint: () => tint(read(KEY.tint)),
@@ -235,22 +213,21 @@ const REPLAY: Partial<Record<Name, () => void>> = {
   contrast: () => flag("contrast", read(KEY.contrast)),
   targets: () => flag("targets", read(KEY.targets)),
   saver: () => screen(read(KEY.saver)),
-  page: () => width("page", "--win"),
-  wide: () => width("wide", "--wide"),
 };
 
 function knobs() {
-  return stored().filter(([key]) => key.startsWith(KNOB));
+  return stored().filter(([key]) => KNOBBED.test(key.slice(PREFIX.length)));
 }
 
 export function replay(key: string | null) {
-  for (const [one, value] of knobs()) {
-    if (key !== null && key !== one) continue;
-    const id = one.slice(KNOB.length);
+  const mine = dial("");
+  for (const one of key === null ? knobs().map(([one]) => one) : [key]) {
+    if (!one.startsWith(mine)) continue;
+    const id = one.slice(mine.length);
+    const value = read(one);
     if (value) root().dataset[id] = value;
     else delete root().dataset[id];
   }
-  if (key?.startsWith(KNOB) && !read(key)) delete root().dataset[key.slice(KNOB.length)];
   for (const [name, fn] of Object.entries(REPLAY) as [Name, () => void][]) {
     if (key !== null && key !== KEY[name]) continue;
     try {
@@ -269,11 +246,11 @@ if (typeof window !== "undefined") {
 }
 
 export const SETTINGS =
-  "history theme tint text icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad page wide".split(
+  "history design theme tint text icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad".split(
     " ",
   ) as Name[];
 
-const KNOBBED = /^knob-[a-z]+$/;
+export const KNOBBED = /^knob-([a-z]+)-([a-z]+)$/;
 
 export const keyOf = (name: string) => (KNOBBED.test(name) ? `${PREFIX}${name}` : KEY[name as Name]);
 
@@ -285,7 +262,7 @@ export const nameOf = (key: string) => {
 
 export const adopt = (name: string, value: string) => {
   const key = keyOf(name);
-  if (read(key) === value) return;
+  if (!key || read(key) === value) return;
   write(key, value);
   replay(key);
 };

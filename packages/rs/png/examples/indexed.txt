@@ -1,0 +1,13 @@
+..#.....#..
+...#...#...
+..#######..
+.##o###o##.
+###########
+#.#######.#
+#.#.....#.#
+...##.##...
+
+colour type 3 (palette), 2 bits a pixel, 130 bytes
+every pixel is palette[index]  true
+encode() on those colours      128 bytes
+index 3 with 3 colours         index 3 at pixel 0 is past the 3 palette colours.

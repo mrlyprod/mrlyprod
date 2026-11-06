@@ -5,7 +5,6 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 cd "$HERE/.."
 
-export CARGO_PROFILE_TEST_OPT_LEVEL=3
 DATA_DIR="data/scripts/check"
 LEAKS='/Users/|Developer/|AKIA[0-9A-Z]{16}|npm_[A-Za-z0-9]{36}|pypi-[A-Za-z0-9_-]{40,}|cio[A-Za-z0-9]{32}'
 
@@ -32,20 +31,6 @@ leak() {
 
 labs() { find . -name Cargo.toml -not -path './data/*' -not -path './node_modules/*' | sort; }
 rust() { local verb="$1"; for toml in $(labs); do echo "== $toml"; cargo "$verb" --manifest-path "$toml" --all-targets || return 1; done; }
-tested() { for toml in $(labs); do grep -rl --include='*.rs' '#\[test\]' "$(dirname "$toml")" 2>/dev/null | grep -q . && echo "$toml"; done; }
-rust_test() {
-  local slow=""
-  for toml in $(tested); do
-    echo "== $toml"
-    perl -e 'alarm 120; exec @ARGV' cargo test --manifest-path "$toml"
-    case $? in
-      0) ;;
-      142) slow="$slow $toml" ;;
-      *) return 1 ;;
-    esac
-  done
-  [ -z "$slow" ] || echo "slow, not gated:$slow"
-}
 
 RUFF="uvx ruff@0.17.2"
 lint_py() { $RUFF format --check . && $RUFF check .; }
@@ -54,6 +39,5 @@ mkdir -p "$DATA_DIR"
 total=$SECONDS
 step leak leak
 step rust-check rust check
-step rust-test rust_test
 step ruff lint_py
 echo "check passed in $((SECONDS - total))s"

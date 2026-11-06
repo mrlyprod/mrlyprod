@@ -18,6 +18,7 @@ mrly-error.workspace = true
 mrly-graph.workspace = true
 mrly-json.workspace = true
 mrly-math.workspace = true
+mrly-obj.workspace = true
 mrly-rand.workspace = true
 mrly-sequences.workspace = true
 mrly-tensor.workspace = true

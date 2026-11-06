@@ -1,0 +1,3 @@
+mean error a channel   colors   bytes   per pixel   per 4x4 patch
+nearest color             256    6669        3.46            2.42
+dithered                  256   11091        4.11            0.84

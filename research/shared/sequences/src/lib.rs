@@ -66,17 +66,22 @@ pub fn walk() -> Result<Vec<Row>> {
     Ok(rows)
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        ("the_walk_pins_its_rows", the_walk_pins_its_rows),
+        (
+            "orbit_mates_split_at_base_two_and_merge_under_shift",
+            orbit_mates_split_at_base_two_and_merge_under_shift,
+        ),
+    ];
+
     fn the_walk_pins_its_rows() {
         let rows = walk().unwrap();
         assert_eq!(rows.len(), 99152);
     }
 
-    #[test]
     fn orbit_mates_split_at_base_two_and_merge_under_shift() {
         let rows = designs::orbit_rows(2, 2, 7, &baseq::group(2, 2)).unwrap();
         let fills: Vec<&Row> = rows.iter().filter(|r| r.measure == "fills/level").collect();

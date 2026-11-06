@@ -674,9 +674,25 @@ pub fn run() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("energy_matches_brute", energy_matches_brute),
+        ("partition_invariance", partition_invariance),
+        ("diagonal_and_ceiling", diagonal_and_ceiling),
+        ("scaling_invariance", scaling_invariance),
+        (
+            "restricted_energy_matches_brute",
+            restricted_energy_matches_brute,
+        ),
+        ("sigma_stays_under_the_bound", sigma_stays_under_the_bound),
+        (
+            "shift_solutions_are_solutions",
+            shift_solutions_are_solutions,
+        ),
+        ("random_column_is_a_set", random_column_is_a_set),
+    ];
 
     fn brute_energy(vals: &[u128]) -> u128 {
         let mut e = 0u128;
@@ -694,7 +710,6 @@ mod tests {
         e
     }
 
-    #[test]
     fn energy_matches_brute() {
         for (q, digits, l) in [
             (3u64, vec![0u64, 1], 4usize),
@@ -710,7 +725,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn partition_invariance() {
         let vals = column(3, &[0, 1], 8);
         let (a, ta) = energy_of(&vals, CAP);
@@ -720,7 +734,6 @@ mod tests {
         assert_eq!((a, ta), (c, tc));
     }
 
-    #[test]
     fn diagonal_and_ceiling() {
         for (q, digits, l) in [
             (3u64, vec![0u64, 1], 9usize),
@@ -737,7 +750,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn scaling_invariance() {
         for l in 1..=9 {
             let a = energy_of(&column(3, &[0, 1], l), CAP);
@@ -754,7 +766,6 @@ mod tests {
         assert!(a != b, "translation is not a multiplicative invariance");
     }
 
-    #[test]
     fn restricted_energy_matches_brute() {
         let (q, digits, l, mm, nn) = (3u64, vec![0u64, 1], 8usize, 8u64, 16u64);
         let x = qpow(q, l);
@@ -806,7 +817,6 @@ mod tests {
         assert!((row.check.0 - row.check.1).abs() < 1e-6 * row.check.1);
     }
 
-    #[test]
     fn sigma_stays_under_the_bound() {
         for (q, digits, l, mm, nn) in [
             (3u64, vec![0u64, 1], 8usize, 8u64, 16u64),
@@ -828,7 +838,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn shift_solutions_are_solutions() {
         for (q, digits, l) in [
             (3u64, vec![0u64, 1], 6usize),
@@ -881,7 +890,6 @@ mod tests {
         assert_eq!(count, shift_excess(2, l), "shift count L={l}");
     }
 
-    #[test]
     fn random_column_is_a_set() {
         let mut rng = Rng::new(4);
         let v = random_column(1000, 400, &mut rng);

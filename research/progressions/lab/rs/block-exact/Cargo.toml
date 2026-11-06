@@ -3,6 +3,7 @@ name = "block-exact"
 edition = "2021"
 
 [dependencies]
+witness = { path = "../../../../shared/witness" }
 
 [workspace]
 

@@ -147,11 +147,11 @@ export function Widget({ value, onChange, onReady, units }: Props) {
       )}
       <Bar side="actions">
         <Btn className="short" on={value.sound === 1} aria-pressed={value.sound === 1} onClick={() => flip("sound")}>
-          <Icon name="volume_up" />
+          <Icon name="volume" />
           Sound
         </Btn>
         <Btn className="short" on={value.music === 1} aria-pressed={value.music === 1} onClick={() => flip("music")}>
-          <Icon name="music_note" />
+          <Icon name="note" />
           Music
         </Btn>
       </Bar>

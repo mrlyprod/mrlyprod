@@ -6,9 +6,9 @@ type Settings = { people: Record<string, Record<string, string>> };
 const GUEST = "guest";
 
 const NAMES =
-  "history theme tint text icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad page wide";
+  "history design theme tint text icons always magnify saver off idle clock hours motion clear contrast targets dock widgets launchpad";
 
-const KEY = `^(${NAMES.split(" ").join("|")}|knob-[a-z]+)$`;
+const KEY = `^(${NAMES.split(" ").join("|")}|knob-[a-z]+-[a-z]+)$`;
 
 const LONGEST = 20000;
 
@@ -27,6 +27,7 @@ const view: ViewNode[] = [
     id: "appearance",
     title: "Appearance",
     nodes: [
+      { kind: "viewer", name: "design" },
       {
         kind: "group",
         nodes: [

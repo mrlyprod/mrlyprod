@@ -9,4 +9,4 @@
 - OEIS: four 5-term windows at offsets 0 to 3 for `a`, `-a`, the differences, the partial sums, `a-1`, `a+1`, `a/2` and `a/gcd`; a hit agrees with the record on every term both carry; an absence is Conjecture.
 - Run: `OEIS_STRIPPED=<stripped dump> OEIS_NAMES=<names file> cargo run --release --manifest-path research/shared/sequences/Cargo.toml` from the repo root.
 - Output: `data/research/shared/sequences/atlas.json` (rows, classes, relations, failed ids), `atlas.md` (one table sorted by generator), `absences.txt`.
-- Test: `cargo test --manifest-path research/shared/sequences/Cargo.toml` pins the walk at 99152 rows and one orbit-mate dedup case.
+- Witness: `bash research/scripts/witness.sh sequences` pins the walk at 99152 rows and one orbit-mate dedup case.

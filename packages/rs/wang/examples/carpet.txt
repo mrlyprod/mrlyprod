@@ -1,0 +1,7 @@
+carpet5 level 3
+grid   two 125x125  wang 125x125  (same size)
+array  two 15625  wang [250, 250] = 62500 entries (4x)
+tags   {"0", "f"}
+area   two fills 9261  wang fills/4 9261
+perim  two 9636  wang straight 9636 diagonal 0
+euler  two -1851  wang -1851

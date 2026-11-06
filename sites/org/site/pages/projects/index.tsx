@@ -9,7 +9,7 @@ export const layout = { wide: true, bare: true };
 
 export function render(row: Row, _site: unknown, host: HTMLElement, { rows }: { rows: Row[] }) {
   const cards = ORDER.flatMap((id) => rows.filter((one) => one.meta.id === id)).map(card);
-  show(host, <parts.prose kind="hub" id={row.meta.id} title={row.title} lead={row.lead} contents={[]} cards={cards} />);
+  show(host, <parts.prose kind="hub" id={row.meta.id} title={row.title} lead={row.lead} cards={cards} />);
 }
 
 export const unmount = hide;

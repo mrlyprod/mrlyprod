@@ -1,6 +1,5 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { seti } from "../../kit/git/seti/seti.ts";
 import { home, stem, type Twig, type Wood } from "../../kit/git/view.ts";
 
 export type Git = { root: string; slug: string; branch: string; folder: string; name: string };
@@ -69,8 +68,6 @@ export function tree(root: string): string[] {
   return out.sort();
 }
 
-const icon = (name: string) => seti(name).replace(/^si( si-)?/, "");
-
 export function forest(git: Git, paths: string[], file = (path: string) => join(git.root, path)): Wood {
   const kids = new Map<string, Twig[]>([["", []]]);
   const dir = (at: string): Twig[] => {
@@ -82,11 +79,7 @@ export function forest(git: Git, paths: string[], file = (path: string) => join(
     return list;
   };
   for (const path of paths) {
-    const twig: Twig = { n: stem(path), k: "f" };
-    const i = icon(twig.n);
-    if (i) twig.i = i;
-    twig.s = statSync(file(path)).size;
-    dir(home(path)).push(twig);
+    dir(home(path)).push({ n: stem(path), k: "f", s: statSync(file(path)).size });
   }
   for (const list of kids.values())
     list.sort((a, b) => (a.k !== b.k ? (a.k === "d" ? -1 : 1) : a.n.localeCompare(b.n)));

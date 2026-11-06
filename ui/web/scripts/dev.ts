@@ -4,7 +4,7 @@ import { router } from "@mrlyprod/os/hosts/cloud/edge.ts";
 import { kind } from "@mrlyprod/os/hosts/cloud/mime.ts";
 import { decode } from "../../kit/git/view.ts";
 import shell from "../../shell/index.html";
-import { globals, ready, typed, withSite } from "./build.ts";
+import { globals, ready, sheet, typed, withSite } from "./build.ts";
 import { HOME, REPO, SITE } from "./home.ts";
 
 if (process.cwd() !== REPO)
@@ -13,6 +13,7 @@ const { decide, join: joined } = router(JSON.parse(readFileSync(join(HOME, "redi
 const made = await ready();
 const files = new Map([...made.assets, ...globals(made)].map((one) => [`/${one.path}`, one]));
 files.set("/boot.js", files.get(made.boot)!);
+const looks = new Map(made.designs.map((one) => [made.pages[one.name], one]));
 const reply = (body: string | Uint8Array, type: string) =>
   new Response(body as BodyInit, { headers: { "content-type": type } });
 const SHELL = "/_shell";
@@ -48,13 +49,15 @@ const server = Bun.serve({
     const path = step.uri!;
     if (path === "/index.html" || path === "/404.html")
       return reply(
-        withSite((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${REPO}/`, "/"), made.bar),
+        withSite((await (await fetch(new URL(SHELL, server.url))).text()).replaceAll(`${REPO}/`, "/"), made),
         "text/html; charset=utf-8",
       );
     const raw = path.startsWith("/raw/");
     const disk = raw ? join(resolve(HOME, SITE.git.root ?? "."), path.slice(5)) : join(HOME, "public", path);
     const found = !path.includes("..") && existsSync(disk) && statSync(disk).isFile() ? readFileSync(disk) : null;
     if (found) return reply(found, raw ? typed(path, found) : kind(disk));
+    const dressed = looks.get(path);
+    if (dressed) return reply((await sheet(dressed, new Map()))[0]!.bytes, kind(path));
     const hit = files.get(path);
     if (!hit && path === STATS) return reply(sample(), "application/json");
     return hit ? reply(hit.bytes, hit.type ?? kind(path)) : new Response("not found", { status: 404 });

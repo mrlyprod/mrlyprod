@@ -1348,6 +1348,7 @@ fn census(m: usize, seconds: Option<f64>) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = std::env::args().skip(1).collect();
     let verb = args.first().map(String::as_str).unwrap_or("optimum");
     let mut ms = Vec::new();
@@ -1408,9 +1409,37 @@ fn main() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("peel_agrees_with_reflection", peel_agrees_with_reflection),
+        ("one_dimension_is_half_plus", one_dimension_is_half_plus),
+        (
+            "canonical_sets_match_brute_force_at_three",
+            canonical_sets_match_brute_force_at_three,
+        ),
+        (
+            "line_bound_is_sound_on_random_sets",
+            line_bound_is_sound_on_random_sets,
+        ),
+        (
+            "cube_peel_agrees_with_brute_force",
+            cube_peel_agrees_with_brute_force,
+        ),
+        (
+            "four_peel_agrees_with_brute_force",
+            four_peel_agrees_with_brute_force,
+        ),
+        (
+            "four_free_agrees_with_brute_force",
+            four_free_agrees_with_brute_force,
+        ),
+        (
+            "four_peel_lift_breaks_at_nine",
+            four_peel_lift_breaks_at_nine,
+        ),
+    ];
 
     fn reflect_free(grid: &Grid, set: Mask) -> bool {
         let (m, n) = (grid.m, grid.n);
@@ -1457,7 +1486,6 @@ mod tests {
             .collect()
     }
 
-    #[test]
     fn peel_agrees_with_reflection() {
         for m in [3, 5, 7] {
             let grid = Grid::new(m, 3, false);
@@ -1473,7 +1501,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn one_dimension_is_half_plus() {
         for m in [3, 5, 7, 11] {
             let grid = Grid::new(m, 3, false);
@@ -1482,7 +1509,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn canonical_sets_match_brute_force_at_three() {
         let grid = Grid::new(3, 3, false);
         let mut orbits = 0u128;
@@ -1504,7 +1530,6 @@ mod tests {
         assert_eq!(sets, all);
     }
 
-    #[test]
     fn line_bound_is_sound_on_random_sets() {
         let grid = Grid::new(5, 3, false);
         for s in random_sets(grid.n, 10, 200) {
@@ -1518,7 +1543,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn cube_peel_agrees_with_brute_force() {
         for (m, d) in [(4, 2), (5, 2), (6, 2), (7, 2), (3, 3), (4, 3)] {
             let cube = Cube::new(m, d, 3);
@@ -1574,7 +1598,6 @@ mod tests {
         inner
     }
 
-    #[test]
     fn four_peel_agrees_with_brute_force() {
         for (m, d) in [
             (4, 2),
@@ -1626,7 +1649,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn four_free_agrees_with_brute_force() {
         for m in [5, 7] {
             let grid = Grid::new(m, 4, true);
@@ -1643,7 +1665,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn four_peel_lift_breaks_at_nine() {
         let cube = Cube::new(9, 1, 4);
         let set = [0, 1, 2, 3, 4, 7];

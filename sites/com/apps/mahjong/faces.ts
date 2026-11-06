@@ -154,16 +154,16 @@ function rose(mrly: Mrly, { ring, wheel, lace, code, number }: Rose): Art {
 
 function mesh(
   mrly: Mrly,
-  cell: Parameters<Mrly["six"]["triangles"]>[0] extends infer _ ? ReturnType<Mrly["six"]["iso_design"]> : never,
+  cell: Parameters<Mrly["hex"]["triangles"]>[0] extends infer _ ? ReturnType<Mrly["hex"]["iso_design"]> : never,
 ) {
-  const six = mrly.six;
+  const hex = mrly.hex;
   const kinds = {
-    VOID: six.VOID(),
-    FILL: six.FILL(),
-    GRID: six.GRID(),
-    UP: six.UP(),
-    LEFT: six.LEFT(),
-    RIGHT: six.RIGHT(),
+    VOID: hex.VOID(),
+    FILL: hex.FILL(),
+    GRID: hex.GRID(),
+    UP: hex.UP(),
+    LEFT: hex.LEFT(),
+    RIGHT: hex.RIGHT(),
   };
   const custom = Object.fromEntries(
     Object.entries(kinds).map(([name, type]) => [String(type), [[type, 0, 0, name === "GRID" ? 0 : 255]]]),
@@ -171,7 +171,7 @@ function mesh(
   const across = cell.orientation === "Horizontal";
   const out = new Map<number, number[]>();
   let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const [corners, rgba] of six.triangles(six.paint(cell, custom as never))) {
+  for (const [corners, rgba] of hex.triangles(hex.paint(cell, custom as never))) {
     const list = out.get(rgba[0]) ?? [];
     for (const [x, y] of corners) {
       const u = across ? Number(x) : Number(x) * RATIO;
@@ -217,7 +217,7 @@ function hexed(
 }
 
 function cube(mrly: Mrly, { code, number, level, base }: Grown): Art {
-  const made = mesh(mrly, mrly.six.iso_design(code, number, level, base));
+  const made = mesh(mrly, mrly.hex.iso_design(code, number, level, base));
   const { UP, LEFT, RIGHT, FILL } = made.kinds;
   return hexed(made, (kind, main, tones) => {
     if (kind === UP) return blend(main, tones.pale, TOP);
@@ -227,7 +227,7 @@ function cube(mrly: Mrly, { code, number, level, base }: Grown): Art {
 }
 
 function star(mrly: Mrly, { code, number, level, base }: Grown): Art {
-  const made = mesh(mrly, mrly.six.cut_design(code, number, level, base));
+  const made = mesh(mrly, mrly.hex.cut_design(code, number, level, base));
   const { FILL, VOID: EMPTY } = made.kinds;
   return hexed(made, (kind, main, _tones, other) => (kind === FILL ? main : kind === EMPTY ? veil(other, GHOST) : ""));
 }

@@ -572,6 +572,7 @@ fn render_ladder_coro(a: Rat) -> String {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     println!("mertens-numerology");
     println!(
         "guard {GUARD:e}; alpha_q truncated down at 6 digits, c_q rounded up at 5, delta_q rounded down at 5"
@@ -760,9 +761,75 @@ fn main() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("table_rows_pinned", table_rows_pinned),
+        ("wall_sign_flip", wall_sign_flip),
+        (
+            "gap_steps_up_and_stays_positive",
+            gap_steps_up_and_stays_positive,
+        ),
+        ("closes_matches_gap_sign", closes_matches_gap_sign),
+        ("corollary_maxima", corollary_maxima),
+        ("margin_at_the_wall_pinned", margin_at_the_wall_pinned),
+        ("margin_bounds_are_safe", margin_bounds_are_safe),
+        ("delta_stable_matches_delta", delta_stable_matches_delta),
+        ("cost_out_rows_pinned", cost_out_rows_pinned),
+        ("sharpened_cost_out_is_pinned", sharpened_cost_out_is_pinned),
+        (
+            "step3_row_reproduces_the_ladder",
+            step3_row_reproduces_the_ladder,
+        ),
+        (
+            "the_chord_constant_saves_half_a_base",
+            the_chord_constant_saves_half_a_base,
+        ),
+        (
+            "every_sharpened_wall_lies_under_its_predecessor",
+            every_sharpened_wall_lies_under_its_predecessor,
+        ),
+        ("crossover_is_pinned", crossover_is_pinned),
+        ("sci_is_directional", sci_is_directional),
+        ("rounding_is_directional", rounding_is_directional),
+        ("l1_floor_holds", l1_floor_holds),
+        (
+            "the_chord_floor_carries_its_harmonic_convention",
+            the_chord_floor_carries_its_harmonic_convention,
+        ),
+        ("harmonic_bound_dominates", harmonic_bound_dominates),
+        (
+            "kernel_bound_dominates_sampled_sup",
+            kernel_bound_dominates_sampled_sup,
+        ),
+        ("ladder_rows_pinned", ladder_rows_pinned),
+        ("ladder_trend_pinned", ladder_trend_pinned),
+        (
+            "last_down_step_below_the_floor",
+            last_down_step_below_the_floor,
+        ),
+        ("general_b_floor_bound", general_b_floor_bound),
+        ("ladder_grh_rung_is_the_wall", ladder_grh_rung_is_the_wall),
+        (
+            "zhang_beats_baker_harman_strictly_inside",
+            zhang_beats_baker_harman_strictly_inside,
+        ),
+        ("ladder_floor_forces_steps_up", ladder_floor_forces_steps_up),
+        ("pb_step_below_the_constant", pb_step_below_the_constant),
+        ("pb_low_is_a_lower_bound", pb_low_is_a_lower_bound),
+        (
+            "ladder_below_the_floor_is_clear",
+            ladder_below_the_floor_is_clear,
+        ),
+        (
+            "ladder_wall_matches_exhaustive_scan",
+            ladder_wall_matches_exhaustive_scan,
+        ),
+        ("ladder_m_corollary_pinned", ladder_m_corollary_pinned),
+        ("ladder_wall_rises_with_a", ladder_wall_rises_with_a),
+        ("asymptotic_shape", asymptotic_shape),
+    ];
 
     fn kernel_sum(q: u64, t: f64) -> f64 {
         let qf = q as f64;
@@ -777,7 +844,6 @@ mod tests {
         s
     }
 
-    #[test]
     fn table_rows_pinned() {
         let got: Vec<String> = BASES.iter().map(|&q| render(&row(q, 1))).collect();
         let want = [
@@ -795,7 +861,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn wall_sign_flip() {
         assert!(!closes(3689.0, 1.0));
         assert!(closes(3690.0, 1.0));
@@ -809,7 +874,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn gap_steps_up_and_stays_positive() {
         let (arg, worst, min_gap) = gap_sweep(SWEEP_LO, SWEEP_HI, 1);
         assert!(worst > 0.0);
@@ -824,7 +888,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn closes_matches_gap_sign() {
         for q in 3..20_000u64 {
             assert_eq!(
@@ -835,7 +898,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn corollary_maxima() {
         assert_eq!(max_excluded(10_000), 6);
         assert_eq!(max_excluded(100_000), 78);
@@ -852,7 +914,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn margin_at_the_wall_pinned() {
         let got: Vec<String> = WALL
             .iter()
@@ -871,7 +932,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn margin_bounds_are_safe() {
         for q in WALL {
             let qf = q as f64;
@@ -894,7 +954,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn delta_stable_matches_delta() {
         for q in BASES.iter().chain(COST.iter()) {
             let qf = *q as f64;
@@ -914,7 +973,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn cost_out_rows_pinned() {
         let mut got: Vec<String> = COST.iter().map(|&q| render_cost(q, 1)).collect();
         got.extend(CORO.iter().map(|&q| render_cost(q, max_excluded(q))));
@@ -933,7 +991,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn sharpened_cost_out_is_pinned() {
         let got: Vec<String> = [
             ("`1 + Phi_q/q`", "any", Cst::Step3),
@@ -955,7 +1012,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn step3_row_reproduces_the_ladder() {
         let (w, up) = onestep_wall(Cst::Step3, SHARP_HI);
         assert_eq!((w, up), (3_690, true));
@@ -966,7 +1022,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_chord_constant_saves_half_a_base() {
         for q in (36u64..4_000).step_by(1) {
             let qf = q as f64;
@@ -988,7 +1043,6 @@ mod tests {
         assert!(psi_chord(35.0) < (1.0 + PI) * 35.0 / 2.0);
     }
 
-    #[test]
     fn every_sharpened_wall_lies_under_its_predecessor() {
         let walls: Vec<u64> = [
             Cst::Step3,
@@ -1022,7 +1076,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn crossover_is_pinned() {
         let (first, down) = crossover(SWEEP_LO, SWEEP_HI);
         assert_eq!(first, 3_692);
@@ -1037,7 +1090,6 @@ mod tests {
         assert!(delta_stable(3_692.0, 1.0) > defect(3_692.0, 1.0));
     }
 
-    #[test]
     fn sci_is_directional() {
         for x in [1.0e-6, -1.0e-6, 9.999999999e-3, 1.23456789e7, -7.5e-11] {
             for d in [3u32, 5, 9] {
@@ -1051,7 +1103,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn rounding_is_directional() {
         for q in BASES {
             let (qf, mf) = (q as f64, 1.0);
@@ -1063,7 +1114,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn l1_floor_holds() {
         for q in 3..5_000u64 {
             assert!(c_exp(q as f64, 1.0) >= 0.0, "negative c_q at {q}");
@@ -1071,7 +1121,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_chord_floor_carries_its_harmonic_convention() {
         let exact = |n: f64| (1..=(n as u64)).map(|j| 1.0 / j as f64).sum::<f64>();
         let psi_exact = |q: f64| {
@@ -1095,7 +1144,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn harmonic_bound_dominates() {
         let mut h = 0.0;
         for n in 1..=2_000u64 {
@@ -1104,7 +1152,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn kernel_bound_dominates_sampled_sup() {
         for q in [50u64, 101, 200] {
             let bound = phi(q as f64);
@@ -1124,7 +1171,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn ladder_rows_pinned() {
         let got: Vec<String> = LADDER
             .iter()
@@ -1145,7 +1191,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn ladder_trend_pinned() {
         assert_eq!(
             ladder_trend(),
@@ -1153,7 +1198,6 @@ mod tests {
         );
     }
 
-    #[test]
     fn last_down_step_below_the_floor() {
         assert!((4.0 / PI) / 662.0 > 0.25 * 664f64.powf(-0.75));
         let mut last = 0u64;
@@ -1165,7 +1209,6 @@ mod tests {
         assert_eq!(last, 662);
     }
 
-    #[test]
     fn general_b_floor_bound() {
         let k = 2.0 / PI;
         let slack = 2.0 * 723f64.powf(-0.75);
@@ -1208,7 +1251,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn ladder_grh_rung_is_the_wall() {
         let (b, src) = ladder_b(Rat::new(1, 2));
         assert!(b.same(Rat::new(3, 4)));
@@ -1217,7 +1259,6 @@ mod tests {
         assert!(gap(3_690.0, 1.0) > 0.0 && gap(3_689.0, 1.0) < 0.0);
     }
 
-    #[test]
     fn zhang_beats_baker_harman_strictly_inside() {
         assert!(zhang(Rat::new(1, 2))
             .unwrap()
@@ -1247,7 +1288,6 @@ mod tests {
         assert!(zhang(Rat::new(3, 5)).is_none());
     }
 
-    #[test]
     fn ladder_floor_forces_steps_up() {
         for (n, d) in LADDER {
             let a = Rat::new(n, d);
@@ -1284,7 +1324,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn pb_step_below_the_constant() {
         let mut worst = 0.0f64;
         for q in 40..400_000u64 {
@@ -1298,7 +1337,6 @@ mod tests {
         assert!(worst > 1.27, "PB step bound absurdly loose: {worst}");
     }
 
-    #[test]
     fn pb_low_is_a_lower_bound() {
         for q in 3..20_000u64 {
             let qf = q as f64;
@@ -1310,7 +1348,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn ladder_below_the_floor_is_clear() {
         for (n, d) in LADDER {
             let a = Rat::new(n, d);
@@ -1331,7 +1368,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn ladder_wall_matches_exhaustive_scan() {
         for (n, d) in LADDER {
             let a = Rat::new(n, d);
@@ -1358,7 +1394,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn ladder_m_corollary_pinned() {
         let got: Vec<String> = LADDER
             .iter()
@@ -1377,7 +1412,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn ladder_wall_rises_with_a() {
         let mut prev = 0.0f64;
         for (n, d) in LADDER {
@@ -1389,7 +1423,6 @@ mod tests {
         assert!(prev > 1.0e83);
     }
 
-    #[test]
     fn asymptotic_shape() {
         let q = 1e12;
         let c = c_exp(q, 1.0);

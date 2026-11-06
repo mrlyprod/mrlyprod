@@ -18,7 +18,7 @@
 - `bases`: about fifty seconds. The parity codes and the one-cell deletions at base 4 to level 12 and at base 5 to level 10, with the distinct nonzero sequences they give and their OEIS hits.
 - `census`: about two minutes and 1.1 GB. Every code at base 2 to level 24 and every class at base 3 to level 14, the classes without a fit rerun to level 17.
 
-- `cargo test --manifest-path research/arcs/lab/rs/arc-loops/Cargo.toml`: three tests, the three counts at base 2 to level 5, the carpet law to level 8, and the glued void block.
+- `bash research/scripts/witness.sh arc-loops`: three witnesses, the three counts at base 2 to level 5, the carpet law to level 8, and the glued void block.
 
 ## WITNESSES
 

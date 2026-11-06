@@ -1,5 +1,6 @@
-import { frame } from "site:frame";
+import { frames } from "site:frame";
 import { site } from "site:routes";
+import { design } from "./active.ts";
 import { fits, LOGO, MIN } from "./gate.ts";
 
 const html = () => document.documentElement;
@@ -22,7 +23,7 @@ function mount() {
   gate();
   addEventListener("resize", gate);
   document.querySelector(".domain")?.remove();
-  document.body.insertAdjacentHTML("afterbegin", frame);
+  document.body.insertAdjacentHTML("afterbegin", frames[design.id] ?? "");
   document.body.append(logo());
 }
 

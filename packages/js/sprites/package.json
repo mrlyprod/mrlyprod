@@ -1,0 +1,22 @@
+{
+  "name": "@mrlyprod/sprites",
+  "version": "0.2.0",
+  "author": "MrlyProd, Inc.",
+  "license": "MIT",
+  "homepage": "https://mrly.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrlyprod/mrlyprod"
+  },
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "types": "tsc -p tsconfig.json"
+  }
+}

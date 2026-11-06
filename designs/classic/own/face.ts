@@ -1,0 +1,18 @@
+export const FACE = [
+  "................",
+  ".....kkkkkk.....",
+  "....kyyyyyyk....",
+  "...kyyyyyyyyk...",
+  "..kyyyyyyyyyyk..",
+  ".kyyyyyyyyyyyyk.",
+  ".kyyyyyyyyyyyyk.",
+  ".kyyyyyyyyyyyyk.",
+  ".kyyyyyyyyyyyyk.",
+  ".kyyyyyyyyyyyyk.",
+  ".kyyyyyyyyyyyyk.",
+  "..kyyyyyyyyyyk..",
+  "...kyyyyyyyyk...",
+  "....kyyyyyyk....",
+  ".....kkkkkk.....",
+  "................",
+];

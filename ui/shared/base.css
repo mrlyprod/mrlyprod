@@ -17,6 +17,17 @@ body {
 [hidden] {
   display: none !important;
 }
+.toasts {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  overflow: visible;
+  pointer-events: none;
+}
+.toasts > * {
+  pointer-events: auto;
+}
 img,
 canvas,
 svg,
@@ -69,11 +80,6 @@ h4 {
 }
 h1 {
   font-size: var(--t7);
-}
-@container window (max-width: 40rem) {
-  h1 {
-    font-size: 1.4rem;
-  }
 }
 h2 {
   font-size: var(--t6);
@@ -345,7 +351,7 @@ code {
     .pill,
     .tree a,
     .contents a
-  ):not(.close, .zoom, .remove, .link, .controls label > *) {
+  ):not(.remove, .link, .controls label > *) {
   min-height: var(--touch);
 }
 :root[data-targets="large"]
@@ -378,9 +384,6 @@ code {
 }
 :root[data-targets="large"] :is(.icon, .pill.add) {
   min-width: var(--touch);
-}
-:root[data-targets="large"] .title :is(.close, .zoom)::after {
-  inset: -1rem;
 }
 
 @media print {
@@ -441,7 +444,6 @@ code {
   --z-pad: 12;
   --z-dock: 20;
   --z-gallery: 25;
-  --z-scrim: 30;
   --z-drawer: 40;
   --z-sheet: 45;
   --z-bar: 50;

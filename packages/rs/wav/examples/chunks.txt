@@ -1,0 +1,6 @@
+22050 Hz, 2 channels, 24 bits, float false, 2 frames
+samples [0.9999999, -1.0, 0.5, 0.0]
+empty: not a riff wave file.
+cut in the format: chunk fmt  claims 16 bytes with 4 left.
+not riff: not a riff wave file.
+cut in the sound: 1 frame

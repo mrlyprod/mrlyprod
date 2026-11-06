@@ -35,7 +35,6 @@ export function meet() {
 const PLAY = 2000;
 const FADE = 250;
 const QUIET = 200;
-const PAGING = ["ArrowDown", "PageDown", " ", "End"];
 const LIVE = "main a[href], main button, main input, main select, main textarea, main summary";
 
 let playing = false;
@@ -48,11 +47,11 @@ let tapped = 0;
 const hall = () => document.querySelector<HTMLElement>(".welcome");
 export const greeting = () => root().dataset.welcome;
 const jump = (top: number) => scrollTo({ top, behavior: "instant" });
-const rolls = () => CSS.supports("animation-timeline", "scroll()");
+const still = () => calm() || !CSS.supports("animation-timeline", "scroll()");
 
 function glide(path: Path, time: number, done: () => void) {
   playing = true;
-  const span = calm() ? 0 : time;
+  const span = still() ? 0 : time;
   const start = performance.now();
   const step = (now: number) => {
     const t = span ? Math.min(1, Math.max(0, (now - start) / span)) : 1;
@@ -103,7 +102,7 @@ function enter() {
       if (shown === mine && greeting() === "open") run();
     });
   };
-  if (mine?.stop?.leave && root().dataset.lock) return mine.stop.leave(go);
+  if (!still() && mine?.stop?.leave && root().dataset.lock) return mine.stop.leave(go);
   go();
 }
 
@@ -130,7 +129,7 @@ function greet() {
         () => (asked ? enter() : lid()),
       );
     },
-    calm() ? 0 : FADE,
+    still() ? 0 : FADE,
   );
 }
 
@@ -156,16 +155,18 @@ function hold(e: Event) {
   }
   if (e.type === "keydown") {
     const press = e as KeyboardEvent;
-    if (press.metaKey || press.ctrlKey || press.altKey || !PAGING.includes(press.key)) return;
+    if (press.metaKey || press.ctrlKey || press.altKey) return;
     e.preventDefault();
+    e.stopPropagation();
     return enter();
   }
   if (target?.closest(LIVE)) {
     if (open && !playing) settle();
     return;
   }
-  if (e.type === "pointerdown") return enter();
+  if (e.type === "pointerdown" && !still()) return enter();
   e.preventDefault();
+  if (e.type === "click" && still()) enter();
 }
 
 function drift() {
@@ -207,8 +208,7 @@ async function arrive() {
   const due = owed;
   owed = false;
   if (!drawn) return void delete root().dataset.welcome;
-  if (!rolls()) return;
-  root().dataset.welcome = held() || read(KEY.welcome) || calm() ? "shut" : "open";
+  root().dataset.welcome = held() || read(KEY.welcome) ? "shut" : "open";
   if (greeting() === "open") {
     clearTimeout(later);
     shown?.stop?.play?.();
@@ -312,7 +312,7 @@ function leave(): Promise<unknown> | null {
   const kit = drawn;
   if (!up || !host || !kit) return null;
   const left = kit.ending(host, () => kit.seal(host, "leaving"));
-  return calm() ? null : left;
+  return still() ? null : left;
 }
 
 function unlock() {

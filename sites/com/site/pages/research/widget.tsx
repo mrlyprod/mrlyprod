@@ -207,7 +207,7 @@ export function Widget({ rows, site, draw }: Props) {
       </Library>
       <Bar side="actions">
         <Btn className="share" onClick={copy}>
-          <Icon name="ios_share" />
+          <Icon name="share" />
           Share
         </Btn>
         {topic && (

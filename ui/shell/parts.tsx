@@ -72,7 +72,7 @@ export function veil(host: Element, props: Props["saver"]) {
 
 export function Lede({ id, title, lead, children }: LedeProps) {
   return (
-    <parts.prose kind="hub" id={id} title={title} lead={lead} contents={[]}>
+    <parts.prose kind="hub" id={id} title={title} lead={lead}>
       {children}
     </parts.prose>
   );
@@ -118,7 +118,7 @@ export function Lost({ site, rows, row = rows.find((one) => one.meta?.id === "mi
       <a href="/redirects/">Redirects</a>.
     </>
   );
-  return <parts.prose kind="lost" id="lost" title={row.title} lead={lead} contents={[]} />;
+  return <parts.prose kind="lost" id="lost" title={row.title} lead={lead} />;
 }
 
 export { PANES } from "./panes.ts";

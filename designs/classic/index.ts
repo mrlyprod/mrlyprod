@@ -1,31 +1,43 @@
 import type { Design } from "@mrlyprod/ui/shell/design.ts";
-import { App } from "./app.tsx";
-import { Bar } from "./bar.tsx";
-import { Control } from "./control.tsx";
-import { Desk } from "./desk.tsx";
-import { Dialog } from "./dialog.tsx";
-import { Dock } from "./dock.tsx";
-import { Group } from "./group.tsx";
-import { Launcher } from "./launcher.tsx";
-import { Lock } from "./lock.tsx";
-import { MEASURE } from "./measure.ts";
-import { Menu } from "./menu.tsx";
-import { Preview } from "./preview.tsx";
-import { Prose } from "./prose.tsx";
-import { Saver } from "./saver.tsx";
-import { DARK, LIGHT } from "./skin.ts";
-import { Tile } from "./tile.tsx";
-import { Widgets } from "./widgets.tsx";
-import { Window } from "./window.tsx";
+import { emojis } from "./emojis/index.ts";
+import { icons } from "./icons/index.ts";
+import { Alert } from "./parts/alert.tsx";
+import { App } from "./parts/app.tsx";
+import { Bar } from "./parts/bar.tsx";
+import { Calendar } from "./parts/calendar.tsx";
+import { Control } from "./parts/control.tsx";
+import { Desk } from "./parts/desk.tsx";
+import { Dialog } from "./parts/dialog.tsx";
+import { Dock } from "./parts/dock.tsx";
+import { Empty } from "./parts/empty.tsx";
+import { Group } from "./parts/group.tsx";
+import { Launcher } from "./parts/launcher.tsx";
+import { Lock } from "./parts/lock.tsx";
+import { Menu } from "./parts/menu.tsx";
+import { Preview } from "./parts/preview.tsx";
+import { Progress } from "./parts/progress.tsx";
+import { Prose } from "./parts/prose.tsx";
+import { Saver } from "./parts/saver.tsx";
+import { Search } from "./parts/search.tsx";
+import { Sheet } from "./parts/sheet.tsx";
+import { Table } from "./parts/table.tsx";
+import { Tabs } from "./parts/tabs.tsx";
+import { Tile } from "./parts/tile.tsx";
+import { Toast } from "./parts/toast.tsx";
+import { Tooltip } from "./parts/tooltip.tsx";
+import { Widgets } from "./parts/widgets.tsx";
+import { Window } from "./parts/window.tsx";
+import { pulldown } from "./pulldown.ts";
+import { BAR, SKIN } from "./skin.ts";
 
-export const classic: Design = {
+export const design: Design = {
   id: "classic",
   title: "Classic",
-  skin: { light: LIGHT, dark: DARK },
-  bar: { light: "#ffffff", dark: "#1a1a1a" },
-  css: ["classic.css"],
-  measure: MEASURE,
-  pulldown: "pulldown.ts",
+  skin: SKIN,
+  bar: BAR,
+  icons,
+  emojis,
+  pulldown,
   parts: {
     bar: Bar,
     window: Window,
@@ -37,6 +49,16 @@ export const classic: Design = {
     prose: Prose,
     tile: Tile,
     launcher: Launcher,
+    sheet: Sheet,
+    alert: Alert,
+    tabs: Tabs,
+    table: Table,
+    toast: Toast,
+    tooltip: Tooltip,
+    search: Search,
+    progress: Progress,
+    empty: Empty,
+    calendar: Calendar,
     desk: Desk,
     dock: Dock,
     widgets: Widgets,

@@ -149,7 +149,7 @@ export function Nav({ label, hint, href }: NavProps) {
   return (
     <a className="item nav" href={href}>
       <Words label={label} hint={hint} id={id} />
-      <Icon name="chevron_right" size={16} />
+      <Icon name="right" size={16} />
     </a>
   );
 }
@@ -211,7 +211,7 @@ export function Select({ label, hint, value, options, onChange, disabled }: Choi
             </option>
           ))}
         </select>
-        <Icon name="expand_more" size={16} />
+        <Icon name="down" size={16} />
       </span>
     </Line>
   );

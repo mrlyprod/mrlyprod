@@ -1,19 +1,8 @@
-import type { IconName } from "./controls.tsx";
-import { ICONS, VIEWBOX } from "./icons.gen.js";
+import { glyph } from "./icon.tsx";
 import type { Item } from "./menus.ts";
 import { label } from "./menus.ts";
 
-const SVG = "http://www.w3.org/2000/svg";
-
-export function glyph(name: IconName) {
-  const svg = document.createElementNS(SVG, "svg");
-  svg.setAttribute("viewBox", VIEWBOX);
-  svg.setAttribute("aria-hidden", "true");
-  const path = document.createElementNS(SVG, "path");
-  path.setAttribute("d", ICONS[name]);
-  svg.append(path);
-  return svg;
-}
+const SIZE = 14;
 
 export function chord(keys: string[], mac: boolean) {
   const out = document.createElement("span");
@@ -21,11 +10,11 @@ export function chord(keys: string[], mac: boolean) {
   const parts = keys.map((one) =>
     one === "mod"
       ? mac
-        ? glyph("keyboard_command_key")
+        ? glyph("command", SIZE)
         : "Ctrl"
       : one === "shift"
         ? mac
-          ? glyph("shift")
+          ? glyph("shift", SIZE)
           : "Shift"
         : label(one),
   );
@@ -58,7 +47,7 @@ export function item(row: Item | null, mac: boolean) {
   if (row.act) one.dataset.act = row.act;
   const tick = document.createElement("span");
   tick.className = "tick";
-  if (row.on) tick.append(glyph("check"));
+  if (row.on) tick.append(glyph("check", SIZE));
   const text = document.createElement("span");
   text.className = "label";
   text.textContent = String(row.label);

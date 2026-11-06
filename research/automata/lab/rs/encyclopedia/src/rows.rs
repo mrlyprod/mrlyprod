@@ -137,13 +137,16 @@ pub fn each_row(mut f: impl FnMut(Row)) -> Result<usize> {
     })
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
     use crate::cache::line;
     use crate::{run_named, short};
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "a_short_line_reads_back_as_a_row",
+        a_short_line_reads_back_as_a_row,
+    )];
+
     fn a_short_line_reads_back_as_a_row() {
         let name = "dust.3.1 x1 wallpaper mask:carpet.3.1 birth:evens survive:evens x:256";
         let (recipe, run) = run_named(name).unwrap();

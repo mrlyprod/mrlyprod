@@ -7,6 +7,7 @@ name = "carry-skeleton"
 version = "0.0.0"
 dependencies = [
  "mrly-automaton",
+ "witness",
 ]
 
 [[package]]
@@ -95,12 +96,28 @@ version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 
+[[package]]
+name = "witness"
+version = "0.0.0"
+
 [[patch.unused]]
 name = "mrly-apollonian"
 version = "0.2.0"
 
 [[patch.unused]]
 name = "mrly-arcs"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-audio"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-auth"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-avatar"
 version = "0.2.0"
 
 [[patch.unused]]
@@ -136,15 +153,23 @@ name = "mrly-font"
 version = "0.2.0"
 
 [[patch.unused]]
-name = "mrly-four"
-version = "0.2.0"
-
-[[patch.unused]]
 name = "mrly-gaussian"
 version = "0.2.0"
 
 [[patch.unused]]
+name = "mrly-gif"
+version = "0.2.0"
+
+[[patch.unused]]
 name = "mrly-graph"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-graphics"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-hex"
 version = "0.2.0"
 
 [[patch.unused]]
@@ -180,7 +205,27 @@ name = "mrly-moire"
 version = "0.2.0"
 
 [[patch.unused]]
+name = "mrly-music"
+version = "0.2.0"
+
+[[patch.unused]]
 name = "mrly-name"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-obj"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-pixels"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-png"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-quotes"
 version = "0.2.0"
 
 [[patch.unused]]
@@ -204,7 +249,7 @@ name = "mrly-sequences"
 version = "0.2.0"
 
 [[patch.unused]]
-name = "mrly-six"
+name = "mrly-space"
 version = "0.2.0"
 
 [[patch.unused]]
@@ -245,6 +290,22 @@ version = "0.2.0"
 
 [[patch.unused]]
 name = "mrly-ulam"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-video"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-voxels"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-wang"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-wav"
 version = "0.2.0"
 
 [[patch.unused]]

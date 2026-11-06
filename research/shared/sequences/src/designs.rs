@@ -6,7 +6,7 @@ use mrly_math::factory;
 use mrly_math::factory::code_to_corners;
 use mrly_sequences::counts;
 use mrly_sequences::counts::Exposure;
-use mrly_six as six;
+use mrly_hex as hex;
 use mrly_three as three;
 use mrly_two as two;
 use std::collections::{HashMap, HashSet};
@@ -160,9 +160,9 @@ impl Measure {
             Measure::Gaps => "mrly_sequences::counts::cut_voids",
             Measure::ProFills => "mrly_sequences::counts::pro_fills",
             Measure::ProVoids => "mrly_sequences::counts::pro_voids",
-            Measure::Holes => "mrly_six::holes",
-            Measure::Pieces => "mrly_six::components",
-            Measure::SliceEuler => "mrly_six::euler",
+            Measure::Holes => "mrly_hex::holes",
+            Measure::Pieces => "mrly_hex::components",
+            Measure::SliceEuler => "mrly_hex::euler",
         }
     }
 }
@@ -282,10 +282,10 @@ fn values(
                     (Measure::Hidden, Some(three::hidden(&cell) as i128)),
                 ];
                 if base == 2 {
-                    let slice = six::cut(&cell).ok()?;
-                    out.push((Measure::Holes, Some(six::holes(&slice).ok()? as i128)));
-                    out.push((Measure::Pieces, Some(six::components(&slice).ok()? as i128)));
-                    out.push((Measure::SliceEuler, Some(six::euler(&slice, false) as i128)));
+                    let slice = hex::cut(&cell).ok()?;
+                    out.push((Measure::Holes, Some(hex::holes(&slice).ok()? as i128)));
+                    out.push((Measure::Pieces, Some(hex::components(&slice).ok()? as i128)));
+                    out.push((Measure::SliceEuler, Some(hex::euler(&slice, false) as i128)));
                 }
                 out
             }

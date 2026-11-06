@@ -50,11 +50,9 @@
 .saver .clock time {
   display: block;
   margin-top: var(--s3);
-  font:
-    400 clamp(4.5rem, 16vw, 10rem) / 1 "MrlyFont",
-    var(--mono);
+  font: 200 clamp(4.5rem, 16vw, 10rem) / 1 var(--sans);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.03em;
 }
 
 html[data-motion="reduce"] :is(.saver, .saver canvas) {

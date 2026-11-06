@@ -1,0 +1,6 @@
+title = "Music"
+description = "Tunes the music crate composes from a seed."
+kind = "randomized"
+version = "0.2.0"
+seed = 1
+sizes = ["1k"]

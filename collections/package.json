@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "types": "tsc -p tsconfig.json"
+  }
+}

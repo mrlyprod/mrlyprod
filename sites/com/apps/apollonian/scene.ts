@@ -123,7 +123,7 @@ export const SAVERS = [
   },
 ];
 
-export const FACE = "Noto Sans Mono";
+const FACE = "ui-monospace, monospace";
 
 const TAU = Math.PI * 2;
 const WASH = 0.15;
@@ -135,7 +135,7 @@ const NIBS = 16;
 const SOFT = 4;
 export const SLOW = 2;
 
-const font = (size: number) => `${size}px "${FACE}", ui-monospace, monospace`;
+const font = (size: number) => `${size}px ${FACE}`;
 
 export const fg = (paper: string) => {
   const [r, g, b] = rgb(paper);
@@ -473,5 +473,5 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
     return JSON.stringify({ root: value!.root, quadruple: plan!.quad, cap: value!.cap, circles: list });
   };
   set(opts);
-  return { draw, size, theme, set, tap, svg, json, still: whole, font: FACE };
+  return { draw, size, theme, set, tap, svg, json, still: whole };
 }

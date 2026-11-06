@@ -4,7 +4,7 @@ edition = "2021"
 
 [dependencies]
 mrly-num = "0.2.0"
-mrly-six = "0.2.0"
+mrly-hex = "0.2.0"
 mrly-three = "0.2.0"
 mrly-tile = "0.2.0"
 num-bigint = "0.4"

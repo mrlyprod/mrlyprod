@@ -242,12 +242,22 @@ pub fn blocks(n: usize, tile: &[bool], top: usize) -> Vec<Block> {
     out
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
     use crate::design::Design;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "three_counts_agree_at_base_two",
+            three_counts_agree_at_base_two,
+        ),
+        ("carpet_law", carpet_law),
+        (
+            "void_block_glues_to_its_formula",
+            void_block_glues_to_its_formula,
+        ),
+    ];
+
     fn three_counts_agree_at_base_two() {
         for code in 0..16u128 {
             let d = Design::full(code, 2);
@@ -262,7 +272,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn carpet_law() {
         let s = series(3, &Design::new(7, 3, 2).tile, 8);
         for (n, &x) in s.iter().enumerate() {
@@ -274,7 +283,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn void_block_glues_to_its_formula() {
         for n in 2..6 {
             let glued = glue(n, &vec![true; n * n], &void_block(n), true);

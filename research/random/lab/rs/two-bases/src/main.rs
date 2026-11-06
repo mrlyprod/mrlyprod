@@ -1017,6 +1017,7 @@ fn sparse(rmax: u32, wmax: usize, digits: u32) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = env::args().collect();
     let clock = Instant::now();
     match args.get(1).map(String::as_str) {
@@ -1036,11 +1037,14 @@ fn main() {
     eprintln!("{:.2} s", clock.elapsed().as_secs_f64());
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "layers_match_the_block_recursions",
+        layers_match_the_block_recursions,
+    )];
+
     fn layers_match_the_block_recursions() {
         for h in 1u64..3000 {
             let w = W([h, 0, 0]);

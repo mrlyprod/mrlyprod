@@ -14,5 +14,6 @@ workspace = true
 
 [dependencies]
 mrly-error.workspace = true
+mrly-png.workspace = true
 mrly-wire.workspace = true
 serde.workspace = true

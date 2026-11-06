@@ -118,7 +118,6 @@ export const SCALES = { min: 2, max: 9 };
 export const KERNELS = [2, 3];
 export const FOLD = 9;
 export const PAD = 16;
-export const FACE = "Noto Sans Mono";
 export const FLOOR = 0.1;
 export const THUMB = 32;
 export const NICKNAMES: Record<string, string> = {
@@ -484,7 +483,7 @@ export function inks(look: Look): Inks {
   };
 }
 
-export const font = (dpr: number, k = 1) => `${Math.round(12 * dpr * k)}px "${FACE}", ui-monospace, monospace`;
+export const font = (dpr: number, k = 1) => `${Math.round(12 * dpr * k)}px ui-monospace, monospace`;
 
 export function stamp(stream: ArrayLike<number>, width: number, rows: number, plus: Rgb, minus: Rgb): OffscreenCanvas {
   const page = new OffscreenCanvas(width, rows);

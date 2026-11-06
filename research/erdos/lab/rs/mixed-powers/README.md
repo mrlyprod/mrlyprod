@@ -120,7 +120,7 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml -- classes 2 8 8
 ```
 
-- `cargo test --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.toml`, `18` tests, under `1` s after the build.
+- `bash research/scripts/witness.sh mixed-powers`, `21` witnesses, under `1` s after the build.
 
 ## READS
 
@@ -153,31 +153,31 @@ cargo run --release --manifest-path research/erdos/lab/rs/mixed-powers/Cargo.tom
 - `windows`: the power multisets run no window chain.
 - `census 10 5 32 4`, `cell 3,4,5 4 34` and `cell 3,4,5 5 34`: the certificate for `{3, 4, 5}` at `k = 5` passes `2^34` bits.
 - `refute 27`: the Refuted row on the surplus lemma L.
-- `chainless 27` and its crate test: the Refuted row on the chain-excluded lemma.
+- `chainless 27` and its witness: the Refuted row on the chain-excluded lemma.
 - `forced 26`: the six forced-window variants of the note, none with a non-sum in its last `12` term intervals.
-- `windowed 27` and its crate test: the Refuted row on the windowed lemma.
+- `windowed 27` and its witness: the Refuted row on the windowed lemma.
 - `jumps 10 6 31 4`: the jump law on every step of the `173` cells it reaches, the route of `F` by its birth step, the peaks of `T_n/a_(n+1)` and the open runs at the cut.
 - `deep 10 6 31 4`, the `wcell` runs and `wcontrol 16`: cofinite at `k = 1..4` for every base set in `[3, 10]`, `28` of `30` minimal sets at `k = 5`, and the route of every `F`.
 - `deep 10 6 31 4` and `split 3,4,5 5 31333640736 64`: `F({3, 4, 5}, 5)`.
 - `deep 12 3 31 4`: `101` of `103` minimal sets in `[3, 12]` at `k = 3`.
 - `ternary 6 200 8`: `g_3(n)` for Erdos problem 817 at `n = 1..6`.
-- `band 419 475 70 8` and the crate test on the set: `g_3(7) <= 474`.
+- `band 419 475 70 8` and the witness on the set: `g_3(7) <= 474`.
 - `band 419 473 100 8`: no set beating `474` with its six largest elements within `100` of the top.
 - `sweep 7 169 473 8`: `g_3(7) = 474`.
 - `tally 7 LO HI 8 1` over `[169, 348]`, `[349, 445]`, `[446, 458]`, `[459, 467]`, `[468, 473]`, `[474, 474]`: the search without the cut agrees, about `27` minutes in all.
-- `tally 7 474 474 8 0` and `tally 6 168 176 8 1`: the extremal sets at `n = 6, 7`, and the cut removing none of the sets it was tried on, with the crate tests on the cut.
-- `four 6 200 8`, `fourplain N 100` for `N = 1..6` and the crate test on the four-term values: `g_4(n) = 1, 3, 5, 14, 40, 79` at `n = 1..6`.
-- `four 7 130 8` and the crate test on the four-term values: `131 <= g_4(7) <= 237`.
-- `tight 4 31`, `tight 4 20`, `set 3,4,7 1 2000000`, `set 3,4,7 2 20000000`, the `split` runs at `3,4,7` and the crate test on the sigma-one set: `{3, 4, 7}` cofinite at `k = 1..4` and its largest non-sums.
+- `tally 7 474 474 8 0` and `tally 6 168 176 8 1`: the extremal sets at `n = 6, 7`, and the cut removing none of the sets it was tried on, with the witnesses on the cut.
+- `four 6 200 8`, `fourplain N 100` for `N = 1..6` and the witness on the four-term values: `g_4(n) = 1, 3, 5, 14, 40, 79` at `n = 1..6`.
+- `four 7 130 8` and the witness on the four-term values: `131 <= g_4(7) <= 237`.
+- `tight 4 31`, `tight 4 20`, `set 3,4,7 1 2000000`, `set 3,4,7 2 20000000`, the `split` runs at `3,4,7` and the witness on the sigma-one set: `{3, 4, 7}` cofinite at `k = 1..4` and its largest non-sums.
 - The certificate, exactness, monotone, wide certificate, two-part, window, two-route, one-inequality, surplus-does-not-heal, chain, birth, jump and route-of-`F` rows are proofs on `research/erdos/notes/problem-124.md`; the sigma-one deficit, tight certificate and sigma-one exactness rows, the smooth-pair reduction and the two-log reduction are proofs on `research/erdos/notes/sigma-one.md`.
 - `ones 47 6`: the `62` base sets of at most six bases in `[3, 47]` with `sigma = 1`, `gcd = 1` and no two bases powers of one integer, the `52` with two smooth bases, and `rho = 7153/2^19`, in the smooth-pair reduction row.
-- `pairs 47 6 5 35 26 2`, `pairs 47 6 5 33 25 3`, `pairs 47 6 4 24 25 4`, `pcontrol 47 6 2`, the `split` runs at `3,4,10,19`, `3,5,6,21` and `3,6,8,15,21,29`, and the crate test on the smooth pair: the `52` smooth-pair sets cofinite at `k <= 4`, `51` at `k = 5`, and the largest non-sums of `{3, 4, 10, 19}`.
-- `near 3 5 24`, `near 3 7 0`, `near 5 7 0`, `near 31 46 0` and the crate test on the close powers: the neighbour pairs below `2^80` and `abs(3^a - 5^b) >= min(2^80, min(3^a, 5^b)/47)`.
-- `logs 47 6 5 31 25 4 0`, `logs 47 6 5 33 25 2 0`, `logs 47 6 4 24 25 4 0`, `logs 47 6 4 31 25 4 1`, `lcontrol 47 6 2 0`, `lcontrol 47 6 2 1`, the `split` runs at `3,5,7,13`, `lpair 3,5,7,13 6 34 25` and the crate test on the two-log rule: the `10` sets without two smooth bases cofinite at `k = 1..5`, and the two rules agreeing on the `52`.
+- `pairs 47 6 5 35 26 2`, `pairs 47 6 5 33 25 3`, `pairs 47 6 4 24 25 4`, `pcontrol 47 6 2`, the `split` runs at `3,4,10,19`, `3,5,6,21` and `3,6,8,15,21,29`, and the witness on the smooth pair: the `52` smooth-pair sets cofinite at `k <= 4`, `51` at `k = 5`, and the largest non-sums of `{3, 4, 10, 19}`.
+- `near 3 5 24`, `near 3 7 0`, `near 5 7 0`, `near 31 46 0` and the witness on the close powers: the neighbour pairs below `2^80` and `abs(3^a - 5^b) >= min(2^80, min(3^a, 5^b)/47)`.
+- `logs 47 6 5 31 25 4 0`, `logs 47 6 5 33 25 2 0`, `logs 47 6 4 24 25 4 0`, `logs 47 6 4 31 25 4 1`, `lcontrol 47 6 2 0`, `lcontrol 47 6 2 1`, the `split` runs at `3,5,7,13`, `lpair 3,5,7,13 6 34 25` and the witness on the two-log rule: the `10` sets without two smooth bases cofinite at `k = 1..5`, and the two rules agreeing on the `52`.
 - The concentration-cut row is a proof on `research/erdos/notes/problems-817-406.md`.
-- `deaths 3 3000 79 8`, `tuples 3 124 8 16777216` and the crate test on the two deciders: no four exponents within a span of `3000` for a nonzero 3-adic `lambda`.
+- `deaths 3 3000 79 8`, `tuples 3 124 8 16777216` and the witness on the two deciders: no four exponents within a span of `3000` for a nonzero 3-adic `lambda`.
 - `tuples 2 40 8 16777216`, `deaths 2 40 79 8` and `cantor 2,18`: the pairs up to `40`.
-- `cantor 8` and the crate test on the prefix counts: the Table 5.2 entry at `2^8`.
-- `classes 3 3 8` to `classes 3 7 8` and the crate test on the first moment: the class densities.
+- `cantor 8` and the witness on the prefix counts: the Table 5.2 entry at `2^8`.
+- `classes 3 3 8` to `classes 3 7 8` and the witness on the first moment: the class densities.
 - `tuples 1 40 8 16777216`: the Conjecture row on `dim C(1, 2^m)`.
 - The prefix-test and almost-every-set-is-empty rows are proofs on `research/erdos/notes/problems-817-406.md`.

@@ -1,0 +1,17 @@
+87 bytes
+
+  0  header      47 49 46 38 39 61                      GIF89a
+  6  screen      04 00 04 00 80 00 00                   4 by 4, 2 colors
+ 13  colors      00 00 00 ff ff ff                      #000000 #ffffff
+ 19  loop        21 ff 0b 4e 45 54 53 43 41 50 45 32 .. NETSCAPE2.0, 0 = forever
+ 38  control     21 f9 04 04 32 00 00 00                delay 50/100 s, keep, transparent none
+ 46  image       2c 00 00 00 00 04 00 04 00 00          4 by 4 at (0, 0)
+ 56  code size   02                                     2 bits a color
+ 57  lzw data    04 84 1d a7 57                         4 bytes
+ 62  end         00                                     no more data
+ 63  control     21 f9 04 04 32 00 00 00                delay 50/100 s, keep, transparent none
+ 71  image       2c 01 00 01 00 02 00 01 00 00          2 by 1 at (1, 1)
+ 81  code size   02                                     2 bits a color
+ 82  lzw data    02 44 0a                               2 bytes
+ 85  end         00                                     no more data
+ 86  trailer     3b                                     end of file

@@ -1,0 +1,16 @@
+progression CCCCFFCCGFCG
+bar 4 frames, beat 0.25 s
+voice 0: 14 notes G2..F#4, chord triad, counts [1], moves repeat up down
+voice 1: 14 notes G3..F#5, chord triad, counts [2, 3], moves repeat random
+voice 2: 7 notes G4..F#5, chord none, counts [1], moves repeat random up down pause
+frame  voice 0             voice 1             voice 2             
+    0  D3                  D4 G3 B3            C5                  
+    1  D3                  D4 G3 B3            D5                  
+    2  B2                  G3 B3               -                   
+    3  B2                  G3 B3               C5                  
+    4  D3                  G3 D4 B3            C5                  
+    5  D3                  B3 D4 G3            D5                  
+    6  G2                  G3 D4               C5                  
+    7  G2                  B3 G3 D4            C5                  
+frame 0 sounds D3 D4 G3 B3 C5
+seed 1 again gives the same parts: true

@@ -1,0 +1,26 @@
+import type { Color } from "@mrlyprod/draw";
+
+export const RIM: Color = [238, 152, 34, 255];
+export const FACE: Color = [255, 196, 58, 255];
+export const GLOW: Color = [255, 214, 90, 255];
+export const BROWN: Color = [96, 54, 24, 255];
+export const MOUTH: Color = [110, 52, 28, 255];
+export const TEETH: Color = [255, 255, 255, 255];
+export const TONGUE: Color = [242, 104, 104, 255];
+export const TEAR: Color = [74, 164, 242, 255];
+export const SHINE: Color = [170, 216, 255, 255];
+export const RED: Color = [236, 44, 60, 255];
+export const DEEP: Color = [196, 26, 44, 255];
+export const BLUSH: Color = [255, 140, 146, 255];
+export const SHADE: Color = [40, 34, 36, 255];
+export const GLINT: Color = [104, 100, 108, 255];
+export const EMBER: Color = [238, 78, 36, 255];
+export const FLAME: Color = [250, 140, 32, 255];
+export const CORE: Color = [255, 208, 64, 255];
+export const GOLD: Color = [255, 200, 40, 255];
+export const AMBER: Color = [244, 156, 24, 255];
+export const LIGHT: Color = [255, 234, 140, 255];
+export const BLUE: Color = [64, 148, 240, 255];
+export const GREEN: Color = [70, 196, 104, 255];
+export const PINK: Color = [255, 96, 160, 255];
+export const PURPLE: Color = [150, 96, 232, 255];

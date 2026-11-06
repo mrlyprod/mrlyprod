@@ -63,6 +63,7 @@ fn run_terms(design: &Design, top: u32, threads: usize) {
 }
 
 fn main() {
+    witness::dispatch(&[pairs::witnesses::ALL].concat());
     let args: Vec<String> = std::env::args().skip(1).collect();
     let threads = std::thread::available_parallelism()
         .map(|n| n.get())

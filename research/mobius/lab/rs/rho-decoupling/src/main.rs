@@ -275,6 +275,18 @@ fn pinned(q: u64, digits: &[u64], label: &str, l: usize, d: u64) {
 }
 
 fn main() {
+    witness::dispatch(
+        &[
+            witnesses::ALL,
+            carry::witnesses::ALL,
+            large::witnesses::ALL,
+            menergy::witnesses::ALL,
+            riesz::witnesses::ALL,
+            signed::witnesses::ALL,
+            vaughan::witnesses::ALL,
+        ]
+        .concat(),
+    );
     let mu = mu_sieve(500);
     let ex = |q: u64, e: u64| -> Vec<u64> { (0..q).filter(|&f| f != e).collect() };
     census(3, &[0, 1], "01", &[8, 16, 24, 32], 200, &mu);
@@ -306,9 +318,17 @@ fn main() {
     vaughan::run();
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("dp_matches_brute", dp_matches_brute),
+        ("residues_sum_to_kl", residues_sum_to_kl),
+        ("crt_reduction_exact", crt_reduction_exact),
+        ("mu_pins", mu_pins),
+        ("lemma_a_exact_small", lemma_a_exact_small),
+        ("helpers_pin", helpers_pin),
+    ];
 
     fn brute(q: u64, digits: &[u64], l: usize, d: u64) -> u128 {
         fn rec(v: u128, len: usize, q: u64, digits: &[u64], l: usize, d: u64, hits: &mut u128) {
@@ -327,7 +347,6 @@ mod tests {
         hits
     }
 
-    #[test]
     fn dp_matches_brute() {
         for d in 1..=40 {
             assert_eq!(n_div(3, &[0, 1], 8, d), brute(3, &[0, 1], 8, d));
@@ -344,7 +363,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn residues_sum_to_kl() {
         for (q, digits, l, d) in [
             (3u64, vec![0u64, 1], 12usize, 35u64),
@@ -356,7 +374,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn crt_reduction_exact() {
         let f = [0u64, 1, 3, 4];
         let low = residue_counts(6, &f, 4, 5);
@@ -364,7 +381,6 @@ mod tests {
         assert_eq!(n_div(6, &f, 5, 10), split);
     }
 
-    #[test]
     fn mu_pins() {
         let mu = mu_sieve(100);
         assert_eq!(&mu[1..13], &[1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0]);
@@ -372,7 +388,6 @@ mod tests {
         assert_eq!(m100, 1);
     }
 
-    #[test]
     fn lemma_a_exact_small() {
         let l = 16;
         let kl = BigInt::from(pow_checked(2, l));
@@ -391,7 +406,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn helpers_pin() {
         assert_eq!(pow_checked(3, 4), 81);
         assert_eq!(diff_gcd(&[0, 2, 4]), 2);

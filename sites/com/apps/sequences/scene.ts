@@ -19,7 +19,6 @@ import {
   chart,
   clear,
   drawRibbon,
-  FACE,
   growth,
   legend,
   ribbon,
@@ -276,5 +275,5 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Fed = {}) {
     at = Math.max(0, Math.min(count - 1, (at < 0 ? count - 1 : at) + by));
     again();
   };
-  return { draw, size: again, theme: again, set, tap, step, font: FACE };
+  return { draw, size: again, theme: again, set, tap, step };
 }

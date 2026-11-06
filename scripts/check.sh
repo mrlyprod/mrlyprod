@@ -6,8 +6,8 @@ cd "$(dirname "$0")/.."
 
 DATA_DIR="data/scripts/check"
 RUFF="uvx ruff@0.17.2"
-JS=(os apps ui designs packages/js/draw packages/js/loader sim sites/net sites/com sites/org sites/tv sites/store)
-SITES=(sites/net sites/com sites/org sites/tv sites/store)
+JS=(os apps ui designs packages/js/draw packages/js/loader packages/js/sprites collections sim sites/net sites/com sites/org sites/tv sites/store sites/sh)
+SITES=(sites/net sites/com sites/org sites/tv sites/store sites/sh)
 
 step() {
   local name="$1"; shift
@@ -47,8 +47,8 @@ step fmtcli cargo fmt --manifest-path packages/cli/Cargo.toml --check
 step clippy cargo clippy --workspace --all-targets -- -D warnings
 step clipcli cargo clippy --manifest-path data/packages/rs/bindgen/Cargo.toml -p mrly-cli -- -D warnings
 step examples uv run --no-project scripts/examples.py --check
-step ruff $RUFF check packages/py aws
-step ruffmt $RUFF format --check packages/py aws
+step ruff $RUFF check packages/py infra
+step ruffmt $RUFF format --check packages/py infra
 step install bun install --frozen-lockfile
 step rules bun os/scripts/rules.ts
 step lint bun run lint

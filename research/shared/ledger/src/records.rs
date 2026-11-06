@@ -74,7 +74,7 @@ pub static RECORDS: &[Record] = &[
     record("A001316", "Gould's sequence: number of odd entries in row n of Pascal's triangle", 0, "1, 2, 2, 4, 2, 4, 4, 8, 2, 4, 4, 8", Tag::Verified, "2^wt(n)", "REFS.md"),
     record("A001481", "Numbers that are the sum of 2 squares", 1, "0, 1, 2, 4, 5, 8, 9, 10, 13, 16, 17, 18", Tag::Verified, "none", "spin.md, the ring radii of a spun square lattice"),
     record("A001844", "Centered square numbers: a(n) = 2*n*(n+1)+1", 0, "1, 5, 13, 25, 41, 61, 85, 113, 145, 181, 221, 265", Tag::Proved, "2k^2 - 2k + 1", SIDES).keyed(9, 2, Measure::Fills, Axis::Side, -1),
-    record("A002407", "Cuban primes: primes which are the difference of two consecutive cubes", 1, "7, 19, 37, 61, 127, 271, 331, 397, 547, 631, 919, 1657", Tag::Verified, "none", "mrly_sequences::counts::six theorems, slices.md"),
+    record("A002407", "Cuban primes: primes which are the difference of two consecutive cubes", 1, "7, 19, 37, 61, 127, 271, 331, 397, 547, 631, 919, 1657", Tag::Verified, "none", "mrly_sequences::counts::hex theorems, slices.md"),
     record("A003136", "Loeschian numbers: numbers of the form x^2 + xy + y^2", 1, "0, 1, 3, 4, 7, 9, 12, 13, 16, 19, 21, 25", Tag::Verified, "none", "spin.md, the ring radii of a spun hexagonal lattice"),
     record("A003180", "Number of equivalence classes of Boolean functions of n variables under action of symmetric group", 0, "2, 4, 12, 80, 3984, 37333248, 25626412338274304", Tag::Verified, "none", "bijection.md, the axis-permutation orbits at a one-term shift"),
     record("A003215", "Hex (or centered hexagonal) numbers: 3*n*(n+1)+1", 0, "1, 7, 19, 37, 61, 91, 127, 169, 217, 271, 331, 397", Tag::Proved, "3k^2 - 3k + 1", SIDES).keyed(11, 2, Measure::Fills, Axis::Side, -1),
@@ -173,12 +173,26 @@ pub fn identify(terms: &[i128]) -> Vec<(&'static Record, i32)> {
     found
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::super::{terms, BUDGET, TERMS};
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "the_records_are_sorted_distinct_and_parse",
+            the_records_are_sorted_distinct_and_parse,
+        ),
+        (
+            "every_keyed_record_reads_its_generator_at_its_shift",
+            every_keyed_record_reads_its_generator_at_its_shift,
+        ),
+        (
+            "every_design_family_reads_its_record_by_value",
+            every_design_family_reads_its_record_by_value,
+        ),
+        ("identify_returns_the_shift", identify_returns_the_shift),
+    ];
+
     fn the_records_are_sorted_distinct_and_parse() {
         for pair in RECORDS.windows(2) {
             assert!(
@@ -196,7 +210,6 @@ mod tests {
         assert_eq!(record_by_id("A398348").unwrap().parsed().len(), 5);
     }
 
-    #[test]
     fn every_keyed_record_reads_its_generator_at_its_shift() {
         let mut keyed = 0;
         for record in RECORDS.iter().filter(|record| record.key.is_some()) {
@@ -217,7 +230,6 @@ mod tests {
         assert_eq!(keyed, 25);
     }
 
-    #[test]
     fn every_design_family_reads_its_record_by_value() {
         use mrly_life::source::{sequence, Source};
         for family in Source::designs() {
@@ -240,7 +252,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn identify_returns_the_shift() {
         let ids = |terms: &[i128]| -> Vec<(&str, i32)> {
             identify(terms).iter().map(|(r, s)| (r.id, *s)).collect()

@@ -87,14 +87,12 @@
   color: var(--dim);
   font-size: 12px;
 }
-.files .ico {
+.files svg {
   flex: none;
-  width: 1.05rem;
-  text-align: center;
   color: var(--dim);
 }
-.files .ico::before {
-  content: "/";
+.tree a > svg {
+  flex: none;
 }
 .readme {
   margin-top: var(--s6);

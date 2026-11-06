@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
+import { basename, join, relative, resolve, sep } from "node:path";
 import { router } from "@mrlyprod/os/hosts/cloud/edge.ts";
 import { kind } from "@mrlyprod/os/hosts/cloud/mime.ts";
 import { decode } from "../../kit/git/view.ts";
@@ -44,6 +44,7 @@ export type Opts = {
   walk?: boolean;
   probe?: string;
   scheme?: string;
+  design?: string;
   keys?: string[];
   count?: number;
   every?: number;
@@ -52,13 +53,14 @@ export type Opts = {
 export type Shot = { out: string; chrome: string; frames: Frame[]; failures: string[] };
 
 const CHROME = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const PORT = 9335;
-const SERVE = 3335;
+const PORT = Number(process.env.SHOTS_PORT ?? 9335);
+const SERVE = Number(process.env.SHOTS_SERVE ?? 3335);
 const LIVE = (process.env.SITE_URL ?? "").replace(/\/$/, "");
 const CSP = process.env.CSP ?? "";
 const LOCALE = "en-US";
 const ZONE = "Europe/Rome";
 const GL = /GL Driver Message \(OpenGL, Performance,/;
+const BOOT = /\/boot(-[0-9a-z]+)?\.js$/;
 const SIGNALS = ["SIGINT", "SIGTERM", "SIGHUP"] as const;
 const FIXTURE = resolve(import.meta.dir, "..", "..", "..", "apps", "stats", "fixture.json");
 const CELL = 320;
@@ -200,7 +202,7 @@ type Reply = {
   product: string;
 };
 
-type Params = { requestId: string; frame: { parentId?: string } };
+type Params = { requestId: string; request?: { url: string }; frame: { parentId?: string } };
 
 const flat = (one?: Remote) =>
   one?.value !== undefined
@@ -285,6 +287,9 @@ const painted = (born: number) =>
 const WIDE = `JSON.stringify([...document.querySelectorAll("body *")].filter((el) => !el.closest(".pane, .scrim") && getComputedStyle(el).visibility !== "hidden").map((el) => [el, el.getBoundingClientRect()]).filter(([, r]) => r.right > innerWidth + 1 && r.width > 0).sort((a, b) => b[1].right - a[1].right).slice(0, 4).map(([el, r]) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\\s+/).join(".") : "") + " right=" + Math.round(r.right) + " width=" + Math.round(r.width)))`;
 
 const FRAMED = "new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(1))))";
+
+const choose = (design: string) =>
+  `try { localStorage.setItem(${JSON.stringify(`${SITE.prefix}design`)}, ${JSON.stringify(design)}); } catch {}`;
 
 const pinned = (frozen: boolean) =>
   `(() => { const T = Date.UTC(2026, 0, 1, 8, 41); const t0 = performance.now(); const D = Date; const at = () => ${frozen ? "T" : "Math.floor(T + performance.now() - t0)"}; class Pinned extends D { constructor(...a) { super(...(a.length ? a : [at()])); } static now() { return at(); } } globalThis.Date = Pinned; let s = 0x9e3779b9; Math.random = () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return (s >>> 0) / 4294967296; }; })()`;
@@ -372,6 +377,7 @@ export async function shoot(opts: Opts): Promise<Shot> {
   ].map(Boolean);
   const probe = opts.probe ?? "";
   const scheme = opts.scheme ?? "";
+  const design = opts.design ?? "";
   const keys = opts.keys ?? [];
   const count = opts.count ?? 0;
   const step = Math.round((opts.every ?? 1) * 1000);
@@ -387,7 +393,7 @@ export async function shoot(opts: Opts): Promise<Shot> {
   const DATA_DIR = join(repo, "data", relative(repo, root), "scripts");
   const out = join(DATA_DIR, "shots", label);
   const base = join(DATA_DIR, "shots", "baseline");
-  const profile = join(DATA_DIR, "profile");
+  const profile = join(DATA_DIR, `profile-${PORT}`);
   const origin = LIVE || `http://127.0.0.1:${SERVE}`;
   const frames: Frame[] = [];
   const failures: string[] = [];
@@ -396,7 +402,7 @@ export async function shoot(opts: Opts): Promise<Shot> {
     failures.push(line);
   };
   const name = (route: string, act: number, stage = "") =>
-    `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}${print ? "-print" : ""}${motion ? "-motion" : ""}${nojs ? "-nojs" : ""}${scheme ? `-${scheme}` : ""}${keys.length ? "-keys" : ""}${walk ? "-walk" : ""}${stage}.png`;
+    `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}${print ? "-print" : ""}${motion ? "-motion" : ""}${nojs ? "-nojs" : ""}${scheme ? `-${scheme}` : ""}${design ? `-${design}` : ""}${keys.length ? "-keys" : ""}${walk ? "-walk" : ""}${stage}.png`;
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   const server = LIVE ? null : serve(resolve(opts.dist ?? join(root, "dist")), answer);
@@ -422,6 +428,7 @@ export async function shoot(opts: Opts): Promise<Shot> {
     await send("Runtime.enable");
     await send("Log.enable");
     await send("Page.addScriptToEvaluateOnNewDocument", { source: pinned(!motion && !count) });
+    if (design) await send("Page.addScriptToEvaluateOnNewDocument", { source: choose(design) });
     await send("Emulation.setTimezoneOverride", { timezoneId: ZONE });
     await send("Emulation.setLocaleOverride", { locale: LOCALE });
     await send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: out });
@@ -439,7 +446,9 @@ export async function shoot(opts: Opts): Promise<Shot> {
     let loads = 0;
     const pass = (requestId: string) => send("Fetch.continueRequest", { requestId }).catch(() => 0);
     if (first) {
-      on("Fetch.requestPaused", ({ requestId }) => (holding ? held.push(requestId) : pass(requestId)));
+      on("Fetch.requestPaused", ({ requestId, request }) =>
+        holding && !BOOT.test(new URL(request?.url ?? origin).pathname) ? held.push(requestId) : pass(requestId),
+      );
       await send("Fetch.enable", { patterns: [{ resourceType: "Script" }] });
     }
     on("Page.frameNavigated", ({ frame }) => {
@@ -608,7 +617,7 @@ export async function shoot(opts: Opts): Promise<Shot> {
           await wait(PAUSE);
           top = Number(await value("Math.round(scrollY)"));
           await take(early, ` scroll=${top}`, true, { route, n: 0, t: 0, clock: "still" });
-        } else fail(`shots: ${early} FAILED nothing parsed within ${FIRST / 1000} s with every script held`);
+        } else fail(`shots: ${early} FAILED nothing parsed within ${FIRST / 1000} s with every script but boot held`);
         holding = false;
         for (const id of held.splice(0)) pass(id);
       }
@@ -717,13 +726,16 @@ export function faults(shot: Pick<Shot, "frames" | "failures">, same = false): s
   ];
 }
 
-const VALUED = ["--js", "--theme", "--keys", "--count", "--every", "--run", "--screen"];
+const VALUED = ["--js", "--theme", "--design", "--keys", "--count", "--every", "--run", "--screen"];
 
 async function main(args: string[]) {
   const told = block(SITE as Record<string, unknown>);
   const flag = (name: string) => (args.includes(name) ? (args[args.indexOf(name) + 1] ?? "") : "");
   const asked = args.filter((a, i) => !a.startsWith("--") && !VALUED.includes(args[i - 1] ?? ""));
   if (args.includes("--count") && !(Number(flag("--count")) >= 1)) throw new Error("shots: --count takes 1 to 60");
+  const designs = (SITE.designs ?? []).map((one) => basename(one));
+  if (args.includes("--design") && !designs.includes(flag("--design")))
+    throw new Error(`shots: --design takes one of ${designs.join(", ")}`);
   const shot = await shoot({
     root: HOME,
     dist: process.env.MRLY_DIST || undefined,
@@ -738,6 +750,7 @@ async function main(args: string[]) {
     walk: args.includes("--walk"),
     probe: flag("--js"),
     scheme: flag("--theme"),
+    design: flag("--design"),
     keys: flag("--keys") ? flag("--keys").split(",") : [],
     count: args.includes("--count") ? Number(flag("--count")) : 0,
     every: args.includes("--every") ? every(flag("--every")) : 1,

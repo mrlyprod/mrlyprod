@@ -16,7 +16,6 @@ import {
   chart,
   clear,
   drawRibbon,
-  FACE,
   fit,
   font,
   growth,
@@ -287,5 +286,5 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Fed = {}) {
     }
     return null;
   };
-  return { draw, size: again, theme: again, set, tap, font: FACE };
+  return { draw, size: again, theme: again, set, tap };
 }

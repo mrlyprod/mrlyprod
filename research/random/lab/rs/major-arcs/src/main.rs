@@ -431,7 +431,6 @@ fn six_adic(r: &[Cx], k: u32, emax: u32) -> (Cx, Vec<Cx>) {
     (terms.iter().fold(Cx::ZERO, |s, &t| s.add(t)), terms)
 }
 
-#[cfg(test)]
 fn six_local(r: &[Cx], depth: u32) -> Cx {
     let (c2, a2) = units(2, 2);
     let (c3, a3) = units(3, 2);
@@ -1760,6 +1759,7 @@ fn terms(top: u32, qmax: u64) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = env::args().collect();
     let clock = Instant::now();
     let num = |i: usize, d: u32| args.get(i).and_then(|s| s.parse().ok()).unwrap_or(d);
@@ -1784,11 +1784,34 @@ fn main() {
     eprintln!("{:.2} s", clock.elapsed().as_secs_f64());
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        ("walker_reads_the_digits", walker_reads_the_digits),
+        ("slices_count_the_bits", slices_count_the_bits),
+        (
+            "weighted_sums_match_the_direct_sum",
+            weighted_sums_match_the_direct_sum,
+        ),
+        (
+            "closed_forms_match_the_local_sums",
+            closed_forms_match_the_local_sums,
+        ),
+        (
+            "six_classes_match_the_enumeration",
+            six_classes_match_the_enumeration,
+        ),
+        (
+            "six_valuations_match_the_local_sums",
+            six_valuations_match_the_local_sums,
+        ),
+        (
+            "local_sums_count_the_square_roots",
+            local_sums_count_the_square_roots,
+        ),
+    ];
+
     fn walker_reads_the_digits() {
         let t = Tables::new();
         let all = Design::all();
@@ -1807,7 +1830,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn slices_count_the_bits() {
         let mut total = [0u64; 64];
         let mut s = Slices::new();
@@ -1823,7 +1845,6 @@ mod tests {
         assert_eq!(total, want);
     }
 
-    #[test]
     fn weighted_sums_match_the_direct_sum() {
         for (name, num, den, k) in [
             ("2:1", 1u64, 3u64, 2u32),
@@ -1855,7 +1876,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn closed_forms_match_the_local_sums() {
         for (name, c, j) in [
             ("2:1", 1usize, 10u32),
@@ -1880,7 +1900,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn six_classes_match_the_enumeration() {
         let d = Design::find("6:12345");
         let pts = Point::all(d);
@@ -1924,7 +1943,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn six_valuations_match_the_local_sums() {
         for (name, c) in [
             ("6:5", 0usize),
@@ -1951,7 +1969,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn local_sums_count_the_square_roots() {
         let q = 36u64;
         for m in 0..q {

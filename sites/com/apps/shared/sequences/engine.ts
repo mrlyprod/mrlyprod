@@ -249,7 +249,7 @@ const strip = (word: string) => (/^[hvxyz](tree|line)$/.test(word) ? word.slice(
 
 export function ledger(mrly: Mrly) {
   const census = new Map<string, Census>();
-  const slices = new Map<string, math.Cell6d>();
+  const slices = new Map<string, math.CellHex>();
   const profiles = new Map<string, bigint[]>();
   const rows = new Map<string, Row>();
   const titles = new Map<number, Names>();
@@ -381,7 +381,7 @@ export function ledger(mrly: Mrly) {
       return one.dim === 2 ? mrly.two.census(cell) : mrly.three.census(cell);
     });
   const slice = (one: Row, side: number, level: number) =>
-    memo(slices, `${one.code}-${side}-${level}`, () => mrly.six.cut_design(one.code, side, level, one.base));
+    memo(slices, `${one.code}-${side}-${level}`, () => mrly.hex.cut_design(one.code, side, level, one.base));
   const profile = (one: Row, side: number, level: number) =>
     memo(profiles, `${one.dim}-${one.base}-${one.code}-${side}-${level}`, () =>
       mrly.sequences.counts
@@ -414,9 +414,9 @@ export function ledger(mrly: Mrly) {
       case "provoids":
         return mrly.sequences.counts.pro_voids(code, side, level);
       case "holes":
-        return String(mrly.six.holes(slice(one, side, level)));
+        return String(mrly.hex.holes(slice(one, side, level)));
       case "pieces":
-        return String(mrly.six.components(slice(one, side, level)));
+        return String(mrly.hex.components(slice(one, side, level)));
       default:
         return String(tally(one, side, level)[one.measure]);
     }

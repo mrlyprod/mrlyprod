@@ -5,7 +5,7 @@ import { front } from "../../../kit/md/md.ts";
 import type { Row } from "../../../kit/rows.ts";
 import { parts } from "../../active.ts";
 import { Contents, heads, hide, show } from "../../parts.tsx";
-import type { Context, Layout } from "../../router.ts";
+import type { Context } from "../../router.ts";
 import { render as markup, mathml } from "./md.ts";
 
 export type Front = Record<string, string>;
@@ -57,7 +57,6 @@ function Page({ row, site, data, html, slug }: PageProps) {
       lead={row.lead}
       figure={data.opener ? (row.figure ?? undefined) : undefined}
       html={html}
-      contents={[]}
       after={after}
     />
   );
@@ -73,7 +72,6 @@ export function Post({ row, site, html, slug }: PostProps) {
       by={`${row.date} · ${site.title}`}
       figure={row.figure ?? undefined}
       html={html}
-      contents={[]}
     />
   );
 }
@@ -87,12 +85,9 @@ function Standard({ row, html }: Pick<PageProps, "row" | "html">) {
       lead={row.lead}
       figure={row.figure ?? undefined}
       html={html}
-      contents={[]}
     />
   );
 }
-
-export const layout: Layout = { right: "contents" };
 
 export async function render(row: Row, site: Site, host: HTMLElement, { text, rows, right }: Context) {
   const { data, body } = front(text);

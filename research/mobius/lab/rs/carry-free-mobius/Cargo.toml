@@ -3,5 +3,6 @@ name = "carry-free-mobius"
 edition = "2021"
 
 [dependencies]
+witness = { path = "../../../../shared/witness" }
 
 [workspace]

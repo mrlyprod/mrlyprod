@@ -3,6 +3,7 @@ name = "major-arcs"
 edition = "2021"
 
 [dependencies]
+witness = { path = "../../../../shared/witness" }
 
 [profile.release]
 codegen-units = 1

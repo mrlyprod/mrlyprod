@@ -324,6 +324,7 @@ fn emit(out: &Path, sheet: &Sheet, book: &Census, lines: &[String]) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let out = env::args()
         .nth(1)
         .map(PathBuf::from)
@@ -359,11 +360,14 @@ fn main() {
     println!("files run {:.1}s", clock.elapsed().as_secs_f64());
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "the_census_reads_its_registry",
+        the_census_reads_its_registry,
+    )];
+
     fn the_census_reads_its_registry() {
         let mut total = 0;
         for tier in rows::TIERS {

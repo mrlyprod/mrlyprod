@@ -9,7 +9,7 @@ pub mod raster;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
-pub use animate::{Anim, FPS, HOLD, animate, cycle, merge};
+pub use animate::{Anim, FPS, HOLD, animate, cycle, gif, merge};
 pub use glyph::{Glyph, all, digits, extras, lower, lowers, specials, trim, uppers};
 pub use names::name_of;
 pub use paths::{draft, floor, path, strokes};

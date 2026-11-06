@@ -10,13 +10,7 @@
   "menu": "/menu/",
   "desk": "polygons",
   "tiles": { "id": "mrly", "title": "Tiles" },
-  "designs": [
-    "../../../designs/modern",
-    "../../../designs/boxy",
-    "../../../designs/bricks",
-    "../../../designs/classic",
-    "../../../designs/terminal"
-  ],
+  "designs": ["../../../designs/modern", "../../../designs/classic", "../../../designs/system"],
   "roots": ["pages", "../apps"],
   "apps": ["settings", "stats", "git", "screensavers", "kit"],
   "wasm": {
@@ -28,12 +22,12 @@
       "chladni",
       "crop",
       "graph",
+      "hex",
       "math",
       "moire",
       "radix",
       "roulette",
       "sequences",
-      "six",
       "spin",
       "star",
       "thue",
@@ -82,53 +76,5 @@
     "bucket": "MRLYCOM_BUCKET",
     "store": { "bucket": "MRLYDEV_BUCKET", "prefix": "build/com" }
   },
-  "git": { "root": "." },
-  "fonts": {
-    "out": "shared/fonts",
-    "keep": "shared/fonts/keep.css",
-    "faces": [
-      { "family": "Noto Sans", "file": "sans", "axes": "wght@400..700", "weight": "400 700", "licence": "notosans" },
-      { "family": "Noto Serif", "file": "serif", "axes": "wght@400..700", "weight": "400 700", "licence": "notoserif" },
-      {
-        "family": "Noto Sans Mono",
-        "file": "mono",
-        "axes": "wght@400..700",
-        "weight": "400 700",
-        "licence": "notosansmono"
-      },
-      { "family": "Noto Sans Math", "file": "math", "weight": "400", "licence": "notosansmath" },
-      { "family": "Noto Color Emoji", "file": "emoji", "weight": "400", "licence": "notocoloremoji" }
-    ]
-  },
-  "icons": {
-    "names": [
-      "casino",
-      "check",
-      "chevron_right",
-      "close",
-      "download",
-      "expand_more",
-      "fullscreen_exit",
-      "graphic_eq",
-      "grid_view",
-      "info",
-      "ios_share",
-      "keyboard",
-      "keyboard_command_key",
-      "left_panel_close",
-      "left_panel_open",
-      "link",
-      "more_horiz",
-      "music_note",
-      "right_panel_close",
-      "right_panel_open",
-      "search",
-      "shift",
-      "star",
-      "star_fill",
-      "tune",
-      "volume_up"
-    ],
-    "out": "kit/icons.gen.js"
-  }
+  "git": { "root": "." }
 }

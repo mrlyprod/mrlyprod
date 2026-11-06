@@ -1,0 +1,5 @@
+{
+  "name": "@mrlyprod/electron",
+  "private": true,
+  "type": "module"
+}

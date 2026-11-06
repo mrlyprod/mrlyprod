@@ -1,0 +1,5 @@
+         avalanche  balance  entropy  collisions
+sponge      0.4958     2.92   7.9476          15
+sha-256     0.4980     3.29   7.9468          22
+
+1500 keys, first 16 bits: chance predicts 17.0 collisions

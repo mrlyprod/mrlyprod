@@ -1,20 +1,23 @@
 import type { Site } from "site:routes";
 import type { DoNode, Obj, PaneNode, PrefNode, ViewNode } from "@mrlyprod/os/kernel/index.ts";
 import type { ComponentType } from "react";
-import { useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
+import { sure } from "../../kit/controls.tsx";
 import { useCall, useWorld } from "../../kit/world.ts";
 import { design } from "../active.ts";
 import { keyOf, read } from "../prefs.ts";
 import { current } from "../world.ts";
 import About, { FIND as about } from "./about.tsx";
 import { ART, Knobs, FIND as knobs, swatches } from "./appearance.tsx";
+import Designs, { FIND as designs } from "./design.tsx";
 import Desktop, { FIND as desktop } from "./desktop.tsx";
-import Privacy, { FIND as privacy, Sure } from "./privacy.tsx";
+import Privacy, { FIND as privacy } from "./privacy.tsx";
 import Shuffle, { FIND as shuffle } from "./screensaver.tsx";
 import type { Choice } from "./ui.tsx";
 import { Action, Pane as Page, Section, Segment, Select, Swatches, Switch, Tiles } from "./ui.tsx";
 
 const VIEWERS: Partial<Record<string, ComponentType<{ site: Site }>>> = {
+  design: Designs,
   knobs: Knobs,
   desktop: Desktop,
   shuffle: Shuffle,
@@ -22,7 +25,7 @@ const VIEWERS: Partial<Record<string, ComponentType<{ site: Site }>>> = {
   about: About,
 };
 
-const WORDS: Partial<Record<string, string[]>> = { knobs, desktop, shuffle, privacy, about };
+const WORDS: Partial<Record<string, string[]>> = { design: designs, knobs, desktop, shuffle, privacy, about };
 
 const MOST = 4;
 
@@ -99,20 +102,15 @@ function Pref({ node, site }: { node: PrefNode; site: Site }) {
 const ACTS: Partial<Record<string, () => void>> = { wipe: () => current()?.wipe() };
 
 function Do({ node }: { node: DoNode }) {
-  const [sure, setSure] = useState(false);
-  const go = () => {
-    ACTS[node.action]?.();
-    setSure(false);
+  const go = async () => {
+    if (!node.sure || (await sure({ title: `${node.title}?` }, { label: node.title, danger: true })))
+      ACTS[node.action]?.();
   };
   return (
     <div data-do={node.action} style={{ display: "contents" }}>
-      {sure ? (
-        <Sure label={`${node.title}?`} hint="" yes={node.title} hot go={go} no={() => setSure(false)} />
-      ) : (
-        <Action label={node.title} danger={node.sure} onClick={() => (node.sure ? setSure(true) : go())}>
-          {node.title}
-        </Action>
-      )}
+      <Action label={node.title} danger={node.sure} onClick={go}>
+        {node.title}
+      </Action>
     </div>
   );
 }

@@ -1,0 +1,8 @@
+name  bytes  holds
+IHDR     13  size, bit depth, colour type
+PLTE      9  the colour table, three bytes a colour
+tRNS      1  alpha for the first table entries
+IDAT     23  the pixel rows, compressed
+IEND      0  end of file
+
+signature 8 + bodies 46 + 12 x 5 chunks = 114 bytes

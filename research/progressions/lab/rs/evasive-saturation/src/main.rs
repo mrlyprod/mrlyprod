@@ -348,6 +348,7 @@ fn membership(inside: &[u32]) -> Vec<bool> {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = env::args().skip(1).collect();
     let verb = args.first().map(|s| s.as_str()).unwrap_or("all");
     let u: u32 = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
@@ -422,9 +423,24 @@ fn main() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "packed_arithmetic_matches_digits",
+            packed_arithmetic_matches_digits,
+        ),
+        ("fields_are_fields", fields_are_fields),
+        (
+            "largest_progression_free_subset_of_the_line_has_four_points",
+            largest_progression_free_subset_of_the_line_has_four_points,
+        ),
+        (
+            "a_line_of_the_level_set_holds_at_most_three_points",
+            a_line_of_the_level_set_holds_at_most_three_points,
+        ),
+    ];
 
     fn lcg(state: &mut u64) -> u32 {
         *state = state
@@ -433,7 +449,6 @@ mod tests {
         (*state >> 33) as u32
     }
 
-    #[test]
     fn packed_arithmetic_matches_digits() {
         let mut s = 7u64;
         for _ in 0..20000 {
@@ -453,12 +468,10 @@ mod tests {
         }
     }
 
-    #[test]
     fn fields_are_fields() {
         field_checks();
     }
 
-    #[test]
     fn largest_progression_free_subset_of_the_line_has_four_points() {
         let mut best = 0;
         for mask in 0u32..128 {
@@ -477,7 +490,6 @@ mod tests {
         assert_eq!(best, 4);
     }
 
-    #[test]
     fn a_line_of_the_level_set_holds_at_most_three_points() {
         let (bits, _, _) = level_set(0);
         let mut s = 11u64;

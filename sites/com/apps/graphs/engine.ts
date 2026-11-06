@@ -78,7 +78,7 @@ export const DIMS: [number, string][] = [
 ];
 export const VIEWS: [string, string][] = [
   ["cube", "3D"],
-  ["hex", "6D"],
+  ["hex", "Hex"],
 ];
 export const NAMES: Record<Graph, string> = {
   core: "Core, filled cells",
@@ -173,8 +173,8 @@ export function bound(
   if (space === "hex")
     return Number(
       graph === "edge"
-        ? mrly.sequences.counts.six.solid_slice_vertices(number ** level)
-        : mrly.sequences.counts.six.grid_triangles(number, level),
+        ? mrly.sequences.counts.hex.solid_slice_vertices(number ** level)
+        : mrly.sequences.counts.hex.grid_triangles(number, level),
     );
   const dim = space === "cube" ? 3 : 2;
   if (graph === "tunnel") return Number(mrly.sequences.counts.void_(code, number, dim, level, base));
@@ -224,12 +224,12 @@ export function build(mrly: Mrly, site: Site, base: number, code: string, number
       net: mrly.graph[`${site.graph}_graph`]({ shape: cell.shape, data: cell.types }),
       euler: count(mrly.three.census(cell).euler),
     };
-  const cut = mrly.six.cut(cell);
+  const cut = mrly.hex.cut(cell);
   const net =
     site.graph === "edge"
-      ? mrly.six.slice_edge_graph(cut, mrly.six.FILL())
-      : mrly.six[`slice_${site.graph}_graph`](cut);
-  return { side: cell.shape[0], net: aspect(mrly, net), euler: count(mrly.six.fills_only(cut).euler) };
+      ? mrly.hex.slice_edge_graph(cut, mrly.hex.FILL())
+      : mrly.hex[`slice_${site.graph}_graph`](cut);
+  return { side: cell.shape[0], net: aspect(mrly, net), euler: count(mrly.hex.fills_only(cut).euler) };
 }
 
 export function flatten(net: graph.Network): Flat {

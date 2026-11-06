@@ -406,6 +406,7 @@ fn report_depth() {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let whole = Instant::now();
     report_identity();
     report_rules();
@@ -416,20 +417,62 @@ fn main() {
     println!("run seconds {:.2}", whole.elapsed().as_secs_f64());
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("the_carry_word_is_the_defect", the_carry_word_is_the_defect),
+        (
+            "the_substitution_clears_the_constant",
+            the_substitution_clears_the_constant,
+        ),
+        ("the_skeleton_is_rule_sixty", the_skeleton_is_rule_sixty),
+        (
+            "one_digit_reaches_every_digit",
+            one_digit_reaches_every_digit,
+        ),
+        (
+            "the_zero_carry_codes_are_pinned",
+            the_zero_carry_codes_are_pinned,
+        ),
+        (
+            "the_zero_carry_set_is_the_rule",
+            the_zero_carry_set_is_the_rule,
+        ),
+        (
+            "the_two_named_couplings_come_back",
+            the_two_named_couplings_come_back,
+        ),
+        (
+            "the_stationary_vector_balances",
+            the_stationary_vector_balances,
+        ),
+        (
+            "the_carry_density_is_one_half",
+            the_carry_density_is_one_half,
+        ),
+        (
+            "the_carry_free_map_has_one_cycle",
+            the_carry_free_map_has_one_cycle,
+        ),
+        (
+            "the_defect_is_no_function_of_its_statistics",
+            the_defect_is_no_function_of_its_statistics,
+        ),
+        (
+            "the_worst_depth_is_the_digit_count_plus_one",
+            the_worst_depth_is_the_digit_count_plus_one,
+        ),
+    ];
 
     type Pinned = (&'static str, fn(u64) -> u64, u64, u64, u32, u32);
 
-    #[test]
     fn the_carry_word_is_the_defect() {
         for n in 0..(1u64 << 16) {
             assert_eq!(carries(n, 20), defect(n));
         }
     }
 
-    #[test]
     fn the_substitution_clears_the_constant() {
         for n in 0..(1u64 << 16) {
             let m = 2 * n + 1;
@@ -437,7 +480,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_skeleton_is_rule_sixty() {
         for n in 0..(1u64 << 16) {
             let m = 2 * n + 1;
@@ -451,7 +493,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn one_digit_reaches_every_digit() {
         for length in 2..=40usize {
             let mut u = 1u64;
@@ -465,7 +506,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_zero_carry_codes_are_pinned() {
         let pinned = [
             (3u64, 2usize, 7u64),
@@ -480,7 +520,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_zero_carry_set_is_the_rule() {
         for q in [3u64, 5, 7, 9, 11, 15] {
             let supp = support(q);
@@ -493,7 +532,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_two_named_couplings_come_back() {
         let golden = Rule::new(1, 2, 7).unwrap();
         let supergolden = Rule::new(1, 3, 23).unwrap();
@@ -503,7 +541,6 @@ mod tests {
         assert!((perron(&supergolden) - 1.465_571_231_876_768).abs() < 1e-9);
     }
 
-    #[test]
     fn the_stationary_vector_balances() {
         let pi = [2i64, 1, 1, 2];
         assert_eq!(2 * pi[0], pi[0] + pi[1] + pi[2]);
@@ -513,7 +550,6 @@ mod tests {
         assert_eq!(2 * (pi[1] + pi[3]), pi.iter().sum::<i64>());
     }
 
-    #[test]
     fn the_carry_density_is_one_half() {
         for l in [16usize, 18, 20] {
             let limit = 1u64 << l;
@@ -527,7 +563,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_carry_free_map_has_one_cycle() {
         for n in 1..(1u64 << 18) {
             assert!(digits(t_free(n)) <= digits(n));
@@ -541,7 +576,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_defect_is_no_function_of_its_statistics() {
         let pinned: [Pinned; 6] = [
             ("popcount", |n| u64::from(n.count_ones()), 1, 2, 2, 0),
@@ -578,7 +612,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_worst_depth_is_the_digit_count_plus_one() {
         for l in [1usize, 2, 4, 8, 16, 32, 40] {
             assert_eq!(depth_of(&vec![1u8; l]), l + 1);

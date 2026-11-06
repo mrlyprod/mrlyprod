@@ -19,6 +19,7 @@ import {
   DRAWN,
   dial,
   every,
+  fits,
   flat,
   GAP,
   glance,
@@ -40,7 +41,6 @@ import {
   study,
   THIN,
   twisted,
-  wears,
 } from "./engine.ts";
 
 export type Knobs = Design & { level: number; line: number; cell: number; tint: string };
@@ -144,7 +144,7 @@ export const PAGE = {
     flat: (value, _key, units) => flat(dialed(value, units)),
     level: (value, key) => ({ level: Number(value.level) + (key === "ArrowDown" ? -1 : 1) }),
     preset: (value, key, units) => {
-      const was = presets(units!).find(([, one]) => wears(value as unknown as Design, one))?.[0] ?? "";
+      const was = presets(units!).find(([, one]) => fits(value as unknown as Design, one))?.[0] ?? "";
       return preset(units!.gaussian, units!, next(was, key === "ArrowLeft" ? -1 : 1)) ?? {};
     },
     every: (value, _key, units) => every(dialed(value, units)),

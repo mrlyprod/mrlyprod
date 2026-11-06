@@ -81,7 +81,11 @@ impl<const N: usize> CellNd<N> {
     }
     pub fn width(&self) -> usize {
         let shape = &self.cell.types.shape;
-        shape[shape.len() - 1]
+        if N == 3 {
+            shape[0]
+        } else {
+            shape[shape.len() - 1]
+        }
     }
     pub fn height(&self) -> usize {
         let shape = &self.cell.types.shape;
@@ -171,7 +175,7 @@ impl CellNd<2> {
 
 impl CellNd<3> {
     pub fn depth(&self) -> usize {
-        self.cell.types.shape[0]
+        self.cell.types.shape[2]
     }
     pub fn rotate(self, k: usize, axes: (usize, usize)) -> Result<Cell3d> {
         Ok(CellNd {
@@ -187,7 +191,7 @@ impl CellNd<3> {
     }
     pub fn tile(self, width: usize, height: usize, depth: usize) -> Result<Cell3d> {
         Ok(CellNd {
-            cell: self.cell.tile(&[depth, height, width])?,
+            cell: self.cell.tile(&[width, height, depth])?,
         })
     }
 }

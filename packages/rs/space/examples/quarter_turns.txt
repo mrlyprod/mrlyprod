@@ -1,0 +1,6 @@
+yaw + 90k against the cell turned k times in the plane of axes 0 and 2
+k 0: 2304 of 2304 pixels match
+k 1: 2304 of 2304 pixels match
+k 2: 2304 of 2304 pixels match
+k 3: 2304 of 2304 pixels match
+turned the wrong way: 1439 of 2304 pixels match

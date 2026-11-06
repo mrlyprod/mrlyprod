@@ -18,7 +18,7 @@
 - `uv run python research/mobius/lab/rs/carry-free-mobius/carry_free.py exponent`
 - `cargo run --release --manifest-path research/mobius/lab/rs/carry-free-mobius/Cargo.toml -- pin` from the repo root
 - `cargo run --release --manifest-path research/mobius/lab/rs/carry-free-mobius/Cargo.toml -- ladder 22 2.5` from the repo root, where the first argument is the top degree and the second the working-set budget in GB
-- `cargo test --manifest-path research/mobius/lab/rs/carry-free-mobius/Cargo.toml` pins the Rust ladder to the Python numbers at every level to `18`
+- `bash research/scripts/witness.sh carry-free-mobius` pins the Rust ladder to the Python numbers at every level to `18`
 - the [mobius](../../../notes/mobius.md) page prints the same `ladder` command in its own house form, `cargo run --release --manifest-path research/mobius/lab/rs/carry-free-mobius/Cargo.toml -- ladder 22 2.5`, which is one recipe under two wrappers, the build lock being the only difference
 - The Python `lemma` runs in ten seconds, `sequence` and `exponent` in seventeen each; peak resident memory is `0.60` GB in `lemma` and `0.58` GB in the other two.
 - The Rust `pin` runs in one second and `ladder 22 2.5` in `99` seconds; the `heldMB` column of the table is the working set the generator accounts for itself, `26` MB at level `18` and `2069` MB at level `23`, and the peak resident memory of the process, measured outside it, is `2.41` GB in `ladder 22 2.5`; the ladder asserts the Python numbers at every level to `18` before it prints a deeper one, and stops at the first level whose working set passes the budget, printing that cut.

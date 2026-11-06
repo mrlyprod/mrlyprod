@@ -1230,6 +1230,14 @@ fn all() {
 }
 
 fn main() {
+    witness::dispatch(
+        &[
+            battery::witnesses::ALL,
+            design::witnesses::ALL,
+            gen::witnesses::ALL,
+        ]
+        .concat(),
+    );
     let verb = env::args().nth(1).unwrap_or_else(|| "all".into());
     match verb.as_str() {
         "sources" => sources(),

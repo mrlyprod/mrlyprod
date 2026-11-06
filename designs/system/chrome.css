@@ -1,0 +1,3154 @@
+@import "./own/pieces.css";
+
+:root {
+  color-scheme: light dark;
+  --ground: var(--paper);
+  --bg: var(--paper);
+  --panel: var(--paper);
+  --deep: #f0f0f0;
+  --solid: var(--paper);
+  --fg: var(--ink);
+  --dim: var(--muted);
+  --art: var(--paper);
+  --mono: "MrlyFont", monospace;
+  --sans: "MrlyFont", sans-serif;
+  --serif: "MrlyFont", serif;
+  --math: "MrlyFont", math;
+  --face: var(--mono);
+  --t1: 11px;
+  --t2: 12px;
+  --t3: 13px;
+  --t4: 15px;
+  --t5: 15px;
+  --t6: 22px;
+  --t7: 38px;
+  --lh1: 1.2;
+  --lh2: 1.4;
+  --lh3: 1.6;
+  --text: var(--t4);
+  --read-text: var(--t5);
+  --s1: 5px;
+  --s2: 10px;
+  --s3: 15px;
+  --s4: 20px;
+  --s5: 25px;
+  --s6: 30px;
+  --s7: 50px;
+  --r-window: 5px;
+  --r-panel: 5px;
+  --r-control: 5px;
+  --r-inset: 5px;
+  --round: 9999px;
+  --hair: 1px solid var(--line);
+  --ring: 1px solid var(--accent);
+  --rim: none;
+  --gap: 5px;
+  --touch: 52px;
+  --read: 500px;
+  --page: 980px;
+  --pace: 150ms;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --deep: #0f0f0f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --deep: #0f0f0f;
+  }
+}
+
+:root {
+  --m-unit: 5px;
+  --m-cell: 52px;
+  --m-line: 25px;
+  --m-small: 13px;
+  --m-large: 22px;
+  --m-huge: 38px;
+  --m-page: 500px;
+  --m-wide: 980px;
+  --m-read: 760px;
+  --m-pixel: var(--mono);
+  --m-face: var(--sans);
+  --m-body: 17px;
+  --m-lede: 21px;
+  --m-head: 19px;
+  --m-lead: 1.7;
+  --m-code: 0.85em;
+  --m-pre: 12px;
+  --m-lift: 0 18px 50px #0000002e;
+  --m-chrome: 278px;
+}
+
+.appicon :is(.lift, .glow, .rim, .shade) {
+  display: none;
+}
+
+body > .desk {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body {
+  --link: var(--ink);
+  margin: 0;
+  min-height: 100svh;
+  background:
+    linear-gradient(to bottom, #ffffff00, var(--m-route, var(--gray))) fixed,
+    var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh2) var(--mono);
+}
+
+:root:has(.window[data-hue="red"]) {
+  --m-route: var(--red);
+}
+
+:root:has(.window[data-hue="orange"]) {
+  --m-route: var(--orange);
+}
+
+:root:has(.window[data-hue="yellow"]) {
+  --m-route: var(--yellow);
+}
+
+:root:has(.window[data-hue="green"]) {
+  --m-route: var(--green);
+}
+
+:root:has(.window[data-hue="mint"]) {
+  --m-route: var(--mint);
+}
+
+:root:has(.window[data-hue="teal"]) {
+  --m-route: var(--teal);
+}
+
+:root:has(.window[data-hue="cyan"]) {
+  --m-route: var(--cyan);
+}
+
+:root:has(.window[data-hue="blue"]) {
+  --m-route: var(--blue);
+}
+
+:root:has(.window[data-hue="indigo"]) {
+  --m-route: var(--indigo);
+}
+
+:root:has(.window[data-hue="purple"]) {
+  --m-route: var(--purple);
+}
+
+:root:has(.window[data-hue="pink"]) {
+  --m-route: var(--pink);
+}
+
+:root:has(.window[data-hue="brown"]) {
+  --m-route: var(--brown);
+}
+
+:root:has(.window[data-hue="gray"]) {
+  --m-route: var(--gray);
+}
+
+:root[data-window="none"]:has(.window) {
+  --m-route: var(--gray);
+}
+
+.cell,
+a.cell,
+.control > .value {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  margin: 0;
+  padding: 0 var(--s2);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  text-decoration: none;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+a.cell:hover,
+button.cell:hover,
+summary.cell:hover,
+.button.cell:hover {
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: var(--ring);
+  outline-offset: 1px;
+}
+
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--m-line);
+  height: var(--m-line);
+  margin: 0;
+  border: 1px solid var(--ink);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  cursor: pointer;
+  transition: background var(--pace) steps(1);
+}
+
+input[type="checkbox"]::before {
+  content: "";
+  width: calc(var(--m-line) - 4 * var(--m-unit));
+  height: calc(var(--m-line) - 4 * var(--m-unit));
+  border-radius: 1px;
+  background: var(--paper);
+  visibility: hidden;
+}
+
+input[type="checkbox"]:checked {
+  background: var(--ink);
+}
+
+input[type="checkbox"]:checked::before {
+  visibility: visible;
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.word {
+  display: block;
+  height: 15px;
+  fill: currentColor;
+}
+
+.bar {
+  position: relative;
+  z-index: var(--z-bar);
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--m-unit);
+  width: var(--m-page);
+  max-width: calc(100% - var(--s4));
+  margin: var(--s2) auto var(--m-unit);
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--gray);
+}
+
+.bar .mark {
+  flex: 1 0 100%;
+}
+
+.bar .mark svg {
+  display: block;
+  width: auto;
+  height: 15px;
+  fill: currentColor;
+}
+
+.bar .mark :is(.x, .glint) {
+  display: none;
+}
+
+.bar :is(.trio, .menus, .tray) {
+  display: flex;
+  flex: 1 0 auto;
+  flex-wrap: wrap;
+  gap: var(--m-unit);
+}
+
+.bar :is(.trio, .menus, .tray) > * {
+  flex: 1 0 auto;
+}
+
+.bar .trio:not(:has(.app)):not(:has(.menus > *)):not(:has(.cart:not([hidden]))) {
+  display: none;
+}
+
+.bar .menus:empty,
+.bar .app:empty,
+.bar .date:empty {
+  display: none;
+}
+
+.bar .menus > button {
+  box-sizing: border-box;
+  min-height: var(--m-cell);
+  padding: 0 var(--s2);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  cursor: pointer;
+}
+
+.bar .menus > button:hover,
+.bar .menus [aria-expanded="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.bar :is(.app, .clock) {
+  font-family: var(--m-pixel);
+}
+
+.menu[role="menu"],
+.launchpad .menu {
+  z-index: var(--z-drawer);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  min-width: 200px;
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--black);
+}
+
+.menu[popover] {
+  inset: auto;
+  margin: var(--m-unit) 0 0;
+  border: 0;
+  position-area: bottom span-left;
+  position-try-fallbacks: flip-block;
+}
+
+.menu[popover]:not(:popover-open) {
+  display: none;
+}
+
+.menu hr {
+  height: 0;
+  margin: 0;
+  border: 0;
+}
+
+.menu[role="menu"] .item,
+.launchpad .item {
+  display: grid;
+  grid-template-columns: var(--s2) 1fr auto;
+  gap: var(--s2);
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--s2);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu .item:hover,
+.menu .item:focus-visible,
+.launchpad .item:hover,
+.launchpad [aria-selected="true"] > .item {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.menu .item[aria-disabled="true"] {
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.pulldown {
+  position: fixed;
+  inset: auto;
+  z-index: var(--z-drawer);
+  box-sizing: border-box;
+  min-width: 200px;
+  margin: var(--m-unit) 0 0;
+  padding: var(--m-unit);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--black);
+}
+
+.pulldown:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+}
+
+.pulldown > :is(button, a) {
+  display: grid;
+  grid-template-columns: var(--s3) 1fr auto;
+  gap: var(--s2);
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--s2);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pulldown > :is(button, a):is(:hover, :focus-visible) {
+  background: var(--ink);
+  color: var(--paper);
+  outline: 0;
+}
+
+.pulldown > [aria-disabled="true"] {
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.pulldown .chord {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: var(--m-small);
+}
+
+.pulldown > hr {
+  height: 0;
+  margin: 0;
+  border: 0;
+}
+
+kbd {
+  color: var(--muted);
+  font: var(--m-small) var(--mono);
+}
+
+.window {
+  position: relative;
+  z-index: var(--z-window);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  width: calc(100% - var(--s4));
+  min-height: calc(100svh - var(--m-chrome) + 2 * var(--m-cell) + 4 * var(--m-unit));
+  margin: 0 auto var(--s4);
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue);
+}
+
+:root[data-window="none"] .window {
+  width: var(--m-page);
+  padding: 0;
+  background: none;
+}
+
+:root[data-window="none"] .window > .title {
+  display: none;
+}
+
+:root[data-window="none"] .window,
+:root[data-window="none"] .window > .panes {
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.window > .title {
+  display: flex;
+  gap: var(--m-unit);
+}
+
+.window > .title > .close {
+  flex: 0 0 var(--m-cell);
+}
+
+.window > .title .name {
+  flex: 1;
+  min-width: 0;
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+}
+
+.window > .title .name:empty {
+  display: none;
+}
+
+.window > .panes {
+  position: relative;
+  min-width: 0;
+  min-height: var(--m-cell);
+}
+
+.window main {
+  min-width: 0;
+  outline: 0;
+}
+
+.window > .panes:has(> .pane) {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--m-unit);
+}
+
+.window > .panes:has(> .pane) > main {
+  flex: 1 1 auto;
+}
+
+.window > .panes > .pane {
+  position: sticky;
+  top: var(--s2);
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--m-unit);
+  width: 280px;
+  max-height: calc(100svh - var(--s4));
+  overflow: auto;
+}
+
+.window .contents details {
+  margin: 0;
+}
+
+.window .contents summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+  list-style: none;
+  cursor: pointer;
+}
+
+.window .contents summary::-webkit-details-marker {
+  display: none;
+}
+
+.window .contents ol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  margin: var(--m-unit) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.window .contents a {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: var(--m-unit) var(--s2);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.window .contents li.h3 a {
+  padding-left: var(--s5);
+  color: var(--muted);
+}
+
+.window .contents a:is(:hover, [aria-current]) {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+section.app {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: calc(100svh - var(--m-chrome)) auto;
+  row-gap: var(--m-unit);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.app > .pane {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  align-self: stretch;
+  width: 280px;
+  overflow: auto;
+  contain: size;
+}
+
+.app > .pane.left {
+  grid-column: 1;
+  margin-right: var(--m-unit);
+  padding: var(--s2);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.app > .middle {
+  grid-column: 2;
+}
+
+.app > .strip {
+  grid-row: 2;
+  grid-column: 1 / -1;
+}
+
+.app > .pane.right {
+  grid-column: 3;
+  margin-left: var(--m-unit);
+}
+
+.app .middle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  min-width: 0;
+  min-height: 0;
+}
+
+.app .board {
+  position: relative;
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.app .board:has(> .page:not(.source)) {
+  background: none;
+}
+
+.app .board > .page:not(.source) {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: 0 var(--s2) var(--s4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.app .board > canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.app .strip,
+.app .actions {
+  display: flex;
+  gap: var(--m-unit);
+  min-width: 0;
+}
+
+.app .strip > *,
+.app .actions > * {
+  flex: none;
+  height: var(--m-cell);
+  white-space: nowrap;
+}
+
+.app .actions > .design {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  max-width: 200px;
+  min-height: var(--m-cell);
+  padding: 0 var(--s3) 0 var(--s2);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  cursor: pointer;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.app .actions > .design:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.app .actions > .design canvas {
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  background: var(--paper);
+}
+
+.app .actions > :is(.chooser, .modal) {
+  height: auto;
+}
+
+.button.cell {
+  gap: var(--m-unit);
+}
+
+.button.cell > svg {
+  flex: none;
+}
+
+.app .strip > :is(.actions, .hints) {
+  flex: 0 1 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.app .actions:empty,
+.app .status:empty,
+.app .hints:empty {
+  display: none;
+}
+
+.app .strip > .status {
+  flex: 1 1 0;
+  justify-content: flex-start;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.app .strip > .hints {
+  flex: none;
+  overflow: visible;
+}
+
+.app :is(.status, .hints) {
+  gap: var(--s3);
+}
+
+.app :is(.status, .hints) > [data-drop] {
+  display: none;
+}
+
+.app .hints {
+  color: var(--muted);
+}
+
+.app .hints > span {
+  display: inline-flex;
+  gap: var(--s1);
+  align-items: baseline;
+}
+
+.app .hints kbd {
+  color: var(--ink);
+  font: inherit;
+}
+
+.app :is(.status, .hints) > .button.icon {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  color: var(--ink);
+}
+
+.app :is(.status, .hints) > .button.icon:hover {
+  background: none;
+  color: var(--accent);
+}
+
+.app .unzen {
+  display: none;
+}
+
+:root[data-zen] .app .unzen {
+  position: absolute;
+  top: var(--m-unit);
+  right: var(--m-unit);
+  z-index: 3;
+  display: flex;
+  width: var(--m-cell);
+  padding: 0;
+}
+
+.app .side {
+  width: var(--m-cell);
+}
+
+.app .controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+}
+
+.app > .pane.left:has(> .library) {
+  padding: 0;
+  background: none;
+}
+
+.app .library {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+}
+
+.app .library > h2 {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  margin: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+}
+
+.app .browser {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+}
+
+.app .library > .chips {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--m-unit);
+  margin: 0;
+}
+
+.app .library > .chips > button,
+.app .library > label.chips > select {
+  flex: 1 1 auto;
+  min-height: var(--m-huge);
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: var(--round);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  appearance: none;
+  cursor: pointer;
+}
+
+.app .library > .chips > button:is(:hover, .on) {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.app .library > label.chips > .drop {
+  position: absolute;
+  right: var(--s3);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.app .library .shelf > h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--m-cell);
+  margin: 0 0 var(--m-unit);
+  padding: 0 var(--s3);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app .library .shelf + .shelf {
+  margin-top: var(--m-unit);
+}
+
+.app .shelf > .list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+}
+
+.app .shelf > .grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--m-unit);
+}
+
+.app .shelf [data-item] {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+  min-height: var(--m-cell);
+  padding: var(--m-unit) var(--s3) var(--m-unit) var(--m-unit);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.app .shelf [data-item]:not(:has(> :is(figure, canvas, svg, img, .art))) {
+  padding-left: var(--s3);
+}
+
+.app .shelf [data-item]:is(:hover, .on) {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.app .shelf [data-item] > :is(figure, canvas) {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+}
+
+.app .shelf [data-item] canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background: var(--paper);
+}
+
+.app .shelf [data-item] > .label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app .shelf [data-item] > .sub {
+  flex: none;
+  font-size: var(--m-small);
+  opacity: 0.6;
+}
+
+.app .shelf > .grid > [data-item] {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--m-unit);
+  padding: var(--m-unit) var(--m-unit) var(--s2);
+  font-size: var(--m-small);
+  text-align: center;
+}
+
+.app .shelf > .grid > [data-item] > :is(figure, canvas) {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.app .browser .list {
+  padding: 0;
+  overflow: visible;
+}
+
+.app .browser .shelf + .shelf {
+  margin-top: var(--m-unit);
+}
+
+.app .browser .shelf h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--m-cell);
+  margin: 0 0 var(--m-unit);
+  padding: 0 var(--s3);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app .browser .shelf h3 span {
+  color: var(--muted);
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.app .browser .space {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  margin: 0 0 var(--m-unit);
+}
+
+.app .designs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--m-unit);
+}
+
+.app .designs > button {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  min-height: 0;
+  padding: var(--m-unit) var(--m-unit) var(--s2);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: none;
+  font: var(--m-small) / var(--lh1) var(--mono);
+  cursor: pointer;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.app .designs > button:is(:hover, .on, [aria-pressed="true"]) {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: none;
+}
+
+.app .designs canvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 0;
+  background: var(--paper);
+}
+
+.app .designs small {
+  color: inherit;
+  font: inherit;
+  text-align: center;
+}
+
+.app .browser .none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  margin: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--muted);
+  font-size: var(--m-small);
+}
+
+.app .tree,
+.app .tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app .tree {
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh1) var(--mono);
+}
+
+.app .tree li {
+  margin: 0;
+}
+
+.app .tree ul ul {
+  margin-left: var(--s3);
+  padding-left: var(--s2);
+  border-left: 1px solid var(--hairline);
+}
+
+.app .tree :is(a, summary) {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 32px;
+  padding: 0 var(--s2);
+  border-radius: var(--m-unit);
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.app .tree summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.app .tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.app .tree summary > a {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+}
+
+.app .tree summary > svg {
+  flex: none;
+  rotate: -90deg;
+  transition: rotate var(--pace) var(--ease);
+}
+
+.app .tree details[open] > summary > svg {
+  rotate: none;
+}
+
+.app .tree :is(a, summary):hover,
+.app .tree a[aria-current] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.app .tree summary:hover > a {
+  background: none;
+  color: inherit;
+}
+
+.app .tree .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app .board > .page.source {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: var(--s3) var(--s4) var(--s5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.app .board > .page.source .lede h1 {
+  margin: var(--s4) 0 var(--s2);
+  font: var(--m-huge) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.app .board > .page.source .lede .lead {
+  color: var(--muted);
+  font: var(--t3) / var(--lh2) var(--mono);
+}
+
+.app .board > .page.source .readme {
+  --face: var(--m-face);
+  max-width: var(--m-read);
+  margin-top: var(--s5);
+  font-size: var(--m-body);
+  line-height: var(--m-lead);
+}
+
+.app .board > .page.source .path {
+  font: var(--m-small) / var(--lh2) var(--mono);
+}
+
+.app .board > .page.source :is(.files, .code, .doc) {
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+}
+
+.app .board > .page.source .files li {
+  border-top-color: var(--hairline);
+}
+
+.app .board > .page.source .files li:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.app .board > .page.source .files li:hover :is(a, .n, svg) {
+  color: inherit;
+}
+
+.control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--m-unit);
+}
+
+.control[data-kind="slider"] {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) minmax(0, 1fr);
+}
+
+.control[data-kind="number"] {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.control > .label {
+  overflow: hidden;
+  padding-inline: calc(var(--m-unit) / 2);
+  overflow-wrap: normal;
+  text-align: center;
+  font-size: 0.8em;
+  line-height: 1.15;
+}
+
+.control .step[data-limit="true"] {
+  background: color-mix(in srgb, var(--hue, var(--gray)) 50%, var(--paper));
+  color: var(--muted);
+}
+
+.control .track {
+  appearance: none;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.control .track::-webkit-slider-thumb {
+  width: var(--m-cell);
+  height: var(--m-cell);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--ink);
+  appearance: none;
+}
+
+.control .track::-moz-range-thumb {
+  width: var(--m-cell);
+  height: var(--m-cell);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--ink);
+}
+
+.control .switch[aria-checked="true"],
+.button.primary,
+.button.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.control .pick {
+  position: relative;
+  padding: 0;
+}
+
+.control .pick select {
+  width: 100%;
+  height: var(--m-cell);
+  padding: 0 calc(var(--s4) + 0.6em) 0 var(--s2);
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  text-overflow: ellipsis;
+  text-align: center;
+  appearance: none;
+  cursor: pointer;
+}
+
+.control .drop {
+  position: absolute;
+  right: var(--s2);
+  pointer-events: none;
+}
+
+.control .options {
+  display: flex;
+  gap: var(--m-unit);
+}
+
+.control .options .cell {
+  flex: 1;
+  cursor: pointer;
+}
+
+.control .options .cell[data-on="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.control .options input {
+  position: absolute;
+  opacity: 0;
+}
+
+.control .text {
+  width: 100%;
+  border: 1px solid var(--paper);
+  text-align: center;
+}
+
+.control .text:focus {
+  border-color: var(--accent);
+  outline: 0;
+}
+
+.control .value {
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.control[data-kind="slider"] > .value {
+  font-size: 0.8em;
+}
+
+.group {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue, var(--gray));
+}
+
+.group .rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+}
+
+.group .head {
+  display: grid;
+  grid-template-columns: var(--s4) minmax(max-content, 1fr) minmax(0, max-content);
+  gap: var(--s2);
+  list-style: none;
+}
+
+.group .head::-webkit-details-marker {
+  display: none;
+}
+
+.group h3 {
+  margin: 0;
+  font: var(--t4) / var(--lh1) var(--mono);
+  text-align: center;
+}
+
+.group .fold::after {
+  content: "+";
+}
+
+.group[open] .fold::after {
+  content: "-";
+}
+
+.group .live {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--m-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: var(--m-page);
+  max-width: calc(100vw - 20px);
+  height: fit-content;
+  max-height: calc(100vh - 40px);
+  margin: auto;
+  padding: var(--m-unit);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--gray);
+  color: var(--ink);
+  box-shadow: var(--m-lift);
+}
+
+.modal[open] {
+  animation: m-open var(--pace) var(--ease);
+}
+
+.modal::backdrop {
+  background: var(--scrim);
+  backdrop-filter: blur(20px);
+}
+
+.modal .head {
+  display: grid;
+  grid-template-columns: 1fr var(--m-cell);
+  gap: var(--m-unit);
+  margin-bottom: var(--m-unit);
+}
+
+.modal h2 {
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+}
+
+.modal .body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+}
+
+.modal .also {
+  display: flex;
+  gap: var(--m-unit);
+}
+
+.modal .also > button {
+  flex: 1;
+  min-height: var(--m-cell);
+  padding: 0 var(--s2);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  cursor: pointer;
+}
+
+.modal .also > button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+@keyframes m-open {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+}
+
+.window .settings {
+  --rail: 280px;
+  --seam: var(--hairline);
+  --hover: var(--fill);
+  --box: var(--paper);
+  color: var(--ink);
+  font: var(--t3) / var(--lh2) var(--mono);
+}
+
+.window .settings.two {
+  gap: var(--m-unit);
+  background: none;
+}
+
+.window .settings .side {
+  gap: var(--m-unit);
+  padding: 0;
+}
+
+.window .settings .top {
+  gap: 0 var(--m-unit);
+}
+
+.window .settings .top .icon {
+  flex: none;
+  width: var(--m-cell);
+  height: var(--m-cell);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.window .settings .top .icon:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.window .settings .list {
+  gap: var(--m-unit);
+}
+
+.window .settings .list a {
+  min-height: var(--m-cell);
+  padding: 0 var(--s3);
+  gap: var(--s3);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.window .settings .list a:is(:hover, [aria-current]) {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 400;
+}
+
+.window .settings .list :is(.name, .hint) {
+  color: inherit;
+}
+
+.window .settings .list .hint {
+  opacity: 0.6;
+}
+
+.window .settings .symbol {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--m-unit);
+  background: var(--hue);
+  box-shadow: none;
+}
+
+.window .settings .detail {
+  padding: 0 0 var(--s4);
+}
+
+.window .settings .detail > .form {
+  max-width: none;
+}
+
+.window .settings .form {
+  gap: var(--s4);
+}
+
+.window .settings h1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  margin: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+}
+
+.window .settings .form > h1 + .intro {
+  margin-top: calc(var(--s2) - var(--s4));
+}
+
+.window .settings :is(.intro, .foot, .block > h2) {
+  color: var(--black);
+}
+
+.window .settings .intro {
+  padding: 0 var(--s3);
+  text-align: center;
+}
+
+.window .settings .back {
+  min-height: var(--m-cell);
+  margin: 0;
+  padding: 0 var(--s3);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.window .settings .block {
+  gap: var(--m-unit);
+}
+
+.window .settings .block > h2 {
+  padding: 0 var(--s3);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.window .settings .box {
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+}
+
+.window .settings .item {
+  min-height: var(--m-cell);
+  padding: var(--s2) var(--s4);
+}
+
+.window .settings .words > .hint,
+.window .settings .note,
+.window .settings .chosen {
+  color: var(--muted);
+}
+
+.window .settings .nav:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.window .settings .nav:hover :is(.name, .hint, svg) {
+  color: inherit;
+}
+
+.window .settings .push {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  box-shadow: none;
+  color: var(--ink);
+}
+
+.window .settings .push:hover,
+.window .settings .push.main {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.window .settings .menu > select {
+  min-height: 36px;
+  border-radius: var(--m-unit);
+}
+
+.window .settings :is(button.push, .screensaver-peek) {
+  min-height: 36px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--ink);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t3) / var(--lh1) var(--mono);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.window .settings :is(.push, .screensaver-peek):hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.window .settings .seg {
+  gap: var(--m-unit);
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.window .settings .seg > label {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.window .settings .seg > label:hover {
+  background: var(--fill);
+}
+
+.window .settings .seg > label:has(:checked) {
+  background: var(--ink);
+  box-shadow: none;
+  color: var(--paper);
+}
+
+.window .settings label.choice > .art {
+  border-radius: var(--m-unit);
+  background: var(--fill);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.window .settings .choice:has(:checked) > .art {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.prose[data-kind] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  max-width: var(--m-read);
+  margin: 0 auto;
+}
+
+.window main > .prose:not([data-kind]):has(> .prose[data-kind]) {
+  max-width: none;
+}
+
+.prose[data-kind="hub"] {
+  max-width: none;
+}
+
+.prose[data-kind] .card {
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.prose[data-kind="hub"] > :not(.cards) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--m-read);
+  margin-inline: auto;
+}
+
+.prose[data-kind] > h1 {
+  margin: var(--s2) 0;
+  font: var(--m-huge) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+:root:not([data-window="none"]) .window .prose[data-kind] > h1 {
+  color: var(--black);
+}
+
+.prose[data-kind] .frame {
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue, var(--gray));
+}
+
+.prose[data-kind] .frame h1 {
+  min-height: calc(2 * var(--m-cell));
+  margin: 0;
+  font: var(--m-huge) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+}
+
+.prose[data-kind] .opener {
+  margin: 0;
+}
+
+.prose[data-kind] .opener canvas {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  aspect-ratio: 2;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+  background: var(--paper);
+  object-fit: contain;
+}
+
+.prose[data-kind] > p:has(> .button) {
+  margin: 0;
+}
+
+.prose[data-kind] > p > .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  border-radius: var(--m-unit);
+  font: var(--t4) / var(--lh1) var(--mono);
+  text-decoration: none;
+}
+
+.prose[data-kind] > .legal {
+  margin: 0;
+  padding: var(--s2);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--muted);
+  font: var(--m-small) / var(--lh2) var(--mono);
+  text-align: center;
+}
+
+.window main .prose[data-kind="hub"] ~ :is(p, .scroll) {
+  box-sizing: border-box;
+  max-width: var(--m-read);
+  margin: 0 auto;
+  padding: var(--s2) var(--s5);
+  border-inline: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-body) / var(--m-lead) var(--m-face);
+}
+
+.window main .prose[data-kind="hub"] + :is(p, .scroll) {
+  margin-top: var(--s2);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line);
+  border-radius: var(--s2) var(--s2) 0 0;
+}
+
+.window main .prose[data-kind="hub"] ~ :is(p, .scroll):last-child {
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 var(--s2) var(--s2);
+}
+
+.window main .prose[data-kind="hub"] + :is(p, .scroll):last-child {
+  border-radius: var(--s2);
+}
+
+.window main .prose[data-kind="hub"] ~ p > a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hue, var(--line));
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+
+.window main .prose[data-kind="hub"] ~ .scroll {
+  overflow-x: auto;
+}
+
+.window main .prose[data-kind="hub"] ~ .scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--t3) / var(--lh2) var(--mono);
+}
+
+.window main .prose[data-kind="hub"] ~ .scroll :is(th, td) {
+  padding: var(--s2) var(--s3);
+  border: 0;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.window main .prose[data-kind="hub"] ~ .scroll th {
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.window main .prose[data-kind="hub"] ~ .scroll tr:last-child td {
+  border-bottom: 0;
+}
+
+.window main .prose[data-kind="hub"] ~ .scroll td code {
+  padding: 2px var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue, var(--deep));
+  color: var(--black);
+  font-size: inherit;
+  white-space: nowrap;
+}
+
+.window main .prose[data-kind="hub"] ~ .scroll td a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.window main .prose[data-kind="hub"] ~ .scroll td a:hover {
+  text-decoration: underline;
+}
+
+.window .kit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.window .kit .jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--m-unit);
+  margin-top: var(--s3);
+}
+
+.window .kit .card .jump > a.chip:not(.cell) {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--m-huge);
+  margin: 0;
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: var(--round);
+  background: var(--fill-strong);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh1) var(--mono);
+  text-decoration: none;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+.window .kit .card .jump > a.chip:not(.cell):hover {
+  background: var(--ink);
+  box-shadow: none;
+  color: var(--paper);
+}
+
+.window .kit > section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin: 0;
+}
+
+.window .kit > section > h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  margin: var(--s2) 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+}
+
+.app .page:not(.source) > .prose:not([data-kind]) {
+  box-sizing: border-box;
+  max-width: var(--m-page);
+  margin: 0 auto;
+  padding: var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) {
+  font: var(--m-body) / var(--m-lead) var(--m-face);
+  overflow-wrap: break-word;
+}
+
+.prose[data-kind] > .card.body {
+  padding: var(--s6);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) p {
+  text-wrap: pretty;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card)
+  :where(p, ul, ol, pre, blockquote, .table, figure, math[display="block"]) {
+  margin: 0 0 var(--s4);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) h1 {
+  margin: var(--s2) 0 var(--s4);
+  font: var(--m-huge) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+  text-align: center;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) h2 {
+  position: relative;
+  margin: var(--s7) 0 var(--s4);
+  padding-left: var(--s6);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+  letter-spacing: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) h2::before {
+  position: absolute;
+  top: calc((var(--lh1) * var(--m-large) - var(--s4)) / 2);
+  left: 0;
+  width: var(--s4);
+  height: var(--s4);
+  border-radius: var(--m-unit);
+  background: var(--hue, var(--gray));
+  content: "";
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(h3, h4) {
+  margin: var(--s6) 0 var(--s1);
+  font: var(--m-head) / var(--lh2) var(--m-face);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) h4 {
+  color: var(--muted);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) > :first-child {
+  margin-top: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) > :last-child {
+  margin-bottom: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) a:not(.cell, .tile, .button) {
+  border-radius: 2px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--hue, var(--gray)) 60%, var(--ink));
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease),
+    box-shadow var(--pace) var(--ease);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) a:not(.cell, .tile, .button):hover {
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ul, ol) {
+  padding-left: var(--s4);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul {
+  list-style: none;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul > li {
+  position: relative;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul > li::before {
+  position: absolute;
+  top: calc(0.5lh - var(--m-unit) / 2);
+  left: calc(var(--m-unit) / 2 - var(--s4));
+  width: var(--m-unit);
+  height: var(--m-unit);
+  background: var(--hue, var(--gray));
+  content: "";
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) li {
+  margin: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) li + li,
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) li > :is(ul, ol) {
+  margin-top: var(--s1);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) li > :is(ul, ol, p) {
+  margin-bottom: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(strong, b) {
+  font-weight: 650;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) code {
+  padding: 1px var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--fill-strong);
+  font: var(--m-code) / var(--lh1) var(--mono);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) pre {
+  padding: var(--s3);
+  border-radius: var(--m-unit);
+  background: var(--fill);
+  color: var(--ink);
+  font: var(--m-small) / var(--s4) var(--mono);
+  white-space: pre;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) pre code {
+  padding: 0;
+  background: none;
+  font: inherit;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) blockquote {
+  padding: var(--s3) var(--s4) var(--s3) var(--s5);
+  font: var(--m-lede) / var(--lh2) var(--m-face);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--fill);
+  box-shadow: inset var(--m-unit) 0 0 var(--hue, var(--gray));
+  color: var(--ink);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) hr {
+  height: var(--m-unit);
+  margin: var(--s5) 0;
+  border: 0;
+  background: repeating-linear-gradient(
+    to right,
+    var(--hue, var(--gray)) 0 var(--m-unit),
+    transparent var(--m-unit) var(--s2)
+  );
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) .table {
+  border-radius: var(--m-unit);
+  overflow-x: auto;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue, var(--gray));
+  font: var(--t3) / var(--lh2) var(--m-face);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(th, td) {
+  padding: var(--m-unit) var(--s2);
+  border: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) th {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 650;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue, var(--gray));
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) figure > :is(canvas, img) {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  margin: 0;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) figure > canvas {
+  aspect-ratio: 1;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) figcaption {
+  margin: 0;
+  padding: var(--m-unit) var(--s2);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--m-small) / var(--lh2) var(--mono);
+  text-align: center;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) img {
+  max-width: 100%;
+  height: auto;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) mark {
+  padding: 0 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  color: var(--white);
+}
+
+.prose[data-kind] .card.lede > p:is(.lead, .by) {
+  max-width: none;
+  margin: 0;
+}
+
+.prose[data-kind] .card.lede > p.lead {
+  color: var(--ink);
+}
+
+.prose[data-kind] > .card.lede:has(> p.lead:only-child) {
+  padding: 0 var(--s4) var(--s3);
+  border: 0;
+  background: none;
+  text-align: center;
+}
+
+.prose[data-kind] > .card.lede:has(> p.lead:only-child) > p.lead {
+  font: var(--m-lede) / var(--lh2) var(--m-face);
+  text-wrap: balance;
+}
+
+:root:not([data-window="none"]) .window .prose[data-kind] > .card.lede:has(> p.lead:only-child) > p.lead {
+  color: var(--black);
+}
+
+.prose[data-kind] .card.lede > p.by {
+  color: var(--muted);
+  font: var(--m-small) / var(--m-line) var(--mono);
+}
+
+.prose[data-kind] .card.lede > p.by + p.lead {
+  margin-top: var(--m-unit);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ol {
+  padding-left: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ol > li {
+  position: relative;
+  box-sizing: border-box;
+  min-height: var(--m-cell);
+  padding: calc((var(--m-cell) - 1lh) / 2) var(--s3) calc((var(--m-cell) - 1lh) / 2) calc(var(--m-cell) + var(--s3));
+  border-radius: var(--s2);
+  background: var(--fill);
+  counter-increment: step;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ol > li::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: var(--m-cell);
+  height: var(--m-cell);
+  border-radius: var(--s2);
+  background: var(--step);
+  color: var(--black);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+  content: counter(step);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--s2);
+  padding-left: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li {
+  position: relative;
+  margin: 0;
+  padding: var(--s4) var(--s3) var(--s3);
+  border-radius: var(--s2);
+  background: var(--fill);
+  box-shadow: inset 0 var(--m-unit) 0 var(--step);
+  color: var(--muted);
+  font: var(--t4) / var(--lh2) var(--m-face);
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li::before {
+  content: none;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li > a:first-child {
+  color: var(--ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li > a:first-child::after {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--s2);
+  content: "";
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li > a:not(:first-child) {
+  position: relative;
+  z-index: 1;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li:has(> a:first-child > img:first-child) {
+  overflow: hidden;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li > a:first-child > img:first-child {
+  display: block;
+  width: calc(100% + 2 * var(--s3));
+  max-width: none;
+  height: auto;
+  margin: calc(var(--m-unit) - var(--s4)) calc(-1 * var(--s3)) var(--s3);
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li:hover {
+  background: var(--step);
+  color: var(--black);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li:hover > a,
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li > a:first-child:hover {
+  background: none;
+  color: var(--black);
+  box-shadow: none;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 1) {
+  --step: var(--red);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 2) {
+  --step: var(--orange);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 3) {
+  --step: var(--yellow);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 4) {
+  --step: var(--green);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 5) {
+  --step: var(--mint);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 6) {
+  --step: var(--teal);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 7) {
+  --step: var(--cyan);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 8) {
+  --step: var(--blue);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 9) {
+  --step: var(--indigo);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 10) {
+  --step: var(--purple);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 11) {
+  --step: var(--pink);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n + 12) {
+  --step: var(--brown);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(ol, ul.links) > li:nth-child(13n) {
+  --step: var(--gray);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) :is(h3, h4) > code:only-child {
+  display: inline-block;
+  padding: 2px var(--s2);
+  border-radius: var(--round);
+  background: var(--hue, var(--gray));
+  color: var(--black);
+  font: var(--m-head) / var(--lh2) var(--mono);
+  font-weight: 650;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.contains-task-list {
+  padding-left: 0;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) li.task-list-item {
+  position: relative;
+  padding: var(--s3) var(--s3) var(--s3) calc(2 * var(--s3) + var(--s5));
+  border-radius: var(--s2);
+  background: var(--fill);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) li.task-list-item::before {
+  content: none;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) li.task-list-item > input {
+  position: absolute;
+  top: calc(var(--s3) + 0.5lh - var(--s5) / 2);
+  left: var(--s3);
+  width: var(--s5);
+  height: var(--s5);
+  margin: 0;
+  border: var(--m-unit) solid var(--hue, var(--gray));
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  appearance: none;
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) li.task-list-item > input:checked {
+  background: var(--hue, var(--gray));
+}
+
+.prose[data-kind] > .card.body > pre {
+  margin-inline: calc(-1 * var(--s6));
+  padding: var(--s4);
+  border-radius: 0;
+  font: var(--m-pre) / var(--s4) var(--mono);
+}
+
+:is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ul.links > li > code:last-child {
+  display: block;
+  width: fit-content;
+  margin-top: var(--s2);
+  padding: 2px var(--s2);
+  border-radius: var(--round);
+  background: var(--step);
+  color: var(--black);
+}
+
+.prose[data-kind] > .card.body > figure:first-child {
+  margin: calc(-1 * var(--s6)) calc(-1 * var(--s6)) var(--s6);
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: calc(var(--s2) - 1px) calc(var(--s2) - 1px) 0 0;
+  overflow: hidden;
+  background: none;
+}
+
+.prose[data-kind] > .card.body > figure:first-child > img {
+  border-radius: 0;
+  background: none;
+}
+
+.prose[data-kind] > .card.body > figure:first-child > figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.prose[data-kind] .cards,
+.gallery.grid {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--s3);
+  max-width: none;
+  margin: 0;
+  padding: var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--s2);
+  background: var(--paper);
+}
+
+.gallery.grid {
+  margin-top: var(--s2);
+}
+
+:is(.prose[data-kind] .cards, .gallery.grid) > .tile {
+  min-width: 0;
+}
+
+.prose[data-kind] .cards > .tile {
+  container-type: inline-size;
+}
+
+.prose[data-kind] .cards > .tile > .art {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.prose[data-kind] .tile figure.art {
+  margin: 0;
+}
+
+.prose[data-kind] .tile figure.art > canvas {
+  position: absolute;
+  top: var(--m-unit);
+  left: var(--m-unit);
+  width: calc(100% - 2 * var(--m-unit));
+  max-width: none;
+  height: calc(100% - 2 * var(--m-unit));
+  margin: 0;
+  aspect-ratio: auto;
+  border-radius: var(--m-unit);
+  background: none;
+}
+
+.prose[data-kind] .tile span.art {
+  color: var(--hue);
+  font-family: var(--m-pixel);
+  font-size: 50cqi;
+  line-height: 1;
+}
+
+:is(.prose[data-kind] .cards, .gallery.grid) .tile :is(.name, h2, figcaption) {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--m-cell);
+  margin: 0;
+  padding: var(--m-unit) var(--s2);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t4) / var(--lh1) var(--mono);
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: lowercase;
+  overflow-wrap: anywhere;
+  transition:
+    background var(--pace) var(--ease),
+    color var(--pace) var(--ease);
+}
+
+:is(.prose[data-kind] .cards, .gallery.grid) .tile :is(.text, p) {
+  box-sizing: border-box;
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: var(--s2);
+  border-radius: var(--m-unit);
+  background: var(--paper);
+  color: var(--muted);
+  font: var(--m-small) / var(--lh2) var(--mono);
+  text-align: left;
+}
+
+:is(.prose[data-kind] .cards, .gallery.grid) > .tile > :last-child {
+  flex-grow: 1;
+}
+
+.gallery.grid > .tile > p.dates {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: var(--m-unit) var(--s2);
+  font-variant-numeric: tabular-nums;
+}
+
+.gallery.grid > .tile > figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  margin: 0;
+}
+
+.gallery.grid > .tile > figure > figcaption {
+  flex: 1 0 auto;
+}
+
+.gallery.grid > .tile > figure > canvas {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  margin: 0;
+  aspect-ratio: 1;
+  border-radius: var(--m-unit);
+  background: var(--paper);
+}
+
+:is(.prose[data-kind] .cards, .gallery.grid) > a.tile:is(:hover, :focus-visible) :is(.name, h2) {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.gallery.grid > .tile:nth-child(13n + 1) {
+  --hue: var(--red);
+}
+
+.gallery.grid > .tile:nth-child(13n + 2) {
+  --hue: var(--orange);
+}
+
+.gallery.grid > .tile:nth-child(13n + 3) {
+  --hue: var(--yellow);
+}
+
+.gallery.grid > .tile:nth-child(13n + 4) {
+  --hue: var(--green);
+}
+
+.gallery.grid > .tile:nth-child(13n + 5) {
+  --hue: var(--mint);
+}
+
+.gallery.grid > .tile:nth-child(13n + 6) {
+  --hue: var(--teal);
+}
+
+.gallery.grid > .tile:nth-child(13n + 7) {
+  --hue: var(--cyan);
+}
+
+.gallery.grid > .tile:nth-child(13n + 8) {
+  --hue: var(--blue);
+}
+
+.gallery.grid > .tile:nth-child(13n + 9) {
+  --hue: var(--indigo);
+}
+
+.gallery.grid > .tile:nth-child(13n + 10) {
+  --hue: var(--purple);
+}
+
+.gallery.grid > .tile:nth-child(13n + 11) {
+  --hue: var(--pink);
+}
+
+.gallery.grid > .tile:nth-child(13n + 12) {
+  --hue: var(--brown);
+}
+
+.gallery.grid > .tile:nth-child(13n) {
+  --hue: var(--gray);
+}
+
+.tile,
+a.tile {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.tile .art {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+}
+
+.tile.launcher .art > :is(svg, img, canvas, .face):first-child {
+  width: 50%;
+  height: 50%;
+}
+
+.tile.launcher .art > .face:first-child > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tile .text {
+  color: var(--muted);
+  font-size: var(--m-small);
+}
+
+.tile.launcher[aria-current] .name,
+.tile:hover .name {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.tile.soon {
+  opacity: 0.66;
+}
+
+.tile.launcher .soon {
+  position: absolute;
+  top: var(--s2);
+  right: var(--s2);
+  color: var(--muted);
+  font-size: var(--m-small);
+}
+
+.launchpad {
+  position: relative;
+  isolation: isolate;
+}
+
+.launchpad .veil {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.launchpad .pad {
+  position: relative;
+  left: 50%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  width: min(var(--m-wide), 100vw - 2 * var(--s4));
+  margin: 0;
+  translate: -50% 0;
+}
+
+.launchpad .search {
+  display: grid;
+  grid-template-columns: 1fr var(--m-cell);
+  gap: var(--s2);
+  margin: 0;
+}
+
+.launchpad .find input {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--m-cell);
+  padding: 0 var(--s4);
+  border: 0;
+  border-radius: var(--round);
+  background: var(--fill-strong);
+  color: var(--ink);
+  font: var(--t4) var(--mono);
+}
+
+.launchpad .find input:focus {
+  outline: var(--ring);
+}
+
+.launchpad .more {
+  border: 0;
+  border-radius: var(--round);
+  background: var(--fill-strong);
+  letter-spacing: 0.1em;
+}
+
+.launchpad .names {
+  display: contents;
+}
+
+.launchpad .pop[popover] {
+  inset: var(--y) auto auto var(--x);
+  margin: 0;
+  border: 0;
+  position-area: none;
+}
+
+.launchpad .pop[popover]:not(:popover-open) {
+  display: none;
+}
+
+.launchpad :is(.grid, .hits ul) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.launchpad .hits ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+}
+
+.launchpad .hits .item {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.launchpad .hits .head {
+  padding: var(--m-unit);
+  border: 0;
+  color: var(--white);
+}
+
+.launchpad .grid > li {
+  min-width: 0;
+}
+
+.launchpad .grid > [aria-selected="true"] .name,
+.launchpad .grid > [data-held] .name {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.launchpad :is(.empty, .none) {
+  margin: var(--s3) 0 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.launchpad .link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.chip {
+  height: 38px;
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: var(--round);
+  background: var(--fill-strong);
+  color: var(--ink);
+  font: var(--t4) var(--mono);
+  cursor: pointer;
+}
+
+.chip[aria-selected="true"],
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.launchpad .head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  padding-bottom: var(--m-unit);
+  border-bottom: 1px solid var(--hairline);
+  font: var(--m-large) / var(--lh1) var(--m-pixel);
+}
+
+.launchpad .count {
+  color: var(--muted);
+  font: var(--m-small) var(--mono);
+}
+
+.launchpad .shelf + .shelf {
+  margin-top: var(--s3);
+}
+
+.launchpad .grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--s3);
+  margin-top: var(--s3);
+}
+
+.launchpad .toast {
+  position: fixed;
+  bottom: var(--s4);
+  left: 50%;
+  padding: var(--s2) var(--s4);
+  border-radius: var(--round);
+  background: var(--black);
+  color: var(--white);
+  transform: translateX(-50%);
+}
+
+.launchpad .toast .link {
+  margin-left: var(--s2);
+}
+
+.widgets {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s2);
+  width: var(--m-page);
+  max-width: calc(100% - var(--s4));
+  margin: 0 auto var(--s4);
+}
+
+.widgets .widget,
+.widgets .gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--hue, var(--gray));
+}
+
+.widgets > :not(.widget[data-size="small"]) {
+  grid-column: 1 / -1;
+}
+
+.widgets .widget[data-size="small"] .body {
+  flex: 1;
+  justify-content: center;
+}
+
+.widgets .widget[data-held="true"] {
+  opacity: 0.66;
+}
+
+.widgets .widget .head {
+  display: flex;
+  gap: var(--m-unit);
+}
+
+.widgets .widget .head button {
+  width: var(--m-cell);
+}
+
+.widgets .widget .head h2 {
+  flex: 1;
+  font: var(--t4) / var(--lh1) var(--m-pixel);
+}
+
+.widgets .body {
+  flex-direction: column;
+  gap: var(--m-unit);
+  padding: var(--s2);
+  text-align: center;
+}
+
+.widgets .body :is(h2, h3, p) {
+  margin: 0;
+}
+
+.widgets .body h2 {
+  font: var(--t4) / var(--lh1) var(--m-pixel);
+}
+
+.widgets .body h2:not(:has(+ .big)) {
+  display: none;
+}
+
+.widgets .body .big {
+  font: var(--m-huge) / var(--lh1) var(--m-pixel);
+}
+
+.widgets .body :is(.dim, .lead, small) {
+  color: var(--muted);
+}
+
+.widgets .body .fill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--m-unit);
+  color: inherit;
+  text-decoration: none;
+}
+
+.widgets .body .art {
+  width: 96px;
+  aspect-ratio: 1;
+}
+
+.widgets .body .who {
+  display: flex;
+  gap: var(--s2);
+  align-items: center;
+  text-align: left;
+}
+
+.widgets .body .who > span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.widgets .body .face {
+  display: block;
+  flex: none;
+  width: var(--m-cell);
+  height: var(--m-cell);
+}
+
+.docked,
+:root:not([data-window="none"]) .desked {
+  display: none;
+}
+
+.lock {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-lock);
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  color: var(--ink);
+  transition:
+    opacity 0.4s var(--ease),
+    transform 0.4s var(--ease);
+}
+
+.lock .big {
+  height: 50px;
+}
+
+.lock rect {
+  animation: m-pixel 1s steps(1) both;
+  animation-delay: calc(var(--k) * 1s);
+}
+
+.lock[data-state="leaving"] {
+  opacity: 0;
+  transform: translateY(-40svh) scale(0.3);
+  pointer-events: none;
+}
+
+@keyframes m-pixel {
+  from {
+    opacity: 0;
+  }
+}
+
+.lock:has(> .ask) {
+  align-content: center;
+  gap: var(--s5);
+}
+
+.lock .ask {
+  display: grid;
+  justify-items: center;
+  gap: var(--s2);
+}
+
+.lock .ask .cell {
+  width: 16rem;
+  border: 1px solid var(--ink);
+  text-align: center;
+}
+
+.lock .ask .cell::placeholder {
+  color: var(--muted);
+}
+
+.lock .ask[aria-busy="true"] .cell {
+  background: var(--fill);
+}
+
+.lock .wrong {
+  color: var(--ink);
+  font: var(--t3) / var(--lh1) var(--mono);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lock .ask:has(.wrong) .cell {
+    animation: m-shake 0.4s var(--ease);
+  }
+}
+
+@keyframes m-shake {
+  25%,
+  75% {
+    translate: -6px 0;
+  }
+  50% {
+    translate: 6px 0;
+  }
+}
+
+.saver {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-saver);
+}
+
+.saver .clock {
+  position: absolute;
+  bottom: var(--s4);
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-unit);
+  padding: var(--m-unit);
+  border-radius: var(--m-unit);
+  background: var(--black);
+  transform: translateX(-50%);
+}
+
+.saver .time {
+  min-width: 240px;
+  min-height: 76px;
+  font: var(--m-huge) / var(--lh1) var(--m-pixel);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.still {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 26% 1fr;
+  gap: 3px;
+  padding: 7% 16% 0;
+  background: linear-gradient(to bottom, #ffffff00, color-mix(in srgb, var(--gray) 60%, transparent)), var(--paper);
+}
+
+.still :is(.still-bar, .still-win) {
+  display: grid;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 3px;
+  background: var(--gray);
+}
+
+.still .still-bar {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.still .still-win {
+  grid-template: 1fr 2fr / 1fr 2fr;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent);
+}
+
+.still :is(.still-bar, .still-win) > i {
+  border-radius: 2px;
+  background: var(--paper);
+}
+
+.still .still-bar > i:first-child,
+.still .still-win > i:first-child {
+  background: var(--ink);
+}
+
+.still .still-win > i:first-child {
+  grid-column: 1 / -1;
+}
+
+.still .still-win > i:last-child {
+  display: none;
+}

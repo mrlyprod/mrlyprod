@@ -1,0 +1,24 @@
+[package]
+name = "mrly-voxels"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-color.workspace = true
+mrly-error.workspace = true
+mrly-gif.workspace = true
+mrly-image.workspace = true
+mrly-pixels.workspace = true
+mrly-png.workspace = true
+mrly-space.workspace = true
+mrly-tensor.workspace = true
+mrly-three.workspace = true

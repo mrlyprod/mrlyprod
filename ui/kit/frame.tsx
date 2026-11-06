@@ -1,30 +1,25 @@
-import type { ReactNode, RefCallback, RefObject } from "react";
+import type { ReactNode, RefCallback } from "react";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { parts } from "../shell/active.ts";
 import type { Props } from "../shell/design.ts";
-import { measure } from "../shell/measure.ts";
-import { handle } from "./handle.ts";
 import { held, hold } from "./keep.ts";
 
 export type Side = "left" | "right";
 
 export type Slot = Side | "tail" | "status" | "hints" | "actions";
 
-export type Pane = { name: string; key: string; keep: string };
+export type Pane = { name: string; key: string };
 
 export type Nodes = Partial<Record<Slot, HTMLElement | null>>;
 
 export type Panes = {
-  claims: Partial<Record<Slot, number>>;
   nodes: Nodes;
   ref: (side: Slot) => RefCallback<HTMLElement>;
   claim: (side: Slot) => () => void;
   has: (side: Slot) => boolean;
   open: Record<Side, boolean>;
-  flip: (side: Side, on?: boolean) => void;
-  widths: Record<Side, number>;
-  size: (side: Side, px: number, keep: boolean) => void;
+  flip: (side: Side) => void;
 };
 
 export type Framed = Pick<Panes, "claim" | "nodes">;
@@ -38,11 +33,9 @@ export type BarProps = { side: Slot; children?: ReactNode };
 const Slots = createContext<Framed | null>(null);
 
 export const SIDES: Record<Side, Pane> = {
-  left: { name: "Library", key: "[", keep: "library" },
-  right: { name: "Knobs", key: "]", keep: "knobs" },
+  left: { name: "Library", key: "[" },
+  right: { name: "Knobs", key: "]" },
 };
-
-const { width: WIDTH, least: LEAST, most: MOST, gap: GAP, stage: ROOM } = measure.panes;
 
 export function calm(box: EventTarget | null): () => void {
   let by = "";
@@ -61,11 +54,6 @@ export function slot(frame: Framed | null, side: Slot, doc: Doc | undefined = gl
   if (frame) return frame.nodes[side] ?? null;
   return side === "right" || side === "tail" ? (doc?.querySelector("#right .controls") ?? null) : null;
 }
-
-export const pushed = (open: Partial<Record<Side, boolean>>, widths: Record<Side, number>, gap = GAP) =>
-  Math.max(0, ...(Object.keys(SIDES) as Side[]).map((side) => (open[side] ? widths[side] + 2 * gap : 0)));
-
-export const floats = (width: number, push: number, room = ROOM) => width - 2 * push < room;
 
 export function fit(rights: number[], room: number, least = 1, lefts: number[] = [], end = 0): [number, number] {
   const short = (rights[least - 1] ?? 0) - room;
@@ -102,19 +90,11 @@ function trim(pill: Element, box: Element, end: Element) {
   pill.removeAttribute("data-measure");
 }
 
-const phone = () => typeof document !== "undefined" && document.documentElement?.dataset?.form === "phone";
-
 export function usePanes(): Panes {
   const [claims, setClaims] = useState<Partial<Record<Slot, number>>>({});
   const [nodes, setNodes] = useState<Nodes>({});
   const refs = useRef<Partial<Record<Slot, RefCallback<HTMLElement>>>>({});
-  const [open, setOpen] = useState<Record<Side, boolean>>(() =>
-    phone() ? { left: false, right: false } : { left: true, right: true, ...held("panes", {}) },
-  );
-  const [widths, setWidths] = useState<Record<Side, number>>(() => ({
-    left: held(SIDES.left.keep, WIDTH),
-    right: held(SIDES.right.keep, WIDTH),
-  }));
+  const [open, setOpen] = useState<Record<Side, boolean>>(() => ({ left: true, right: true, ...held("panes", {}) }));
   const claim = useCallback((side: Slot) => {
     setClaims((was) => ({ ...was, [side]: (was[side] ?? 0) + 1 }));
     return () => setClaims((was) => ({ ...was, [side]: was[side]! - 1 }));
@@ -123,62 +103,20 @@ export function usePanes(): Panes {
     (refs.current[side] ??= (node) => setNodes((was) => (was[side] === node ? was : { ...was, [side]: node })));
   const has = (side: Slot) => (claims[side] ?? 0) > 0 || (side === "right" && (claims.tail ?? 0) > 0);
   const flip = useCallback(
-    (side: Side, on?: boolean) =>
+    (side: Side) =>
       setOpen((was) => {
-        const next = { ...was, [side]: on ?? !was[side] };
-        if (!phone()) hold("panes", next);
+        const next = { ...was, [side]: !was[side] };
+        hold("panes", next);
         return next;
       }),
     [],
   );
-  const size = useCallback((side: Side, px: number, keep: boolean) => {
-    setWidths((was) => (was[side] === px ? was : { ...was, [side]: px }));
-    if (keep) hold(SIDES[side].keep, px === WIDTH ? null : Math.round(px / measure.step) * measure.step);
-  }, []);
-  return { claims, nodes, ref, claim, has, open, flip, widths, size };
-}
-
-function useGrips(panes: Panes, root: RefObject<HTMLElement | null>) {
-  const latest = useRef(panes);
-  latest.current = panes;
-  return useMemo(
-    () =>
-      Object.fromEntries(
-        (Object.keys(SIDES) as Side[]).map((side): [Side, RefCallback<HTMLElement>] => [
-          side,
-          (el) =>
-            el
-              ? handle(el, {
-                  get: () => latest.current.widths[side],
-                  set: (px) => latest.current.size(side, px, false),
-                  done: (px) => latest.current.size(side, px, true),
-                  reset: WIDTH,
-                  min: LEAST,
-                  max: MOST,
-                  rate: side === "left" ? 1 : -1,
-                  label: `${SIDES[side].name} width`,
-                  busy: (on) => root.current?.toggleAttribute("data-drag", on),
-                })
-              : undefined,
-        ]),
-      ) as Record<Side, RefCallback<HTMLElement>>,
-    [root],
-  );
+  return { nodes, ref, claim, has, open, flip };
 }
 
 export function Frame({ label, gestures, panes: given, children }: FrameProps) {
   const mine = usePanes();
-  const panes = given ?? mine;
-  const { claim, nodes, ref, has, open, flip, widths } = panes;
-  const box = useRef<HTMLElement>(null);
-  const [wide, setWide] = useState(Infinity);
-  useLayoutEffect(() => {
-    const el = box.current;
-    if (!el || typeof ResizeObserver !== "function") return undefined;
-    const eye = new ResizeObserver(([one]) => setWide(one.contentRect.width));
-    eye.observe(el);
-    return () => eye.disconnect();
-  }, []);
+  const { claim, nodes, ref, has, open, flip } = given ?? mine;
   const stage = useRef<HTMLDivElement>(null);
   const status = has("status") || has("hints");
   useLayoutEffect(() => {
@@ -211,12 +149,7 @@ export function Frame({ label, gestures, panes: given, children }: FrameProps) {
     addEventListener("keydown", press);
     return () => removeEventListener("keydown", press);
   }, [flip]);
-  const grips = useGrips(panes, box);
   const frame = useMemo(() => ({ claim, nodes }), [claim, nodes]);
-  const shown = Object.fromEntries(
-    (Object.keys(SIDES) as Side[]).map((side): [Side, boolean] => [side, has(side) && open[side]]),
-  );
-  const float = phone() || floats(wide, pushed(shown, widths));
   const to = (slot: Slot) => () => ({ ref: ref(slot) });
   const slots: Props["app"]["slots"] = {
     stage: () => ({ ref: stage, "data-gestures": gestures ? "" : undefined }),
@@ -226,14 +159,12 @@ export function Frame({ label, gestures, panes: given, children }: FrameProps) {
     ...(status && { status: to("status"), hints: to("hints") }),
   };
   const bind: Props["app"]["bind"] = {
-    root: () => ({ ref: box }),
     pane: (side) => () => ({
       id: side,
       "aria-label": SIDES[side].name,
       inert: !open[side] ? true : undefined,
       ...(side === "right" && { ref: calm }),
     }),
-    grip: (side) => () => ({ ref: grips[side] }),
     opener: (side) => () => ({
       "aria-controls": side,
       "aria-expanded": open[side],
@@ -244,7 +175,7 @@ export function Frame({ label, gestures, panes: given, children }: FrameProps) {
   };
   return (
     <Slots.Provider value={frame}>
-      <parts.app title={label ?? ""} slots={slots} open={open} widths={widths} float={float} onFlip={flip} bind={bind}>
+      <parts.app title={label ?? ""} slots={slots} open={open} bind={bind}>
         {children}
       </parts.app>
     </Slots.Provider>

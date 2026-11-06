@@ -6,7 +6,7 @@ import { Frame, usePanes } from "./frame.tsx";
 import type { Item, Menu } from "./menus.ts";
 import { publish } from "./menus.ts";
 
-export type Layout = { wide: boolean; bare: boolean; sheet: string; window: string };
+export type Layout = { wide: boolean; bare: boolean; sheet: string };
 
 export type Route = { title: string };
 
@@ -27,7 +27,7 @@ export type ReaderProps = {
   children?: ReactNode;
 };
 
-export const layout: Layout = { wide: true, bare: true, sheet: "mrly", window: "app" };
+export const layout: Layout = { wide: true, bare: true, sheet: "mrly" };
 
 const COPIED = 1500;
 

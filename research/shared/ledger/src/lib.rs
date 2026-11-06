@@ -213,11 +213,24 @@ pub fn search(catalog: &[Row], query: &str) -> Vec<usize> {
         .collect()
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "the_classics_read_their_records",
+            the_classics_read_their_records,
+        ),
+        (
+            "the_keys_of_the_closed_tier_cover_every_space",
+            the_keys_of_the_closed_tier_cover_every_space,
+        ),
+        (
+            "the_search_finds_terms_and_names",
+            the_search_finds_terms_and_names,
+        ),
+    ];
+
     fn the_classics_read_their_records() {
         let carpet = sequence(&Key::new(7, 2, 2, Measure::Fills, Axis::Side), 4, BUDGET).unwrap();
         assert_eq!(carpet.sequence.terms, [8, 21, 40, 65]);
@@ -252,7 +265,6 @@ mod tests {
         assert_eq!(void.sequence.terms, [4, 12, 24]);
     }
 
-    #[test]
     fn the_keys_of_the_closed_tier_cover_every_space() {
         let closed = keys(Tier::Closed);
         assert_eq!(closed.len(), 1282 * 3 * 2 + (6 + 26 + 805) * 3 + 22 * 4);
@@ -268,7 +280,6 @@ mod tests {
         assert_eq!(Tier::parse("side").unwrap(), Tier::SideGrid);
     }
 
-    #[test]
     fn the_search_finds_terms_and_names() {
         let rows: Vec<Row> = [
             Key::new(7, 2, 2, Measure::Fills, Axis::Level),

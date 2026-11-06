@@ -1938,6 +1938,7 @@ fn eta() {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = env::args().collect();
     let clock = Instant::now();
     let num = |i: usize, d: u32| args.get(i).and_then(|s| s.parse().ok()).unwrap_or(d);
@@ -1955,11 +1956,37 @@ fn main() {
     eprintln!("{:.2} s", clock.elapsed().as_secs_f64());
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        ("reader_matches_the_digits", reader_matches_the_digits),
+        ("walsh_chi_square_is_pearson", walsh_chi_square_is_pearson),
+        (
+            "tally_counts_every_block_once",
+            tally_counts_every_block_once,
+        ),
+        (
+            "intervals_hold_the_logarithms",
+            intervals_hold_the_logarithms,
+        ),
+        ("intervals_hold_the_cosines", intervals_hold_the_cosines),
+        (
+            "digit_walk_sums_the_autocorrelation",
+            digit_walk_sums_the_autocorrelation,
+        ),
+        (
+            "energy_recursion_matches_the_blocks",
+            energy_recursion_matches_the_blocks,
+        ),
+        ("mirrors_share_the_spectrum", mirrors_share_the_spectrum),
+        ("wide_squares_match_the_tally", wide_squares_match_the_tally),
+        (
+            "brackets_hold_the_closed_forms",
+            brackets_hold_the_closed_forms,
+        ),
+    ];
+
     fn reader_matches_the_digits() {
         let all = Design::all();
         let reader = Reader::new();
@@ -1979,7 +2006,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn walsh_chi_square_is_pearson() {
         let mut c = [0u64; 256];
         for (i, x) in c.iter_mut().enumerate() {
@@ -1997,7 +2023,6 @@ mod tests {
         assert_eq!(null().0, 255.0);
     }
 
-    #[test]
     fn tally_counts_every_block_once() {
         let grid = tally(17, |n| mix(n));
         for d in [0, 30, STREAMS - 1] {
@@ -2016,7 +2041,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn intervals_hold_the_logarithms() {
         for x in [1e-9, 0.01, 0.4330127, 0.75, 1.0, 1.5, 2.0, 6.0, 1e6] {
             let iv = ln_iv(Iv::pt(x));
@@ -2029,7 +2053,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn intervals_hold_the_cosines() {
         for q in [3i128, 7, 12, 1000, 59049, 1 << 20] {
             for p in [0, 1, q / 8, q / 4, q / 3, q / 2, q - 1, 5 * q + 7] {
@@ -2040,7 +2063,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn digit_walk_sums_the_autocorrelation() {
         let tm = Corr::of(Design { b: 2, mask: 1 });
         let t3 = Corr::of(Design { b: 3, mask: 2 });
@@ -2074,7 +2096,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn energy_recursion_matches_the_blocks() {
         for d in [
             Design { b: 2, mask: 1 },
@@ -2110,7 +2131,6 @@ mod tests {
         );
     }
 
-    #[test]
     fn mirrors_share_the_spectrum() {
         for d in Design::all() {
             let m = d.mirror();
@@ -2133,7 +2153,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn wide_squares_match_the_tally() {
         let reader = Reader::new();
         let grid = tally(22, |n| reader.word(n * n));
@@ -2147,7 +2166,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn brackets_hold_the_closed_forms() {
         let tm = Design { b: 2, mask: 1 };
         let t3 = Design { b: 3, mask: 2 };

@@ -1,0 +1,5 @@
+400 names
+filled cells    min 12, max 37
+distinct shapes 400
+distinct inks   385
+look-alikes     0

@@ -4,5 +4,6 @@ edition = "2021"
 
 [dependencies]
 ledger = { path = "../../../../shared/ledger" }
+witness = { path = "../../../../shared/witness" }
 
 [workspace]

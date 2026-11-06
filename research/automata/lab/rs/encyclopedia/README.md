@@ -11,7 +11,7 @@
 - Readings: the stop and its generation, the settled generation, the population and box curves, the box growth slope, entropy, churn, symmetry, the last frame as hex rows with its origin, the Kronecker cuts of the frame, the heatmap's visited count, peak and median level set with its cuts; readings are never filters.
 - The cache is one JSON line per recipe under the repo's `data/research/automata/lab/rs/encyclopedia/chunks/`, keyed by the name, so a rerun of a chunk skips every cached recipe; the census JSON of the note is written from these lines by a later bin.
 - The note of the catalogue is [the encyclopedia](../../../notes/encyclopedia.md): the object, the two modes, the census as run, the laws, the sequences, the library and what the catalogue does not contain.
-- The test-only torus configuration (seed centred in a wrapped canvas) replays the retired mini preset: 1272 runs on canvas 27 for 64 generations agree rule for rule with the old atlas run today; the old number-rule line of the claims no longer replays on its own witness either, since the `random_0` source has changed.
+- The witness-only torus configuration (seed centred in a wrapped canvas) replays the retired mini preset: 1272 runs on canvas 27 for 64 generations agree rule for rule with the old atlas run today; the old number-rule line of the claims no longer replays on its own witness either, since the `random_0` source has changed.
 
 ## RUN
 
@@ -24,7 +24,7 @@
 - `... -- library` writes `library.json` to the data dir: one shelf cell per stop, class and seed family, the first 8 recipes of each in grammar order, readings only.
 - `... -- mini` prints the mini control table.
 - The cache line of a recipe is sparse: the stop, generation, period, displacement, wall_by, settled, growth slope, entropy, churn, symmetry, the Kronecker cuts and tilings when any, the heat visited count and peak, flips and background when set, and the population and box curves sampled as the first 16 values, every 16th after, the last, the max and its generation; `run NAME --full` prints the full line with the last frame and the heat level set.
-- `cargo test --manifest-path research/automata/lab/rs/encyclopedia/Cargo.toml` runs the hand checks: blinker, glider, R-pentomino, island against a large canvas, wallpaper against the torus, the sublattice lemma, the flipping background, the mini control.
+- `bash research/scripts/witness.sh encyclopedia` runs the hand checks: blinker, glider, R-pentomino, island against a large canvas, wallpaper against the torus, the sublattice lemma, the flipping background, the mini control.
 
 ## LAWS
 

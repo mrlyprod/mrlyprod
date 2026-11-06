@@ -1,0 +1,26 @@
+[package]
+name = "mrly-hex"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-color.workspace = true
+mrly-error.workspace = true
+mrly-graph.workspace = true
+mrly-image.workspace = true
+mrly-json.workspace = true
+mrly-math.workspace = true
+mrly-rand.workspace = true
+mrly-tensor.workspace = true
+mrly-three.workspace = true
+mrly-two.workspace = true
+serde.workspace = true

@@ -1,13 +1,13 @@
 import type { Site } from "site:routes";
+import { site as SITE } from "site:routes";
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { ask, sure } from "../../kit/controls.tsx";
 import { design } from "../active.ts";
 import { STORE } from "../password.ts";
-import { KNOB, PREFIX, stored, subscribe, write } from "../prefs.ts";
+import { dial, KNOBBED, PREFIX, stored, subscribe, write } from "../prefs.ts";
 import { Password } from "./password.tsx";
 import { Action, Item, Note, Section } from "./ui.tsx";
-
-type SureProps = { label: string; hint: string; yes: string; hot?: boolean; go: () => void; no: () => void };
 
 export const FIND = [
   "privacy",
@@ -27,6 +27,7 @@ export const FIND = [
 ];
 
 const NAMES: Partial<Record<string, string>> = {
+  design: "Design",
   theme: "Appearance",
   tint: "Accent colour",
   icons: "Icon style",
@@ -44,28 +45,28 @@ const NAMES: Partial<Record<string, string>> = {
   cart: "Cart",
   welcome: "Lock screen seen",
   password: "Lock screen password",
-  page: "Page window width",
-  wide: "Wide window width",
   launchpad: "Launchpad layout",
   recent: "Recent apps",
   dock: "Dock",
   widgets: "Widgets",
-  design: "Current design",
-  "designs-recent": "Recent designs",
-  "designs-saved": "Saved designs",
+  sprite: "Current pattern",
+  "designs-recent": "Recent patterns",
+  "designs-saved": "Saved patterns",
   panes: "Open side panels",
-  library: "Library width",
-  knobs: "Knobs width",
   world: "World",
   journal: "History",
   history: "Acts kept",
 };
 
-const KNOBS = new Map((design.knobs?.own ?? []).map((one) => [`${KNOB}${one.id}`, one.name]));
+const KNOBS = new Map((design.knobs?.own ?? []).map((one) => [dial(one.id), one.name]));
+
+const TITLES = new Map(SITE.designs.map((one) => [one.id, one.title]));
 
 const name = (key: string) => {
   const id = key.slice(PREFIX.length);
-  return KNOBS.get(key) ?? NAMES[id] ?? id;
+  const [, owner, knob] = KNOBBED.exec(id) ?? [];
+  if (knob) return KNOBS.get(key) ?? `${TITLES.get(owner) ?? owner} design: ${knob}`;
+  return NAMES[id] ?? id;
 };
 
 const bytes = (text: string) => new TextEncoder().encode(text).length;
@@ -120,32 +121,15 @@ function useKept() {
   return list;
 }
 
-export function Sure({ label, hint, yes, hot, go, no }: SureProps) {
-  const cancel = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    cancel.current?.focus();
-  }, []);
-  return (
-    <Item label={label} hint={hint}>
-      <span className="priv-pair">
-        <button ref={cancel} type="button" className="priv-btn" onClick={no}>
-          Cancel
-        </button>
-        <button type="button" className={hot ? "priv-btn hot" : "priv-btn"} onClick={go}>
-          {yes}
-        </button>
-      </span>
-    </Item>
-  );
+async function erase() {
+  if (await sure({ title: "Erase all data?", text: "This cannot be undone." }, { label: "Erase", danger: true }))
+    wipe();
 }
 
 export default function Pane({ site }: { site: Site }) {
   const host = new URL(site.root).host;
   const list = useKept();
   const input = useRef<HTMLInputElement>(null);
-  const [plan, setPlan] = useState<[string, string][] | null>(null);
-  const [fault, setFault] = useState("");
-  const [sure, setSure] = useState(false);
   const total = list.reduce((sum, [, value]) => sum + bytes(value), 0);
 
   async function choose(event: ChangeEvent<HTMLInputElement>) {
@@ -153,11 +137,12 @@ export default function Pane({ site }: { site: Site }) {
     event.target.value = "";
     if (!file) return;
     const rows = parse(await file.text().catch(() => ""));
-    setPlan(rows);
-    setFault(rows ? "" : `That file is not a ${site.title} data export.`);
-  }
-
-  function load(rows: [string, string][]) {
+    if (!rows) return void ask({ title: `That file is not a ${site.title} data export.` });
+    const asked = {
+      title: `Import ${count(rows.length)}?`,
+      text: "They replace matching items here. The page reloads.",
+    };
+    if (!(await sure(asked, { label: "Import" }))) return;
     for (const [key, value] of rows) write(key, value);
     location.reload();
   }
@@ -183,41 +168,19 @@ export default function Pane({ site }: { site: Site }) {
         >
           Export
         </Action>
-        {plan ? (
-          <Sure
-            label={`Import ${count(plan.length)}?`}
-            hint="They replace matching items here. The page reloads."
-            yes="Import"
-            go={() => load(plan)}
-            no={() => setPlan(null)}
-          />
-        ) : (
-          <Action label="Import data" hint={`Choose a ${PREFIX}data.json file.`} onClick={() => input.current?.click()}>
-            Import…
-          </Action>
-        )}
-        {fault && <Note>{fault}</Note>}
+        <Action label="Import data" hint={`Choose a ${PREFIX}data.json file.`} onClick={() => input.current?.click()}>
+          Import…
+        </Action>
       </Section>
       <Section title="Reset">
-        {sure ? (
-          <Sure
-            label="Erase all data?"
-            hint="This cannot be undone."
-            yes="Erase"
-            hot
-            go={wipe}
-            no={() => setSure(false)}
-          />
-        ) : (
-          <Action
-            danger
-            label="Erase all data"
-            hint="Removes everything kept in this browser. The lock screen plays again on your next visit home."
-            onClick={() => setSure(true)}
-          >
-            Erase…
-          </Action>
-        )}
+        <Action
+          danger
+          label="Erase all data"
+          hint="Removes everything kept in this browser. The lock screen plays again on your next visit home."
+          onClick={erase}
+        >
+          Erase…
+        </Action>
       </Section>
       <Section title="What the site sends">
         <Item label="Cookies">

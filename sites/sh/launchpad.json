@@ -1,0 +1,9 @@
+{
+  "sections": [
+    {
+      "name": "MrlyDash",
+      "apps": ["settings"]
+    }
+  ],
+  "dock": [["settings"]]
+}

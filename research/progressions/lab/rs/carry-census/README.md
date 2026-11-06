@@ -16,12 +16,12 @@
 - `control`: at bases `3..12` every family member against brute force to level `5`; asserts `0` mismatches and prints the deepest first level, `3`.
 - `verify`: at bases `2..27` every family member against brute force at level `3`, the decisive level; asserts `0` mismatches on `293820` sets.
 - `census`: at bases `28..40` every maximiser against brute force at level `3`; every half-base `F` asserted free; the cyclic maximum asserted equal to the no-carry maximum at every base.
-- `cargo test`: the asymmetry `-5 in S`, `5` not, at `F = {0, 1, 3}`; `(3, {0, 1})` free to level `8`; `(5, {0, 1, 3})` closing by a carry with the witness `0, 3, 6` at level `2`; `(4, {0, 2})` free with both exits; the base-`19` design free with no exit; the criterion against brute force at level `3` at bases `3..9`.
+- `bash research/scripts/witness.sh carry-census`: the asymmetry `-5 in S`, `5` not, at `F = {0, 1, 3}`; `(3, {0, 1})` free to level `8`; `(5, {0, 1, 3})` closing by a carry with the witness `0, 3, 6` at level `2`; `(4, {0, 2})` free with both exits; the base-`19` design free with no exit; the criterion against brute force at level `3` at bases `3..9`.
 
 ## RUN
 
 - `cargo run --release --manifest-path research/progressions/lab/rs/carry-census/Cargo.toml` from the repo root, `23` seconds, most of it the families and the cyclic search at bases `33..40`. Prints only, writes nothing; every check asserts.
-- `cargo test --release --manifest-path research/progressions/lab/rs/carry-census/Cargo.toml`, `9` tests, under a second after the build.
+- `bash research/scripts/witness.sh carry-census`, `9` witnesses, under a second after the build.
 
 ## READS
 

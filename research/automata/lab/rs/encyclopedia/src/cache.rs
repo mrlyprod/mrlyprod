@@ -83,11 +83,14 @@ pub fn append(path: &PathBuf, lines: &[String]) -> std::io::Result<()> {
     file.flush()
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "a_cache_line_starts_with_its_key",
+        a_cache_line_starts_with_its_key,
+    )];
+
     fn a_cache_line_starts_with_its_key() {
         let line = line("carpet.3.1 x1 island", 7, &mrly_json::json!({ "a": 1 }));
         assert_eq!(index_of(&line), Some(7));

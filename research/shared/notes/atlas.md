@@ -38,12 +38,12 @@ The design rows carry 36 measures, counting each axis apart. Grouped by the gene
 - Closed: fills and voids by the fill law (`mrly_sequences::counts::fill`), surface by the exposure recurrence (`mrly_sequences::counts::Exposure::at`); 54502 and 30708 rows.
 - Convolved: the peak and the number of nonzero heights of the diagonal profile (`mrly_sequences::counts::profile_of_tile`); 5217 rows.
 - Rendered: perimeter, vertices, edges, faces, Euler characteristic and hidden faces of the drawn design (`mrly_two::census`, `mrly_three::census`, `mrly_three::hidden`); 6742 rows in the plane, 614 and 132 in space.
-- The hex slice of dim 3, base 2: triangles, gaps, the profile fills and voids (`mrly_sequences::counts::cut_fills` and its siblings, 160 rows each), holes, pieces and the slice Euler characteristic (`mrly_six::holes`, `components`, `euler`).
+- The hex slice of dim 3, base 2: triangles, gaps, the profile fills and voids (`mrly_sequences::counts::cut_fills` and its siblings, 160 rows each), holes, pieces and the slice Euler characteristic (`mrly_hex::holes`, `components`, `euler`).
 
 Beside the designs, the atlas walks every other sequence-shaped generator in the tree:
 
 - The carry ladder at bases 3, 5, 7 and dims 2 to 6 (`mrly_sequences::counts::ladder::ladder`, 15 rows), its fill and its sign.
-- The solid slice closed forms (`mrly_sequences::counts::six::solid_slice_*`, seven rows), the centered hexagonal numbers and the grid triangle counts.
+- The solid slice closed forms (`mrly_sequences::counts::hex::solid_slice_*`, seven rows), the centered hexagonal numbers and the grid triangle counts.
 - The design counts, bracelets and fill classes (`mrly_bang::baseq`).
 - The press at small bases and dims (`mrly_bang::press::members`, 160 rows).
 - The arc loops drawn and the proved loop laws (`mrly_arcs::draw`, 41 rows; `mrly_arcs::law`, 15 rows).
@@ -132,7 +132,7 @@ The same argument works for any base `q >= 2` and any tile of side `q` with one 
 
 ### One function under two names
 
-The solid slice closed forms in `mrly_sequences::counts::six` carry two functions, `solid_slice_core_edges` and `solid_slice_interior`, whose bodies both return `36k^2 - 42k + 12`. The atlas puts their 16 terms in one class, and so this is a sequence of the tree under two names in the strictest sense: the same code. Their class matches A033570 after division by 6, and `solid_slice_edges`, `36k^2 - 30k + 6 = 6(2k-1)(3k-1)`, is six times A033568.
+The solid slice closed forms in `mrly_sequences::counts::hex` carry two functions, `solid_slice_core_edges` and `solid_slice_interior`, whose bodies both return `36k^2 - 42k + 12`. The atlas puts their 16 terms in one class, and so this is a sequence of the tree under two names in the strictest sense: the same code. Their class matches A033570 after division by 6, and `solid_slice_edges`, `36k^2 - 30k + 6 = 6(2k-1)(3k-1)`, is six times A033568.
 
 ### The sponge's slice, read on the side axis
 

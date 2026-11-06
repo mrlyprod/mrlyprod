@@ -534,7 +534,7 @@ function App<U extends Mathy, S extends Made>({
             units={units}
           />
           <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
-            <Icon name="fullscreen_exit" />
+            <Icon name="shrink" />
           </Btn>
           {spec && (
             <Bar side="right">
@@ -595,7 +595,7 @@ function App<U extends Mathy, S extends Made>({
               </Btn>
             )}
             <Btn className="reroll" onClick={acts.reroll}>
-              <Icon name="casino" />
+              <Icon name="dice" />
               Reroll
             </Btn>
             <Btn className="export" onClick={() => flip("dialog.export")}>
@@ -603,7 +603,7 @@ function App<U extends Mathy, S extends Made>({
               Export
             </Btn>
             <Btn className="share" onClick={copy}>
-              <Icon name="ios_share" />
+              <Icon name="share" />
               Share
             </Btn>
           </Bar>

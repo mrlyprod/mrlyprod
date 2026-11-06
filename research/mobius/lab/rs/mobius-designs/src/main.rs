@@ -147,6 +147,7 @@ fn crosscheck(mu: &[i8], primes: &[u64]) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     println!("mobius-designs generator: cargo run --release --manifest-path research/mobius/lab/rs/mobius-designs/Cargo.toml");
     let primes = small_primes(1024);
     let mu = mu_sieve(SIEVE_LIMIT);
@@ -346,12 +347,26 @@ fn verify_scalings(jobs: &[Family], outcomes: &[Outcome]) {
     }
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
     use factor::{is_prime, isqrt};
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        ("mu_matches_sieve", mu_matches_sieve),
+        ("strong_pseudoprimes_rejected", strong_pseudoprimes_rejected),
+        ("isqrt_exact", isqrt_exact),
+        ("methods_agree_on_family", methods_agree_on_family),
+        ("scaled_family_vanishes", scaled_family_vanishes),
+        ("scaling_identity_small", scaling_identity_small),
+        ("counting_closed_form", counting_closed_form),
+        (
+            "ordered_enumeration_ascending",
+            ordered_enumeration_ascending,
+        ),
+        ("ordered_walk_matches_prefix", ordered_walk_matches_prefix),
+        ("mertens_prefix_known", mertens_prefix_known),
+    ];
+
     fn mu_matches_sieve() {
         let primes = small_primes(1024);
         let mu = mu_sieve(50_000);
@@ -360,7 +375,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn strong_pseudoprimes_rejected() {
         for n in [
             2047u64,
@@ -383,7 +397,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn isqrt_exact() {
         for n in [0u64, 1, 2, 3, 4, 24, 25, 26, 999999999999999999] {
             let r = isqrt(n);
@@ -392,7 +405,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn methods_agree_on_family() {
         let primes = small_primes(1024);
         let mu = mu_sieve(6561);
@@ -405,7 +417,6 @@ mod tests {
         assert_eq!(a, b);
     }
 
-    #[test]
     fn scaled_family_vanishes() {
         let primes = small_primes(1024);
         let fam = census::make_family_depth(5, vec![0, 4], 8);
@@ -415,7 +426,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn scaling_identity_small() {
         let primes = small_primes(1024);
         for (q, scaled, base, a) in [
@@ -433,7 +443,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn counting_closed_form() {
         let primes = small_primes(1024);
         let f01 = census::make_family_depth(3, vec![0, 1], 8);
@@ -446,7 +455,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn ordered_enumeration_ascending() {
         for digits in [vec![0u64, 1], vec![0, 2], vec![1, 2]] {
             let mut prev = 0u64;
@@ -459,7 +467,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn ordered_walk_matches_prefix() {
         let primes = small_primes(1024);
         let mu = mu_sieve(19683);
@@ -484,7 +491,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn mertens_prefix_known() {
         let mu = mu_sieve(100_000);
         let mut run = 0i64;

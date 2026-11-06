@@ -2,21 +2,13 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-export const DESIGNS = ["modern", "boxy", "classic", "bricks", "terminal"] as const;
+export const DESIGNS = ["modern", "classic", "system"] as const;
 
 export type Design = (typeof DESIGNS)[number];
 
 export type Options = { title: string; domain: string; design: Design };
 
 export const DEFAULTS: Options = { title: "Example", domain: "example.com", design: "modern" };
-
-const FACES = [
-  { family: "Noto Sans", file: "sans", axes: "wght@400..700", weight: "400 700", licence: "notosans" },
-  { family: "Noto Serif", file: "serif", axes: "wght@400..700", weight: "400 700", licence: "notoserif" },
-  { family: "Noto Sans Mono", file: "mono", axes: "wght@400..700", weight: "400 700", licence: "notosansmono" },
-  { family: "Noto Sans Math", file: "math", weight: "400", licence: "notosansmath" },
-  { family: "Noto Color Emoji", file: "emoji", weight: "400", licence: "notocoloremoji" },
-];
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
 
@@ -36,7 +28,7 @@ const site = ({ title, domain, design }: Options) => ({
   menu: "/menu/",
   desk: "tiles",
   tiles: { id: "tiles", title: "Tiles" },
-  designs: [`../../designs/${design}`],
+  designs: [design, ...DESIGNS.filter((one) => one !== design)].map((one) => `../../designs/${one}`),
   roots: ["pages"],
   screen: [1440, 900, 2],
   min: [1280, 720],
@@ -63,7 +55,6 @@ const site = ({ title, domain, design }: Options) => ({
     store: { bucket: "SITE_BUCKET", prefix: "build/site" },
   },
   git: { root: ".", slug: `owner/${domain}`, branch: "main" },
-  fonts: { faces: FACES },
 });
 
 const MARK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#2f6fde"/><circle cx="32" cy="32" r="14" fill="#fff"/></svg>\n`;

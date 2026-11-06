@@ -1,32 +1,11 @@
 import "./mount.ts";
-import { handle } from "../kit/handle.ts";
 import { state } from "../kit/history.ts";
-import { px } from "../kit/px.ts";
 import { seek, track, type } from "./catalog.ts";
 import { canvas, desk, greeting, listen, meet, route, visit } from "./desk.ts";
-import { measure } from "./measure.ts";
 import { menus } from "./menus.ts";
-import {
-  calm,
-  icons,
-  KEY,
-  magnify,
-  PREFIX,
-  read,
-  root,
-  screen,
-  shade,
-  shine,
-  theme,
-  tint,
-  turn,
-  widths,
-  write,
-} from "./prefs.ts";
+import { calm, icons, KEY, magnify, PREFIX, read, root, screen, shade, shine, theme, tint } from "./prefs.ts";
 import type { Wired } from "./route.ts";
 import { expand, turns } from "./tree.ts";
-
-type Width = [string, string, number];
 
 type Piece = { start: () => void };
 
@@ -59,54 +38,6 @@ function resumed() {
 function land() {
   const at = saved() || state().y || 0;
   if (at > 0 && resumed() && !location.hash) main()?.scrollTo({ top: at, behavior: "instant" });
-}
-
-const rem = () => (Number.parseFloat(getComputedStyle(root()).fontSize) || 16) / 16;
-const docked = () => root().hasAttribute("data-docked");
-const isOpen = (side: string) => root().dataset[side] === "open";
-
-function set(side: string, open: boolean) {
-  root().dataset[side] = open ? "open" : "shut";
-  sync();
-}
-
-function stow() {
-  set("right", false);
-}
-
-function dock() {
-  const box = document.querySelector(".window");
-  const on =
-    root().dataset.window === "wide" && Boolean(box) && box!.getBoundingClientRect().width >= measure.dock * rem();
-  if (on === docked()) return;
-  root().toggleAttribute("data-docked", on);
-  stow();
-}
-
-function watch() {
-  dock();
-  new MutationObserver(dock).observe(root(), { attributeFilter: ["data-window", "data-text"] });
-  const box = document.querySelector(".window");
-  if (box && typeof ResizeObserver === "function") new ResizeObserver(dock).observe(box);
-}
-
-function sync() {
-  for (const button of document.querySelectorAll<HTMLElement>("[data-pane]"))
-    button.setAttribute("aria-expanded", String(isOpen(button.dataset.pane!)));
-}
-
-function toggle(side: string) {
-  const open = !isOpen(side);
-  set(side, open);
-  if (open) document.getElementById(side)?.querySelector<HTMLElement>("a, button, input, select, textarea")?.focus();
-}
-
-function shut() {
-  if (docked()) return false;
-  if (!isOpen("right")) return false;
-  set("right", false);
-  document.querySelector<HTMLElement>('[data-pane="right"]')?.focus();
-  return true;
 }
 
 const eyes = new Map<Element, IntersectionObserver>();
@@ -143,50 +74,6 @@ function contents(nav: Element) {
   eyes.set(nav, eye);
 }
 
-const WIDTHS: Record<"page" | "wide", Width> & Partial<Record<string, Width>> = {
-  page: ["--win", KEY.page, measure.page],
-  wide: ["--wide", KEY.wide, measure.wide],
-};
-const step = (n: number) => Math.round(n / measure.step) * measure.step;
-
-function edges() {
-  const box = document.querySelector<HTMLElement>(".window");
-  if (!box) return;
-  const kind = () => WIDTHS[root().dataset.window ?? ""] ?? WIDTHS.page;
-  const room = () => innerWidth - 2 * measure.gutter * rem();
-  const get = () => box.getBoundingClientRect().width;
-  const put = (n: number) => root().style.setProperty(kind()[0], px(step(n)));
-  for (const grip of document.querySelectorAll<HTMLElement>("[data-edge]")) {
-    const side = grip.dataset.edge;
-    handle(grip, {
-      get,
-      set: put,
-      done: (n) => write(kind()[1], n >= room() - 1 ? "" : String(step(n))),
-      reset: () => kind()[2],
-      min: measure.least,
-      max: room,
-      rate: side === "left" ? -2 : 2,
-      label: "Window width",
-      busy: (on) => box.classList.toggle("drag", on),
-    });
-  }
-}
-
-function zoom(button: Element) {
-  const box = document.querySelector(".window");
-  if (!box) return;
-  const on = !box.classList.contains("zoomed");
-  box.classList.toggle("zoomed", on);
-  button.setAttribute("aria-pressed", String(on));
-}
-
-function close(e: MouseEvent) {
-  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  if (!((state().depth ?? 0) > 0)) return;
-  e.preventDefault();
-  history.back();
-}
-
 let typing = false;
 
 function ahead(e: KeyboardEvent) {
@@ -214,7 +101,12 @@ function ahead(e: KeyboardEvent) {
   dispatchEvent(new CustomEvent("go", { detail: "/menu/" }));
 }
 
-const pieces: Record<"bar" | "dock" | "widgets", Promise<void> | null> = { bar: null, dock: null, widgets: null };
+const pieces: Record<"bar" | "dock" | "widgets" | "live", Promise<void> | null> = {
+  bar: null,
+  dock: null,
+  widgets: null,
+  live: null,
+};
 
 function lay(name: keyof typeof pieces, load: () => Promise<Piece>) {
   pieces[name] ??= load()
@@ -245,7 +137,6 @@ function wire(event?: CustomEvent<Wired>) {
     landed = true;
     land();
   }
-  sync();
   unread();
   theme(root().dataset.theme ?? "");
   tint(root().dataset.tint ?? "");
@@ -262,6 +153,7 @@ function wire(event?: CustomEvent<Wired>) {
   meet();
   lay("bar", () => import("./bar.tsx"));
   lay("dock", () => import("./dock.tsx"));
+  lay("live", () => import("./live.tsx"));
   if (route === "/") lay("widgets", () => import("./widgets.tsx"));
   if (!lit) {
     lit = true;
@@ -280,27 +172,11 @@ function boot() {
   icons(read(KEY.icons), read(KEY.always) === "1");
   screen(read(KEY.saver));
   magnify(read(KEY.magnify) === "1");
-  widths();
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", shade);
   track();
   menus();
-  stow();
-  edges();
-  watch();
-  document.addEventListener("click", (e) => {
-    const target = e.target instanceof Element ? e.target : null;
-    if (!target) return;
-    const button = target.closest<HTMLElement>("[data-pane]");
-    if (button) return button.closest("#right") ? shut() : toggle(button.dataset.pane!);
-    if (target.closest("[data-theme-toggle]")) return turn();
-    if (target.closest("[data-close]")) return close(e);
-    const zoomer = target.closest("[data-zoom]");
-    if (zoomer) return zoom(zoomer);
-    if (target.closest("[data-scrim]") || target.closest("#right a[href]")) shut();
-  });
   document.addEventListener("toggle", expand, true);
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !document.querySelector("dialog[open]") && shut()) return e.preventDefault();
     if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "k") {
       e.preventDefault();
       seek();

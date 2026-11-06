@@ -158,14 +158,14 @@ export function source(mrly: Mrly, value: Src): Made {
     };
   if (cube(value)) {
     const code = canon(mrly, 3, value.base, value.code);
-    const cut = mrly.six.cut_design(code, value.tile, Math.min(value.slevel, cap(value.tile, CUT)), value.base);
+    const cut = mrly.hex.cut_design(code, value.tile, Math.min(value.slevel, cap(value.tile, CUT)), value.base);
     return {
       kind: "slice",
       code,
       name: mrly.math.name.of(code, 3, value.base) ?? "",
       side: HEX,
-      data: mrly.six.raster(cut, HEX),
-      fills: mrly.six.fills(cut),
+      data: mrly.hex.raster(cut, HEX),
+      fills: mrly.hex.fills(cut),
       binary: true,
     };
   }

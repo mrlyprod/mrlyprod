@@ -1,0 +1,5 @@
+150 frames of 189 by 189, 35721 pixels each
+
+as stills, every frame whole      82439 bytes
+one animation, changes only       53376 bytes
+the animation is 65% of the stills

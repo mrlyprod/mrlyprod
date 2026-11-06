@@ -8,7 +8,9 @@ import { loose } from "./room.ts";
 import type { Option, Scalar } from "./spec.ts";
 
 export type { IconName, IconProps } from "./icon.tsx";
-export { Icon } from "./icon.tsx";
+export { Emoji, Icon } from "./icon.tsx";
+export type { Asked, Choice, Tab } from "./pieces.tsx";
+export { ask, DateField, Empty, Progress, Search, Sheet, sure, Table, Tabs, Tooltip, toast } from "./pieces.tsx";
 export { useRoom } from "./room.ts";
 
 export type Action = readonly [string, () => void];

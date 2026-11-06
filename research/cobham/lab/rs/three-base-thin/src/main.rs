@@ -244,6 +244,7 @@ fn report(base: u32, exp: usize, top7: u8, name: &str) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = env::args().collect();
     let verb = args.get(1).map(|s| s.as_str()).unwrap_or("budget");
     let n: usize = args.get(2).map(|s| s.parse().unwrap()).unwrap_or(0);
@@ -268,22 +269,50 @@ fn big<F: FnOnce() + Send + 'static>(f: F) {
         .unwrap();
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "the_thin_set_below_seven_to_the_seventeen",
+            the_thin_set_below_seven_to_the_seventeen,
+        ),
+        (
+            "the_thin_set_gains_no_member_by_three_to_the_two_hundred",
+            the_thin_set_gains_no_member_by_three_to_the_two_hundred,
+        ),
+        (
+            "the_pruned_walk_agrees_with_a_direct_scan",
+            the_pruned_walk_agrees_with_a_direct_scan,
+        ),
+        (
+            "the_wide_variant_rebuilds_a030979",
+            the_wide_variant_rebuilds_a030979,
+        ),
+        (
+            "every_member_passes_all_three_digit_rules",
+            every_member_passes_all_three_digit_rules,
+        ),
+        (
+            "the_pair_budgets_are_positive_and_the_triple_budget_is_not",
+            the_pair_budgets_are_positive_and_the_triple_budget_is_not,
+        ),
+        (
+            "the_dimensions_print_to_six_places",
+            the_dimensions_print_to_six_places,
+        ),
+    ];
 
     fn list(v: &[u128]) -> Vec<BigUint> {
         v.iter().map(|&x| BigUint::from(x)).collect()
     }
 
-    #[test]
     fn the_thin_set_below_seven_to_the_seventeen() {
         let cap = pow_big(7, 17);
         assert_eq!(cap.to_string(), "232630513987207");
         assert_eq!(members(cap, 2, 2), list(&[0, 1, 3186, 3187, 20007]));
     }
 
-    #[test]
     fn the_thin_set_gains_no_member_by_three_to_the_two_hundred() {
         assert_eq!(
             members(pow_big(3, 200), 2, 2),
@@ -291,20 +320,17 @@ mod tests {
         );
     }
 
-    #[test]
     fn the_pruned_walk_agrees_with_a_direct_scan() {
         let cap = 3u128.pow(15);
         assert_eq!(members(BigUint::from(cap), 2, 2), scan(cap, 2, 2));
         assert_eq!(members(BigUint::from(cap), 2, 3), scan(cap, 2, 3));
     }
 
-    #[test]
     fn the_wide_variant_rebuilds_a030979() {
         let far = BigUint::from(*A030979.last().unwrap() + 1);
         assert_eq!(members(far, 2, 3), a030979());
     }
 
-    #[test]
     fn every_member_passes_all_three_digit_rules() {
         for n in members(pow_big(3, 120), 2, 2) {
             assert!(ok_big(&n, 3, 1));
@@ -313,7 +339,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_pair_budgets_are_positive_and_the_triple_budget_is_not() {
         let d3 = dim(3.0, 2.0);
         let d5 = dim(5.0, 3.0);
@@ -328,7 +353,6 @@ mod tests {
         );
     }
 
-    #[test]
     fn the_dimensions_print_to_six_places() {
         assert_eq!(format!("{:.6}", near(dim(3.0, 2.0))), "0.630930");
         assert_eq!(format!("{:.6}", near(dim(5.0, 3.0))), "0.682606");

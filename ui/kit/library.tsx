@@ -1,7 +1,6 @@
 import type { KeyboardEvent, MouseEvent, ReactNode, Ref } from "react";
 import { useEffect, useRef } from "react";
-import { measure } from "../shell/measure.ts";
-import { Icon, useRoom } from "./controls.tsx";
+import { Icon, Search, useRoom } from "./controls.tsx";
 import { Bar } from "./frame.tsx";
 import type { Scalar } from "./spec.ts";
 
@@ -57,7 +56,7 @@ function queue(job: () => void) {
   };
 }
 
-export function Art({ paint, px = measure.thumb, deps = [], label }: ArtProps) {
+export function Art({ paint, px = 56, deps = [], label }: ArtProps) {
   const at = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = at.current;
@@ -156,7 +155,7 @@ export function Chips({ label, chips, chip, onChip }: ChipsProps) {
           ))}
         </select>
         <span className="drop">
-          <Icon name="expand_more" />
+          <Icon name="down" />
         </span>
       </label>
     );
@@ -204,18 +203,7 @@ export function Library({
       <div className="library" onKeyDown={move}>
         <h2>{name}</h2>
         {onFind && (
-          <label className="find">
-            <Icon name="search" />
-            <input
-              ref={at}
-              type="search"
-              value={find ?? ""}
-              placeholder={hint}
-              aria-label={label}
-              onChange={(e) => onFind(e.target.value)}
-              onKeyDown={go}
-            />
-          </label>
+          <Search ref={at} label={label} value={find ?? ""} placeholder={hint} onChange={onFind} onKeyDown={go} />
         )}
         {chips && chips.length > 0 && <Chips label={`${name} filter`} chips={chips} chip={chip} onChip={onChip} />}
         {children}

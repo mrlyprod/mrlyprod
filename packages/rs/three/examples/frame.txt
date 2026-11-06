@@ -1,0 +1,22 @@
+the middle plane as text:
+0111110
+0100000
+0100000
+0111100
+0100000
+0100000
+0100000
+
+faces that point to the front, top row first:
+.#####.
+.#.....
+.#.....
+.####..
+.#.....
+.#.....
+.#.....
+
+obj x runs from 1 to 6
+obj y runs from 0 to 7
+obj z runs from 3 to 4
+width 7, height 7, depth 7

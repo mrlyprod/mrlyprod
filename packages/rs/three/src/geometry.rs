@@ -9,7 +9,7 @@ pub use mrly_math::cell::geometry::{magic, mosaic, perforate};
 pub use mrly_math::cell::models::orientations;
 
 pub fn merge(cells: &[Cell3d], width: usize, height: usize, depth: usize) -> Result<Cell3d> {
-    geometry::merge_reps(cells, &[depth, height, width])
+    geometry::merge_reps(cells, &[width, height, depth])
 }
 
 pub fn special(mask: &Tensor, cell: &Cell3d) -> Result<Cell3d> {

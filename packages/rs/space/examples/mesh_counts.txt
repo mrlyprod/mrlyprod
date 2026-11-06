@@ -1,0 +1,11 @@
+solid   corners  edges  triangles  euler
+tetra         4      6          4      2
+cube          8     18         12      2
+octa          6     12          8      2
+dodeca       20     54         36      2
+icosa        12     30         20      2
+
+sponge  surface  triangles
+     1       72        144
+     2     1056       2112
+     3    18048      36096

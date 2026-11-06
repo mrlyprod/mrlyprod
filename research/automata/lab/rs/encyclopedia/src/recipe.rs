@@ -197,11 +197,14 @@ impl Recipe {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "a_name_parses_back_to_its_recipe_and_a_recipe_back_to_its_name",
+        a_name_parses_back_to_its_recipe_and_a_recipe_back_to_its_name,
+    )];
+
     fn a_name_parses_back_to_its_recipe_and_a_recipe_back_to_its_name() {
         let names = [
             "carpet.5.1 x3 island mask:carpet.5.1 birth:carpet_fills survive:carpet_voids x:1024 cap:301",

@@ -777,7 +777,7 @@ fn probe(book: &Book, function: &Function) -> Result<String> {
 fn suffix_dim(name: &str) -> Option<u8> {
     if name.ends_with("_2d") {
         Some(2)
-    } else if name.ends_with("_3d") || name.ends_with("_6d") {
+    } else if name.ends_with("_3d") || name.ends_with("_hex") {
         Some(3)
     } else {
         None

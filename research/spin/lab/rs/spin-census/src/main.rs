@@ -718,6 +718,7 @@ fn eisenstein_limit(top: usize) {
 }
 
 fn main() {
+    witness::dispatch(&[mass::witnesses::ALL].concat());
     let table = bit_cells();
     if std::env::args().any(|a| a == "shape") {
         shape::control();

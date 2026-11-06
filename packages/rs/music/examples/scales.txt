@@ -1,0 +1,9 @@
+scale       steps                 notes from C4
+major        0  2  4  5  7  9 11  C4 D4 E4 F4 G4 A4 B4
+dorian       0  2  3  5  7  9 10  C4 D4 D#4 F4 G4 A4 A#4
+phrygian     0  1  3  5  7  8 10  C4 C#4 D#4 F4 G4 G#4 A#4
+lydian       0  2  4  6  7  9 11  C4 D4 E4 F#4 G4 A4 B4
+mixolydian   0  2  4  5  7  9 10  C4 D4 E4 F4 G4 A4 A#4
+minor        0  2  3  5  7  8 10  C4 D4 D#4 F4 G4 G#4 A#4
+locrian      0  1  3  5  6  8 10  C4 C#4 D#4 F4 F#4 G#4 A#4
+major from G2 over 2 octaves: G2 A2 B2 C3 D3 E3 F#3 G3 A3 B3 C4 D4 E4 F#4

@@ -1,0 +1,15 @@
+a good file: 135 bytes, 3 frames
+
+empty              not a gif file.
+not a gif          not a gif file.
+cut in the header  the file ends inside the header.
+cut in the colors  the file ends inside the color table.
+cut in a frame     the file ends inside frame 2.
+no trailer         ok: 3 frames of 8 by 8, 0 pixels differ
+huge canvas        frame 0 takes a 65535 by 65535 canvas over the limit of 67108864 pixels.
+unknown block      unknown block 0x99 at byte 134.
+bad code size      frame 0: minimum code size 10 is outside 2 to 8.
+bad lzw code       frame 0: code 10 comes before the table reaches it.
+wrong pixels       ok: 3 frames of 8 by 8, 28 pixels differ
+
+LIMIT is 67108864 pixels: the most decode() holds, counting the canvas and every frame.

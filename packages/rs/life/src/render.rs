@@ -1,6 +1,6 @@
 use mrly_color::ramp::Colorizer;
 use mrly_color::{BLACK, Color, WHITE};
-use mrly_error::{Result, shape_error, value_error};
+use mrly_error::{Error, Result, shape_error, value_error};
 use mrly_image::Image;
 use mrly_math::cell::base::Mode;
 use mrly_tensor::Tensor;
@@ -20,6 +20,27 @@ pub fn frames(grids: &[Cell2d], scale: usize) -> Result<Vec<Image>> {
         out.push(two::image(&painted, scale, None, 1, two::Shape::Square)?);
     }
     Ok(out)
+}
+
+pub fn gif(grids: &[Cell2d], scale: usize, delay: u16) -> Result<Vec<u8>> {
+    let Some(first) = grids.first() else {
+        return value_error("a gif needs at least one grid.");
+    };
+    let (width, height) = (first.width(), first.height());
+    let mut frames = Vec::with_capacity(grids.len());
+    for grid in grids {
+        if (grid.width(), grid.height()) != (width, height) {
+            return shape_error("every grid must share one shape.");
+        }
+        let types = grid.types();
+        let alive: Vec<u8> = (0..types.size())
+            .map(|at| (types.at(at) != 0) as u8)
+            .collect();
+        frames.push(mrly_gif::scale(&alive, width, scale).map_err(Error::Value)?);
+    }
+    let palette = [BLACK, WHITE].map(|color| [color.r, color.g, color.b, 255]);
+    mrly_gif::encode(&frames, width * scale, height * scale, &palette, &[delay])
+        .map_err(Error::Value)
 }
 
 pub fn frame(grid: &Cell2d, scale: usize) -> Result<Image> {

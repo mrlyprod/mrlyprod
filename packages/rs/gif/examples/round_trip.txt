@@ -1,0 +1,4 @@
+indexed: 12 by 12, 4 frames, delays [10, 10, 10, 10], 186 bytes
+  every pixel back: true
+indexed with a clear color: 233 bytes, every pixel back: true
+rgba with a hole: 73 bytes, every pixel back: true

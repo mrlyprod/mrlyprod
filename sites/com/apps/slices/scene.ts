@@ -1,6 +1,6 @@
 import type { Color, Frame, Pen } from "@mrlyprod/draw";
 import { frame as box, hex, canvas as pen, svg as sheet } from "@mrlyprod/draw";
-import type { Cell6d } from "@mrlyprod/math";
+import type { CellHex } from "@mrlyprod/math";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb, TINTS } from "@mrlyprod/ui/kit/color.ts";
 import type { Code, Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
@@ -46,7 +46,7 @@ const CARPET = "23";
 const PAD = 0.04;
 const FAINT = 18;
 
-export const codesOf = (mrly: Mrly): Codes => ({ fill: mrly.six.FILL(), void: mrly.six.VOID() });
+export const codesOf = (mrly: Mrly): Codes => ({ fill: mrly.hex.FILL(), void: mrly.hex.VOID() });
 
 export const lid = (mrly: Mrly, tile: number) => (tile ? mrly.math.factory.level_cap(tile, 1, REACH) : 1);
 
@@ -111,14 +111,14 @@ const glances = memo(20);
 function cut(mrly: Mrly, code: Code, base: number, number: number, level: number) {
   return cuts(`${code} ${base} ${number} ${level}`, () => {
     const cell = mrly.three.create(code, number, level, base);
-    const mesh = mrly.six.cut(cell);
+    const mesh = mrly.hex.cut(cell);
     return {
       mesh,
       side: cell.shape[0],
-      tally: mrly.six.census(mesh, false),
-      pieces: mrly.six.components(mesh),
-      holes: mrly.six.holes(mesh),
-      giant: mrly.six.giant(mesh),
+      tally: mrly.hex.census(mesh, false),
+      pieces: mrly.hex.components(mesh),
+      holes: mrly.hex.holes(mesh),
+      giant: mrly.hex.giant(mesh),
     };
   });
 }
@@ -149,7 +149,7 @@ export function study(mrly: Mrly, value: Raw) {
     ["name", title(named(mrly, code, base), code, base)],
     ["side", one.side],
     ["triangles", tally.triangles],
-    ["closed form", String(mrly.sequences.counts.six.solid_slice_triangles(one.side))],
+    ["closed form", String(mrly.sequences.counts.hex.solid_slice_triangles(one.side))],
     ["filled", tally.fills],
     ["empty", tally.voids],
     ["pieces", one.pieces],
@@ -176,14 +176,14 @@ export function study(mrly: Mrly, value: Raw) {
 
 export function glance(mrly: Mrly, value: Raw, k: number) {
   const { base, code } = design(mrly, { ...value, base: Number(value.base) });
-  return glances(`${code} ${base} ${k}`, () => mrly.six.cut(mrly.three.create(code, 2 * k - 1, 1, base)));
+  return glances(`${code} ${base} ${k}`, () => mrly.hex.cut(mrly.three.create(code, 2 * k - 1, 1, base)));
 }
 
 export const layout = (w: number, h: number) => box(0, 0, w, h).inset(Math.min(w, h) * PAD);
 
 export const scrub = (x: number, w: number) => Math.min(TOP, Math.max(1, Math.floor((x / Math.max(1, w)) * TOP) + 1));
 
-export function picture(page: Pen, frame: Frame, plan: { mesh: Cell6d }, paint: Paint) {
+export function picture(page: Pen, frame: Frame, plan: { mesh: CellHex }, paint: Paint) {
   const fill = paint.accent;
   const [r, g, b] = fill;
   const faint: Color = [r, g, b, FAINT];
@@ -191,7 +191,7 @@ export function picture(page: Pen, frame: Frame, plan: { mesh: Cell6d }, paint: 
   hex.draw(page, frame, plan.mesh, 0, (type) => codes[type] ?? null);
 }
 
-export function thumb(ctx: CanvasRenderingContext2D, side: number, mesh: Cell6d, codes: Codes, accent: string) {
+export function thumb(ctx: CanvasRenderingContext2D, side: number, mesh: CellHex, codes: Codes, accent: string) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, side, side);
   picture(pen(ctx, side, side), layout(side, side), { mesh }, { ...codes, accent: [...rgb(accent), 255] });

@@ -1,0 +1,4 @@
+title = "Sequences"
+description = "The integer sequences a design writes, one per design and measure."
+kind = "enumerated"
+version = "0.2.0"

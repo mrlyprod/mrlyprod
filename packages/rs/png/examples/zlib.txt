@@ -1,0 +1,10 @@
+text       1800 bytes
+level 0    1811 bytes
+level 1    67 bytes
+level 6    66 bytes
+level 9    66 bytes
+round trip true
+limit 100  the inflated data runs past the size limit.
+bad sum    the zlib checksum does not match the data.
+header     78 da
+checksum   8d988b37, adler32 of the text 8d988b37

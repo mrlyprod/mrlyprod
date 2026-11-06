@@ -3,5 +3,6 @@ name = "sumset-density"
 edition = "2021"
 
 [dependencies]
+witness = { path = "../../../../shared/witness" }
 
 [workspace]

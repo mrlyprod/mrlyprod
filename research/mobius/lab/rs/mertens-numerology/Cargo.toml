@@ -2,4 +2,7 @@
 name = "mertens-numerology"
 edition = "2021"
 
+[dependencies]
+witness = { path = "../../../../shared/witness" }
+
 [workspace]

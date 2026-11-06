@@ -269,7 +269,7 @@ function Saver({ row, rows, site, entry, list, off, want, live, go }: SaverProps
     <div className="one">
       <p className="back">
         <a href={ROOT}>
-          <Icon name="chevron_right" />
+          <Icon name="right" />
           {row.title}
         </a>
       </p>
@@ -284,18 +284,18 @@ function Saver({ row, rows, site, entry, list, off, want, live, go }: SaverProps
       <div className="steps">
         {many && (
           <a className="button prev" href={link(prev.id)} title={prev.title} aria-keyshortcuts="ArrowLeft">
-            <Icon name="chevron_right" />
+            <Icon name="right" />
             Previous
           </a>
         )}
         <button type="button" onClick={reroll}>
-          <Icon name="casino" />
+          <Icon name="dice" />
           Reroll
         </button>
         {many && (
           <a className="button next" href={link(next.id)} title={next.title} aria-keyshortcuts="ArrowRight">
             Next
-            <Icon name="chevron_right" />
+            <Icon name="right" />
           </a>
         )}
       </div>

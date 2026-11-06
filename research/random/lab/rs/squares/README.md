@@ -14,7 +14,7 @@
 
 - `speed K`: the decay exponent of every strongly lit statistic along `n^2`: for each design with `eta < 1/4` and each of its bias and lags with `abs(z) >= 8` at `2^K`, the least-squares slope of `log2 abs(T_S/N)` over every `N = 2^k`, `k` in `18..K` and in `K-6..K`, against `-2 eta` and `-2 e_h`, with the mean and largest gap. `speed 30` takes about 13 s.
 
-- `thue K`: Thue-Morse alone along `n^2`, the squares in 128 bits and updated by `+2n + 1`, the parity of `n^2` the popcount of its two halves XORed: the bias and the lags 3 and 6 at every `N = 2^k`, `k <= K`, and their decay slopes over `2^18..2^30`, `2^18..2^K` and `2^30..2^K`. It agrees with the tally to `2^22` (a test). `thue 40` takes about 8 minutes on 8 threads.
+- `thue K`: Thue-Morse alone along `n^2`, the squares in 128 bits and updated by `+2n + 1`, the parity of `n^2` the popcount of its two halves XORed: the bias and the lags 3 and 6 at every `N = 2^k`, `k <= K`, and their decay slopes over `2^18..2^30`, `2^18..2^K` and `2^30..2^K`. It agrees with the tally to `2^22` (a witness). `thue 40` takes about 8 minutes on 8 threads.
 
 ## RUN
 
@@ -24,5 +24,5 @@ cargo run --release --manifest-path research/random/lab/rs/squares/Cargo.toml --
 cargo run --release --manifest-path research/random/lab/rs/squares/Cargo.toml -- diagonal 24 22
 cargo run --release --manifest-path research/random/lab/rs/squares/Cargo.toml -- speed 30
 cargo run --release --manifest-path research/random/lab/rs/squares/Cargo.toml -- thue 40
-cargo test --release --manifest-path research/random/lab/rs/squares/Cargo.toml
+bash research/scripts/witness.sh squares
 ```

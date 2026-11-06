@@ -5,7 +5,7 @@ pub type Config2d = ConfigNd<2>;
 
 pub type Config3d = ConfigNd<3>;
 
-pub use six::{HexTile, build as build_6d, create as create_6d, random_tile as random_tile_6d};
+pub use hex::{HexTile, build as build_hex, create as create_hex, random_tile as random_tile_hex};
 pub use three::{build as build_3d, create as create_3d, random_tile as random_tile_3d};
 pub use two::{build as build_2d, create as create_2d, random_tile as random_tile_2d, tree_mask};
 
@@ -263,14 +263,14 @@ mod three {
     }
 }
 
-mod six {
+mod hex {
     use super::Config3d as Config;
     use super::three;
     use crate::recipe::Tile;
     use mrly_error::Result;
+    use mrly_hex::geometry::{cut, iso, pro};
+    use mrly_hex::{CellHex, Projection};
     use mrly_rand::Rng;
-    use mrly_six::geometry::{cut, iso, pro};
-    use mrly_six::{Cell6d, Projection};
 
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     pub struct HexTile {
@@ -296,7 +296,7 @@ mod six {
         })
     }
 
-    pub fn build(hex: &HexTile) -> Result<Cell6d> {
+    pub fn build(hex: &HexTile) -> Result<CellHex> {
         let cell = three::build(&hex.tile)?;
         match hex.projection {
             Projection::Iso => iso(&cell),

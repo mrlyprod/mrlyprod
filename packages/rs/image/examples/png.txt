@@ -1,0 +1,8 @@
+image       7 x 7, 196 bytes as rgba
+png         106 bytes
+starts      "PNG"
+read back   7 x 7
+same image  true
+corner      [0, 0, 0, 0]
+middle      [255, 61, 64, 255]
+garbage     not a png file.

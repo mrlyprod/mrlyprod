@@ -17,7 +17,7 @@
 
 - `cargo run --release --manifest-path research/coprime/lab/rs/coprime-terms/Cargo.toml -- terms menger 18 8`
 - Arguments: design (`menger`, `carpet`, `vicsek`), top level, threads.
-- `-- check menger 6 14` runs the gate battery; `-- profile menger 16 8` prints seconds per `log2 Y` band and counter for one level; `cargo test --release --manifest-path research/coprime/lab/rs/coprime-terms/Cargo.toml` pins the stored terms.
+- `-- check menger 6 14` runs the gate battery; `-- profile menger 16 8` prints seconds per `log2 Y` band and counter for one level; `bash research/scripts/witness.sh coprime-terms` pins the stored terms.
 - The sponge ladder to `level = 14` takes 1 s, to `level = 18` about 2.5 min (`terms/menger.txt`).
 
 ## WITNESSES

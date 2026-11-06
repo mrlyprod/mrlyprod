@@ -27,6 +27,10 @@
       "name": "@mrlyprod/loader",
       "version": "0.2.0",
     },
+    "packages/js/sprites": {
+      "name": "@mrlyprod/sprites",
+      "version": "0.2.0",
+    },
     "sim": {
       "name": "@mrlyprod/sim",
       "bin": {
@@ -47,6 +51,9 @@
     },
     "sites/org": {
       "name": "@mrlyprod/org",
+    },
+    "sites/sh": {
+      "name": "@mrlyprod/sh",
     },
     "sites/store": {
       "name": "@mrlyprod/store",
@@ -126,7 +133,11 @@
 
     "@mrlyprod/os": ["@mrlyprod/os@workspace:os"],
 
+    "@mrlyprod/sh": ["@mrlyprod/sh@workspace:sites/sh"],
+
     "@mrlyprod/sim": ["@mrlyprod/sim@workspace:sim"],
+
+    "@mrlyprod/sprites": ["@mrlyprod/sprites@workspace:packages/js/sprites"],
 
     "@mrlyprod/store": ["@mrlyprod/store@workspace:sites/store"],
 

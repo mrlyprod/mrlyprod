@@ -1,0 +1,5 @@
+{
+  "title": "Cloud",
+  "line": "No host source yet: nothing to deploy or run. You can keep a list of services.",
+  "aliases": ["deploy", "run", "host", "services", "functions", "infrastructure"]
+}

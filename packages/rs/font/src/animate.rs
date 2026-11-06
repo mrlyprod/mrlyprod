@@ -1,11 +1,16 @@
 use super::paths::strokes;
 use super::raster::{Block, Layout, layout};
+use mrly_gif::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 pub const FPS: usize = 25;
 
 pub const HOLD: usize = 25;
+
+const PAPER: [u8; 4] = [255, 255, 255, 255];
+
+const INK: [u8; 4] = [0, 0, 0, 255];
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Anim {
@@ -94,6 +99,40 @@ pub fn cycle(write: &Anim, merge: &[Vec<usize>], hold: usize) -> Anim {
         fps: write.fps,
         frames,
     }
+}
+
+pub fn gif(anim: &Anim, scale: usize) -> Result<Vec<u8>> {
+    let (rows, cols) = (anim.rows, anim.cols);
+    let Some(area) = rows
+        .checked_mul(cols)
+        .filter(|area| (1..=mrly_gif::LIMIT).contains(area))
+    else {
+        return Err(format!(
+            "a {rows} by {cols} board is outside 1 to {} cells.",
+            mrly_gif::LIMIT
+        ));
+    };
+    if anim.fps == 0 {
+        return Err("fps must be at least 1.".into());
+    }
+    let mut frames = Vec::with_capacity(anim.frames.len());
+    for (i, lit) in anim.frames.iter().enumerate() {
+        let mut board = vec![0u8; area];
+        for &cell in lit {
+            let Some(slot) = board.get_mut(cell) else {
+                return Err(format!(
+                    "frame {i} lights cell {cell}, outside the {rows} by {cols} board."
+                ));
+            };
+            *slot = 1;
+        }
+        frames.push(mrly_gif::scale(&board, cols, scale)?);
+    }
+    let at = |k: usize| (k * 100 + anim.fps / 2) / anim.fps;
+    let delays: Vec<u16> = (0..frames.len())
+        .map(|k| (at(k + 1) - at(k)).min(u16::MAX as usize) as u16)
+        .collect();
+    mrly_gif::encode(&frames, cols * scale, rows * scale, &[PAPER, INK], &delays)
 }
 
 fn board(laid: &Layout, pad: usize) -> (usize, usize) {

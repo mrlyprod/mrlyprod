@@ -1,0 +1,23 @@
+[package]
+name = "mrly-pixels"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-error.workspace = true
+mrly-gif.workspace = true
+mrly-json.workspace = true
+mrly-math.workspace = true
+mrly-png.workspace = true
+mrly-tensor.workspace = true
+mrly-two.workspace = true
+serde.workspace = true

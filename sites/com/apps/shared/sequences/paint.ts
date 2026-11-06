@@ -70,8 +70,6 @@ export type Laid = { lines: Placed[][]; cut: boolean; height: number; line: numb
 
 type Growing = { from: number; to: number; t: number };
 
-export const FACE = "Noto Sans Mono";
-
 export const GROW = 300;
 
 const FADE = 0.62;
@@ -96,7 +94,7 @@ export function tones(view: Pick<View, "look" | "dpr">): Tones {
 }
 
 export const font = (tones: Tones, k = 1, weight = "") =>
-  `${weight ? `${weight} ` : ""}${Math.round(tones.px * k)}px "${FACE}", ui-monospace, monospace`;
+  `${weight ? `${weight} ` : ""}${Math.round(tones.px * k)}px ui-monospace, monospace`;
 
 export function clear(ctx: CanvasRenderingContext2D, view: Pick<View, "w" | "h">, tones: Tones): void {
   ctx.setTransform(1, 0, 0, 1, 0, 0);

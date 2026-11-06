@@ -646,6 +646,7 @@ fn pin() {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let a: Vec<String> = env::args().collect();
     let verb = a.get(1).map(|s| s.as_str()).unwrap_or("pin");
     match verb {
@@ -660,11 +661,14 @@ fn main() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "ladder_pins_to_the_python_at_level_eighteen",
+        ladder_pins_to_the_python_at_level_eighteen,
+    )];
+
     fn ladder_pins_to_the_python_at_level_eighteen() {
         let st = ladder(17, true, usize::MAX);
         assert_eq!(st.mx, PIN_MX.to_vec());

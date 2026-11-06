@@ -1,7 +1,0 @@
-pixels at scale 1: 15625 compared, 0 differ
-pixels at scale 2: 62500 compared, 0 differ
-pixels at scale 3: 140625 compared, 0 differ
-pixels at scale 8: 1000000 compared, 0 differ
-four array == two kron 2x2 ones: true
-embed(carpet level 3) == embed(carpet level 1).fractal(3): true
-embed(turn(c)) == turn(embed(c)): true

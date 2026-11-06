@@ -128,6 +128,7 @@ fn meter() {
 }
 
 fn main() {
+    witness::dispatch(&[design::witnesses::ALL].concat());
     let want = std::env::args().nth(1);
     let pick = |name: &str| match want.as_deref() {
         Some(verb) => verb == name,

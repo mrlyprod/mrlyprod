@@ -1391,9 +1391,25 @@ pub fn run() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("energy_matches_histogram", energy_matches_histogram),
+        (
+            "higher_energy_matches_histogram",
+            higher_energy_matches_histogram,
+        ),
+        (
+            "fourth_moment_matches_direct_sum",
+            fourth_moment_matches_direct_sum,
+        ),
+        ("charpoly_and_scaling_pins", charpoly_and_scaling_pins),
+        ("irreducibility_tester_pins", irreducibility_tester_pins),
+        ("rows_pinned", rows_pinned),
+        ("arcs_pinned", arcs_pinned),
+        ("bracket_contains_growth", bracket_contains_growth),
+    ];
 
     fn roots_string(r: &[BigInt]) -> String {
         r.iter()
@@ -1463,7 +1479,6 @@ mod tests {
         total
     }
 
-    #[test]
     fn energy_matches_histogram() {
         for (q, digits, l) in [
             (3u64, vec![0u64, 1], 7usize),
@@ -1488,7 +1503,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn higher_energy_matches_histogram() {
         for (q, digits, p, l) in [
             (3u64, vec![0u64, 1], 6usize, 5usize),
@@ -1507,7 +1521,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn fourth_moment_matches_direct_sum() {
         for (q, digits, l) in [
             (3u64, vec![0u64, 1], 6usize),
@@ -1532,7 +1545,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn charpoly_and_scaling_pins() {
         let f = Family {
             q: 3,
@@ -1563,7 +1575,6 @@ mod tests {
         assert_eq!(minpoly_string(&mh), "x - 6");
     }
 
-    #[test]
     fn irreducibility_tester_pins() {
         let poly = |c: &[i64]| -> Vec<BigInt> { c.iter().map(|&x| BigInt::from(x)).collect() };
         assert!(irreducible_mod(&poly(&[1, 0, 1]), 3));
@@ -1588,7 +1599,6 @@ mod tests {
         assert_eq!(divisors(12), vec![1, 2, 3, 4, 6, 12]);
     }
 
-    #[test]
     fn rows_pinned() {
         let fams = families();
         let row = |q: u64, label: &str, p: usize| {
@@ -1649,7 +1659,6 @@ mod tests {
         assert!(m.lo.to_f64() <= rho + 1e-9 && rho - 1e-9 <= m.hi.to_f64());
     }
 
-    #[test]
     fn arcs_pinned() {
         let fams = families();
         let f = find(&fams, 3, "01");
@@ -1663,7 +1672,6 @@ mod tests {
         assert!((a.zero_l4 - (16f64 / 18.0).powi(12)).abs() < 1e-9);
     }
 
-    #[test]
     fn bracket_contains_growth() {
         for f in families() {
             let m = moment(&f, 4, 40);

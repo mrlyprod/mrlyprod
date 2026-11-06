@@ -1,6 +1,6 @@
 {
   "sections": [
-    {"name": "Designs", "apps": ["arcs", "chaos", "chladni", "crop", "cuts", "designs", "graphs", "moire", "polygons", "radial", "roulette", "six", "sleep", "slices", "spin", "star", "three", "thue", "tourbillon", "two", "wolfram"]},
+    {"name": "Designs", "apps": ["arcs", "chaos", "chladni", "crop", "cuts", "designs", "graphs", "hex", "moire", "polygons", "radial", "roulette", "sleep", "slices", "spin", "star", "three", "thue", "tourbillon", "two", "wolfram"]},
     {"name": "Numbers", "apps": ["apollonian", "gaussian", "plot", "radix", "readings", "sequences", "tour", "ulam", "zeta"]},
     {"name": "Fractals", "apps": ["fractals", "zoom"]},
     {"name": "Space", "apps": ["planets", "lightspeed", "voyage"]},

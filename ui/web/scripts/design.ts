@@ -1,18 +1,18 @@
+import { existsSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
 import type { Design, Tokens } from "../../shell/design.ts";
-import { lacks } from "../../shell/design.ts";
+import { lacks, MAP } from "../../shell/design.ts";
 import { HOME, REPO, SITE } from "./home.ts";
 import { packages } from "./packages.ts";
+import { faults } from "./stamp.ts";
 
 Bun.plugin(packages);
 
 export const LISTED = (SITE.designs ?? []).map((one) => resolve(HOME, one));
 
-export const SLOTS = ["tokens.css", "saver.css"];
+const SHEETS = Object.keys({ ...MAP.required, ...MAP.optional }).filter((one) => one.endsWith(".css"));
 
-export type Drawn = { name: string; design: Design; by: "env" | "pin" };
-
-export const named = () => process.env.MRLY_DESIGN || (LISTED[0] ? basename(LISTED[0]) : "");
+export type Drawn = { name: string; design: Design };
 
 export function folder(name: string): string {
   const dir = LISTED.find((one) => basename(one) === name);
@@ -23,35 +23,45 @@ export function folder(name: string): string {
   return dir;
 }
 
-const index = (name: string) => join(folder(name), "index.ts");
+export function names(): string[] {
+  const all = LISTED.map((one) => basename(one));
+  const lead = process.env.MRLY_DESIGN || all[0] || "";
+  folder(lead);
+  const twice = all.find((one, at) => all.indexOf(one) !== at);
+  if (twice) throw new Error(`site: site.json designs lists ${twice} twice`);
+  return [lead, ...all.filter((one) => one !== lead)];
+}
+
+const index = (name: string) => join(folder(name), MAP.index);
 
 export async function load(name: string): Promise<Design> {
-  const one = (await import(index(name))) as Record<string, Design | undefined>;
-  const found = one[name] ?? one.default;
-  if (!found) throw new Error(`site: ${relative(REPO, index(name))} exports no design named ${name}`);
-  return found;
+  const one = (await import(index(name))) as { design?: Design };
+  if (!one.design) throw new Error(`site: ${relative(REPO, index(name))} exports no design`);
+  return one.design;
 }
 
-export async function choose(name = named()): Promise<Drawn> {
-  const design = await load(name);
-  const lost = lacks(design);
-  if (lost.length) throw new Error(`site: the design ${name} does not draw ${lost.join(", ")}`);
-  return { name, design, by: process.env.MRLY_DESIGN ? "env" : "pin" };
+export async function choose(list = names()): Promise<Drawn[]> {
+  const off = list.flatMap((name) => faults(folder(name)));
+  if (off.length) throw new Error(off.join("\n"));
+  const all = await Promise.all(list.map(async (name) => ({ name, design: await load(name) })));
+  const bad = all.flatMap(({ name, design }) =>
+    lacks(design).map((part) => `the design ${name} does not draw ${part}`),
+  );
+  if (bad.length) throw new Error(`site: ${bad.join("; ")}`);
+  return all;
 }
 
-let drawn: Promise<Drawn> | null = null;
+let drawn: Promise<Drawn[]> | null = null;
 
 export const draw = () => (drawn ??= choose());
 
-export const source = (name: string) =>
-  `import * as one from ${JSON.stringify(index(name))};\nexport const design = one[${JSON.stringify(name)}] ?? one.default;`;
-
-const at = (name: string, file: string) => (file.startsWith("@mrlyprod/") ? file : join(folder(name), file));
-
-export const pulldown = (name: string, file?: string) =>
-  file ? `export { pulldown } from ${JSON.stringify(at(name, file))};` : "export const pulldown = null;";
-
-const sheet = (name: string, file: string) => `@import ${JSON.stringify(at(name, file))};`;
+export const source = (list: string[]) =>
+  [
+    `export const names = ${JSON.stringify(list)};`,
+    `export const designs = { ${list
+      .map((name) => `${JSON.stringify(name)}: () => import(${JSON.stringify(index(name))}).then((one) => one.design)`)
+      .join(", ")} };`,
+  ].join("\n");
 
 const rule = (selector: string, tokens: Tokens, pad = "") => {
   const lines = Object.entries(tokens).map(([name, value]) => `${pad}  ${name}: ${value};`);
@@ -69,27 +79,13 @@ export function skinned({ light, dark }: Design["skin"]): string {
     .join("\n\n");
 }
 
-export function sheets(
-  name: string,
-  css: string[],
-  skin: Design["skin"] = { light: {}, dark: {} },
-): Record<string, string> {
-  const slot = (one: string) => (css.includes(one) ? sheet(name, one) : "");
-  return {
-    "site:design.css": css
-      .filter((one) => !SLOTS.includes(one))
-      .map((one) => sheet(name, one))
-      .join("\n"),
-    ...Object.fromEntries(SLOTS.map((one) => [`site:design/${one}`, slot(one)])),
-    "site:design/tokens.css": [slot("tokens.css"), skinned(skin)].filter(Boolean).join("\n"),
-  };
+export function sheets(name: string, skin: Design["skin"]): Record<string, string> {
+  const held = Object.fromEntries(
+    SHEETS.map((one) => {
+      const file = join(folder(name), one);
+      return [`site:design/${one}`, existsSync(file) ? `@import ${JSON.stringify(file)};` : ""];
+    }),
+  );
+  const tokens = [held["site:design/tokens.css"], skinned(skin)].filter(Boolean).join("\n");
+  return { ...held, "site:design/tokens.css": tokens };
 }
-
-export const runtime = (name: string, file?: string) =>
-  Bun.plugin({
-    name: "design",
-    setup(build) {
-      build.module("site:design", () => ({ contents: source(name), loader: "js" }));
-      build.module("site:design/pulldown", () => ({ contents: pulldown(name, file), loader: "js" }));
-    },
-  });

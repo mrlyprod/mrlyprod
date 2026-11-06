@@ -1,8 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
-export type Face = { family: string; file: string; axes?: string; weight: string; licence: string };
-
 export type Site = {
   title: string;
   wordmark?: string;
@@ -33,8 +31,6 @@ export type Site = {
   shots: { routes: string[] };
   push?: { prefix: string; guard: string[]; bucket: string; store: { bucket: string; prefix: string } };
   git: { root?: string; slug?: string; branch?: string; folder?: string };
-  fonts: { out?: string; keep?: string; faces: Face[] };
-  icons?: { names: string[]; out: string };
 };
 
 export const top = (dir: string): string =>

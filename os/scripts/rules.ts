@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
 const TOP = resolve(import.meta.dir, "..", "..");
-const INSTANCES = ["net", "com", "org", "tv", "store", "sim"];
+const INSTANCES = ["net", "com", "org", "tv", "store", "sh", "sim"];
 const HOMES: Record<string, string> = {
   os: join(TOP, "os"),
   apps: join(TOP, "apps"),
@@ -13,6 +13,7 @@ const HOMES: Record<string, string> = {
   org: join(TOP, "sites", "org"),
   tv: join(TOP, "sites", "tv"),
   store: join(TOP, "sites", "store"),
+  sh: join(TOP, "sites", "sh"),
 };
 for (const arg of process.argv.slice(2)) {
   const [name, dir] = arg.split("=");

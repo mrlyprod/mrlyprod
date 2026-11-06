@@ -1,0 +1,6 @@
+crc32   "123456789"  cbf43926
+adler32 "Wikipedia"  11e60398
+crc32   "123456780"  b2288182
+crc32   ""           00000000
+adler32 ""           00000001
+IHDR stored 3a7e9b55, computed 3a7e9b55

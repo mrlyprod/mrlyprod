@@ -1,0 +1,4 @@
+title = "Emojis"
+description = "The emojis every design draws, one file each."
+kind = "made"
+source = "designs/*/emojis"

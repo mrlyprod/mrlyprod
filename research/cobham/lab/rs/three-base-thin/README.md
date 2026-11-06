@@ -24,7 +24,7 @@ cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo
 cargo run --release --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml -- ten 140
 ```
 
-- `cargo test --manifest-path research/cobham/lab/rs/three-base-thin/Cargo.toml`, `7` tests, `1.18` s after the build.
+- `bash research/scripts/witness.sh three-base-thin`, `7` witnesses, `1.18` s after the build.
 
 ## READS
 

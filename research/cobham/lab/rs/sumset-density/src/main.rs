@@ -452,7 +452,6 @@ fn energy(k: u32, m: u32) -> u128 {
     }
 }
 
-#[cfg(test)]
 fn energy_direct(k: u32, m: u32) -> u128 {
     let a = members(3, 3u64.pow(k) - 1);
     let b = members(4, 4u64.pow(m) - 1);
@@ -1082,6 +1081,7 @@ fn control() {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = env::args().collect();
     match args.get(1).map(|s| s.as_str()) {
         Some("density") => density(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(17)),
@@ -1102,30 +1102,57 @@ fn main() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        ("shift_or_matches_double_loop", shift_or_matches_double_loop),
+        ("first_gaps_are_a367090", first_gaps_are_a367090),
+        (
+            "member_counts_are_powers_of_two",
+            member_counts_are_powers_of_two,
+        ),
+        ("scan_counts_match_popcount", scan_counts_match_popcount),
+        (
+            "scan_extremes_match_direct_search",
+            scan_extremes_match_direct_search,
+        ),
+        (
+            "energy_matches_representation_histogram",
+            energy_matches_representation_histogram,
+        ),
+        (
+            "chunked_energy_matches_digit_energy",
+            chunked_energy_matches_digit_energy,
+        ),
+        ("gap_copies_double_the_energy", gap_copies_double_the_energy),
+        (
+            "window_energy_at_the_lattice_is_the_energy",
+            window_energy_at_the_lattice_is_the_energy,
+        ),
+        (
+            "prefix_count_matches_bit_scan",
+            prefix_count_matches_bit_scan,
+        ),
+        ("clean_centres_are_symmetric", clean_centres_are_symmetric),
+    ];
+
     fn shift_or_matches_double_loop() {
         let top = 3u64.pow(9);
         assert!(same(&sumset_direct(top), &sumset(top, 3, 4)));
         assert!(same(&sumset_direct(top), &sumset(top, 4, 3)));
     }
 
-    #[test]
     fn first_gaps_are_a367090() {
         let s = sumset(3u64.pow(7), 3, 4);
         assert_eq!(complement(&s, OEIS_A367090.len()), OEIS_A367090.to_vec());
     }
 
-    #[test]
     fn member_counts_are_powers_of_two() {
         assert_eq!(members(3, 3u64.pow(10) - 1).len(), 1 << 10);
         assert_eq!(members(4, 4u64.pow(6) - 1).len(), 1 << 6);
     }
 
-    #[test]
     fn scan_counts_match_popcount() {
         let top = 3u64.pow(9);
         let s = sumset(top, 3, 4);
@@ -1133,7 +1160,6 @@ mod tests {
         assert_eq!(sc.marks, vec![(top, s.count() - 1)]);
     }
 
-    #[test]
     fn scan_extremes_match_direct_search() {
         let top = 3u64.pow(9);
         let s = sumset(top, 3, 4);
@@ -1158,14 +1184,12 @@ mod tests {
         }
     }
 
-    #[test]
     fn energy_matches_representation_histogram() {
         for (k, m) in [(4, 3), (6, 5), (9, 7)] {
             assert_eq!(energy(k, m), energy_direct(k, m));
         }
     }
 
-    #[test]
     fn chunked_energy_matches_digit_energy() {
         for k in 1..=11 {
             for m in 1..=14 {
@@ -1175,7 +1199,6 @@ mod tests {
         assert_eq!(energy_fast(9, 7), energy_direct(9, 7));
     }
 
-    #[test]
     fn gap_copies_double_the_energy() {
         for (k, m) in [(6, 4), (7, 5), (11, 8), (12, 9)] {
             assert!(2 * 4u128.pow(m) < 3u128.pow(k) + 5);
@@ -1188,7 +1211,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn window_energy_at_the_lattice_is_the_energy() {
         let (zt, ct) = chunk_tables();
         for (k, m) in [(6, 5), (9, 7), (10, 8), (12, 10)] {
@@ -1203,7 +1225,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn prefix_count_matches_bit_scan() {
         let s = sumset(3u64.pow(9), 3, 4);
         for d in [0u64, 63, 64, 705, 15302, 19683] {
@@ -1211,7 +1232,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn clean_centres_are_symmetric() {
         let top = 3u64.pow(11);
         let s = sumset(top, 3, 4);

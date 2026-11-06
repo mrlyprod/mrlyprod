@@ -185,11 +185,14 @@ impl Grammar {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "the_grammar_counts_its_recipes_and_every_name_regenerates_its_recipe",
+        the_grammar_counts_its_recipes_and_every_name_regenerates_its_recipe,
+    )];
+
     fn the_grammar_counts_its_recipes_and_every_name_regenerates_its_recipe() {
         let mut small = Grammar::standard(64, 101);
         small.sides = vec![3];

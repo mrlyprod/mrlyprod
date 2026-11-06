@@ -1,0 +1,7 @@
+default         504039b6
+yaw + 360       504039b6
+yaw - 720       504039b6
+odd angles      b69a01ab
+perspective     2f68ccb1
+one sample      eebc3fcf
+8 by 8 samples  cfc00316

@@ -1,0 +1,3 @@
+6 frames of 4/100 s in, 3 out, delays [12, 8, 4]
+own delays: [2, 80]
+still: 37 bytes, GIF87a, delays [0]

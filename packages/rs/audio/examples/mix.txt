@@ -1,0 +1,6 @@
+C4  22050 samples, peak 1.000
+E4  22050 samples, peak 1.000
+G4  22050 samples, peak 1.000
+mix 22050 samples, peak 2.993
+normalized to 0.8, peak 0.800
+with a 0.1 s C5: 22050 samples

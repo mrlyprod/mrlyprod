@@ -96,7 +96,7 @@ function row(book: Ledger, dim: number, code: string, measure: Slug, axis: strin
 
 const item = (read: ReturnType<typeof row>, label: string): Line => ({ label, ...read, axis: read.row.axis });
 
-const census = (mrly: Mrly, side: number) => mrly.six.census(mrly.six.cut_design(SPONGE, side, 1, 2), false);
+const census = (mrly: Mrly, side: number) => mrly.hex.census(mrly.hex.cut_design(SPONGE, side, 1, 2), false);
 
 function profile(mrly: Mrly, level: number) {
   const counts = mrly.three.profile(GASKET, 2, level, 2).map(BigInt);

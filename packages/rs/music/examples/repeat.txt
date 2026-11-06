@@ -1,0 +1,8 @@
+repeat false: the six C bars are all the same: false
+  bar  0 [[62], [60], [55], [66]]
+  bar  1 [[66], [66], [55], [57]]
+  bar  2 [[60], [60], [66], [59]]
+repeat true : the six C bars are all the same: true
+  bar  0 [[62], [60], [55], [66]]
+  bar  1 [[62], [60], [55], [66]]
+  bar  2 [[62], [60], [55], [66]]

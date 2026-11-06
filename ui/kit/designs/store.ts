@@ -71,7 +71,7 @@ const list = (name: string) => {
   return Array.isArray(out) ? out.filter((one) => one && one.code !== undefined) : [];
 };
 
-export const current = () => held<Design | null>("design", null);
+export const current = () => held<Design | null>("sprite", null);
 
 export const recent = () => list("designs-recent");
 
@@ -84,7 +84,7 @@ const tell = () => typeof dispatchEvent === "function" && dispatchEvent(new Even
 export function choose(design: Loose | null | undefined) {
   if (!design || String(design.code ?? "").trim() === "") return;
   const one = clean(design);
-  hold("design", one);
+  hold("sprite", one);
   hold("designs-recent", [one, ...recent().filter((was) => !same(was, one))].slice(0, MOST));
   tell();
 }

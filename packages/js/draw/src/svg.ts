@@ -11,6 +11,7 @@ export type Png = (pixels: {
 
 export type Svg = Pen & {
   text(options?: { png?: Png }): Promise<string>;
+  body(): string;
 };
 
 type Part = { x: number; y: number; w: number; h: number; pixels: { shape: [number, number]; colors: Uint8Array } };
@@ -55,6 +56,11 @@ export function svg(width: number, height: number, ground: Color = CLEAR): Svg {
 
   return {
     ...board(width, height),
+    body() {
+      if (parts.some((part) => typeof part !== "string"))
+        throw new Error("svg: body() holds no image; use text({ png })");
+      return parts.join("");
+    },
     async text({ png } = {}) {
       const body: string[] = [];
       for (const part of parts) {

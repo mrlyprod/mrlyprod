@@ -12,7 +12,6 @@ import { AppIcon } from "./appicon.tsx";
 import { app, recent } from "./catalog.ts";
 import { ago, gist } from "./launch.ts";
 import type { Spot } from "./lens.ts";
-import { measure } from "./measure.ts";
 import { show } from "./parts.tsx";
 import { KEY, read, root, subscribe, write } from "./prefs.ts";
 import type { Wired } from "./route.ts";
@@ -25,7 +24,7 @@ type Hooks = { preview: (next: Draft | null) => void; commit: (next: Draft | nul
 
 const MINUTE = 60000;
 const SKIP = "a, button, input, textarea, select, [popover], .barred, .docked";
-const EDGE = measure.edge;
+const EDGE = 8;
 
 const two = (n: number) => String(n).padStart(2, "0");
 const shift = (ms = 0) => dispatchEvent(new CustomEvent("shift", { detail: ms }));

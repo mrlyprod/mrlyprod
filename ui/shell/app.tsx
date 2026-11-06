@@ -4,9 +4,7 @@ import { esc } from "../kit/md/text.ts";
 import type { Row } from "../kit/rows.ts";
 import type { Layout, Mounting, Own } from "./router.ts";
 
-const APP: Layout = { wide: true, bare: true, sheet: "mrly", window: "app" };
-
-const PAGE: Layout = { ...APP, window: "wide" };
+const APP: Layout = { wide: true, bare: true, sheet: "mrly" };
 
 const live = new WeakMap<HTMLElement, () => void>();
 
@@ -33,10 +31,7 @@ const still: Own = {
   },
 };
 
-const layoutOf = (row: Row): Layout => {
-  if (row.meta.frame === "page") return { bare: true };
-  return row.meta.scene || row.meta.frame === "app" ? APP : PAGE;
-};
+const layoutOf = (row: Row): Layout => (row.meta.frame === "page" ? { bare: true } : APP);
 
 export function page(row: Row): Own | Promise<Own> {
   const id = row.meta.id ?? "";

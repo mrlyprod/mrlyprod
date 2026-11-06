@@ -1,4 +1,8 @@
 mod check;
+mod witnesses {
+    pub mod coprime;
+    pub mod theorem;
+}
 
 use coprime_terms::design::Design;
 use coprime_terms::engine::{terms_each, Mode};
@@ -37,6 +41,7 @@ fn profile(args: &[String]) {
 }
 
 fn main() {
+    witness::dispatch(&[witnesses::coprime::ALL, witnesses::theorem::ALL].concat());
     let all: Vec<String> = std::env::args().collect();
     let rest = &all[1..];
     match rest.first().map(|s| s.as_str()) {

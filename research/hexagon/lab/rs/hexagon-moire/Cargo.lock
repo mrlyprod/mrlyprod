@@ -30,8 +30,8 @@ checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 name = "hexagon-moire"
 version = "0.0.0"
 dependencies = [
+ "mrly-hex",
  "mrly-num",
- "mrly-six",
  "mrly-three",
  "mrly-tile",
  "num-bigint",
@@ -94,6 +94,23 @@ dependencies = [
  "mrly-linalg",
  "mrly-rand",
  "mrly-tensor",
+ "serde",
+]
+
+[[package]]
+name = "mrly-hex"
+version = "0.2.0"
+dependencies = [
+ "mrly-color",
+ "mrly-error",
+ "mrly-graph",
+ "mrly-image",
+ "mrly-json",
+ "mrly-math",
+ "mrly-rand",
+ "mrly-tensor",
+ "mrly-three",
+ "mrly-two",
  "serde",
 ]
 
@@ -176,23 +193,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrly-six"
-version = "0.2.0"
-dependencies = [
- "mrly-color",
- "mrly-error",
- "mrly-graph",
- "mrly-image",
- "mrly-json",
- "mrly-math",
- "mrly-rand",
- "mrly-tensor",
- "mrly-three",
- "mrly-two",
- "serde",
-]
-
-[[package]]
 name = "mrly-tensor"
 version = "0.2.0"
 dependencies = [
@@ -223,11 +223,11 @@ dependencies = [
  "mrly-bang",
  "mrly-color",
  "mrly-error",
+ "mrly-hex",
  "mrly-image",
  "mrly-math",
  "mrly-name",
  "mrly-rand",
- "mrly-six",
  "mrly-tensor",
  "mrly-three",
  "mrly-two",
@@ -391,7 +391,19 @@ name = "mrly-arcs"
 version = "0.2.0"
 
 [[patch.unused]]
+name = "mrly-audio"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-auth"
+version = "0.2.0"
+
+[[patch.unused]]
 name = "mrly-automaton"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-avatar"
 version = "0.2.0"
 
 [[patch.unused]]
@@ -419,11 +431,15 @@ name = "mrly-font"
 version = "0.2.0"
 
 [[patch.unused]]
-name = "mrly-four"
+name = "mrly-gaussian"
 version = "0.2.0"
 
 [[patch.unused]]
-name = "mrly-gaussian"
+name = "mrly-gif"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-graphics"
 version = "0.2.0"
 
 [[patch.unused]]
@@ -443,6 +459,26 @@ name = "mrly-moire"
 version = "0.2.0"
 
 [[patch.unused]]
+name = "mrly-music"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-obj"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-pixels"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-png"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-quotes"
+version = "0.2.0"
+
+[[patch.unused]]
 name = "mrly-radix"
 version = "0.2.0"
 
@@ -452,6 +488,10 @@ version = "0.2.0"
 
 [[patch.unused]]
 name = "mrly-roulette"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-space"
 version = "0.2.0"
 
 [[patch.unused]]
@@ -476,6 +516,22 @@ version = "0.2.0"
 
 [[patch.unused]]
 name = "mrly-ulam"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-video"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-voxels"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-wang"
+version = "0.2.0"
+
+[[patch.unused]]
+name = "mrly-wav"
 version = "0.2.0"
 
 [[patch.unused]]

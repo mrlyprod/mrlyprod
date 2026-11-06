@@ -14,9 +14,10 @@ mrly-math = "0.2.0"
 mrly-name = "0.2.0"
 mrly-num = "0.2.0"
 mrly-sequences = "0.2.0"
-mrly-six = "0.2.0"
+mrly-hex = "0.2.0"
 mrly-tensor = "0.2.0"
 mrly-three = "0.2.0"
 mrly-two = "0.2.0"
+witness = { path = "../witness" }
 
 [workspace]

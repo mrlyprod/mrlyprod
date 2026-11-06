@@ -877,6 +877,7 @@ fn fake_verb(level: usize) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let start = Instant::now();
     let first = std::env::args().nth(1);
     if first.as_deref() == Some("fake") {
@@ -946,15 +947,50 @@ fn main() {
     println!("box: 3^{level}, M_F = {}, A = {}, Mmax = {}, theta = {:.6} against alpha/2 = {:.6}, {:.1}s", last.m, last.a, last.max, theta(last.max, last.level), alpha / 2.0, start.elapsed().as_secs_f64());
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "trial_bound_cubes_past_the_top",
+            trial_bound_cubes_past_the_top,
+        ),
+        (
+            "elements_ascend_and_start_right",
+            elements_ascend_and_start_right,
+        ),
+        ("mu_matches_sieve", mu_matches_sieve),
+        ("two_large_primes_resolved", two_large_primes_resolved),
+        ("strong_pseudoprimes_rejected", strong_pseudoprimes_rejected),
+        ("isqrt_exact", isqrt_exact),
+        (
+            "walk_matches_mobius_census_to_16",
+            walk_matches_mobius_census_to_16,
+        ),
+        ("walk_recursion_exact_to_16", walk_recursion_exact_to_16),
+        ("level_rows_match_walk_to_16", level_rows_match_walk_to_16),
+        (
+            "walsh_spectrum_matches_brute_force_at_10",
+            walsh_spectrum_matches_brute_force_at_10,
+        ),
+        (
+            "fakes_carry_the_true_meter_at_14",
+            fakes_carry_the_true_meter_at_14,
+        ),
+        (
+            "parallel_walk_matches_sequential",
+            parallel_walk_matches_sequential,
+        ),
+        (
+            "plain_character_sums_at_level_12",
+            plain_character_sums_at_level_12,
+        ),
+    ];
 
     fn primes() -> Vec<u64> {
         small_primes(6600)
     }
 
-    #[test]
     fn trial_bound_cubes_past_the_top() {
         assert_eq!(trial_bound(24), 6562);
         assert_eq!(trial_bound(27), 19684);
@@ -962,7 +998,6 @@ mod tests {
         assert!(((trial_bound(26) - 1) as u128).pow(3) <= 3u128.pow(26));
     }
 
-    #[test]
     fn elements_ascend_and_start_right() {
         let first: Vec<u64> = (1..8).map(read3).collect();
         assert_eq!(first, vec![1, 3, 4, 9, 10, 12, 13]);
@@ -970,14 +1005,12 @@ mod tests {
         assert_eq!(read3(1 << 24), 3u64.pow(24));
     }
 
-    #[test]
     fn mu_matches_sieve() {
         let mu = mu_sieve(200_000);
         let p = primes();
         assert!((1..=200_000u64).all(|n| mobius(n, &p) == mu[n as usize]));
     }
 
-    #[test]
     fn two_large_primes_resolved() {
         let p = primes();
         assert_eq!(mobius(6607 * 6619, &p), 1);
@@ -987,7 +1020,6 @@ mod tests {
         assert_eq!(mobius(999_983 * 999_979, &p), 1);
     }
 
-    #[test]
     fn strong_pseudoprimes_rejected() {
         for n in [
             3_215_031_751u64,
@@ -1002,7 +1034,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn isqrt_exact() {
         for r in [1u64, 2, 6600, 65_535, 524_287, 524_288] {
             assert_eq!(isqrt(r * r), r);
@@ -1011,7 +1042,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn walk_matches_mobius_census_to_16() {
         let rungs = walk(16, &primes());
         let census = [
@@ -1029,12 +1059,10 @@ mod tests {
         }
     }
 
-    #[test]
     fn walk_recursion_exact_to_16() {
         assert!(recursion_holds(&walk(16, &primes())));
     }
 
-    #[test]
     fn level_rows_match_walk_to_16() {
         let p = primes();
         let rows = level_rows(&mu_level(16, &p));
@@ -1046,7 +1074,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn walsh_spectrum_matches_brute_force_at_10() {
         let a = mu_level(10, &primes());
         let mut h: Vec<i32> = a.iter().map(|&x| x as i32).collect();
@@ -1071,7 +1098,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn fakes_carry_the_true_meter_at_14() {
         let p = small_primes(isqrt(3u64.pow(14)) + 1);
         let rows = fakes(14, &p);
@@ -1083,7 +1109,6 @@ mod tests {
         assert_eq!(sq as i64, level.last().unwrap().q_cop);
     }
 
-    #[test]
     fn parallel_walk_matches_sequential() {
         let p = primes();
         let par = walk(18, &p);
@@ -1108,7 +1133,6 @@ mod tests {
         assert_eq!(par, seq);
     }
 
-    #[test]
     fn plain_character_sums_at_level_12() {
         let level = 12;
         let primes = small_primes(isqrt(3u64.pow(level as u32)) + 1);

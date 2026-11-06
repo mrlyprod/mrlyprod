@@ -22,7 +22,7 @@ const CSS = `
 
 const stops = new WeakMap<HTMLElement, () => void>();
 
-function wear(stage: HTMLElement) {
+function paint(stage: HTMLElement) {
   const style = getComputedStyle(stage);
   for (const [want, from] of TOKENS)
     if (style.getPropertyValue(from).trim()) stage.style.setProperty(want, `var(${from})`);
@@ -49,7 +49,7 @@ export function render(row: Row, site: Site, host: HTMLElement) {
   head.append(title, lead);
   stage.append(head);
   host.replaceChildren(style, stage);
-  wear(stage);
+  paint(stage);
   stops.set(host, mount(stage));
 }
 

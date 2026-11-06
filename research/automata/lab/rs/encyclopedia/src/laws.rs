@@ -544,11 +544,14 @@ fn write_tally(t: &Tally, total: usize) -> Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "the_light_speed_bound_and_the_frobenius_order_read_as_expected",
+        the_light_speed_bound_and_the_frobenius_order_read_as_expected,
+    )];
+
     fn the_light_speed_bound_and_the_frobenius_order_read_as_expected() {
         let recipe = Recipe::parse(
             "code1.3.1 x1 island mask:carpet.3.1 birth:evens survive:evens x:256 cap:151",

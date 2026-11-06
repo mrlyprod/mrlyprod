@@ -16,8 +16,9 @@
     "shots": "bun web/scripts/shots.ts",
     "film": "bun web/scripts/film.ts",
     "draw": "bun web/scripts/draw.ts",
-    "time": "bun web/scripts/time.ts",
-    "vendor": "bun web/scripts/vendor.ts"
+    "glyphs": "bun web/scripts/glyphs.ts",
+    "stamp": "bun web/scripts/stamp.ts",
+    "time": "bun web/scripts/time.ts"
   },
   "dependencies": {
     "@shikijs/core": "^4.5.0",

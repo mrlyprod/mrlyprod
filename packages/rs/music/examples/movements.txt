@@ -1,0 +1,6 @@
+repeat       E4 E4 E4 E4 E4 E4 E4 E4
+random       E4 E4 E4 E4 E4 C4 E4 C4
+up           E4 G4 C4 E4 G4 C4 E4 G4
+down         E4 C4 G4 E4 C4 G4 E4 C4
+pause        E4 - - - - - - -
+up or pause  G4+B4 - - A4+C4 B4+D4 - - C4+E4

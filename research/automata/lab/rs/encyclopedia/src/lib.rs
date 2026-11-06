@@ -1,6 +1,5 @@
 pub mod cache;
-#[cfg(test)]
-mod checks;
+pub mod checks;
 pub mod control;
 pub mod design;
 pub mod engine;

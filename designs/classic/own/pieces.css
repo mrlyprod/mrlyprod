@@ -1,0 +1,489 @@
+.dialog.prop {
+  width: min(400px, 100% - 16px);
+}
+
+.dialog.prop > .body {
+  max-height: calc(100svh - 80px);
+  overflow-y: auto;
+}
+
+.prop > .body > button:last-child {
+  align-self: flex-end;
+}
+
+.dialog > .title {
+  touch-action: none;
+}
+
+.dialog.message {
+  min-width: 0;
+  width: fit-content;
+  max-width: min(400px, 100% - 16px);
+}
+
+.dialog.message > .body {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 16px 8px 12px;
+}
+
+.message > .body > p {
+  min-width: 180px;
+  margin: 8px 0 0;
+}
+
+.message > .acts {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px 10px;
+}
+
+.message .acts > button:focus,
+.message .acts:not(:has(> :focus)) > [data-default] {
+  box-shadow:
+    0 0 0 1px var(--dk),
+    var(--raised);
+}
+
+.message .acts > button:focus:active {
+  box-shadow:
+    0 0 0 1px var(--dk),
+    var(--pressed);
+}
+
+.tabset {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tabset > .strip {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: -2px;
+  padding: 2px 2px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.strip > button {
+  position: relative;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  background: var(--box);
+  box-shadow:
+    inset 1px 1px var(--box),
+    inset 2px 2px var(--lt),
+    inset -1px 0 var(--dk),
+    inset -2px 0 var(--sh);
+  clip-path: polygon(2px 0, calc(100% - 2px) 0, 100% 2px, 100% 100%, 0 100%, 0 2px);
+  white-space: nowrap;
+}
+
+.strip > [aria-selected="true"] {
+  z-index: 1;
+  height: 22px;
+  margin: 0 -2px -2px;
+  padding: 0 8px 2px;
+}
+
+.strip > button:focus-visible {
+  outline: 0;
+}
+
+.strip > button:focus-visible > span {
+  outline: 1px dotted var(--fg);
+}
+
+.tabset > [role="tabpanel"] {
+  min-width: 0;
+  padding: 10px 12px 12px;
+  background: var(--box);
+  box-shadow:
+    inset -1px -1px var(--dk),
+    inset 1px 1px var(--box),
+    inset -2px -2px var(--sh),
+    inset 2px 2px var(--lt);
+}
+
+.tabset > [role="tabpanel"]:focus-visible {
+  outline: 1px dotted var(--fg);
+  outline-offset: -4px;
+}
+
+.tabset [role="tabpanel"] > :first-child {
+  margin-top: 0;
+}
+
+.report {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.report table {
+  min-width: 100%;
+  padding: 2px;
+  border-spacing: 0;
+  background: var(--bg);
+  box-shadow: var(--sunken);
+  color: var(--fg);
+  font: 11px / 1.3 var(--sans);
+}
+
+.report caption {
+  padding: 0 0 4px;
+  text-align: start;
+}
+
+.report :is(th, td) {
+  padding: 1px 6px;
+  text-align: start;
+  white-space: nowrap;
+}
+
+.report th {
+  height: 17px;
+  background: var(--box);
+  box-shadow:
+    inset -1px -1px var(--dk),
+    inset 1px 1px var(--lt),
+    inset -2px -2px var(--sh);
+  font-weight: 400;
+}
+
+.report td {
+  height: 17px;
+}
+
+.report [data-align="end"] {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.toasts:popover-open {
+  inset: auto 6px 38px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: calc(100vw - 12px);
+  margin: 0;
+}
+
+.balloon {
+  position: relative;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--tip-line);
+  background: var(--tip);
+  color: var(--tip-fg);
+}
+
+.balloon > svg {
+  flex: none;
+}
+
+.balloon > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.balloon > .button {
+  flex: none;
+  min-width: 60px;
+  height: 21px;
+}
+
+.balloon:last-child::before,
+.balloon:last-child::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 18px;
+  width: 12px;
+  height: 10px;
+  background: var(--tip-line);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+.balloon:last-child::after {
+  top: calc(100% - 1px);
+  right: 19px;
+  width: 10px;
+  height: 8px;
+  background: var(--tip);
+}
+
+.helped {
+  display: inline-flex;
+}
+
+.help {
+  inset: auto;
+  margin: 4px 0 0 8px;
+  padding: 1px 3px 2px;
+  border: 1px solid var(--tip-line);
+  background: var(--tip);
+  color: var(--tip-fg);
+  font: 11px / 1.3 var(--sans);
+  white-space: nowrap;
+  pointer-events: none;
+  position-area: bottom span-right;
+  position-try-fallbacks: flip-block, flip-inline;
+}
+
+.lookup {
+  height: 22px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 2px 2px 4px;
+}
+
+.lookup > svg {
+  flex: none;
+}
+
+.lookup > input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 2px;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  background: none;
+  color: var(--fg);
+}
+
+.lookup > input::placeholder {
+  color: var(--dim);
+}
+
+.lookup > input::selection {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.lookup > input::-webkit-search-decoration,
+.lookup > input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.lookup > .knob {
+  flex: none;
+}
+
+.gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.gauge > :is(progress, .sweep) {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  padding: 2px;
+  border: 0;
+  appearance: none;
+  background: var(--box);
+}
+
+.gauge > progress::-webkit-progress-bar {
+  background: none;
+}
+
+.gauge > progress::-webkit-progress-value {
+  background: repeating-linear-gradient(to right, var(--pick) 0 8px, transparent 8px 10px);
+}
+
+.gauge > progress::-moz-progress-bar {
+  background: repeating-linear-gradient(to right, var(--pick) 0 8px, transparent 8px 10px);
+}
+
+.sweep > i {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: 38px;
+  background: repeating-linear-gradient(to right, var(--pick) 0 8px, transparent 8px 10px);
+  animation: classic-sweep 2s steps(20) infinite alternate;
+}
+
+@keyframes classic-sweep {
+  to {
+    left: calc(100% - 40px);
+  }
+}
+
+.blank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 12px;
+  font: 11px / 1.3 var(--sans);
+  text-align: center;
+}
+
+.blank > h3 {
+  margin: 4px 0 0;
+  font: 700 11px / 1.3 var(--sans);
+}
+
+.blank > p {
+  max-width: 36ch;
+  margin: 0;
+  color: var(--dim);
+}
+
+.blank > .button {
+  margin-top: 6px;
+}
+
+.datepick > .when {
+  position: relative;
+  min-width: 120px;
+  padding: 2px 20px 2px 4px;
+  text-align: start;
+}
+
+.datepick > .when .unset {
+  color: var(--dim);
+}
+
+.datepick > .when:focus-visible {
+  outline: 0;
+}
+
+.datepick > .when:focus-visible > :first-child {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.datepick > .when > .arrow {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  width: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.datepick > .when:active > .arrow,
+.datepick > .when:has(+ :popover-open) > .arrow {
+  box-shadow: var(--pressed);
+  padding: 1px 0 0 1px;
+}
+
+.monthcal {
+  inset: auto;
+  margin: 1px 0;
+  padding: 0;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+  font: 11px / 1.3 var(--sans);
+  position-area: bottom span-right;
+  position-try-fallbacks: flip-block, flip-inline;
+}
+
+.monthcal:popover-open {
+  display: flex;
+  flex-direction: column;
+}
+
+.monthcal > .head {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 3px;
+  background: var(--bar);
+  color: var(--on-accent);
+}
+
+.monthcal > .head > b {
+  flex: 1;
+  text-align: center;
+}
+
+.monthcal > .head > button {
+  width: 22px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--fg);
+}
+
+.monthcal > .head > button:disabled {
+  color: var(--off);
+}
+
+.monthcal > .head > button:disabled:active {
+  box-shadow: var(--raised);
+}
+
+.monthcal > :is(.week, .days) {
+  display: grid;
+  grid-template-columns: repeat(7, 26px);
+  margin: 0 6px;
+}
+
+.monthcal > .week {
+  margin-top: 4px;
+  padding-bottom: 1px;
+  border-bottom: 1px solid var(--fg);
+  color: var(--accent);
+}
+
+.monthcal abbr {
+  text-align: center;
+  text-decoration: none;
+}
+
+.monthcal > .days {
+  padding: 2px 0 6px;
+}
+
+.monthcal .days > button {
+  height: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthcal .days > :disabled {
+  color: var(--off);
+}
+
+.monthcal .days > [aria-pressed="true"] {
+  background: var(--pick);
+  color: var(--on-accent);
+}
+
+.monthcal .days > [aria-current="date"] {
+  outline: 1px solid var(--active);
+  outline-offset: -1px;
+}
+
+.monthcal .days > button:focus-visible {
+  outline: 1px dotted var(--fg);
+  outline-offset: -2px;
+}
+
+.monthcal .days > [aria-pressed="true"]:focus-visible {
+  outline-color: var(--on-accent);
+}

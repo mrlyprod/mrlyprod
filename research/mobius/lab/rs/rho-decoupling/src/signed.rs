@@ -650,11 +650,25 @@ pub fn run() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        ("the_sieves_are_right", the_sieves_are_right),
+        (
+            "signed_row_matches_the_definition",
+            signed_row_matches_the_definition,
+        ),
+        (
+            "the_unsigned_row_matches_the_census",
+            the_unsigned_row_matches_the_census,
+        ),
+        (
+            "the_random_column_kills_the_unsigned_sum",
+            the_random_column_kills_the_unsigned_sum,
+        ),
+    ];
+
     fn the_sieves_are_right() {
         let spf = spf_table(20);
         let mu = mobius(20, &spf);
@@ -687,7 +701,6 @@ mod tests {
         total
     }
 
-    #[test]
     fn signed_row_matches_the_definition() {
         let (_, coefs) = coefficients(256);
         for (q, digits, l, mm, nn) in [
@@ -711,7 +724,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_unsigned_row_matches_the_census() {
         let (_, coefs) = coefficients(1024);
         for (q, digits, l, mm, nn) in [
@@ -731,7 +743,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_random_column_kills_the_unsigned_sum() {
         let (_, coefs) = coefficients(1024);
         let (q, digits, l, mm, nn) = (3u64, vec![0u64, 1], 12usize, 128u64, 128u64);

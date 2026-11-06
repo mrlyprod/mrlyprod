@@ -1481,6 +1481,7 @@ fn ladder(top: u32, qmax: u64) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = env::args().collect();
     let clock = Instant::now();
     let num = |i: usize, d: u32| args.get(i).and_then(|s| s.parse().ok()).unwrap_or(d);
@@ -1498,9 +1499,25 @@ fn main() {
     eprintln!("{:.2} s", clock.elapsed().as_secs_f64());
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("reader_matches_the_digits", reader_matches_the_digits),
+        (
+            "census_matches_trial_division",
+            census_matches_trial_division,
+        ),
+        (
+            "twisted_sums_match_the_definition",
+            twisted_sums_match_the_definition,
+        ),
+        ("thue_morse_closed_forms", thue_morse_closed_forms),
+        (
+            "base_six_fifths_are_fibonacci_and_lucas",
+            base_six_fifths_are_fibonacci_and_lucas,
+        ),
+    ];
 
     fn twisted(d: Design, a: u64, q: u64, x: u64) -> Cx {
         let tab: Vec<Cx> = (0..q).map(|r| Cx::turn(r, q)).collect();
@@ -1533,7 +1550,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn reader_matches_the_digits() {
         let reader = Reader::new();
         for v in (0..3000u64).chain((0..3000u64).map(|i| mix(i) >> 32)) {
@@ -1544,7 +1560,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn census_matches_trial_division() {
         let top = 16;
         let rows = census(top);
@@ -1605,7 +1620,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn twisted_sums_match_the_definition() {
         let all = Design::all();
         for (d, a, q, x) in [
@@ -1639,7 +1653,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn thue_morse_closed_forms() {
         let tm = Design { b: 2, mask: 1 };
         for x in (0..3000u64).map(|i| mix(i) % 100_000) {
@@ -1655,7 +1668,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn base_six_fifths_are_fibonacci_and_lucas() {
         for (name, k) in [
             ("6:23", 1u32),

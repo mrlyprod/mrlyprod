@@ -17,7 +17,7 @@ import { MaskView, Pane, useLife, usePaint } from "../shared/life/parts.tsx";
 import { DESIGN, fixed, island, knobsOf, nameOf } from "../shared/life/recipe.ts";
 import { SOUP, sprite } from "../shared/life/scene.ts";
 import type { Life, Stat } from "./scene.ts";
-import { DIMS, make, PRESETS, RULES, SPEC, wears } from "./scene.ts";
+import { DIMS, fits, make, PRESETS, RULES, SPEC } from "./scene.ts";
 import type { Filter, Row } from "./shelves.tsx";
 import { ALL, Encyclopedia } from "./shelves.tsx";
 
@@ -268,7 +268,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
                   key={label}
                   label={label}
                   sub={`B${one.born}/S${one.stay}`}
-                  on={wears(value, one)}
+                  on={fits(value, one)}
                   onPick={() => onChange(one)}
                   art={
                     <Art
@@ -290,7 +290,7 @@ export function Widget({ value, onChange, onReady, onStatus }: Props) {
                   key={label}
                   label={label}
                   sub={`B${one.born}/S${one.stay}`}
-                  on={wears(value, one)}
+                  on={fits(value, one)}
                   onPick={() => onChange(one)}
                 />
               ))}

@@ -276,13 +276,23 @@ fn shift_add(out: &mut [i32], src: &[i32], h: usize, w: usize, dr: i64, dc: i64)
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
     use crate::design::standard_shapes;
     use mrly_life::{design_mask, moore, next_grid, Boundary};
     use mrly_math::code::Code;
     use mrly_rand::Rng;
+
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "every_grammar_kernel_is_the_popped_design_and_counts_as_the_engine_does",
+            every_grammar_kernel_is_the_popped_design_and_counts_as_the_engine_does,
+        ),
+        (
+            "kernel_counts_match_the_engine_on_both_boundaries",
+            kernel_counts_match_the_engine_on_both_boundaries,
+        ),
+    ];
 
     fn noise(h: usize, w: usize, seed: u64) -> Grid {
         let mut rng = Rng::new(seed);
@@ -319,7 +329,6 @@ mod tests {
         out
     }
 
-    #[test]
     fn every_grammar_kernel_is_the_popped_design_and_counts_as_the_engine_does() {
         let shapes = standard_shapes();
         let mut checked = 0;
@@ -347,7 +356,6 @@ mod tests {
         assert_eq!(checked, 15 * 8);
     }
 
-    #[test]
     fn kernel_counts_match_the_engine_on_both_boundaries() {
         let grid = noise(31, 31, 7);
         let small = noise(13, 13, 8);

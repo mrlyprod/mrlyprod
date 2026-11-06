@@ -1,25 +1,11 @@
 import type { Twig, Wood } from "../kit/git/view.ts";
-import { ICONS, VIEWBOX } from "../kit/icons.gen.js";
+import { kind } from "../kit/git/view.ts";
+import { glyph } from "../kit/icon.tsx";
 
-const SVG = "http://www.w3.org/2000/svg";
+const SIZE = 16;
 
-function chevron() {
-  const svg = document.createElementNS(SVG, "svg");
-  const path = document.createElementNS(SVG, "path");
-  for (const [name, value] of [
-    ["viewBox", VIEWBOX],
-    ["width", "1em"],
-    ["height", "1em"],
-    ["fill", "currentColor"],
-    ["aria-hidden", "true"],
-  ])
-    svg.setAttribute(name, value);
-  path.setAttribute("d", ICONS.expand_more);
-  svg.append(path);
-  return svg;
-}
-
-export const turns = (summary: Element) => summary.querySelector(":scope > svg") ?? summary.prepend(chevron());
+export const turns = (summary: Element) =>
+  summary.querySelector(":scope > svg") ?? summary.prepend(glyph("down", SIZE));
 
 let forest: Promise<Wood | null> | null = null;
 
@@ -41,13 +27,10 @@ export function branch(base: string, kid: Twig, path: string) {
   const li = document.createElement("li");
   const a = document.createElement("a");
   if (kid.k !== "d") {
-    const icon = document.createElement("span");
-    icon.className = kid.i ? `si si-${kid.i}` : "si";
-    icon.setAttribute("aria-hidden", "true");
     const name = document.createElement("span");
     name.className = "name";
     name.textContent = kid.n;
-    a.append(icon, name);
+    a.append(glyph(kind(kid.n), SIZE), name);
     a.href = `${base}${path}`;
     li.append(a);
     return li;
@@ -57,7 +40,7 @@ export function branch(base: string, kid: Twig, path: string) {
   const details = document.createElement("details");
   details.dataset.lazy = path;
   const summary = document.createElement("summary");
-  summary.append(chevron(), a);
+  summary.append(glyph("down", SIZE), a);
   details.append(summary, document.createElement("ul"));
   li.append(details);
   return li;

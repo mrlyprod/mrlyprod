@@ -3,14 +3,13 @@ import { flushSync } from "react-dom";
 import type { Draft } from "../kit/drag.ts";
 import { dragging, placed, sortable } from "../kit/drag.ts";
 import { px } from "../kit/px.ts";
-import { parts } from "./active.ts";
+import { design, parts } from "./active.ts";
 import { AppIcon } from "./appicon.tsx";
 import { app, dock, launch as fold, redock } from "./catalog.ts";
 import type { Tile } from "./design.ts";
 import { route } from "./desk.ts";
 import type { Item } from "./lens.ts";
 import { lens } from "./lens.ts";
-import { measure } from "./measure.ts";
 import { show } from "./parts.tsx";
 import { calm, KEY, read, subscribe } from "./prefs.ts";
 import type { Wired } from "./route.ts";
@@ -88,7 +87,7 @@ function Dock() {
 
   useEffect(() => {
     const html = document.documentElement;
-    const shape = measure.lens;
+    const shape = design.lens;
     let x = 0;
     let want = false;
     let amount = 0;

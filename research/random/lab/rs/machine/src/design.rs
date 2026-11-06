@@ -331,11 +331,14 @@ pub fn anf(g: &[u8]) -> [u64; 9] {
     sel
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "primes_birth_odds_survive_agrees_with_parity_on_476_of_512",
+        primes_birth_odds_survive_agrees_with_parity_on_476_of_512,
+    )];
+
     fn primes_birth_odds_survive_agrees_with_parity_on_476_of_512() {
         if let Mess::Life { birth, survive } = obstruction(8).mess {
             assert!((parity_agreement(&birth, &survive) - 476.0 / 512.0).abs() < 1e-12);

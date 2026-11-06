@@ -1,4 +1,5 @@
 import type { Site } from "site:routes";
+import { Empty, Table } from "../../../kit/controls.tsx";
 import type { Row } from "../../../kit/rows.ts";
 import { hide, Lede, show } from "../../parts.tsx";
 import type { Layout } from "../../router.ts";
@@ -14,32 +15,18 @@ export function render(row: Row, site: Site, host: HTMLElement) {
     <>
       <Lede id="redirects" title={row.title} lead={row.lead} />
       {moves.length ? (
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>From</th>
-                <th>To</th>
-                <th>Since</th>
-              </tr>
-            </thead>
-            <tbody>
-              {moves.map(([from, one]) => (
-                <tr key={from}>
-                  <td>
-                    <code>{from}</code>
-                  </td>
-                  <td>
-                    <a href={one.to}>{one.to}</a>
-                  </td>
-                  <td>{one.since}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          head={["From", "To", "Since"]}
+          rows={moves.map(([from, one]) => [
+            <code key="from">{from}</code>,
+            <a key="to" href={one.to}>
+              {one.to}
+            </a>,
+            one.since,
+          ])}
+        />
       ) : (
-        <p>No page has moved.</p>
+        <Empty title="No page has moved" />
       )}
     </>,
   );

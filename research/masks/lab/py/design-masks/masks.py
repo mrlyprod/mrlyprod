@@ -82,8 +82,8 @@ def draw():
                 }
             )
     for seed in SEEDS:
-        hextile = mrly("tile.build.random_tile_6d", S, seed)
-        cell = grid(mrly("tile.build.build_6d", hextile)["cell"]["cell"])
+        hextile = mrly("tile.build.random_tile_hex", S, seed)
+        cell = grid(mrly("tile.build.build_hex", hextile)["cell"]["cell"])
         out.append(
             {
                 "name": f"hex-{seed}",

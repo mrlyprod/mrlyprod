@@ -1,0 +1,4 @@
+title = "Font"
+description = "Every MrlyFont glyph: its bitmap and its pen path."
+kind = "enumerated"
+version = "0.2.0"

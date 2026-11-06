@@ -330,10 +330,20 @@ pub fn run() {
     println!("      the control's, the restricted lanes riding the same walk for free.");
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
     use mrly_num::factor::gcd;
+
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "restricted_count_matches_brute_force",
+            restricted_count_matches_brute_force,
+        ),
+        (
+            "restricted_totient_sum_matches_brute_force",
+            restricted_totient_sum_matches_brute_force,
+        ),
+    ];
 
     const FULL: Design = Design {
         name: "full set, the control",
@@ -371,7 +381,6 @@ mod tests {
         count
     }
 
-    #[test]
     fn restricted_count_matches_brute_force() {
         for (design, q) in [(&BASE3, 243usize), (&BASE10, 200), (&FULL, 120)] {
             let keep = design.flags(q);
@@ -380,7 +389,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn restricted_totient_sum_matches_brute_force() {
         for (design, q) in [(&BASE3, 243usize), (&BASE10, 200), (&FULL, 120)] {
             let keep = design.flags(q);

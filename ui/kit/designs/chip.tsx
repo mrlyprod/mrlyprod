@@ -96,12 +96,12 @@ export function Chip({ slot, value, onChange, mrly: given }: ChipProps) {
                 disabled={!ok}
                 onClick={() => star(now)}
               >
-                <Icon name={on ? "star_fill" : "star"} />
+                <Icon name={on ? "star-fill" : "star"} />
               </button>
             </header>
             <Browser compact slot={slot} value={value} mrly={mrly} onPick={pick} />
             <Btn className="all" onClick={browse}>
-              <Icon name="grid_view" />
+              <Icon name="grid" />
               Browse all
             </Btn>
           </>

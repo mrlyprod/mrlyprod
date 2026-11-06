@@ -3778,6 +3778,7 @@ fn four_plain(n: usize, hi: usize) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let args: Vec<String> = env::args().collect();
     let num = |i: usize, d: u64| args.get(i).map(|s| s.parse().unwrap()).unwrap_or(d);
     match args.get(1).map(|s| s.as_str()).unwrap_or("") {
@@ -3865,11 +3866,90 @@ fn main() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        ("the_four_term_values_to_five", the_four_term_values_to_five),
+        (
+            "the_unit_sets_below_eight_are_one",
+            the_unit_sets_below_eight_are_one,
+        ),
+        ("the_minimal_sets_below_nine", the_minimal_sets_below_nine),
+        (
+            "the_bit_array_matches_a_plain_array",
+            the_bit_array_matches_a_plain_array,
+        ),
+        (
+            "three_four_five_at_k_one_misses_seventy_nine_last",
+            three_four_five_at_k_one_misses_seventy_nine_last,
+        ),
+        (
+            "surplus_and_a_full_spectrum_leave_a_hole_chain",
+            surplus_and_a_full_spectrum_leave_a_hole_chain,
+        ),
+        (
+            "the_seven_set_under_four_hundred_seventy_five_is_admissible",
+            the_seven_set_under_four_hundred_seventy_five_is_admissible,
+        ),
+        (
+            "the_cut_spares_every_prefix_of_the_extremal_sets",
+            the_cut_spares_every_prefix_of_the_extremal_sets,
+        ),
+        (
+            "the_cut_keeps_every_set_the_plain_search_finds",
+            the_cut_keeps_every_set_the_plain_search_finds,
+        ),
+        (
+            "the_wide_certificate_matches_the_full_one_past_its_window",
+            the_wide_certificate_matches_the_full_one_past_its_window,
+        ),
+        (
+            "a_multiset_with_surplus_full_spectrum_and_no_window_is_incomplete",
+            a_multiset_with_surplus_full_spectrum_and_no_window_is_incomplete,
+        ),
+        (
+            "windows_at_every_fifth_step_leave_the_chain_open",
+            windows_at_every_fifth_step_leave_the_chain_open,
+        ),
+        (
+            "the_deepest_hole_rises_only_past_the_middle",
+            the_deepest_hole_rises_only_past_the_middle,
+        ),
+        (
+            "the_unit_set_certifies_through_the_power_gap",
+            the_unit_set_certifies_through_the_power_gap,
+        ),
+        (
+            "the_smooth_pair_reproduces_the_tight_certificate",
+            the_smooth_pair_reproduces_the_tight_certificate,
+        ),
+        (
+            "the_close_powers_match_machine_integers",
+            the_close_powers_match_machine_integers,
+        ),
+        (
+            "the_two_log_rule_matches_a_knapsack",
+            the_two_log_rule_matches_a_knapsack,
+        ),
+        (
+            "a_set_below_the_threshold_never_certifies",
+            a_set_below_the_threshold_never_certifies,
+        ),
+        (
+            "the_carry_automaton_counts_prefixes_by_multiplication",
+            the_carry_automaton_counts_prefixes_by_multiplication,
+        ),
+        (
+            "the_prefix_test_agrees_with_the_automaton",
+            the_prefix_test_agrees_with_the_automaton,
+        ),
+        (
+            "the_surviving_classes_obey_the_first_moment",
+            the_surviving_classes_obey_the_first_moment,
+        ),
+    ];
+
     fn the_four_term_values_to_five() {
         let mut floor = vec![0usize];
         for (n, g) in [1usize, 3, 5, 14, 40].into_iter().enumerate() {
@@ -3883,13 +3963,11 @@ mod tests {
         assert!(!plain_free(&[1, 2, 29, 45, 74, 77, 79]));
     }
 
-    #[test]
     fn the_unit_sets_below_eight_are_one() {
         assert_eq!(unit(8), vec![vec![3, 4, 7]]);
         assert_eq!(sigma(&[3, 4, 7]), (6, 6));
     }
 
-    #[test]
     fn the_minimal_sets_below_nine() {
         let want: Vec<Vec<u64>> = vec![
             vec![3, 4, 5],
@@ -3906,7 +3984,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn the_bit_array_matches_a_plain_array() {
         let mut bits = Bits::new(4096);
         let mut plain = vec![false; 4096];
@@ -3927,7 +4004,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn three_four_five_at_k_one_misses_seventy_nine_last() {
         let Verdict::Found { f, .. } = certify(&[3, 4, 5], 1, 1 << 20) else {
             panic!()
@@ -3938,7 +4014,6 @@ mod tests {
         assert!((80..=5000).all(|x| r[x]));
     }
 
-    #[test]
     fn surplus_and_a_full_spectrum_leave_a_hole_chain() {
         let terms = fibonacci(1 << 20);
         assert_eq!(&terms[..8], &[1, 3, 5, 9, 15, 25, 41, 67]);
@@ -3955,7 +4030,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_seven_set_under_four_hundred_seventy_five_is_admissible() {
         assert!(admissible(&[302, 409, 447, 459, 465, 466, 474]));
         assert!(!admissible(&[302, 409, 447, 459, 465, 467, 474]));
@@ -3964,7 +4038,6 @@ mod tests {
         assert!(hunt(5, 60, &floor, 2).0.is_some());
     }
 
-    #[test]
     fn the_cut_spares_every_prefix_of_the_extremal_sets() {
         for set in [
             vec![19, 52, 57, 59, 60],
@@ -3978,7 +4051,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_cut_keeps_every_set_the_plain_search_finds() {
         let floor = [0usize, 1, 3, 8, 22, 60, 168];
         for top in 168..=172 {
@@ -3989,7 +4061,6 @@ mod tests {
         assert!(sweep_top(6, 167, &floor, 2, true, false).found.is_none());
     }
 
-    #[test]
     fn the_wide_certificate_matches_the_full_one_past_its_window() {
         let mut truncated = 0;
         for (bases, k) in [
@@ -4010,7 +4081,6 @@ mod tests {
         assert!(truncated > 0);
     }
 
-    #[test]
     fn a_multiset_with_surplus_full_spectrum_and_no_window_is_incomplete() {
         let a = chainless_terms(1 << 22);
         assert_eq!(&a[..10], &[4, 5, 6, 7, 12, 18, 31, 50, 80, 129]);
@@ -4027,7 +4097,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn windows_at_every_fifth_step_leave_the_chain_open() {
         let (a, u) = windowed_terms(1 << 22);
         assert_eq!(&a[..10], &[4, 5, 6, 7, 13, 19, 47, 54, 86, 153]);
@@ -4046,7 +4115,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_deepest_hole_rises_only_past_the_middle() {
         for (bases, k) in [(&[3u64, 4, 5][..], 3), (&[3, 4, 6], 2), (&[3, 5, 6, 7], 2)] {
             let a = elements(bases, k, far());
@@ -4063,7 +4131,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_unit_set_certifies_through_the_power_gap() {
         for k in [1, 2] {
             let r = tight_cell(k, 20, 25).unwrap();
@@ -4076,7 +4143,6 @@ mod tests {
         assert_eq!(tight_cell(1, 16, 25).unwrap().f, 581);
     }
 
-    #[test]
     fn the_smooth_pair_reproduces_the_tight_certificate() {
         for k in [1, 2, 3] {
             let t = tight_cell(k, 20, 25).unwrap();
@@ -4087,7 +4153,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_close_powers_match_machine_integers() {
         let p = closest(3, 5);
         let mut direct = vec![];
@@ -4109,7 +4174,6 @@ mod tests {
         assert!(p.rows.iter().all(|r| r.2 <= 80));
     }
 
-    #[test]
     fn the_two_log_rule_matches_a_knapsack() {
         for k in [1, 2] {
             let p = paired_cell(&[3, 5, 7, 13], k, 20, 25, Rule::Logs)
@@ -4129,13 +4193,11 @@ mod tests {
         );
     }
 
-    #[test]
     fn a_set_below_the_threshold_never_certifies() {
         assert_eq!(certify(&[3, 4], 1, 1 << 22), Verdict::Cap);
         assert_eq!(certify(&[3, 6, 9, 12, 15, 21], 1, 1 << 22), Verdict::Cap);
     }
 
-    #[test]
     fn the_carry_automaton_counts_prefixes_by_multiplication() {
         for mults in [vec![256u128], vec![4, 256], vec![1 << 12, 1 << 36, 1 << 38]] {
             let s = shape(&mults, 1 << 20);
@@ -4161,7 +4223,6 @@ mod tests {
         assert!((root.powi(6) - root.powi(5) - 1.0).abs() < 1e-9 && s.hi - s.lo < 1e-9);
     }
 
-    #[test]
     fn the_prefix_test_agrees_with_the_automaton() {
         for r in [2, 3] {
             for e in subsets_of(&[2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24], r) {
@@ -4178,7 +4239,6 @@ mod tests {
         assert_eq!(death(&[4, 256, 1 << 72], 79), Some(23));
     }
 
-    #[test]
     fn the_surviving_classes_obey_the_first_moment() {
         for (r, d) in [(2, 4), (2, 5), (3, 3), (3, 4)] {
             let (dead, all) = dead_classes(r, d, 4);

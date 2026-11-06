@@ -1,0 +1,7 @@
+format      bytes  worst error  about one step
+pcm 8       44144  3.906e-3     7.812e-3
+pcm 16      88244  1.526e-5     3.052e-5
+pcm 24     132368  5.960e-8     1.192e-7
+pcm 32     176468  2.328e-10    4.657e-10
+float 32   176480  0.000e0      0.000e0
+stereo: 2 channels, 44100 frames, 1.0 s at 44100 Hz

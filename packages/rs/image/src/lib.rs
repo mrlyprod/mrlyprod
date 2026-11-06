@@ -44,6 +44,66 @@ impl Image {
     }
 }
 
+pub fn to_png(image: &Image) -> Result<Vec<u8>> {
+    mrly_png::encode(&image.colors, image.width, image.height).map_err(Error::Value)
+}
+
+pub fn from_png(bytes: &[u8]) -> Result<Image> {
+    let (width, height, colors) = mrly_png::decode(bytes).map_err(Error::Value)?;
+    Image::new(width, height, colors)
+}
+
+fn paint(attr: &str, [r, g, b, a]: [u8; 4]) -> String {
+    let mut out = format!("{attr}=\"#{r:02x}{g:02x}{b:02x}\"");
+    if a < 255 {
+        out += &format!(" {attr}-opacity=\"{:.2}\"", a as f64 / 255.0);
+    }
+    out
+}
+
+pub fn svg(images: &[Image], gap: usize, scale: usize) -> String {
+    let width = images
+        .iter()
+        .map(|i| i.width + gap)
+        .sum::<usize>()
+        .saturating_sub(gap);
+    let height = images.iter().map(|i| i.height).max().unwrap_or(0);
+    let ground = images.first().and_then(|i| i.colors.first()).copied();
+    let mut paths: Vec<([u8; 4], String)> = Vec::new();
+    let mut left = 0;
+    for image in images {
+        for (y, row) in image.colors.chunks(image.width.max(1)).enumerate() {
+            let mut x = 0;
+            while x < row.len() {
+                let run = row[x..].iter().take_while(|&&c| c == row[x]).count();
+                if row[x][3] > 0 && Some(row[x]) != ground {
+                    let line = format!("M{} {y}.5h{run}", left + x);
+                    match paths.iter_mut().find(|(c, _)| *c == row[x]) {
+                        Some((_, d)) => d.push_str(&line),
+                        None => paths.push((row[x], line)),
+                    }
+                }
+                x += run;
+            }
+        }
+        left += image.width + gap;
+    }
+    let mut out = format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 {width} {height}\" width=\"{}\" shape-rendering=\"crispEdges\">\n",
+        width * scale
+    );
+    if let Some(ground) = ground.filter(|c| c[3] > 0) {
+        out += &format!(
+            "<rect width=\"{width}\" height=\"{height}\" {}/>\n",
+            paint("fill", ground)
+        );
+    }
+    for (color, d) in paths {
+        out += &format!("<path {} d=\"{d}\"/>\n", paint("stroke", color));
+    }
+    out + "</svg>"
+}
+
 pub fn blur(pixels: &[[u8; 4]], width: usize, height: usize, radius: usize) -> Vec<[u8; 4]> {
     let read = |y: usize, x: usize| -> [u8; 4] {
         pixels.get(y * width + x).copied().unwrap_or([0, 0, 0, 0])

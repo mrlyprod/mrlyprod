@@ -5,13 +5,13 @@ export const PANES: Pane[] = [
     id: "appearance",
     title: "Appearance",
     art: ".###. ##..# ##..# ##..# .###.",
-    more: "theme dark light mode font text size tint accent colour color icon icons style tinted clock time hours 12-hour 24-hour",
+    more: "design theme dark light mode font text size tint accent colour color icon icons style tinted clock time hours 12-hour 24-hour",
   },
   {
     id: "desktop",
     title: "Desktop & Dock",
     art: "##### #...# ##### ..#.. .###.",
-    more: "desktop picture wallpaper dock magnify widgets launchpad window width",
+    more: "desktop picture wallpaper dock magnify widgets launchpad",
   },
   {
     id: "screensaver",

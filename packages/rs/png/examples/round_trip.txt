@@ -1,0 +1,6 @@
+picture      16 x 16
+raw rgba     1024 bytes
+png          174 bytes
+decoded      16 x 16
+same pixels  true
+signature    [137, 80, 78, 71, 13, 10, 26, 10]

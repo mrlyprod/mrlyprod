@@ -147,7 +147,7 @@ export function Picker({ value, onChange, mrly, dims = [2, 3] }: PickerProps) {
         />
       )}
       <Btn disabled={!mrly} onClick={() => write({ code: roll(mrly!, dim, base, Math.random) })}>
-        <Icon name="casino" />
+        <Icon name="dice" />
         Random
       </Btn>
       {reps.length > 0 && reps.length <= STRIP && (

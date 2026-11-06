@@ -723,11 +723,20 @@ pub fn corrected<G: Gen>(g: &G, guess: usize, cap: usize) -> Corrected {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "complexity_of_an_m_sequence_is_its_degree",
+            complexity_of_an_m_sequence_is_its_degree,
+        ),
+        (
+            "rank_law_matches_every_three_by_three_matrix",
+            rank_law_matches_every_three_by_three_matrix,
+        ),
+    ];
+
     fn complexity_of_an_m_sequence_is_its_degree() {
         let mut s: u32 = 1;
         let mut words = vec![0u64; 1024];
@@ -739,7 +748,6 @@ mod tests {
         assert_eq!(complexity(&words), 7);
     }
 
-    #[test]
     fn rank_law_matches_every_three_by_three_matrix() {
         let mut counts = [0u64; 4];
         for m in 0u64..512 {

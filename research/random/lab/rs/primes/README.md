@@ -22,5 +22,5 @@ cargo run --release --manifest-path research/random/lab/rs/primes/Cargo.toml -- 
 cargo run --release --manifest-path research/random/lab/rs/primes/Cargo.toml -- law 32
 cargo run --release --manifest-path research/random/lab/rs/primes/Cargo.toml -- ladder 32 4096
 cargo run --release --manifest-path research/random/lab/rs/primes/Cargo.toml -- exact
-cargo test --release --manifest-path research/random/lab/rs/primes/Cargo.toml
+bash research/scripts/witness.sh primes
 ```

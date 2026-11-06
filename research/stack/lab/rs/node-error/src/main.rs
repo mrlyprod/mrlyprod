@@ -292,14 +292,26 @@ fn run(field: &Field) {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     for field in &FIELDS {
         run(field);
     }
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "totient_sums_match_the_class_route",
+            totient_sums_match_the_class_route,
+        ),
+        ("layers_sum_to_the_error", layers_sum_to_the_error),
+        (
+            "ideal_counts_match_lattice_points",
+            ideal_counts_match_lattice_points,
+        ),
+    ];
 
     const BOUNDS: [usize; 9] = [50, 200, 800, 1200, 2000, 3200, 12800, 51200, 102400];
     const GAUSS: [i64; 9] = [
@@ -309,7 +321,6 @@ mod tests {
         630, 9606, 151020, 337026, 945486, 2419950, 38560362, 616981926, 2466558234,
     ];
 
-    #[test]
     fn totient_sums_match_the_class_route() {
         for (field, pinned) in FIELDS.iter().zip([GAUSS, EISENSTEIN]) {
             let t = tables(field, 102400);
@@ -319,7 +330,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn layers_sum_to_the_error() {
         let limit = 400_000;
         for field in &FIELDS {
@@ -340,7 +350,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn ideal_counts_match_lattice_points() {
         let limit = 2000i64;
         for field in &FIELDS {

@@ -128,7 +128,7 @@ function Dial({ one }: { one: Knob }) {
 
 const ROUND: [IconName, string][] = [
   ["info", "Info"],
-  ["ios_share", "Share"],
+  ["share", "Share"],
   ["keyboard", "Keys"],
   ["download", "Save"],
 ];

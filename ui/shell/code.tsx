@@ -87,7 +87,7 @@ export function Code({ site }: Props) {
       </Library>
       <Bar side="actions">
         <Btn className="share" onClick={copy}>
-          <Icon name="ios_share" />
+          <Icon name="share" />
           Share
         </Btn>
         {raw && <Btn onClick={() => open(raw)}>Raw</Btn>}

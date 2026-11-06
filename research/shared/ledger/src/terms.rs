@@ -6,7 +6,7 @@ use mrly_math::factory;
 use mrly_math::factory::code_to_corners;
 use mrly_sequences::counts;
 use mrly_sequences::counts::{fill_polynomial, odd_power, Closed, Placements};
-use mrly_six as six;
+use mrly_hex as hex;
 use mrly_tensor::Tensor;
 use mrly_three as three;
 use mrly_two as two;
@@ -168,16 +168,16 @@ fn term(key: &Key, number: usize, level: u32, cells: u128) -> Result<Option<i128
             if !within(grid(number, dimension, level)) {
                 return Ok(None);
             }
-            let slice = six::cut(&three::create(
+            let slice = hex::cut(&three::create(
                 Code::from(code),
                 number,
                 level as usize,
                 base,
             )?)?;
             Some(if measure == Measure::Holes {
-                six::holes(&slice)? as i128
+                hex::holes(&slice)? as i128
             } else {
-                six::components(&slice)? as i128
+                hex::components(&slice)? as i128
             })
         }
     };
@@ -263,10 +263,33 @@ pub fn closed(key: &Key) -> Result<Option<Closed>> {
     Ok(Some(form))
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::super::BUDGET;
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "the_closed_measures_read_the_classics",
+            the_closed_measures_read_the_classics,
+        ),
+        (
+            "the_grid_measures_agree_with_the_censuses",
+            the_grid_measures_agree_with_the_censuses,
+        ),
+        ("the_budget_caps_honestly", the_budget_caps_honestly),
+        (
+            "the_arcs_and_the_windows_read_the_carpet",
+            the_arcs_and_the_windows_read_the_carpet,
+        ),
+        (
+            "the_closed_forms_match_the_terms",
+            the_closed_forms_match_the_terms,
+        ),
+        (
+            "the_skeleton_closes_the_rendered_face_counts",
+            the_skeleton_closes_the_rendered_face_counts,
+        ),
+    ];
 
     fn read(code: u128, dimension: usize, measure: Measure, axis: Axis, count: usize) -> Vec<i128> {
         terms(&Key::new(code, dimension, 2, measure, axis), count, BUDGET)
@@ -274,7 +297,6 @@ mod tests {
             .0
     }
 
-    #[test]
     fn the_closed_measures_read_the_classics() {
         assert_eq!(read(7, 2, Measure::Voids, Axis::Level, 3), [1, 17, 217]);
         assert_eq!(
@@ -297,7 +319,6 @@ mod tests {
         assert_eq!(read(255, 3, Measure::Fills, Axis::Side, 3), [27, 125, 343]);
     }
 
-    #[test]
     fn the_grid_measures_agree_with_the_censuses() {
         assert_eq!(read(7, 2, Measure::Euler, Axis::Level, 3), [0, -8, -72]);
         assert_eq!(read(23, 3, Measure::Euler, Axis::Level, 2), [-4, -80]);
@@ -312,7 +333,6 @@ mod tests {
         assert_eq!(read(23, 3, Measure::Heights, Axis::Level, 2), [7, 25]);
     }
 
-    #[test]
     fn the_budget_caps_honestly() {
         let key = Key::new(23, 3, 2, Measure::Euler, Axis::Side);
         assert_eq!(terms(&key, 8, 124).unwrap(), (vec![-4], true));
@@ -331,7 +351,6 @@ mod tests {
         assert!(terms(&Key::new(16, 2, 2, Measure::Fills, Axis::Level), 1, BUDGET).is_err());
     }
 
-    #[test]
     fn the_arcs_and_the_windows_read_the_carpet() {
         let loops = Key::new(495, 2, 3, Measure::Loops, Axis::Level);
         assert_eq!(
@@ -350,7 +369,6 @@ mod tests {
         assert!(terms(&Key::new(7, 2, 2, Measure::Fills, Axis::Window), 1, BUDGET).is_err());
     }
 
-    #[test]
     fn the_closed_forms_match_the_terms() {
         for code in 0..16u128 {
             for measure in [Measure::Fills, Measure::Voids] {
@@ -392,7 +410,6 @@ mod tests {
         );
     }
 
-    #[test]
     fn the_skeleton_closes_the_rendered_face_counts() {
         let faces = [
             Measure::Vertices,

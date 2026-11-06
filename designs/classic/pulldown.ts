@@ -1,10 +1,10 @@
 import { button, item, sheet } from "@mrlyprod/ui/kit/pulldown.ts";
 import type { Pulldown } from "@mrlyprod/ui/shell/design.ts";
-import { pixel } from "./glyphs.tsx";
+import { pixel } from "./own/glyphs.tsx";
 
 const menu = () => {
   const one = sheet();
-  one.className = "classic menu raised";
+  one.className = "menu raised";
   return one;
 };
 

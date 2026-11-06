@@ -225,11 +225,14 @@ pub fn scaling_error(mass: &Mass, low: f64, high: f64, fill: f64) -> f64 {
     worst
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::periods;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "the_window_counts_whole_periods_at_every_level",
+        the_window_counts_whole_periods_at_every_level,
+    )];
+
     fn the_window_counts_whole_periods_at_every_level() {
         for level in 4..=12u32 {
             let side = 3f64.powi(level as i32);

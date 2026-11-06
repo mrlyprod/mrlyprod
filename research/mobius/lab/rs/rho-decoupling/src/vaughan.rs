@@ -296,11 +296,24 @@ pub fn run() {
     );
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "the_vaughan_pieces_match_a_direct_divisor_sum",
+            the_vaughan_pieces_match_a_direct_divisor_sum,
+        ),
+        (
+            "the_vaughan_form_matches_the_pair_definition",
+            the_vaughan_form_matches_the_pair_definition,
+        ),
+        (
+            "the_mu_piece_form_is_the_exact_integer",
+            the_mu_piece_form_is_the_exact_integer,
+        ),
+    ];
+
     fn the_vaughan_pieces_match_a_direct_divisor_sum() {
         let lim = 1200usize;
         let spf = spf_table(lim);
@@ -325,7 +338,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_vaughan_form_matches_the_pair_definition() {
         let (q, digits, l, mm, nn) = (3u64, vec![0u64, 1], 8usize, 8u64, 16u64);
         let x = qpow(q, l);
@@ -376,7 +388,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn the_mu_piece_form_is_the_exact_integer() {
         let (q, digits, l, mm, nn) = (5u64, vec![0u64, 1, 2, 3], 5usize, 16u64, 32u64);
         let x = qpow(q, l);

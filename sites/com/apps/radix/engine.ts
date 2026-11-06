@@ -210,7 +210,7 @@ export function preset(num: Num, mrly: Mrly, name: Preset): Shaped | null {
   return patch;
 }
 
-export const wears = (value: Design, patch: Design | null) =>
+export const fits = (value: Design, patch: Design | null) =>
   Boolean(patch) &&
   (["ring", "base", "d", "t"] satisfies (keyof Design)[]).every((key) => String(value[key]) === String(patch![key]));
 

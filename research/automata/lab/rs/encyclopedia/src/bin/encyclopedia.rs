@@ -362,6 +362,21 @@ fn mini() {
 }
 
 fn main() {
+    witness::dispatch(
+        &[
+            encyclopedia::checks::ALL,
+            encyclopedia::cache::witnesses::ALL,
+            encyclopedia::control::witnesses::ALL,
+            encyclopedia::design::witnesses::ALL,
+            encyclopedia::grammar::witnesses::ALL,
+            encyclopedia::grid::witnesses::ALL,
+            encyclopedia::laws::witnesses::ALL,
+            encyclopedia::mask::witnesses::ALL,
+            encyclopedia::recipe::witnesses::ALL,
+            encyclopedia::rows::witnesses::ALL,
+        ]
+        .concat(),
+    );
     let o = options();
     let grammar = Grammar::standard(o.x, o.cap);
     match o.words.first().map(String::as_str) {

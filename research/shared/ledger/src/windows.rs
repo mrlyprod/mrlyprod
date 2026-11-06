@@ -106,9 +106,13 @@ pub fn census(cells: &[u8], side: usize, count: usize, budget: u128) -> (Vec<i12
     (out, false)
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[(
+        "the_census_matches_a_brute_count_on_a_deep_render",
+        the_census_matches_a_brute_count_on_a_deep_render,
+    )];
 
     fn brute(render: &Picture, top: usize) -> Vec<i128> {
         (1..=top)
@@ -120,7 +124,6 @@ mod tests {
             .collect()
     }
 
-    #[test]
     fn the_census_matches_a_brute_count_on_a_deep_render() {
         for (side, code) in [(3usize, 495u32), (3, 186), (2, 7), (3, 84), (4, 0x9669)] {
             let tile = Picture {

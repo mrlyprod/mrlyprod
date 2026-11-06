@@ -1,8 +1,1 @@
-{
-  "/julia/": { "to": "/fractals/?kind=julia", "since": "2026-10-19" },
-  "/mandelbrot/": { "to": "/fractals/?kind=mandelbrot", "since": "2026-10-19" },
-  "/math/": { "to": "/mrlymath/", "since": "2026-10-09" },
-  "/morse/": { "to": "/thue/", "since": "2026-11-06" },
-  "/spirograph/": { "to": "/roulette/", "since": "2026-11-06" },
-  "/stack/": { "to": "/moire/", "since": "2026-10-12" }
-}
+{}

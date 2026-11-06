@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { ask } from "../../kit/controls.tsx";
 import { choose, forget, held, matches } from "../password.ts";
 import { Action, Item, Note, Section } from "./ui.tsx";
 
@@ -24,8 +25,7 @@ function Field({ label, name, auto }: FieldProps) {
 
 export function Password() {
   const [on, setOn] = useState(held);
-  const [step, setStep] = useState<Step | null>(null);
-  const [fault, setFault] = useState("");
+  const [step, open] = useState<Step | null>(null);
   const [busy, setBusy] = useState(false);
   const form = useRef<HTMLFormElement>(null);
 
@@ -33,15 +33,10 @@ export function Password() {
     if (step) form.current?.querySelector("input")?.focus();
   }, [step]);
 
-  const open = (next: Step | null) => {
-    setStep(next);
-    setFault("");
-  };
-
   async function apply(given: FormData) {
     const said = (name: string) => String(given.get(name) ?? "");
-    if (step !== "set" && !(await matches(said("current")))) return setFault("Wrong password.");
-    if (step !== "remove" && said("next") !== said("again")) return setFault("The new passwords differ.");
+    if (step !== "set" && !(await matches(said("current")))) return ask({ title: "Wrong password." });
+    if (step !== "remove" && said("next") !== said("again")) return ask({ title: "The new passwords differ." });
     if (step === "remove") forget();
     else await choose(said("next"));
     setOn(held());
@@ -53,7 +48,7 @@ export function Password() {
     if (busy) return;
     setBusy(true);
     apply(new FormData(e.currentTarget))
-      .catch(() => setFault("This browser cannot set a password here."))
+      .catch(() => ask({ title: "This browser cannot set a password here." }))
       .finally(() => setBusy(false));
   }
 
@@ -67,11 +62,6 @@ export function Password() {
               <Field label="New password" name="next" auto="new-password" />
               <Field label="Confirm new password" name="again" auto="new-password" />
             </>
-          )}
-          {fault && (
-            <div role="alert">
-              <Note>{fault}</Note>
-            </div>
           )}
           <Item label="">
             <span className="priv-pair">

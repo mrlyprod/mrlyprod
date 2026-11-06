@@ -48,9 +48,9 @@ pub fn to_json(cell: &Cell3d) -> String {
     let shape = &cell.types().shape;
     let mut data = json!({
         "v": 1,
-        "depth": shape[0],
+        "width": shape[0],
         "height": shape[1],
-        "width": shape[2],
+        "depth": shape[2],
         "types": to_lists(cell),
     });
     if let Some(colors) = &cell.cell.colors {
@@ -79,32 +79,45 @@ pub fn from_json(text: &str) -> Result<Cell3d> {
 }
 
 pub fn to_strings(cell: &Cell3d) -> Vec<Vec<String>> {
-    to_lists(cell)
-        .iter()
-        .map(|plane| {
-            plane
-                .iter()
-                .map(|row| row.iter().map(|site| site.to_string()).collect())
+    let types = cell.types();
+    let (width, height, depth) = (types.shape[0], types.shape[1], types.shape[2]);
+    (0..depth)
+        .map(|z| {
+            (0..height)
+                .rev()
+                .map(|y| {
+                    (0..width)
+                        .map(|x| (types.at(types.index(&[x, y, z])) as u8).to_string())
+                        .collect()
+                })
                 .collect()
         })
         .collect()
 }
 
 pub fn from_strings(data: &[Vec<String>]) -> Result<Cell3d> {
-    let mut lists = Vec::with_capacity(data.len());
-    for plane in data {
-        let mut rows = Vec::with_capacity(plane.len());
-        for row in plane {
-            let mut sites = Vec::with_capacity(row.len());
-            for site in row.chars() {
+    let (depth, height) = (data.len(), data.first().map_or(0, Vec::len));
+    let width = data
+        .first()
+        .and_then(|plane| plane.first())
+        .map_or(0, |row| row.chars().count());
+    if depth == 0 || height == 0 || width == 0 {
+        return value_error("cannot build a cell from an empty list.");
+    }
+    let mut types = vec![0u8; width * height * depth];
+    for (z, plane) in data.iter().enumerate() {
+        if plane.len() != height || plane.iter().any(|row| row.chars().count() != width) {
+            return value_error("all planes and rows must have the same lengths.");
+        }
+        for (row, line) in plane.iter().enumerate() {
+            let y = height - 1 - row;
+            for (x, site) in line.chars().enumerate() {
                 match site.to_digit(10) {
-                    Some(value) => sites.push(value as u8),
+                    Some(value) => types[(x * height + y) * depth + z] = value as u8,
                     None => return value_error(format!("'{site}' is not a digit.")),
                 }
             }
-            rows.push(sites);
         }
-        lists.push(rows);
     }
-    from_lists(&lists)
+    Cell3d::new(Tensor::of(types, vec![width, height, depth])?)
 }

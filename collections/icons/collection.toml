@@ -1,0 +1,4 @@
+title = "Icons"
+description = "The icons every design draws, one file each."
+kind = "made"
+source = "designs/*/icons"

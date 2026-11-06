@@ -8,7 +8,7 @@ use mrly_life::Source;
 use mrly_math::code::Code;
 use mrly_math::factory;
 use mrly_sequences::counts;
-use mrly_sequences::counts::{ladder, six};
+use mrly_sequences::counts::{hex, ladder};
 
 const LIMIT: usize = 4000;
 const LONG: usize = 24;
@@ -58,20 +58,20 @@ pub fn ladders() -> Vec<Row> {
 pub fn hexes() -> Vec<Row> {
     type Slice = fn(usize) -> Result<u128>;
     let slices: [(&str, Slice); 7] = [
-        ("core_nodes", six::solid_slice_core_nodes),
-        ("core_edges", six::solid_slice_core_edges),
-        ("triangles", six::solid_slice_triangles),
-        ("boundary", six::solid_slice_boundary),
-        ("vertices", six::solid_slice_vertices),
-        ("interior", six::solid_slice_interior),
-        ("edges", six::solid_slice_edges),
+        ("core_nodes", hex::solid_slice_core_nodes),
+        ("core_edges", hex::solid_slice_core_edges),
+        ("triangles", hex::solid_slice_triangles),
+        ("boundary", hex::solid_slice_boundary),
+        ("vertices", hex::solid_slice_vertices),
+        ("interior", hex::solid_slice_interior),
+        ("edges", hex::solid_slice_edges),
     ];
     let mut rows: Vec<Row> = slices
         .iter()
         .map(|(slug, slice)| {
             Row::new(
                 format!("solid_slice_{slug}"),
-                &format!("mrly_sequences::counts::six::solid_slice_{slug}"),
+                &format!("mrly_sequences::counts::hex::solid_slice_{slug}"),
                 &format!("solid-slice-{slug}"),
                 timed(TERMS, |i| slice(2 * i + 1).ok().and_then(wide)),
             )
@@ -88,15 +88,15 @@ pub fn hexes() -> Vec<Row> {
     );
     rows.push(Row::new(
         "grid_triangles_side=3_axis=level",
-        "mrly_sequences::counts::six::grid_triangles",
+        "mrly_sequences::counts::hex::grid_triangles",
         "grid-triangles/level",
-        timed(TERMS, |i| wide(six::grid_triangles(3, i as u32 + 1))),
+        timed(TERMS, |i| wide(hex::grid_triangles(3, i as u32 + 1))),
     ));
     rows.push(Row::new(
         "grid_triangles_axis=side",
-        "mrly_sequences::counts::six::grid_triangles",
+        "mrly_sequences::counts::hex::grid_triangles",
         "grid-triangles/side",
-        timed(TERMS, |i| wide(six::grid_triangles(2 * i + 3, 1))),
+        timed(TERMS, |i| wide(hex::grid_triangles(2 * i + 3, 1))),
     ));
     rows
 }

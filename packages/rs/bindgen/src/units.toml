@@ -52,12 +52,12 @@ ts = "Cell"
 ts_data = "{ cell: CellData }"
 
 [[hand]]
-name = "Cell6d"
-rust = ["mrly_six::Cell6d"]
+name = "CellHex"
+rust = ["mrly_hex::CellHex"]
 word = "cell"
-ts = "Cell6d"
-ts_data = "Cell6dData"
-decl = "export interface Cell6d {\n    cell: Cell;\n    projection: \"Iso\" | \"Pro\" | \"Cut\";\n    orientation: \"Horizontal\" | \"Vertical\";\n    start: number;\n}\nexport interface Cell6dData {\n    cell: { cell: CellData };\n    projection: \"Iso\" | \"Pro\" | \"Cut\";\n    orientation: \"Horizontal\" | \"Vertical\";\n    start: number;\n}"
+ts = "CellHex"
+ts_data = "CellHexData"
+decl = "export interface CellHex {\n    cell: Cell;\n    projection: \"Iso\" | \"Pro\" | \"Cut\";\n    orientation: \"Horizontal\" | \"Vertical\";\n    start: number;\n}\nexport interface CellHexData {\n    cell: { cell: CellData };\n    projection: \"Iso\" | \"Pro\" | \"Cut\";\n    orientation: \"Horizontal\" | \"Vertical\";\n    start: number;\n}"
 
 [[hand]]
 name = "Code"

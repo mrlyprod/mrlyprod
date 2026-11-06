@@ -26,7 +26,7 @@
 
 - `cargo run --release --manifest-path research/stack/lab/rs/node-error/Cargo.toml` from the repo root.
 - One core, about 4 s, about 600 MB, standard library only, writes nothing.
-- `cargo test --release --manifest-path research/stack/lab/rs/node-error/Cargo.toml` pins `S(N)` at the nine norm bounds 50 to 102400 to the counts of the class route in `lab/py/totient-constant` (672 to 2732257376 Gaussian, 630 to 2466558234 Eisenstein), `A(2000)` to a brute lattice-point count of both norm forms, and `E(n)` to the layer sum `sum_m layers(m) E_1(n/m)` within `0.01` at `n = 100, 250, 400` in both fields.
+- `bash research/scripts/witness.sh node-error` pins `S(N)` at the nine norm bounds 50 to 102400 to the counts of the class route in `lab/py/totient-constant` (672 to 2732257376 Gaussian, 630 to 2466558234 Eisenstein), `A(2000)` to a brute lattice-point count of both norm forms, and `E(n)` to the layer sum `sum_m layers(m) E_1(n/m)` within `0.01` at `n = 100, 250, 400` in both fields.
 
 ## WITNESSES
 

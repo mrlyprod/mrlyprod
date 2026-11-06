@@ -18,8 +18,8 @@
 
 ## THE CONTROLS
 
-- `cargo test`: the `climb` peel against a brute-force one-point-at-a-time peel on `1800` random sets at `m = 4, 5, 6, 7`, `d = 2` and `m = 3, 4`, `d = 3`; `peelable` against a reflection-based peel on `2700` random sets at `m = 3, 5, 7`; the one-dimensional table gives `(m + 1)/2` at `m = 3, 5, 7, 11`; at `m = 3` the orderly census equals the brute force over all `512` sets in orbits, in sets and in sets containing the origin (`57`); the line bound is never below the size of a peelable `10`-set at `m = 5` on `200` random sets.
-- `cargo test`, four-term: the 4-peel of `climb` and of `optimum` against a brute-force peel over every `(x, D)` on `5400` random sets at `m = 4, 5, 6, 7, 9` and `d = 1, 2, 3`, the free test against brute force on `2400` random sets at `m = 5, 7`, and the lift of `{0, 1, 2, 3, 4, 7}` in `Z_9` to `Z_9^4` holding a progression.
+- `bash research/scripts/witness.sh block-exact`: the `climb` peel against a brute-force one-point-at-a-time peel on `1800` random sets at `m = 4, 5, 6, 7`, `d = 2` and `m = 3, 4`, `d = 3`; `peelable` against a reflection-based peel on `2700` random sets at `m = 3, 5, 7`; the one-dimensional table gives `(m + 1)/2` at `m = 3, 5, 7, 11`; at `m = 3` the orderly census equals the brute force over all `512` sets in orbits, in sets and in sets containing the origin (`57`); the line bound is never below the size of a peelable `10`-set at `m = 5` on `200` random sets.
+- `bash research/scripts/witness.sh block-exact`, four-term: the 4-peel of `climb` and of `optimum` against a brute-force peel over every `(x, D)` on `5400` random sets at `m = 4, 5, 6, 7, 9` and `d = 1, 2, 3`, the free test against brute force on `2400` random sets at `m = 5, 7`, and the lift of `{0, 1, 2, 3, 4, 7}` in `Z_9` to `Z_9^4` holding a progression.
 - `census 3 5`: `5` and `168` orbits, `172` and `1346226` sets, `57` and `417581` containing the origin, the last two the counts of the Python depth-first enumeration in [block-search](../../py/block-search/).
 - `optimum 3 5`: `4/9` and `10/25`, with `1` and `9` maximisers up to symmetry.
 
@@ -33,7 +33,7 @@
 - `-- climb 5 --dim 3 --seconds 15`: `36`, `15` seconds; `-- climb 8 9 11 12 13 --dim 2 --seconds 12`, `60` seconds; `-- climb 7 --dim 3 --seconds 60 --seed 2`, `60` seconds, `81`; `-- climb 7 --dim 3 --seconds 120 --seed 1`, `120` seconds, `83`.
 - `-- climb 15 16 17 19 20 21 23 24 25 --dim 2 --seconds 40 --seed 1`, `361` seconds, `76, 91, 93, 113, 133, 132, 156, 181, 182` points; other seeds: `-- climb 25 --dim 2 --seconds 110 --seed 2` gives `178`, `-- climb 25 --dim 2 --seconds 50 --seed 3` gives `179`, `-- climb 23 --dim 2 --seconds 40 --seed 2` gives `154`; the clock cuts the search, so a seed does not fix the set, and at `m = 23, 25` the best size moves between seeds.
 - `-- optimum 5 7 --k 4` and `-- optimum 5 7 --k 4 --free`, `4` seconds; `-- control`; `-- climb 7 --dim 2 --k 4 --seconds 5`; `-- climb 7 --dim 3 --k 4 --seconds 120 --seed 1`.
-- `cargo test --release --manifest-path research/progressions/lab/rs/block-exact/Cargo.toml`, `8` tests, under a second after the build.
+- `bash research/scripts/witness.sh block-exact`, `8` witnesses, under a second after the build.
 - Prints only, writes nothing (`witness` prints the one JSON line); every check asserts.
 
 ## WITNESSES

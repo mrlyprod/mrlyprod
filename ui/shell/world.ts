@@ -4,7 +4,7 @@ import type { Act, App, Config, Kernel, Line, Who, World } from "@mrlyprod/os/ke
 import { canon, Fault, kernel, resume } from "@mrlyprod/os/kernel/index.ts";
 import type { Port } from "../kit/world.ts";
 import { plug } from "../kit/world.ts";
-import { adopt, KEY, nameOf, PREFIX, read, record, SETTINGS } from "./prefs.ts";
+import { adopt, KEY, nameOf, PREFIX, pack, read, record, SETTINGS } from "./prefs.ts";
 
 export type User = { id: string; label: string; name: string; hue: string | null; glyph: string | null; kind: string };
 
@@ -185,7 +185,7 @@ function settle(store: Store, resumed: boolean) {
     const mine = held();
     for (const name of [...SETTINGS, ...Object.keys(mine)]) adopt(name, mine[name] ?? "");
   } else {
-    for (const name of SETTINGS) if (read(KEY[name])) set(name, read(KEY[name]));
+    for (const [name, value] of Object.entries(pack())) set(name, value);
   }
   record((key, value) => {
     const name = nameOf(key);

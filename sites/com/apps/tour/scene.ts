@@ -9,18 +9,7 @@ import type { Inks } from "../shared/sequences/design.ts";
 import { draw as art, inks } from "../shared/sequences/design.ts";
 import type { Entry } from "../shared/sequences/engine.ts";
 import type { Grown, Rect, Tones } from "../shared/sequences/paint.ts";
-import {
-  caption,
-  chart,
-  clear,
-  drawRibbon,
-  FACE,
-  fit,
-  font,
-  growth,
-  ribbon,
-  tones,
-} from "../shared/sequences/paint.ts";
+import { caption, chart, clear, drawRibbon, fit, font, growth, ribbon, tones } from "../shared/sequences/paint.ts";
 import type { Art, ArtOf, Built, Picked } from "./cards.ts";
 import { CARDS, pick, shown } from "./cards.ts";
 
@@ -282,5 +271,5 @@ export function make(canvas: HTMLCanvasElement, view: View, opts: Given = {}) {
     draw();
   };
   const tap = (x: number, y: number) => (within(pic, x, y) ? { picture: true } : null);
-  return { draw, size: again, theme: again, tap, font: FACE, still: true };
+  return { draw, size: again, theme: again, tap, still: true };
 }

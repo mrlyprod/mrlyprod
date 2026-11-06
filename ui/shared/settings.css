@@ -1,13 +1,16 @@
-main:has(> div > .settings) {
+main:has(.settings) {
   padding: 0;
+}
+main:has(.settings) > div,
+#root:has(> .settings) {
+  height: 100%;
 }
 .settings {
   --rail: 13.5rem;
   --seam: color-mix(in srgb, var(--fg) 10%, transparent);
   --hover: color-mix(in srgb, var(--fg) 6%, transparent);
   --box: color-mix(in srgb, var(--panel) 78%, transparent);
-  --tall: calc(min(85svh, 100svh - var(--top) - var(--below)) - var(--title) - 1px);
-  min-height: min(34rem, var(--tall));
+  min-height: 100%;
   color: var(--fg);
   font-size: var(--t3);
   line-height: var(--lh2);
@@ -34,51 +37,18 @@ main:has(> div > .settings) {
   display: flex;
   flex-direction: column;
   gap: var(--s2);
-  max-height: var(--tall);
+  max-height: 100svh;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--s3) var(--s2);
 }
-.settings .side > .banner {
-  margin-bottom: 0;
-}
 .settings .top {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0 var(--s1);
+  gap: var(--s1);
 }
-.settings .find {
-  position: relative;
-  display: flex;
+.settings .top > [role="search"] {
   flex: 1 1 0;
-  align-items: center;
-  min-width: 0;
-  color: var(--dim);
-}
-.settings .find > svg {
-  position: absolute;
-  left: var(--s2);
-  pointer-events: none;
-}
-.settings .find > input {
-  appearance: none;
-  width: 100%;
-  min-width: 0;
-  min-height: 1.75rem;
-  padding: 0 var(--s2) 0 calc(var(--s2) + 1.25rem);
-  border: 0;
-  border-radius: var(--round);
-  background: color-mix(in srgb, var(--fg) 8%, transparent);
-  color: var(--fg);
-  font-size: var(--t3);
-}
-.settings .find > input::placeholder {
-  color: var(--dim);
-  opacity: 1;
-}
-.settings .find > input:focus-visible {
-  outline-offset: 0;
 }
 .settings .top .icon {
   flex: none;
@@ -89,15 +59,6 @@ main:has(> div > .settings) {
 }
 .settings .top .icon:hover {
   color: var(--fg);
-}
-.settings .said {
-  flex: 1 0 100%;
-  padding: var(--s1) var(--s2) 0;
-  color: var(--dim);
-  font-size: var(--t2);
-}
-.settings .said:empty {
-  padding: 0;
 }
 .settings .list {
   display: grid;
@@ -148,17 +109,11 @@ main:has(> div > .settings) {
   height: calc(var(--rows) * var(--cell));
   max-width: none;
 }
-.settings .none {
-  padding: var(--s3) var(--s2);
-  color: var(--dim);
-  text-align: center;
-}
-
 .settings .detail {
   min-width: 0;
   padding: var(--s4) var(--s5) var(--s7);
 }
-.settings .detail > :is(.form, .banner) {
+.settings .detail > .form {
   max-width: 40rem;
   margin-inline: auto;
 }
@@ -185,31 +140,6 @@ main:has(> div > .settings) {
 }
 .settings .back > svg {
   rotate: 180deg;
-}
-.settings .banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s3);
-  margin-bottom: var(--s4);
-  padding: var(--s3);
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  border-radius: var(--r-panel);
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-}
-.settings .banner > p {
-  display: grid;
-  flex: 1 1 14rem;
-  gap: 2px;
-}
-.settings .banner > p > span {
-  color: var(--dim);
-  font-size: var(--t2);
-}
-.settings .pair {
-  display: flex;
-  gap: var(--s2);
-  margin-left: auto;
 }
 
 .settings .block {
@@ -322,11 +252,6 @@ main:has(> div > .settings) {
 }
 .settings .push.danger {
   color: light-dark(var(--red-link), color-mix(in srgb, var(--red) 70%, var(--white)));
-}
-.settings .push.main {
-  background: var(--fg);
-  color: var(--bg);
-  font-weight: 600;
 }
 .settings .menu {
   position: relative;
@@ -534,7 +459,7 @@ main:has(> div > .settings) {
   min-height: var(--touch);
   padding-block: var(--s1);
 }
-[data-targets="large"] .settings :is(.push, .menu > select, .seg > label, .find > input) {
+[data-targets="large"] .settings :is(.push, .menu > select, .seg > label, [role="search"] input) {
   min-height: calc(var(--touch) - 2 * var(--s1));
 }
 [data-targets="large"] .settings .top .icon {

@@ -117,7 +117,7 @@ export function Widget({ value, onChange, onReady, onExport }: Props) {
       </Library>
       <Bar side="actions">
         <Btn className="short" on={sound === 1} aria-pressed={sound === 1} onClick={mute}>
-          <Icon name="volume_up" />
+          <Icon name="volume" />
           Sound
         </Btn>
       </Bar>

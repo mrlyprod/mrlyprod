@@ -21,5 +21,5 @@ cargo run --release --manifest-path research/random/lab/rs/major-arcs/Cargo.toml
 cargo run --release --manifest-path research/random/lab/rs/major-arcs/Cargo.toml -- model 32
 cargo run --release --manifest-path research/random/lab/rs/major-arcs/Cargo.toml -- terms 32 36
 cargo run --release --manifest-path research/random/lab/rs/major-arcs/Cargo.toml -- cubes 33
-cargo test --release --manifest-path research/random/lab/rs/major-arcs/Cargo.toml
+bash research/scripts/witness.sh major-arcs
 ```

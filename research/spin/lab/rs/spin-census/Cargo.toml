@@ -8,5 +8,6 @@ mrly-math = "0.2.0"
 mrly-spin = "0.2.0"
 mrly-tensor = "0.2.0"
 mrly-two = "0.2.0"
+witness = { path = "../../../../shared/witness" }
 
 [workspace]

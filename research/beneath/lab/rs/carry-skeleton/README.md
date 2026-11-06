@@ -26,7 +26,7 @@
 ## RUN
 
 - `cargo run --release --manifest-path research/beneath/lab/rs/carry-skeleton/Cargo.toml` from the repo root. `7.53s` on one thread, `7.43s` of it the depth sampling. Prints only, writes nothing.
-- `cargo test --manifest-path research/beneath/lab/rs/carry-skeleton/Cargo.toml`, `12` tests, under a second after the build.
+- `bash research/scripts/witness.sh carry-skeleton`, `12` witnesses, under a second after the build.
 
 ## READS
 

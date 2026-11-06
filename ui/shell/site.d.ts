@@ -27,6 +27,7 @@ declare module "site:routes" {
     contact: string;
     tree: { name: string; nodes: { name: string; href: string }[] }[];
     git: { slug: string; branch: string; folder: string };
+    designs: { id: string; title: string }[];
     min?: [number, number];
     doors?: undefined;
   };
@@ -46,15 +47,12 @@ declare module "site:widgets" {
 }
 
 declare module "site:frame" {
-  export const frame: string;
+  export const frames: Record<string, string>;
 }
 
 declare module "site:design" {
-  export const design: import("./design.ts").Design;
-}
-
-declare module "site:design/pulldown" {
-  export const pulldown: import("./design.ts").Pulldown | null;
+  export const names: string[];
+  export const designs: Record<string, () => Promise<import("./design.ts").Design>>;
 }
 
 declare module "site:css" {

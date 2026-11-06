@@ -14,8 +14,10 @@
       "designs/**",
       "sites/**",
       "sim/**",
-      "aws/**",
+      "infra/**",
       "packages/js/draw/**",
+      "packages/js/sprites/**",
+      "collections/**",
       "package.json",
       "biome.json",
       "!!research",
@@ -24,7 +26,6 @@
       "!**/*.html",
       "!**/*.md",
       "!os/hosts/cloud/edge.js",
-      "!ui/shared/fonts",
       "!apps/stats/fixture.json",
       "!sites/net/launchpad.json",
       "!sites/com/site/launchpad.json",
@@ -69,21 +70,16 @@
   },
   "overrides": [
     {
-      "includes": ["ui/kit/view.tsx", "ui/shell/settings/pane.tsx", "designs/modern/dock.tsx"],
+      "includes": [
+        "ui/kit/view.tsx",
+        "ui/shell/settings/pane.tsx",
+        "designs/modern/parts/dock.tsx",
+        "designs/*/parts/table.tsx"
+      ],
       "linter": {
         "rules": {
           "suspicious": {
             "noArrayIndexKey": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["designs/pixel/bar.tsx"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "noNoninteractiveElementToInteractiveRole": "off"
           }
         }
       }

@@ -3,6 +3,7 @@ import { blend, HUES } from "../../kit/color.ts";
 import type { MenuRow } from "../../kit/controls.tsx";
 import {
   Btn,
+  Empty,
   Export,
   Fold,
   Group,
@@ -10,10 +11,12 @@ import {
   Menu,
   Modal,
   Pick,
+  Search,
   Segment,
   Slider,
   Text,
   Toggle,
+  Tooltip,
 } from "../../kit/controls.tsx";
 import { flip } from "../../kit/keys.tsx";
 import { Knobs } from "../../kit/knobs.tsx";
@@ -110,9 +113,11 @@ export function Controls() {
         <Btn primary>Primary</Btn>
         <Btn on>On</Btn>
         <Btn>Plain</Btn>
-        <Btn className="icon" aria-label="Info" title="Icon">
-          <Icon name="info" />
-        </Btn>
+        <Tooltip text="Info">
+          <Btn className="icon" aria-label="Info">
+            <Icon name="info" />
+          </Btn>
+        </Tooltip>
         <Btn disabled>Disabled</Btn>
         <Menu rows={rows}>Menu</Menu>
         <Btn onClick={() => modal.current?.showModal()}>Modal</Btn>
@@ -178,16 +183,7 @@ export function Library() {
     <div className="lanes">
       <div className="library box">
         <h2>Library</h2>
-        <label className="find">
-          <Icon name="search" />
-          <input
-            type="search"
-            value={find}
-            placeholder="Search"
-            aria-label="Search Library"
-            onChange={(e) => setFind(e.target.value)}
-          />
-        </label>
+        <Search label="Search Library" value={find} placeholder="Search" onChange={setFind} />
         <div className="chips" role="radiogroup" aria-label="Library filter">
           {FILTERS.map(([v, text]) => (
             <button
@@ -208,6 +204,7 @@ export function Library() {
             {cool.map(item)}
           </Shelf>
         )}
+        {warm.length + cool.length === 0 && <Empty icon="search" title="No Results" />}
       </div>
     </div>
   );

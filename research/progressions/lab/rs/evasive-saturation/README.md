@@ -14,7 +14,7 @@
 
 ## THE CONTROLS
 
-- `cargo test`: packed addition and negation against digit arithmetic on `20000` random pairs; the two norms are multiplicative, anisotropic and onto; the largest subset of `Z_7` free of four-term progressions has `4` points; `200000` random lines meet the level set in at most `3` points.
+- `bash research/scripts/witness.sh evasive-saturation`: packed addition and negation against digit arithmetic on `20000` random pairs; the two norms are multiplicative, anisotropic and onto; the largest subset of `Z_7` free of four-term progressions has `4` points; `200000` random lines meet the level set in at most `3` points.
 - The run asserts `card S = 16807`, the line count, no progression in `S`, and at least one in the spoiled set.
 
 ## RUN

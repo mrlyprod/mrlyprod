@@ -656,34 +656,45 @@ pub fn report(height: u64, threads: usize) {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("shift_pair_has_radius_three", shift_pair_has_radius_three),
+        (
+            "one_four_has_radius_exactly_two",
+            one_four_has_radius_exactly_two,
+        ),
+        (
+            "four_thirteen_sits_at_theta_for_gasket_digits_only",
+            four_thirteen_sits_at_theta_for_gasket_digits_only,
+        ),
+        (
+            "one_four_walks_follow_the_recurrence",
+            one_four_walks_follow_the_recurrence,
+        ),
+    ];
 
     fn cert(s: u64, t: u64, digits: Digits) -> Cert {
         let (_, live) = build(s, t, digits);
         certify(&live, &radii::primes(primes_for(live.edges.len()).max(2)))
     }
 
-    #[test]
     fn shift_pair_has_radius_three() {
         let c = cert(1, 3, Digits::Free);
         assert!(c.at3 && !c.le2);
     }
 
-    #[test]
     fn one_four_has_radius_exactly_two() {
         let c = cert(1, 4, Digits::Gasket);
         assert!(c.eq2 && !c.at3 && !c.theta);
     }
 
-    #[test]
     fn four_thirteen_sits_at_theta_for_gasket_digits_only() {
         assert!(cert(4, 13, Digits::Gasket).theta);
         assert!(!cert(4, 13, Digits::Free).theta);
     }
 
-    #[test]
     fn one_four_walks_follow_the_recurrence() {
         let (_, live) = build(1, 4, Digits::Gasket);
         let g: Vec<u128> = walks(&live, 10).iter().map(|row| row[0]).collect();

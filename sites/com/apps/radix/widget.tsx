@@ -28,6 +28,7 @@ import {
   DIM,
   dial,
   every,
+  fits,
   flat,
   LETTERS,
   PRESETS,
@@ -38,7 +39,6 @@ import {
   toggle,
   turn,
   twisted,
-  wears,
 } from "./engine.ts";
 import type { Doors, Knobs, Listed, Moves, Radix, Sketch } from "./scene.ts";
 import { file, make, SPEC, presets as shelf, sketch, units as UNITS } from "./scene.ts";
@@ -293,7 +293,7 @@ export function Widget({ value, onChange, onReady, onExport, onStatus, units: gi
     [units, value.ring, value.base, value.d, value.t],
   );
   const presets = useMemo(() => (units ? shelf(units) : []), [units]);
-  const name = presets.find(([, one]) => wears(value, one))?.[0] ?? "";
+  const name = presets.find(([, one]) => fits(value, one))?.[0] ?? "";
   const label = PRESETS.find(([one]) => one === name)?.[1] ?? "Custom";
   const now = useRef<Now | null>(null);
   now.current = { value, onChange, dialed, units, name };

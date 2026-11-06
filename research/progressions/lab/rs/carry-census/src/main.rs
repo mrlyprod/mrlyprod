@@ -290,6 +290,7 @@ fn census(bases: std::ops::RangeInclusive<u32>, checked: u32) -> Vec<u32> {
 }
 
 fn main() {
+    witness::dispatch(witnesses::ALL);
     let start = Instant::now();
     let mismatches = control(3..=12, 5);
     println!("control mismatches: {mismatches}");
@@ -303,15 +304,37 @@ fn main() {
     println!("total {:.2} seconds", start.elapsed().as_secs_f64());
 }
 
-#[cfg(test)]
-mod tests {
+mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("signed_set_is_not_symmetric", signed_set_is_not_symmetric),
+        ("stanley_design_is_free", stanley_design_is_free),
+        (
+            "full_digit_set_has_a_progression_in_f",
+            full_digit_set_has_a_progression_in_f,
+        ),
+        ("base_five_closes_by_a_carry", base_five_closes_by_a_carry),
+        (
+            "even_digits_exit_without_closing",
+            even_digits_exit_without_closing,
+        ),
+        ("base_nineteen_record_is_free", base_nineteen_record_is_free),
+        (
+            "levels_three_and_five_agree_with_the_criterion",
+            levels_three_and_five_agree_with_the_criterion,
+        ),
+        ("sums_past_bit_63_are_kept", sums_past_bit_63_are_kept),
+        (
+            "base_thirty_five_record_is_nine",
+            base_thirty_five_record_is_nine,
+        ),
+    ];
 
     fn mask(ds: &[u32]) -> u64 {
         ds.iter().fold(0, |m, &d| m | 1 << d)
     }
 
-    #[test]
     fn signed_set_is_not_symmetric() {
         let m = mask(&[0, 1, 3]);
         let ff = sums(m);
@@ -319,19 +342,16 @@ mod tests {
         assert!(!signed(5, m, ff));
     }
 
-    #[test]
     fn stanley_design_is_free() {
         assert!(free(3, mask(&[0, 1])));
         assert_eq!(brute(3, mask(&[0, 1]), 8), None);
     }
 
-    #[test]
     fn full_digit_set_has_a_progression_in_f() {
         assert!(!digit_free(mask(&[0, 1, 2])));
         assert!(!free(3, mask(&[0, 1, 2])));
     }
 
-    #[test]
     fn base_five_closes_by_a_carry() {
         let m = mask(&[0, 1, 3]);
         assert!(digit_free(m));
@@ -340,7 +360,6 @@ mod tests {
         assert!(level(5, m, 2).contains(&5) && level(5, m, 2).contains(&1));
     }
 
-    #[test]
     fn even_digits_exit_without_closing() {
         let m = mask(&[0, 2]);
         assert_eq!(exits(4, m), (true, true));
@@ -348,7 +367,6 @@ mod tests {
         assert_eq!(brute(4, m, 6), None);
     }
 
-    #[test]
     fn base_nineteen_record_is_free() {
         let m = mask(&[0, 1, 3, 12, 14, 15]);
         assert!(free(19, m));
@@ -356,7 +374,6 @@ mod tests {
         assert_eq!(brute(19, m, 3), None);
     }
 
-    #[test]
     fn levels_three_and_five_agree_with_the_criterion() {
         for base in 3..=9 {
             for m in families(base) {
@@ -380,7 +397,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn sums_past_bit_63_are_kept() {
         let m = mask(&[0, 34]);
         assert_eq!(sums(m) >> 68 & 1, 1);
@@ -389,7 +405,6 @@ mod tests {
         assert!(!signed(67, m, sums(m)));
     }
 
-    #[test]
     fn base_thirty_five_record_is_nine() {
         let m = mask(&[0, 1, 3, 4, 10, 12, 22, 26, 28]);
         assert!(free(35, m));

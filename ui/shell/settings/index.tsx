@@ -3,7 +3,8 @@ import type { PaneNode } from "@mrlyprod/os/kernel/index.ts";
 import type { ChangeEvent, KeyboardEvent as Pressed } from "react";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Icon, Menu } from "../../kit/controls.tsx";
+import type { Asked } from "../../kit/controls.tsx";
+import { ask, Empty, Icon, Menu, Search, toast } from "../../kit/controls.tsx";
 import { text } from "../../kit/export.ts";
 import { rank, terms } from "../launch.ts";
 import type { Pane } from "../panes.ts";
@@ -22,13 +23,10 @@ type Live = { open: (to: string, how?: How) => void; pop: () => void };
 
 type RowProps = { one: Pane; on: boolean; labels: string[] };
 
-type OfferProps = { code: string; drop: () => void };
-
 type SettingsProps = { row: Titled; site: Site; start: URL; panes: PaneNode[] };
 
 const ROOT = "/settings/";
 const FIRST = "appearance";
-const SAID = 2500;
 const SHOWN = 3;
 
 const IDS = new Set(PANES.map((one) => one.id));
@@ -84,59 +82,33 @@ function Row({ one, on, labels }: RowProps) {
   );
 }
 
-function Offer({ code, drop }: OfferProps) {
-  const [broken, setBroken] = useState(false);
+const APPLY: Asked = {
+  title: "Apply settings from this link?",
+  text: "They replace the settings kept in this browser.",
+  actions: [{ label: "Not now" }, { label: "Apply" }],
+};
+
+const BROKEN: Asked = { title: "This settings link is broken.", text: "It may have been cut short." };
+
+async function offer(code: string, drop: () => void) {
   const data = decode(code);
-  const apply = () => {
-    try {
-      unpack(data);
-      location.replace(ROOT);
-    } catch {
-      setBroken(true);
-    }
-  };
-  if (!data || broken) {
-    return (
-      <div className="banner" role="alert">
-        <p>
-          <strong>This settings link is broken.</strong>
-          <span>It may have been cut short.</span>
-        </p>
-        <span className="pair">
-          <button type="button" className="push" onClick={drop}>
-            OK
-          </button>
-        </span>
-      </div>
-    );
+  if (data && (await ask(APPLY)) !== "Apply") return drop();
+  try {
+    unpack(data);
+    location.replace(ROOT);
+  } catch {
+    await ask(BROKEN);
+    drop();
   }
-  return (
-    <div className="banner" role="region" aria-label="Settings link">
-      <p>
-        <strong>Apply settings from this link?</strong>
-        <span>They replace the settings kept in this browser.</span>
-      </p>
-      <span className="pair">
-        <button type="button" className="push" onClick={drop}>
-          Not now
-        </button>
-        <button type="button" className="push main" onClick={apply}>
-          Apply
-        </button>
-      </span>
-    </div>
-  );
 }
 
 export function Settings({ row, site, start, panes }: SettingsProps) {
   const [here, setHere] = useState(() => spot(start.pathname) + start.search);
   const [query, setQuery] = useState("");
-  const [said, setSaid] = useState("");
   const box = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const file = useRef<HTMLInputElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | 0>(0);
   const live = useRef<Live | null>(null);
 
   const cut = here.indexOf("?");
@@ -223,22 +195,19 @@ export function Settings({ row, site, start, panes }: SettingsProps) {
       document.removeEventListener("click", click);
       document.removeEventListener("keydown", key);
       removeEventListener("popstate", pop);
-      clearTimeout(timer.current);
     };
   }, []);
 
-  const tell = (words: string) => {
-    clearTimeout(timer.current);
-    setSaid(words);
-    timer.current = setTimeout(() => setSaid(""), SAID);
-  };
+  useEffect(() => {
+    if (code !== null) void offer(code, drop);
+  }, [code]);
 
   const copy = () => {
     const link = share(location.origin);
     const done = navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject(new Error("no clipboard"));
     done.then(
-      () => tell("Link copied"),
-      () => tell("The link could not be copied"),
+      () => toast("Link copied", { kind: "ok" }),
+      () => toast("The link could not be copied", { kind: "warn" }),
     );
   };
 
@@ -252,7 +221,7 @@ export function Settings({ row, site, start, panes }: SettingsProps) {
       unpack(JSON.parse(await one.text()));
       location.reload();
     } catch {
-      tell("That file holds no settings");
+      toast("That file holds no settings", { kind: "warn" });
     }
   };
 
@@ -262,11 +231,7 @@ export function Settings({ row, site, start, panes }: SettingsProps) {
   };
 
   const press = (e: Pressed<HTMLInputElement>) => {
-    if (e.key === "Escape" && query) {
-      e.preventDefault();
-      e.stopPropagation();
-      setQuery("");
-    } else if (e.key === "Enter") {
+    if (e.key === "Enter") {
       e.preventDefault();
       if (words.length && hits.length) open(hits[0].href);
     } else if (e.key === "ArrowDown") {
@@ -294,28 +259,19 @@ export function Settings({ row, site, start, panes }: SettingsProps) {
     else links[Math.min(to, links.length - 1)].focus();
   };
 
-  const offer = code !== null && <Offer key={code} code={code} drop={drop} />;
-
   return (
     <div className={pane ? "settings two" : "settings"} ref={box}>
       <div className="side">
-        {!pane && offer}
         <div className="top">
-          <form role="search" className="find" onSubmit={(e) => e.preventDefault()}>
-            <Icon name="search" size={16} />
-            <input
-              ref={field}
-              type="search"
-              value={query}
-              placeholder="Search"
-              aria-label="Search settings"
-              autoComplete="off"
-              spellCheck={false}
-              enterKeyHint="go"
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={press}
-            />
-          </form>
+          <Search
+            ref={field}
+            label="Search settings"
+            value={query}
+            placeholder="Search"
+            enterKeyHint="go"
+            onChange={setQuery}
+            onKeyDown={press}
+          />
           <Menu
             className="icon"
             aria-label="More"
@@ -325,12 +281,9 @@ export function Settings({ row, site, start, panes }: SettingsProps) {
               ["Import settings…", () => file.current?.click()],
             ]}
           >
-            <Icon name="more_horiz" />
+            <Icon name="more" />
           </Menu>
           <input ref={file} type="file" accept="application/json,.json" hidden onChange={load} />
-          <p className="said" role="status">
-            {said}
-          </p>
         </div>
         <nav aria-label="Settings">
           {hits.length ? (
@@ -340,13 +293,12 @@ export function Settings({ row, site, start, panes }: SettingsProps) {
               ))}
             </ul>
           ) : (
-            <p className="none">No results</p>
+            <Empty icon="search" title="No Results" text={`Nothing matches ${query.trim()}.`} />
           )}
         </nav>
       </div>
       {pane && (
         <div className="detail">
-          {offer}
           <Body key={shown} node={pane} site={site} />
         </div>
       )}

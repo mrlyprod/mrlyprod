@@ -1,8 +1,8 @@
-import { pulldown } from "site:design/pulldown";
 import { rows } from "site:routes";
 import type { Item, Menu, Model } from "../kit/menus.ts";
 import { button, item, sheet } from "../kit/pulldown.ts";
 import { px } from "../kit/px.ts";
+import { design } from "./active.ts";
 import type { Note } from "./catalog.ts";
 import { app, notes, recent, shelves } from "./catalog.ts";
 import type { Pulldown } from "./design.ts";
@@ -12,7 +12,7 @@ const RECENT = 5;
 
 const PLAIN: Pulldown = { drop: 6, button, sheet: () => sheet(), item };
 
-const look = pulldown ?? PLAIN;
+const look = () => design.pulldown ?? PLAIN;
 
 let held: Model | null = null;
 let topics: Note[] = [];
@@ -64,7 +64,7 @@ const live = (drop: HTMLElement) => [
 ];
 
 function place(drop: HTMLElement, button: HTMLElement) {
-  const gap = look.drop;
+  const gap = look().drop;
   const at = button.getBoundingClientRect();
   drop.style.left = px(Math.max(gap, Math.min(at.left, innerWidth - drop.offsetWidth - gap)));
   drop.style.top = px(at.bottom + gap);
@@ -111,18 +111,19 @@ function render() {
   nav.replaceChildren();
   if (!held) return;
   const apple = mac();
+  const drawn = look();
   full(held).forEach((menu, n) => {
-    const button = look.button(menu.name);
+    const button = drawn.button(menu.name);
     button.setAttribute("aria-haspopup", "menu");
     button.setAttribute("aria-expanded", "false");
-    const drop = look.sheet(menu.name);
+    const drop = drawn.sheet(menu.name);
     drop.id = `menu-${menu.name.toLowerCase()}`;
     drop.dataset.menu = menu.name;
     drop.popover = "auto";
     drop.setAttribute("role", "menu");
     drop.setAttribute("aria-label", menu.name);
     button.setAttribute("aria-controls", drop.id);
-    drop.append(...menu.items.map((row) => look.item(row, apple)));
+    drop.append(...menu.items.map((row) => drawn.item(row, apple)));
     drop.addEventListener("toggle", (e) => {
       const open = e.newState === "open";
       button.setAttribute("aria-expanded", String(open));

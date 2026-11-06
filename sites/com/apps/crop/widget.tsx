@@ -52,7 +52,7 @@ export const panes = (value: Value, onChange: (patch: Patch) => void, unit: Mrly
   design(value, onChange, unit, SPEC),
 ];
 
-const wears = (value: Value, patch: Value) => Object.entries(patch).every(([key, v]) => value[key] === v);
+const fits = (value: Value, patch: Value) => Object.entries(patch).every(([key, v]) => value[key] === v);
 
 export function Crops({ value, onChange, unit }: CropsProps) {
   const tick = useTheme();
@@ -76,7 +76,7 @@ export function Crops({ value, onChange, unit }: CropsProps) {
             <Item
               key={label}
               label={label}
-              on={wears(value, patch)}
+              on={fits(value, patch)}
               onPick={() => onChange(patch)}
               art={art(patch, [patch.shape, value.radius, value.mode, value.policy, value.edge])}
             />
@@ -89,7 +89,7 @@ export function Crops({ value, onChange, unit }: CropsProps) {
             <Item
               key={label}
               label={label}
-              on={wears(value, patch)}
+              on={fits(value, patch)}
               onPick={() => onChange(patch)}
               art={art(patch, Object.values(patch))}
             />

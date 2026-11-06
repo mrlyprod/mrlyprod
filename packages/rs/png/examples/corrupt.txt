@@ -1,0 +1,8 @@
+untouched                ok, 8 x 8
+no bytes at all          not a png file.
+not a png                not a png file.
+cut in half              the file ends before its IEND chunk.
+last 4 bytes missing     the file ends inside chunk IEND.
+one bit flipped          chunk IDAT fails its checksum.
+claims 100000 x 100000   100000 x 100000 pixels is over the limit of 67108864.
+width changed to 9       the image data holds 200 bytes, not the 224 its size needs.

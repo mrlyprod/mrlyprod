@@ -40,6 +40,7 @@ const BEAUTY: [(&str, &str); 8] = [
 ];
 
 fn main() -> Result<()> {
+    witness::dispatch(sequences::witnesses::ALL);
     let start = Instant::now();
     let mut rows = walk()?;
     let generated = rows.len();

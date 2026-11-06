@@ -1,6 +1,6 @@
 import type { Color, Frame, Pen, Point } from "@mrlyprod/draw";
 import { frame as box, hex, canvas as pen, svg as sheet } from "@mrlyprod/draw";
-import type { Cell6d } from "@mrlyprod/math";
+import type { CellHex } from "@mrlyprod/math";
 import type { Paints } from "@mrlyprod/ui/kit/color.ts";
 import { rgb, TINTS } from "@mrlyprod/ui/kit/color.ts";
 import type { Code, Crate, Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
@@ -34,7 +34,7 @@ export type Cut = Empty | Full;
 
 export type Reach = { empty: true } | Pick<Full, "empty" | "low" | "high">;
 
-export type Art = { mesh: Cell6d; svg?: undefined } | { mesh?: undefined; svg: string } | null;
+export type Art = { mesh: CellHex; svg?: undefined } | { mesh?: undefined; svg: string } | null;
 
 export type Study = ReturnType<typeof study>;
 
@@ -179,7 +179,7 @@ export function points(mrly: Mrly, code: Code, base: number, level: number, list
 }
 
 export function section(mrly: Mrly, code: Code, base: number, level: number) {
-  return drawings(`section ${code} ${base} ${level}`, () => mrly.six.cut_design(code, NUMBER, level, base));
+  return drawings(`section ${code} ${base} ${level}`, () => mrly.hex.cut_design(code, NUMBER, level, base));
 }
 
 export function plane(mrly: Mrly, value: Raw) {
@@ -304,7 +304,7 @@ export function make(canvas: HTMLCanvasElement, view: Seen, opts: Given = {}) {
   const { mrly, tell } = opts;
   if (!mrly) throw new Error("cuts: the scene wants the design crates as opts.mrly");
   const ctx = canvas.getContext("2d")!;
-  const codes = { fill: mrly.six.FILL(), void: mrly.six.VOID() };
+  const codes = { fill: mrly.hex.FILL(), void: mrly.hex.VOID() };
   let value = settle({ ...opts, mrly });
   let plan = study(mrly, value);
   let dirty = true;

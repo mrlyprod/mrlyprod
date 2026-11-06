@@ -1,0 +1,20 @@
+[package]
+name = "mrly-music"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-audio.workspace = true
+mrly-name.workspace = true
+mrly-rand.workspace = true
+mrly-wav.workspace = true
+serde.workspace = true

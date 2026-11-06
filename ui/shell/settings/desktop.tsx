@@ -1,14 +1,12 @@
 import type { Site } from "site:routes";
 import type { ReactNode } from "react";
-import { useReducer } from "react";
 import type { Saver } from "../../kit/rows.ts";
-import { parts } from "../active.ts";
+import { design, parts } from "../active.ts";
 import { AppIcon } from "../appicon.tsx";
 import { app, KNOWN, PAD, redock } from "../catalog.ts";
 import { desk } from "../desk.ts";
 import { docked } from "../launch.ts";
-import { measure } from "../measure.ts";
-import { KEY, magnify, root, screen, write } from "../prefs.ts";
+import { KEY, magnify, screen, write } from "../prefs.ts";
 import { PLAIN } from "../tiles.ts";
 import { kept, WIDGETS } from "../widgets.tsx";
 import type { Choice } from "./ui.tsx";
@@ -17,7 +15,7 @@ import { usePref } from "./use.ts";
 
 const DOCK = Boolean(parts.dock);
 
-const LENS = DOCK && Boolean(measure.lens);
+const LENS = DOCK && Boolean(design.lens);
 
 export const FIND = [
   ...(parts.desk ? ["Wallpaper", "Desktop picture", "Random"] : []),
@@ -25,8 +23,6 @@ export const FIND = [
   ...(DOCK ? ["Dock", "Dock apps", "Add to Dock", "Remove from Dock", "Reset dock"] : []),
   ...(LENS ? ["Magnify"] : []),
   "Launchpad",
-  "Window width",
-  "Reset window width",
 ];
 
 const DICE = "#...# ..... ..#.. ..... #...#";
@@ -150,28 +146,6 @@ function Dock() {
   );
 }
 
-function Windows() {
-  const page = usePref(KEY.page);
-  const wide = usePref(KEY.wide);
-  const [, bump] = useReducer((n: number) => n + 1, 0);
-  const style = root().style;
-  if (!(page || wide || style.getPropertyValue("--win") || style.getPropertyValue("--wide"))) return null;
-  const reset = () => {
-    write(KEY.page, "");
-    write(KEY.wide, "");
-    style.removeProperty("--win");
-    style.removeProperty("--wide");
-    bump();
-  };
-  return (
-    <Section title="Windows" foot="Drag the edge of a window to resize it.">
-      <Action label="Reset window width" hint="Go back to the default width." onClick={reset}>
-        Reset
-      </Action>
-    </Section>
-  );
-}
-
 export default function Pane({ site }: { site: Site }) {
   return (
     <>
@@ -179,7 +153,6 @@ export default function Pane({ site }: { site: Site }) {
       {parts.widgets && <Widgets />}
       {DOCK && <Dock />}
       {DOCK && <Apps />}
-      <Windows />
     </>
   );
 }

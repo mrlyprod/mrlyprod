@@ -501,9 +501,16 @@ pub fn run() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("grid_matches_brute", grid_matches_brute),
+        ("large_set_matches_brute", large_set_matches_brute),
+        ("gram_pins", gram_pins),
+        ("shape_pins", shape_pins),
+        ("witness_matches_enumeration", witness_matches_enumeration),
+    ];
 
     fn brute(q: u64, digits: &[u64], l: usize) -> Vec<(f64, f64)> {
         let n = (q as usize).pow(l as u32);
@@ -539,7 +546,6 @@ mod tests {
             .unwrap()
     }
 
-    #[test]
     fn grid_matches_brute() {
         for (q, label, l) in [(3, "01", 6), (4, "012", 4), (5, "0123", 3), (10, "ex7", 3)] {
             let f = fam(q, label);
@@ -551,7 +557,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn large_set_matches_brute() {
         let f = fam(3, "01");
         let g = grid(&f, 6);
@@ -565,7 +570,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn gram_pins() {
         let f = fam(3, "01");
         let g = grid(&f, 6);
@@ -585,7 +589,6 @@ mod tests {
         assert!((fg.lo - 729.0).abs() < 1e-6 && fg.hi <= 729.0 * (1.0 + 1e-9));
     }
 
-    #[test]
     fn shape_pins() {
         let s = shape(&[0, 1, 2, 10, 11, 20], 30);
         assert_eq!((s.min_gap, s.runs, s.max_run), (1, 3, 3));
@@ -595,7 +598,6 @@ mod tests {
         assert_eq!((e.min_gap, e.runs, e.max_run), (30, 1, 1));
     }
 
-    #[test]
     fn witness_matches_enumeration() {
         let f = fam(3, "01");
         let l = 8;

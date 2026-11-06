@@ -75,6 +75,7 @@ fn check() {
 }
 
 fn main() {
+    witness::dispatch(&[count::witnesses::ALL].concat());
     let verb = std::env::args().nth(1).unwrap_or_else(|| "all".to_string());
     let clock = Instant::now();
     if verb == "check" || verb == "all" {

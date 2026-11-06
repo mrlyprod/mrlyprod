@@ -597,10 +597,17 @@ pub fn run() {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
     use crate::n_div;
+
+    pub const ALL: &[witness::Witness] = &[
+        ("carry_matches_brute", carry_matches_brute),
+        ("carry_matches_residue_dp", carry_matches_residue_dp),
+        ("mobius_is_certified", mobius_is_certified),
+        ("mobius_rows_pinned", mobius_rows_pinned),
+        ("carry_rows_pinned", carry_rows_pinned),
+    ];
 
     fn brute(q: u64, digits: &[u64], l: usize, e: u128) -> u128 {
         fn rec(v: u128, len: usize, q: u64, digits: &[u64], l: usize, e: u128, hits: &mut u128) {
@@ -619,7 +626,6 @@ mod tests {
         hits
     }
 
-    #[test]
     fn carry_matches_brute() {
         for (q, digits, l) in [
             (3u64, vec![0u64, 1], 8usize),
@@ -645,7 +651,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn carry_matches_residue_dp() {
         let mut checks = 0;
         for (q, digits) in [(3u64, vec![0u64, 1]), (10, ex7_digits())] {
@@ -675,7 +680,6 @@ mod tests {
         );
     }
 
-    #[test]
     fn mobius_is_certified() {
         for c in contexts(40).iter() {
             for t in 1..=40 {
@@ -684,7 +688,6 @@ mod tests {
         }
     }
 
-    #[test]
     fn mobius_rows_pinned() {
         let cs = contexts(40);
         let mut got: Vec<String> = Vec::new();
@@ -711,7 +714,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-    #[test]
     fn carry_rows_pinned() {
         let cs = contexts(40);
         let res: Vec<Vec<Res>> = cs

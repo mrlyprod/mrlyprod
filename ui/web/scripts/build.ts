@@ -15,8 +15,9 @@ import { esc } from "../../kit/md/text.ts";
 import { rng } from "../../kit/rand.ts";
 import type { App, Host, Pad, Row, Saver, Topic } from "../../kit/rows.ts";
 import { tintCss } from "../../kit/theme/tint.ts";
+import { apply } from "../../shell/active.ts";
 import type { Design } from "../../shell/design.ts";
-import { named as designNamed, draw, folder, pulldown, runtime, sheets, source } from "./design.ts";
+import { draw, LISTED, sheets, source } from "./design.ts";
 import { forest, config as gitConfig, TREE, tree } from "./git.ts";
 import { closed, HOME, home, REPO, SITE, UNITS, unit } from "./home.ts";
 import { llms, type Shelf } from "./llms.ts";
@@ -94,16 +95,19 @@ export type State = {
   dropped: number;
 };
 
-export type Dressed = {
-  design: string;
-  sheets: string[];
+export type Look = {
+  name: string;
+  title: string;
   skin: Design["skin"];
   bar: Design["bar"];
-  pulldown?: string;
   frame: string;
 };
 
-export type Ready = State & Dressed & { boot: string; css: Record<string, string>; assets: Out[] };
+export type Dressed = { designs: Look[] };
+
+export type Primed = { boot: string; css: Record<string, string>; pages: Record<string, string>; assets: Out[] };
+
+export type Ready = State & Dressed & Primed;
 
 const lede = (text: string, max = 200) => {
   const all = summary(text, Infinity);
@@ -263,7 +267,7 @@ export function topics(known: Set<string>, at = RESEARCH): Topic[] {
       if (data.slug && data.slug !== slug)
         throw new Error(`site: research/${slug}/README.md names the slug ${data.slug}, and the folder is ${slug}`);
       if (data.figure && !known.has(data.figure))
-        throw new Error(`site: research/${slug}/README.md wears the figure ${data.figure}, which no roster file draws`);
+        throw new Error(`site: research/${slug}/README.md uses the figure ${data.figure}, which no roster file draws`);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date ?? ""))
         throw new Error(
           `site: research/${slug}/README.md dates itself ${data.date ?? "nowhere"}; its front matter needs a date, YYYY-MM-DD`,
@@ -351,7 +355,7 @@ export function apps(found = places()): App[] {
     if (!icon && !one.hidden)
       throw say(`shows on the site, and ${rel(dir)}/${NAMES.icon} is missing; only a hidden app goes without an icon`);
     if (!one.hidden && !existsSync(at("icon.svg")))
-      throw say(`shows on the site, and ${rel(at("icon.svg"))} is missing; every shown app wears an app icon`);
+      throw say(`shows on the site, and ${rel(at("icon.svg"))} is missing; every shown app needs an app icon`);
     return { id, dir, ...one, page: pages[0] === "source" ? null : pages[0]!, icon };
   });
   if (!list.some((one) => one.id === "home")) throw new Error("site: no route root holds home/, and home is /");
@@ -621,11 +625,9 @@ export function reach(seeds: string[]): string[] {
   return [...seen].sort();
 }
 
-const dressing = () => [folder(designNamed())];
-
 export const shipped = (figures: Figure[], list: App[] = apps()) =>
   reach([
-    ...[...ROOTS, ...(SITE.apps ?? []).map(shelved), join(repo, "shell"), ...dressing()].flatMap((dir) =>
+    ...[...ROOTS, ...(SITE.apps ?? []).map(shelved), join(repo, "shell"), ...LISTED].flatMap((dir) =>
       existsSync(dir) ? walk(dir) : [],
     ),
     join(repo, "kit", "git", "page.ts"),
@@ -659,7 +661,7 @@ export function state(): State {
     if (seen.has(row.route)) throw new Error(`site: two rows claim ${row.route}`);
     seen.add(row.route);
     if (row.figure && !known.has(row.figure))
-      throw new Error(`site: ${row.route} wears the figure ${row.figure}, which no roster file draws`);
+      throw new Error(`site: ${row.route} uses the figure ${row.figure}, which no roster file draws`);
     if (!row.source) continue;
     if (!existsSync(rawFile(row.source)))
       throw new Error(`site: ${row.route} reads ${row.source}, which does not exist`);
@@ -795,10 +797,8 @@ export function modules(ready: Ready): Record<string, string> {
     "site:css": `export const css = ${JSON.stringify(ready.css)};`,
     "site:icons": icons(ready.apps),
     "site:widgets": gadgets(ready.apps, ready.widgets),
-    "site:frame": `export const frame = ${JSON.stringify(ready.frame)};`,
-    "site:design": source(ready.design),
-    "site:design/pulldown": pulldown(ready.design, ready.pulldown),
-    ...sheets(ready.design, ready.sheets, ready.skin),
+    "site:frame": `export const frames = ${JSON.stringify(Object.fromEntries(ready.designs.map((one) => [one.name, one.frame])))};`,
+    "site:design": source(ready.designs.map((one) => one.name)),
     "apps:scenes": `export const scenes = ${thunks(scenes(ready))};`,
     "site:world": worlds(ready.world),
     ...Object.fromEntries(
@@ -850,34 +850,44 @@ async function outs(list: BuildArtifact[]): Promise<Out[]> {
   );
 }
 
-const LICENSES = [
-  ...readdirSync(join(repo, "shared", "fonts"))
-    .filter((name) => name.startsWith("LICENSE-"))
-    .map((name) => join(repo, "shared", "fonts", name)),
-  join(repo, "kit", "git", "seti", "LICENSE-seti.txt"),
-];
-
 const faces = (seen: Map<string, string>): Out[] =>
   [...seen].map(([file, url]) => ({ path: url.slice(1), bytes: readFileSync(file) }));
 
-const licenses = (): Out[] => LICENSES.map((file) => ({ path: `fonts/${basename(file)}`, bytes: readFileSync(file) }));
+const credits = (raw: string[]) => (raw.includes("LICENSE") ? [{ name: SITE.title, href: "/raw/LICENSE" }] : []);
 
-const BY: Record<string, string> = { icons: "Material Symbols", seti: "Seti UI" };
+const PAGE = join(repo, "shell", "page.css");
 
-function credits(raw: string[]) {
-  const name = (file: string) => {
-    const stem = basename(file, ".txt").slice("LICENSE-".length);
-    const found = SITE.fonts.faces.find((one) => one.file === stem || one.licence === stem)?.family ?? BY[stem];
-    if (!found) throw new Error(`site: ${rel(file)} ships under /fonts/, and no font of site.json names it`);
-    return { name: found, href: `/fonts/${basename(file)}` };
-  };
-  return [
-    ...LICENSES.map(name).sort((a, b) => a.name.localeCompare(b.name)),
-    ...(raw.includes("LICENSE") ? [{ name: SITE.title, href: "/raw/LICENSE" }] : []),
-  ];
+const styles = (one: Look): BunPlugin => ({
+  name: "design",
+  setup(build) {
+    const held = sheets(one.name, one.skin);
+    mrly.setup(build);
+    build.onResolve({ filter: /^\// }, ({ path }) => (existsSync(path) ? undefined : { path, external: true }));
+    build.onResolve({ filter: /^site:design/ }, ({ path }) => ({ path, namespace: "site" }));
+    build.onLoad({ filter: /.*/, namespace: "site" }, ({ path }) => {
+      if (held[path] === undefined) throw new Error(`site: no design sheet ${path}`);
+      return { contents: held[path], loader: "css" };
+    });
+  },
+});
+
+export async function sheet(one: Look, seen: Map<string, string>): Promise<Out[]> {
+  const built = await Bun.build({
+    entrypoints: [PAGE],
+    minify: true,
+    publicPath: "/",
+    naming: { ...NAMING, entry: `${one.name}-[hash].[ext]` },
+    plugins: [styles(one), fonts(seen)],
+  });
+  if (!built.success)
+    throw new Error(`site: the sheet of the design ${one.name} failed to bundle\n${built.logs.join("\n")}`);
+  const made = await outs(built.outputs);
+  const lead = made.find((each) => each.path.startsWith(`${one.name}-`) && each.path.endsWith(".css"));
+  if (!lead) throw new Error(`site: the design ${one.name} bundled no sheet`);
+  return [lead, ...made.filter((each) => each !== lead)];
 }
 
-async function prime(seen: Map<string, string>) {
+async function prime(seen: Map<string, string>, looks: Look[]): Promise<Primed> {
   const boot = shellFile("boot");
   if (scanner.scanImports(read(boot)).length)
     throw new Error(`site: ${rel(boot)} imports nothing; it runs alone as the blocking classic script of the shell`);
@@ -894,14 +904,14 @@ async function prime(seen: Map<string, string>) {
   const made = await outs(built.outputs);
   const find = (stem: string, ext: string) =>
     made.find((one) => one.path.startsWith(`${stem}-`) && one.path.endsWith(ext))!.path;
+  const pages = await Promise.all(looks.map((one) => sheet(one, seen)));
   return {
     boot: `/${find("boot", ".js")}`,
     css: Object.fromEntries(Object.keys(sheets).map((name) => [name, `/${find(name, ".css")}`])),
-    assets: made,
+    pages: Object.fromEntries(looks.map((one, at) => [one.name, `/${pages[at]![0]!.path}`])),
+    assets: [...made, ...pages.flat()],
   };
 }
-
-let worn = false;
 
 export async function dress(
   title: string,
@@ -910,18 +920,26 @@ export async function dress(
   cart = Boolean((SITE as { cart?: boolean }).cart),
 ): Promise<Dressed> {
   const drawn = await draw();
-  if (!worn) runtime(drawn.name, drawn.design.pulldown);
-  worn = true;
   const { Frame } = await import("../../shell/frame.tsx");
   return {
-    design: drawn.name,
-    sheets: drawn.design.css,
-    skin: drawn.design.skin,
-    bar: drawn.design.bar,
-    pulldown: drawn.design.pulldown,
-    frame: renderToStaticMarkup(createElement(Frame, { title, mark, word, cart })),
+    designs: drawn.map(({ name, design }) => {
+      apply(design);
+      return {
+        name,
+        title: design.title,
+        skin: design.skin,
+        bar: design.bar,
+        frame: renderToStaticMarkup(createElement(Frame, { design, title, mark, word, cart })),
+      };
+    }),
   };
 }
+
+const whole = (made: Primed, dressed: Dressed): Ready => {
+  const held = state();
+  const designs = dressed.designs.map((one) => ({ id: one.name, title: one.title }));
+  return { ...held, ...made, ...dressed, site: { ...held.site, designs } };
+};
 
 let primed: Promise<Ready> | null = null;
 
@@ -930,8 +948,9 @@ let done: Ready | null = null;
 export function ready(): Promise<Ready> {
   if (primed) return primed;
   const seen = new Map<string, string>();
-  primed = Promise.all([prime(seen), dress(SITE.title)]).then(([made, dressed]) => {
-    done = { ...state(), ...made, ...dressed, assets: [...made.assets, ...faces(seen), ...licenses()] };
+  primed = dress(SITE.title).then(async (dressed) => {
+    const made = await prime(seen, dressed.designs);
+    done = whole({ ...made, assets: [...made.assets, ...faces(seen)] }, dressed);
     return done;
   });
   return primed;
@@ -1038,7 +1057,7 @@ function copies(ready: State): Out[] {
 
 export type Built = {
   out: string;
-  design: string;
+  designs: string[];
   rows: Row[];
   files: { path: string; hash: string; type?: string; fixed?: boolean }[];
   raw: number;
@@ -1046,7 +1065,7 @@ export type Built = {
   units: string[];
 };
 
-export function withSite(html: string, bar: Design["bar"]) {
+export function withSite(html: string, { designs, pages }: Pick<Ready, "designs" | "pages">) {
   if (!html.includes(TINT))
     throw new Error(`site: shell/index.html must hold ${TINT}, which the build fills with the tint rules`);
   const fill = {
@@ -1054,8 +1073,9 @@ export function withSite(html: string, bar: Design["bar"]) {
     prefix: SITE.prefix,
     root,
     domain: new URL(root).host,
-    barLight: bar.light,
-    barDark: bar.dark,
+    barLight: designs[0]!.bar.light,
+    barDark: designs[0]!.bar.dark,
+    designs: JSON.stringify(designs.map((one) => [one.name, pages[one.name], one.bar.light, one.bar.dark])),
   };
   const safe = (text: string) => text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
   let out = html.replace(TINT, `<style id="tint">\n${tintCss(SITE.tint)}</style>`);
@@ -1082,8 +1102,9 @@ export function withSite(html: string, bar: Design["bar"]) {
 
 export async function build(out = DIST): Promise<Built> {
   const seen = new Map<string, string>();
-  const made = await prime(seen);
-  const ready: Ready = { ...state(), ...made, ...(await dress(SITE.title)) };
+  const dressed = await dress(SITE.title);
+  const made = await prime(seen, dressed.designs);
+  const ready = whole(made, dressed);
   const entries = [
     join(repo, "shell", "index.html"),
     ...SHELLS,
@@ -1110,7 +1131,7 @@ export async function build(out = DIST): Promise<Built> {
   page.path = "index.html";
   page.bytes = withSite(
     shell.replace('<script src="/boot.js"></script>', `<script src="${made.boot}"></script>`),
-    ready.bar,
+    ready,
   );
   const loose = [...bundle, ...made.assets].filter((one) => one !== page && !HASHED.test(one.path));
   if (loose.length) throw new Error(`site: the bundle named ${loose.map((one) => one.path).join(", ")} without a hash`);
@@ -1118,14 +1139,7 @@ export async function build(out = DIST): Promise<Built> {
     ...one,
     fixed: true,
   }));
-  const all: Out[] = [
-    ...copies(ready),
-    ...globals(ready),
-    ...licenses(),
-    ...hashed,
-    page,
-    { path: "404.html", bytes: page.bytes },
-  ];
+  const all: Out[] = [...copies(ready), ...globals(ready), ...hashed, page, { path: "404.html", bytes: page.bytes }];
   rmSync(out, { recursive: true, force: true });
   const files = new Map<string, Built["files"][number]>();
   for (const one of all) {
@@ -1136,7 +1150,7 @@ export async function build(out = DIST): Promise<Built> {
   }
   return {
     out,
-    design: ready.design,
+    designs: ready.designs.map((one) => one.name),
     rows: ready.rows,
     files: [...files.values()],
     raw: ready.raw.length,
@@ -1149,6 +1163,6 @@ if (import.meta.main) {
   const done = await build();
   const size = done.files.reduce((sum, one) => sum + statSync(join(done.out, one.path)).size, 0);
   console.log(
-    `site: design ${done.design}, ${done.rows.length} rows, ${done.raw} raw files, ${done.files.length} files (${(size / 1e6).toFixed(1)} MB) in ${done.out.startsWith(`${repo}/`) ? relative(repo, done.out) : done.out}, wasm ${done.units.join(" ") || "none"}, ${done.dropped} redirects dropped for a target that is no route`,
+    `site: designs ${done.designs.join(" ")}, ${done.rows.length} rows, ${done.raw} raw files, ${done.files.length} files (${(size / 1e6).toFixed(1)} MB) in ${done.out.startsWith(`${repo}/`) ? relative(repo, done.out) : done.out}, wasm ${done.units.join(" ") || "none"}, ${done.dropped} redirects dropped for a target that is no route`,
   );
 }

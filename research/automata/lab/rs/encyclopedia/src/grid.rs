@@ -264,11 +264,14 @@ impl Grid {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "a_tiled_carpet_splits_at_its_tile_and_a_shifted_one_does_not",
+        a_tiled_carpet_splits_at_its_tile_and_a_shifted_one_does_not,
+    )];
+
     fn a_tiled_carpet_splits_at_its_tile_and_a_shifted_one_does_not() {
         let carpet = Grid::from_rows(&["111", "101", "111"]);
         let tiled = carpet.tile(3);

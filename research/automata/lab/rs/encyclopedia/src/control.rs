@@ -151,11 +151,14 @@ pub fn summary() -> Result<Summary> {
     })
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "the_mini_control_replays_the_old_fate_table",
+        the_mini_control_replays_the_old_fate_table,
+    )];
+
     fn the_mini_control_replays_the_old_fate_table() {
         let s = summary().unwrap();
         println!("mini control: {} runs of the 848", s.runs);

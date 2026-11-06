@@ -45,7 +45,7 @@ pub use animate::animate;
 pub use mask::{design_mask, lattice_index, mask_offsets};
 pub use metrics::{churn, entropy};
 pub use models::{Config, Life};
-pub use render::{frames, heatmap};
+pub use render::{frames, gif, heatmap};
 pub use rule::Rule;
 pub use source::{Counts, Source, counts};
 pub use step::next_grid;

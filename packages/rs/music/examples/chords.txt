@@ -1,0 +1,42 @@
+progression CCCCFFCCGFCG
+triad
+  C  C3 E3 G3
+  C  C3 E3 G3
+  C  C3 E3 G3
+  C  C3 E3 G3
+  F  F3 A3 C4
+  F  F3 A3 C4
+  C  C3 E3 G3
+  C  C3 E3 G3
+  G  G3 B3 D4
+  F  F3 A3 C4
+  C  C3 E3 G3
+  G  G3 B3 D4
+seventh
+  C  C3 E3 G3 B3
+  C  C3 E3 G3 B3
+  C  C3 E3 G3 B3
+  C  C3 E3 G3 B3
+  F  F3 A3 C4 E4
+  F  F3 A3 C4 E4
+  C  C3 E3 G3 B3
+  C  C3 E3 G3 B3
+  G  G3 B3 D4 F4
+  F  F3 A3 C4 E4
+  C  C3 E3 G3 B3
+  G  G3 B3 D4 F4
+ninth
+  C  C3 E3 G3 B3 D4
+  C  C3 E3 G3 B3 D4
+  C  C3 E3 G3 B3 D4
+  C  C3 E3 G3 B3 D4
+  F  F3 A3 C4 E4 G4
+  F  F3 A3 C4 E4 G4
+  C  C3 E3 G3 B3 D4
+  C  C3 E3 G3 B3 D4
+  G  G3 B3 D4 F4 A4
+  F  F3 A3 C4 E4 G4
+  C  C3 E3 G3 B3 D4
+  G  G3 B3 D4 F4 A4
+B triad in one octave: F#3 A2 C3
+chord 'H' in "CH" is not a letter from C to B.

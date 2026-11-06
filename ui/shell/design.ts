@@ -1,3 +1,4 @@
+import type { Color, Pen } from "@mrlyprod/draw";
 import type { ComponentType, ReactNode } from "react";
 import type { Item as Row } from "../kit/menus.ts";
 
@@ -12,13 +13,89 @@ export const REQUIRED = [
   "prose",
   "tile",
   "launcher",
+  "sheet",
+  "alert",
+  "tabs",
+  "table",
+  "toast",
+  "tooltip",
+  "search",
+  "progress",
+  "empty",
+  "calendar",
 ] as const;
 
 export const OPTIONAL = ["desk", "dock", "widgets", "lock", "saver", "preview"] as const;
 
-export type Required = (typeof REQUIRED)[number];
+export const ICONS = [
+  "add",
+  "minus",
+  "check",
+  "close",
+  "left",
+  "right",
+  "up",
+  "down",
+  "search",
+  "more",
+  "grid",
+  "pane-left",
+  "pane-right",
+  "shrink",
+  "share",
+  "download",
+  "link",
+  "info",
+  "warn",
+  "lock",
+  "cart",
+  "star",
+  "star-fill",
+  "dice",
+  "tune",
+  "levels",
+  "note",
+  "volume",
+  "keyboard",
+  "command",
+  "shift",
+  "calendar",
+  "clock",
+  "trash",
+  "edit",
+  "folder",
+  "file",
+  "code",
+  "image",
+  "data",
+] as const;
 
-export type Optional = (typeof OPTIONAL)[number];
+export type IconName = (typeof ICONS)[number];
+
+export const EMOJIS = {
+  smile: "\u{1F642}",
+  grin: "\u{1F600}",
+  joy: "\u{1F602}",
+  wink: "\u{1F609}",
+  love: "\u{1F60D}",
+  cool: "\u{1F60E}",
+  sad: "\u{1F622}",
+  heart: "\u{2764}\u{FE0F}",
+  thumb: "\u{1F44D}",
+  fire: "\u{1F525}",
+  spark: "\u{2728}",
+  party: "\u{1F389}",
+} as const;
+
+export type EmojiName = keyof typeof EMOJIS;
+
+export type Glyph = (pen: Pen, ink: Color) => void;
+
+export type Glyphs<Name extends string> = { box: number; crisp?: boolean; draw: Record<Name, Glyph> };
+
+type Required = (typeof REQUIRED)[number];
+
+type Optional = (typeof OPTIONAL)[number];
 
 export type Part = Required | Optional;
 
@@ -28,7 +105,7 @@ export type Side = "left" | "right";
 
 export type Item = {
   label: string;
-  icon?: string;
+  icon?: IconName;
   href?: string;
   act?: string;
   on?: boolean;
@@ -44,6 +121,10 @@ export type Scalar = string | number;
 export type Clock = { now: Date; hours: 12 | 24 | null };
 
 export type Ask = { wrong: boolean; busy: boolean; bind: { form: Bind; field: Bind } };
+
+export type Act = { label: string; primary?: boolean; danger?: boolean; bind: Bind };
+
+export type Day = { iso: string; n: number; out: boolean; bind: Bind };
 
 export type Props = {
   desk: { canvas: Bind; home: boolean };
@@ -61,36 +142,12 @@ export type Props = {
     mac: boolean;
     bind: { list: Bind; item: (i: number) => Bind };
   };
-  window: {
-    kind: "page" | "wide";
-    title: string;
-    zoomed: boolean;
-    tools: boolean;
-    drawer: boolean;
-    width: number;
-    bind: {
-      close: Bind;
-      zoom: Bind;
-      tools: Bind;
-      title: Bind;
-      menus: Bind;
-      edge: (side: Side) => Bind;
-      scroll: Bind;
-      main: Bind;
-      pane: Bind;
-      scrim: Bind;
-    };
-    children: ReactNode;
-    side?: ReactNode;
-  };
+  window: { bind: { close: Bind; title: Bind; menus: Bind; main: Bind; pane: Bind } };
   app: {
     title: string;
     slots: Partial<Record<"stage" | "left" | "right" | "tail" | "actions" | "status" | "hints", Bind>>;
     open: Record<Side, boolean>;
-    widths: Record<Side, number>;
-    float: boolean;
-    onFlip: (side: Side) => void;
-    bind: { root: Bind; pane: (side: Side) => Bind; grip: (side: Side) => Bind; opener: (side: Side) => Bind };
+    bind: { pane: (side: Side) => Bind; opener: (side: Side) => Bind };
     children?: ReactNode;
   };
   control: {
@@ -132,7 +189,6 @@ export type Props = {
     dates?: string[];
     figure?: string;
     html?: string;
-    contents: { id: string; level: number; text: string; on: boolean }[];
     cards?: { href: string; name: string; text?: string; figure?: string }[];
     children?: ReactNode;
     after?: ReactNode;
@@ -205,22 +261,36 @@ export type Props = {
   lock: { word: string; state: "wake" | "rest" | "leaving"; bind: Bind; ask?: Ask };
   saver: { clock: Clock | null; state?: "on" | "out"; stage: Bind };
   preview: { title: string; theme: "light" | "dark" };
+  sheet: { title: string; tag?: string; bind: { root: Bind; pull: Bind }; children: ReactNode };
+  alert: { title: string; text?: string; actions: Act[]; bind: { root: Bind; title: Bind; text: Bind } };
+  tabs: {
+    items: { id: string; label: string; icon?: IconName }[];
+    bind: { list: Bind; tab: (id: string) => Bind; panel: Bind };
+    children?: ReactNode;
+  };
+  table: { head: string[]; rows: ReactNode[][]; align?: ("start" | "end")[]; caption?: string };
+  toast: { text: string; kind: "info" | "ok" | "warn"; icon: IconName; action?: Act };
+  tooltip: { text: string; bind: { root: Bind; tip: Bind }; children: ReactNode };
+  search: {
+    label: string;
+    value: string;
+    placeholder?: string;
+    onChange: (value: string) => void;
+    bind: { field: Bind; clear: Bind };
+  };
+  progress: { value: number | null; max: number; label: string };
+  empty: { icon?: IconName; title: string; text?: string; action?: Act };
+  calendar: {
+    label: string;
+    text: string;
+    month: string;
+    week: string[];
+    days: Day[];
+    bind: { field: Bind; pop: Bind; prev: Bind; next: Bind; grid: Bind };
+  };
 };
 
 export type Tokens = Record<`--${string}`, string>;
-
-export type Measure = {
-  page: number;
-  wide: number;
-  least: number;
-  step: number;
-  panes: { width: number; least: number; most: number; gap: number; stage: number };
-  gutter: number;
-  edge: number;
-  thumb: number;
-  dock?: number;
-  lens?: { big: number; reach: number };
-};
 
 export type World = { root: HTMLElement; desk: () => HTMLCanvasElement | null; calm: () => boolean };
 
@@ -242,12 +312,42 @@ export type Design = {
   title: string;
   skin: { light: Tokens; dark: Tokens };
   bar: { light: string; dark: string };
-  css: string[];
-  measure: Measure;
   parts: Parts;
   knobs?: Knobs;
-  pulldown?: string;
+  lens?: { big: number; reach: number };
+  icons: Glyphs<IconName>;
+  emojis: Glyphs<EmojiName>;
+  pulldown?: Pulldown;
   start?: (world: World) => () => void;
+};
+
+type Gives = Record<string, Partial<Record<keyof Design, string>>>;
+
+export const MAP: {
+  index: string;
+  required: Gives;
+  optional: Gives;
+  each: Record<"parts" | "icons" | "emojis", string>;
+  free: string[];
+} = {
+  index: "index.ts",
+  required: {
+    "skin.ts": { skin: "SKIN", bar: "BAR" },
+    "icons/index.ts": { icons: "icons" },
+    "emojis/index.ts": { emojis: "emojis" },
+    "chrome.css": {},
+  },
+  optional: {
+    "knobs.ts": { knobs: "KNOBS" },
+    "lens.ts": { lens: "LENS" },
+    "pulldown.ts": { pulldown: "pulldown" },
+    "start.ts": { start: "start" },
+    "tokens.css": {},
+    "saver.css": {},
+    "fonts/fonts.css": {},
+  },
+  each: { parts: "parts/*.tsx", icons: "icons/*.ts", emojis: "emojis/*.ts" },
+  free: ["fonts", "own"],
 };
 
 export const lacks = (design: { parts: Partial<Record<Part, unknown>> }): Required[] =>

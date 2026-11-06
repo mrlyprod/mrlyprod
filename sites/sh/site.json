@@ -1,0 +1,52 @@
+{
+  "title": "MrlyDash",
+  "wordmark": "MRLYDASH",
+  "root": "https://mrly.sh",
+  "since": 2026,
+  "prefix": "sh-",
+  "mark": "/mark.svg",
+  "tint": "green",
+  "menu": "/menu/",
+  "desk": "tiles",
+  "tiles": {
+    "id": "tiles",
+    "title": "Tiles"
+  },
+  "designs": ["../../designs/modern", "../../designs/classic", "../../designs/system"],
+  "roots": ["pages"],
+  "apps": ["settings"],
+  "screen": [1440, 900, 2],
+  "min": [1280, 720],
+  "company": "MrlyProd, Inc.",
+  "tree": [
+    {
+      "name": "Root",
+      "nodes": [
+        {
+          "name": "robots.txt",
+          "href": "/robots.txt"
+        },
+        {
+          "name": "sitemap.xml",
+          "href": "/sitemap.xml"
+        },
+        {
+          "name": "llms.txt",
+          "href": "/llms.txt"
+        },
+        {
+          "name": "404.html",
+          "href": "/404.html"
+        }
+      ]
+    }
+  ],
+  "socials": [],
+  "contact": "help@mrly.net",
+  "shots": {
+    "routes": ["/", "/menu/", "/nowhere/"]
+  },
+  "git": {
+    "root": "."
+  }
+}

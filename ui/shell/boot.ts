@@ -3,16 +3,10 @@
   const home = ["/", "/index.html"].includes(location.pathname);
   d.classList.add("js");
   const p = d.dataset.prefix || "";
-  const knob = `${p}knob-`;
   try {
     for (const k of ["theme", "tint", "text", "motion", "contrast", "targets"]) {
       const v = localStorage.getItem(`${p}${k}`);
       if (v) d.dataset[k] = v;
-    }
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i) || "";
-      const v = k.startsWith(knob) && localStorage.getItem(k);
-      if (v) d.dataset[k.slice(knob.length)] = v;
     }
     if (localStorage.getItem(`${p}clear`) === "1" || matchMedia("(prefers-reduced-transparency: reduce)").matches)
       d.dataset.clear = "1";
@@ -26,15 +20,29 @@
       d.dataset.icons = icons === "dark" ? "dark" : `${icons}-${tone}`;
     const password = localStorage.getItem(`${p}password`);
     if (password && !sessionStorage.getItem(`${p}unlocked`)) d.dataset.sealed = "";
-    if (home && CSS.supports("animation-timeline", "scroll()"))
-      d.dataset.welcome =
-        password ||
-        localStorage.getItem(`${p}welcome`) ||
-        d.dataset.motion === "reduce" ||
-        matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "shut"
-          : "open";
+    if (home) d.dataset.welcome = password || localStorage.getItem(`${p}welcome`) ? "shut" : "open";
   } catch {}
+  let table: string[][] = [];
+  let picked = "";
+  try {
+    table = JSON.parse(d.dataset.designs || "[]");
+    picked = localStorage.getItem(`${p}design`) || "";
+  } catch {}
+  const row = table.find((one) => one[0] === picked) || table[0];
+  if (row) {
+    d.dataset.design = row[0];
+    const knob = `${p}knob-${row[0]}-`;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i) || "";
+        const v = k.startsWith(knob) && localStorage.getItem(k);
+        if (v) d.dataset[k.slice(knob.length)] = v;
+      }
+    } catch {}
+    document.write(`<link rel="stylesheet" href="${row[1]}">`);
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'))
+      meta.content = row[meta.media.includes("dark") ? 3 : 2];
+  }
   if (home) {
     d.dataset.desk = "";
     d.dataset.window = "none";

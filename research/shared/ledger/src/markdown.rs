@@ -263,13 +263,16 @@ pub fn markdown() -> String {
     out
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
     use std::fs;
     use std::path::Path;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "the_page_on_disk_is_the_rendered_page",
+        the_page_on_disk_is_the_rendered_page,
+    )];
+
     fn the_page_on_disk_is_the_rendered_page() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../sequences.md");
         let disk = fs::read_to_string(&path).expect("the page is on disk");

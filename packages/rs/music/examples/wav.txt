@@ -1,0 +1,7 @@
+2646044 bytes, hash 737de90c
+44100 Hz, 1 channel, 16 bits, 1323000 frames, 30.00 s
+peak 1.0000
+seed 1 again: hash 737de90c
+seed 2:       hash 2ad0a199
+dorian      8d406035
+minor       94807e45

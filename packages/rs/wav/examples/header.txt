@@ -1,0 +1,15 @@
+file is 50 bytes
+ 0  RIFF   container
+ 4  42     bytes after this field
+ 8  WAVE   kind
+12  fmt    chunk: the format
+16  16     chunk size
+20  1      tag: 1 is whole-number pcm, 3 is float
+22  1      channels
+24  8000   samples a second
+28  16000  bytes a second
+32  2      bytes a frame (one sample for every channel)
+34  16     bits a sample
+36  data   chunk: the sound
+40  6      chunk size
+44  [0, 0, 1, 0, 255, 255] the samples 0, 1, -1 as 16-bit pairs

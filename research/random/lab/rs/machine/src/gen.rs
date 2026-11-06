@@ -637,11 +637,20 @@ impl Gen for Counter {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub(crate) mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[
+        (
+            "quarter_round_matches_rfc_8439_section_2_1_1",
+            quarter_round_matches_rfc_8439_section_2_1_1,
+        ),
+        (
+            "chacha20_block_matches_rfc_8439_section_2_3_2",
+            chacha20_block_matches_rfc_8439_section_2_3_2,
+        ),
+    ];
+
     fn quarter_round_matches_rfc_8439_section_2_1_1() {
         let mut s = [0u32; 16];
         s[..4].copy_from_slice(&[0x1111_1111, 0x0102_0304, 0x9b8d_6f43, 0x0123_4567]);
@@ -649,7 +658,6 @@ mod tests {
         assert_eq!(s[..4], [0xea2a_92f4, 0xcb1c_f8ce, 0x4581_472e, 0x5881_c4bb]);
     }
 
-    #[test]
     fn chacha20_block_matches_rfc_8439_section_2_3_2() {
         let key: [u32; 8] =
             std::array::from_fn(|i| u32::from_le_bytes(std::array::from_fn(|b| (4 * i + b) as u8)));

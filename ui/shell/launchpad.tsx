@@ -29,7 +29,6 @@ import {
 import type { Tile } from "./design.ts";
 import { exported, RECENT, rank, renamed, spare } from "./launch.ts";
 import type { Spot } from "./lens.ts";
-import { measure } from "./measure.ts";
 import { PANES } from "./parts.tsx";
 import { WORD } from "./welcome.ts";
 
@@ -66,6 +65,7 @@ type Shown = { slot: string; name: string; kind: string; ids: string[] };
 
 const CAP = { apps: 27, list: 6 };
 const SAID = 5000;
+const EDGE = 8;
 const SEEN = " recent";
 
 const section = (id: string) => PAD.sections.find((one) => one.apps.includes(id))?.name ?? "";
@@ -344,9 +344,8 @@ export function Launchpad() {
     if (!menu || !box) return undefined;
     box.showPopover?.();
     if (box.offsetWidth) {
-      const { edge } = measure;
-      box.style.setProperty("--x", px(Math.max(edge, Math.min(menu.at.x, innerWidth - box.offsetWidth - edge))));
-      box.style.setProperty("--y", px(Math.max(edge, Math.min(menu.at.y, innerHeight - box.offsetHeight - edge))));
+      box.style.setProperty("--x", px(Math.max(EDGE, Math.min(menu.at.x, innerWidth - box.offsetWidth - EDGE))));
+      box.style.setProperty("--y", px(Math.max(EDGE, Math.min(menu.at.y, innerHeight - box.offsetHeight - EDGE))));
     }
     box.querySelector("button")?.focus();
     const gone = (e: ToggleEvent) => e.newState === "closed" && setMenu(null);

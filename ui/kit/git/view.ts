@@ -1,7 +1,7 @@
+import { mark } from "../icon.tsx";
 import { esc } from "../md/text.ts";
-import { seti } from "./seti/seti.ts";
 
-export type Twig = { n: string; k: "d" | "f"; i?: string; s?: number; c?: Twig[] };
+export type Twig = { n: string; k: "d" | "f"; s?: number; c?: Twig[] };
 
 export type Wood = { base: string; name: string; slug: string; branch: string; folder: string; c: Twig[] };
 
@@ -86,6 +86,15 @@ const LANGS: Record<string, string> = {
 export const lang = (path: string) => (Object.hasOwn(LANGS, ext(path)) ? LANGS[ext(path)]! : "text");
 
 export const IMAGE = new Set(["avif", "gif", "ico", "jpeg", "jpg", "png", "svg", "webp"]);
+
+const DATA = new Set(["csv", "json", "lock", "toml", "xml", "yaml", "yml"]);
+
+export function kind(path: string) {
+  const end = ext(path);
+  if (IMAGE.has(end)) return "image";
+  if (DATA.has(end)) return "data";
+  return end !== "md" && Object.hasOwn(LANGS, end) ? "code" : "file";
+}
 
 export const HUGE = 1 << 20;
 
@@ -179,6 +188,8 @@ const lede = (name: string, lead: string) =>
 
 const source = (path: string) => `/${rawPath(path)}`;
 
+const ICON = 16;
+
 const prose = async (wood: Wood, tools: Tools, path: string, text: string) =>
   `<div class="prose readme">${await tools.md!(text, (url) => link(home(path), url, wood))}</div>`;
 
@@ -187,9 +198,9 @@ function rows(dir: string, kids: Twig[]): string {
     const path = dir ? `${dir}/${kid.n}` : kid.n;
     if (kid.k === "d") {
       const count = kid.c?.length ?? 0;
-      return `<li class="dir"><span class="ico" aria-hidden="true"></span><a href="${href(dirRoute(path))}">${esc(kid.n)}/</a><span class="n">${count} item${count === 1 ? "" : "s"}</span></li>`;
+      return `<li class="dir">${mark("folder", ICON)}<a href="${href(dirRoute(path))}">${esc(kid.n)}/</a><span class="n">${count} item${count === 1 ? "" : "s"}</span></li>`;
     }
-    return `<li><span class="${seti(kid.n)}" aria-hidden="true"></span><a href="${href(fileRoute(path))}">${esc(kid.n)}</a><span class="n">${size(kid.s ?? 0)}</span></li>`;
+    return `<li>${mark(kind(kid.n), ICON)}<a href="${href(fileRoute(path))}">${esc(kid.n)}</a><span class="n">${size(kid.s ?? 0)}</span></li>`;
   });
   return `<ul class="files">\n${items.join("\n")}\n</ul>`;
 }

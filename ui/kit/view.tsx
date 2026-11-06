@@ -24,7 +24,7 @@ import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from "
 import type { Look, Model } from "./chart.ts";
 import { draw } from "./chart.ts";
 import { paints } from "./color.ts";
-import { Btn, Fold, Group, Pick, Slider, Text, Toggle } from "./controls.tsx";
+import { Btn, Empty, Fold, Group, Pick, Slider, Table, Text, Toggle, toast } from "./controls.tsx";
 import { fed, source as feed } from "./feed.ts";
 import { dig, useFile } from "./files.ts";
 import { island } from "./island.tsx";
@@ -40,7 +40,6 @@ type FormProps = {
   send: (args: Obj) => Outcome;
   choices?: Record<string, Choice[]>;
   rank?: Rank;
-  note?: string | null;
 };
 
 const SLIDES = 10000;
@@ -131,7 +130,7 @@ export function Field({ name, schema, value, onChange }: FieldProps) {
   return <Text {...known} label={label} value={canon(value)} wide commit onChange={parse} />;
 }
 
-export function Form({ move, send, choices = {}, rank, note }: FormProps) {
+export function Form({ move, send, choices = {}, rank }: FormProps) {
   const props = move.args.properties ?? {};
   const keys = Object.keys(props);
   const need = new Set(move.args.required ?? []);
@@ -169,11 +168,6 @@ export function Form({ move, send, choices = {}, rank, note }: FormProps) {
       <Btn primary={!rank || rank === "primary"} onClick={press}>
         {tail(move.verb)}
       </Btn>
-      {rank && (
-        <p className="note" role="status">
-          {note}
-        </p>
-      )}
     </>
   );
   const name = rank ? named(verbOf(move.verb)) : move.verb;
@@ -273,36 +267,25 @@ function RowsPart({ node }: { node: RowsNode }) {
     <>
       {node.title && <h2>{node.title}</h2>}
       {shown.length ? (
-        <table className="rows" data-from={nameOf(node.from)}>
-          <thead>
-            <tr>
-              {fields.map((one) => (
-                <th key={one.key} className={one.as}>
-                  {one.title ?? one.key}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((row, i) => (
-              <tr key={i}>
-                {fields.map((one) => (
-                  <td key={one.key} className={one.as}>
-                    {cell(row as Obj, one)}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          head={fields.map((one) => one.title ?? one.key)}
+          align={fields.map((one) => (one.as === "number" ? "end" : "start"))}
+          rows={shown.map((row) => fields.map((one) => cell(row as Obj, one)))}
+        />
       ) : (
-        <p className="reads" data-from={nameOf(node.from)}>
-          none
-        </p>
+        <Empty title="Nothing yet" />
       )}
     </>
   );
 }
+
+const tell = (out: Outcome) => {
+  const said = out.envelope?.said;
+  const line = said && typeof said === "object" && !Array.isArray(said) ? (said.note ?? said) : said;
+  const text = out.note ?? (line === undefined ? "" : spelled(line));
+  if (text) toast(text, { kind: out.ok ? "ok" : "warn" });
+  return out;
+};
 
 const picks = (value: Json | null): Choice[] => {
   if (Array.isArray(value)) return value.map((one) => [spelled(one), spelled(one)]);
@@ -323,15 +306,8 @@ function FormPart({ node }: { node: FormNode }) {
   const read = useReads(given.flatMap(([, list]) => list.map((source) => source.world)));
   const signed = useWho();
   const call = useCall();
-  const [note, setNote] = useState<string | null>(null);
   if (!move) return null;
-  const send = (args: Obj) => {
-    const out = call(node.verb, args);
-    const said = out.envelope?.said;
-    const line = said && typeof said === "object" && !Array.isArray(said) ? said.note : said;
-    setNote(out.note ?? (line === undefined ? null : spelled(line)));
-    return out;
-  };
+  const send = (args: Obj) => tell(call(node.verb, args));
   let at = 0;
   const choices = Object.fromEntries(
     given.map(([key, list]) => {
@@ -340,7 +316,7 @@ function FormPart({ node }: { node: FormNode }) {
       return [key, joined(reads, signed?.who.id)];
     }),
   );
-  return <Form move={move} send={send} choices={choices} rank={node.rank} note={note} />;
+  return <Form move={move} send={send} choices={choices} rank={node.rank} />;
 }
 
 function look(canvas: HTMLCanvasElement): Look {
@@ -533,12 +509,7 @@ function Plain({ id, app, signed }: { id: string; app: Manifest; signed: Signed 
   const whole = useWorld(id);
   const moves = useMoves(id);
   const call = useCall();
-  const [note, setNote] = useState<string | null>(null);
-  const send = (verb: string) => (args: Obj) => {
-    const out = call(verb, args);
-    setNote(out.note ?? (out.envelope?.said === undefined ? null : JSON.stringify(out.envelope.said)));
-    return out;
-  };
+  const send = (verb: string) => (args: Obj) => tell(call(verb, args));
   return (
     <section className="world">
       <Head app={app} signed={signed} />
@@ -551,9 +522,6 @@ function Plain({ id, app, signed }: { id: string; app: Manifest; signed: Signed 
             {moves.map((move) => (
               <Form key={move.verb} move={move} send={send(move.verb)} />
             ))}
-            <p className="note" role="status">
-              {note}
-            </p>
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 import type { Tokens } from "@mrlyprod/ui/shell/design.ts";
 
-export const LIGHT: Tokens = {
+const LIGHT: Tokens = {
   "--ground": "#008080",
   "--box": "#c0c0c0",
   "--lt": "#ffffff",
@@ -29,12 +29,13 @@ export const LIGHT: Tokens = {
   "--tip-line": "#000000",
   "--console": "#000000",
   "--console-fg": "#c0c0c0",
-  "--sans": '"Noto Sans", sans-serif',
-  "--serif": '"Noto Serif", serif',
-  "--mono": '"Noto Sans Mono", monospace',
+  "--sans": "Tahoma, Verdana, sans-serif",
+  "--serif": '"Times New Roman", Times, serif',
+  "--mono": '"Lucida Console", Monaco, "Courier New", monospace',
+  "--math": "math",
 };
 
-export const DARK: Tokens = {
+const DARK: Tokens = {
   "--ground": "#003f3f",
   "--box": "#3c3c3c",
   "--lt": "#6a6a6a",
@@ -64,3 +65,7 @@ export const DARK: Tokens = {
   "--console": "#000000",
   "--console-fg": "#c0c0c0",
 };
+
+export const SKIN = { light: LIGHT, dark: DARK };
+
+export const BAR = { light: "#ffffff", dark: "#1a1a1a" };

@@ -4,6 +4,8 @@ The machinery every topic leans on: the sequence ledger, the sequence atlas, the
 
 - [ledger/](ledger/): walks `research/*/notes` and `research/*/claims` and writes `sequences.md`.
 - [claims/](claims/): re-runs claim witnesses.
+- [witness/](witness/): the runner behind `scripts/witness.sh`; a lab hands it a table of proofs.
+- [crate-witnesses/](crate-witnesses/): the crate tests the notes cite, kept as witnesses.
 - [sequences/](sequences/): the sequence atlas, one walk of every integer-sequence generator, de-duplicated, related and searched against the OEIS.
 - [notes/atlas.md](notes/atlas.md): the atlas chapter, its census, the laws behind its collisions and the ranked absences.
 - [claims/atlas.md](claims/atlas.md): the atlas claims.

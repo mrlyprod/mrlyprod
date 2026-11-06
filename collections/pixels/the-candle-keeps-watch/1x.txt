@@ -1,0 +1,77 @@
+a 1a1420
+h 2a1c2a
+b 1f2844
+c 4a2e32
+d 8a5634
+e e2b47e
+f f2862a
+y ffc85a
+g fff0c4
+
+aaaaaaaaaaaaaaaa
+aaahfhaaaaaaaaaa
+aahhfhhaaabbabba
+ahhfyfhhacbbabba
+ahhfgfhhhcbbabba
+hhhfgfhhhcbbabba
+hhhhfhhhhcaaaaaa
+ahhhchhhhhbbabba
+ahheeehhaabbabba
+ahheeehdddbbabba
+aaheedhdhdbbabba
+acddddddddaaaaaa
+cchhhhhhhcchhaaa
+cccccccccchhaaaa
+hhhhhhhaaaaaaaaa
+aaaaaaaaaaaaaaaa
+
+aaaaaaaaaaaaaaaa
+aaahhfaaaaaaaaaa
+aahhffhaaabbabba
+ahhfyfhhacbbabba
+ahhfgfhhhcbbabba
+hhhfgfhhhcbbabba
+hhhhfhhhhcaaaaaa
+ahhhchhhhhbbabba
+ahheeehhaabbabba
+ahheeehdddbbabba
+aaheedhdhdbbabba
+acddddddddaaaaaa
+cchhhhhhhcchhaaa
+cccccccccchhaaaa
+hhhhhhhaaaaaaaaa
+aaaaaaaaaaaaaaaa
+
+aaaaaaaaaaaaaaaa
+aaahhhfaaaaaaaaa
+aahhhffaaabbabba
+ahhfyfhhacbbabba
+ahhfgfhhhcbbabba
+hhhfgfhhhcbbabba
+hhhhfhhhhcaaaaaa
+ahhhchhhhhbbabba
+ahheeehhaabbabba
+ahheeehdddbbabba
+aaheedhdhdbbabba
+acddddddddaaaaaa
+cchhhhhhhcchhaaa
+cccccccccchhaaaa
+hhhhhhhaaaaaaaaa
+aaaaaaaaaaaaaaaa
+
+aaaaaaaaaaaaaaaa
+aaahhhaaaaaaaaaa
+aahhfhhaaabbabba
+ahhfyfhhacbbabba
+ahhfgfhhhcbbabba
+hhhfgfhhhcbbabba
+hhhhfhhhhcaaaaaa
+ahhhchhhhhbbabba
+ahheeehhaabbabba
+ahheeehdddbbabba
+aaheedhdhdbbabba
+acddddddddaaaaaa
+cchhhhhhhcchhaaa
+cccccccccchhaaaa
+hhhhhhhaaaaaaaaa
+aaaaaaaaaaaaaaaa

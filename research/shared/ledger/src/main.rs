@@ -3,6 +3,16 @@ use std::path::Path;
 use std::time::Instant;
 
 fn main() {
+    witness::dispatch(
+        &[
+            ledger::witnesses::ALL,
+            ledger::markdown::witnesses::ALL,
+            ledger::records::witnesses::ALL,
+            ledger::terms::witnesses::ALL,
+            ledger::windows::witnesses::ALL,
+        ]
+        .concat(),
+    );
     for tier in [Tier::Closed, Tier::Convolved] {
         let clock = Instant::now();
         let rows = catalog(tier, TERMS).len();

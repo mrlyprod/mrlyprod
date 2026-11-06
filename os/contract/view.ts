@@ -2,7 +2,7 @@ import type { App, Knob, Schema, Source, ViewNode } from "../kernel/index.ts";
 
 const homeOf = (world: string) => world.split("/").filter(Boolean)[0] ?? "";
 
-const VIEWERS = ["savers", "code", "knobs", "desktop", "shuffle", "privacy", "about"];
+const VIEWERS = ["savers", "code", "design", "knobs", "desktop", "shuffle", "privacy", "about"];
 
 const STUB = (() => 1) as unknown as Knob;
 

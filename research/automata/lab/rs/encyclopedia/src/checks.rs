@@ -7,6 +7,45 @@ use crate::{run_named, Grammar, Shape};
 use mrly_life::{next_grid, Boundary};
 use mrly_rand::Rng;
 
+pub const ALL: &[witness::Witness] = &[
+    (
+        "the_blinker_loops_with_period_two_from_generation_zero",
+        the_blinker_loops_with_period_two_from_generation_zero,
+    ),
+    (
+        "the_glider_moves_one_cell_down_and_right_every_four_generations",
+        the_glider_moves_one_cell_down_and_right_every_four_generations,
+    ),
+    (
+        "the_r_pentomino_reaches_a_close_wall_and_settles_at_116_cells_by_generation_1103",
+        the_r_pentomino_reaches_a_close_wall_and_settles_at_116_cells_by_generation_1103,
+    ),
+    (
+        "an_island_agrees_with_a_much_larger_constant_canvas_frame_for_frame",
+        an_island_agrees_with_a_much_larger_constant_canvas_frame_for_frame,
+    ),
+    (
+        "a_wallpaper_is_the_seed_torus_under_a_mask_wider_than_the_torus",
+        a_wallpaper_is_the_seed_torus_under_a_mask_wider_than_the_torus,
+    ),
+    (
+        "the_sublattice_lemma_holds_on_the_plane_and_on_the_torus",
+        the_sublattice_lemma_holds_on_the_plane_and_on_the_torus,
+    ),
+    (
+        "a_zero_in_birth_runs_as_the_rule_pair_on_a_flipping_background",
+        a_zero_in_birth_runs_as_the_rule_pair_on_a_flipping_background,
+    ),
+    (
+        "the_torus_control_matches_the_engine_on_a_padded_canvas",
+        the_torus_control_matches_the_engine_on_a_padded_canvas,
+    ),
+    (
+        "one_recipe_of_every_class_runs_from_its_name_and_reads",
+        one_recipe_of_every_class_runs_from_its_name_and_reads,
+    ),
+];
+
 fn moore() -> Kernel {
     Kernel::from_grid(&Grid::from_rows(&["111", "101", "111"])).unwrap()
 }
@@ -52,7 +91,6 @@ fn pentomino() -> Grid {
     Grid::from_rows(&[".##", "##.", ".#."])
 }
 
-#[test]
 fn the_blinker_loops_with_period_two_from_generation_zero() {
     let out = run(&life(Grid::from_rows(&["...", "###", "..."]), 31, 64));
     assert_eq!(out.stop, Stop::Loop { period: 2 });
@@ -65,7 +103,6 @@ fn the_blinker_loops_with_period_two_from_generation_zero() {
     assert_eq!(json["shape"]["symmetry"], 4);
 }
 
-#[test]
 fn the_glider_moves_one_cell_down_and_right_every_four_generations() {
     let out = run(&life(Grid::from_rows(&[".#.", "..#", "###"]), 41, 1024));
     assert_eq!(
@@ -82,7 +119,6 @@ fn the_glider_moves_one_cell_down_and_right_every_four_generations() {
     assert_eq!(out.pop, vec![5; 5]);
 }
 
-#[test]
 fn the_r_pentomino_reaches_a_close_wall_and_settles_at_116_cells_by_generation_1103() {
     let close = run(&life(pentomino(), 41, 2000));
     assert_eq!(close.stop, Stop::Wall);
@@ -94,7 +130,6 @@ fn the_r_pentomino_reaches_a_close_wall_and_settles_at_116_cells_by_generation_1
     assert!(wide.pop[1000] != 116 || wide.pop[500] != 116);
 }
 
-#[test]
 fn an_island_agrees_with_a_much_larger_constant_canvas_frame_for_frame() {
     let big = 301;
     let mask = moore().dense();
@@ -119,7 +154,6 @@ fn an_island_agrees_with_a_much_larger_constant_canvas_frame_for_frame() {
     assert_eq!(checks, 6);
 }
 
-#[test]
 fn a_wallpaper_is_the_seed_torus_under_a_mask_wider_than_the_torus() {
     let seed = Shape::parse("carpet").unwrap().build(3, 2).unwrap();
     let kernel = Kernel::design(Shape::parse("net").unwrap(), 5, 2).unwrap();
@@ -143,7 +177,6 @@ fn a_wallpaper_is_the_seed_torus_under_a_mask_wider_than_the_torus() {
     assert!(out.gen <= 40);
 }
 
-#[test]
 fn the_sublattice_lemma_holds_on_the_plane_and_on_the_torus() {
     let b = Grid::from_rows(&["111", "101", "111"]);
     let centre = Grid::from_rows(&["000", "010", "000"]);
@@ -185,7 +218,6 @@ fn the_sublattice_lemma_holds_on_the_plane_and_on_the_torus() {
     assert!(checked >= 10);
 }
 
-#[test]
 fn a_zero_in_birth_runs_as_the_rule_pair_on_a_flipping_background() {
     let seed = Grid::from_rows(&[".##", "##.", ".#."]);
     let mask = moore().dense();
@@ -256,7 +288,6 @@ fn a_zero_in_birth_runs_as_the_rule_pair_on_a_flipping_background() {
     }
 }
 
-#[test]
 fn the_torus_control_matches_the_engine_on_a_padded_canvas() {
     let board = Grid::from_rows(&["111", "101", "111"]).tile(3);
     let kernel = moore();
@@ -283,7 +314,6 @@ fn the_torus_control_matches_the_engine_on_a_padded_canvas() {
     assert_ne!(want.0, "Timeout");
 }
 
-#[test]
 fn one_recipe_of_every_class_runs_from_its_name_and_reads() {
     let mut grammar = Grammar::standard(32, 61);
     grammar.sides = vec![3];

@@ -1,0 +1,13 @@
+picture                   stored as   bits a pixel  bytes
+black and white           gray                   1     77
+4 grays                   gray                   2     78
+5 grays                   gray                   8     80
+256 grays                 gray                   8     88
+2 colours                 palette                1     89
+3 colours                 palette                2    105
+16 colours                palette                4    169
+64 colours                palette                8    378
+violet on clear           palette                1    127
+gray, soft alpha          gray+alpha            16     95
+1024 colours              rgb                   24    104
+1024 colours, soft alpha  rgba                  32    265

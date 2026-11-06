@@ -1,5 +1,12 @@
-import { design } from "site:design";
+import { glyphs } from "../kit/icon.tsx";
+import type { Design, Parts } from "./design.ts";
 
-export { design };
+export let design: Design;
 
-export const parts = design.parts;
+export let parts: Parts;
+
+export function apply(next: Design) {
+  design = next;
+  parts = next.parts;
+  glyphs(next);
+}

@@ -11,9 +11,7 @@ import { deeps, match, named, sort, walled } from "./route.ts";
 
 export { state };
 
-export type Shape = "page" | "wide" | "app" | "none";
-
-export type Layout = { right?: string; wide?: boolean; bare?: boolean; sheet?: string; window?: Shape };
+export type Layout = { wide?: boolean; bare?: boolean; sheet?: string; window?: "none" };
 
 export type Context = { text: string; rows: Row[]; url: URL; right: HTMLElement };
 
@@ -88,7 +86,7 @@ function page(row: Row): Promise<Own> {
 
 const sheets = new Map<string, Sheet>();
 
-function wear(name: string | undefined): Sheet | null {
+function style(name: string | undefined): Sheet | null {
   const url = name ? css[name] : null;
   if (!url) return null;
   if (!sheets.has(url)) {
@@ -105,7 +103,7 @@ function wear(name: string | undefined): Sheet | null {
 async function prepare(row: Row, url: URL): Promise<Next> {
   const [kind, text] = await Promise.all([page(row), source(row)]);
   const layout = kind.layout ?? {};
-  const sheet = wear(layout.sheet);
+  const sheet = style(layout.sheet);
   const host = document.createElement(layout.bare ? "div" : "article");
   if (!layout.bare) host.className = "prose";
   const side = document.createElement("div");
@@ -139,8 +137,6 @@ function head(row: Row, url: URL) {
   if (!lost) robots?.remove();
 }
 
-const kind = (layout: Layout) => layout.window ?? (layout.wide ? "wide" : "page");
-
 function title(row: Row) {
   const name = document.querySelector("[data-title]");
   if (name) name.textContent = row.title;
@@ -148,9 +144,8 @@ function title(row: Row) {
 
 function dress(next: Next) {
   const { layout, side, row } = next;
-  const shape = kind(layout);
   const box = pane();
-  html.dataset.window = shape;
+  html.dataset.window = layout.window ?? "app";
   if (box) {
     box.setAttribute("aria-label", row.title);
     box.dataset.app = row.kind === "app" ? (row.meta?.id ?? "") : "";
@@ -162,9 +157,6 @@ function dress(next: Next) {
   drawer.hidden = false;
   if (fill && !drawer.isConnected) main.after(drawer);
   if (!fill) drawer.remove();
-  const button = document.querySelector<HTMLElement>("[data-tools]");
-  if (button) button.hidden = !fill;
-  html.dataset.right = "shut";
   for (const { link } of sheets.values()) link.media = link === next.sheet?.link ? "" : "not all";
 }
 
@@ -228,7 +220,7 @@ function fail(url: URL, error: unknown) {
     sessionStorage.removeItem(ONCE);
   } catch {}
   leave();
-  html.dataset.window ??= "page";
+  html.dataset.window ??= "app";
   const lede = document.createElement("div");
   lede.className = "lede";
   lede.innerHTML =

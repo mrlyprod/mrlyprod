@@ -23,11 +23,6 @@
   min-height: 20px;
   margin-top: 8px;
 }
-.banner {
-  min-height: 24px;
-  font-weight: 600;
-  margin-top: 12px;
-}
 .yellow {
   color: var(--yellow);
 }
@@ -107,21 +102,6 @@ pre {
   height: 100%;
   width: 0;
   border-radius: var(--round);
-}
-
-.scroll table {
-  width: max-content;
-  min-width: 100%;
-}
-.scroll tbody tr {
-  cursor: pointer;
-}
-.scroll tbody tr:hover td {
-  background: var(--deep);
-}
-.scroll tbody tr.on td {
-  background: var(--deep);
-  color: var(--link);
 }
 
 .ribbon {
@@ -481,29 +461,6 @@ dialog.modal.browse::backdrop {
 .browse .designs {
   grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
 }
-[data-form="phone"] dialog.modal.browse {
-  width: 100vw;
-  height: 100svh;
-  border-radius: 0;
-}
-[data-form="phone"] .browse .browser {
-  grid-template: "view" auto "find" auto "list" minmax(0, 1fr) / minmax(0, 1fr);
-}
-[data-form="phone"] .browser .view {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  padding: 0 0 var(--s2);
-}
-[data-form="phone"] .browser .view canvas {
-  width: 4rem;
-}
-[data-form="phone"] .browser .view h3 {
-  flex: 1 1 0;
-}
-[data-form="phone"] .browser .view dl {
-  display: none;
-}
 
 .kit {
   display: flex;
@@ -549,6 +506,10 @@ dialog.modal.browse::backdrop {
   border: var(--hair);
   border-radius: var(--r-panel);
   background: var(--panel);
+}
+.kit .stack {
+  display: grid;
+  gap: var(--s3);
 }
 .kit .tall {
   display: grid;
@@ -669,6 +630,19 @@ dialog.modal.browse::backdrop {
   flex-wrap: wrap;
   gap: var(--s3);
 }
+.kit .drawn {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: var(--s4) var(--s2);
+}
+.kit .drawn figure {
+  display: grid;
+  justify-items: center;
+  gap: var(--s2);
+}
+.kit .drawn figcaption {
+  font: var(--t1) var(--mono);
+}
 .kit .type {
   display: grid;
   gap: var(--s2);
@@ -702,8 +676,7 @@ dialog.modal.browse::backdrop {
   background: var(--bg);
 }
 .frame:has(> .canvas > .page) > .canvas {
-  top: 0;
-  bottom: 0;
+  inset: 0 var(--pr) 0 var(--pl);
 }
 .frame > .canvas > .page {
   height: 100%;
@@ -711,11 +684,7 @@ dialog.modal.browse::backdrop {
   overscroll-behavior: contain;
   padding: var(--room) var(--s5) calc(var(--room) + var(--s5));
 }
-.frame:not([data-float]):has(> .canvas > .page) > .canvas {
-  left: var(--pl);
-  right: var(--pr);
-}
-.frame:not([data-float]):has(> .canvas > .page) > :is(.actions, .status) {
+.frame:has(> .canvas > .page) > :is(.actions, .status) {
   left: calc(50% + (var(--pl) - var(--pr)) / 2);
   max-width: calc(100% - var(--pl) - var(--pr) - 2 * var(--gap));
 }
@@ -784,31 +753,9 @@ dialog.modal.browse::backdrop {
   margin-bottom: var(--s3);
   border-radius: var(--r-inset);
 }
-.arena > .panel:has(.rows) {
-  overflow-x: auto;
-}
 .rows {
   width: 100%;
-  border-collapse: collapse;
   font: var(--t2) / var(--lh3) var(--mono);
-}
-.rows th {
-  padding: 0 var(--s3) var(--s1) 0;
-  color: var(--dim);
-  font-weight: 400;
-  text-align: left;
-}
-.rows td {
-  padding: var(--s1) var(--s3) var(--s1) 0;
-  border-top: var(--hair);
-  vertical-align: top;
-  overflow-wrap: anywhere;
-}
-.rows :is(th, td):last-child {
-  padding-right: 0;
-}
-.rows :is(.number, .money) {
-  text-align: right;
 }
 .tree {
   display: grid;

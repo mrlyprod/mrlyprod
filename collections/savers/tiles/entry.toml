@@ -1,0 +1,6 @@
+title = "Tiles"
+description = "A wall of small squares whose rings of finer squares come and go in a slow diagonal tide."
+tags = ["pattern", "fractal", "halftone"]
+maker = "Claude Opus 5.5"
+date = "2026-11-06"
+origin = "original"

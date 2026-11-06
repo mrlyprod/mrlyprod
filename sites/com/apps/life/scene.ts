@@ -242,7 +242,7 @@ export const PRESETS: Preset[] = [
   ["Rule 150", { dim: 1, code: "1", number: 3, level: 1, born: "1", stay: "02" }],
 ];
 
-export const wears = (value: Value, preset: Value) =>
+export const fits = (value: Value, preset: Value) =>
   Object.entries(preset).every(([key, v]) => String(value[key]) === String(v));
 
 const slug = (text: Scalar) =>
@@ -251,8 +251,8 @@ const slug = (text: Scalar) =>
     .replace(/[^a-z0-9.]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-export const worn = (presets: readonly Preset[], value: Value) =>
-  presets.find(([, one]) => wears(value, one))?.[0] ?? "";
+export const named = (presets: readonly Preset[], value: Value) =>
+  presets.find(([, one]) => fits(value, one))?.[0] ?? "";
 
 export const units = wasm(...CRATES, "life");
 
@@ -268,7 +268,7 @@ export const PAGE = {
     return [
       "life",
       slug(
-        worn(PRESETS, value) ||
+        named(PRESETS, value) ||
           `${dimOf(value)}d ${value.code} ${value.number} ${value.level} b${value.born} s${value.stay}`,
       ),
       SOUP(value) ? value.seed : slug(value.from),

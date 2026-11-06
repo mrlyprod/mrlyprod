@@ -87,11 +87,14 @@ pub fn distinct(shapes: &[Shape], side: usize, level: usize) -> Result<Vec<(Shap
     Ok(out)
 }
 
-#[cfg(test)]
-mod tests {
+pub mod witnesses {
     use super::*;
 
-    #[test]
+    pub const ALL: &[witness::Witness] = &[(
+        "the_plane_classes_are_the_five_known_codes_and_code_seven_is_the_carpet",
+        the_plane_classes_are_the_five_known_codes_and_code_seven_is_the_carpet,
+    )];
+
     fn the_plane_classes_are_the_five_known_codes_and_code_seven_is_the_carpet() {
         assert_eq!(classes(), vec![1, 3, 6, 7, 15]);
         let carpet = Shape::Named(Design::Carpet).build(3, 1).unwrap();
