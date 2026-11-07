@@ -1,7 +1,0 @@
-[package]
-name = "witness"
-edition = "2021"
-license = "MIT"
-publish = false
-
-[workspace]

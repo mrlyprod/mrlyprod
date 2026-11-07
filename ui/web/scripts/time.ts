@@ -1,9 +1,9 @@
 import { readFileSync, rmSync } from "node:fs";
 import { cpus, tmpdir } from "node:os";
-import { join, relative, sep } from "node:path";
+import { join, relative } from "node:path";
 import { type Ink, ink, type Pen, raster } from "@mrlyprod/draw";
 import { dark, light } from "../../kit/theme/theme.ts";
-import { mrly, RESEARCH, roster } from "./build.ts";
+import { mrly, roster } from "./build.ts";
 import { SIBLINGS, wasm } from "./home.ts";
 
 const OUT = join(tmpdir(), "figure-time");
@@ -78,7 +78,7 @@ async function main() {
     plugins: [mrly],
   });
   if (!built.success) throw new Error(`time: the figures failed to bundle\n${built.logs.join("\n")}`);
-  const rows: { name: string; cold: number; warm: number; units: string[]; error: string; research: boolean }[] = [];
+  const rows: { name: string; cold: number; warm: number; units: string[]; error: string }[] = [];
   for (const { name, file } of list) {
     const row = {
       name,
@@ -86,7 +86,6 @@ async function main() {
       warm: 0,
       units: [] as string[],
       error: "",
-      research: RESEARCH !== null && file.startsWith(RESEARCH + sep),
     };
     for (const theme of Object.keys(THEMES) as Theme[]) {
       const done = await run({ name, file: join(OUT, relative(SIBLINGS, file).replace(/\.ts$/, ".js")), theme });
@@ -103,28 +102,21 @@ async function main() {
   const slow = (row: (typeof rows)[number]) =>
     [row.warm > GATE.warm && "over warm", row.cold > GATE.cold && "over cold"].filter(Boolean).join(", ");
   const flag = (row: (typeof rows)[number]) =>
-    row.error
-      ? `FAILED ${row.error}`
-      : FREE.has(row.name)
-        ? "excluded"
-        : row.research && slow(row)
-          ? `warning, ${slow(row)}`
-          : slow(row);
+    row.error ? `FAILED ${row.error}` : FREE.has(row.name) ? "excluded" : slow(row);
   const width = Math.max(...rows.map((row) => row.name.length));
-  const over = rows.filter((row) => !FREE.has(row.name) && (row.error || (!row.research && slow(row))));
-  const warned = rows.filter((row) => !row.error && row.research && slow(row));
+  const over = rows.filter((row) => !FREE.has(row.name) && (row.error || slow(row)));
   const lines = [
     `site/scripts/time.ts, bun ${Bun.version}, ${cpus()[0]?.model ?? "cpu"}`,
     "- The raster pen in Bun is a proxy for the browser's canvas() pen: same figures, same kit, a different paint.",
     `- cold: the first draw in a fresh worker; warm: the median of ${WARM} draws after it; each the slower of dark and light; pen build and unit init not timed.`,
-    `- gate: ${GATE.warm} ms warm, ${GATE.cold} ms cold on the icons; a research figure over it is a warning, judged with its topic; ${[...FREE].join(", ")} excluded.`,
+    `- gate: ${GATE.warm} ms warm, ${GATE.cold} ms cold on the icons; ${[...FREE].join(", ")} excluded.`,
     "",
     `${"name".padEnd(width)}  ${"cold ms".padStart(9)}  ${"warm ms".padStart(9)}  ${"units".padEnd(6)}  flag`,
     ...rows.map((row) =>
       `${row.name.padEnd(width)}  ${ms(row.cold)}  ${ms(row.warm)}  ${(row.units.join(",") || "-").padEnd(6)}  ${flag(row)}`.trimEnd(),
     ),
     "",
-    `${rows.length} figures, ${over.length} over the gate, ${warned.length} research warnings${warned.length ? `: ${warned.map((row) => row.name).join(", ")}` : ""}`,
+    `${rows.length} figures, ${over.length} over the gate`,
   ];
   console.log(lines.join("\n"));
   rmSync(OUT, { recursive: true, force: true });

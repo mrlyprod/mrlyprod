@@ -1,4 +1,4 @@
-import type { recipe } from "@mrlyprod/life";
+import type { Mode as Modes, Run as Runs, recipe, Stop as Stops } from "@mrlyprod/life";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Patch, Scalar, Value } from "@mrlyprod/ui/kit/spec.ts";
 import type { Door } from "./engine.ts";
@@ -7,11 +7,11 @@ import { sprite } from "./scene.ts";
 
 export type Recipe = recipe.Recipe;
 
-export type Mode = recipe.Mode;
+export type Mode = Modes;
 
-export type Stop = recipe.Stop;
+export type Stop = Stops;
 
-export type Run = recipe.Run;
+export type Run = Runs;
 
 export type Tokens = { of: Map<number, string>; code: Map<string, number> };
 
@@ -34,7 +34,7 @@ export const modes = (life: Door | undefined): [string, string][] => [
 
 export function modeOf(life: Door, value: Value): Mode | null {
   const at = grammar(life).modes.indexOf(String(value.mode));
-  return at < 0 ? null : (life.recipe.Mode.all()[at] ?? null);
+  return at < 0 ? null : (life.Mode.all()[at] ?? null);
 }
 
 export const island = (life: Door, value: Value) => modeOf(life, value) === "Island";
@@ -99,7 +99,7 @@ export function knobsOf(life: Door, mrly: Mrly, recipe: Recipe): Patch {
   const alone = recipe.mode === "Island";
   const design = made.copies.includes(recipe.mask) ? null : recipe.mask.split(".");
   return {
-    mode: made.modes[life.recipe.Mode.all().indexOf(recipe.mode)],
+    mode: made.modes.find((mode) => mode === recipe.mode.toLowerCase()) ?? FIXED,
     dim: 2,
     shape: recipe.seed,
     side: recipe.side,
@@ -147,7 +147,7 @@ export function thumb(
 ): void {
   let run: Run | null = null;
   try {
-    run = new life.recipe.Run(life.recipe.parse(key));
+    run = new life.Run(life.recipe.parse(key));
     for (let i = 0; i < cap; i++) if (run.step()) break;
     const frame = run.frame();
     const [rows, cols] = frame.shape;

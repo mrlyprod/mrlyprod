@@ -1,0 +1,12 @@
+2744500 recipes
+      0 code1.3.1 x1 island mask:code1.3.1 birth:evens survive:evens x:256 cap:151
+1000000 code6.5.1 x1 island mask:code6.5.1 birth:evens survive:evens x:256 cap:151
+2744499 vline.7.2 x1 wallpaper mask:copyinv birth:star_fills_zeros_ones survive:star_voids_zeros_ones x:256
+
+three draws that last 16 generations or more:
+vtree.3.1 x5 island mask:code15.7.1 birth:dust_fills_zeros survive:dust_voids_zeros x:256 cap:151
+  wall at generation 27, 28 frames on 115 by 149, a gif of 16660 bytes
+net.7.1 x3 island mask:code1.3.2 birth:line_fills survive:line_voids x:256 cap:151
+  wall at generation 148, 149 frames on 145 by 145, a gif of 47945 bytes
+vline.7.2 x1 island mask:vtree.7.1 birth:net_fills_zeros_ones survive:net_voids_zeros_ones x:256 cap:151
+  wall at generation 17, 18 frames on 151 by 135, a gif of 18589 bytes

@@ -1,2 +1,1 @@
-- A research ledger.
 - Lives in `packages/rs/sequences`.

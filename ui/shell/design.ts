@@ -180,13 +180,11 @@ export type Props = {
   };
   dialog: { title: string; light: boolean; tag?: string; bind: Bind; children: ReactNode };
   prose: {
-    kind: "page" | "post" | "hub" | "lost" | "error";
+    kind: "page" | "hub" | "lost" | "error";
     id?: string;
     title: string;
     level?: 1 | 2;
     lead?: ReactNode;
-    by?: string;
-    dates?: string[];
     figure?: string;
     html?: string;
     cards?: { href: string; name: string; text?: string; figure?: string }[];

@@ -17,7 +17,6 @@ export type Site = {
   wasm?: Record<string, string[]>;
   designs?: string[];
   seams?: { apps?: string };
-  research?: string;
   widgets?: string[];
   cart?: boolean;
   roots: string[];

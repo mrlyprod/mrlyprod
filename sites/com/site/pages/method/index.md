@@ -1,2 +1,0 @@
-- The long form: [method note](../../research/method/notes/method.md).
-- The ledger: [claims](../../research/method/claims/).

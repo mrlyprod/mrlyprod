@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { viewFaults } from "@mrlyprod/os/contract/index.ts";
 import { rawKind } from "@mrlyprod/os/hosts/cloud/mime.ts";
 import type { Config, App as Made } from "@mrlyprod/os/kernel/index.ts";
@@ -10,10 +10,10 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { appicon } from "../../kit/appicon.ts";
 import { ext, HUGE, IMAGE, reads } from "../../kit/git/view.ts";
-import { front, NAME, figures as named, plain, summary } from "../../kit/md/md.ts";
+import { NAME, figures as named, plain, summary } from "../../kit/md/md.ts";
 import { esc } from "../../kit/md/text.ts";
 import { rng } from "../../kit/rand.ts";
-import type { App, Host, Pad, Row, Saver, Topic } from "../../kit/rows.ts";
+import type { App, Host, Pad, Row, Saver } from "../../kit/rows.ts";
 import { tintCss } from "../../kit/theme/tint.ts";
 import { apply } from "../../shell/active.ts";
 import type { Design } from "../../shell/design.ts";
@@ -50,11 +50,7 @@ const repo = REPO;
 const DIST = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(HOME, "dist");
 const root = (process.env.MRLY_SITE ?? SITE.root).replace(/\/$/, "");
 const ROOTS = [join(repo, "shell", "routes"), ...SITE.roots.map((one) => resolve(HOME, one))];
-const BLOG = ROOTS.map((one) => join(one, "blog")).find((one) => existsSync(one)) ?? join(ROOTS[0], "blog");
 const GIT = gitConfig(HOME, SITE.git)!;
-const HELD = (SITE as { research?: string }).research;
-export const RESEARCH = HELD ? resolve(HOME, HELD) : null;
-const HELD_OUT = RESEARCH !== null && !RESEARCH.startsWith(GIT.root + sep);
 const LAUNCHPAD = join(HOME, "launchpad.json");
 const WORLD = join(HOME, "world.json");
 const shellFile = (name: Name) => under(join(repo, "shell"), name);
@@ -68,14 +64,11 @@ const NAMING = { entry: "[name]-[hash].[ext]", chunk: "lib-[hash].[ext]", asset:
 const read = (file: string) => readFileSync(file, "utf8");
 const sha = (data: string | Uint8Array) => createHash("sha256").update(data).digest("hex");
 const rel = (file: string) => relative(GIT.root, file);
-export const rawFile = (path: string) =>
-  HELD_OUT && path.startsWith("research/") ? join(RESEARCH!, path.slice("research/".length)) : join(GIT.root, path);
+export const rawFile = (path: string) => join(GIT.root, path);
 
-export type { App, Host, Pad, Row, Saver, Topic };
+export type { App, Host, Pad, Row, Saver };
 
 export type Out = { path: string; bytes: Uint8Array | string; type?: string; fixed?: boolean };
-
-type Post = { slug: string; route: string; title: string; date: string; lead: string; source: string };
 
 export type Figure = { name: string; file: string };
 
@@ -88,8 +81,6 @@ export type State = {
   figures: Figure[];
   units: string[];
   apps: App[];
-  posts: Post[];
-  topics: Topic[];
   raw: string[];
   widgets: string[];
   dropped: number;
@@ -154,15 +145,6 @@ const LEAF = new RegExp(`^@mrlyprod/(${UNITS.join("|") || "(?!)"})$`);
 
 const unitWasm = (unit: string) => join(HOME, "wasm", "blobs", `${home(unit)}.wasm`);
 
-const stem = (name: string) => name.slice(0, -3);
-
-const drawn = (dir: string) =>
-  existsSync(dir)
-    ? readdirSync(dir)
-        .filter((name) => name.endsWith(".ts") && !/\.(test|d)\.ts$/.test(name))
-        .sort((a, b) => (stem(a) < stem(b) ? -1 : stem(a) > stem(b) ? 1 : 0))
-    : [];
-
 const SHELF = new Set(["shared", "data", "node_modules"]);
 
 const SHELVES = [join(repo, "..", "apps"), join(repo, "examples")];
@@ -190,16 +172,9 @@ export const plates = (figures: Figure[]) =>
   figures.filter((one) => [...ROOTS, ...SHELVES].includes(dirname(dirname(one.file)))).map((one) => one.name);
 
 export function roster(): Figure[] {
-  const found = [
-    ...places().map(({ id, dir }) => ({ name: id, file: under(dir, "icon") })),
-    ...folders(BLOG).map((slug) => ({ name: `blog-${slug}`, file: under(join(BLOG, slug), "icon") })),
-    ...(RESEARCH ? folders(RESEARCH) : []).flatMap((topic) =>
-      drawn(join(RESEARCH!, topic, "figures")).map((name) => ({
-        name: name.slice(0, -3),
-        file: join(RESEARCH!, topic, "figures", name),
-      })),
-    ),
-  ].filter((one) => existsSync(one.file));
+  const found = [...places().map(({ id, dir }) => ({ name: id, file: under(dir, "icon") }))].filter((one) =>
+    existsSync(one.file),
+  );
   const seen = new Map<string, string>();
   for (const one of found) {
     if (!NAME.test(one.name))
@@ -230,64 +205,6 @@ const walk = (dir: string): string[] =>
   );
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-
-function posts(): Post[] {
-  return folders(BLOG)
-    .map((slug) => {
-      const file = join(BLOG, slug, "index.md");
-      if (!SLUG.test(slug))
-        throw new Error(`site: ${rel(BLOG)}/${slug} is not a slug; use lowercase words and digits joined by hyphens`);
-      if (!existsSync(file)) throw new Error(`site: ${rel(BLOG)}/${slug} has no index.md`);
-      const { data } = front(read(file));
-      for (const key of ["title", "date", "lead"])
-        if (!data[key]) throw new Error(`site: ${rel(BLOG)}/${slug} names no ${key} in its front matter`);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date!))
-        throw new Error(`site: ${rel(BLOG)}/${slug} dates itself ${data.date}; a date is YYYY-MM-DD`);
-      return {
-        slug,
-        route: `/blog/${slug}/`,
-        title: data.title!,
-        date: data.date!,
-        lead: lede(plain(data.lead!)),
-        source: rel(file),
-      };
-    })
-    .sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
-}
-
-export function topics(known: Set<string>, at = RESEARCH): Topic[] {
-  if (!at) return [];
-  return folders(at)
-    .filter((slug) => slug !== "shared" && existsSync(join(at, slug, "README.md")))
-    .flatMap((slug) => {
-      const { data } = front(read(join(at, slug, "README.md")));
-      if (!data.title) return [];
-      if (!SLUG.test(slug))
-        throw new Error(`site: research/${slug} is not a slug; use lowercase words and digits joined by hyphens`);
-      if (data.slug && data.slug !== slug)
-        throw new Error(`site: research/${slug}/README.md names the slug ${data.slug}, and the folder is ${slug}`);
-      if (data.figure && !known.has(data.figure))
-        throw new Error(`site: research/${slug}/README.md uses the figure ${data.figure}, which no roster file draws`);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date ?? ""))
-        throw new Error(
-          `site: research/${slug}/README.md dates itself ${data.date ?? "nowhere"}; its front matter needs a date, YYYY-MM-DD`,
-        );
-      const figures = drawn(join(at, slug, "figures"))
-        .map((name) => name.slice(0, -3))
-        .filter((name) => known.has(name));
-      return [
-        {
-          slug,
-          title: data.title,
-          date: data.date!,
-          lead: data.lead ? lede(plain(data.lead)) : "",
-          figure: data.figure || null,
-          figures,
-        },
-      ];
-    })
-    .sort((a, b) => a.title.localeCompare(b.title) || a.slug.localeCompare(b.slug));
-}
 
 const FIELDS = new Set(["title", "line", "aliases", "saver", "hidden", "deep", "frame", "source", "route"]);
 
@@ -548,7 +465,7 @@ export function launchpad(list: App[], file = LAUNCHPAD): Pad {
   return { sections, dock };
 }
 
-function rows(list: App[], blog: Post[]): Row[] {
+function rows(list: App[]): Row[] {
   const out: Row[] = [];
   for (const app of list) {
     const route = app.route ?? (app.id === "home" ? "/" : `/${app.id}/`);
@@ -572,19 +489,6 @@ function rows(list: App[], blog: Post[]): Row[] {
       hidden: Boolean(app.hidden),
       meta,
     });
-    if (app.id === "blog")
-      for (const post of blog)
-        out.push({
-          route: post.route,
-          kind: "prose",
-          title: post.title,
-          source: post.source,
-          date: post.date,
-          lead: post.lead,
-          figure: `blog-${post.slug}`,
-          hidden: false,
-          meta: { prose: "post", date: post.date },
-        });
   }
   return out;
 }
@@ -653,9 +557,7 @@ export function state(): State {
   const figures = roster();
   const known = new Set(figures.map((one) => one.name));
   const list = apps();
-  const blog = posts();
-  const research = topics(known);
-  const all = rows(list, blog);
+  const all = rows(list);
   const seen = new Set<string>();
   for (const row of all) {
     if (seen.has(row.route)) throw new Error(`site: two rows claim ${row.route}`);
@@ -678,7 +580,7 @@ export function state(): State {
       );
   const moves = JSON.parse(read(join(HOME, "redirects.json"))) as Record<string, { to: string; since: string }>;
   const kept = Object.fromEntries(Object.entries(moves).filter(([, row]) => seen.has(row.to.split("?")[0]!)));
-  const raw = [...tree(git.root), ...(HELD_OUT ? tree(RESEARCH!).map((path) => `research/${path}`) : [])].sort();
+  const raw = tree(git.root).sort();
   tiles(list);
   const shown = savers(hosts(list), evaluate);
   const site = {
@@ -700,7 +602,6 @@ export function state(): State {
     ),
     root,
     version: units.length ? version() : null,
-    research: Boolean(RESEARCH),
     units,
     savers: shown.list,
     desk: shown.desk,
@@ -716,8 +617,6 @@ export function state(): State {
     figures,
     units,
     apps: list,
-    posts: blog,
-    topics: research,
     raw,
     widgets: widgets(list),
     dropped: Object.keys(moves).length - Object.keys(kept).length,
@@ -1019,17 +918,8 @@ export function globals(ready: State): Out[] {
     { path: "routes.json", bytes: `${JSON.stringify({ site: ready.site, rows: ready.rows })}\n` },
     {
       path: "llms.txt",
-      bytes: llms(
-        SITE.title,
-        root,
-        ready.rows,
-        new Set(ready.raw),
-        (ready.site.launchpad as Pad).sections,
-        ready.topics,
-        RESEARCH ? (HELD_OUT ? "research" : rel(RESEARCH)) : "",
-      ),
+      bytes: llms(SITE.title, root, ready.rows, new Set(ready.raw), (ready.site.launchpad as Pad).sections),
     },
-    ...(RESEARCH ? [{ path: "research.json", bytes: `${JSON.stringify({ topics: ready.topics })}\n` }] : []),
     ...sitemaps([
       ...shown.map((row) => ({ route: row.route, date: row.date })),
       ...ready.raw.map((path) => ({ route: `/raw/${path}`, date: null })),

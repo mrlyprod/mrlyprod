@@ -7,4 +7,5 @@
 ........  ........  ........  ........  ........
 ........  ........  ........  ........  ........
 
-fate loop, back to the start after 32 steps
+loop after 32 steps, period 32, counted the factored way
+a 64 by 64 gif of 33 frames and 2907 bytes, every frame as drawn: true

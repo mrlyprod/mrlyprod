@@ -1,4 +1,3 @@
-import { rows } from "site:routes";
 import type { FocusEvent, KeyboardEvent as Pressed } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
@@ -11,21 +10,7 @@ import { px } from "../kit/px.ts";
 import type { Shelf as Section } from "../kit/rows.ts";
 import { parts } from "./active.ts";
 import { AppIcon } from "./appicon.tsx";
-import type { Note } from "./catalog.ts";
-import {
-  app,
-  away,
-  dock,
-  KNOWN,
-  notes,
-  PAD,
-  recent,
-  redock,
-  shelves as saved,
-  shelve,
-  take,
-  unshelve,
-} from "./catalog.ts";
+import { app, away, dock, KNOWN, PAD, recent, redock, shelves as saved, shelve, take, unshelve } from "./catalog.ts";
 import type { Tile } from "./design.ts";
 import { exported, RECENT, rank, renamed, spare } from "./launch.ts";
 import type { Spot } from "./lens.ts";
@@ -78,10 +63,6 @@ const APPS = [...KNOWN].map((id) => ({
   href: app(id)!.route,
 }));
 
-const POSTS = rows
-  .filter((one) => one.meta?.prose === "post" && !one.hidden)
-  .map((one) => ({ title: one.title, more: one.lead, href: one.route }));
-
 let pull: (() => void) | null = null;
 
 export function opened(host: ParentNode) {
@@ -113,7 +94,6 @@ export function Launchpad() {
   const [hit, setHit] = useState(0);
   const [naming, setNaming] = useState("");
   const [said, setSaid] = useState<Said | null>(null);
-  const [found, setFound] = useState<Note[]>([]);
   const [seen, setSeen] = useState(recent);
   const [menu, setMenu] = useState<Asked | null>(null);
   const live = useRef(shelves);
@@ -243,12 +223,10 @@ export function Launchpad() {
       searching
         ? [
             ["Apps", rank(query, APPS, CAP.apps)],
-            ["Research", rank(query, found, CAP.list)],
-            ["Posts", rank(query, POSTS, CAP.list)],
             ["Settings", rank(query, PANES, CAP.list)],
           ]
         : [],
-    [query, found, searching],
+    [query, searching],
   );
   const hits = groups.flatMap(([, list]) => list);
   const at = hits.length ? Math.min(hit, hits.length - 1) : -1;
@@ -352,10 +330,6 @@ export function Launchpad() {
     box.addEventListener("toggle", gone);
     return () => box.removeEventListener("toggle", gone);
   }, [menu?.at]);
-
-  useEffect(() => {
-    if (searching) notes().then(setFound);
-  }, [searching]);
 
   useEffect(() => {
     dispatchEvent(new CustomEvent("shift", { detail: 0 }));
@@ -505,7 +479,7 @@ export function Launchpad() {
         find: () => ({
           ref: field,
           "data-find": "",
-          placeholder: "Search apps, notes, settings",
+          placeholder: "Search apps, settings",
           "aria-label": "Search",
           role: "combobox",
           "aria-expanded": searching,

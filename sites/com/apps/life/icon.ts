@@ -32,7 +32,7 @@ function prove() {
   for (const [c, r] of GLIDER) seed[(START + r) * SIDE + START + c] = 1;
   let cell: Cell = { shape: [SIDE, SIDE], types: seed };
   for (let g = 0; g < PERIOD; g++) {
-    cell = life.next_grid(cell, [3], [2, 3], MOORE, "Constant");
+    cell = life.tick(cell, MOORE, [3], [2, 3], "Board");
     const alive = (cell.types as Bits).reduce((a, b) => a + b, 0);
     if (alive !== GLIDER.length)
       throw new Error(`life: generation ${g + 1} has ${alive} live cells, the glider has ${GLIDER.length}`);

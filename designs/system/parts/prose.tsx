@@ -3,7 +3,7 @@ import type { Props } from "@mrlyprod/ui/shell/design.ts";
 import { hash, tint } from "../own/cell.ts";
 
 export function Prose(props: Props["prose"]) {
-  const { kind, id, title, level, lead, by, dates, figure, html, cards, children, after } = props;
+  const { kind, id, title, level, lead, figure, html, cards, children, after } = props;
   const Head = level === 2 ? "h2" : "h1";
   if (kind === "lost" || kind === "error")
     return (
@@ -18,15 +18,12 @@ export function Prose(props: Props["prose"]) {
         {after}
       </div>
     );
-  const post = kind === "post";
   return (
     <article className="prose" data-kind={kind}>
-      {(post || figure) && <Figure className="opener" name={figure ?? ""} label={title} />}
+      {figure && <Figure className="opener" name={figure} label={title} />}
       <Head id={id}>{title}</Head>
-      {(lead || post || children) && (
+      {(lead || children) && (
         <div className="card lede">
-          {post && by && <p className="by">{by}</p>}
-          {post && dates && dates.length > 0 && <p className="by">{dates.join(" / ")}</p>}
           {lead && <p className="lead">{lead}</p>}
           {children}
         </div>

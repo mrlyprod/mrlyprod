@@ -15,21 +15,13 @@ export type Line = { name: string; href: string; note: string };
 
 export type Section = { name: string; lines: Line[] };
 
-export type Topic = { slug: string; title: string };
-
 export type { Shelf };
 
 type Group = [string, (row: Listed) => boolean, (a: Listed, b: Listed) => number];
 
 const newest = (a: Listed, b: Listed) => (b.date ?? "").localeCompare(a.date ?? "") || a.title.localeCompare(b.title);
 
-export function sections(
-  rows: Listed[],
-  raw: Set<string>,
-  shelves: Shelf[] = [],
-  topics: Topic[] = [],
-  folder = "research",
-): Section[] {
+export function sections(rows: Listed[], raw: Set<string>, shelves: Shelf[] = []): Section[] {
   const left = rows.filter((row) => !row.hidden);
   const line = (row: Listed): Line => ({
     name: row.title,
@@ -39,7 +31,6 @@ export function sections(
   const at = (shelf: Shelf, row: Listed) => shelf.apps.indexOf(String(row.meta.id));
   const groups: Group[] = [
     ...shelves.map((shelf): Group => [shelf.name, (row) => at(shelf, row) >= 0, (a, b) => at(shelf, a) - at(shelf, b)]),
-    ["Blog", (row) => row.meta.prose === "post", newest],
     ["Doors", () => true, newest],
   ];
   const found = groups.map(([name, pick, order]) => {
@@ -47,33 +38,16 @@ export function sections(
     for (const row of taken) left.splice(left.indexOf(row), 1);
     return { name, lines: taken.map(line) };
   });
-  const research = {
-    name: "Research",
-    lines: topics.length
-      ? [
-          { name: "Research", note: "", href: `/raw/${folder}/README.md` },
-          ...topics.map((one) => ({ name: one.title, note: "", href: `/raw/${folder}/${one.slug}/README.md` })),
-        ]
-      : [],
-  };
-  return [...found, research].filter((one) => one.lines.length);
+  return found.filter((one) => one.lines.length);
 }
 
-export function llms(
-  title: string,
-  root: string,
-  rows: Listed[],
-  raw: Set<string>,
-  shelves: Shelf[] = [],
-  topics: Topic[] = [],
-  folder = "research",
-): string {
+export function llms(title: string, root: string, rows: Listed[], raw: Set<string>, shelves: Shelf[] = []): string {
   const list = (lines: Line[]) =>
     lines.map((one) => `- [${one.name}](${root}${one.href})${one.note ? `: ${one.note}` : ""}`).join("\n");
   const blocks = [
     `# ${title}`,
     `> ${root}`,
-    ...sections(rows, raw, shelves, topics, folder).map((one) => `## ${one.name}\n\n${list(one.lines)}`),
+    ...sections(rows, raw, shelves).map((one) => `## ${one.name}\n\n${list(one.lines)}`),
   ];
   return `${blocks.filter(Boolean).join("\n\n")}\n`;
 }

@@ -24,7 +24,6 @@ LANGUAGES = {
     "yml": "YAML",
     "yaml": "YAML",
     "svg": "SVG",
-    "lean": "Lean",
 }
 
 

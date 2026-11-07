@@ -206,7 +206,7 @@ const KINDS: [string, string][] = [
   ["tinted", "Tinted"],
 ];
 
-const APPS = ["about", "blog", "moire", "spin", "three", "polygons"];
+const APPS = ["about", "moire", "spin", "three", "polygons"];
 
 export function Icons() {
   const style = usePref(KEY.icons);

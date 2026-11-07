@@ -8,7 +8,6 @@
     "dev": "bun scripts/site.ts dev",
     "shots": "bun scripts/site.ts shots",
     "push": "bun scripts/site.ts push",
-    "library": "bun scripts/library.ts",
     "types": "tsc -p tsconfig.json",
     "content": "bun scripts/site.ts content"
   },

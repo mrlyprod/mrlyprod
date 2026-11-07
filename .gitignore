@@ -19,7 +19,6 @@ target/
 sites/*/wasm/
 **/wasm.next/
 
-.lake/
 
 node_modules/
 .astro/

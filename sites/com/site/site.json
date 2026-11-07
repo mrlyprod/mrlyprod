@@ -36,13 +36,11 @@
       "two"
     ],
     "num": ["apollonian", "gaussian", "num", "readings", "ulam", "zeta"],
-    "life": ["life", "wolfram"],
-    "font": ["font"],
-    "research": ["coarray", "color", "kummer", "ladder", "rand", "sumset", "tensor"]
+    "life": ["life", "saga", "wolfram"],
+    "font": ["font"]
   },
   "seams": { "apps": "../seams/toys.ts" },
-  "research": "../../../research",
-  "widgets": ["clock", "designs", "continue", "research"],
+  "widgets": ["clock", "designs", "continue"],
   "screen": [1440, 900, 2],
   "min": [1280, 720],
   "company": "MrlyProd, Inc.",
@@ -68,7 +66,7 @@
   ],
   "contact": "help@mrly.net",
   "shots": {
-    "routes": ["/", "/about/", "/blog/launching-mrlyprod-org/", "/menu/", "/research/", "/git/site.json"]
+    "routes": ["/", "/about/", "/menu/", "/git/site.json"]
   },
   "push": {
     "prefix": "",

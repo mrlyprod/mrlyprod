@@ -1,7 +1,7 @@
 {
   "sections": [
-    { "name": "MrlyProd", "apps": ["projects", "research", "toys", "about", "donate"] },
+    { "name": "MrlyProd", "apps": ["projects", "toys", "about", "donate"] },
     { "name": "System", "apps": ["settings"] }
   ],
-  "dock": [["projects", "research", "toys"], ["about"], ["settings"]]
+  "dock": [["projects", "toys"], ["about"], ["settings"]]
 }

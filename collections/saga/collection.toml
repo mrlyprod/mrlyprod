@@ -1,0 +1,11 @@
+title = "Saga"
+description = "Life runs that change rule mid-run: each chapter starts on the last frame of the one before."
+kind = "randomized"
+version = "0.2.0"
+seed = 1
+sizes = ["1k", "2k", "4k"]
+deck = "all"
+least = 2
+most = 6
+lasts = 8
+lengths = [16, 32, 48, 64]

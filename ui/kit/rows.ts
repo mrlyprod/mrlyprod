@@ -14,7 +14,7 @@ export type Row = {
     scene?: true;
     deep?: true;
     frame?: string;
-    prose?: "source" | "page" | "post";
+    prose?: "source" | "page";
     date?: string;
     aliases?: string[];
   };
@@ -34,15 +34,6 @@ export type App = {
   route?: string;
   page: string | null;
   icon: boolean;
-};
-
-export type Topic = {
-  slug: string;
-  title: string;
-  date: string;
-  lead: string;
-  figure: string | null;
-  figures: string[];
 };
 
 export type Saver = { id: string; app: string; name: string; title: string };

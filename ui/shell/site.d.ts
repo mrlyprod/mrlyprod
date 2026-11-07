@@ -20,7 +20,6 @@ declare module "site:routes" {
     launchpad: import("../kit/rows.ts").Pad;
     redirects: Record<string, { to: string; since: string }>;
     version: string | null;
-    research: boolean;
     units: string[];
     licences: { name: string; href: string }[];
     socials: { name: string; href: string }[];

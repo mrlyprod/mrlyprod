@@ -26,7 +26,7 @@ function Icons({ cards }: { cards: Card[] }) {
 }
 
 export function Prose(props: Props["prose"]) {
-  const { kind, id, title, level, lead, by, dates = [], figure, html, cards, children, after } = props;
+  const { kind, id, title, level, lead, figure, html, cards, children, after } = props;
   const Head = level === 2 ? "h2" : "h1";
   if (kind === "lost" || kind === "error")
     return (
@@ -45,7 +45,6 @@ export function Prose(props: Props["prose"]) {
   return (
     <article className={classes("prose", kind)}>
       <Head id={id}>{title}</Head>
-      {(by || dates.length > 0) && <p className="by">{[by, ...dates].filter(Boolean).join(" - ")}</p>}
       {figure && <Figure className="opener" name={figure} label={title} />}
       {(lead || children) && (
         <div className="intro">

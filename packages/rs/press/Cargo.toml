@@ -1,0 +1,21 @@
+[package]
+name = "mrly-press"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+mrly-error.workspace = true
+mrly-json.workspace = true
+mrly-life.workspace = true
+mrly-rand.workspace = true
+mrly-saga.workspace = true

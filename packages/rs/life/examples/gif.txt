@@ -1,3 +1,0 @@
-52 steps, fate loop: a 104 by 104 gif of 4651 bytes
-52 frames, the first delays [10, 10, 10]
-every frame reads back as drawn: true

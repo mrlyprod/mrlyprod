@@ -1,7 +1,7 @@
 use crate::config::{Config, Rule};
 use crate::sbox;
 use mrly_error::{Result, shape_error};
-use mrly_life::{Boundary, next_grid};
+use mrly_life::{Mode, tick};
 use mrly_math::cell::base::moore;
 use mrly_tensor::Tensor;
 use mrly_two::Cell2d;
@@ -9,7 +9,7 @@ use mrly_two::Cell2d;
 fn automaton(bits: &[u8], side: usize, rule: Rule, mask: &Tensor) -> Result<Vec<u8>> {
     let cell = Cell2d::new(Tensor::of(bits.to_vec(), vec![side, side])?)?;
     let (birth, survive) = rule.counts();
-    let next = next_grid(&cell, &birth, &survive, mask, Boundary::Wrap)?;
+    let next = tick(&cell, mask, &birth, &survive, Mode::Wallpaper)?;
     Ok(next.types().bytes()?.to_vec())
 }
 

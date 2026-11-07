@@ -8,9 +8,9 @@
     {"name": "Games", "apps": ["snake", "chess", "mahjong", "mines", "tennis", "escape", "merge", "memory", "crush", "ttt", "captcha", "quiz"]},
     {"name": "Simulations", "apps": ["life", "race"]},
     {"name": "Type", "apps": ["font", "matrix"]},
-    {"name": "Read", "apps": ["about", "blog", "method", "mrlymath", "research"]},
+    {"name": "Read", "apps": ["about", "mrlymath"]},
     {"name": "System", "apps": ["settings", "stats", "git", "contact", "donate"]},
     {"name": "Developer", "apps": ["kit", "screensavers"]}
   ],
-  "dock": [["designs", "three", "life", "sequences", "planets", "snake", "techno", "font"], ["research", "settings"]]
+  "dock": [["designs", "three", "life", "sequences", "planets", "snake", "techno", "font"], ["settings"]]
 }

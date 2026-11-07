@@ -332,17 +332,68 @@ impl Counts {
     pub fn drawn(seq: Source, zeros: bool, ones: bool) -> Counts {
         Counts::Drawn { seq, zeros, ones }
     }
+    pub fn parse(token: &str) -> Result<Counts> {
+        if token.is_empty() {
+            return Ok(Counts::list(Vec::new()));
+        }
+        if token.starts_with(|c: char| c.is_ascii_digit()) {
+            let mut list = Vec::new();
+            for part in token.split(',') {
+                match part.parse::<usize>() {
+                    Ok(n) => list.push(n),
+                    Err(_) => return value_error(format!("count {part:?} is not a number.")),
+                }
+            }
+            return Ok(Counts::list(list));
+        }
+        let Some((seq, tail)) = Source::read(token) else {
+            return value_error(format!("no source starts {token:?}."));
+        };
+        let (zeros, tail) = match tail.strip_prefix("_zeros") {
+            Some(rest) => (true, rest),
+            None => (false, tail),
+        };
+        let (ones, tail) = match tail.strip_prefix("_ones") {
+            Some(rest) => (true, rest),
+            None => (false, tail),
+        };
+        if !tail.is_empty() {
+            return value_error(format!("counts {token:?} have a tail {tail:?}."));
+        }
+        Ok(Counts::drawn(seq, zeros, ones))
+    }
+    pub fn token(&self) -> String {
+        match self {
+            Counts::List(list) => sorted(list)
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(","),
+            Counts::Drawn { seq, zeros, ones } => format!("{}{}", seq.name(), roll(*zeros, *ones)),
+        }
+    }
     pub fn values(&self, budget: usize) -> Result<Vec<usize>> {
         match self {
-            Counts::List(list) => {
-                let mut out = list.clone();
-                out.sort_unstable();
-                out.dedup();
-                Ok(out)
-            }
+            Counts::List(list) => Ok(sorted(list).into_iter().filter(|&n| n <= budget).collect()),
             Counts::Drawn { seq, zeros, ones } => counts(*seq, budget, *zeros, *ones),
         }
     }
+}
+
+pub fn roll(zeros: bool, ones: bool) -> &'static str {
+    match (zeros, ones) {
+        (false, false) => "",
+        (true, false) => "_zeros",
+        (false, true) => "_ones",
+        (true, true) => "_zeros_ones",
+    }
+}
+
+fn sorted(list: &[usize]) -> Vec<usize> {
+    let mut out = list.to_vec();
+    out.sort_unstable();
+    out.dedup();
+    out
 }
 
 impl From<Vec<usize>> for Counts {

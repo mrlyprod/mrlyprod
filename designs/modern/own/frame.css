@@ -442,14 +442,6 @@ html.js .contents summary::-webkit-details-marker {
   font-size: var(--t2);
   margin-top: var(--s1);
 }
-.grid .tile .dates {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s2) var(--s3);
-  color: var(--dim);
-  font: var(--t1) var(--mono);
-  margin-top: var(--s2);
-}
 .grid .tile.plain {
   display: grid;
   align-content: center;
@@ -1468,22 +1460,6 @@ html[data-zen] .frame .unzen:hover {
   font: var(--t1) / var(--lh3) var(--mono);
   border: var(--hair);
   color: var(--dim);
-}
-.chip.proved {
-  color: color-mix(in srgb, var(--green) var(--mix), var(--fg));
-  border-color: color-mix(in srgb, var(--green) var(--mix), var(--fg));
-}
-.chip.verified {
-  color: color-mix(in srgb, var(--blue) var(--mix), var(--fg));
-  border-color: color-mix(in srgb, var(--blue) var(--mix), var(--fg));
-}
-.chip.conjecture {
-  color: color-mix(in srgb, var(--yellow) var(--mix), var(--fg));
-  border-color: color-mix(in srgb, var(--yellow) var(--mix), var(--fg));
-}
-.chip.refuted {
-  color: color-mix(in srgb, var(--orange) var(--mix), var(--fg));
-  border-color: color-mix(in srgb, var(--orange) var(--mix), var(--fg));
 }
 .badge {
   font: var(--t2) var(--mono);

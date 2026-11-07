@@ -34,7 +34,6 @@ const SKIP = new Set([
   "data",
   "pkg",
   "wasm",
-  ".lake",
   ".cargo",
   ".ruff_cache",
   ".pytest_cache",

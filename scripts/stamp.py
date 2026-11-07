@@ -7,7 +7,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 RS = os.path.join(REPO, "packages", "rs")
 ROOT = os.path.join(REPO, "Cargo.toml")
-PATCH = os.path.join(REPO, "research", ".cargo", "config.toml")
 INHERIT = [
     "version",
     "edition",
@@ -122,12 +121,6 @@ def root(known, text):
     return head + "[workspace.dependencies]\n" + "\n".join([*rows, *others]) + "\n"
 
 
-def patch(known, text):
-    head = text.split("[patch.crates-io]")[0]
-    rows = [f'mrly-{name} = {{ path = "../packages/rs/{name}" }}' for name in known if not hidden(name)]
-    return head + "[patch.crates-io]\n" + "\n".join(rows) + "\n"
-
-
 def hidden(name):
     return name in ("wire", "bindgen")
 
@@ -141,7 +134,7 @@ def read(path):
 
 def plan():
     known = crates()
-    files = {ROOT: root(known, read(ROOT)), PATCH: patch(known, read(PATCH))}
+    files = {ROOT: root(known, read(ROOT))}
     for name in known:
         if hidden(name):
             continue

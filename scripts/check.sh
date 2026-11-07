@@ -8,6 +8,8 @@ DATA_DIR="data/scripts/check"
 RUFF="uvx ruff@0.17.2"
 JS=(os apps ui designs packages/js/draw packages/js/loader packages/js/sprites collections sim sites/net sites/com sites/org sites/tv sites/store sites/sh)
 SITES=(sites/net sites/com sites/org sites/tv sites/store sites/sh)
+FULL=0
+[ "${1:-}" = "--full" ] && FULL=1
 
 step() {
   local name="$1"; shift
@@ -41,12 +43,12 @@ mkdir -p "$DATA_DIR"
 total=$SECONDS
 step prose uv run scripts/prose.py README.md CONTRIBUTING.md sim/testers/
 step stamp uv run --no-project scripts/stamp.py --check
-step generate bash scripts/build.sh
+if [ "$FULL" = 1 ] || [ ! -d data/packages/rs/bindgen/js/blobs ]; then step generate bash scripts/build.sh; fi
 step fmt cargo fmt --all --check
 step fmtcli cargo fmt --manifest-path packages/cli/Cargo.toml --check
 step clippy cargo clippy --workspace --all-targets -- -D warnings
 step clipcli cargo clippy --manifest-path data/packages/rs/bindgen/Cargo.toml -p mrly-cli -- -D warnings
-step examples uv run --no-project scripts/examples.py --check
+if [ "$FULL" = 1 ]; then step examples uv run --no-project scripts/examples.py --check; fi
 step ruff $RUFF check packages/py infra
 step ruffmt $RUFF format --check packages/py infra
 step install bun install --frozen-lockfile

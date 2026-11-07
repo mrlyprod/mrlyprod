@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-exclude = ["research", "packages/cli", "data"]
+exclude = ["packages/cli", "data"]
 members = ["packages/rs/*"]
 
 [workspace.package]
@@ -30,14 +30,12 @@ strip = true
 mrly-apollonian = { path = "packages/rs/apollonian", version = "0.2.0" }
 mrly-arcs = { path = "packages/rs/arcs", version = "0.2.0" }
 mrly-audio = { path = "packages/rs/audio", version = "0.2.0" }
-mrly-auth = { path = "packages/rs/auth", version = "0.2.0" }
 mrly-automaton = { path = "packages/rs/automaton", version = "0.2.0" }
 mrly-avatar = { path = "packages/rs/avatar", version = "0.2.0" }
 mrly-bang = { path = "packages/rs/bang", version = "0.2.0" }
 mrly-bindgen = { path = "packages/rs/bindgen", version = "0.2.0" }
 mrly-chaos = { path = "packages/rs/chaos", version = "0.2.0" }
 mrly-chladni = { path = "packages/rs/chladni", version = "0.2.0" }
-mrly-coarray = { path = "packages/rs/coarray", version = "0.2.0" }
 mrly-color = { path = "packages/rs/color", version = "0.2.0" }
 mrly-crop = { path = "packages/rs/crop", version = "0.2.0" }
 mrly-error = { path = "packages/rs/error", version = "0.2.0" }
@@ -46,12 +44,9 @@ mrly-font = { path = "packages/rs/font", version = "0.2.0" }
 mrly-gaussian = { path = "packages/rs/gaussian", version = "0.2.0" }
 mrly-gif = { path = "packages/rs/gif", version = "0.2.0" }
 mrly-graph = { path = "packages/rs/graph", version = "0.2.0" }
-mrly-graphics = { path = "packages/rs/graphics", version = "0.2.0" }
 mrly-hex = { path = "packages/rs/hex", version = "0.2.0" }
 mrly-image = { path = "packages/rs/image", version = "0.2.0" }
 mrly-json = { path = "packages/rs/json", version = "0.2.0" }
-mrly-kummer = { path = "packages/rs/kummer", version = "0.2.0" }
-mrly-ladder = { path = "packages/rs/ladder", version = "0.2.0" }
 mrly-life = { path = "packages/rs/life", version = "0.2.0" }
 mrly-linalg = { path = "packages/rs/linalg", version = "0.2.0" }
 mrly-math = { path = "packages/rs/math", version = "0.2.0" }
@@ -62,16 +57,16 @@ mrly-num = { path = "packages/rs/num", version = "0.2.0" }
 mrly-obj = { path = "packages/rs/obj", version = "0.2.0" }
 mrly-pixels = { path = "packages/rs/pixels", version = "0.2.0" }
 mrly-png = { path = "packages/rs/png", version = "0.2.0" }
-mrly-quotes = { path = "packages/rs/quotes", version = "0.2.0" }
+mrly-press = { path = "packages/rs/press", version = "0.2.0" }
 mrly-radix = { path = "packages/rs/radix", version = "0.2.0" }
 mrly-rand = { path = "packages/rs/rand", version = "0.2.0" }
 mrly-readings = { path = "packages/rs/readings", version = "0.2.0" }
 mrly-roulette = { path = "packages/rs/roulette", version = "0.2.0" }
+mrly-saga = { path = "packages/rs/saga", version = "0.2.0" }
 mrly-sequences = { path = "packages/rs/sequences", version = "0.2.0" }
 mrly-space = { path = "packages/rs/space", version = "0.2.0" }
 mrly-spin = { path = "packages/rs/spin", version = "0.2.0" }
 mrly-star = { path = "packages/rs/star", version = "0.2.0" }
-mrly-sumset = { path = "packages/rs/sumset", version = "0.2.0" }
 mrly-tensor = { path = "packages/rs/tensor", version = "0.2.0" }
 mrly-three = { path = "packages/rs/three", version = "0.2.0" }
 mrly-thue = { path = "packages/rs/thue", version = "0.2.0" }
@@ -79,7 +74,6 @@ mrly-tile = { path = "packages/rs/tile", version = "0.2.0" }
 mrly-tourbillon = { path = "packages/rs/tourbillon", version = "0.2.0" }
 mrly-two = { path = "packages/rs/two", version = "0.2.0" }
 mrly-ulam = { path = "packages/rs/ulam", version = "0.2.0" }
-mrly-video = { path = "packages/rs/video", version = "0.2.0" }
 mrly-voxels = { path = "packages/rs/voxels", version = "0.2.0" }
 mrly-wang = { path = "packages/rs/wang", version = "0.2.0" }
 mrly-wav = { path = "packages/rs/wav", version = "0.2.0" }

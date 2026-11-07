@@ -70,7 +70,7 @@ export function boot(config: Config): State {
 function tick(state: State): State {
   const grid = { shape: [state.height, state.width], types: types(state.cells) };
   const mask = { shape: state.span, data: types(state.mask) };
-  const next = life.next_grid(grid, state.birth, state.survive, mask, state.wrap ? "Wrap" : "Constant").types;
+  const next = life.tick(grid, mask, state.birth, state.survive, state.wrap ? "Wallpaper" : "Board").types;
   return judged({ ...state, gen: state.gen + 1 }, next, state.seen);
 }
 

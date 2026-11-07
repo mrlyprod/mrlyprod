@@ -20,7 +20,6 @@
       "collections/**",
       "package.json",
       "biome.json",
-      "!!research",
       "!**/*.gen.*",
       "!**/*.svg",
       "!**/*.html",

@@ -3,8 +3,7 @@ import type { Item, Menu, Model } from "../kit/menus.ts";
 import { button, item, sheet } from "../kit/pulldown.ts";
 import { px } from "../kit/px.ts";
 import { design } from "./active.ts";
-import type { Note } from "./catalog.ts";
-import { app, notes, recent, shelves } from "./catalog.ts";
+import { app, recent, shelves } from "./catalog.ts";
 import type { Pulldown } from "./design.ts";
 import { siblings } from "./launch.ts";
 
@@ -15,7 +14,6 @@ const PLAIN: Pulldown = { drop: 6, button, sheet: () => sheet(), item };
 const look = () => design.pulldown ?? PLAIN;
 
 let held: Model | null = null;
-let topics: Note[] = [];
 
 const here = () => rows.find((row) => row.route === location.pathname)?.meta?.id ?? "";
 
@@ -40,13 +38,8 @@ function trips(id: string, sections = shelves(), last = recent()): (Item | null)
 
 function full(model: Model): Menu[] {
   const id = here();
-  const note = topics.find((one) => one.slug === id);
   const go = { name: "Go", items: trips(id) };
-  const out = model.menus.map((one) =>
-    one.name === "Help" && note
-      ? { ...one, items: [...one.items, null, { label: `${note.title} Note`, href: note.href }] }
-      : one,
-  );
+  const out = model.menus;
   const at = out.findIndex((one) => one.name === "Help");
   return [...out.slice(0, at < 0 ? out.length : at), go, ...out.slice(at < 0 ? out.length : at)];
 }
@@ -189,17 +182,6 @@ function press(e: KeyboardEvent) {
   }
 }
 
-let asked = false;
-
-function learn() {
-  if (asked) return;
-  asked = true;
-  notes().then((list) => {
-    topics = list;
-    if (held) render();
-  });
-}
-
 export function host(one: HTMLElement | null) {
   if (!one || one === given) return;
   given = one;
@@ -209,7 +191,6 @@ export function host(one: HTMLElement | null) {
 export function menus() {
   addEventListener("menus", (e: CustomEvent<Model | null>) => {
     held = e.detail ?? null;
-    if (held) learn();
     render();
   });
   addEventListener("wire", () => {

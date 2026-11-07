@@ -16,7 +16,7 @@ export type Vars = CSSProperties & Record<`--${string}`, string | number>;
 
 export type LedeProps = { id?: string; title: string; lead?: string; children?: ReactNode };
 
-export type CardNode = { href: string; name: string; figure?: string | null; text?: string; dates?: string[] };
+export type CardNode = { href: string; name: string; figure?: string | null; text?: string };
 
 export type LostProps = { site: Pick<Site, "menu">; rows: Row[]; row?: Row };
 
@@ -78,24 +78,12 @@ export function Lede({ id, title, lead, children }: LedeProps) {
   );
 }
 
-function Dates({ dates }: { dates?: string[] }) {
-  if (!dates?.length) return null;
-  return (
-    <p className="dates">
-      {dates.map((date) => (
-        <span key={date}>{date}</span>
-      ))}
-    </p>
-  );
-}
-
 export function Card({ node }: { node: CardNode }) {
   return (
     <a className={node.figure ? "tile" : "tile plain"} href={node.href}>
       {node.figure && <Figure name={node.figure} />}
       <h2>{node.name}</h2>
       {node.text && <p>{node.text}</p>}
-      <Dates dates={node.dates} />
     </a>
   );
 }

@@ -3,4 +3,5 @@ description = "Life runs drawn from a seed: a rule, a mask and a start."
 kind = "randomized"
 version = "0.2.0"
 seed = 1
-sizes = ["1k"]
+sizes = ["1k", "2k", "4k"]
+lasts = 16

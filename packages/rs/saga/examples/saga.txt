@@ -1,0 +1,24 @@
+deck all
+  0 hline.5.2 x1 island mask:hline.3.1 birth:star_fills_zeros_ones survive:star_voids_zeros_ones x:48 cap:151
+  1 mask:code3.3.1 birth:line_fills_zeros survive:line_fills_zeros x:32
+  2 mask:void.5.1 birth:star_fills_zeros survive:star_fills_zeros x:32
+  3 mask:hline.3.1 birth:grid_squares_zeros_ones survive:grid_squares_zeros_ones x:32
+  limit at 48, limit at 32, wall at 18, wall at 12
+  111 frames on a 149 by 151 canvas
+deck rules
+  0 void.3.1 x5 island mask:code7.3.1 birth:star_voids_zeros_ones survive:star_voids_zeros_ones x:32 cap:151
+  1 mask:code7.3.1 birth:primes survive:primes x:16
+  limit at 32, limit at 16
+  49 frames on a 101 by 101 canvas
+deck masks
+  0 void.3.1 x5 island mask:code6.3.2 birth:3 survive:2,3 x:32 cap:151
+  1 mask:vtree.3.2 birth:3 survive:2,3 x:16
+  limit at 32, wall at 10
+  43 frames on a 141 by 145 canvas
+deck four chapters of 8, any length kept
+  0 code7.3.1 x5 island mask:void.5.2 birth:star_voids_zeros survive:star_voids_zeros x:8 cap:151
+  1 mask:hline.7.2 birth:void_voids_ones survive:void_voids_ones x:8
+  2 mask:vline.3.1 birth:star_fills_zeros survive:star_voids_zeros x:8
+  3 mask:vline.7.2 birth:fibonacci_zeros survive:fibonacci_zeros x:8
+  wall at 6, wall at 0, loop at 3, wall at 0
+  10 frames on a 139 by 137 canvas

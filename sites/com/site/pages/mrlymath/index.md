@@ -1,2 +1,1 @@
 - Lives in `packages/rs`: `math` and one crate per app.
-- Notes: [research](/research/).

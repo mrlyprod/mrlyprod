@@ -1,16 +1,14 @@
 import { Figure } from "@mrlyprod/ui/kit/host.tsx";
 import type { Props } from "@mrlyprod/ui/shell/design.ts";
 
-export function Prose({ kind, id, title, level, lead, by, figure, html, cards, children, after }: Props["prose"]) {
-  const post = kind === "post";
+export function Prose({ kind, id, title, level, lead, figure, html, cards, children, after }: Props["prose"]) {
   const hub = kind === "hub";
   const Head = level === 2 ? "h2" : "h1";
   return (
     <>
-      {(post || figure) && <Figure className="opener" name={figure!} label={title} />}
-      <div className={post ? "plate" : "lede"}>
+      {figure && <Figure className="opener" name={figure} label={title} />}
+      <div className="lede">
         <Head id={id}>{title}</Head>
-        {post && <p className="by">{by}</p>}
         {lead && <p className="lead">{lead}</p>}
         {children}
       </div>

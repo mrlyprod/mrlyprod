@@ -2200,7 +2200,7 @@ section.app {
   color: var(--white);
 }
 
-.prose[data-kind] .card.lede > p:is(.lead, .by) {
+.prose[data-kind] .card.lede > p.lead {
   max-width: none;
   margin: 0;
 }
@@ -2223,15 +2223,6 @@ section.app {
 
 :root:not([data-window="none"]) .window .prose[data-kind] > .card.lede:has(> p.lead:only-child) > p.lead {
   color: var(--black);
-}
-
-.prose[data-kind] .card.lede > p.by {
-  color: var(--muted);
-  font: var(--m-small) / var(--m-line) var(--mono);
-}
-
-.prose[data-kind] .card.lede > p.by + p.lead {
-  margin-top: var(--m-unit);
 }
 
 :is(.page:not(.source) > .prose:not([data-kind]), .prose > .card) ol {
@@ -2560,14 +2551,6 @@ section.app {
 
 :is(.prose[data-kind] .cards, .gallery.grid) > .tile > :last-child {
   flex-grow: 1;
-}
-
-.gallery.grid > .tile > p.dates {
-  display: flex;
-  flex: none;
-  flex-wrap: wrap;
-  gap: var(--m-unit) var(--s2);
-  font-variant-numeric: tabular-nums;
 }
 
 .gallery.grid > .tile > figure {

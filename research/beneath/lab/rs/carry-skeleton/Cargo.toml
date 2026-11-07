@@ -1,9 +1,0 @@
-[package]
-name = "carry-skeleton"
-edition = "2021"
-
-[dependencies]
-mrly-automaton = "0.2.0"
-witness = { path = "../../../../shared/witness" }
-
-[workspace]

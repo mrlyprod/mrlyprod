@@ -69,10 +69,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrly-auth"
-version = "0.2.0"
-
-[[package]]
 name = "mrly-automaton"
 version = "0.2.0"
 dependencies = [
@@ -142,14 +138,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrly-coarray"
-version = "0.2.0"
-dependencies = [
- "mrly-error",
- "mrly-num",
-]
-
-[[package]]
 name = "mrly-color"
 version = "0.2.0"
 dependencies = [
@@ -213,10 +201,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrly-graphics"
-version = "0.2.0"
-
-[[package]]
 name = "mrly-hex"
 version = "0.2.0"
 dependencies = [
@@ -250,25 +234,6 @@ dependencies = [
  "mrly-error",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "mrly-kummer"
-version = "0.2.0"
-dependencies = [
- "mrly-error",
- "mrly-num",
- "serde",
-]
-
-[[package]]
-name = "mrly-ladder"
-version = "0.2.0"
-dependencies = [
- "mrly-error",
- "mrly-fft",
- "mrly-num",
- "serde",
 ]
 
 [[package]]
@@ -375,8 +340,15 @@ name = "mrly-png"
 version = "0.2.0"
 
 [[package]]
-name = "mrly-quotes"
+name = "mrly-press"
 version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-json",
+ "mrly-life",
+ "mrly-rand",
+ "mrly-saga",
+]
 
 [[package]]
 name = "mrly-radix"
@@ -410,6 +382,16 @@ version = "0.2.0"
 dependencies = [
  "mrly-error",
  "mrly-num",
+ "mrly-rand",
+ "serde",
+]
+
+[[package]]
+name = "mrly-saga"
+version = "0.2.0"
+dependencies = [
+ "mrly-error",
+ "mrly-life",
  "mrly-rand",
  "serde",
 ]
@@ -455,15 +437,6 @@ version = "0.2.0"
 dependencies = [
  "mrly-error",
  "mrly-math",
- "mrly-num",
- "serde",
-]
-
-[[package]]
-name = "mrly-sumset"
-version = "0.2.0"
-dependencies = [
- "mrly-error",
  "mrly-num",
  "serde",
 ]
@@ -555,10 +528,6 @@ dependencies = [
  "mrly-num",
  "serde",
 ]
-
-[[package]]
-name = "mrly-video"
-version = "0.2.0"
 
 [[package]]
 name = "mrly-voxels"

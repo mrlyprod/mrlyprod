@@ -1,5 +1,6 @@
-one cell               dead   frames  2  period 0
-block                  alive  frames  1  period 0
-blinker                loop   frames  2  period 2
-glider on a torus      loop   frames 32  period 32
-glider against a wall  alive  frames 16  period 0
+one cell               board     dead   at  1  period  1  moved  0, 0  entropy   8  churn 0.0006
+block                  board     still  at  1  period  1  moved  0, 0  entropy  25  churn 0.0000
+blinker                board     loop   at  2  period  2  moved  0, 0  entropy  20  churn 0.0025
+glider against a wall  board     limit  at 64  period  0  moved  0, 0  entropy  31  churn 0.0025
+glider on a wallpaper  wallpaper loop   at 32  period 32  moved  0, 0  entropy 396  churn 0.0625
+glider on an island    island    mover  at  4  period  4  moved  1, 1  entropy 896  churn 0.2500

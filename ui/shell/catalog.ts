@@ -1,11 +1,9 @@
 import { rows, site } from "site:routes";
 import { state } from "../kit/history.ts";
-import type { Row, Shelf, Topic } from "../kit/rows.ts";
+import type { Row, Shelf } from "../kit/rows.ts";
 import { arrange, docked, recents, visited } from "./launch.ts";
 import { KEY, read, write } from "./prefs.ts";
 import type { Wired } from "./route.ts";
-
-export type Note = Topic & { more: string; href: string };
 
 export const PAD = site.launchpad;
 export const KNOWN = new Set(PAD.sections.flatMap((one) => one.apps));
@@ -59,30 +57,6 @@ export function track() {
     if (open) note();
   });
   addEventListener("stamp", () => open && location.pathname.startsWith(at) && note());
-}
-
-let topics: Promise<Note[]> | null = null;
-
-export function notes(): Promise<Note[]> {
-  if (!site.research) return Promise.resolve([]);
-  topics ??= fetch("/research.json")
-    .then((reply) =>
-      reply.ok ? reply.json() : Promise.reject(new Error(`research: /research.json answered ${reply.status}`)),
-    )
-    .then((data: { topics?: Topic[] }) =>
-      (data.topics ?? []).map(
-        (one): Note => ({
-          ...one,
-          more: one.lead ?? "",
-          href: `/research/${encodeURIComponent(one.slug)}/`,
-        }),
-      ),
-    )
-    .catch(() => {
-      topics = null;
-      return [];
-    });
-  return topics;
 }
 
 let ahead = "";

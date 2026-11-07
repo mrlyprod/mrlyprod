@@ -20,8 +20,6 @@ const FACES = [
   ["--mono", "Mono"],
 ];
 
-const MARKS = ["proved", "verified", "conjecture", "refuted"];
-
 function Scale() {
   return (
     <div className="lanes">
@@ -52,11 +50,6 @@ function Scale() {
         <kbd>Shift</kbd>
         <kbd>Z</kbd>
         <span className="chip">chip</span>
-        {MARKS.map((mark) => (
-          <span key={mark} className={`chip ${mark}`}>
-            {mark}
-          </span>
-        ))}
       </div>
     </div>
   );

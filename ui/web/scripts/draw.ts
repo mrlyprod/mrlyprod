@@ -78,7 +78,7 @@ async function paint(
 export async function* draw({ names, all, kinds, themes, size, out }: Ask) {
   const list = roster();
   const lost = names.find((name) => !list.some((one) => one.name === name));
-  if (lost) throw new Error(`draw: ${lost} is no figure; the roster draws ${list.length}, as research-arcs`);
+  if (lost) throw new Error(`draw: ${lost} is no figure; the roster draws ${list.length}`);
   const picked = all ? list : names.map((name) => list.find((one) => one.name === name)!);
   const clear = new Set(plates(list));
   const figures = await load(picked.map((one) => one.file));

@@ -1,7 +1,7 @@
 import type { Row } from "@mrlyprod/ui/kit/rows.ts";
 import { hide, parts, show } from "../../shell.ts";
 
-const ORDER = ["mrlynet", "mrlymath", "sequences", "researchproject", "crates", "bindgen", "draw", "mrlyprod", "setup"];
+const ORDER = ["mrlynet", "mrlymath", "sequences", "crates", "bindgen", "draw", "mrlyprod", "setup"];
 
 const card = (one: Row) => ({ href: one.route, name: one.title, text: one.lead, figure: one.figure ?? undefined });
 

@@ -1,4 +1,4 @@
-import type { Cell, Fate, recipe, Tensor } from "@mrlyprod/life";
+import type { Cell, recipe, Tensor } from "@mrlyprod/life";
 import type { Mrly } from "@mrlyprod/ui/kit/designs/engine.ts";
 import type { Rng } from "@mrlyprod/ui/kit/rand.ts";
 import type { Scalar, Value } from "@mrlyprod/ui/kit/spec.ts";
@@ -34,7 +34,7 @@ export type Shape = {
   lattice: number;
 };
 
-export type Ending = { fate: Fate; count: number; loop: number };
+export type Ending = { fate: string; count: number; loop: number };
 
 export const BOARD = 96;
 export const LINE = 320;
@@ -310,7 +310,7 @@ export function fate(seen: number[], h: number, pop: number): string {
   return verdict;
 }
 
-const ENDS: Record<Fate, string> = { Dead: "dies", Alive: "freezes", Loop: "loops", Timeout: "still moving" };
+const ENDS: Record<string, string> = { dead: "dies", still: "freezes", loop: "loops", limit: "still moving" };
 
 export function destiny(
   life: Door,
@@ -320,18 +320,13 @@ export function destiny(
   wrap: Scalar | boolean,
   limit = LIMIT,
 ): Ending {
-  const config = new life.Config(
-    { shape: mask.shape, types: mask.data },
-    life.Counts.list(rule.birth),
-    life.Counts.list(rule.survive),
-  );
-  config.boundary = wrap ? "Wrap" : "Constant";
-  config.max_generations = limit;
-  const run = life.animate(cell, config);
-  const read = { fate: run.fate, count: run.count, loop: run.loop_length };
-  run.free();
-  config.free();
-  return read;
+  const run = life.Run.of(cell, mask, rule.birth, rule.survive, wrap ? "Wallpaper" : "Board", 0, limit);
+  try {
+    const stop = run.finish();
+    return { fate: stop.kind, count: stop.generation, loop: stop.kind === "loop" ? stop.period : 0 };
+  } finally {
+    run.free();
+  }
 }
 
 export function told({ fate: end, count, loop }: Ending): string {
